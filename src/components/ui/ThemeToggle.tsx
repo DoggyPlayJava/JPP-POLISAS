@@ -31,7 +31,6 @@ export function ThemeToggle() {
             >
               {theme === 'light' && <Sun className="h-5 w-5 text-amber-500" />}
               {theme === 'dark' && <Moon className="h-5 w-5 text-blue-400" />}
-              {theme === 'system' && <Laptop className="h-5 w-5 text-slate-500" />}
             </motion.div>
           </AnimatePresence>
           <span className="sr-only">Tukar Tema</span>
@@ -49,12 +48,6 @@ export function ThemeToggle() {
           className="rounded-xl gap-3 font-black text-[10px] uppercase tracking-widest cursor-pointer focus:bg-primary/5"
         >
           <Moon size={14} className="text-blue-500" /> Malam
-        </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => setTheme('system')}
-          className="rounded-xl gap-3 font-black text-[10px] uppercase tracking-widest cursor-pointer focus:bg-primary/5"
-        >
-          <Laptop size={14} className="text-slate-500" /> Sistem
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
