@@ -662,8 +662,8 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
       const url = await uploadPdfToDrive(file, 'program_docs', fileName);
       setForm((prev: any) => ({ ...prev, [type === 'kertas_kerja' ? 'urlKertasKerja' : 'urlPostMortem']: url }));
       toast.success('Fail sedia!', { id: toastId });
-    } catch (err: any) { 
-      toast.error(err.message || 'Gagal upload.', { id: toastId }); 
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal upload.', { id: toastId });
     }
   };
 
@@ -695,11 +695,24 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
     }
   };
 
-  const handleRemoveImage = (index: number) => {
+  const handleRemoveImage = async (index: number) => {
+    const urlToRemove = form.imageUrls[index];
     setForm((prev: any) => ({
       ...prev,
       imageUrls: prev.imageUrls.filter((_: any, i: number) => i !== index)
     }));
+
+    if (urlToRemove) {
+      try {
+        const urlParts = urlToRemove.split('/reports/');
+        if (urlParts.length > 1) {
+          const filePath = urlParts[1];
+          await supabase.storage.from('reports').remove([filePath]);
+        }
+      } catch (e) {
+        console.error('Failed to remove image from storage', e);
+      }
+    }
   };
 
   const handleSave = async () => {
@@ -759,6 +772,21 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
     } catch (err: any) {
       toast.error(err.message || 'Gagal menghantar permohonan.');
     } finally { setSaving(false); }
+  };
+
+  const handleDeleteProgram = async (actId: string) => {
+    if (!window.confirm('Padam draf program ini secara kekal? Tindakan ini tidak boleh diundur.')) return;
+    try {
+      setSaving(true);
+      const { error } = await supabase.from('programs').delete().eq('id', actId);
+      if (error) throw error;
+      toast.success('Draf berjaya dipadam');
+      load();
+    } catch (e: any) {
+      toast.error('Gagal memadam draf: ' + e.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const urgentItems = activities.filter(a =>
@@ -846,6 +874,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                 {urgentItems.map(act => (
                   <ProgramCard key={act.id} act={act} isUrgent canManage={canManage}
                     onEdit={() => openEdit(act)} load={load}
+                    allowAddTakwim={allowAddTakwim} onDelete={() => handleDeleteProgram(act.id)}
                     onUnlock={() => { setTargetUnlock(act); setUnlockDialogOpen(true); }} />
                 ))}
               </div>
@@ -863,6 +892,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                 {activeZone.map(act => (
                   <ProgramCard key={act.id} act={act} load={load} canManage={canManage}
                     onEdit={() => openEdit(act)}
+                    allowAddTakwim={allowAddTakwim} onDelete={() => handleDeleteProgram(act.id)}
                     onUnlock={() => { setTargetUnlock(act); setUnlockDialogOpen(true); }} />
                 ))}
               </div>
@@ -879,6 +909,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {draftingZone.map(act => (
                   <ProgramCard key={act.id} act={act} isMini load={load} canManage={canManage}
+                    allowAddTakwim={allowAddTakwim} onDelete={() => handleDeleteProgram(act.id)}
                     onEdit={() => openEdit(act)} />
                 ))}
               </div>
@@ -1087,7 +1118,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
 
 // ─── SHARED SUB-COMPONENTS ────────────────────────────────────────────────────
 
-function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage }: any) {
+function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage, onDelete, allowAddTakwim }: any) {
   const { user } = useAuth();
   const daysLeft = act.tarikh_mula ? differenceInDays(parseISO(act.tarikh_mula), new Date()) : 999;
   const isPastDeadline = daysLeft < 9 && act.status === 'DRAFT';
@@ -1140,9 +1171,15 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage 
                 </Button>
               )}
               <Button variant="ghost" size="icon" onClick={onEdit}
-                className="h-8 w-8 rounded-full bg-slate-50 text-muted-foreground" title={isRejectedPostMortem ? "Muat Naik Semula Post-Mortem" : "Kemaskini"}>
+                className="h-8 w-8 rounded-full bg-slate-50 text-muted-foreground hover:bg-slate-200" title={isRejectedPostMortem ? "Muat Naik Semula Post-Mortem" : "Kemaskini"}>
                 <Pencil size={13} />
               </Button>
+              {act.status === 'DRAFT' && allowAddTakwim && (
+                <Button variant="ghost" size="icon" onClick={onDelete}
+                  className="h-8 w-8 rounded-full bg-rose-50 text-rose-500 hover:bg-rose-100" title="Padam Program">
+                  <Trash2 size={13} />
+                </Button>
+              )}
             </div>
           )}
         </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { differenceInDays, parseISO } from 'date-fns';
 import {
   Eye, CheckCircle2, XCircle, RefreshCw, Lock, Unlock, FileText,
   ExternalLink, Filter, MessageSquare, BookOpen, Users, Calendar,
@@ -64,7 +65,7 @@ export function SemakanLaporanPage() {
   const [programs, setPrograms] = useState<Program[]>([]);
   const [archivedPrograms, setArchivedPrograms] = useState<Program[]>([]);
   const [showArchive, setShowArchive] = useState(false);
-  const [actionDialog, setActionDialog] = useState<{ open: boolean, type: 'APPROVE' | 'REJECT' | 'UNLOCK' | null, data: Program | null }>({
+  const [actionDialog, setActionDialog] = useState<{ open: boolean, type: 'APPROVE' | 'REJECT' | 'UNLOCK' | 'REJECT_UNLOCK' | null, data: Program | null }>({
     open: false, type: null, data: null
   });
   const [remarks, setRemarks] = useState('');
@@ -197,7 +198,7 @@ export function SemakanLaporanPage() {
     }
     else if (actionDialog.type === 'REJECT') {
       if (actionDialog.data.status === 'PENDING_POSTMORTEM') {
-        nextStatus = 'PENDING_POSTMORTEM'; 
+        nextStatus = 'PENDING_POSTMORTEM';
         isLocked = false;
         notificationTitle = '❌ Post-Mortem Ditolak';
         notificationContent = `Post-Mortem "${actionDialog.data.nama_program}" memerlukan pindaan. Sila semak ulasan JPP.`;
@@ -213,6 +214,12 @@ export function SemakanLaporanPage() {
       isLocked = false;
       notificationTitle = '🔓 Permohonan Unlock Diluluskan';
       notificationContent = `JPP telah meluluskan permohonan unlock untuk "${actionDialog.data.nama_program}". Anda kini boleh mengedit tarikh semula.`;
+    }
+    else if (actionDialog.type === 'REJECT_UNLOCK') {
+      nextStatus = 'CONFIRMED';
+      isLocked = true;
+      notificationTitle = '⛔ Permohonan Unlock Ditolak';
+      notificationContent = `JPP telah MENOLAK permohonan unlock anda untuk "${actionDialog.data.nama_program}". ${remarks ? 'Alasan: ' + remarks : ''}`;
     }
 
     const toastId = toast.loading("Mengemaskini...");
@@ -233,7 +240,7 @@ export function SemakanLaporanPage() {
       await supabase.from('notifications').insert([{
         user_id: actionDialog.data.user_id, // ID Presiden/MT yang daftar program
         title: notificationTitle,
-        content: notificationContent,
+        message: notificationContent,
         type: actionDialog.type === 'UNLOCK' ? 'UNLOCK_APPROVED' : 'STATUS_UPDATE',
         is_read: false
       }]);
@@ -243,6 +250,63 @@ export function SemakanLaporanPage() {
     loadData();
     setActionDialog({ open: false, type: null, data: null });
     setRemarks('');
+  };
+
+  // ── Overdue Reminder Engine ──
+  const handleSendOverdueNotices = async () => {
+    const toastId = toast.loading("Mengimbas pangkalan data...");
+
+    // Fetch all active programs
+    const { data: allPrograms, error } = await supabase.from('programs').select('id, nama_program, tarikh_mula, tarikh_tamat, status, user_id').not('status', 'eq', 'COMPLETED');
+
+    if (error || !allPrograms) {
+      toast.error("Ralat mengakses pangkalan data.", { id: toastId });
+      return;
+    }
+
+    const noticesToInsert: any[] = [];
+    const now = new Date();
+
+    for (const prog of allPrograms) {
+      let isOverdue = false;
+      let reason = '';
+
+      if (prog.status === 'DRAFT' && prog.tarikh_mula) {
+        const daysLeft = differenceInDays(parseISO(prog.tarikh_mula), now);
+        if (daysLeft < 9) {
+          isOverdue = true;
+          reason = 'Kertas Kerja tertunggak / belum disahkan (Kurang 9 hari)';
+        }
+      } else if (prog.status === 'CONFIRMED' && prog.tarikh_tamat) {
+        const daysAfter = differenceInDays(now, parseISO(prog.tarikh_tamat));
+        if (daysAfter > 3) {
+          isOverdue = true;
+          reason = 'Post-Mortem tertunggak (Melepasi 3 hari selepas tamat)';
+        }
+      }
+
+      if (isOverdue && prog.user_id) {
+        noticesToInsert.push({
+          user_id: prog.user_id,
+          title: '⚠️ PERINGATAN JPP: AMARAN TERTUNGGAK',
+          message: `Sila selesaikan dokumen bagi program "${prog.nama_program}" dengan SEGERA. Sebab: ${reason}.`,
+          type: 'SYSTEM_ALERT',
+          is_read: false
+        });
+      }
+    }
+
+    if (noticesToInsert.length === 0) {
+      toast.success("Tiada program yang tertunggak. Semua takwim berjalan lancar!", { id: toastId });
+      return;
+    }
+
+    const { error: insertError } = await supabase.from('notifications').insert(noticesToInsert);
+    if (insertError) {
+      toast.error("Gagal menghantar notis peringatan.", { id: toastId });
+    } else {
+      toast.success(`Berjaya menghantar ${noticesToInsert.length} notis peringatan!`, { id: toastId });
+    }
   };
 
   // ── Tab 2: General Report Logic ──
@@ -263,15 +327,25 @@ export function SemakanLaporanPage() {
     <div className="page-container space-y-10 pb-24 max-w-7xl mx-auto">
 
       {/* ── Header Premium ── */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-gradient-to-r from-slate-900 to-slate-800 p-8 rounded-[3rem] text-white shadow-xl shadow-slate-900/20">
-        <div className="space-y-3">
-          <Badge className="bg-white/10 text-white border-none px-4 py-1.5 font-black uppercase tracking-widest text-[10px]">Super Admin Panel</Badge>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-none">Pusat Kawalan JPP</h1>
-          <p className="text-slate-300 font-medium max-w-md">Sahkan takwim program dan pantau kelulusan dokumen rasmi persatuan pelajar.</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 bg-gradient-to-br from-slate-900 via-slate-800 to-primary/95 p-10 md:p-12 rounded-[3.5rem] text-white shadow-2xl shadow-slate-900/30 relative overflow-hidden border border-white/5">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-primary/20 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/3" />
+
+        <div className="space-y-4 relative z-10">
+          <Badge className="bg-white/10 text-amber-400 border border-white/5 px-5 py-2 font-black uppercase tracking-widest text-[10px] backdrop-blur-md rounded-2xl shadow-xl">
+            Super Admin Panel
+          </Badge>
+          <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-none text-white drop-shadow-sm">Pusat Kawalan JPP</h1>
+          <p className="text-slate-300 font-medium max-w-lg leading-relaxed text-sm md:text-base">Sahkan takwim program dan pantau kelulusan dokumen rasmi persatuan pelajar.</p>
         </div>
-        <Button onClick={loadData} variant="outline" className="rounded-2xl gap-2 h-14 px-8 border-none bg-white/10 hover:bg-white/20 text-white font-black tracking-widest uppercase text-[10px] backdrop-blur-sm">
-          <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} /> Segarkan Data
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center relative z-10 shrink-0">
+          <Button onClick={handleSendOverdueNotices} variant="outline" className="w-full sm:w-auto rounded-3xl gap-2 h-14 px-8 border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 font-black tracking-widest uppercase text-[10px] backdrop-blur-sm transition-all shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:shadow-[0_0_30px_rgba(245,158,11,0.25)] hover:scale-105">
+            <AlertTriangle className="w-5 h-5" /> Imbas Tunggakan
+          </Button>
+          <Button onClick={loadData} variant="outline" className="w-full sm:w-auto rounded-3xl gap-2 h-14 px-8 border-white/10 bg-white/10 hover:bg-white/20 text-white font-black tracking-widest uppercase text-[10px] backdrop-blur-sm transition-all hover:scale-105">
+            <RefreshCw className={cn("w-5 h-5", loading && "animate-spin")} /> Segarkan Data
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="programs" className="w-full">
@@ -282,9 +356,9 @@ export function SemakanLaporanPage() {
             { value: 'takwim', label: 'Pemantauan Takwim' },
             { value: 'arkib', label: 'Arkib Berpusat', onClick: handleArkibTab }
           ].map(t => (
-            <TabsTrigger 
-              key={t.value} 
-              value={t.value} 
+            <TabsTrigger
+              key={t.value}
+              value={t.value}
               onClick={t.onClick}
               className="rounded-[2rem] font-black tracking-widest px-8 py-4 text-[10px] sm:text-[11px] uppercase transition-all duration-500 text-slate-500 hover:text-primary data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-rose-800 data-[state=active]:text-white data-[state=active]:shadow-[0_12px_24px_-8px_rgba(139,26,26,0.5)] data-[state=active]:scale-[1.02] flex-1 whitespace-nowrap"
             >
@@ -339,10 +413,10 @@ export function SemakanLaporanPage() {
                             <div className="flex flex-wrap items-center gap-2">
                               <Badge className={cn("rounded-md font-black text-[10px] uppercase tracking-widest border-none px-2 py-0.5",
                                 p.status === 'REQUEST_UNLOCK' ? "bg-indigo-500/10 text-indigo-500" :
-                                isRejectedPostmortem ? "bg-rose-500/10 text-rose-500" :
-                                p.status === 'PENDING_APPROVAL' ? "bg-amber-500/10 text-amber-500" :
-                                p.status === 'CONFIRMED' ? "bg-emerald-500/10 text-emerald-500" :
-                                "bg-muted text-muted-foreground")}>
+                                  isRejectedPostmortem ? "bg-rose-500/10 text-rose-500" :
+                                    p.status === 'PENDING_APPROVAL' ? "bg-amber-500/10 text-amber-500" :
+                                      p.status === 'CONFIRMED' ? "bg-emerald-500/10 text-emerald-500" :
+                                        "bg-muted text-muted-foreground")}>
                                 {isRejectedPostmortem ? 'POSTMORTEM (REJECTED)' : p.status.replace('_', ' ')}
                               </Badge>
                               {club && (
@@ -355,7 +429,7 @@ export function SemakanLaporanPage() {
                         })()}
                         <h3 className="font-black text-xl text-slate-900 leading-tight">{p.nama_program}</h3>
                         <span className="text-xs text-slate-400 flex items-center gap-1.5 font-bold"><Clock size={12} /> Dikemaskini {new Date(p.updated_at).toLocaleDateString('ms-MY')}</span>
-                        
+
                         {p.jpp_remarks && (
                           <div className="mt-2 p-3 bg-indigo-50/50 rounded-xl border border-indigo-100/50 flex flex-col gap-1 max-w-[400px]">
                             <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400">Nota Semasa / Alasan</span>
@@ -369,20 +443,29 @@ export function SemakanLaporanPage() {
 
                     <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-border">
                       {(() => {
-                         const url = p.status === 'PENDING_POSTMORTEM' ? p.url_post_mortem : p.url_kertas_kerja;
-                         const isValidUrl = url && url.length > 5;
-                         return isValidUrl ? (
-                           <a href={url} target="_blank" rel="noopener noreferrer" className="flex-1 md:flex-none">
-                             <Button variant="outline" className="w-full rounded-xl font-black text-xs h-12 border-border hover:bg-muted"><FileText size={16} className="mr-2 text-slate-400" /> Papar Dokumen</Button>
-                           </a>
-                         ) : (
-                           <Button disabled variant="outline" className="flex-1 md:flex-none rounded-xl font-black text-xs h-12 border-border opacity-50 cursor-not-allowed">
-                             <FileText size={16} className="mr-2 text-slate-400" /> Tiada Dokumen
-                           </Button>
-                         );
+                        const url = p.status === 'PENDING_POSTMORTEM' ? p.url_post_mortem : p.url_kertas_kerja;
+                        const isValidUrl = url && url.length > 5;
+                        return isValidUrl ? (
+                          <a href={url} target="_blank" rel="noopener noreferrer" className="flex-1 md:flex-none">
+                            <Button variant="outline" className="w-full rounded-xl font-black text-xs h-12 border-border hover:bg-muted"><FileText size={16} className="mr-2 text-slate-400" /> Papar Dokumen</Button>
+                          </a>
+                        ) : (
+                          <Button disabled variant="outline" className="flex-1 md:flex-none rounded-xl font-black text-xs h-12 border-border opacity-50 cursor-not-allowed">
+                            <FileText size={16} className="mr-2 text-slate-400" /> Tiada Dokumen
+                          </Button>
+                        );
                       })()}
 
-                      {p.status === 'REQUEST_UNLOCK' && <Button onClick={() => setActionDialog({ open: true, type: 'UNLOCK', data: p })} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-xs h-12 shadow-lg shadow-indigo-200">Buka Kunci (Unlock)</Button>}
+                      {p.status === 'REQUEST_UNLOCK' && (
+                        <div className="flex gap-2 flex-1">
+                          <Button onClick={() => setActionDialog({ open: true, type: 'UNLOCK', data: p })} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-xs h-12 shadow-lg shadow-indigo-200">
+                            <Unlock size={16} className="mr-1.5" /> Buka Kunci (Unlock)
+                          </Button>
+                          <Button variant="destructive" onClick={() => setActionDialog({ open: true, type: 'REJECT_UNLOCK', data: p })} className="rounded-xl font-black text-xs h-12 px-6">
+                            <XCircle size={16} className="mr-1.5" /> Tolak
+                          </Button>
+                        </div>
+                      )}
 
                       {(p.status === 'PENDING_APPROVAL' || p.status === 'PENDING_POSTMORTEM') && (
                         <div className="flex gap-2 flex-1">
@@ -426,10 +509,10 @@ export function SemakanLaporanPage() {
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 mt-1">
                           Selesai · {new Date(p.updated_at).toLocaleDateString('ms-MY')}
                           {p.club_id && (
-                             <>
-                               <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                               <span className="text-muted-foreground truncate">{ALL_CLUBS.find(c => c.id === p.club_id)?.shortName}</span>
-                             </>
+                            <>
+                              <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                              <span className="text-muted-foreground truncate">{ALL_CLUBS.find(c => c.id === p.club_id)?.shortName}</span>
+                            </>
                           )}
                         </p>
                       </div>
@@ -605,7 +688,7 @@ export function SemakanLaporanPage() {
           {/* Senarai Arkib */}
           {arkibLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[1,2,3,4].map(i => (
+              {[1, 2, 3, 4].map(i => (
                 <div key={i} className="h-24 bg-muted/40 rounded-[2rem] animate-pulse" />
               ))}
             </div>
@@ -631,8 +714,8 @@ export function SemakanLaporanPage() {
                     const typeColor = item.type === 'kertas_kerja'
                       ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
                       : item.type === 'post_mortem'
-                      ? 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20'
-                      : 'bg-amber-500/10 text-amber-600 border-amber-500/20';
+                        ? 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20'
+                        : 'bg-amber-500/10 text-amber-600 border-amber-500/20';
 
                     return (
                       <motion.div
@@ -691,12 +774,14 @@ export function SemakanLaporanPage() {
             <DialogTitle className="text-3xl font-black tracking-tighter">Sahkan Tindakan</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-4">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Komen Rasmi JPP (Opsyenal)</Label>
-            <Textarea 
-              value={remarks} 
-              onChange={(e) => setRemarks(e.target.value)} 
-              placeholder="Taip alasan atau ulasan di sini..." 
-              className="rounded-2xl bg-muted border-none min-h-[120px] p-5 font-medium focus-visible:ring-primary/20" 
+            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">
+              {actionDialog.type === 'REJECT_UNLOCK' ? 'Surat Penolakan (WAJIB isi alasan)' : 'Komen Rasmi JPP (Opsyenal)'}
+            </Label>
+            <Textarea
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              placeholder="Taip alasan atau ulasan di sini..."
+              className="rounded-2xl bg-muted border-none min-h-[120px] p-5 font-medium focus-visible:ring-primary/20"
             />
           </div>
           <DialogFooter className="gap-3 pt-4 border-t border-border">
