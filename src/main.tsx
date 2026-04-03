@@ -6,6 +6,8 @@ import ReactDOM from 'react-dom/client'
 import { Toaster } from 'react-hot-toast'
 import App from './App'
 import './index.css'
+import { SpeedInsights } from "@vercel/speed-insights/react"
+
 
 console.log('Dependencies imported, grabbing root...');
 const rootElement = document.getElementById('root');
@@ -16,6 +18,7 @@ if (rootElement) {
     ReactDOM.createRoot(rootElement).render(
       <React.StrictMode>
         <App />
+        <SpeedInsights />
       </React.StrictMode>,
     );
     console.log('App rendered successfully');
