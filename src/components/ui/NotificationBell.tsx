@@ -18,7 +18,7 @@ export function NotificationBell() {
 
         // ✅ REAL-TIME LISTENER
         const channel = supabase
-            .channel(`notifications-${user.id}-${Date.now()}`)
+            .channel(`notifications-${user.id}-${Math.random().toString(36).substring(7)}`)
             .on(
                 'postgres_changes',
                 {

@@ -114,7 +114,7 @@ export function KarnivalVotingPage() {
   // Setiap kali ada undi baru → update vote counts secara live
   useEffect(() => {
     const channel = supabase
-      .channel('karnival-votes-realtime')
+      .channel(`karnival-votes-realtime-${Math.random().toString(36).substring(7)}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'karnival_votes' },

@@ -129,7 +129,7 @@ export function AhliPage() {
     const targetClubId = selectedClubId ?? profile?.club_id;
     if (!targetClubId) return;
 
-    const channel = supabase.channel(`ahli_page_changes_${targetClubId}`)
+    const channel = supabase.channel(`ahli_page_changes_${targetClubId}_${Math.random().toString(36).substring(7)}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
