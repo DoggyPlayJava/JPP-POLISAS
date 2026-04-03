@@ -1,0 +1,13 @@
+Profiles:
+[
+  {
+    "id": "56eb444d-215e-4fa1-902e-36df6230ffaf",
+    "full_name": "NUR SYUHADA BINTI SAIFULIZAM",
+    "role": "CLUB_MEMBER",
+    "club_id": "3970d20a-76a1-41eb-8fc6-33819c90b7c8"
+  }
+]
+
+Memberships for 56eb444d-215e-4fa1-902e-36df6230ffaf:
+[]
+

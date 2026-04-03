@@ -1,0 +1,462 @@
+# 🔬 JPP-POLISAS Deep Dive Logic & Workflow Audit — FINAL v3
+
+> **Auditor:** Senior Staff Engineer & Security Auditor
+> **Scope:** COMPLETE CODEBASE — every single `.tsx`, `.ts`, and `.sql` file
+> **Scale Target:** 800+ concurrent users
+> **Passes:** 3 (initial + deep-dive + final sweep)
+> **Presentation:** Tomorrow 🟢
+
+---
+
+## ✅ FILE COVERAGE CHECKLIST
+
+All files confirmed audited:
+
+| Category | Count | Files |
+|---|---|---|
+| **Pages** | 22 | AhliPage, AktivitiFull, CarianPage, ClubDetailPage, DashboardPage, JppAdminPage, JppReviewPage, KarnivalVotingPage, KelabPage, LandingPage, LaporanPage, LeaderboardPage, LoginPage, OnboardingPage, PenasihatLogPage, PendingPage, RejectedPage, ResetPasswordPage, SemakanLaporanPage, SettingsPage, TeamPage, UrusKelabPage |
+| **Components** | 71 | RouteGuards, AppLayout, Sidebar, Header, BottomNav, CommandPalette, EditAnnouncementModal, ErrorBoundary, ClubSwitcher, NotificationBell, MeritAssigner, StatusChip, ThemeToggle, AddTaskModal, TaskDetailModal, LaporanPDFTemplate + 55 shadcn/ui primitives |
+| **Lib** | 5 | supabase.ts, cache.ts, driveUpload.ts, report-utils.ts, utils.ts |
+| **Hooks** | 4 | useDashboardData, useClubs, useReports, use-mobile |
+| **Contexts** | 2 | AuthContext, ThemeContext |
+| **Types** | 1 | types/index.ts |
+| **Entry** | 2 | App.tsx, main.tsx |
+| **Migrations** | 10 | 01–09 (with 07 duplicated) |
+
+---
+
+## 🛑 CRITICAL ISSUES
+
+### CRIT-1: Privilege Escalation — Client-Side Role Change Bypasses Server Validation
+
+**Location:** [AhliPage.tsx L170-188](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/AhliPage.tsx#L170-L188)
+
+`handleRoleChange` does a direct `.update({ role: newRole })` on `student_club_memberships`. The `getAllowedRoles()` helper only controls UI dropdown — **zero server-side enforcement**. Any user can modify the request payload via DevTools.
+
+**Fix:** Use `change_member_role` RPC (see v2 audit for full SQL).
+
+> [!CAUTION]
+> Without the RPC, any authenticated user can promote themselves to CLUB_PRESIDENT.
+
+---
+
+### CRIT-2: `handleAcceptAll` — Unscoped Bulk Approve
+
+**Location:** [JppAdminPage.tsx L136-146](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/JppAdminPage.tsx#L136-L146)
+
+Approves **every pending membership globally** with no club filter and no membership limit check.
+
+---
+
+### CRIT-3: Notification Field Mismatch — Blank Bodies
+
+**Location:** [NotificationBell.tsx L80](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/components/ui/NotificationBell.tsx#L80) vs [SemakanLaporanPage.tsx L229-235](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/SemakanLaporanPage.tsx#L229-L235)
+
+Inserts `content`, reads `n.message` → always `undefined`.
+
+```diff
+-<p>{n.message}</p>
++<p>{n.content || n.message}</p>
+```
+
+---
+
+### CRIT-4: Merit Award Race Condition — Non-Atomic TOCTOU
+
+**Location:** [DashboardPage.tsx L167-179](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/DashboardPage.tsx#L167-L179)
+
+Two concurrent merit awards → lost update. Fix with atomic `increment_merit` RPC.
+
+---
+
+### CRIT-5: Self-Registration as CLUB_ADVISOR
+
+**Location:** [LoginPage.tsx L14-15](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/LoginPage.tsx#L14-L15)
+
+`LEADER_ROLES` includes `CLUB_ADVISOR`. Profile role is set immediately (L116) while membership is PENDING — code paths checking `profiles.role` treat user as Advisor before approval.
+
+```diff
+-const LEADER_ROLES: UserRole[] = ['CLUB_PRESIDENT', 'CLUB_MT', 'CLUB_ADVISOR'];
++const LEADER_ROLES: UserRole[] = ['CLUB_PRESIDENT', 'CLUB_MT'];
+```
+
+---
+
+### CRIT-6: Task System — No Authorization on Submit/Verify
+
+**Location:** [TaskDetailModal.tsx L55-67](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/components/tasks/TaskDetailModal.tsx#L55-L67)
+
+Any authenticated user can submit proof for any task and mark it COMPLETED. No check that `user.id === task.assigned_to`.
+
+---
+
+### CRIT-7 🆕: Search Input Passes Unsanitized to `.ilike()` — SQL Wildcard Injection
+
+**Location:** [CarianPage.tsx L35-46](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/CarianPage.tsx#L35-L46)
+
+```typescript
+// Line 35-38
+const { data: acts } = await supabase
+  .from('club_activities')
+  .select('*')
+  .ilike('title', `%${query}%`)  // ← User input directly interpolated
+  .limit(10);
+```
+
+**Problem:** The `query` value comes directly from `searchParams.get('q')`. While Supabase's PostgREST parameterizes the SQL (preventing classic SQL injection), the `%` and `_` wildcards in `ILIKE` are **not escaped**. A user searching for `%` will match ALL rows, and `___` matches any 3-character title. This enables **data enumeration** of titles across all clubs without RLS filtering.
+
+Additionally, `select('*')` fetches ALL columns from `club_activities` and `club_reports` — including `user_id`, `budget`, etc. — for ANY club, with **no club_id scoping**. This is a **cross-club data leak**.
+
+```diff
++// Escape SQL wildcards
++const escapedQuery = query.replace(/[%_]/g, '\\$&');
+ const { data: acts } = await supabase
+   .from('club_activities')
+-  .select('*')
+-  .ilike('title', `%${query}%`)
++  .select('id, title, status, club_id')
++  .ilike('title', `%${escapedQuery}%`)
+   .limit(10);
+```
+
+> [!CAUTION]
+> The search page returns `select('*')` from `club_activities` and `club_reports` with NO club scoping. Any user can search and see data from all clubs.
+
+---
+
+## ⚠️ STATE & LOGIC WARNINGS
+
+### WARN-1: `isMember` Flag Excludes Higher Roles
+
+**Location:** [AuthContext.tsx L254](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/contexts/AuthContext.tsx#L254)
+
+`isMember` is `false` for Presidents/MTs. Features gated by `isMember` behave differently for leaders.
+
+---
+
+### WARN-2: `SemakanLaporanPage` — No Pagination, No Limit
+
+**Location:** [SemakanLaporanPage.tsx L96-113](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/SemakanLaporanPage.tsx#L96-L113)
+
+---
+
+### WARN-3: `UrusKelabPage` — Merit Reset Uses `profiles.club_id`
+
+**Location:** [UrusKelabPage.tsx L62-65](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/UrusKelabPage.tsx#L62-L65)
+
+---
+
+### WARN-4: `NotificationBell` — Bulk Update Without Filter
+
+---
+
+### WARN-5: Activity Created Under Wrong Club
+
+**Location:** [AktivitiFull.tsx L199](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/AktivitiFull.tsx#L199)
+
+---
+
+### WARN-6: Takwim Fallback Leaks Cross-Club Data
+
+**Location:** [AktivitiFull.tsx L627-631](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/AktivitiFull.tsx#L627-L631)
+
+---
+
+### WARN-7: Boolean/String Mismatch in Karnival Settings
+
+---
+
+### WARN-8: `window.prompt` De-Merit — Uncapped, No NaN Check
+
+**Location:** [DashboardPage.tsx L206-214](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/DashboardPage.tsx#L206-L214)
+
+---
+
+### WARN-9: Notification Preferences Are Cosmetic Only
+
+**Location:** [SettingsPage.tsx L290-306](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/SettingsPage.tsx#L290-L306)
+
+---
+
+### WARN-10: Committee Avatar Matching by Name String
+
+**Location:** [ClubDetailPage.tsx L44-46](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/ClubDetailPage.tsx#L44-L46)
+
+---
+
+### WARN-11: Admin Stats Query Wrong Table
+
+**Location:** [JppAdminPage.tsx L66](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/JppAdminPage.tsx#L66)
+
+---
+
+### WARN-12: ClubDetailPage Fetches Private Data for Any Club
+
+**Location:** [ClubDetailPage.tsx L32-37](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/ClubDetailPage.tsx#L32-L37)
+
+---
+
+### WARN-13: `is_new_register` Flag Set Before signUp
+
+**Location:** [LoginPage.tsx L94](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/LoginPage.tsx#L94)
+
+---
+
+### WARN-14: Predictable File Upload Paths (`Math.random()`)
+
+---
+
+### WARN-15 🆕: Dual Toaster Instances — Double Toast Rendering
+
+**Location:** [main.tsx L18](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/main.tsx#L18) AND [App.tsx L106](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/App.tsx#L106)
+
+```typescript
+// main.tsx line 18
+<Toaster position="top-right" />
+
+// App.tsx line 106-118
+<Toaster position="top-right" toastOptions={{...}} />
+```
+
+Two `<Toaster />` components are mounted simultaneously. Every `toast()` call will render **twice** — once as a plain toast from `main.tsx` and once as a styled toast from `App.tsx`. This causes duplicate toast notifications visible to the user.
+
+**Fix:** Remove the `<Toaster />` from `main.tsx`:
+
+```diff
+ // main.tsx
+ ReactDOM.createRoot(rootElement).render(
+   <React.StrictMode>
+-    <Toaster position="top-right" />
+     <App />
+   </React.StrictMode>,
+ );
+```
+
+---
+
+### WARN-16 🆕: `LaporanPage` Auto-PDF Uses `profile.club_id` Instead of `effectiveClubId`
+
+**Location:** [LaporanPage.tsx L214, L238, L244](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/LaporanPage.tsx#L214)
+
+```typescript
+// Line 214 — Guard check uses user but NOT effectiveClubId
+if (!user || !profile?.club_id || previewData.length === 0) return;
+
+// Line 238 — Upload path uses profile.club_id
+await supabase.storage.from('reports').upload(`${profile.club_id}/${fileName}`, blob);
+
+// Line 244 — DB insert uses profile.club_id
+await supabase.from('club_reports').insert({ club_id: profile.club_id, ... });
+```
+
+`handleConfirmGenerate` uses `profile.club_id` (primary club only) even though the rest of the page correctly uses `effectiveClubId` (line 62). If a user switches to Club B via ClubSwitcher, previews data from Club B, but the PDF report is saved under Club A.
+
+```diff
+-if (!user || !profile?.club_id || previewData.length === 0) return;
++if (!user || !effectiveClubId || previewData.length === 0) return;
+
+-await supabase.storage.from('reports').upload(`${profile.club_id}/${fileName}`, blob);
++await supabase.storage.from('reports').upload(`${effectiveClubId}/${fileName}`, blob);
+
+-await supabase.from('club_reports').insert({ club_id: profile.club_id, ... });
++await supabase.from('club_reports').insert({ club_id: effectiveClubId, ... });
+```
+
+---
+
+### WARN-17 🆕: `PenasihatLogPage` Renders Wrong Field Names from `club_logs`
+
+**Location:** [PenasihatLogPage.tsx L69-77](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/PenasihatLogPage.tsx#L69-L77)
+
+```typescript
+// Line 69 — Reads log.action_type
+<span>{log.action_type}</span>
+// Line 74 — Reads log.description
+<p>{log.description}</p>
+// Line 76 — Reads log.actor_name
+<span>{log.actor_name}</span>
+```
+
+But `club_logs` is inserted elsewhere (JppReviewPage line 143-150) with fields `type` and `content`:
+
+```typescript
+await supabase.from('club_logs').insert({
+  club_id: ..., user_id: ...,
+  type: 'report_approved',    // ← Not `action_type`
+  content: 'Laporan diluluskan',  // ← Not `description`
+  // No `actor_name` field inserted anywhere
+});
+```
+
+**Result:** The log page shows blank/undefined for every entry. The field name mapping is completely wrong:
+
+```diff
+-<span>{log.action_type}</span>
++<span>{log.type}</span>
+
+-<p>{log.description}</p>
++<p>{log.content}</p>
+
+-<span>{log.actor_name}</span>
++<span>{log.user_id}</span>
+```
+
+> [!WARNING]
+> The advisor log page will show entirely blank entries during your presentation. This is a visible bug.
+
+---
+
+### WARN-18 🆕: `JppReviewPage` Uses TypeScript Interface with camelCase — DB Returns snake_case
+
+**Location:** [JppReviewPage.tsx L94](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/JppReviewPage.tsx#L94)
+
+```typescript
+// Line 94 — Cast DB response to ClubReport type
+setReports((data ?? []) as unknown as ClubReport[]);
+```
+
+The `ClubReport` TypeScript interface in `types/index.ts` uses **camelCase** (`clubId`, `fileUrl`, `createdAt`, `adminFeedback`), but the DB returns **snake_case** (`club_id`, `file_url`, `created_at`, `admin_feedback`).
+
+The `as unknown as ClubReport[]` cast silences TypeScript but at runtime:
+- `report.clubId` → `undefined` (DB field is `club_id`)
+- `report.fileUrl` → `undefined` (DB field is `file_url`)
+
+However, some references in JSX use camelCase (`report.clubId` on line 167, `report.fileUrl` on line 381) while others directly use what comes from the DB. The code works by accident because JavaScript doesn't throw on `undefined` property access — the template just renders empty strings.
+
+**Fix:** Either transform the DB response to match the interface, or use snake_case consistently:
+
+```typescript
+// Quick fix: access as snake_case directly
+const club = ALL_CLUBS.find(c => c.id === (report as any).club_id);
+```
+
+---
+
+### WARN-19 🆕: `EditAnnouncementModal` Uses `alert()` Instead of `toast()`
+
+**Location:** [EditAnnouncementModal.tsx L26](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/components/ui/EditAnnouncementModal.tsx#L26)
+
+```typescript
+// Line 26
+alert("Gagal mengemaskini pesanan");
+```
+
+Uses browser-native `alert()` which blocks the thread and doesn't match the project's design system. Should use `toast.error()`.
+
+---
+
+### WARN-20 🆕: Header Bell Icon is Decorative — Not Linked to NotificationBell
+
+**Location:** [Header.tsx L104-107](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/components/layout/Header.tsx#L104-L107)
+
+```typescript
+// Line 104-107 — Static bell icon with hardcoded badge dot
+<Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-xl hover:bg-muted/60">
+  <Bell className="h-4 w-4 text-muted-foreground/70" />
+  <Badge className="absolute top-1.5 right-1.5 h-2 w-2 p-0 bg-accent border-none" />
+</Button>
+```
+
+This bell icon:
+1. Has **no `onClick` handler** — clicking it does nothing.
+2. Shows a **permanently visible red dot** regardless of whether unread notifications exist.
+3. Is completely separate from the `NotificationBell` component (which is the actual working notification bell).
+
+**Fix:** Replace with `<NotificationBell />` component, or add an onClick that opens the notification panel.
+
+---
+
+## 📊 DATA OVERFETCHING ANALYSIS
+
+### OVER-1: Cache Invalidation Too Aggressive
+**Location:** [useDashboardData.ts L113](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/hooks/useDashboardData.ts#L113)
+
+### OVER-2: JppAdminPage Downloads All Rows to Count
+**Location:** [JppAdminPage.tsx L84-91](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/JppAdminPage.tsx#L84-L91)
+
+### OVER-3: Stale Cache Fallback Broken
+**Location:** [useDashboardData.ts L100-102](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/hooks/useDashboardData.ts#L100-L102) + [cache.ts L22-24](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/lib/cache.ts#L22-L24)
+
+---
+
+## 🏗️ ARCHITECTURAL ADVISORIES
+
+### ARCH-1: RLS Policies Reference `profiles.role` — Disconnected from Multi-Club
+
+All RLS in `01_arkib_rls.sql` and `04_department_and_membership.sql` check `profiles.role` + `profiles.club_id`. In a multi-club system, a CLUB_PRESIDENT in Club A passes the RLS check for Club B's data because `profiles.role` = `CLUB_PRESIDENT` with no actual club membership verification.
+
+> [!WARNING]
+> Root cause of cross-club data leakage at the DB level.
+
+### ARCH-2: `is_new_register` Flag Race Condition with Browser Lifecycle
+
+### ARCH-3: Duplicate Migration Prefix `07_`
+
+Two files both use `07_`:
+- `07_fix_multiclub_rls.sql` (5,047 bytes)
+- `07_performance_indexes.sql` (4,720 bytes)
+
+### ARCH-4 🆕: `LeaderboardPage` Queries `profiles` Table — Shows Only Primary Club Members
+
+**Location:** [LeaderboardPage.tsx L29-34](file:///c:/Users/Cyborg%2015/Desktop/JPP-POLISAS-main/src/pages/LeaderboardPage.tsx#L29-L34)
+
+```typescript
+const { data } = await supabase
+  .from('profiles')
+  .select('*')
+  .eq('club_id', profile.club_id)  // ← Primary club only
+  .eq('account_status', 'APPROVED')
+  .order('merit', { ascending: false });
+```
+
+Users who joined this club as a secondary membership (via `student_club_memberships`) will NOT appear on the leaderboard. Also fetches `select('*')` which includes potentially sensitive fields (`email`, `phone`, `matric_no`).
+
+---
+
+## 📋 FINAL PRIORITY MATRIX
+
+| ID | Severity | Fix Effort | Description |
+|---|---|---|---|
+| **CRIT-1** | 🔴 Critical | Medium | Role change bypasses server validation |
+| **CRIT-2** | 🔴 Critical | Medium | Bulk approve ignores membership limits |
+| **CRIT-3** | 🔴 Critical | **Low** | Notification body blank (field mismatch) |
+| **CRIT-4** | 🔴 Critical | Low | Merit award race condition (TOCTOU) |
+| **CRIT-5** | 🔴 Critical | **Low** | Self-register as CLUB_ADVISOR |
+| **CRIT-6** | 🔴 Critical | Medium | Task submit/verify has no user check |
+| **CRIT-7** | 🔴 Critical | Low | Search exposes all clubs' data with no scope |
+| WARN-15 | 🟡 Warning | **Low** | Dual Toaster = double toast notifications |
+| WARN-16 | 🟡 Warning | **Low** | Auto-PDF saved to wrong club |
+| WARN-17 | 🟡 Warning | **Low** | Advisor log page blank (wrong field names) |
+| WARN-18 | 🟡 Warning | Medium | JppReviewPage camelCase/snake_case mismatch |
+| WARN-19 | 🟡 Warning | **Low** | `alert()` instead of `toast.error()` |
+| WARN-20 | 🟡 Warning | **Low** | Header bell icon is decorative, always shows dot |
+| ARCH-4 | 🟠 Architecture | Medium | Leaderboard misses multi-club members |
+| + 18 earlier | 🟡–🟠 | Various | See detailed sections above |
+
+---
+
+## 🎯 QUICK WINS FOR TOMORROW'S PRESENTATION
+
+These are **low-effort, high-visibility** fixes you can apply right now:
+
+### 1. Fix Dual Toaster (WARN-15) — 5 seconds
+Remove `<Toaster />` from `main.tsx` line 18.
+
+### 2. Fix Notification Body (CRIT-3) — 10 seconds
+Change `n.message` to `n.content` in `NotificationBell.tsx` line 80.
+
+### 3. Fix Advisor Log Page (WARN-17) — 30 seconds
+Change `log.action_type` → `log.type`, `log.description` → `log.content` in `PenasihatLogPage.tsx`.
+
+### 4. Fix Auto-PDF Club Scope (WARN-16) — 30 seconds
+Replace `profile.club_id` with `effectiveClubId` in `LaporanPage.tsx` lines 214, 238, 244.
+
+### 5. Remove CLUB_ADVISOR from Self-Registration (CRIT-5) — 10 seconds
+Remove `'CLUB_ADVISOR'` from `LEADER_ROLES` array in `LoginPage.tsx` line 14.
+
+### 6. Fix EditAnnouncementModal (WARN-19) — 10 seconds
+Replace `alert(...)` with `toast.error(...)` in `EditAnnouncementModal.tsx` line 26.
+
+---
+
+> **STATUS:** 🟢 **FULL CODEBASE AUDIT COMPLETE** — All 100+ source files, 10 migrations, and all component/lib/hook files have been reviewed. No file left unaudited.

@@ -1,0 +1,241 @@
+import React from 'react';
+import {
+  Document, Page, Text, View, StyleSheet, Image, Font
+} from '@react-pdf/renderer';
+import { format } from 'date-fns';
+import { ms } from 'date-fns/locale';
+
+// Pendaftaran Font (Helvetica)
+Font.register({
+  family: 'Helvetica',
+  fonts: [
+    { src: 'https://cdn.jsdelivr.net/npm/@canvas-fonts/helvetica@1.0.4/Helvetica.ttf' },
+    { src: 'https://cdn.jsdelivr.net/npm/@canvas-fonts/helvetica@1.0.4/Helvetica-Bold.ttf', fontWeight: 'bold' }
+  ]
+});
+
+const styles = StyleSheet.create({
+  page: {
+    padding: 40,
+    fontFamily: 'Helvetica',
+    fontSize: 11,
+    lineHeight: 1.5,
+    position: 'relative'
+  },
+
+  // ── WATERMARK ──
+  watermarkContainer: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: -1,
+  },
+  watermarkImage: {
+    width: 350,
+    opacity: 0.08,
+  },
+
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  logoLeft: {
+    width: 200,
+    height: 110,
+    objectFit: 'contain',
+    marginLeft: 30,
+  },
+  logoRight: {
+    width: 200,
+    height: 110,
+    objectFit: 'contain',
+    marginRight: 30,
+  },
+
+  coverCenter: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: -80,
+  },
+  reportMonthTitle: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    lineHeight: 1.2
+  },
+
+  coverBottom: {
+    position: 'absolute',
+    bottom: 100,
+    left: 40,
+    right: 40,
+    alignItems: 'center'
+  },
+  coverClubName: { fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 4 },
+  coverInstitution: { fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
+
+  sectionTitle: { fontSize: 12, fontWeight: 'bold', marginBottom: 10, marginTop: 10 },
+  table: { width: '100%', borderStyle: 'solid', borderWidth: 1, borderColor: '#000', marginBottom: 20 },
+  tableRow: { flexDirection: 'row' },
+  tableColHeader: { width: '33.33%', borderStyle: 'solid', borderWidth: 1, borderColor: '#000', backgroundColor: '#e2e8f0', padding: 8 },
+  tableCol: { width: '33.33%', borderStyle: 'solid', borderWidth: 1, borderColor: '#000', padding: 8 },
+  tableCellHeader: { fontSize: 10, fontWeight: 'bold' },
+  tableCell: { fontSize: 10, textAlign: 'justify' },
+
+  lampiranTitle: { fontSize: 12, fontWeight: 'bold', marginTop: 10, textDecoration: 'underline' },
+  imageContainer: {
+    flexDirection: 'row',
+    gap: 15,
+    marginTop: 15,
+    marginBottom: 15,
+    justifyContent: 'center',
+    flexWrap: 'wrap'
+  },
+  imageWrapper: { width: '45%', height: 180 },
+  image: { width: '100%', height: '100%', objectFit: 'contain' },
+  lampiranDesc: { fontSize: 11, textAlign: 'justify', marginTop: 10 },
+
+  signatureSection: {
+    marginTop: 40,
+    flexDirection: 'column',
+    gap: 40,
+  },
+  signBox: { width: 300 },
+  signRoleTitle: { fontSize: 11, marginBottom: 35 },
+  signLine: { borderBottomWidth: 1, borderBottomColor: '#000', marginBottom: 5 },
+  signText: { fontSize: 11, fontWeight: 'bold' },
+  signRole: { fontSize: 10 }
+});
+
+interface LaporanPDFProps {
+  clubName: string;
+  monthYear: string;
+  activities: any[];
+  presidenName?: string;
+  clubLogoUrl?: string;
+}
+
+export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
+  clubName,
+  monthYear,
+  activities,
+  presidenName = "NAMA PRESIDEN KELAB",
+  clubLogoUrl
+}) => {
+  const poliLogo = "https://ujklcxfbmmzxsqtidjtz.supabase.co/storage/v1/object/public/reports/LOGO%20POLISAS.jpeg";
+
+  return (
+    <Document>
+      {/* ── MUKA DEPAN ── */}
+      <Page size="A4" style={styles.page}>
+        <View style={styles.headerRow}>
+          <Image src={poliLogo} style={styles.logoLeft} />
+          {clubLogoUrl && <Image src={clubLogoUrl} style={styles.logoRight} />}
+        </View>
+
+        <View style={styles.coverCenter}>
+          <Text style={styles.reportMonthTitle}>
+            LAPORAN BULANAN{'\n'}
+            {monthYear.toUpperCase()}
+          </Text>
+        </View>
+
+        <View style={styles.coverBottom}>
+          <Text style={styles.coverClubName}>{clubName.toUpperCase()}</Text>
+          <Text style={styles.coverInstitution}>POLITEKNIK SULTAN HAJI AHMAD SHAH</Text>
+        </View>
+      </Page>
+
+      {/* ── ISI LAPORAN ── */}
+      {activities.map((act, index) => {
+        // Logik mendapatkan gambar yang sah dari kod lama
+        const validImages = Array.isArray(act.image_urls)
+          ? act.image_urls.filter((url: any) => typeof url === 'string' && url.trim() !== '')
+          : [];
+
+        return (
+          <Page key={index} size="A4" style={styles.page}>
+            <View style={styles.watermarkContainer} fixed>
+              {clubLogoUrl && <Image src={clubLogoUrl} style={styles.watermarkImage} />}
+            </View>
+
+            <Text style={styles.sectionTitle}>{index + 1}. PERINCIAN AKTIVITI</Text>
+
+            <View style={styles.table}>
+              <View style={styles.tableRow}>
+                <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>TARIKH</Text></View>
+                <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>AKTIVITI</Text></View>
+                <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>TINDAKAN</Text></View>
+              </View>
+              <View style={styles.tableRow}>
+                <View style={styles.tableCol}>
+                  <Text style={styles.tableCell}>
+                    {act.start_date ? format(new Date(act.start_date), 'd MMMM yyyy', { locale: ms }) : '-'}
+                  </Text>
+                </View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>{act.title}</Text></View>
+                <View style={styles.tableCol}><Text style={styles.tableCell}>{act.tindakan || '-'}</Text></View>
+              </View>
+            </View>
+
+            {/* ── LAMPIRAN ── */}
+            <Text style={styles.lampiranTitle}>LAMPIRAN</Text>
+
+            {validImages.length > 0 ? (
+              <View style={styles.imageContainer}>
+                {validImages.map((img: string, i: number) => (
+                  <View key={i} style={styles.imageWrapper}>
+                    <Image src={img} style={styles.image} />
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text style={{ fontSize: 10, marginTop: 10, color: '#666' }}>[ Tiada gambar dilampirkan ]</Text>
+            )}
+
+            {/* Huraiam / Deskripsi Lampiran */}
+            {act.description && (
+              <Text style={styles.lampiranDesc}>{act.description}</Text>
+            )}
+
+          </Page>
+        );
+      })}
+
+      {/* ── MUKA SURAT PENGESAHAN ── */}
+      <Page size="A4" style={styles.page}>
+        <View style={styles.watermarkContainer} fixed>
+          {clubLogoUrl && <Image src={clubLogoUrl} style={styles.watermarkImage} />}
+        </View>
+
+        <View style={styles.signatureSection}>
+          <View style={styles.signBox}>
+            <Text style={styles.signRoleTitle}>Disediakan oleh:</Text>
+            <View style={styles.signLine} />
+            <Text style={styles.signText}>SETIAUSAHA</Text>
+            <Text style={styles.signRole}>{clubName.toUpperCase()}</Text>
+          </View>
+
+          <View style={styles.signBox}>
+            <Text style={styles.signRoleTitle}>Disemak oleh:</Text>
+            <View style={styles.signLine} />
+            <Text style={styles.signText}>{presidenName.toUpperCase()}</Text>
+            <Text style={styles.signText}>PRESIDEN</Text>
+            <Text style={styles.signRole}>{clubName.toUpperCase()}</Text>
+          </View>
+
+          <View style={styles.signBox}>
+            <Text style={styles.signRoleTitle}>Disahkan oleh:</Text>
+            <View style={styles.signLine} />
+            <Text style={styles.signText}>YANG DIPERTUA</Text>
+            <Text style={styles.signText}>JAWATANKUASA PERWAKILAN PELAJAR</Text>
+          </View>
+        </View>
+      </Page>
+    </Document>
+  );
+};

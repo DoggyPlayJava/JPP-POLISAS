@@ -1,0 +1,126 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext'; // Import useAuth di sini
+import { ProtectedRoute, PublicRoute } from '@/components/RouteGuards';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { LoginPage } from '@/pages/LoginPage';
+import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
+import { OnboardingPage } from '@/pages/OnboardingPage';
+import { LandingPage } from '@/pages/LandingPage';
+import { DashboardPage } from '@/pages/DashboardPage';
+import { KelabPage } from '@/pages/KelabPage';
+import { AktivitiFull } from '@/pages/AktivitiFull';
+import { AhliPage } from '@/pages/AhliPage';
+import { SettingsPage } from '@/pages/SettingsPage';
+import { LaporanPage } from '@/pages/LaporanPage';
+import { SemakanLaporanPage } from '@/pages/SemakanLaporanPage';
+import { CarianPage } from '@/pages/CarianPage';
+import { PendingPage } from '@/pages/PendingPage';
+import { ClubDetailPage } from '@/pages/ClubDetailPage';
+import { RejectedPage } from '@/pages/RejectedPage';
+import { JppAdminPage } from '@/pages/JppAdminPage';
+import { UrusKelabPage } from '@/pages/UrusKelabPage'; // Import di atas sekali
+import { LeaderboardPage } from './pages/LeaderboardPage';
+import { PenasihatLogPage } from './pages/PenasihatLogPage';
+import { KarnivalVotingPage } from './pages/KarnivalVotingPage';
+
+
+function RequireApproval({ children }: { children: React.ReactNode }) {
+  const { profile, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse font-black text-xs uppercase tracking-[0.3em] opacity-20">Mengesahkan Akses...</div>
+      </div>
+    );
+  }
+
+  // A. Jika status REJECTED, hantar ke skrin Ditolak
+  if (profile?.account_status === 'REJECTED') {
+    return <RejectedPage />;
+  }
+
+  // B. Oleh sebab account_status kini secara automatik APPROVED sebaik pendaftaran,
+  // mana-mana 'PENDING' lama (atau kelulusan terbantut) kita halang ke paparan ringkas
+  // atau terus lepaskan jika selamat. TETAPI pengguna mengadu: "lepas register kena approval".
+  // Maka, secara drastik kita buang rintangan PENDING ini terus. 
+  // Biar pengguna masuk asalkan mereka dah Verify Email dan Login.
+
+  // C. Lepaskan log masuk jika sah
+  return <>{children}</>;
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      {/* 🔓 PUBLIC ROUTES */}
+      <Route element={<PublicRoute />}>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+      </Route>
+
+      {/* 🔑 RESET PASSWORD ROUTE (Standalone to handle Supabase recovery event without kicks) */}
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+      {/* 🔐 PROTECTED ROUTES */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/onboarding" element={<OnboardingPage />} />
+
+        {/* ✅ WRAP SEMUA HALAMAN DALAM APPLAYOUT DENGAN REQUIREAPPROVAL */}
+        <Route element={<RequireApproval><AppLayout /></RequireApproval>}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/kelab" element={<KelabPage />} />
+          <Route path="/sertai-kelab" element={<KelabPage />} />
+          <Route path="/aktiviti" element={<AktivitiFull />} />
+          <Route path="/ahli" element={<AhliPage />} />
+          <Route path="/tetapan" element={<SettingsPage />} />
+          <Route path="/carian" element={<CarianPage />} />
+          <Route path="/kelab/:id" element={<ClubDetailPage />} />
+          <Route path="/laporan" element={<LaporanPage />} />
+          <Route path="/urus-kelab" element={<UrusKelabPage />} />
+          <Route path="/semakan-laporan" element={<SemakanLaporanPage />} />
+          <Route path="/jpp-admin" element={<JppAdminPage />} />
+          <Route path="/leaderboard" element={<LeaderboardPage />} />
+          <Route path="/logs" element={<PenasihatLogPage />} />
+          <Route path="/karnival" element={<KarnivalVotingPage />} />
+        </Route>
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+import { ThemeProvider } from '@/contexts/ThemeContext';
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <ThemeProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <AppRoutes />
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                className: 'glass !bg-white/70 dark:!bg-slate-900/70 !backdrop-blur-xl !border-white/20 !shadow-2xl rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest text-slate-900 dark:text-white py-4 px-6',
+                duration: 4000,
+                success: {
+                  iconTheme: { primary: '#10b981', secondary: '#fff' },
+                },
+                error: {
+                  iconTheme: { primary: '#ef4444', secondary: '#fff' },
+                },
+              }}
+            />
+          </AuthProvider>
+        </BrowserRouter>
+      </ThemeProvider>
+    </ErrorBoundary>
+  );
+}
+
+export default App;
