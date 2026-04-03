@@ -275,13 +275,22 @@ export function SemakanLaporanPage() {
       </div>
 
       <Tabs defaultValue="programs" className="w-full">
-        <TabsList className="bg-muted p-1.5 rounded-[1.5rem] mb-10 w-full md:w-auto flex flex-col md:flex-row h-auto md:h-14 border border-border/50 shadow-inner">
-          <TabsTrigger value="programs" className="rounded-xl font-black tracking-wide px-8 py-3 text-xs md:w-auto w-full data-[state=active]:bg-card data-[state=active]:shadow-sm">Pengurusan Program</TabsTrigger>
-          <TabsTrigger value="reports" className="rounded-xl font-black tracking-wide px-8 py-3 text-xs md:w-auto w-full data-[state=active]:bg-card data-[state=active]:shadow-sm">Laporan Kelab (General)</TabsTrigger>
-          <TabsTrigger value="takwim" className="rounded-xl font-black tracking-wide px-8 py-3 text-xs md:w-auto w-full data-[state=active]:bg-card data-[state=active]:shadow-sm">Pemantauan Takwim</TabsTrigger>
-          <TabsTrigger value="arkib" onClick={handleArkibTab} className="rounded-xl font-black tracking-wide px-8 py-3 text-xs md:w-auto w-full data-[state=active]:bg-card data-[state=active]:shadow-sm">
-            Arkib Berpusat
-          </TabsTrigger>
+        <TabsList className="bg-white/60 backdrop-blur-xl p-2 rounded-[2.5rem] mb-12 w-full flex flex-col xl:flex-row h-auto border-2 border-primary/5 shadow-[0_8px_30px_rgba(0,0,0,0.04)] gap-2">
+          {[
+            { value: 'programs', label: 'Pengurusan Program' },
+            { value: 'reports', label: 'Laporan Kelab (General)' },
+            { value: 'takwim', label: 'Pemantauan Takwim' },
+            { value: 'arkib', label: 'Arkib Berpusat', onClick: handleArkibTab }
+          ].map(t => (
+            <TabsTrigger 
+              key={t.value} 
+              value={t.value} 
+              onClick={t.onClick}
+              className="rounded-[2rem] font-black tracking-widest px-8 py-4 text-[10px] sm:text-[11px] uppercase transition-all duration-500 text-slate-500 hover:text-primary data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-rose-800 data-[state=active]:text-white data-[state=active]:shadow-[0_12px_24px_-8px_rgba(139,26,26,0.5)] data-[state=active]:scale-[1.02] flex-1 whitespace-nowrap"
+            >
+              {t.label}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
         {/* --- TAB 1: PENGURUSAN PROGRAM --- */}
