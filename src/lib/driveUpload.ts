@@ -7,7 +7,7 @@
 
 import { supabase } from '@/lib/supabase';
 
-export type UploadSubfolder = 'kertas_kerja' | 'postmortem' | 'aktiviti' | 'avatar' | 'lain';
+export type UploadSubfolder = 'kertas_kerja' | 'postmortem' | 'aktiviti' | 'avatar' | 'lain' | (string & {});
 
 /**
  * Compress gambar menggunakan Canvas API.
@@ -119,4 +119,70 @@ export async function uploadMultipleImages(
     urls.push(await uploadFileToDrive(file, subfolder));
   }
   return urls;
+}
+
+/**
+ * Upload dokumen PDF terus ke Google Drive menggunakan Supabase Edge Function
+ * (Menjimatkan kuota Supabase Storage)
+ */
+export async function uploadPdfToDrive(
+  file: File,
+  subfolder: UploadSubfolder = 'lain',
+  customName?: string
+): Promise<string> {
+  if (file.type !== 'application/pdf') {
+    throw new Error('Hanya fail PDF dibenarkan untuk dimuat naik secara hibrid ke Google Drive.');
+  }
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    throw new Error('Sila log masuk untuk memuat naik fail.');
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('subfolder', subfolder);
+  if (customName) formData.append('customName', customName);
+
+  // Direct fetch to Edge Function (bypass supabase.functions.invoke to get full error visibility)
+  const SUPABASE_URL = 'https://ujklcxfbmmzxsqtidjtz.supabase.co';
+  const SUPABASE_ANON_KEY = session.access_token;
+
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/upload-to-drive`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: formData,
+  });
+
+  const responseText = await response.text();
+  console.log(`[drive-upload] Status: ${response.status}, Body: ${responseText}`);
+
+  if (!response.ok) {
+    let errorMsg = `Edge Function Error (${response.status})`;
+    try {
+      const errJson = JSON.parse(responseText);
+      errorMsg = errJson.error || errorMsg;
+    } catch { /* response was not JSON */ }
+    throw new Error(`Muat naik ke Drive gagal: ${errorMsg}`);
+  }
+
+  let data: any;
+  try {
+    data = JSON.parse(responseText);
+  } catch {
+    throw new Error('Respons Edge Function bukan JSON yang sah.');
+  }
+
+  if (data?.error) {
+    throw new Error(`Ralat Google Drive: ${data.error}`);
+  }
+
+  if (!data?.url) {
+    throw new Error('URL dokumen tidak dikembalikan oleh Drive.');
+  }
+
+  console.log(`[upload-drive] Berjaya PDF: ${data.url}`);
+  return data.url;
 }

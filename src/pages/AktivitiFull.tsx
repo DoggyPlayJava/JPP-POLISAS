@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { uploadFileToDrive } from '@/lib/driveUpload';
+import { uploadFileToDrive, uploadPdfToDrive } from '@/lib/driveUpload';
 import { queryCache } from '@/lib/cache';
 import { toast } from 'react-hot-toast';
 import {
@@ -168,7 +168,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
       .filter(f => f.type.startsWith('image/'))
       .slice(0, remainingSlots);
 
-    const toastId = toast.loading(`Memuat naik ${filesToUpload.length} gambar ke Google Drive...`);
+    const toastId = toast.loading(`Memuat naik ${filesToUpload.length} gambar...`);
     const urls: string[] = [];
     try {
       for (let i = 0; i < filesToUpload.length; i++) {
@@ -178,12 +178,12 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
       }
       setForm((prev: any) => ({ ...prev, imageUrls: [...(prev.imageUrls || []), ...urls] }));
       if (files.length > remainingSlots) {
-        toast.success(`${urls.length} gambar dimuat naik ke Drive (Maksimum 3).`, { id: toastId });
+        toast.success(`${urls.length} gambar dimuat naik (Maksimum 3).`, { id: toastId });
       } else {
         toast.success(`${urls.length} gambar berjaya dimuat naik! ☁️`, { id: toastId });
       }
     } catch (err: any) {
-      toast.error(err.message || 'Gagal upload gambar ke Drive.', { id: toastId });
+      toast.error(err.message || 'Gagal upload gambar.', { id: toastId });
     }
   };
 
@@ -656,15 +656,15 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'kertas_kerja' | 'post_mortem') => {
     const file = e.target.files?.[0];
     if (!file || file.type !== 'application/pdf') { toast.error('Hanya PDF!'); return; }
-    const toastId = toast.loading('Memuat naik...');
+    const toastId = toast.loading('Memuat naik ke Google Drive...');
     try {
-      const fileName = `${type}_${selectedClubId}_${Date.now()}.pdf`;
-      const filePath = `program_docs/${fileName}`;
-      await supabase.storage.from('reports').upload(filePath, file);
-      const { data: { publicUrl } } = supabase.storage.from('reports').getPublicUrl(filePath);
-      setForm((prev: any) => ({ ...prev, [type === 'kertas_kerja' ? 'urlKertasKerja' : 'urlPostMortem']: publicUrl }));
+      const fileName = `${type}_${selectedClubId}_${Date.now()}`;
+      const url = await uploadPdfToDrive(file, 'program_docs', fileName);
+      setForm((prev: any) => ({ ...prev, [type === 'kertas_kerja' ? 'urlKertasKerja' : 'urlPostMortem']: url }));
       toast.success('Fail sedia!', { id: toastId });
-    } catch { toast.error('Gagal upload.', { id: toastId }); }
+    } catch (err: any) { 
+      toast.error(err.message || 'Gagal upload.', { id: toastId }); 
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -763,7 +763,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
 
   const urgentItems = activities.filter(a =>
     (a.status === 'DRAFT' && differenceInDays(parseISO(a.tarikh_mula), new Date()) <= 14) ||
-    (a.status === 'PENDING_POSTMORTEM' && !!a.jpp_remarks)
+    ((a.status === 'DRAFT' || a.status === 'PENDING_POSTMORTEM') && !!a.jpp_remarks)
   );
   const activeZone = activities.filter(a => ['CONFIRMED', 'PENDING_APPROVAL', 'REQUEST_UNLOCK'].includes(a.status) && !urgentItems.includes(a));
   const draftingZone = activities.filter(a => a.status === 'DRAFT' && !urgentItems.includes(a));
@@ -1160,12 +1160,12 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage 
           )}
         </div>
 
-        {act.jpp_remarks && !isMini && (
+        {act.jpp_remarks && (
           <div className="p-3.5 bg-rose-50/70 rounded-2xl border border-rose-100 flex items-start gap-2">
             <Info size={13} className="text-rose-400 mt-0.5 shrink-0" />
-            <div>
-              <p className="text-[9px] font-black uppercase text-rose-400 tracking-widest mb-0.5">Ulasan JPP</p>
-              <p className="text-[10px] font-bold text-rose-700 italic">{act.jpp_remarks}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] font-black uppercase text-rose-400 tracking-widest mb-0.5">Ulasan / Nota</p>
+              <p className="text-[10px] font-bold text-rose-700 italic break-words">{act.jpp_remarks}</p>
             </div>
           </div>
         )}

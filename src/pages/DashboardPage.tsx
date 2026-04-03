@@ -80,37 +80,46 @@ function ProgramStatusCard({ program, onUnlock }: { program: any, onUnlock: (p: 
   const isRejected = program.status === 'DRAFT' && program.jpp_remarks;
 
   return (
-    <div className="p-5 bg-muted/30 border border-border/50 rounded-[1.5rem] flex items-center justify-between group hover:bg-card hover:shadow-xl transition-all border-l-4"
+    <div className="p-5 bg-muted/30 border border-border/50 rounded-[1.5rem] flex flex-col gap-4 group hover:bg-card hover:shadow-xl transition-all border-l-4"
       style={{ borderLeftColor: isConfirmed ? '#10b981' : isPending ? '#f59e0b' : '#e2e8f0' }}>
-      <div className="flex items-center gap-4">
-        <div className={cn(
-          "w-12 h-12 rounded-2xl flex items-center justify-center",
-          isConfirmed ? "bg-emerald-500/10 text-emerald-600" : isPending ? "bg-amber-500/10 text-amber-600" : "bg-muted text-muted-foreground"
-        )}>
-          {isConfirmed ? <CheckCircle2 size={20} /> : <FileText size={20} />}
-        </div>
-        <div className="space-y-1">
-          <h4 className="font-black text-sm text-foreground truncate w-32 sm:w-48 leading-none">{program.nama_program}</h4>
-          <div className="flex items-center gap-2">
-            <Badge className={cn(
-              "text-[10px] font-black uppercase px-2 py-0 border-none",
-              isConfirmed ? "bg-emerald-500/10 text-emerald-600" : isPending ? "bg-amber-500/10 text-amber-600" : "bg-muted text-muted-foreground"
-            )}>
-              {program.status.replace('_', ' ')}
-            </Badge>
-            {isRejected && <span className="text-[10px] text-rose-500 font-bold animate-pulse">Perlu Pindaan</span>}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className={cn(
+            "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0",
+            isConfirmed ? "bg-emerald-500/10 text-emerald-600" : isPending ? "bg-amber-500/10 text-amber-600" : "bg-muted text-muted-foreground"
+          )}>
+            {isConfirmed ? <CheckCircle2 size={20} /> : <FileText size={20} />}
+          </div>
+          <div className="space-y-1 min-w-0 flex-1">
+            <h4 className="font-black text-sm text-foreground truncate leading-none">{program.nama_program}</h4>
+            <div className="flex items-center gap-2 flex-wrap mt-1">
+              <Badge className={cn(
+                "text-[10px] font-black uppercase px-2 py-0 border-none shrink-0",
+                isConfirmed ? "bg-emerald-500/10 text-emerald-600" : isPending ? "bg-amber-500/10 text-amber-600" : "bg-muted text-muted-foreground"
+              )}>
+                {program.status.replace('_', ' ')}
+              </Badge>
+              {isRejected && <span className="text-[10px] text-rose-500 font-bold animate-pulse">Perlu Pindaan</span>}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="flex items-center gap-2">
-        {isConfirmed && (
-          <Button onClick={() => onUnlock(program)} variant="ghost" size="sm" className="h-8 px-3 text-[10px] font-black uppercase text-indigo-500 hover:bg-indigo-500/10 rounded-lg gap-1">
-            <Unlock size={12} /> Unlock
-          </Button>
-        )}
-        <ChevronRight size={18} className="text-muted-foreground/30 group-hover:translate-x-1 transition-transform" />
+        <div className="flex items-center gap-2 shrink-0">
+          {isConfirmed && (
+            <Button onClick={() => onUnlock(program)} variant="ghost" size="sm" className="h-8 px-3 text-[10px] font-black uppercase text-indigo-500 hover:bg-indigo-500/10 rounded-lg gap-1 hidden sm:flex">
+              <Unlock size={12} /> Unlock
+            </Button>
+          )}
+          <ChevronRight size={18} className="text-muted-foreground/30 group-hover:translate-x-1 transition-transform" />
+        </div>
       </div>
+      
+      {program.jpp_remarks && (
+        <div className="p-3 bg-rose-50/70 border border-rose-100 rounded-xl">
+          <p className="text-[9px] font-black uppercase tracking-widest text-rose-500 mb-0.5">Ulasan / Nota</p>
+          <p className="text-[10px] text-rose-800 font-bold italic line-clamp-2">{program.jpp_remarks}</p>
+        </div>
+      )}
     </div>
   );
 }

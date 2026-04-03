@@ -74,7 +74,7 @@ export function LoginPage() {
       toast.error('Sila lengkapkan semua maklumat termasuk Nombor Matrik.');
       return;
     }
-    if (registerMode === 'student' && !jabatan) {
+    if (!jabatan) {
       toast.error('Sila pilih jabatan anda.');
       return;
     }
@@ -86,10 +86,7 @@ export function LoginPage() {
     setIsLoading(true);
     try {
       const isLeader = registerMode === 'leader';
-      const academikClubId = registerMode === 'student'
-        ? getAkademikClubId(jabatan as JabatanValue)
-        : null;
-
+      const academikClubId = getAkademikClubId(jabatan as JabatanValue);
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -98,9 +95,9 @@ export function LoginPage() {
           data: {
             full_name: fullName.trim(),
             matric_no: matricNo.trim(),
-            club_id: isLeader ? leaderClubId : academikClubId,
-            role: isLeader ? leaderRole : 'CLUB_MEMBER',
-            department: registerMode === 'student' ? jabatan : null,
+            club_id: academikClubId,
+            role: 'CLUB_MEMBER',
+            department: jabatan,
           },
         },
       });
@@ -108,16 +105,17 @@ export function LoginPage() {
 
       if (data.user) {
         localStorage.setItem('is_new_register', 'true');
+        // FIX SECURITY LEAK: Create profile as regular member and assign to academic club by default
         await supabase.from('profiles').update({
           full_name: fullName.trim(),
           matric_no: matricNo.trim(),
-          club_id: isLeader ? leaderClubId : academikClubId,
-          role: isLeader ? leaderRole : 'CLUB_MEMBER',
-          department: registerMode === 'student' ? jabatan : null,
+          club_id: academikClubId,
+          role: 'CLUB_MEMBER',
+          department: jabatan,
           account_status: 'APPROVED',
         }).eq('id', data.user.id);
 
-        if (!isLeader && academikClubId) {
+        if (academikClubId) {
           await supabase.from('student_club_memberships').insert({
             user_id: data.user.id,
             club_id: academikClubId,
@@ -128,12 +126,13 @@ export function LoginPage() {
         }
         
         if (isLeader) {
+          // Send leader request purely as PENDING
           await supabase.from('student_club_memberships').insert({
             user_id: data.user.id,
             club_id: leaderClubId,
             role: leaderRole,
             account_status: 'PENDING',
-            is_primary: true,
+            is_primary: false,
           }).select();
         }
       }
@@ -141,7 +140,7 @@ export function LoginPage() {
       toast.success(
         registerMode === 'student'
           ? `Akaun berjaya didaftar! Sila semak peti masuk emel anda untuk pengesahan.`
-          : 'Akaun berjaya didaftar! Penasihat kelab akan menyemak permohonan kepimpinan anda.'
+          : 'Akaun berjaya didaftar! Anda dimasukkan ke Kelab Akademik anda. Permohonan kepimpinan anda akan disemak oleh Penasihat.'
       );
 
       setIsSignUp(false);
@@ -302,39 +301,42 @@ export function LoginPage() {
                       </button>
                     </div>
 
+                    <div className="space-y-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">
+                          <Building2 className="inline w-3.5 h-3.5 mr-1" />Jabatan Akademik Anda
+                        </Label>
+                        <Select value={jabatan} onValueChange={v => setJabatan(v as JabatanValue)} required>
+                          <SelectTrigger className="h-12 rounded-xl bg-muted/40 border-border/60 focus:ring-accent/40 font-medium">
+                            <SelectValue placeholder="Pilih jabatan akademik anda..." />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-2xl border-border/60 shadow-2xl">
+                            {JABATAN_LIST.map(j => (
+                              <SelectItem key={j.value} value={j.value} className="rounded-lg font-medium py-3">
+                                {j.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {jabatan === 'geomatik' && (
+                          <p className="text-[11px] text-amber-600 font-medium pt-1">
+                            ⚠️ Anda mungkin perlu mohon Kelab Akademik GEOSAS sendiri selepas log masuk.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
                     <AnimatePresence mode="wait">
                       {registerMode === 'student' ? (
                         <motion.div key="student" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
                           <div className="p-3 rounded-xl bg-blue-500/8 border border-blue-500/20 text-[11px] text-blue-600 font-medium leading-relaxed">
-                            💡 Pilih jabatan anda. Anda akan <strong>auto-diasingkan</strong> ke Kelab Akademik masing-masing. Selepas log masuk, layari <strong>"Sertai Kelab"</strong> untuk menyertai kelab umum tambahan.
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">
-                              <Building2 className="inline w-3.5 h-3.5 mr-1" />Jabatan Anda
-                            </Label>
-                            <Select value={jabatan} onValueChange={v => setJabatan(v as JabatanValue)} required>
-                              <SelectTrigger className="h-12 rounded-xl bg-muted/40 border-border/60 focus:ring-accent/40 font-medium">
-                                <SelectValue placeholder="Pilih jabatan anda..." />
-                              </SelectTrigger>
-                              <SelectContent className="rounded-2xl border-border/60 shadow-2xl">
-                                {JABATAN_LIST.map(j => (
-                                  <SelectItem key={j.value} value={j.value} className="rounded-lg font-medium py-3">
-                                    {j.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {jabatan === 'geomatik' && (
-                              <p className="text-[11px] text-amber-600 font-medium pt-1">
-                                ⚠️ GEOSAS tidak mempunyai auto-assign. Anda perlu apply sendiri selepas log masuk.
-                              </p>
-                            )}
+                            💡 Anda akan <strong>auto-diasingkan</strong> ke Kelab Akademik secara rasmi. Selepas log masuk, layari <strong>"Sertai Kelab"</strong> untuk menyertai kelab sukan/beruniform yang lain.
                           </div>
                         </motion.div>
                       ) : (
                         <motion.div key="leader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
                           <div className="p-3 rounded-xl bg-amber-500/8 border border-amber-500/20 text-[11px] text-amber-700 font-medium leading-relaxed">
-                            👑 Permohonan Presiden/MT/Penasihat perlu diluluskan oleh Penasihat kelab. JPP boleh intervene jika perlu.
+                            👑 Anda akan dimasukkan ke Kelab Akademik anda dahulu. Permohonan jawatan kepimpinan bagi kelab yang dipilih di bawah tertakluk pada kelulusan Penasihat kelab.
                           </div>
                           <div className="space-y-1.5">
                             <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Peranan</Label>
@@ -352,10 +354,10 @@ export function LoginPage() {
                             </Select>
                           </div>
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Kelab</Label>
+                            <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Kelab (Mohon Kepimpinan)</Label>
                             <Select value={leaderClubId} onValueChange={setLeaderClubId} required>
                               <SelectTrigger className="h-12 rounded-xl bg-muted/40 border-border/60 font-medium">
-                                <SelectValue placeholder="Pilih kelab anda..." />
+                                <SelectValue placeholder="Pilih kelab untuk diterajui..." />
                               </SelectTrigger>
                               <SelectContent className="rounded-2xl border-border/60 shadow-2xl max-h-60">
                                 {ALL_CLUBS.filter(c => !['Badan Beruniform', 'badan_beruniform'].includes(c.category)).map(c => (

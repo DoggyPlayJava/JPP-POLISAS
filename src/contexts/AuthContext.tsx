@@ -109,34 +109,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return ids[0];
         });
       } else if (profileData?.club_id) {
-        // AUTO-REPAIR: Jika tiada di junction table, insert profil utama ke dalam junction table!
-        console.log("🛠️ Auto-repairing missing club membership for user...");
-        const { error: insErr } = await supabase.from('student_club_memberships').insert({
-          user_id: userId,
-          club_id: profileData.club_id,
-          role: profileData.role || 'CLUB_MEMBER',
-          account_status: 'APPROVED',
-          is_primary: true
-        });
-        
-        if (!insErr) {
-           console.log("✅ Auto-repair successful! Refreshing profile...");
-           // Panggil semula diri sendiri sekali sahaja utk muat data yg baru disisip
-           const { data: newMemberships } = await supabase
-             .from('student_club_memberships')
-             .select('club_id, role, is_primary')
-             .eq('user_id', userId)
-             .eq('account_status', 'APPROVED');
-             
-           if (newMemberships && newMemberships.length > 0) {
-             const ids = newMemberships.map((m: any) => m.club_id);
-             setUserClubIds(ids);
-             setUserMemberships(newMemberships.map((m: any) => ({
-               club_id: m.club_id, role: m.role, is_primary: m.is_primary
-             })));
-           }
+        // FIX SECURITY LEAK: Before auto-repairing, ensure there isn't already a PENDING/REJECTED request for this club!
+        const { data: existingAll } = await supabase
+          .from('student_club_memberships')
+          .select('id, account_status')
+          .eq('user_id', userId)
+          .eq('club_id', profileData.club_id);
+
+        if (!existingAll || existingAll.length === 0) {
+          // AUTO-REPAIR ONLY IF TRULY MISSING
+          console.log("🛠️ Auto-repairing missing club membership for user...");
+          const { error: insErr } = await supabase.from('student_club_memberships').insert({
+            user_id: userId,
+            club_id: profileData.club_id,
+            role: profileData.role || 'CLUB_MEMBER',
+            account_status: 'APPROVED',
+            is_primary: true
+          });
+          
+          if (!insErr) {
+             console.log("✅ Auto-repair successful! Refreshing profile...");
+             const { data: newMemberships } = await supabase
+               .from('student_club_memberships')
+               .select('club_id, role, is_primary')
+               .eq('user_id', userId)
+               .eq('account_status', 'APPROVED');
+               
+             if (newMemberships && newMemberships.length > 0) {
+               const ids = newMemberships.map((m: any) => m.club_id);
+               setUserClubIds(ids);
+               setUserMemberships(newMemberships.map((m: any) => ({
+                 club_id: m.club_id, role: m.role, is_primary: m.is_primary
+               })));
+             }
+          } else {
+             console.error("❌ Auto-repair failed:", insErr);
+          }
         } else {
-           console.error("❌ Auto-repair failed:", insErr);
+           console.log("⚠️ Auto-repair skipped: Found existing membership with status: ", existingAll[0].account_status);
+           setUserClubIds([]);
+           setUserMemberships([]);
+           setSelectedClubIdState(null);
+           localStorage.removeItem('selectedClubId');
         }
       } else {
         // Jatuh ke sini jika tiada pendaftaran & tiada auto-repair yg diperlukan

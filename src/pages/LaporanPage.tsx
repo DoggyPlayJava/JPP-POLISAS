@@ -34,6 +34,7 @@ import {
 import { pdf } from '@react-pdf/renderer';
 import { LaporanPDFTemplate } from '@/components/reports/LaporanPDFTemplate';
 import { normalizeReportData } from '@/lib/report-utils';
+import { uploadPdfToDrive } from '@/lib/driveUpload';
 
 const ALL_DOC_TYPES = [
   { value: 'Laporan Aktiviti', label: 'Laporan Aktiviti (Auto-Jana)', icon: Zap },
@@ -111,15 +112,17 @@ export function LaporanPage() {
     setSubmitting(true); setProgress(20);
     try {
       const ts = Date.now();
-      const storagePath = `${effectiveClubId}/${effectiveClubId}_${reportType.replace(/\s+/g, '_')}_${ts}.pdf`;
-      const { data: uploadData, error: uploadError } = await supabase.storage.from('reports').upload(storagePath, file);
-      if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from('reports').getPublicUrl(uploadData.path);
+      const customName = `${effectiveClubId}_${reportType.replace(/\s+/g, '_')}_${ts}`;
+      
+      setProgress(50);
+      const url = await uploadPdfToDrive(file, effectiveClubId as any, customName);
+      setProgress(80);
+
       const { error: dbError } = await supabase.from('club_reports').insert({
         club_id: effectiveClubId,
         submitted_by: user.id,
         report_type: reportType,
-        file_url: urlData.publicUrl,
+        file_url: url,
         file_name: `${reportType} - ${file.name}`,
         status: 'Menunggu',
       });
@@ -234,17 +237,18 @@ export function LaporanPage() {
       const blob = await asPdf.toBlob();
       setProgress(70);
 
-      const fileName = `Auto_Laporan_${targetMonth}_${Date.now()}.pdf`;
-      const { data: uploadData, error: uploadErr } = await supabase.storage.from('reports').upload(`${effectiveClubId}/${fileName}`, blob);
-      if (uploadErr) throw uploadErr;
-
-      const { data: { publicUrl } } = supabase.storage.from('reports').getPublicUrl(`${effectiveClubId}/${fileName}`);
+      const fileName = `Auto_Laporan_${targetMonth}_${Date.now()}`;
+      // Tukar Blob kepada File untuk Edge Function
+      const pdfFile = new File([blob], `${fileName}.pdf`, { type: 'application/pdf' });
+      
+      const url = await uploadPdfToDrive(pdfFile, effectiveClubId as any, fileName);
+      setProgress(90);
 
       await supabase.from('club_reports').insert({
         club_id: effectiveClubId,
         submitted_by: user.id,
         report_type: 'Laporan Aktiviti',
-        file_url: publicUrl,
+        file_url: url,
         file_name: `Laporan Aktiviti - ${monthLabel}.pdf`,
         status: 'Menunggu',
       });

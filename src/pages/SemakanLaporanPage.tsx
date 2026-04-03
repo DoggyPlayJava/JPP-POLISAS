@@ -346,6 +346,13 @@ export function SemakanLaporanPage() {
                         })()}
                         <h3 className="font-black text-xl text-slate-900 leading-tight">{p.nama_program}</h3>
                         <span className="text-xs text-slate-400 flex items-center gap-1.5 font-bold"><Clock size={12} /> Dikemaskini {new Date(p.updated_at).toLocaleDateString('ms-MY')}</span>
+                        
+                        {p.jpp_remarks && (
+                          <div className="mt-2 p-3 bg-indigo-50/50 rounded-xl border border-indigo-100/50 flex flex-col gap-1 max-w-[400px]">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400">Nota Semasa / Alasan</span>
+                            <span className="text-xs font-semibold text-slate-700 italic break-words">{p.jpp_remarks}</span>
+                          </div>
+                        )}
                       </div>
                       {/* TAMAT UI DARI KOD 3 */}
 
