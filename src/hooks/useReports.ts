@@ -10,6 +10,7 @@ export interface Report {
   file_url: string;
   file_name: string;
   status: ReportStatus;
+  admin_feedback?: string;
   created_at: string;
 }
 

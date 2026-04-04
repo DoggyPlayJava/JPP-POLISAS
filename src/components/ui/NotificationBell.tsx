@@ -16,6 +16,11 @@ export function NotificationBell() {
         if (!user) return;
         fetchNotifs();
 
+        // Polling as fallback/guarantee
+        const interval = setInterval(() => {
+            fetchNotifs();
+        }, 10000);
+
         // ✅ REAL-TIME LISTENER
         const channel = supabase
             .channel(`notifications-${user.id}-${Math.random().toString(36).substring(7)}`)
@@ -35,6 +40,7 @@ export function NotificationBell() {
             .subscribe();
 
         return () => {
+            clearInterval(interval);
             supabase.removeChannel(channel);
         };
     }, [user]);

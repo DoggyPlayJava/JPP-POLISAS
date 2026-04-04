@@ -37,6 +37,8 @@ import { format, differenceInDays, parseISO, isValid } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AIGrammarCheck } from '@/components/ai/AIGrammarCheck';
+import { AIBudgetGenerator } from '@/components/ai/AIBudgetGenerator';
 
 // ─── STATUS CONFIG ────────────────────────────────────────────────────────────
 const ACTIVITY_STATUS: Record<string, { label: string; color: string; bg: string }> = {
@@ -437,9 +439,12 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
-                  Objektif
-                </Label>
+                <div className="flex justify-between items-end">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 flex-1">
+                    Objektif
+                  </Label>
+                  <AIGrammarCheck textValue={form.description} onApply={v => setForm({ ...form, description: v })} disabled={saving} />
+                </div>
                 <Textarea
                   value={form.description}
                   onChange={e => setForm({ ...form, description: e.target.value })}
@@ -449,10 +454,13 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
-                  Tindakan / Catatan
-                  <span className="ml-2 text-emerald-600">← untuk Laporan Bulanan</span>
-                </Label>
+                <div className="flex justify-between items-end">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1.5 flex-1">
+                    Tindakan / Catatan
+                    <span className="ml-2 text-emerald-600 normal-case tracking-normal">← untuk Laporan Bulanan</span>
+                  </Label>
+                  <AIGrammarCheck textValue={form.tindakan} onApply={v => setForm({ ...form, tindakan: v })} disabled={saving} />
+                </div>
                 <Textarea
                   value={form.tindakan}
                   onChange={e => setForm({ ...form, tindakan: e.target.value })}
@@ -994,7 +1002,15 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                     className="rounded-3xl border-none bg-muted/30 h-14 font-bold px-6" placeholder="Tempat program..." />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-2 tracking-widest">Bajet (RM)</Label>
+                  <div className="flex justify-between items-end mb-1">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-2 tracking-widest flex-1">Bajet (RM)</Label>
+                      <AIBudgetGenerator 
+                        initialTitle={form.title} 
+                        initialDescription={form.description} 
+                        onApplyBudget={(v) => setForm({...form, budget: v})} 
+                        disabled={saving} 
+                      />
+                  </div>
                   <Input type="number" value={form.budget} onChange={e => setForm({ ...form, budget: e.target.value })}
                     className="rounded-3xl border-none bg-muted/30 h-14 font-bold px-6" placeholder="0.00" />
                 </div>
@@ -1026,9 +1042,12 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                   <h3 className="text-xs font-black uppercase text-indigo-500 tracking-widest pl-2">Butiran Tindakan & Gambar Bukti</h3>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-indigo-400 ml-2 tracking-widest">
-                      Objektif / Deskripsi Program
-                    </Label>
+                    <div className="flex justify-between items-end">
+                      <Label className="text-[10px] font-black uppercase text-indigo-400 ml-2 tracking-widest mb-1.5 flex-1">
+                        Objektif / Deskripsi Program
+                      </Label>
+                      <AIGrammarCheck textValue={form.description} onApply={v => setForm({ ...form, description: v })} disabled={saving} />
+                    </div>
                     <Textarea
                       value={form.description}
                       onChange={e => setForm({ ...form, description: e.target.value })}
@@ -1038,9 +1057,12 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-indigo-400 ml-2 tracking-widest">
-                      Rumusan Tindakan / Pencapaian
-                    </Label>
+                    <div className="flex justify-between items-end">
+                      <Label className="text-[10px] font-black uppercase text-indigo-400 ml-2 tracking-widest mb-1.5 flex-1">
+                        Rumusan Tindakan / Pencapaian
+                      </Label>
+                      <AIGrammarCheck textValue={form.tindakan} onApply={v => setForm({ ...form, tindakan: v })} disabled={saving} />
+                    </div>
                     <Textarea
                       value={form.tindakan}
                       onChange={e => setForm({ ...form, tindakan: e.target.value })}

@@ -343,18 +343,26 @@ export function LaporanPage() {
               {reports.map((r) => (
                 <motion.div key={r.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}>
                   <Card className="bento-card border-none p-5">
-                    <div className="flex justify-between items-start">
-                      <div className="flex gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center"><FileText className="w-5 h-5 text-primary" /></div>
-                        <div>
-                          <p className="font-bold text-sm">{r.file_name}</p>
-                          <p className="text-[10px] opacity-50 uppercase tracking-widest font-black mt-1">{format(new Date(r.created_at), 'dd MMM yyyy, h:mm a')}</p>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex justify-between items-start">
+                        <div className="flex gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0"><FileText className="w-5 h-5 text-primary" /></div>
+                          <div>
+                            <p className="font-bold text-sm">{r.file_name}</p>
+                            <p className="text-[10px] opacity-50 uppercase tracking-widest font-black mt-1">{format(new Date(r.created_at), 'dd MMM yyyy, h:mm a')}</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2 shrink-0">
+                          <StatusChip status={r.status} size="sm" />
+                          <a href={r.file_url} target="_blank" rel="noreferrer" className="text-[10px] font-bold text-primary underline tracking-widest uppercase">LIHAT FAIL</a>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <StatusChip status={r.status} size="sm" />
-                        <a href={r.file_url} target="_blank" rel="noreferrer" className="text-[10px] font-bold text-primary underline tracking-widest uppercase">LIHAT FAIL</a>
-                      </div>
+                      {r.status === 'Ditolak' && r.admin_feedback && (
+                        <div className="mt-1 p-3 bg-rose-50/50 border border-rose-100/50 rounded-xl">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-rose-500 mb-1">Nota Penolakan JPP</p>
+                          <p className="text-xs font-semibold text-rose-700 italic">{r.admin_feedback}</p>
+                        </div>
+                      )}
                     </div>
                   </Card>
                 </motion.div>

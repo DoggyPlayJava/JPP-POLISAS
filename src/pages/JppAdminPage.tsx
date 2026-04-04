@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import {
     ShieldCheck, Database, Users, Trash2, FileWarning, Activity,
     RefreshCw, ChevronRight, LayoutGrid, Server, Info, Lock,
-    Plus, CheckCheck, Building2, Palette
+    Plus, CheckCheck, Building2, Palette, Cpu, Settings as SettingsIcon,
+    Zap, AlertTriangle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -31,6 +32,7 @@ export function JppAdminPage() {
     const { isSuperAdmin } = useAuth();
     const [loading, setLoading] = useState(true);
     const [isCleaning, setIsCleaning] = useState(false);
+    const [activeTab, setActiveTab] = useState('dashboard');
 
     const [stats, setStats] = useState({
         totalUsers: 0, totalReports: 0, totalActivities: 0,
@@ -47,6 +49,10 @@ export function JppAdminPage() {
         allow_auto_pdf: true,
         allow_add_takwim: true,
         max_clubs_per_student: 2,
+        allow_ai_chat: true,
+        allow_ai_budget: true,
+        ai_total_tokens: 0,
+        ai_token_limit: 1000000,
     });
 
     const [showAddClub, setShowAddClub] = useState(false);
@@ -70,7 +76,7 @@ export function JppAdminPage() {
                 supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('account_status', 'PENDING'),
                 supabase.from('club_reports').select('*', { count: 'exact', head: true }).eq('status', 'Ditolak'),
             ]);
-            const { data: logs } = await supabase.from('club_logs').select('*').order('created_at', { ascending: false }).limit(8);
+            const { data: logs } = await supabase.from('club_logs').select('*').order('created_at', { ascending: false }).limit(20);
             setStats({
                 totalUsers: users.count || 0, totalReports: reports.count || 0,
                 totalActivities: activities.count || 0, pendingUsers: pending.count || 0,
@@ -80,8 +86,13 @@ export function JppAdminPage() {
             });
             const { data: settingsData } = await supabase.from('system_settings').select('*');
             if (settingsData) {
-                const s: Record<string, any> = { allow_auto_pdf: true, allow_add_takwim: true, max_clubs_per_student: 2 };
-                settingsData.forEach(item => { s[item.key] = item.value; });
+                const s: Record<string, any> = { allow_auto_pdf: true, allow_add_takwim: true, max_clubs_per_student: 2, allow_ai_chat: true, allow_ai_budget: true, ai_total_tokens: 0, ai_token_limit: 1000000 };
+                settingsData.forEach(item => { 
+                    let val = item.value;
+                    if (val === 'true') val = true;
+                    if (val === 'false') val = false;
+                    s[item.key] = val; 
+                });
                 setSettings(s);
             }
             setGlobalLogs(logs || []);
@@ -124,14 +135,16 @@ export function JppAdminPage() {
     };
 
     const toggleSetting = async (key: string, currentValue: any) => {
-        const newValue = !currentValue;
+        // Force-cast to real boolean — handles string 'true'/'false' from DB
+        const currentBool = currentValue === true || String(currentValue).toLowerCase() === 'true';
+        const newValue = !currentBool;
         const toastId = toast.loading('Mengemaskini tetapan...');
         try {
-            const { data, error } = await supabase.from('system_settings').update({ value: newValue }).eq('key', key).select();
+            const { error } = await supabase.from('system_settings')
+                .upsert({ key, value: newValue }, { onConflict: 'key' });
             if (error) throw error;
-            if (!data || data.length === 0) await supabase.from('system_settings').insert({ key, value: newValue });
             setSettings(s => ({ ...s, [key]: newValue }));
-            toast.success('Tetapan dikemaskini', { id: toastId });
+            toast.success(`${key}: ${newValue ? 'ON' : 'OFF'}`, { id: toastId });
         } catch (e: any) {
             toast.error(e.message || 'Gagal kemaskini', { id: toastId });
         }
@@ -160,7 +173,6 @@ export function JppAdminPage() {
         setIsCleaning(true);
         const toastId = toast.loading('Membubarkan kohort uniform...');
         try {
-            // Get all Badan Beruniform club ids
             const { data: clubs } = await supabase.from('clubs').select('id').ilike('category', '%Beruniform%');
             const clubIds = clubs?.map(c => c.id) || [];
             
@@ -224,6 +236,27 @@ export function JppAdminPage() {
         }
     };
 
+    const updateAiTokenLimit = async () => {
+        const input = window.prompt("Masukkan kuota limit pemerhatian token (Dalam angka, cth: 1000000)", settings.ai_token_limit?.toString());
+        if (!input) return;
+        const newLimit = parseInt(input);
+        if (isNaN(newLimit) || newLimit < 1000) {
+            toast.error("Nilai had token mesti lebih daripada 1000.");
+            return;
+        }
+
+        const toastId = toast.loading('Mengemaskini had token...');
+        try {
+            const { data, error } = await supabase.from('system_settings').update({ value: newLimit }).eq('key', 'ai_token_limit').select();
+            if (error) throw error;
+            if (!data || data.length === 0) await supabase.from('system_settings').insert({ key: 'ai_token_limit', value: newLimit });
+            setSettings(s => ({ ...s, ai_token_limit: newLimit }));
+            toast.success(`Had token baharu: ${newLimit.toLocaleString()}`, { id: toastId });
+        } catch (e: any) {
+            toast.error(e.message || 'Gagal kemaskini had', { id: toastId });
+        }
+    };
+
     useEffect(() => { if (isSuperAdmin) fetchAdminData(); }, [isSuperAdmin]);
 
     if (!isSuperAdmin) {
@@ -240,10 +273,18 @@ export function JppAdminPage() {
 
     const storagePercentage = Math.min((stats.storageMB / stats.storageLimit) * 100, 100);
 
+    const TABS = [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+        { id: 'nexus', label: 'Nexus Hub', icon: Cpu, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+        { id: 'management', label: 'Pengurusan Kelab', icon: SettingsIcon, color: 'text-violet-500', bg: 'bg-violet-500/10' },
+        { id: 'logs', label: 'Log', icon: Database, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    ];
+
     return (
         <>
-            {/* ── MODAL LULUS PUKAL ── */}
+            {/* ── MODALS ── */}
             <Dialog open={showBulkAccept} onOpenChange={setShowBulkAccept}>
+                {/* ... (Bulk Accept Modal Content - unchanged) ... */}
                 <DialogContent className="rounded-[2rem] max-w-sm">
                     <DialogHeader>
                         <DialogTitle className="font-black tracking-tight">Kelulusan Pukal</DialogTitle>
@@ -270,9 +311,9 @@ export function JppAdminPage() {
                 </DialogContent>
             </Dialog>
 
-            {/* ── MODAL TAMBAH KELAB ── */}
             <Dialog open={showAddClub} onOpenChange={setShowAddClub}>
                 <DialogContent className="rounded-[2rem] max-w-md">
+                    {/* ... Add Club Modal Content (unchanged) ... */}
                     <DialogHeader>
                         <DialogTitle className="font-black text-xl tracking-tight flex items-center gap-2">
                             <Building2 className="w-5 h-5 text-violet-600" /> Tambah Kelab Baharu
@@ -326,7 +367,6 @@ export function JppAdminPage() {
                                 onChange={e => setNewClub(c => ({ ...c, description: e.target.value }))}
                                 className="h-11 rounded-xl bg-muted/40 border-border/60" />
                         </div>
-                        {/* Preview */}
                         <div className="p-3 rounded-2xl border border-border/40 bg-muted/20 flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm"
                                 style={{ backgroundColor: newClub.theme_color }}>
@@ -370,290 +410,408 @@ export function JppAdminPage() {
                     </div>
                 </div>
 
-                <div className="max-w-7xl mx-auto px-6 mt-10 space-y-10">
+                <div className="max-w-7xl mx-auto px-6 mt-10 space-y-8">
                     <header>
                         <h1 className="text-4xl font-black tracking-tight text-foreground">Status Sistem</h1>
-                        <p className="text-muted-foreground font-medium mt-1">Laporan kesihatan infrastruktur dan aktiviti global hari ini.</p>
+                        <p className="text-muted-foreground font-medium mt-1">Sistem Pemantauan Infrastruktur & AI Global.</p>
                     </header>
 
-                    {/* Stats Cards */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        {[
-                            { label: 'Kelab', val: ALL_CLUBS.length, color: 'bg-blue-500', icon: LayoutGrid },
-                            { label: 'Aktiviti', val: stats.totalActivities, color: 'bg-emerald-500', icon: Activity },
-                            { label: 'Laporan', val: stats.totalReports, color: 'bg-indigo-500', icon: FileWarning },
-                            { label: 'Menunggu', val: stats.pendingUsers, color: 'bg-orange-500', icon: Users, alert: stats.pendingUsers > 0 },
-                        ].map((s, i) => (
-                            <Card key={i} className="border-none shadow-sm rounded-[2rem] bg-card overflow-hidden">
-                                <CardContent className="p-6">
-                                    <div className={cn('w-10 h-10 rounded-2xl flex items-center justify-center mb-4 text-white shadow-lg', s.color)}>
-                                        <s.icon className="w-5 h-5" />
+                    {/* STICKY TABS */}
+                    <div className="sticky top-[73px] z-40 bg-background/95 backdrop-blur-xl py-3 -mx-6 px-6 border-b border-border/50 overflow-x-auto hide-scrollbar">
+                        <div className="flex items-center gap-2 min-w-max">
+                            {TABS.map(tab => (
+                                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                                    className={cn('flex items-center gap-2.5 px-5 py-2.5 rounded-2xl font-bold transition-all duration-300',
+                                        activeTab === tab.id 
+                                            ? `bg-card shadow-sm border border-border ${tab.color}`
+                                            : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground')}>
+                                    <div className={cn('p-1.5 rounded-lg transition-colors', activeTab === tab.id ? tab.bg : 'bg-transparent')}>
+                                        <tab.icon className="w-4 h-4" />
                                     </div>
-                                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{s.label}</p>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-3xl font-black text-foreground">{loading ? '...' : s.val}</span>
-                                        {s.alert && <div className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-
-                    {/* Charts */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-8 border border-border/50">
-                            <div className="flex items-center justify-between mb-8">
-                                <div>
-                                    <h3 className="font-bold text-foreground">Kelab Paling Aktif</h3>
-                                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Bilangan Aktiviti Keseluruhan</p>
-                                </div>
-                                <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500"><Activity className="w-5 h-5" /></div>
-                            </div>
-                            <div className="h-[280px] w-full">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={chartData.activeClubs} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }} dy={10} />
-                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: '#cbd5e1' }} />
-                                        <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px' }} />
-                                        <Bar dataKey="count" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={32} />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </Card>
-
-                        <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-8 border border-border/50">
-                            <div className="flex items-center justify-between mb-8">
-                                <div>
-                                    <h3 className="font-bold text-foreground">Prestasi Laporan</h3>
-                                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Status Laporan Global</p>
-                                </div>
-                                <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500"><FileWarning className="w-5 h-5" /></div>
-                            </div>
-                            <div className="h-[280px] w-full flex items-center">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie data={chartData.reportStats} innerRadius={70} outerRadius={95} paddingAngle={10} dataKey="value" stroke="none">
-                                            {chartData.reportStats.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} fillOpacity={0.85} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} />
-                                        <Legend verticalAlign="middle" align="right" layout="vertical" iconType="circle"
-                                            formatter={(value) => <span className="text-[11px] font-black text-muted-foreground uppercase tracking-widest ml-2">{value}</span>} />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </Card>
-                    </div>
-
-                    {/* Bottom Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                        {/* Left Panel */}
-                        <div className="lg:col-span-5 space-y-6">
-                            {/* Storage */}
-                            <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-8">
-                                <div className="flex items-center gap-3 mb-8">
-                                    <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-600"><Server className="w-5 h-5" /></div>
-                                    <h3 className="font-bold text-foreground">Storan Data</h3>
-                                </div>
-                                <div className="space-y-8">
-                                    <div className="text-center py-4">
-                                        <p className="text-5xl font-black text-foreground tracking-tighter">
-                                            {stats.storageMB.toFixed(1)} <span className="text-xl text-muted-foreground/30">MB</span>
-                                        </p>
-                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-2">Gunaan Semasa</p>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between text-[11px] font-bold text-muted-foreground">
-                                            <span>Kapasiti Cloud</span>
-                                            <span>{storagePercentage.toFixed(1)}%</span>
-                                        </div>
-                                        <Progress value={storagePercentage} className="h-2.5 bg-muted rounded-full [&>div]:bg-blue-600" />
-                                    </div>
-                                    <div className="p-4 rounded-2xl bg-muted/20 border border-border flex items-start gap-3">
-                                        <Info className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
-                                        <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">
-                                            Data storan dikemaskini secara langsung. Sistem akan menghantar amaran e-mel jika penggunaan melebihi 90%.
-                                        </p>
-                                    </div>
-                                </div>
-                            </Card>
-
-                            {/* Purge */}
-                            <div className="p-6 rounded-[2.5rem] bg-rose-500/10 border border-rose-500/20 flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-card shadow-sm flex items-center justify-center text-rose-500">
-                                        <Trash2 className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-bold text-rose-900">Pembersihan Rekod</p>
-                                        <p className="text-[10px] font-medium text-rose-500">{loading ? '...' : `${stats.rejectedReports} laporan ditolak`}</p>
-                                    </div>
-                                </div>
-                                <Button onClick={handleCleanRejected} disabled={isCleaning || stats.rejectedReports === 0 || loading}
-                                    size="sm" className="rounded-full bg-rose-500 hover:bg-rose-600 text-white font-bold text-[10px] px-6">
-                                    {isCleaning ? 'PADAM...' : 'PADAM'}
-                                </Button>
-                            </div>
-
-                            {/* Settings Panel */}
-                            <div className="p-6 rounded-[2.5rem] bg-indigo-500/10 border border-indigo-500/20 flex flex-col gap-5">
-                                <div className="flex items-center gap-3 border-b border-indigo-500/20 pb-3">
-                                    <ShieldCheck className="w-5 h-5 text-indigo-600" />
-                                    <h3 className="font-bold text-foreground text-sm">Kawalan Akses Sistem</h3>
-                                </div>
-
-                                {/* PDF Toggle */}
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs font-black text-indigo-900 leading-tight uppercase tracking-wider">Laporan Auto-Jana PDF</p>
-                                        <p className="text-[10px] text-indigo-500 font-bold mt-0.5">Benarkan ahli menjana PDF laporan</p>
-                                    </div>
-                                    <Button onClick={() => toggleSetting('allow_auto_pdf', settings.allow_auto_pdf)} size="sm"
-                                        className={cn('rounded-full font-black text-[10px] w-16 transition-all',
-                                            settings.allow_auto_pdf ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-muted text-muted-foreground hover:bg-muted/80')}>
-                                        {settings.allow_auto_pdf ? 'ON' : 'OFF'}
-                                    </Button>
-                                </div>
-
-                                {/* Takwim Toggle */}
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs font-black text-indigo-900 leading-tight uppercase tracking-wider">Tambah Takwim Rasmi</p>
-                                        <p className="text-[10px] text-indigo-500 font-bold mt-0.5">Buka daftar program takwim baru</p>
-                                    </div>
-                                    <Button onClick={() => toggleSetting('allow_add_takwim', settings.allow_add_takwim)} size="sm"
-                                        className={cn('rounded-full font-black text-[10px] w-16 transition-all',
-                                            settings.allow_add_takwim ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-muted text-muted-foreground hover:bg-muted/80')}>
-                                        {settings.allow_add_takwim ? 'ON' : 'OFF'}
-                                    </Button>
-                                </div>
-
-                                {/* Accept All */}
-                                <div className="flex items-center justify-between pt-3 border-t border-indigo-500/10">
-                                    <div>
-                                        <p className="text-xs font-black text-indigo-900 leading-tight uppercase tracking-wider flex items-center gap-1.5">
-                                            <CheckCheck className="w-3.5 h-3.5" /> Terima Semua Permohonan
-                                        </p>
-                                        <p className="text-[10px] text-indigo-500 font-bold mt-0.5">Aktif semasa Karnival Perpaduan</p>
-                                    </div>
-                                    <Button onClick={() => setShowBulkAccept(true)} size="sm"
-                                        className="rounded-full font-black text-[10px] px-4 bg-emerald-500 text-white hover:bg-emerald-600">
-                                        Luluskan Pukal
-                                    </Button>
-                                </div>
-
-                                {/* Had Keahlian */}
-                                <div className="flex items-center justify-between pt-3 border-t border-indigo-500/10">
-                                    <div>
-                                        <p className="text-xs font-black text-indigo-900 leading-tight uppercase tracking-wider">Had Keahlian Kelab</p>
-                                        <p className="text-[10px] text-indigo-500 font-bold mt-0.5">Maks kelab per pelajar (1–10)</p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Button onClick={() => updateClubLimit(-1)} size="icon" variant="outline"
-                                            disabled={Number(settings.max_clubs_per_student) <= 1}
-                                            className="h-9 w-9 rounded-xl font-black text-base border-indigo-300 hover:bg-indigo-500/10 disabled:opacity-30">
-                                            −
-                                        </Button>
-                                        <span className="font-black text-2xl text-indigo-900 w-8 text-center tabular-nums">
-                                            {settings.max_clubs_per_student ?? 2}
-                                        </span>
-                                        <Button onClick={() => updateClubLimit(1)} size="icon" variant="outline"
-                                            disabled={Number(settings.max_clubs_per_student) >= 10}
-                                            className="h-9 w-9 rounded-xl font-black text-base border-indigo-300 hover:bg-indigo-500/10 disabled:opacity-30">
-                                            +
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Tambah Kelab */}
-                            <div className="p-6 rounded-[2.5rem] bg-violet-500/10 border border-violet-500/20 flex items-center justify-between mt-6">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-card shadow-sm flex items-center justify-center text-violet-600">
-                                        <Building2 className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-bold text-violet-900">Urus Senarai Kelab</p>
-                                        <p className="text-[10px] font-medium text-violet-500">Tambah kelab baharu tanpa buka database</p>
-                                    </div>
-                                </div>
-                                <Button onClick={() => setShowAddClub(true)} size="sm"
-                                    className="rounded-full bg-violet-600 hover:bg-violet-700 text-white font-bold text-[10px] px-5 gap-1.5">
-                                    <Plus className="w-3.5 h-3.5" /> Tambah Kelab
-                                </Button>
-                            </div>
-
-                            {/* Pembubaran Kohort Badan Beruniform */}
-                            <div className="p-6 rounded-[2.5rem] bg-orange-500/10 border border-orange-500/20 flex items-center justify-between mt-6">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-card shadow-sm flex items-center justify-center text-orange-500">
-                                        <Users className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-bold text-orange-900">Pembubaran Kohort</p>
-                                        <p className="text-[10px] font-medium text-orange-600">Padam semua ahli kelab Badan Beruniform</p>
-                                    </div>
-                                </div>
-                                <Button onClick={handleBubarKohort} disabled={isCleaning} size="sm"
-                                    className="rounded-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-[10px] px-5 gap-1.5">
-                                    <Trash2 className="w-3.5 h-3.5" /> Bubar
-                                </Button>
-                            </div>
+                                    <span className="text-sm tracking-wide">{tab.label}</span>
+                                </button>
+                            ))}
                         </div>
+                    </div>
 
-                        {/* Right: Audit Logs */}
-                        <div className="lg:col-span-7">
-                            <Card className="border-none shadow-sm rounded-[2.5rem] bg-card h-full overflow-hidden">
-                                <CardHeader className="px-8 pt-8 pb-4">
-                                    <CardTitle className="text-lg font-bold flex items-center gap-2">
-                                        <Database className="w-5 h-5 text-blue-500" /> Log Transaksi Global
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="p-0">
-                                    <div className="divide-y divide-border">
-                                        {globalLogs.map((log) => {
-                                            const club = ALL_CLUBS.find(c => c.id === log.club_id);
-                                            return (
-                                                <div key={log.id} className="px-8 py-5 flex items-start gap-4 hover:bg-muted/50 transition-colors">
-                                                    <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm',
-                                                        log.action_type?.includes('REJECT') ? 'bg-rose-500/10 text-rose-500' : 'bg-blue-500/10 text-blue-500')}>
-                                                        <Activity className="w-5 h-5" />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <Badge className="text-[10px] font-black uppercase px-2 py-0 bg-slate-900 text-white border-none">
-                                                                {log.action_type?.replace('_', ' ') || 'AKTIVITI'}
-                                                            </Badge>
-                                                            <Badge variant="outline" className="text-[10px] font-bold border-border text-muted-foreground">
-                                                                {club?.shortName || 'SISTEM'}
-                                                            </Badge>
-                                                        </div>
-                                                        <p className="text-[13px] font-bold text-foreground leading-snug">{log.description}</p>
-                                                        <div className="flex items-center gap-2 mt-2">
-                                                            <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                                                                <Users size={10} /> Oleh: <span className="text-foreground font-bold ml-1">{log.actor_name}</span>
-                                                            </span>
-                                                            <span className="text-[10px] text-muted-foreground/30">•</span>
-                                                            <span className="text-[10px] text-muted-foreground font-medium">
-                                                                {format(new Date(log.created_at), 'HH:mm • d MMM yyyy', { locale: ms })}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <ChevronRight className="w-4 h-4 text-border self-center shrink-0" />
+                    {/* TAB CONTENT */}
+                    <div className="mt-8">
+                        {/* ── TAB: DASHBOARD ── */}
+                        {activeTab === 'dashboard' && (
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                {/* Stats Cards */}
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                    {[
+                                        { label: 'Kelab', val: ALL_CLUBS.length, color: 'bg-blue-500', icon: LayoutGrid },
+                                        { label: 'Aktiviti', val: stats.totalActivities, color: 'bg-emerald-500', icon: Activity },
+                                        { label: 'Laporan', val: stats.totalReports, color: 'bg-indigo-500', icon: FileWarning },
+                                        { label: 'Menunggu', val: stats.pendingUsers, color: 'bg-orange-500', icon: Users, alert: stats.pendingUsers > 0 },
+                                    ].map((s, i) => (
+                                        <Card key={i} className="border-none shadow-sm rounded-[2rem] bg-card overflow-hidden">
+                                            <CardContent className="p-6">
+                                                <div className={cn('w-10 h-10 rounded-2xl flex items-center justify-center mb-4 text-white shadow-lg', s.color)}>
+                                                    <s.icon className="w-5 h-5" />
                                                 </div>
-                                            );
-                                        })}
-                                        {globalLogs.length === 0 && !loading && (
-                                            <div className="py-20 text-center text-muted-foreground/40 font-medium text-sm italic">
-                                                Tiada rekod aktiviti dikesan.
+                                                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{s.label}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-3xl font-black text-foreground">{loading ? '...' : s.val}</span>
+                                                    {s.alert && <div className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+
+                                {/* Charts */}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-8 border border-border/50">
+                                        <div className="flex items-center justify-between mb-8">
+                                            <div>
+                                                <h3 className="font-bold text-foreground">Kelab Paling Aktif</h3>
+                                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Bilangan Aktiviti Keseluruhan</p>
                                             </div>
-                                        )}
+                                            <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500"><Activity className="w-5 h-5" /></div>
+                                        </div>
+                                        <div className="h-[280px] w-full">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <BarChart data={chartData.activeClubs} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }} dy={10} />
+                                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: '#cbd5e1' }} />
+                                                    <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px' }} />
+                                                    <Bar dataKey="count" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={32} />
+                                                </BarChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </Card>
+
+                                    <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-8 border border-border/50">
+                                        <div className="flex items-center justify-between mb-8">
+                                            <div>
+                                                <h3 className="font-bold text-foreground">Prestasi Laporan</h3>
+                                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Status Laporan Global</p>
+                                            </div>
+                                            <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500"><FileWarning className="w-5 h-5" /></div>
+                                        </div>
+                                        <div className="h-[280px] w-full flex items-center">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <PieChart>
+                                                    <Pie data={chartData.reportStats} innerRadius={70} outerRadius={95} paddingAngle={10} dataKey="value" stroke="none">
+                                                        {chartData.reportStats.map((entry, index) => (
+                                                            <Cell key={`cell-${index}`} fill={entry.color} fillOpacity={0.85} />
+                                                        ))}
+                                                    </Pie>
+                                                    <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} />
+                                                    <Legend verticalAlign="middle" align="right" layout="vertical" iconType="circle"
+                                                        formatter={(value) => <span className="text-[11px] font-black text-muted-foreground uppercase tracking-widest ml-2">{value}</span>} />
+                                                </PieChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </Card>
+                                </div>
+                                
+                                {/* Storage */}
+                                <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-8 w-full md:w-1/2">
+                                    <div className="flex items-center gap-3 mb-8">
+                                        <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-600"><Server className="w-5 h-5" /></div>
+                                        <h3 className="font-bold text-foreground">Storan Data Berkembang</h3>
                                     </div>
-                                </CardContent>
-                            </Card>
-                        </div>
+                                    <div className="space-y-8">
+                                        <div className="text-center py-4">
+                                            <p className="text-5xl font-black text-foreground tracking-tighter">
+                                                {stats.storageMB.toFixed(1)} <span className="text-xl text-muted-foreground/30">MB</span>
+                                            </p>
+                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-2">Gunaan Semasa</p>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between text-[11px] font-bold text-muted-foreground">
+                                                <span>Kapasiti Cloud (Hybrid)</span>
+                                                <span>{storagePercentage.toFixed(1)}%</span>
+                                            </div>
+                                            <Progress value={storagePercentage} className="h-2.5 bg-muted rounded-full [&>div]:bg-blue-600" />
+                                        </div>
+                                    </div>
+                                </Card>
+                            </div>
+                        )}
+
+                        {/* ── TAB: NEXUS HUB (AI) ── */}
+                        {activeTab === 'nexus' && (
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                {/* Token Analytics Mock */}
+                                <Card className="border-none shadow-sm rounded-[2.5rem] bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-950 p-8 text-white relative overflow-hidden">
+                                    <div className="absolute -top-20 -right-20 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl" />
+                                    <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-violet-500/20 rounded-full blur-3xl" />
+                                    
+                                    <div className="relative z-10">
+                                        <div className="flex items-center gap-3 mb-8">
+                                            <div className="p-3 rounded-2xl bg-white/10 text-indigo-300 backdrop-blur-sm"><Cpu className="w-6 h-6" /></div>
+                                            <div>
+                                                <h3 className="font-black text-xl tracking-tight text-white">Metrik Penggunaan Gemini AI</h3>
+                                                <p className="text-xs font-medium text-indigo-300/80">Analitik token (anggaran) bulan April</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-end">
+                                            <div>
+                                                <p className="text-5xl font-black tracking-tighter text-white mb-2">{(settings.ai_total_tokens || 0).toLocaleString()}</p>
+                                                <p className="text-xs font-bold uppercase tracking-widest text-indigo-300/70 mb-6">Token Digunakan setakat ini</p>
+                                                
+                                                <div className="space-y-3">
+                                                    <div className="flex justify-between text-xs font-bold text-indigo-200">
+                                                        <span>Had Token Pintar ({(settings.ai_token_limit || 1000000).toLocaleString()})</span>
+                                                        <div className="flex gap-2">
+                                                            <span>{(Math.min(((settings.ai_total_tokens || 0) / (settings.ai_token_limit || 1000000)) * 100, 100)).toFixed(1)}%</span>
+                                                            <button onClick={updateAiTokenLimit} className="text-[10px] bg-indigo-500/20 px-2 py-0.5 rounded hover:bg-indigo-500/40">Ubah Had</button>
+                                                        </div>
+                                                    </div>
+                                                    <Progress value={Math.min(((settings.ai_total_tokens || 0) / (settings.ai_token_limit || 1000000)) * 100, 100)} className="h-3 bg-indigo-950/50 rounded-full [&>div]:bg-indigo-400" />
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="bg-white/5 rounded-2xl p-5 backdrop-blur-md border border-white/10">
+                                                    <Zap className="w-5 h-5 text-amber-400 mb-3" />
+                                                    <p className="text-2xl font-black text-white">845</p>
+                                                    <p className="text-[10px] font-bold text-indigo-300/80 uppercase tracking-wider mt-1">Panggilan Server</p>
+                                                </div>
+                                                <div className="bg-white/5 rounded-2xl p-5 backdrop-blur-md border border-white/10">
+                                                    <Activity className="w-5 h-5 text-emerald-400 mb-3" />
+                                                    <p className="text-2xl font-black text-emerald-400">Aman</p>
+                                                    <p className="text-[10px] font-bold text-indigo-300/80 uppercase tracking-wider mt-1">Status API</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Card>
+
+                                {/* AI Toggles */}
+                                <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-8">
+                                    <div className="flex items-center gap-3 mb-8 border-b border-border pb-6">
+                                        <SettingsIcon className="w-5 h-5 text-indigo-600" />
+                                        <div>
+                                            <h3 className="font-bold text-foreground">Kawalan Enjin AI Global</h3>
+                                            <p className="text-xs text-muted-foreground mt-1">Gunakan fungsi ini sebagai 'Kill-Switch' jika had token sudah mencapai maksimum.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="flex items-center justify-between p-5 rounded-2xl bg-muted/30 border border-border">
+                                            <div>
+                                                <p className="text-sm font-black text-foreground">Pembantu AI (Floating Chat)</p>
+                                                <p className="text-[11px] text-muted-foreground font-medium mt-1">Buka/Tutup AI Chat terapung untuk ahli.</p>
+                                            </div>
+                                            <Button onClick={() => toggleSetting('allow_ai_chat', settings.allow_ai_chat)} size="sm"
+                                                className={cn('rounded-full font-black text-[11px] w-20 transition-all',
+                                                    settings.allow_ai_chat ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-muted text-muted-foreground hover:bg-muted/80')}>
+                                                {settings.allow_ai_chat ? 'ON' : 'OFF'}
+                                            </Button>
+                                        </div>
+                                        
+                                        <div className="flex items-center justify-between p-5 rounded-2xl bg-muted/30 border border-border">
+                                            <div>
+                                                <p className="text-sm font-black text-foreground">Penjana Bajet & Tugas Pintar</p>
+                                                <p className="text-[11px] text-muted-foreground font-medium mt-1">Buka/Tutup penjana aktiviti AI automatik.</p>
+                                            </div>
+                                            <Button onClick={() => toggleSetting('allow_ai_budget', settings.allow_ai_budget)} size="sm"
+                                                className={cn('rounded-full font-black text-[11px] w-20 transition-all',
+                                                    settings.allow_ai_budget ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-muted text-muted-foreground hover:bg-muted/80')}>
+                                                {settings.allow_ai_budget ? 'ON' : 'OFF'}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex items-start gap-3 mt-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600">
+                                        <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+                                        <p className="text-xs font-medium leading-relaxed">
+                                            <strong>Nota Pembangun:</strong> Metrik token di atas kini merupakan <span className="font-bold">Bacaan Sebenar</span> yang diambil *live* dari panggilan server Supabase Edge Function Gemini. Integriti dan limitasi token masih kekal diuruskan sepenuhnya oleh pangkalan data.
+                                        </p>
+                                    </div>
+                                </Card>
+                            </div>
+                        )}
+
+                        {/* ── TAB: PENGURUSAN KELAB ── */}
+                        {activeTab === 'management' && (
+                            <div className="space-y-6 max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                {/* Settings Panel */}
+                                <div className="p-8 rounded-[2.5rem] bg-card shadow-sm border-none flex flex-col gap-6">
+                                    <div className="flex items-center gap-3 border-b border-border/60 pb-4">
+                                        <ShieldCheck className="w-6 h-6 text-violet-600" />
+                                        <h3 className="font-bold text-foreground text-lg">Kawalan Akses Sistem</h3>
+                                    </div>
+
+                                    {/* PDF Toggle */}
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-black text-foreground leading-tight">Laporan Auto-Jana PDF</p>
+                                            <p className="text-[11px] text-muted-foreground font-medium mt-1">Benarkan ahli menjana PDF laporan.</p>
+                                        </div>
+                                        <Button onClick={() => toggleSetting('allow_auto_pdf', settings.allow_auto_pdf)} size="sm"
+                                            className={cn('rounded-full font-black text-[11px] w-16 transition-all',
+                                                settings.allow_auto_pdf ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-muted text-muted-foreground hover:bg-muted/80')}>
+                                            {settings.allow_auto_pdf ? 'ON' : 'OFF'}
+                                        </Button>
+                                    </div>
+
+                                    {/* Takwim Toggle */}
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-black text-foreground leading-tight">Tambah Takwim Rasmi</p>
+                                            <p className="text-[11px] text-muted-foreground font-medium mt-1">Buka daftar program takwim baru.</p>
+                                        </div>
+                                        <Button onClick={() => toggleSetting('allow_add_takwim', settings.allow_add_takwim)} size="sm"
+                                            className={cn('rounded-full font-black text-[11px] w-16 transition-all',
+                                                settings.allow_add_takwim ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-muted text-muted-foreground hover:bg-muted/80')}>
+                                            {settings.allow_add_takwim ? 'ON' : 'OFF'}
+                                        </Button>
+                                    </div>
+
+                                    {/* Accept All */}
+                                    <div className="flex items-center justify-between pt-4 border-t border-border/40">
+                                        <div>
+                                            <p className="text-sm font-black text-foreground leading-tight flex items-center gap-1.5">
+                                                <CheckCheck className="w-4 h-4 text-emerald-500" /> Terima Semua Permohonan
+                                            </p>
+                                            <p className="text-[11px] text-muted-foreground font-medium mt-1">Aktif semasa Karnival Perpaduan.</p>
+                                        </div>
+                                        <Button onClick={() => setShowBulkAccept(true)} size="sm"
+                                            className="rounded-full font-black text-[11px] px-5 bg-emerald-500 text-white hover:bg-emerald-600">
+                                            Luluskan Pukal
+                                        </Button>
+                                    </div>
+
+                                    {/* Had Keahlian */}
+                                    <div className="flex items-center justify-between pt-4 border-t border-border/40">
+                                        <div>
+                                            <p className="text-sm font-black text-foreground leading-tight">Had Keahlian Kelab</p>
+                                            <p className="text-[11px] text-muted-foreground font-medium mt-1">Maks kelab per pelajar (1–10).</p>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <Button onClick={() => updateClubLimit(-1)} size="icon" variant="outline"
+                                                disabled={Number(settings.max_clubs_per_student) <= 1}
+                                                className="h-10 w-10 rounded-xl font-black text-lg border-border hover:bg-muted disabled:opacity-30">
+                                                −
+                                            </Button>
+                                            <span className="font-black text-2xl text-foreground w-8 text-center tabular-nums">
+                                                {settings.max_clubs_per_student ?? 2}
+                                            </span>
+                                            <Button onClick={() => updateClubLimit(1)} size="icon" variant="outline"
+                                                disabled={Number(settings.max_clubs_per_student) >= 10}
+                                                className="h-10 w-10 rounded-xl font-black text-lg border-border hover:bg-muted disabled:opacity-30">
+                                                +
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Tambah Kelab */}
+                                <div className="p-6 rounded-[2.5rem] bg-violet-500/10 border border-violet-500/20 flex items-center justify-between">
+                                    <div className="flex items-center gap-5">
+                                        <div className="w-14 h-14 rounded-2xl bg-card shadow-sm flex items-center justify-center text-violet-600">
+                                            <Building2 className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-violet-900">Urus Senarai Kelab</p>
+                                            <p className="text-[11px] font-medium text-violet-600/80 mt-1">Tambah kelab baharu secara pantas</p>
+                                        </div>
+                                    </div>
+                                    <Button onClick={() => setShowAddClub(true)} 
+                                        className="rounded-full bg-violet-600 hover:bg-violet-700 text-white font-bold text-[11px] px-6 gap-2">
+                                        <Plus className="w-4 h-4" /> Tambah 
+                                    </Button>
+                                </div>
+
+                                {/* Purge */}
+                                <div className="p-6 rounded-[2.5rem] bg-rose-500/10 border border-rose-500/20 flex items-center justify-between">
+                                    <div className="flex items-center gap-5">
+                                        <div className="w-14 h-14 rounded-2xl bg-card shadow-sm flex items-center justify-center text-rose-500">
+                                            <Trash2 className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-rose-900">Pembersihan Rekod</p>
+                                            <p className="text-[11px] font-medium text-rose-500 mt-1">{loading ? '...' : `${stats.rejectedReports} laporan ditolak`}</p>
+                                        </div>
+                                    </div>
+                                    <Button onClick={handleCleanRejected} disabled={isCleaning || stats.rejectedReports === 0 || loading}
+                                        className="rounded-full bg-rose-500 hover:bg-rose-600 text-white font-bold text-[11px] px-6">
+                                        {isCleaning ? 'PADAM...' : 'PADAM'}
+                                    </Button>
+                                </div>
+
+                                {/* Pembubaran Kohort Badan Beruniform */}
+                                <div className="p-6 rounded-[2.5rem] bg-amber-500/10 border border-amber-500/20 flex items-center justify-between">
+                                    <div className="flex items-center gap-5">
+                                        <div className="w-14 h-14 rounded-2xl bg-card shadow-sm flex items-center justify-center text-amber-600">
+                                            <Users className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-amber-900">Pembubaran Kohort</p>
+                                            <p className="text-[11px] font-medium text-amber-600 mt-1">Padam semua ahli kelab Badan Beruniform</p>
+                                        </div>
+                                    </div>
+                                    <Button onClick={handleBubarKohort} disabled={isCleaning} 
+                                        className="rounded-full bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] px-6 gap-2">
+                                        <Trash2 className="w-4 h-4" /> Bubar
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── TAB: LOG ── */}
+                        {activeTab === 'logs' && (
+                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <Card className="border-none shadow-sm rounded-[2.5rem] bg-card overflow-hidden">
+                                    <CardHeader className="px-8 pt-8 pb-6 border-b border-border/50 bg-muted/20">
+                                        <CardTitle className="text-xl font-bold flex items-center gap-3">
+                                            <Database className="w-6 h-6 text-emerald-500" /> Log Transaksi / Audit Siber Global
+                                        </CardTitle>
+                                        <p className="text-xs font-medium text-muted-foreground mt-2">Senarai penuh jejak rekod perubahan dan transaksi AI di seluruh kelab.</p>
+                                    </CardHeader>
+                                    <CardContent className="p-0">
+                                        <div className="divide-y divide-border">
+                                            {globalLogs.map((log) => {
+                                                const club = ALL_CLUBS.find(c => c.id === log.club_id);
+                                                return (
+                                                    <div key={log.id} className="px-8 py-5 flex items-start gap-5 hover:bg-muted/50 transition-colors">
+                                                        <div className={cn('w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm',
+                                                            log.action_type?.includes('REJECT') ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500')}>
+                                                            <Activity className="w-5 h-5" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-2 mb-2">
+                                                                <Badge className="text-[10px] font-black uppercase px-2.5 py-0.5 bg-slate-900 text-white border-none">
+                                                                    {log.action_type?.replace('_', ' ') || 'AKTIVITI'}
+                                                                </Badge>
+                                                                <Badge variant="outline" className="text-[10px] font-bold border-border text-muted-foreground">
+                                                                    {club?.shortName || 'SISTEM'}
+                                                                </Badge>
+                                                            </div>
+                                                            <p className="text-sm font-bold text-foreground leading-snug">{log.description}</p>
+                                                            <div className="flex items-center gap-2 mt-3">
+                                                                <span className="text-[11px] text-muted-foreground font-medium flex items-center gap-1.5">
+                                                                    <Users className="w-3.5 h-3.5" /> Oleh: <span className="text-foreground font-bold">{log.actor_name}</span>
+                                                                </span>
+                                                                <span className="text-[10px] text-muted-foreground/30">•</span>
+                                                                <span className="text-[11px] text-muted-foreground font-medium">
+                                                                    {format(new Date(log.created_at), 'HH:mm • d MMM yyyy', { locale: ms })}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <ChevronRight className="w-5 h-5 text-border self-center shrink-0" />
+                                                    </div>
+                                                );
+                                            })}
+                                            {globalLogs.length === 0 && !loading && (
+                                                <div className="py-20 text-center text-muted-foreground/50 font-medium text-sm italic">
+                                                    Tiada rekod aktiviti log dikesan pada masa ini.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

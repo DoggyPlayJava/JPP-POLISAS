@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { BottomNav } from './BottomNav';
+import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 export function AppLayout() {
   const location = useLocation();
@@ -107,6 +108,9 @@ export function AppLayout() {
 
         {/* Global Command Palette */}
         <CommandPalette open={isSearchOpen} onOpenChange={setIsSearchOpen} />
+
+        {/* Global Floating AI Chat */}
+        <FloatingAiChat />
       </div>
     </div>
   );

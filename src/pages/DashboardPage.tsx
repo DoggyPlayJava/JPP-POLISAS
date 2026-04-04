@@ -20,6 +20,8 @@ import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
 import { EditAnnouncementModal } from '@/components/ui/EditAnnouncementModal';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { ClubSwitcher } from '@/components/ui/ClubSwitcher';
+import { AiAnalysisModal } from '@/components/ai/AiAnalysisModal';
+import { Bot, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -136,6 +138,7 @@ export function DashboardPage() {
   const [taskView, setTaskView] = useState<'active' | 'archive'>('active');
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [showAiModal, setShowAiModal] = useState(false);
 
   // Derive state dari dashData
   const tasks     = dashData.tasks     || [];
@@ -307,6 +310,11 @@ export function DashboardPage() {
         </div>
         <div className="flex items-center gap-3">
           <NotificationBell />
+          {(isPresident || isMT || isAdvisor) && (
+            <Button onClick={() => setShowAiModal(true)} variant="outline" className="rounded-xl font-black text-[10px] uppercase h-10 border-indigo-500/30 text-indigo-600 bg-indigo-500/10 hover:bg-indigo-500/20 hover:text-indigo-700 shadow-sm transition-all group">
+              <Bot className="w-4 h-4 mr-2 group-hover:animate-pulse" /> Analisis AI
+            </Button>
+          )}
           {isAdvisor && (
             <Button onClick={() => navigate('/logs')} variant="outline" className="rounded-xl font-black text-[10px] uppercase h-10">
               <Activity className="w-4 h-4 mr-2" /> Log Sistem
@@ -538,6 +546,12 @@ export function DashboardPage() {
         </div>
       </div>
 
+      <AiAnalysisModal 
+        isOpen={showAiModal} 
+        onClose={() => setShowAiModal(false)} 
+        clubId={effectiveRole !== 'SUPER_ADMIN' ? (selectedClubId || profile?.club_id) : undefined}
+      />
+      
       <TaskDetailModal task={selectedTask} isOpen={isDetailOpen} onClose={() => setIsDetailOpen(false)} onRefresh={fetchData} userRole={userRole} currentUserId={user?.id} />
     </motion.div>
   );

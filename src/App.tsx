@@ -96,6 +96,7 @@ function AppRoutes() {
 }
 
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { AiSettingsProvider } from '@/contexts/AiSettingsContext';
 
 function App() {
   return (
@@ -103,21 +104,23 @@ function App() {
       <ThemeProvider>
         <BrowserRouter>
           <AuthProvider>
-            <AppRoutes />
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                className: 'glass !bg-white/70 dark:!bg-slate-900/70 !backdrop-blur-xl !border-white/20 !shadow-2xl rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest text-slate-900 dark:text-white py-4 px-6',
-                duration: 4000,
-                success: {
-                  iconTheme: { primary: '#10b981', secondary: '#fff' },
-                },
-                error: {
-                  iconTheme: { primary: '#ef4444', secondary: '#fff' },
-                },
-              }}
-            />
-            <SpeedInsights />
+            <AiSettingsProvider>
+              <AppRoutes />
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  className: 'glass !bg-white/70 dark:!bg-slate-900/70 !backdrop-blur-xl !border-white/20 !shadow-2xl rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest text-slate-900 dark:text-white py-4 px-6',
+                  duration: 4000,
+                  success: {
+                    iconTheme: { primary: '#10b981', secondary: '#fff' },
+                  },
+                  error: {
+                    iconTheme: { primary: '#ef4444', secondary: '#fff' },
+                  },
+                }}
+              />
+              <SpeedInsights />
+            </AiSettingsProvider>
           </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>

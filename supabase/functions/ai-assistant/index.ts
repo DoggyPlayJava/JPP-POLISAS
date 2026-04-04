@@ -1,146 +1,189 @@
-// ─── Edge Function: ai-assistant ─────────────────────────────────────────────
-// JPP-POLISAS: Gemini AI Assistant Foundation
-//
-// Satu Edge Function untuk SEMUA AI tasks — foundation yang kukuh
-// untuk pengembangan AI features pada masa akan datang.
-//
-// Tasks yang disokong:
-//   - summarize_report    : Ringkaskan laporan bulanan kelab
-//   - generate_draft      : Jana draft kertas kerja dari template
-//   - analyze_performance : Analisis trend merit & prestasi kelab
-//   - karnival_faq        : Jawab soalan tentang Hari Karnival
-//   - suggest_program     : Cadangkan program berdasarkan histori kelab
-//
-// Environment Variables:
-//   GEMINI_API_KEY — API key dari Google AI Studio (percuma)
-// ─────────────────────────────────────────────────────────────────────────────
-
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
-const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+// Guna model GEMINI 2.5 Flash - model terbaru & aktif Google AI yang menyokong kuota Free Tier
+const GEMINI_API_URL_PRO = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 type AiTask =
-  | "summarize_report"
-  | "generate_draft"
   | "analyze_performance"
-  | "karnival_faq"
-  | "suggest_program";
+  | "review_kertas_kerja"
+  | "suggest_program"
+  | "generate_draft"
+  | "summarize_report";
 
 interface AiRequest {
   task: AiTask;
   data?: Record<string, any>;
-  question?: string;  // untuk karnival_faq
+  clubId?: string;
+  programId?: string;
 }
 
-// ── System prompts untuk setiap task ──────────────────────────────────────────
-function buildPrompt(task: AiTask, data: Record<string, any>, question?: string): string {
-  const clubName = data.clubName || "Kelab";
+interface PromptPayload {
+  systemInstruction: string;
+  userPrompt: string;
+}
+
+async function buildPromptForDB(task: AiTask, reqBody: AiRequest, supabase: any): Promise<PromptPayload> {
   const lang = "Bahasa Melayu";
+  let systemInstruction = "Anda adalah pembantu AI yang sedia membantu dalam Bahasa Melayu.";
+  let userPrompt = "";
 
   switch (task) {
-    case "summarize_report":
-      return `Anda adalah pembantu JPP POLISAS. Ringkaskan laporan bulanan kelab berikut dalam ${lang} yang formal dan profesional. Sertakan: (1) Pencapaian utama, (2) Isu yang dihadapi, (3) Cadangan penambahbaikan.
+    case "analyze_performance": {
+      systemInstruction = "Anda adalah penasihat penganalisis kelab berkaliber untuk JPP POLISAS. Anda berfikir secara kritikal dan logik berdasarkan metrik.";
+      
+      let clubData = reqBody.data;
+      if (!clubData && reqBody.clubId) {
+        // Fetch raw data if frontend didn't supply it
+        const [ { data: club }, { count: members }, { data: activities }, { count: tasks } ] = await Promise.all([
+          supabase.from("clubs").select("name").eq("id", reqBody.clubId).single(),
+          supabase.from("student_club_memberships").select("user_id", { count: "exact", head: true }).eq("club_id", reqBody.clubId),
+          supabase.from("club_activities").select("status, budget").eq("club_id", reqBody.clubId),
+          supabase.from("club_tasks").select("id", { count: "exact", head: true }).eq("club_id", reqBody.clubId)
+        ]);
+        
+        clubData = {
+          clubName: club?.name || "Kelab POLISAS",
+          totalMembers: members || 0,
+          totalActivities: activities?.length || 0,
+          completedActivities: activities?.filter((a: any) => a.status === 'selesai').length || 0,
+          usedBudget: activities?.reduce((sum: number, a: any) => sum + (a.budget || 0), 0) || 0,
+          totalTasksIssued: tasks || 0
+        };
+      }
 
-Data laporan:
-${JSON.stringify(data.reportData, null, 2)}
+      userPrompt = `Buat analisis prestasi kelab berdasarkan data objektif ini dalam ${lang}.
 
-Hasilkan ringkasan dalam 3-4 perenggan.`;
+Data Kelab:
+${JSON.stringify(clubData, null, 2)}
 
-    case "generate_draft":
-      return `Anda adalah pembantu pentadbiran JPP POLISAS. Jana draft kertas kerja untuk program berikut dalam ${lang} yang formal.
+Hasilkan laporan yang mengandungi: (1) Penilaian Keseluruhan (Pendek), (2) Isu Berpotensi (jika aktiviti rendah/banyak budget), (3) 2 Cadangan Konkrit untuk Exco Kelab. Gunakan format Markdown yang menarik dan ringkas.`;
+      break;
+    }
 
-Maklumat program:
-- Nama Program: ${data.programName}
-- Tarikh: ${data.date}
-- Tempat: ${data.venue}
-- Anggaran Bajet: RM ${data.budget}
-- Kelab: ${clubName}
+    case "review_kertas_kerja": {
+      systemInstruction = "Anda adalah Ketua Semakan Dokumentasi (AI) Majlis Perwakilan Pelajar (JPP POLISAS). Anda profesional, teliti, dan menitikberatkan rasional, perancangan kewangan, serta faedah program teknikal.";
+      if (!reqBody.programId) {
+        throw new Error("programId diperlukan untuk semakan kertas kerja.");
+      }
 
-Sertakan bahagian: Pendahuluan, Objektif, Atur Cara, Bajet, Penutup.`;
+      const { data: program, error } = await supabase
+        .from('programs')
+        .select('nama_program, deskripsi, tarikh_mula, tarikh_tamat, location, budget, status, club_id')
+        .eq('id', reqBody.programId)
+        .single();
 
-    case "analyze_performance":
-      return `Anda adalah penganalisis prestasi untuk JPP POLISAS. Berikan analisis prestasi kelab ${clubName} berdasarkan data berikut dalam ${lang}.
+      if (error || !program) {
+        throw new Error(`Data program ID ${reqBody.programId} tidak dijumpai.`);
+      }
 
-Data prestasi:
-${JSON.stringify(data, null, 2)}
+      const { data: club } = await supabase.from('clubs').select('name').eq('id', program.club_id).single();
 
-Berikan: (1) Penilaian keseluruhan, (2) Kekuatan, (3) Bidang yang perlu diperbaiki, (4) Cadangan konkrit.`;
+      userPrompt = `Buat semakan draf Kertas Kerja Program ini sebelum diluluskan oleh Admin JPP.
 
-    case "karnival_faq":
-      return `Anda adalah pembantu maklumat Hari Karnival JPP POLISAS. Jawab soalan pelajar dalam ${lang} yang mesra dan ringkas.
+[ BUTIRAN KERTAS KERJA ]
+- Kelab: ${club?.name || 'Tidak Dinyatakan'}
+- Nama Program: ${program.nama_program}
+- Tarikh: ${program.tarikh_mula} hingga ${program.tarikh_tamat}
+- Lokasi: ${program.location || 'Tidak Dinyatakan'}
+- Anggaran Bajet: RM ${program.budget || '0'}
+- Objektif & Aktiviti (Deskripsi): ${program.deskripsi || 'Tiada deskripsi.'}
 
-Maklumat Karnival:
-- Penganjur: JPP POLISAS
-- Tujuan: Promosi kelab dan persatuan
-- Ciri-ciri: Pendaftaran kelab, Pameran, Pengundian
-
-Soalan pelajar: ${question}
-
-Jawab dengan tepat, mesra, dan tidak lebih dari 3 ayat.`;
-
-    case "suggest_program":
-      return `Anda adalah perancang program yang berpengalaman untuk persatuan pelajar POLISAS. Berdasarkan histori aktiviti kelab ${clubName}, cadangkan 3 program yang bersesuaian untuk bulan hadapan dalam ${lang}.
-
-Histori aktiviti:
-${JSON.stringify(data.history, null, 2)}
-
-Berikan: Nama program, objektif singkat, dan tarikh cadangan untuk setiap program.`;
+[ ARAHAN PENILAIAN ]
+Tulis satu laporan semakan (AI Review) dalam 3 bahagian teras:
+1. Kekuatan Perancangan (Komen positif ringkas).
+2. Potensi Risiko & Kekurangan (Cth: bajet tak padan dengan aktiviti, atau deskripsi terlalu kabur).
+3. Rating Kelulusan JPP (Adakah Sangat Disyorkan, Kurang Disyorkan, atau Perlu Pindaan Besar? Berikan % Skor kualiti).`;
+      break;
+    }
 
     default:
-      return `Bantu saya dengan pertanyaan ini dalam Bahasa Melayu: ${question || JSON.stringify(data)}`;
+      // Fallback for purely data driven (suggest_program, summarize_report, generate_draft)
+      systemInstruction = "Anda adalah pembantu AI integrasi JPP POLISAS.";
+      userPrompt = `Selesaikan tugas: ${task} berasaskan data berikut: ${JSON.stringify(reqBody.data || {})}`;
+      break;
   }
+
+  return { systemInstruction, userPrompt };
 }
 
-// ── Main handler ──────────────────────────────────────────────────────────────
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Authorization, Content-Type",
-      },
-    });
+    return new Response(null, { headers: corsHeaders });
   }
 
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
   try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Akses ditolak: Tiada Authorization." }), { status: 401, headers: corsHeaders });
+    }
+
+    // Initialize Supabase Client context
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
     const apiKey = Deno.env.get("GEMINI_API_KEY");
     if (!apiKey) {
-      return new Response(
-        JSON.stringify({ error: "GEMINI_API_KEY tidak dikonfigurasi" }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
+      throw new Error("GEMINI_API_KEY tidak dikonfigurasi.");
+    }
+
+    // Initialize Admin Client for internal operations
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+
+    // RATE LIMIT CHECK
+    const { data: settingsSettings } = await supabaseAdmin.from('system_settings').select('*').in('key', ['ai_total_tokens', 'ai_token_limit']);
+    let totalTokens = 0;
+    let tokenLimit = 1000000;
+    
+    settingsSettings?.forEach((setting: any) => {
+        if (setting.key === 'ai_total_tokens') totalTokens = parseInt(setting.value) || 0;
+        if (setting.key === 'ai_token_limit') tokenLimit = parseInt(setting.value) || 1000000;
+    });
+
+    if (totalTokens >= tokenLimit) {
+        return new Response(JSON.stringify({ error: "Kuota token AI untuk bulan ini telah didakwa maksimum oleh Pusat Kawalan JPP. Sila hubungi Administrator." }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
     }
 
     const body: AiRequest = await req.json();
-    const { task, data = {}, question } = body;
-
-    if (!task) {
-      return new Response(
-        JSON.stringify({ error: "Parameter 'task' diperlukan" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+    if (!body.task) {
+      throw new Error("Parameter 'task' diperlukan.");
     }
 
-    const prompt = buildPrompt(task, data, question);
+    // 1. Bina Prompt dan Fetch Data DB Securely
+    const { systemInstruction, userPrompt } = await buildPromptForDB(body.task, body, supabaseClient);
 
-    // Hantar ke Gemini API
-    const geminiResponse = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+    // 2. Call Gemini API - gemini-2.5-flash adalah model aktif terkini untuk free tier
+    const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+
+    const geminiResponse = await fetch(`${endpoint}?key=${apiKey}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
+        system_instruction: { parts: [{ text: systemInstruction }] },
+        contents: [{ parts: [{ text: userPrompt }] }],
         generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1024,
+          temperature: 0.5,
+          maxOutputTokens: 8192, // Sesuai untuk perancangan dan laporan panjang
           topP: 0.9,
         },
         safetySettings: [
@@ -159,31 +202,33 @@ Deno.serve(async (req: Request) => {
     const text = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!text) {
-      throw new Error("Gemini tidak mengembalikan respons yang sah");
+      throw new Error("Gemini API tidak mengembalikan text yang sah.");
     }
 
-    return new Response(
-      JSON.stringify({ result: text, task }),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
-    );
+    // RECORD TOKEN USAGE
+    const usedTokens = geminiData?.usageMetadata?.totalTokenCount || 0;
+    if (usedTokens > 0) {
+        const newTotal = totalTokens + usedTokens;
+        
+        // Cek format (if value exists/is missing in DB)
+        const { data: existingTokenRow } = await supabaseAdmin.from('system_settings').select('id').eq('key', 'ai_total_tokens');
+        if (existingTokenRow && existingTokenRow.length > 0) {
+             await supabaseAdmin.from('system_settings').update({ value: newTotal }).eq('key', 'ai_total_tokens');
+        } else {
+             await supabaseAdmin.from('system_settings').insert({ key: 'ai_total_tokens', value: newTotal });
+        }
+    }
+
+    return new Response(JSON.stringify({ result: text, task: body.task }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
 
   } catch (error: any) {
-    console.error("[ai-assistant] Error:", error);
-    return new Response(
-      JSON.stringify({ error: error.message || "AI request gagal" }),
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
-    );
+    console.error("[ai-assistant] Error:", error.message);
+    return new Response(JSON.stringify({ error: error.message || "Ralat Pelayan Dalaman" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

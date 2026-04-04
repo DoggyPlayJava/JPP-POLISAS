@@ -4,7 +4,7 @@ import { differenceInDays, parseISO } from 'date-fns';
 import {
   Eye, CheckCircle2, XCircle, RefreshCw, Lock, Unlock, FileText,
   ExternalLink, Filter, MessageSquare, BookOpen, Users, Calendar,
-  Award, UploadCloud, Zap, AlertTriangle, Clock, Check, ChevronRight, Archive
+  Award, UploadCloud, Zap, AlertTriangle, Clock, Check, ChevronRight, Archive, Bot
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ import { ALL_CLUBS } from '@/types';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import PemantauanTakwimTab from '@/components/takwim/PemantauanTakwimTab';
+import { AiReviewModal } from '@/components/ai/AiReviewModal';
 
 // --- Types & Constants ---
 type ProgramStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'CONFIRMED' | 'PENDING_POSTMORTEM' | 'COMPLETED' | 'REQUEST_UNLOCK';
@@ -68,12 +69,18 @@ export function SemakanLaporanPage() {
   const [actionDialog, setActionDialog] = useState<{ open: boolean, type: 'APPROVE' | 'REJECT' | 'UNLOCK' | 'REJECT_UNLOCK' | null, data: Program | null }>({
     open: false, type: null, data: null
   });
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [reportType, setReportType] = useState('Laporan Aktiviti');
+  const [reportFile, setReportFile] = useState<File | null>(null);
+  const [aiReviewProgramId, setAiReviewProgramId] = useState<{id: string, name: string} | null>(null);
   const [remarks, setRemarks] = useState('');
 
   // States for Tab 2: Laporan Kelab (General)
   const [reports, setReports] = useState<any[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('Semua');
   const [filterClub, setFilterClub] = useState<string>('Semua');
+  const [reportActionDialog, setReportActionDialog] = useState<{ open: boolean, report: any, status: string }>({ open: false, report: null, status: '' });
+  const [reportRemarks, setReportRemarks] = useState('');
 
   // States for Tab 3: Arkib Berpusat
   const [arkibItems, setArkibItems] = useState<any[]>([]);
@@ -316,11 +323,47 @@ export function SemakanLaporanPage() {
     return matchStatus && matchClub;
   });
 
-  const handleStatusUpdate = async (r: any, newStatus: string) => {
+  const handleStatusUpdate = async (r: any, newStatus: string, remarksInput: string = '') => {
     const toastId = toast.loading("Memproses...");
-    const { error } = await supabase.from('club_reports').update({ status: newStatus, reviewed_by: user?.id, reviewed_at: new Date().toISOString() }).eq('id', r.id);
-    if (error) toast.error('Gagal memproses dokumen.', { id: toastId });
-    else { toast.success(`Dokumen ${newStatus.toLowerCase()}!`, { id: toastId }); loadData(); }
+    const { error } = await supabase.from('club_reports').update({ 
+      status: newStatus, 
+      reviewed_by: user?.id, 
+      reviewed_at: new Date().toISOString(),
+      admin_feedback: newStatus === 'Ditolak' ? remarksInput : null
+    }).eq('id', r.id);
+    
+    if (error) {
+      toast.error('Gagal memproses dokumen.', { id: toastId });
+    } else { 
+      toast.success(`Dokumen ${newStatus.toLowerCase()}!`, { id: toastId }); 
+      
+      const isApproved = newStatus === 'Diluluskan';
+      const notificationTitle = isApproved ? '✅ Laporan Diluluskan' : '❌ Laporan Ditolak';
+      let notificationContent = `Dokumen "${r.file_name}" telah ${newStatus.toLowerCase()} oleh JPP.`;
+      if (!isApproved && remarksInput) {
+        notificationContent += ` Alasan: ${remarksInput}`;
+      }
+      
+      if (r.submitted_by) {
+        await supabase.from('notifications').insert([{
+           user_id: r.submitted_by,
+           title: notificationTitle,
+           message: notificationContent,
+           type: 'STATUS_UPDATE',
+           is_read: false
+        }]);
+      }
+      
+      loadData(); 
+    }
+  };
+
+  const submitReportAction = () => {
+    if (reportActionDialog.report && reportActionDialog.status) {
+      handleStatusUpdate(reportActionDialog.report, reportActionDialog.status, reportRemarks);
+      setReportActionDialog({ open: false, report: null, status: '' });
+      setReportRemarks('');
+    }
   };
 
   return (
@@ -396,11 +439,10 @@ export function SemakanLaporanPage() {
                   <CardContent className="p-6 md:p-8 flex flex-col justify-between h-full gap-6">
                     <div className="flex items-start gap-5">
 
-                      {/* UI YANG DIKEMASKINI DARI KOD 3 */}
                       <div className={cn("w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-white shadow-lg shrink-0 transition-transform group-hover:scale-105",
                         p.status === 'PENDING_APPROVAL' ? "bg-gradient-to-br from-amber-400 to-orange-500" :
                           p.status === 'CONFIRMED' ? "bg-gradient-to-br from-emerald-400 to-teal-500" :
-                            p.status === 'REQUEST_UNLOCK' ? "bg-gradient-to-br from-indigo-500 to-purple-600 animate-pulse" : // Warna Ungu Berdenyut
+                            p.status === 'REQUEST_UNLOCK' ? "bg-gradient-to-br from-indigo-500 to-purple-600 animate-pulse" :
                               "bg-slate-300")}>
                         {p.status === 'REQUEST_UNLOCK' ? <Unlock size={24} /> : <Calendar size={24} />}
                       </div>
@@ -437,7 +479,6 @@ export function SemakanLaporanPage() {
                           </div>
                         )}
                       </div>
-                      {/* TAMAT UI DARI KOD 3 */}
 
                     </div>
 
@@ -468,13 +509,24 @@ export function SemakanLaporanPage() {
                       )}
 
                       {(p.status === 'PENDING_APPROVAL' || p.status === 'PENDING_POSTMORTEM') && (
-                        <div className="flex gap-2 flex-1">
-                          <Button variant="success" onClick={() => setActionDialog({ open: true, type: 'APPROVE', data: p })} className="flex-1 rounded-xl font-black text-xs h-12">
-                            <CheckCircle2 size={16} className="mr-1.5" /> Lulus
-                          </Button>
-                          <Button variant="destructive" onClick={() => setActionDialog({ open: true, type: 'REJECT', data: p })} className="rounded-xl font-black text-xs h-12 px-6">
-                            <XCircle size={16} />
-                          </Button>
+                        <div className="flex flex-col gap-2 flex-1">
+                          {p.status === 'PENDING_APPROVAL' && (
+                            <Button 
+                              variant="outline"
+                              onClick={() => setAiReviewProgramId({ id: p.id, name: p.nama_program })} 
+                              className="w-full rounded-xl font-black text-xs h-10 border-emerald-500/30 text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all"
+                            >
+                              <Bot size={16} className="mr-1.5" /> Semak Kertas Kerja (AI)
+                            </Button>
+                          )}
+                          <div className="flex gap-2">
+                            <Button variant="success" onClick={() => setActionDialog({ open: true, type: 'APPROVE', data: p })} className="flex-1 rounded-xl font-black text-xs h-12 shadow-sm">
+                              <CheckCircle2 size={16} className="mr-1.5" /> Lulus
+                            </Button>
+                            <Button variant="destructive" onClick={() => setActionDialog({ open: true, type: 'REJECT', data: p })} className="rounded-xl font-black text-xs h-12 px-6 shadow-sm">
+                              <XCircle size={16} />
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -611,7 +663,7 @@ export function SemakanLaporanPage() {
                               {r.status === 'Menunggu' && (
                                 <>
                                   <Button variant="success" onClick={() => handleStatusUpdate(r, 'Diluluskan')} size="sm" className="rounded-xl font-black text-[10px] h-9 px-4">Lulus</Button>
-                                  <Button variant="destructive" onClick={() => handleStatusUpdate(r, 'Ditolak')} size="sm" className="rounded-xl font-black text-[10px] h-9 px-4">Tolak</Button>
+                                  <Button variant="destructive" onClick={() => setReportActionDialog({ open: true, report: r, status: 'Ditolak' })} size="sm" className="rounded-xl font-black text-[10px] h-9 px-4">Tolak</Button>
                                 </>
                               )}
                               {r.file_url && r.file_url.length > 5 ? (
@@ -790,6 +842,38 @@ export function SemakanLaporanPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── Dialog Action (Reports) ── */}
+      <Dialog open={reportActionDialog.open} onOpenChange={(o) => setReportActionDialog({ ...reportActionDialog, open: o })}>
+        <DialogContent className="rounded-[3rem] p-10 max-w-md border-none shadow-2xl bg-card">
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-3xl font-black tracking-tighter">Sahkan Tindakan Dokumen</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">
+              Alasan Penolakan (Opsyenal tetapi digalakkan)
+            </Label>
+            <Textarea
+              value={reportRemarks}
+              onChange={(e) => setReportRemarks(e.target.value)}
+              placeholder="Berikan alasan kenapa dokumen ini ditolak..."
+              className="rounded-2xl bg-muted border-none min-h-[120px] p-5 font-medium focus-visible:ring-rose-500/20"
+            />
+          </div>
+          <DialogFooter className="gap-3 pt-4 border-t border-border">
+            <Button variant="ghost" onClick={() => setReportActionDialog({ open: false, report: null, status: '' })} className="rounded-xl font-bold flex-1 h-12">Batal</Button>
+            <Button variant="destructive" onClick={submitReportAction} className="rounded-xl font-black flex-1 h-12 shadow-xl shadow-rose-500/20">Sahkan Tolak</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AiReviewModal 
+        isOpen={!!aiReviewProgramId} 
+        onClose={() => setAiReviewProgramId(null)} 
+        programId={aiReviewProgramId?.id || null} 
+        programName={aiReviewProgramId?.name} 
+      />
+
     </div>
   );
 }
