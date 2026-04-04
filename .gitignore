@@ -36,3 +36,4 @@ src/lib/*.json
 .env
 .env.local
 .env.*.local
+src/takwim_rasmi_workflow.md

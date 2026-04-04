@@ -25,7 +25,8 @@ Setiap program dalam takwim akan diunjur dan dikawal selia melalui variasi nilai
 - Membolehkan kelab mengemaskini bila-bila masa menanti Kertas Kerja disiapkan.
 
 > [!WARNING] Blind Spots & Senario Kelemahan (Fasa 1)
-> 1. **Pembatalan / Pemadaman Draf:** Pelajar **TIDAK mempunyai butang "Padam" (Delete/Trash) untuk membuang DRAFT**. Berdasarkan `AktivitiFull.tsx`, butang tong sampah hanya ada pada aktiviti mini (di tab Aktiviti Kelab), tetapi tab Takwim Rasmi (`ProgramCard`) tiada kod `onDelete`. Jika pelajar tersilap cipta Draf/tertekan simpan berkali-kali, lambakan draf "mati" tidak akan dapat dibuang & merosakkan pangkalan data.
+> 1. **Pembatalan / Pemadaman Draf:** Pelajar **TIDAK mempunyai butang "Padam" (Delete/Trash) untuk membuang DRAFT**. Berdasarkan `AktivitiFull.tsx`, butang tong sampah hanya ada pada aktiviti mini (di tab Aktiviti Kelab), tetapi tab Takwim Rasmi (`ProgramCard`) tiada kod `onDelete`. Jika pelajar tersilap cipta Draf/tertekan simpan berkali-kali, lambakan draf "mati" tidak akan dapat dibuang & merosakkan pangkalan data. (PELAJAR HANYA BOLEH DELETE DRAF/BUTANG TONG SAMPAH WUJUD HANYA APABILA TOGGLE "TAMBAH TAKWIM RASMI" DI JPPADMINPAGE.TSX ON)
+
 > 2. **Tarikh Luput Menggantung (Hanging Expiry):** Jika tarikh program (Hari H) berada kurang dari 9 hari dari tarikh hari ini (`daysLeft < 9`), butang `Hantar` akan dilumpuhkan. Walau bagaimanapun, disebabkan tiada butang DELETE dan tiada butang UNLOCK di peringkat ini, **draf selamanya akan terperangkap (Limbo)** di dalam sistem Kelab jika tidak dihantar dalam tempoh yang disyaratkan.
 
 ---
@@ -41,8 +42,8 @@ Setiap program dalam takwim akan diunjur dan dikawal selia melalui variasi nilai
 - Berpindah ke papan JPP (`SemakanLaporanPage.tsx`) untuk disemak.
 
 > [!CAUTION] Kelemahan & Titik Buta (Fasa 2)
-> 1. **Tiada Undo (Tarik Balik Perubahan):** Sebaik sahaja MT menekan Hantar, mereka tidak lagi dapat menukar fail PDF Kertas Kerja. Jika MT menyedari dia *tersalah fail PDF*, dia tidak dapat menekan "Batal Hantar" dan terpaksa memanggil AJK JPP untuk _reject_ secara manual untuk membukanya kembali.
-> 2. **Sistem Teruskan Lulus Walau Hari Terlepas (Overdue Approval):** Jika JPP lambat luluskan dan program sudah berlalu / melepasi tarikhnya, tiada sekatan masa (Time Barrier) ke atas butang pengesahan PENDING_APPROVAL. Sistem menerima pelulusan pasca tarikh (Backdated Approval).
+> 1. **Tiada Undo (Tarik Balik Perubahan):** Sebaik sahaja MT menekan Hantar, mereka tidak lagi dapat menukar fail PDF Kertas Kerja. Jika MT menyedari dia *tersalah fail PDF*, dia tidak dapat menekan "Batal Hantar" dan terpaksa memanggil AJK JPP untuk _reject_ secara manual untuk membukanya kembali. (BIARKAN MCMNI)
+> 2. **Sistem Teruskan Lulus Walau Hari Terlepas (Overdue Approval):** Jika JPP lambat luluskan dan program sudah berlalu / melepasi tarikhnya, tiada sekatan masa (Time Barrier) ke atas butang pengesahan PENDING_APPROVAL. Sistem menerima pelulusan pasca tarikh (Backdated Approval). (JANGAN LAKSANAKAN)
 
 ---
 
@@ -72,9 +73,9 @@ Setiap program dalam takwim akan diunjur dan dikawal selia melalui variasi nilai
 - Status beralih menjadi **DRAFT** (pelajar membetulkan tarikh > masuk semula kitaran Kertas Kerja).
 
 > [!WARNING] Isu Kritikal UI Pentadbir (Fasa 4)
-> 1. **JPP Tiada Butang REJECT untuk "Unlock":** Jika pelajar meminta Unlock (Tangguh), di muka JPP (`SemakanLaporanPage`), butang yang ditawarkan **hanya butang biru "Buka Kunci (Unlock)"**. 
+> 1. **JPP Tiada Butang REJECT untuk "Unlock":** Jika pelajar meminta Unlock (Tangguh), di muka JPP (`SemakanLaporanPage`), butang yang ditawarkan **hanya butang biru "Buka Kunci (Unlock)"**. (TAMBAH BUTANG REJECT)
 > Bagaimana jika JPP **tidak bersetuju** untuk menangguh tarikh? TIADA CARA UNTUK JPP BALAS "TIDAK"! JPP hanya boleh abaikan mesej itu dan ia akan selamanya lekat pada REQUEST_UNLOCK tanpa jalan keluar untuk pelajar memuat naik Post-Mortem.
-> 2. **Alur Post-Mortem Tergantung Jika Sedang Di 'Unlock':** Jika hari program sudah lepas secara fizikal, tetapi pelajar tersilap tekan "Request Unlock" dan ia tidak direspon JPP atau disengajakan abaikan, butang "Hantar Post Mortem" tidak dapat ditekan sehinggalah status berubah balik ke sesuatu yang stabil.
+> 2. **Alur Post-Mortem Tergantung Jika Sedang Di 'Unlock':** Jika hari program sudah lepas secara fizikal, tetapi pelajar tersilap tekan "Request Unlock" dan ia tidak direspon JPP atau disengajakan abaikan, butang "Hantar Post Mortem" tidak dapat ditekan sehinggalah status berubah balik ke sesuatu yang stabil. (TAK FAHAM, KAJI BALIK)
 
 ---
 
@@ -89,9 +90,9 @@ Setiap program dalam takwim akan diunjur dan dikawal selia melalui variasi nilai
 - Selagi dalam `PENDING_POSTMORTEM` yang Ditolak, M.T/Presiden masih boleh tekan butang kuning re-upload dan tekan Hantar Semula. 
 
 > [!TIP] Risiko Integriti & Workflow Berlepas (Fasa 5)
-> 1. **Tiada Pengesanan Tarikh Selesai:** Sistem membenarkan Post-Mortem didaftarkan **walaupun tarikh program masih lagi belum berlaku**! Tiada kawalan yang mengatakan "You cannot submit Post-Mortem for future event". Pelajar (terutama MT yang nak cepat) mungkin memalsukan report 2 hari lebih awal.
-> 2. **Tiada Notis Program Lewat Laporan:** Tidak ada fungsi (misalnya warna Merah Amaran Ekstrem atau Denda Merit) jika MT melengahkan penghantaran Post Mortem selama berbulan-bulan lamanya lamanya melepasi Tarikh Tamat program.
-> 3. **Format Pelampir Bukti Gambar Kurang Kawalan:** Had 3 gambar direkodkan di UI UI, tetapi apabila `onRemoveImage` ditekan, kelab sekadar membuang rekod URL dari array DB, JAWAPAN FAIL GAMBAR ASAL DI SUPABASE BUCKET `reports` MASIH WUJUD DAN TIDAK DIPADAM (Tiada Logik DELETE BUCKET dipanggil semasa menekan pangkah ❌ dalam frontend). Ini mengundang penimbunan 'Sampah Memori' yang menyebabkan kos infrastruktur tinggi di kemudian hari (Orphaned Files).
+> 1. **Tiada Pengesanan Tarikh Selesai:** Sistem membenarkan Post-Mortem didaftarkan **walaupun tarikh program masih lagi belum berlaku**! Tiada kawalan yang mengatakan "You cannot submit Post-Mortem for future event". Pelajar (terutama MT yang nak cepat) mungkin memalsukan report 2 hari lebih awal. (JANGAN LAKSANAKAN)
+> 2. **Tiada Notis Program Lewat Laporan:** Tidak ada fungsi (misalnya warna Merah Amaran Ekstrem atau Denda Merit) jika MT melengahkan penghantaran Post Mortem selama berbulan-bulan lamanya lamanya melepasi Tarikh Tamat program. (BUAT SISTEM NOTIS DARI JPP SEKIRANYA MT LAMBAT HANTAR LAPORAN, POSTMORTEM, KERTAS KERJA DAN SEBAGAINYA)
+> 3. **Format Pelampir Bukti Gambar Kurang Kawalan:** Had 3 gambar direkodkan di UI UI, tetapi apabila `onRemoveImage` ditekan, kelab sekadar membuang rekod URL dari array DB, JAWAPAN FAIL GAMBAR ASAL DI SUPABASE BUCKET `reports` MASIH WUJUD DAN TIDAK DIPADAM (Tiada Logik DELETE BUCKET dipanggil semasa menekan pangkah ❌ dalam frontend). Ini mengundang penimbunan 'Sampah Memori' yang menyebabkan kos infrastruktur tinggi di kemudian hari (Orphaned Files). (FIX ISU INI)
 
 ---
 
@@ -104,12 +105,4 @@ Setiap program dalam takwim akan diunjur dan dikawal selia melalui variasi nilai
 
 ---
 
-## RUMUSAN CADANGAN PENAMBAHBAIKAN ("LOopholes Fix") YANG AKUT:
 
-Berpandukan kajian komprehensif alur aplikasi masa ini, amat disarankan kelak untuk diimplementasikan perincian berikut oleh pasukan pembangun Pautan JPP:
-
-1. **Buat Fungsi Padam Draf Takwim:** Wujudkan butang (Trash) untuk Program berstatus DRAFT agar pelajar boleh menyingkirkan rekod sampah/silap daftar sepertimana Aktiviti Biasa.
-2. **Tambah Sistem Tolak (REJECT) Pada Modal Pentadbiran JPP Untuk Permohonan Tangguh:** Jika butang 'Unlock' tertera pada skrin Admin, sedia tawarkan butang sebelah 'Tolak Unlock', agar status kembali ke CONFIRMED berserta mesej penolakan tangguh.
-3. **Penguatkuasaan Logik Masa (Timeline Guard Rails):** Halang `url_post_mortem` dari dimuatnaik selagi `new Date() < new Date(tarikh_tamat)`.
-4. **Pembatalan Penyerahan Pantas (Quick Recall Button):** Tambah fungsi tarik balik (*Withdraw*) di Papan Pemuka bagi mengelakkan Admin diganggu akibat kesalahan letak fail kecil sekurang-kurangnya sehingga dokumen itu disentuh oleh Admin JPP sendiri (reviewed_at = null).
-5. **Autoclean Orphaned Images Bucket:** Suntik panggilan fungsi `supabase.storage.from('reports').remove(['fail_dir'])` setiap kali `handleRemoveImage` atau `upload` baru mengambil alih indeks bagi mengelakkan storan kotor.
