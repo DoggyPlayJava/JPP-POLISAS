@@ -64,10 +64,16 @@ export function AiSettingsProvider({ children }: { children: React.ReactNode }) 
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('[AiSettings] Realtime status:', status);
+      });
+
+    // Polling fallback every 5s — ensures emergency kill-switch works even if realtime is delayed
+    const pollInterval = setInterval(fetchSettings, 5000);
 
     return () => {
       mounted = false;
+      clearInterval(pollInterval);
       supabase.removeChannel(channel);
     };
   }, []);
