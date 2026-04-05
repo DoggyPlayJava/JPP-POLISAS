@@ -11,8 +11,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { NotificationBell } from '@/components/ui/NotificationBell';
 
 export function Header() {
-  const { profile } = useAuth();
-  const clubName = profile?.club_id ? ALL_CLUBS.find(c => c.id === profile.club_id)?.name : '';
+  const { profile, selectedClubId, isSuperAdmin, isPresident, effectiveRole } = useAuth();
+  
+  const activeClubId = selectedClubId ?? profile?.club_id;
+  const clubName = activeClubId
+    ? (ALL_CLUBS.find(c => c.id === activeClubId)?.name ?? activeClubId.replace('club_', '').toUpperCase())
+    : isSuperAdmin
+      ? 'JPP Admin'
+      : '';
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -35,9 +41,16 @@ export function Header() {
     <header className="h-16 flex items-center justify-between px-6 lg:px-8 relative z-40 bg-background/70 backdrop-blur-xl border-b border-border/40">
       <div className="flex items-center gap-3">
         {clubName && (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary/8 border border-primary/15">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary/8 border border-primary/15 transition-all">
             <div className="w-1.5 h-1.5 rounded-full bg-accent shadow-[0_0_4px_1px_rgba(212,160,23,0.4)]" />
             <span className="text-[11px] font-black uppercase tracking-widest text-primary">{clubName}</span>
+            
+            {/* Sync ADMIN badge with sidebar */}
+            {(isSuperAdmin || isPresident) && effectiveRole !== 'CLUB_MEMBER' && effectiveRole !== 'AHLI' && (
+              <Badge className="text-[9px] px-1.5 py-0 bg-accent/15 text-accent border-none font-black ml-1 scale-90 origin-left">
+                ADMIN
+              </Badge>
+            )}
           </div>
         )}
       </div>
