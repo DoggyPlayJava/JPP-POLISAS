@@ -4,6 +4,13 @@ import { toast } from 'react-hot-toast';
 
 export type AiTask = "analyze_performance" | "review_kertas_kerja" | "suggest_program" | "generate_draft" | "summarize_report" | "custom_query" | "semak_tatabahasa_laporan" | "jana_belanjawan_ai" | "pecahkan_tugasan_ai";
 
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'ai' | 'error';
+  content: string;
+  timestamp: string; // ISO string
+}
+
 interface AiRequestParams {
   task: AiTask;
   clubId?: string;
@@ -13,9 +20,10 @@ interface AiRequestParams {
 }
 
 export function useAiAssistant() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);       // for callAi (quick actions, modals)
+  const [isChatLoading, setIsChatLoading] = useState(false); // for sendChatMessage (FloatingAiChat)
   const [result, setResult] = useState<string | null>(null);
-  const cacheRef = useRef<Record<string, string>>({}); // 2. Client-side caching
+  const cacheRef = useRef<Record<string, string>>({}); // Client-side caching
 
   const callAi = async (params: AiRequestParams) => {
     // Bina unique cache key
@@ -102,7 +110,12 @@ Format Mesti Dipatuhi:
       } else if (params.task === 'custom_query') {
         systemInstruction = "Anda adalah AI rasmi platform web JPP POLISAS. Anda HANYA DIBENARKAN untuk menjawab hal-hal berkaitan kelab, persatuan, dokumentasi aktiviti, dan maklumat kampus POLISAS. Jika subjek di luar skop ini, tolak dengan sopan.\n\nARAHAN WAJIB (STRICT): Anda mesti merumuskan jawapan kepada yang SANGAT PENDEK, mesra, dan santai. JANGAN berikan jawapan panjang lebar melainkan jika betul betul mendesak";
         userPrompt = `Pertanyaan Pelajar: ${params.query}`;
-        outputLimit = 700; // Dikembalikan ke limit selamat untuk elak terpotong (truncated)
+        outputLimit = 700;
+
+      } else if (params.task === 'suggest_program') {
+        systemInstruction = "Anda adalah Pegawai Hal Ehwal Pelajar JPP POLISAS yang kreatif dan berpengalaman dalam menganjurkan program berkualiti untuk pelajar politeknik.";
+        userPrompt = `Cadangkan LIMA (5) idea program atau aktiviti pelajar yang menarik, praktikal, dan berimpak tinggi untuk kelab/persatuan di POLISAS.\n\nFokus Utama: ${params.data?.fokus || 'Meningkatkan perpaduan dan penglibatan aktif pelajar'}\n\n[FORMAT WAJIB — gunakan Markdown]\nUntuk setiap cadangan, nyatakan:\n- **Nama Program** (pendek & menarik)\n- Objektif ringkas (1 ayat)\n- Cadangan tarikh/tempoh\n\nJawab dalam Bahasa Melayu yang mesra dan profesional.`;
+        outputLimit = 1500;
 
       } else {
         systemInstruction = "Anda adalah pembantu AI integrasi JPP POLISAS.";
@@ -174,6 +187,92 @@ Format Mesti Dipatuhi:
     }
   };
 
-  return { callAi, isLoading, result, setResult };
+  // --- Multi-turn chat function for FloatingAiChat ---
+  const sendChatMessage = async (
+    userText: string,
+    history: ChatMessage[]
+  ): Promise<string | null> => {
+    setIsChatLoading(true);
+    try {
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) throw new Error('Sila konfigurasikan VITE_GEMINI_API_KEY dalam fail .env anda.');
+
+      const systemInstruction = [
+        'Anda adalah AI rasmi platform web JPP POLISAS (Jabatan Pelajar Politeknik Sultan Abdul Aziz Shah).',
+        'Anda HANYA DIBENARKAN menjawab soalan berkaitan kelab pelajar, persatuan, dokumentasi aktiviti, dan maklumat umum kampus POLISAS.',
+        '',
+        '== PERATURAN UTAMA: ANTI-REKAAN (WAJIB DIPATUHI) ==',
+        '1. JANGAN SEKALI-KALI mereka, meneka, atau mengarang fakta, singkatan, nama jawatan, nama dokumen, atau maklumat institusi yang anda tidak pasti.',
+        '2. Jika pengguna bertanya tentang singkatan atau kod dalaman (contoh: KJ JSKK, BPK, JK3 dll) yang anda TIDAK PASTI maknanya — AKUI dengan jujur bahawa anda tidak tahu. Contoh: "Maaf, saya tidak pasti maksud singkatan itu. Sila rujuk pihak JPP atau dokumen rasmi untuk pengesahan."',
+        '3. Jika anda tidak mempunyai maklumat yang cukup — JANGAN reka jawapan. Katakan "Saya tidak pasti, sila semak dengan pihak berkaitan."',
+        '4. Lebih baik mengaku tidak tahu daripada memberikan maklumat yang salah.',
+        '',
+        '== FORMAT ==',
+        'Jawapan mestilah PENDEK, mesra, dan santai. JANGAN berikan jawapan panjang melainkan jika amat perlu.',
+        'Jika soalan di luar skop JPP POLISAS, tolak dengan sopan.',
+      ].join('\n');
+
+      // Build alternating user/model turns — exclude error bubbles, cap at 12 messages (6 turns)
+      const validHistory = history
+        .filter((m) => m.role === 'user' || m.role === 'ai')
+        .reduce<ChatMessage[]>((acc, msg) => {
+          if (acc.length > 0 && acc[acc.length - 1].role === msg.role) {
+            acc[acc.length - 1] = msg; // merge consecutive same-role
+          } else {
+            acc.push(msg);
+          }
+          return acc;
+        }, [])
+        .slice(-12);
+
+      const contents = [
+        ...validHistory.map((m) => ({
+          role: m.role === 'user' ? 'user' : 'model',
+          parts: [{ text: m.content }],
+        })),
+        { role: 'user', parts: [{ text: userText }] },
+      ];
+
+      const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+      const response = await fetch(`${endpoint}?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemInstruction }] },
+          contents,
+          generationConfig: { temperature: 0.3, maxOutputTokens: 700, topP: 0.85 },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error?.message || `Google API Error: ${response.status}`);
+      }
+
+      const responseData = await response.json();
+      const finishReason = responseData?.candidates?.[0]?.finishReason;
+      if (finishReason === 'SAFETY') {
+        throw new Error('Mesej anda telah disekat kerana mengandungi elemen yang tidak mematuhi Polisi Keselamatan JPP/Google.');
+      }
+
+      const text = responseData?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) throw new Error('Maklumbalas AI kosong atau tidak sah.');
+      return text;
+
+    } catch (e: any) {
+      console.error('Chat AI Error:', e);
+      const errorMsg = e.message || String(e);
+      if (errorMsg.includes('Polisi Keselamatan')) {
+        toast.error(errorMsg);
+      } else {
+        toast.error('Sistem sedang sibuk, sila cuba lagi!');
+      }
+      return null;
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
+
+  return { callAi, sendChatMessage, isLoading, isChatLoading, result, setResult };
 }
 
