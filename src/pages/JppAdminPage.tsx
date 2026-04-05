@@ -610,8 +610,8 @@ export function JppAdminPage() {
                                         
                                         <div className="flex items-center justify-between p-5 rounded-2xl bg-muted/30 border border-border">
                                             <div>
-                                                <p className="text-sm font-black text-foreground">Penjana Bajet & Tugas Pintar</p>
-                                                <p className="text-[11px] text-muted-foreground font-medium mt-1">Buka/Tutup penjana aktiviti AI automatik.</p>
+                                                <p className="text-sm font-black text-foreground">Enjin Nexus AI</p>
+                                                <p className="text-[11px] text-muted-foreground font-medium mt-1">Buka/Tutup penjana bajet & analisis AI dashboard.</p>
                                             </div>
                                             <Button onClick={() => toggleSetting('allow_ai_budget', settings.allow_ai_budget)} size="sm"
                                                 className={cn('rounded-full font-black text-[11px] w-20 transition-all',
