@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
-  User, Bell, Shield, CreditCard, Mail, Lock, Camera, Check, Award, Globe, Loader2, FileText, Activity
+  User, Bell, Shield, CreditCard, Mail, Lock, Camera, Check, Award, Globe, Loader2, FileText, Activity, HelpCircle, MessageSquare, Headphones, ExternalLink, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -22,6 +23,9 @@ import { toast } from 'react-hot-toast';
 export function SettingsPage() {
   const { user, profile, refetchProfile, effectiveRole } = useAuth();
   const { theme, setTheme } = useTheme();
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentTab = searchParams.get('tab') || 'general';
 
   const [loading, setLoading] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false); // State khas untuk avatar
@@ -156,13 +160,14 @@ export function SettingsPage() {
       </motion.div>
 
       {/* TABS PENGEMUDIAN */}
-      <Tabs defaultValue="general" className="w-full">
+      <Tabs value={currentTab} onValueChange={(value) => setSearchParams({ tab: value })} className="w-full">
         <TabsList className="bg-muted/30 h-auto p-1.5 rounded-[1.5rem] gap-2 border border-border/50 shadow-inner mb-12 flex-wrap">
           {[
             { value: 'general', icon: User, label: 'Profil' },
             { value: 'notifications', icon: Bell, label: 'Pemberitahuan' },
             { value: 'security', icon: Shield, label: 'Keselamatan' },
             { value: 'billing', icon: CreditCard, label: 'Langganan' },
+            { value: 'help', icon: HelpCircle, label: 'Bantuan & Isu' },
           ].map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value} className="data-[state=active]:bg-background data-[state=active]:shadow-xl data-[state=active]:text-primary rounded-xl px-10 py-3 font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground transition-all duration-300 flex items-center gap-3 border border-transparent data-[state=active]:border-border/50">
               <tab.icon className="w-4 h-4" /> {tab.label}
@@ -365,22 +370,146 @@ export function SettingsPage() {
 
           {/* --- TAB LANGGANAN (BILLING) --- */}
           <TabsContent value="billing" className="space-y-10 focus-visible:ring-0">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-6">
-              <Card className="premium-card bg-primary text-primary-foreground rounded-[3rem] p-12 overflow-hidden relative group">
-                <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-110 transition-transform duration-700"><Award size={200} /></div>
-                <div className="relative z-10 space-y-6">
-                  <Badge className="bg-white/20 text-white border-none px-4 py-1.5 font-black text-[10px] uppercase tracking-widest">Pelan Institusi</Badge>
-                  <div className="space-y-2">
-                    <h3 className="text-5xl font-black tracking-tighter">Polisas Enterprise</h3>
-                    <p className="text-white/70 font-medium max-w-sm">Akaun anda didaftarkan di bawah lesen institusi POLISAS secara percuma dan tanpa had.</p>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ duration: 0.4 }} 
+              className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+            >
+              {/* --- FREE TIER --- */}
+              <Card className="premium-card bg-card/40 backdrop-blur-md border-border/40 rounded-[3rem] p-10 flex flex-col justify-between relative overflow-hidden group">
+                <div className="space-y-8 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <Badge variant="outline" className="rounded-full px-4 py-1.5 border-border/50 text-[10px] font-black uppercase tracking-widest bg-muted/20">Active Plan</Badge>
                   </div>
-                  <div className="pt-4 flex items-center gap-3">
-                    <div className="flex -space-x-3">
-                      {[1,2,3].map(i => <Avatar key={i} className="h-10 w-10 border-4 border-primary"><AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i+10}`} /></Avatar>)}
-                    </div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-white/50">+ 1,200 Ahli Aktif</p>
+                  
+                  <div className="space-y-2">
+                    <h3 className="text-4xl font-black tracking-tighter">Free Tier</h3>
+                    <p className="text-muted-foreground font-medium text-sm">Pelan asas institusi untuk pengurusan harian kelab.</p>
+                  </div>
+
+                  <div className="space-y-4 pt-4">
+                    {[
+                      'Basic activity logging tanpa Nexus AI',
+                      'Manual document generation',
+                      'Static Takwim view',
+                      'Standard club analytics'
+                    ].map((feature, i) => (
+                      <div key={i} className="flex items-start gap-3">
+                        <div className="mt-1 p-0.5 rounded-full bg-emerald-500/10 text-emerald-500"><Check size={12} strokeWidth={3} /></div>
+                        <span className="text-xs font-bold text-muted-foreground/80">{feature}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
+
+                <div className="mt-10 pt-8 border-t border-border/40">
+                  <div className="flex items-end gap-1 mb-6">
+                    <span className="text-4xl font-black tracking-tighter">RM0</span>
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest pb-1.5">/ Forever</span>
+                  </div>
+                  <Button disabled className="w-full h-14 rounded-2xl font-black text-[11px] uppercase tracking-widest bg-muted text-muted-foreground cursor-not-allowed">Pelan Semasa</Button>
+                </div>
+              </Card>
+
+              {/* --- PRO TIER (NEXUS AI) --- */}
+              <Card className="premium-card bg-gradient-to-br from-indigo-950 via-indigo-900 to-indigo-950 dark:from-slate-950 dark:via-indigo-950 dark:to-slate-950 text-indigo-50 border-none shadow-2xl shadow-indigo-500/10 rounded-[3rem] p-10 flex flex-col justify-between relative overflow-hidden group">
+                {/* Glow & Backdrop Decor */}
+                <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-125 transition-transform duration-1000 group-hover:rotate-12"><Sparkles size={280} className="text-indigo-400" /></div>
+                <div className="absolute -inset-2 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 blur-lg pointer-events-none" />
+                
+                <div className="space-y-8 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <Badge className="bg-indigo-500/20 text-indigo-300 border-none px-4 py-1.5 font-black text-[10px] uppercase tracking-widest backdrop-blur-md">Recommended</Badge>
+                    <div className="p-3 bg-indigo-500/20 rounded-2xl text-indigo-300 backdrop-blur-md shadow-xl"><Sparkles size={24} /></div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h3 className="text-4xl font-black tracking-tighter">Nexus AI Pro</h3>
+                    <p className="text-indigo-200/60 font-medium text-sm">Tingkatkan produktiviti kelab dengan enjin kecerdasan buatan.</p>
+                  </div>
+
+                  <div className="space-y-4 pt-4">
+                    {[
+                      'Smart AI Budgeting generator',
+                      'Automated Task Delegation',
+                      'AI-Powered Monthly Reports',
+                      'Priority Support & Cloud Storage'
+                    ].map((feature, i) => (
+                      <div key={i} className="flex items-start gap-3">
+                        <div className="mt-1 p-0.5 rounded-full bg-indigo-400/20 text-indigo-400"><Check size={12} strokeWidth={3} /></div>
+                        <span className="text-xs font-bold text-indigo-100/80">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-10 pt-8 border-t border-indigo-500/20">
+                  <div className="flex items-end gap-1 mb-6">
+                    <span className="text-4xl font-black tracking-tighter">RM10</span>
+                    <span className="text-xs font-bold text-indigo-300/60 uppercase tracking-widest pb-1.5">/ Month</span>
+                  </div>
+                  <Button className="w-full h-14 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] bg-indigo-500 hover:bg-indigo-400 text-white shadow-[0_20px_40px_-5px_rgba(99,102,241,0.4)] transition-all hover:scale-105 active:scale-95 group/btn overflow-hidden relative">
+                    <span className="relative z-10">Upgrade ke Nexus AI</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000" />
+                  </Button>
+                </div>
+              </Card>
+            </motion.div>
+          </TabsContent>
+
+          {/* --- TAB BANTUAN & ISU --- */}
+          <TabsContent value="help" className="space-y-10 focus-visible:ring-0">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-6">
+              <Card className="premium-card bg-background/60 backdrop-blur-md border-border/30 overflow-hidden shadow-sm">
+                <CardHeader className="p-10 pb-8 border-b border-border/30">
+                  <CardTitle className="text-2xl font-black tracking-tight uppercase">Bantuan & Isu Sistem</CardTitle>
+                  <CardDescription>Pusat sokongan rasmi e-KPP bagi menyelesaikan masalah dan mengumpul cadangan pengguna.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-10 space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Bantuan Secara WhatsApp */}
+                    <div className="p-8 rounded-[2rem] bg-emerald-500/10 border border-emerald-500/20 space-y-6 relative overflow-hidden group">
+                      <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500"><MessageSquare size={120} /></div>
+                      <div className="space-y-2 relative z-10">
+                        <h4 className="text-lg font-black text-emerald-600 dark:text-emerald-400">Sokongan WhatsApp Live</h4>
+                        <p className="text-sm font-medium text-muted-foreground">Berhubung terus dengan JPP Support Team untuk soalan segera.</p>
+                      </div>
+                      <Button onClick={() => window.open('https://wa.me/601139413699', '_blank')} className="h-12 px-8 rounded-xl font-black text-[11px] uppercase tracking-widest bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 w-full md:w-auto relative z-10 transition-all hover:scale-105 active:scale-95">
+                        Chat Sekarang
+                      </Button>
+                    </div>
+
+                    {/* Lapor Ralat / Cadangan Emel */}
+                    <div className="p-8 rounded-[2rem] bg-primary/10 border border-primary/20 space-y-6 relative overflow-hidden group">
+                      <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500"><Headphones size={120} /></div>
+                      <div className="space-y-2 relative z-10">
+                        <h4 className="text-lg font-black text-primary">Lapor Isu & Cadangan</h4>
+                        <p className="text-sm font-medium text-muted-foreground">Emelkan isu teknikal, ralat, atau idea penambahbaikan anda.</p>
+                      </div>
+                      <Button onClick={() => window.location.href = 'mailto:support.jpp@polisas.edu.my?subject=Maklum%20Balas%20e-KPP'} className="h-12 px-8 rounded-xl font-black text-[11px] uppercase tracking-widest text-primary bg-primary/20 hover:bg-primary/30 w-full md:w-auto relative z-10 shadow-none transition-all hover:scale-105 active:scale-95">
+                        Hantar Emel
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Separator className="bg-border/30" />
+
+                  <div className="space-y-6">
+                    <h3 className="text-xl font-black tracking-tight">Dokumentasi Penting</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {['Garis Panduan Pengguna', 'Tutorial Tambah Laporan', 'Soalan Lazim (FAQ)'].map((doc, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-5 rounded-[1.5rem] bg-muted/30 border border-border/50 hover:bg-muted/50 cursor-pointer transition-all group hover:scale-[1.02] hover:shadow-md">
+                          <div className="flex items-center gap-4">
+                            <div className="p-3 rounded-xl bg-background shadow-sm text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors"><FileText size={18} /></div>
+                            <span className="font-black text-sm tracking-tight">{doc}</span>
+                          </div>
+                          <ExternalLink size={16} className="text-muted-foreground/50 group-hover:text-primary transition-colors" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
               </Card>
             </motion.div>
           </TabsContent>

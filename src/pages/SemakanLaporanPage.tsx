@@ -370,29 +370,29 @@ export function SemakanLaporanPage() {
     <div className="page-container space-y-10 pb-24 max-w-7xl mx-auto">
 
       {/* ── Header Premium ── */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 bg-gradient-to-br from-slate-900 via-slate-800 to-primary/95 p-10 md:p-12 rounded-[3.5rem] text-white shadow-2xl shadow-slate-900/30 relative overflow-hidden border border-white/5">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3" />
-        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-primary/20 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/3" />
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-900 dark:from-black dark:via-slate-950 dark:to-slate-950 p-10 md:p-12 rounded-[3.5rem] text-white shadow-2xl shadow-slate-900/30 relative overflow-hidden border border-white/5 group">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 group-hover:bg-primary/20 transition-colors duration-1000" />
+        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3" />
 
         <div className="space-y-4 relative z-10">
-          <Badge className="bg-white/10 text-amber-400 border border-white/5 px-5 py-2 font-black uppercase tracking-widest text-[10px] backdrop-blur-md rounded-2xl shadow-xl">
+          <Badge className="bg-white/5 text-amber-400 border border-white/10 px-5 py-2 font-black uppercase tracking-widest text-[10px] backdrop-blur-md rounded-2xl shadow-xl">
             Super Admin Panel
           </Badge>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-none text-white drop-shadow-sm">Pusat Kawalan JPP</h1>
-          <p className="text-slate-300 font-medium max-w-lg leading-relaxed text-sm md:text-base">Sahkan takwim program dan pantau kelulusan dokumen rasmi persatuan pelajar.</p>
+          <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-none text-white drop-shadow-2xl">Pusat Kawalan JPP</h1>
+          <p className="text-slate-400 font-medium max-w-lg leading-relaxed text-sm md:text-base">Sahkan takwim program dan pantau kelulusan dokumen rasmi persatuan pelajar.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center relative z-10 shrink-0">
-          <Button onClick={handleSendOverdueNotices} variant="outline" className="w-full sm:w-auto rounded-3xl gap-2 h-14 px-8 border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 font-black tracking-widest uppercase text-[10px] backdrop-blur-sm transition-all shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:shadow-[0_0_30px_rgba(245,158,11,0.25)] hover:scale-105">
+          <Button onClick={handleSendOverdueNotices} variant="outline" className="w-full sm:w-auto rounded-3xl gap-2 h-14 px-8 border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 text-amber-500 hover:text-amber-400 font-black tracking-widest uppercase text-[10px] backdrop-blur-sm transition-all shadow-lg hover:scale-105 active:scale-95">
             <AlertTriangle className="w-5 h-5" /> Imbas Tunggakan
           </Button>
-          <Button onClick={loadData} variant="outline" className="w-full sm:w-auto rounded-3xl gap-2 h-14 px-8 border-white/10 bg-white/10 hover:bg-white/20 text-white font-black tracking-widest uppercase text-[10px] backdrop-blur-sm transition-all hover:scale-105">
+          <Button onClick={loadData} variant="outline" className="w-full sm:w-auto rounded-3xl gap-2 h-14 px-8 border-white/5 bg-white/5 hover:bg-white/10 text-white font-black tracking-widest uppercase text-[10px] backdrop-blur-sm transition-all hover:scale-105 active:scale-95">
             <RefreshCw className={cn("w-5 h-5", loading && "animate-spin")} /> Segarkan Data
           </Button>
         </div>
       </div>
 
       <Tabs defaultValue="programs" className="w-full">
-        <TabsList className="bg-white/60 backdrop-blur-xl p-2 rounded-[2.5rem] mb-12 w-full flex flex-col xl:flex-row h-auto border-2 border-primary/5 shadow-[0_8px_30px_rgba(0,0,0,0.04)] gap-2">
+        <TabsList className="bg-muted/40 dark:bg-slate-900/40 backdrop-blur-xl p-2 rounded-[2.5rem] mb-12 w-full flex flex-col xl:flex-row h-auto border border-border shadow-inner gap-2">
           {[
             { value: 'programs', label: 'Pengurusan Program' },
             { value: 'reports', label: 'Laporan Kelab (General)' },
@@ -403,7 +403,7 @@ export function SemakanLaporanPage() {
               key={t.value}
               value={t.value}
               onClick={t.onClick}
-              className="rounded-[2rem] font-black tracking-widest px-8 py-4 text-[10px] sm:text-[11px] uppercase transition-all duration-500 text-slate-500 hover:text-primary data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-rose-800 data-[state=active]:text-white data-[state=active]:shadow-[0_12px_24px_-8px_rgba(139,26,26,0.5)] data-[state=active]:scale-[1.02] flex-1 whitespace-nowrap"
+              className="rounded-[2rem] font-black tracking-widest px-8 py-4 text-[10px] sm:text-[11px] uppercase transition-all duration-500 text-muted-foreground hover:text-foreground data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-rose-700 data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:shadow-primary/20 data-[state=active]:scale-[1.02] flex-1 whitespace-nowrap"
             >
               {t.label}
             </TabsTrigger>
@@ -469,13 +469,13 @@ export function SemakanLaporanPage() {
                             </div>
                           );
                         })()}
-                        <h3 className="font-black text-xl text-slate-900 leading-tight">{p.nama_program}</h3>
-                        <span className="text-xs text-slate-400 flex items-center gap-1.5 font-bold"><Clock size={12} /> Dikemaskini {new Date(p.updated_at).toLocaleDateString('ms-MY')}</span>
+                        <h3 className="font-black text-xl text-foreground leading-tight">{p.nama_program}</h3>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1.5 font-bold"><Clock size={12} /> Dikemaskini {new Date(p.updated_at).toLocaleDateString('ms-MY')}</span>
 
                         {p.jpp_remarks && (
-                          <div className="mt-2 p-3 bg-indigo-50/50 rounded-xl border border-indigo-100/50 flex flex-col gap-1 max-w-[400px]">
+                          <div className="mt-2 p-3 bg-indigo-500/10 rounded-xl border border-indigo-500/20 flex flex-col gap-1 max-w-[400px]">
                             <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400">Nota Semasa / Alasan</span>
-                            <span className="text-xs font-semibold text-slate-700 italic break-words">{p.jpp_remarks}</span>
+                            <span className="text-xs font-semibold text-foreground/80 italic break-words">{p.jpp_remarks}</span>
                           </div>
                         )}
                       </div>
@@ -557,12 +557,12 @@ export function SemakanLaporanPage() {
                         <Check size={18} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-black text-sm text-slate-700 truncate">{p.nama_program}</p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 mt-1">
+                        <p className="font-black text-sm text-foreground truncate">{p.nama_program}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 mt-1">
                           Selesai · {new Date(p.updated_at).toLocaleDateString('ms-MY')}
                           {p.club_id && (
                             <>
-                              <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                              <span className="w-1 h-1 rounded-full bg-border"></span>
                               <span className="text-muted-foreground truncate">{ALL_CLUBS.find(c => c.id === p.club_id)?.shortName}</span>
                             </>
                           )}
@@ -597,13 +597,13 @@ export function SemakanLaporanPage() {
               </SelectContent>
             </Select>
 
-            <div className="flex flex-wrap gap-2 w-full xl:w-auto bg-muted p-1.5 rounded-2xl">
+            <div className="flex flex-wrap gap-2 w-full xl:w-auto bg-muted/50 p-1.5 rounded-2xl">
               {['Semua', 'Menunggu', 'Dalam Semakan', 'Diluluskan', 'Ditolak'].map(s => (
                 <button
                   key={s}
                   onClick={() => setFilterStatus(s)}
                   className={cn("flex-1 xl:flex-none rounded-xl text-[10px] font-black uppercase tracking-widest px-6 h-11 transition-all",
-                    filterStatus === s ? "bg-slate-900 text-white shadow-md scale-100" : "text-slate-500 hover:bg-slate-200 hover:text-slate-800 scale-95"
+                    filterStatus === s ? "bg-foreground text-background shadow-md scale-100" : "text-muted-foreground hover:bg-muted hover:text-foreground scale-95"
                   )}
                 >
                   {s}
@@ -634,13 +634,13 @@ export function SemakanLaporanPage() {
                                 <DocIcon size={24} />
                               </div>
                               <div>
-                                <h4 className="font-black text-slate-900 text-lg leading-tight line-clamp-2">{r.title || r.file_name}</h4>
+                                <h4 className="font-black text-foreground text-lg leading-tight line-clamp-2">{r.title || r.file_name}</h4>
                                 <div className="flex items-center gap-2 mt-1">
                                   <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{r.report_type}</p>
                                   {r.club_id && (
                                     <>
-                                      <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest truncate max-w-[120px]">
+                                      <span className="w-1 h-1 rounded-full bg-border"></span>
+                                      <p className="text-[10px] text-muted-foreground/80 font-bold uppercase tracking-widest truncate max-w-[120px]">
                                         {ALL_CLUBS.find(c => c.id === r.club_id)?.shortName}
                                       </p>
                                     </>
@@ -668,7 +668,7 @@ export function SemakanLaporanPage() {
                               )}
                               {r.file_url && r.file_url.length > 5 ? (
                                 <a href={r.file_url} target="_blank" rel="noopener noreferrer">
-                                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl bg-muted hover:bg-muted/80 text-slate-500 hover:text-primary transition-colors">
+                                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl bg-muted/50 hover:bg-muted text-muted-foreground hover:text-primary transition-colors">
                                     <ChevronRight size={18} />
                                   </Button>
                                 </a>
@@ -717,8 +717,8 @@ export function SemakanLaporanPage() {
                   className={cn(
                     'rounded-xl text-[10px] font-black uppercase tracking-widest px-5 h-10 transition-all',
                     arkibFilter === f.key
-                      ? 'bg-slate-900 text-white shadow-md'
-                      : 'text-slate-500 hover:bg-slate-200'
+                      ? 'bg-foreground text-background shadow-md'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                   )}
                 >
                   {f.label}

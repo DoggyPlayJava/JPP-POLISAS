@@ -1,31 +1,48 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Flag, Users, CalendarDays, Shield, ArrowRight,
   CheckCircle2, Star, ChevronRight, TrendingUp,
+  Sparkles, Banknote, FileCheck, BarChart3,
+  CalendarRange, Cpu, Zap, Brain, MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ALL_CLUBS } from '@/types';
+import { supabase } from '@/lib/supabase';
+import { ALL_CLUBS as STATIC_CLUBS } from '@/types';
 
 const features = [
   {
-    icon: Flag,
-    title: 'Pengurusan Kelab',
-    desc: 'Urus semua 17 kelab dan persatuan JPP Polisas dalam satu platform yang tersusun.',
+    icon: Sparkles,
+    title: 'Nexus AI Assistant',
+    desc: 'Pembantu pintar yang tersedia 24/7 untuk menjawab soalan dan membantu urusan kelab anda.',
+    badge: 'AI Powered',
   },
   {
-    icon: CalendarDays,
-    title: 'Penjadualan Aktiviti',
-    desc: 'Rancang, jadual dan pantau setiap aktiviti kelab dengan mudah dan efisien.',
+    icon: Banknote,
+    title: 'Smart Budgeting',
+    desc: 'Penjana bajet automatik menggunakan AI untuk pengurusan kewangan yang lebih telus.',
+    badge: 'Nexus Ecosystem',
   },
   {
-    icon: Users,
-    title: 'Ahli Jawatankuasa',
-    desc: 'Urus senarai ahli MT, presiden dan ahli kelab dengan sistem peranan yang jelas.',
+    icon: FileCheck,
+    title: 'AI Grammar Check',
+    desc: 'Pastikan laporan aktiviti anda berkualiti tinggi dengan bantuan semakan tatabahasa AI.',
+    badge: 'Nexus Ecosystem',
+  },
+  {
+    icon: BarChart3,
+    title: 'Analisis Prestasi',
+    desc: 'Pantau pencapaian kelab dengan dashboard data yang dikuasakan oleh AI Nexus.',
+    badge: 'Nexus Ecosystem',
+  },
+  {
+    icon: CalendarRange,
+    title: 'Laporan Automatik',
+    desc: 'Kini laporan anda hanya dengan sekali klik!',
   },
   {
     icon: Shield,
@@ -34,20 +51,36 @@ const features = [
   },
 ];
 
-const stats = [
-  { label: 'Kelab & Persatuan Berdaftar', value: '17' },
-  { label: 'Kategori Kelab', value: '3' },
-  { label: 'Peranan Pengguna', value: '4' },
-  { label: 'Politeknik Sultan Haji Ahmad Shah', value: 'POLISAS' },
-];
-
-const testimonials = [
-  { text: 'e-KPP memudahkan kami memantau semua aktiviti kelab dalam satu tempat. Sangat membantu!', name: 'Ahmad Faiz', role: 'Presiden Elektron' },
-  { text: 'Sistem ini membolehkan kami menguruskan ahli jawatankuasa dengan lebih sistematik.', name: 'Nur Aisyah', role: 'MT Kebudayaan' },
-  { text: 'Laporan aktiviti kini lebih mudah disediakan. Terima kasih JPP Polisas!', name: 'Haziq Azman', role: 'Presiden Robosas' },
-];
-
 export function LandingPage() {
+  const [clubs, setClubs] = useState<any[]>(STATIC_CLUBS.length > 0 ? STATIC_CLUBS : []);
+
+  useEffect(() => {
+    async function fetchClubs() {
+      const { data, error } = await supabase
+        .from('clubs')
+        .select('*')
+        .order('name', { ascending: true });
+      
+      if (!error && data) {
+        setClubs(data.map(c => ({
+          id: c.id,
+          name: c.name,
+          shortName: c.short_name,
+          category: c.category,
+          color: c.theme_color,
+          logo_url: c.logo_url
+        })));
+      }
+    }
+    fetchClubs();
+  }, []);
+
+  const stats = [
+    { label: 'Kelab & Persatuan', value: `${clubs.length || 21}+` },
+    { label: 'Ciri Dikuasakan AI', value: 'Nexus' },
+    { label: 'Aktiviti Bulanan', value: 'Digital' },
+    { label: 'Politeknik Sultan Haji Ahmad Shah', value: 'POLISAS' },
+  ];
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* ── Navbar ─────────────────────────────────── */}
@@ -91,12 +124,10 @@ export function LandingPage() {
             <Badge className="mb-8 px-4 py-2 text-[10px] font-black uppercase tracking-[0.3em] bg-accent/12 text-accent border border-accent/20">
               Platform Digital JPP Polisas
             </Badge>
-            <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-none mb-6">
+            <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-8">
               <span className="text-primary">e-KPP</span>
               <br />
-              <span className="bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/50">
-                Kelab, Persatuan
-              </span>
+              <span className="text-foreground/80">Kelab, Persatuan</span>
               <br />
               <span className="text-accent">& Perpaduan</span>
             </h1>
@@ -107,9 +138,9 @@ export function LandingPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/login">
                 <Button size="lg"
-                  className="h-14 px-10 rounded-2xl bg-primary text-primary-foreground font-black text-sm uppercase tracking-widest shadow-2xl shadow-primary/30 glow-accent transition-all hover:scale-105 active:scale-95 gap-3">
-                  Mulakan Sekarang
-                  <ArrowRight className="w-5 h-5" />
+                  className="h-14 px-10 rounded-2xl bg-primary text-primary-foreground font-black text-sm uppercase tracking-widest shadow-2xl shadow-primary/30 transition-all hover:scale-105 active:scale-95 gap-3">
+                  Eksplorasi Nexus
+                  <Sparkles className="w-5 h-5 fill-white/20" />
                 </Button>
               </Link>
               <div className="flex items-center gap-2 h-14 px-6 rounded-2xl border border-border/60 bg-muted/30">
@@ -152,16 +183,25 @@ export function LandingPage() {
               Direka khas untuk keperluan pengurusan kelab dan persatuan JPP Polisas.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {features.map((f, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }} viewport={{ once: true }} whileHover={{ y: -6 }}>
-                <Card className="bento-card border-none h-full group">
+                <Card className="bento-card border-none h-full group overflow-hidden relative">
+                  {f.badge && (
+                    <div className="absolute top-4 right-4 group-hover:scale-105 transition-transform">
+                      <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase tracking-widest px-2 py-0.5">
+                        {f.badge}
+                      </Badge>
+                    </div>
+                  )}
                   <CardContent className="p-7">
                     <div className="w-12 h-12 rounded-2xl bg-primary/8 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:bg-primary/15 transition-all duration-300 shadow-sm">
                       <f.icon className="w-6 h-6 text-primary" />
                     </div>
-                    <h3 className="font-black text-lg tracking-tight mb-2">{f.title}</h3>
+                    <h3 className="font-black text-lg tracking-tight mb-2 flex items-center gap-2">
+                      {f.title}
+                    </h3>
                     <p className="text-sm text-muted-foreground/80 leading-relaxed font-medium">{f.desc}</p>
                   </CardContent>
                 </Card>
@@ -176,22 +216,26 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-14">
             <Badge className="mb-4 px-3 py-1 text-[10px] font-black uppercase tracking-widest bg-accent/12 text-accent border-none">
-              17 Kelab &amp; Persatuan
+              {clubs.length > 0 ? `${clubs.length} Kelab & Persatuan` : 'Memuat Senarai...'}
             </Badge>
             <h2 className="text-4xl md:text-5xl font-black tracking-tighter">
               Kelab yang Berdaftar
             </h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {ALL_CLUBS.map((club, i) => (
+            {clubs.map((club, i) => (
               <motion.div key={club.id} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.03 }} viewport={{ once: true }} whileHover={{ y: -4, scale: 1.03 }}>
                 <Card className="bento-card border-none text-center group cursor-default overflow-hidden">
                   <div className="h-1 w-full" style={{ backgroundColor: club.color }} />
                   <CardContent className="p-4">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-xs mx-auto mb-2 shadow-md"
-                      style={{ backgroundColor: club.color }}>
-                      {club.shortName.slice(0, 2)}
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-black text-xs mx-auto mb-2 shadow-sm overflow-hidden bg-muted/20"
+                      style={{ backgroundColor: club.logo_url ? 'transparent' : club.color }}>
+                      {club.logo_url ? (
+                        <img src={club.logo_url} alt={club.name} className="w-full h-full object-contain p-1" />
+                      ) : (
+                        club.shortName?.slice(0, 2) || '?'
+                      )}
                     </div>
                     <p className="font-black text-xs tracking-tight leading-tight">{club.name}</p>
                     <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest mt-0.5">{club.category}</p>
@@ -239,40 +283,54 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── Testimonials ───────────────────────────── */}
-      <section className="py-24 px-6 lg:px-12 bg-muted/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-4xl font-black tracking-tighter">Kata Mereka</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }} viewport={{ once: true }}>
-                <Card className="bento-card border-none h-full">
-                  <CardContent className="p-8 flex flex-col gap-5">
-                    <div className="flex gap-0.5">
-                      {[...Array(5)].map((_, s) => (
-                        <Star key={s} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                      ))}
+      {/* ── Nexus Ecosystem (New) ────────────────── */}
+      <section className="py-24 px-6 lg:px-12 relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            <div className="flex-1 space-y-8">
+              <Badge className="bg-primary text-primary-foreground border-none font-black text-[10px] tracking-[0.2em] uppercase px-4 py-1.5 shadow-lg shadow-primary/20">
+                Nexus Ecosystem
+              </Badge>
+              <h2 className="text-5xl md:text-6xl font-black tracking-tighter leading-[1.1]">
+                Enjin AI yang Menggerakkan <span className="text-primary">Masa Hadapan</span>
+              </h2>
+              <p className="text-lg text-muted-foreground font-medium leading-relaxed">
+                Platform e-KPP bukan sekadar sistem pengurusan biasa. Dengan integrasi bot Nexus, setiap langkah pentadbiran kelab dipermudahkan melalui kecerdasan buatan.
+              </p>
+              <div className="space-y-4">
+                {[
+                  { title: 'Generatif & Adaptif', desc: 'Sistem belajar dari corak aktiviti kelab anda.' },
+                  { title: 'Automasi Penuh', desc: 'Dari laporan bulanan hingga tugasan harian anda.' },
+                  { title: 'Telus & Selamat', desc: 'Memastikan integriti data setiap kelab terpelihara.' }
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-4 p-4 rounded-2xl border border-border/40 bg-card/40 backdrop-blur-sm">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="w-5 h-5 text-primary" />
                     </div>
-                    <p className="text-sm font-medium leading-relaxed text-muted-foreground/90 italic flex-1">"{t.text}"</p>
-                    <div className="flex items-center gap-3 pt-4 border-t border-border/40">
-                      <Avatar className="h-10 w-10 rounded-xl">
-                        <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${t.name}&backgroundColor=8B1A1A&textColor=FFF8F0`} />
-                        <AvatarFallback className="bg-primary text-primary-foreground font-black text-xs">
-                          {t.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-black">{t.name}</p>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-accent">{t.role}</p>
-                      </div>
+                    <div>
+                      <p className="font-black text-sm">{item.title}</p>
+                      <p className="text-xs text-muted-foreground">{item.desc}</p>
                     </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex-1 relative">
+              <div className="relative z-10 aspect-square rounded-[3rem] overflow-hidden border-8 border-background shadow-2xl bg-card flex items-center justify-center">
+                <div className="absolute inset-0 bg-primary/5 animate-pulse" />
+                <Cpu className="w-32 h-32 text-primary animate-bounce duration-[3000ms]" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="absolute border border-primary/20 rounded-full animate-ping"
+                      style={{ width: `${(i + 1) * 100}px`, height: `${(i + 1) * 100}px`, animationDuration: `${2 + i}s` }} />
+                  ))}
+                </div>
+              </div>
+              {/* Floating blobs for Nexus look */}
+              <div className="absolute -top-12 -right-12 w-48 h-48 bg-accent/20 rounded-full blur-3xl" />
+              <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-primary/20 rounded-full blur-3xl" />
+            </div>
           </div>
         </div>
       </section>

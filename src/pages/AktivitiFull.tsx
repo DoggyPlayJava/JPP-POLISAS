@@ -1168,9 +1168,9 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
   return (
     <Card className={cn(
       'rounded-[2.5rem] border-none transition-all duration-300',
-      isUrgent ? 'w-[300px] shrink-0 bg-card shadow-2xl ring-1 ring-rose-100' : 'bg-card shadow-sm hover:shadow-xl',
+      isUrgent ? 'w-[300px] shrink-0 bg-card shadow-2xl ring-1 ring-rose-100 dark:ring-rose-900/50' : 'bg-card shadow-sm hover:shadow-xl',
       isMini && 'opacity-80 hover:opacity-100',
-      isRejected && 'ring-1 ring-rose-200'
+      isRejected && 'ring-1 ring-rose-200 dark:ring-rose-800/40'
     )}>
       <CardContent className={cn('p-7 space-y-5', isMini && 'p-5')}>
         <div className="flex justify-between items-start">
@@ -1178,7 +1178,7 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
             'rounded-full px-3 py-1 text-[9px] font-black uppercase border-none',
             isRejected ? 'bg-rose-500 text-white' :
               isPastDeadline ? 'bg-rose-500 text-white' :
-                act.status === 'CONFIRMED' ? 'bg-emerald-500/100 text-white' :
+                act.status === 'CONFIRMED' ? 'bg-emerald-500 text-white' :
                   act.status === 'REQUEST_UNLOCK' ? 'bg-indigo-500 text-white' :
                     'bg-muted text-muted-foreground'
           )}>
@@ -1188,17 +1188,17 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
             <div className="flex gap-1.5">
               {(isPastDeadline || act.status === 'CONFIRMED') && (
                 <Button onClick={onUnlock} variant="ghost" size="icon"
-                  className="h-8 w-8 rounded-full bg-indigo-50 text-indigo-600" title="Mohon Buka Kunci Tarikh">
+                  className="h-8 w-8 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" title="Mohon Buka Kunci Tarikh">
                   <Unlock size={13} />
                 </Button>
               )}
               <Button variant="ghost" size="icon" onClick={onEdit}
-                className="h-8 w-8 rounded-full bg-slate-50 text-muted-foreground hover:bg-slate-200" title={isRejectedPostMortem ? "Muat Naik Semula Post-Mortem" : "Kemaskini"}>
+                className="h-8 w-8 rounded-full bg-slate-50 dark:bg-muted/50 text-muted-foreground hover:bg-slate-200 dark:hover:bg-muted" title={isRejectedPostMortem ? "Muat Naik Semula Post-Mortem" : "Kemaskini"}>
                 <Pencil size={13} />
               </Button>
               {act.status === 'DRAFT' && allowAddTakwim && (
                 <Button variant="ghost" size="icon" onClick={onDelete}
-                  className="h-8 w-8 rounded-full bg-rose-50 text-rose-500 hover:bg-rose-100" title="Padam Program">
+                  className="h-8 w-8 rounded-full bg-rose-50 dark:bg-rose-500/10 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-500/20" title="Padam Program">
                   <Trash2 size={13} />
                 </Button>
               )}
@@ -1213,30 +1213,30 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
           </h3>
           {!isMini && act.tarikh_mula && (
             <p className="text-[11px] font-bold text-muted-foreground flex items-center gap-1.5">
-              <Calendar size={12} className="text-slate-300" />
+              <Calendar size={12} className="text-muted-foreground/50" />
               {act.tarikh_mula}
             </p>
           )}
         </div>
 
         {act.jpp_remarks && (
-          <div className="p-3.5 bg-rose-50/70 rounded-2xl border border-rose-100 flex items-start gap-2">
-            <Info size={13} className="text-rose-400 mt-0.5 shrink-0" />
+          <div className="p-3.5 bg-rose-50 dark:bg-rose-950/30 rounded-2xl border border-rose-100 dark:border-rose-900/50 flex items-start gap-2">
+            <Info size={13} className="text-rose-500 mt-0.5 shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-[9px] font-black uppercase text-rose-400 tracking-widest mb-0.5">Ulasan / Nota</p>
-              <p className="text-[10px] font-bold text-rose-700 italic break-words">{act.jpp_remarks}</p>
+              <p className="text-[9px] font-black uppercase text-rose-500 tracking-widest mb-0.5">Ulasan / Nota</p>
+              <p className="text-[10px] font-bold text-rose-700 dark:text-rose-300 italic break-words">{act.jpp_remarks}</p>
             </div>
           </div>
         )}
 
-        <div className="pt-4 border-t border-slate-50 flex items-center justify-between">
+        <div className="pt-4 border-t border-border/50 flex items-center justify-between">
           <div className="flex -space-x-1.5">
-            <div className={cn('w-7 h-7 rounded-full border-2 border-white flex items-center justify-center shadow-sm',
-              act.url_kertas_kerja ? 'bg-emerald-500/100 text-white' : 'bg-muted text-slate-300')}>
+            <div className={cn('w-7 h-7 rounded-full border-2 border-background flex items-center justify-center shadow-sm',
+              act.url_kertas_kerja ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground/40')}>
               <FileText size={11} />
             </div>
-            <div className={cn('w-7 h-7 rounded-full border-2 border-white flex items-center justify-center shadow-sm',
-              act.url_post_mortem ? 'bg-indigo-600 text-white' : 'bg-muted text-slate-300')}>
+            <div className={cn('w-7 h-7 rounded-full border-2 border-background flex items-center justify-center shadow-sm',
+              act.url_post_mortem ? 'bg-indigo-600 text-white' : 'bg-muted text-muted-foreground/40')}>
               <Check size={11} />
             </div>
           </div>
@@ -1244,7 +1244,7 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
             <Button disabled={!act.url_kertas_kerja || isPastDeadline}
               onClick={() => submitAction('PENDING_APPROVAL')}
               className={cn('h-9 px-5 rounded-full font-black text-[10px] uppercase shadow-md transition-all',
-                isPastDeadline ? 'bg-slate-200 text-muted-foreground shadow-none' : 'bg-primary text-white hover:bg-black active:scale-95')}>
+                isPastDeadline ? 'bg-muted text-muted-foreground shadow-none' : 'bg-primary text-primary-foreground hover:brightness-110 active:scale-95')}>
               {isPastDeadline ? <Lock size={11} className="mr-1" /> : <Send size={11} className="mr-1" />}
               Hantar
             </Button>

@@ -89,7 +89,10 @@ export function Header() {
               </div>
               
               <div className="space-y-1.5">
-                 <button className="w-full flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all group">
+                 <button 
+                    onClick={() => navigate('/tetapan?tab=help')}
+                    className="w-full flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all group"
+                 >
                     <div className="text-left">
                       <p className="text-[11px] font-black">Lapor Isu Teknikal</p>
                       <p className="text-[9px] text-muted-foreground font-medium">Pepijat atau ralat sistem</p>
@@ -97,7 +100,10 @@ export function Header() {
                     <ChevronRight size={14} className="text-muted-foreground group-hover:text-primary transition-colors" />
                  </button>
                  
-                 <button className="w-full flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all group">
+                 <button 
+                    onClick={() => navigate('/tetapan?tab=help')}
+                    className="w-full flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all group"
+                 >
                     <div className="text-left">
                       <p className="text-[11px] font-black">Cadangan UI/UX</p>
                       <p className="text-[9px] text-muted-foreground font-medium">Idea penambahbaikan visual</p>
@@ -107,7 +113,11 @@ export function Header() {
               </div>
 
               <div className="pt-3 border-t border-border/40">
-                 <Button variant="outline" className="w-full rounded-xl h-10 font-black text-[9px] uppercase tracking-widest gap-2 bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20 shadow-none">
+                 <Button 
+                    variant="outline" 
+                    onClick={() => window.open('https://wa.me/601139413699', '_blank')}
+                    className="w-full rounded-xl h-10 font-black text-[9px] uppercase tracking-widest gap-2 bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20 shadow-none"
+                 >
                     <Send size={12} /> WhatsApp JPP Support
                  </Button>
               </div>

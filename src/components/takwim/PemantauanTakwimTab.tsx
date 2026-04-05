@@ -402,7 +402,7 @@ export default function PemantauanTakwimTab() {
                     <td className="px-4 py-3 text-center text-slate-600">{formatDateDMY(item.tarikh_mula)}</td>
                     <td className="px-4 py-3 font-bold text-slate-700 uppercase">{item.pengarah_program || 'TBA'}</td>
                     <td className="px-4 py-3 text-center">
-                      <Badge className="bg-slate-100 text-slate-500 hover:bg-slate-200 border-none px-2 py-0.5 rounded text-[10px] uppercase font-bold">
+                      <Badge className="bg-muted text-muted-foreground hover:bg-muted/80 border-none px-2 py-0.5 rounded text-[10px] uppercase font-bold transition-colors">
                         {clubName}
                       </Badge>
                     </td>

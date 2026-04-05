@@ -270,25 +270,7 @@ export function Sidebar() {
           </NavLink>
         </>
 
-        {/* ── SECTION SOKONGAN ── */}
-        <div className="pt-6 pb-2">
-          <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-white/20">Sokongan</p>
-        </div>
-        <NavLink
-            to="/tetapan?tab=help"
-            className={({ isActive }) => cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
-              isActive
-                ? 'bg-white/12 text-white shadow-inner'
-                : 'text-white/40 hover:bg-white/7 hover:text-white/80'
-            )}
-          >
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center group-hover:bg-white/8 transition-all">
-              <HelpCircle className="w-3.5 h-3.5" />
-            </div>
-            <span className="text-xs font-bold tracking-tight">Bantuan & Isu</span>
-        </NavLink>
-      </nav>
+        </nav>
 
       {/* User footer */}
       <div className="p-4 border-t border-white/10 space-y-3">

@@ -3,7 +3,7 @@ import {
     ShieldCheck, Database, Users, Trash2, FileWarning, Activity,
     RefreshCw, ChevronRight, LayoutGrid, Server, Info, Lock,
     Plus, CheckCheck, Building2, Palette, Cpu, Settings as SettingsIcon,
-    Zap, AlertTriangle
+    Zap, AlertTriangle, Search, Clock
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -64,6 +64,7 @@ export function JppAdminPage() {
     // Bulk Accept Scoped
     const [showBulkAccept, setShowBulkAccept] = useState(false);
     const [bulkClubId, setBulkClubId] = useState<string>('ALL');
+    const [logSearch, setLogSearch] = useState('');
 
     const fetchAdminData = async () => {
         setLoading(true);
@@ -760,52 +761,83 @@ export function JppAdminPage() {
 
                         {/* ── TAB: LOG ── */}
                         {activeTab === 'logs' && (
-                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
+                                <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                                    <div className="relative w-full md:w-96">
+                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                        <Input 
+                                            placeholder="Cari log (Nama kelab, deskripsi, jenis)..." 
+                                            value={logSearch}
+                                            onChange={(e) => setLogSearch(e.target.value)}
+                                            className="pl-11 h-12 rounded-2xl bg-card border-border/40 focus:ring-primary/20"
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                                        <ShieldCheck size={14} className="text-emerald-600" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Audit Siber Aktif</span>
+                                    </div>
+                                </div>
+
                                 <Card className="border-none shadow-sm rounded-[2.5rem] bg-card overflow-hidden">
                                     <CardHeader className="px-8 pt-8 pb-6 border-b border-border/50 bg-muted/20">
                                         <CardTitle className="text-xl font-bold flex items-center gap-3">
                                             <Database className="w-6 h-6 text-emerald-500" /> Log Transaksi / Audit Siber Global
                                         </CardTitle>
-                                        <p className="text-xs font-medium text-muted-foreground mt-2">Senarai penuh jejak rekod perubahan dan transaksi AI di seluruh kelab.</p>
+                                        <p className="text-xs font-medium text-muted-foreground mt-1">Senarai penuh jejak rekod perubahan dan transaksi AI di seluruh kelab.</p>
                                     </CardHeader>
                                     <CardContent className="p-0">
                                         <div className="divide-y divide-border">
-                                            {globalLogs.map((log) => {
+                                            {globalLogs.filter(log => {
                                                 const club = ALL_CLUBS.find(c => c.id === log.club_id);
-                                                return (
-                                                    <div key={log.id} className="px-8 py-5 flex items-start gap-5 hover:bg-muted/50 transition-colors">
-                                                        <div className={cn('w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm',
-                                                            log.action_type?.includes('REJECT') ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500')}>
-                                                            <Activity className="w-5 h-5" />
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-center gap-2 mb-2">
-                                                                <Badge className="text-[10px] font-black uppercase px-2.5 py-0.5 bg-slate-900 text-white border-none">
-                                                                    {log.action_type?.replace('_', ' ') || 'AKTIVITI'}
-                                                                </Badge>
-                                                                <Badge variant="outline" className="text-[10px] font-bold border-border text-muted-foreground">
-                                                                    {club?.shortName || 'SISTEM'}
-                                                                </Badge>
+                                                const searchStr = `${log.description} ${log.action_type ?? 'AKTIVITI'} ${log.actor_name} ${club?.shortName || ''}`.toLowerCase();
+                                                return searchStr.includes(logSearch.toLowerCase());
+                                            }).length === 0 ? (
+                                                <div className="p-20 text-center text-muted-foreground italic text-sm">Tiada log sepadan dengan carian anda.</div>
+                                            ) : (
+                                                globalLogs.filter(log => {
+                                                    const club = ALL_CLUBS.find(c => c.id === log.club_id);
+                                                    const searchStr = `${log.description} ${log.action_type ?? 'AKTIVITI'} ${log.actor_name} ${club?.shortName || ''}`.toLowerCase();
+                                                    return searchStr.includes(logSearch.toLowerCase());
+                                                }).map((log) => {
+                                                    const club = ALL_CLUBS.find(c => c.id === log.club_id);
+                                                    const isCritical = log.action_type?.includes('DELETE') || log.action_type?.includes('REJECT') || log.action_type?.includes('DISSOLVED');
+                                                    const isSuccess = log.action_type?.includes('CREATE') || log.action_type?.includes('APPROVE') || log.action_type?.includes('SUCCESS');
+
+                                                    return (
+                                                        <div key={log.id} className="px-8 py-5 flex items-start gap-5 hover:bg-muted/50 transition-colors group">
+                                                            <div className={cn('w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-110',
+                                                                isCritical ? 'bg-rose-500/10 text-rose-500' : 
+                                                                isSuccess ? 'bg-emerald-500/10 text-emerald-600' :
+                                                                'bg-blue-500/10 text-blue-500')}>
+                                                                {isCritical ? <AlertTriangle size={20} /> : isSuccess ? <CheckCheck size={20} /> : <Activity size={20} />}
                                                             </div>
-                                                            <p className="text-sm font-bold text-foreground leading-snug">{log.description}</p>
-                                                            <div className="flex items-center gap-2 mt-3">
-                                                                <span className="text-[11px] text-muted-foreground font-medium flex items-center gap-1.5">
-                                                                    <Users className="w-3.5 h-3.5" /> Oleh: <span className="text-foreground font-bold">{log.actor_name}</span>
-                                                                </span>
-                                                                <span className="text-[10px] text-muted-foreground/30">•</span>
-                                                                <span className="text-[11px] text-muted-foreground font-medium">
-                                                                    {format(new Date(log.created_at), 'HH:mm • d MMM yyyy', { locale: ms })}
-                                                                </span>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center gap-2 mb-2">
+                                                                    <Badge className={cn('text-[10px] font-black uppercase px-2.5 py-0.5 border-none',
+                                                                        isCritical ? 'bg-rose-600 text-white' : 
+                                                                        isSuccess ? 'bg-emerald-600 text-white' :
+                                                                        'bg-slate-900 text-white')}>
+                                                                        {(log.action_type ?? 'AKTIVITI').replace(/_/g, ' ')}
+                                                                    </Badge>
+                                                                    <Badge variant="outline" className="text-[10px] font-bold border-border text-muted-foreground bg-muted/30">
+                                                                        {club?.shortName || 'SISTEM'}
+                                                                    </Badge>
+                                                                </div>
+                                                                <p className="text-sm font-bold text-foreground leading-snug">{log.description}</p>
+                                                                <div className="flex items-center gap-2 mt-3">
+                                                                    <span className="text-[11px] text-muted-foreground font-medium flex items-center gap-1.5">
+                                                                        <Users className="w-3.5 h-3.5 opacity-50" /> Oleh: <span className="text-foreground font-black uppercase tracking-tight">{log.actor_name}</span>
+                                                                    </span>
+                                                                    <span className="text-[10px] text-muted-foreground/30">•</span>
+                                                                    <span className="text-[11px] text-muted-foreground font-medium flex items-center gap-1.5">
+                                                                        <Clock size={12} className="opacity-50" />
+                                                                        {format(new Date(log.created_at), 'HH:mm • d MMM yyyy', { locale: ms })}
+                                                                    </span>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        <ChevronRight className="w-5 h-5 text-border self-center shrink-0" />
-                                                    </div>
-                                                );
-                                            })}
-                                            {globalLogs.length === 0 && !loading && (
-                                                <div className="py-20 text-center text-muted-foreground/50 font-medium text-sm italic">
-                                                    Tiada rekod aktiviti log dikesan pada masa ini.
-                                                </div>
+                                                    );
+                                                })
                                             )}
                                         </div>
                                     </CardContent>
