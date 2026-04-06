@@ -318,11 +318,6 @@ export function LoginPage() {
                             ))}
                           </SelectContent>
                         </Select>
-                        {jabatan === 'geomatik' && (
-                          <p className="text-[11px] text-amber-600 font-medium pt-1">
-                            ⚠️ Anda mungkin perlu mohon Kelab Akademik GEOSAS sendiri selepas log masuk.
-                          </p>
-                        )}
                       </div>
                     </div>
 

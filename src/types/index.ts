@@ -175,7 +175,6 @@ export const JABATAN_LIST = [
   { value: 'makanan',     label: 'Jabatan Teknologi Makanan (Ketema)' },
   { value: 'elektrik',    label: 'Jabatan Kejuruteraan Elektrik (Elektron)' },
   { value: 'awam',        label: 'Jabatan Kejuruteraan Awam (PePKa)' },
-  { value: 'geomatik',    label: 'Kursus Geomatik — Jabatan Kej. Awam (GEOSAS)' },
 ] as const;
 
 export type JabatanValue = typeof JABATAN_LIST[number]['value'];
@@ -188,12 +187,10 @@ export const JABATAN_SEARCH_TERMS: Record<JabatanValue, string> = {
   makanan:     'Ketema',
   elektrik:    'Elektron',
   awam:        'PePKa',
-  geomatik:    'GEOSAS',
 };
 
 // Fungsi pembantu untuk mencari ID kelab yang sah pada masa nyata (runtime)
 export const getAkademikClubId = (jabatan: JabatanValue): string | null => {
-  if (jabatan === 'geomatik') return null; // Geomatik kena manual
   const keyword = JABATAN_SEARCH_TERMS[jabatan];
   if (!keyword) return null;
   

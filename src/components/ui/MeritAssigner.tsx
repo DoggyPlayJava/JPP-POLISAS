@@ -39,7 +39,7 @@ export function MeritAssigner({ member, isOpen, onClose, onRefresh }: MeritAssig
       const { error: insertError } = await supabase
         .from('club_tasks')
         .insert({
-          club_id: profile?.club_id,
+          club_id: member.club_id,
           title: `[MERIT] Penambahan Kepada ${member.full_name}`,
           description: `Pemberian skor merit manual oleh Presiden. Sila sahkan kelulusan ini.`,
           merit_points: points,

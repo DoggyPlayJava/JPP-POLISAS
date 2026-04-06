@@ -77,15 +77,29 @@ export function KelabPage() {
   };
 
   const approvedCount = myMemberships.filter(m => m.account_status === 'APPROVED').length;
-  const isAtLimit = approvedCount >= maxClubs;
+  
+  const hasGeosas = myMemberships.some(m => m.account_status === 'APPROVED' && clubs.find(c => c.id === m.club_id)?.short_name?.toUpperCase() === 'GEOSAS');
+  const effectiveMaxClubs = (profile?.department === 'awam' && hasGeosas) ? maxClubs + 1 : maxClubs;
+  
+  const isAtLimit = approvedCount >= effectiveMaxClubs;
 
   const handleApply = async (club: any) => {
     if (!user) return;
     const status = getMembershipStatus(club.id);
     if (status === 'APPROVED' || status === 'PENDING') return;
 
-    if (isAtLimit) {
-      toast.error(`Had keahlian dicapai (${maxClubs} kelab). Hubungi JPP untuk menaikkan had.`);
+    const targetIsGeosas = club.short_name?.toUpperCase() === 'GEOSAS';
+    
+    // Semak kelayakan khusus JKA untuk GEOSAS
+    if (targetIsGeosas && profile?.department !== 'awam') {
+      toast.error('Kelab GEOSAS hanya terbuka kepada pelajar Jabatan Kejuruteraan Awam (JKA).');
+      return;
+    }
+
+    const checkLimit = (profile?.department === 'awam' && (hasGeosas || targetIsGeosas)) ? maxClubs + 1 : maxClubs;
+
+    if (approvedCount >= checkLimit) {
+      toast.error(`Had keahlian dicapai (${checkLimit} kelab). Hubungi JPP untuk menaikkan had.`);
       return;
     }
     setConfirmClub(club);
@@ -134,6 +148,9 @@ export function KelabPage() {
   };
 
   const isJoinable = (club: any) => {
+    if (club.short_name?.toUpperCase() === 'GEOSAS') {
+      return profile?.department === 'awam';
+    }
     const cat = club.category || '';
     if (AUTO_ASSIGN_CATEGORIES.some(c => cat.toLowerCase() === c.toLowerCase())) return false;
     if (RESTRICTED_CATEGORIES.some(c => cat.toLowerCase() === c.toLowerCase())) return false;
@@ -173,13 +190,13 @@ export function KelabPage() {
         {/* Had Keahlian Indicator */}
         <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-muted/40 border border-border/60">
           <div className="flex gap-1.5">
-            {Array.from({ length: maxClubs }).map((_, i) => (
+            {Array.from({ length: effectiveMaxClubs }).map((_, i) => (
               <div key={i} className={cn("w-8 h-2 rounded-full transition-colors",
                 i < approvedCount ? "bg-primary" : "bg-muted")} />
             ))}
           </div>
           <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">
-            {approvedCount}/{maxClubs} Kelab Disertai
+            {approvedCount}/{effectiveMaxClubs} Kelab Disertai
           </span>
         </div>
 
@@ -271,7 +288,7 @@ export function KelabPage() {
               const joinable = isJoinable(club);
               const meta = CATEGORY_META[club.category] || { icon: LayoutGrid, color: 'text-muted-foreground', bg: 'bg-muted/30' };
               const CategoryIcon = meta.icon;
-              const isAutoAssign = AUTO_ASSIGN_CATEGORIES.some(c => club.category?.toLowerCase() === c.toLowerCase());
+              const isAutoAssign = AUTO_ASSIGN_CATEGORIES.some(c => club.category?.toLowerCase() === c.toLowerCase()) && club.short_name?.toUpperCase() !== 'GEOSAS';
               const isRestricted = RESTRICTED_CATEGORIES.some(c => club.category?.toLowerCase() === c.toLowerCase());
 
               return (
@@ -380,6 +397,12 @@ export function KelabPage() {
                               <Shield className="w-3.5 h-3.5 mr-1" /> Terhad
                             </Badge>
                           )}
+
+                          {!joinable && club.short_name?.toUpperCase() === 'GEOSAS' && status === 'none' && (
+                            <Badge className="flex-1 justify-center h-9 rounded-xl text-[10px] font-black uppercase tracking-widest bg-rose-500/10 text-rose-600 border-none">
+                              <X className="w-3.5 h-3.5 mr-1" /> Khas JKA
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </CardContent>
@@ -423,7 +446,7 @@ export function KelabPage() {
                 Permohonan anda akan dihantar kepada <strong>MT, Presiden, atau Penasihat</strong> kelab ini untuk kelulusan. Anda akan menerima notifikasi setelah status dikemaskini.
               </p>
               <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/60">
-                Had keahlian: {approvedCount}/{maxClubs} kelab digunakan
+                Had keahlian: {approvedCount}/{(confirmClub.short_name?.toUpperCase() === 'GEOSAS' && profile?.department === 'awam') ? maxClubs + 1 : effectiveMaxClubs} kelab digunakan
               </p>
             </div>
           )}

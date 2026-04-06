@@ -16,7 +16,8 @@ import { Plus, Loader2, Wand2, Sparkles, User, ShieldAlert } from 'lucide-react'
 import { toast } from 'react-hot-toast';
 
 export function AddTaskModal({ onTaskAdded }: { onTaskAdded: () => void }) {
-    const { user, profile } = useAuth();
+    const { user, profile, selectedClubId } = useAuth();
+    const targetClubId = selectedClubId ?? profile?.club_id;
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [members, setMembers] = useState<any[]>([]);
@@ -48,12 +49,12 @@ export function AddTaskModal({ onTaskAdded }: { onTaskAdded: () => void }) {
 
     // Fetch members when modal opens
     useEffect(() => {
-        if (isOpen && profile?.club_id) {
+        if (isOpen && targetClubId) {
             const fetchMembers = async () => {
                 const { data } = await supabase
                     .from('profiles')
                     .select('id, full_name')
-                    .eq('club_id', profile.club_id)
+                    .eq('club_id', targetClubId)
                     .eq('account_status', 'APPROVED');
                 setMembers(data || []);
             };
@@ -64,7 +65,7 @@ export function AddTaskModal({ onTaskAdded }: { onTaskAdded: () => void }) {
             setAiGeneratedTasks([]);
             setIsAiMode(false);
         }
-    }, [isOpen, profile?.club_id]);
+    }, [isOpen, targetClubId]);
 
     const handleSubmitManual = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -73,7 +74,7 @@ export function AddTaskModal({ onTaskAdded }: { onTaskAdded: () => void }) {
         setLoading(true);
         try {
             const { error } = await supabase.from('club_tasks').insert([{
-                club_id: profile?.club_id,
+                club_id: targetClubId,
                 title: formData.title,
                 description: formData.description,
                 assigned_to: formData.assigned_to,
@@ -149,7 +150,7 @@ export function AddTaskModal({ onTaskAdded }: { onTaskAdded: () => void }) {
         setLoading(true);
         try {
             const batchPayload = aiGeneratedTasks.map(t => ({
-                club_id: profile?.club_id,
+                club_id: targetClubId,
                 title: t.title,
                 description: t.description,
                 assigned_to: t.assigned_to,

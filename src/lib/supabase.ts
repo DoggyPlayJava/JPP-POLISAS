@@ -47,6 +47,7 @@ export interface Profile {
   full_name: string | null;
   role: 'SUPER_ADMIN_JPP' | 'CLUB_PRESIDENT' | 'CLUB_MT' | 'CLUB_MEMBER' | 'CLUB_ADVISOR';
   club_id: string | null;
+  department?: string | null;
   avatar_url?: string | null;
   created_at?: string;
   updated_at?: string;
