@@ -1,11 +1,12 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileSearch, Sparkles, RefreshCw, Zap, TrendingUp, AlertTriangle, Star } from 'lucide-react';
+import { FileSearch, Sparkles, RefreshCw, TrendingUp, AlertTriangle, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAiAssistant } from '@/hooks/useAiAssistant';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 
 interface AiReviewModalProps {
   isOpen: boolean;
@@ -89,7 +90,7 @@ export function AiReviewModal({ isOpen, onClose, programId, programName }: AiRev
                   disabled={!programId}
                   className="h-13 px-8 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-sm shadow-xl shadow-emerald-500/25"
                 >
-                  <Zap className="mr-2 w-4 h-4" /> Mula Semakan AI
+                  <Sparkles className="mr-2 w-4 h-4" /> Mula Semakan AI
                 </Button>
               </motion.div>
             )}
@@ -118,7 +119,7 @@ export function AiReviewModal({ isOpen, onClose, programId, programName }: AiRev
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                 className="bg-card p-6 rounded-3xl shadow-sm border border-border/50 text-foreground prose prose-sm dark:prose-invert max-w-none prose-headings:font-black prose-a:text-emerald-500"
               >
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{result}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{result}</ReactMarkdown>
               </motion.div>
             )}
 

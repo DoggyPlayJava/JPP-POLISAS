@@ -5,7 +5,7 @@ import {
   Flag, Users, CalendarDays, Shield, ArrowRight,
   CheckCircle2, Star, ChevronRight, TrendingUp,
   Sparkles, Banknote, FileCheck, BarChart3,
-  CalendarRange, Cpu, Zap, Brain, MessageSquare
+  CalendarRange, Cpu, Brain, MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

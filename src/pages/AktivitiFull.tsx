@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAiSettings } from '@/contexts/AiSettingsContext';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { uploadFileToDrive, uploadPdfToDrive } from '@/lib/driveUpload';
 import { queryCache } from '@/lib/cache';
@@ -9,7 +11,7 @@ import {
   FileText, CheckCircle2, Lock,
   FileUp, CloudUpload, Clock, Check, Send, ChevronRight, MessageCircle,
   BellRing, Timer, History, Unlock, Archive, Info, Trash2,
-  Zap, Users, CalendarDays, Activity, Filter, Image as ImageIcon, X
+  Zap, Users, CalendarDays, Activity, Filter, Image as ImageIcon, X, Sparkles
 } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -607,6 +609,8 @@ function ActivityKelabCard({ act, currentUserId, effectiveRole, onEdit, onDelete
 // Hanya MT & Presiden boleh buat — semua boleh nampak
 // ══════════════════════════════════════════════════════════════════════════════
 function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
+  const navigate = useNavigate();
+  const { allowAiBudget } = useAiSettings();
   const [activities, setActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -1028,12 +1032,27 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <UploadZone label="Kertas Kerja" isReady={!!form.urlKertasKerja}
-                  onUpload={(e: any) => handleFileUpload(e, 'kertas_kerja')} color="bg-emerald-500/100" />
-                <UploadZone label="Post-Mortem PDF" isReady={!!form.urlPostMortem}
-                  onUpload={(e: any) => handleFileUpload(e, 'post_mortem')} color="bg-indigo-600"
-                  disabled={form.status !== 'PENDING_POSTMORTEM' && form.status !== 'CONFIRMED' && !form.urlPostMortem} />
+              <div className="space-y-4">
+                {allowAiBudget && (
+                  <div className="flex bg-indigo-500/10 rounded-2xl p-4 flex-col sm:flex-row items-center sm:items-start justify-between gap-4 border border-indigo-500/20">
+                    <div>
+                      <h4 className="text-xs font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2">
+                        <Sparkles className="w-3.5 h-3.5" /> Nexus AI Kertas Kerja
+                      </h4>
+                      <p className="text-[10px] text-muted-foreground font-medium mt-1">Jana draf atau betulkan format dengan bantuan AI.</p>
+                    </div>
+                    <Button type="button" onClick={() => navigate('/nexus')} variant="outline" className="w-full sm:w-auto shrink-0 bg-white dark:bg-background border-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] hover:bg-indigo-500/10 uppercase tracking-widest gap-2">
+                      <Sparkles className="w-3.5 h-3.5" /> Buka Nexus AI
+                    </Button>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-4">
+                  <UploadZone label="Kertas Kerja" isReady={!!form.urlKertasKerja}
+                    onUpload={(e: any) => handleFileUpload(e, 'kertas_kerja')} color="bg-emerald-500/100" />
+                  <UploadZone label="Post-Mortem PDF" isReady={!!form.urlPostMortem}
+                    onUpload={(e: any) => handleFileUpload(e, 'post_mortem')} color="bg-indigo-600"
+                    disabled={form.status !== 'PENDING_POSTMORTEM' && form.status !== 'CONFIRMED' && !form.urlPostMortem} />
+                </div>
               </div>
 
               {/* Seksyen Post-Mortem Tambahan */}

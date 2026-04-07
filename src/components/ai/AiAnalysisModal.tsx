@@ -1,11 +1,12 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, Sparkles, RefreshCw, ShieldAlert, Zap, Users, Activity, Wallet, CheckSquare } from 'lucide-react';
+import { Bot, Sparkles, RefreshCw, ShieldAlert, Users, Activity, Wallet, CheckSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAiAssistant } from '@/hooks/useAiAssistant';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 
 interface AiAnalysisModalProps {
   isOpen: boolean;
@@ -17,9 +18,9 @@ interface AiAnalysisModalProps {
 type Stage = 'ready' | 'loading' | 'result' | 'error';
 
 const ANALYSIS_POINTS = [
-  { icon: Users,       label: 'Jumlah ahli berdaftar' },
-  { icon: Activity,    label: 'Aktiviti dirancang & diselesaikan' },
-  { icon: Wallet,      label: 'Penggunaan bajet kelab' },
+  { icon: Users, label: 'Jumlah ahli berdaftar' },
+  { icon: Activity, label: 'Aktiviti dirancang & diselesaikan' },
+  { icon: Wallet, label: 'Penggunaan bajet kelab' },
   { icon: CheckSquare, label: 'Tugasan dan produktiviti' },
 ];
 
@@ -47,7 +48,7 @@ export function AiAnalysisModal({ isOpen, onClose, clubId, clubData }: AiAnalysi
         <DialogHeader className="p-8 bg-gradient-to-r from-violet-600 to-indigo-600 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
           <DialogTitle className="text-3xl font-black italic flex items-center gap-3 relative z-10">
-            <Bot size={32} /> Laporan AI <span className="text-violet-200">JPP Nexus</span>
+            <Bot size={32} /> JPP <span className="text-violet-200">Nexus</span>
           </DialogTitle>
           <p className="text-violet-100 font-medium italic relative z-10">
             Sistem Kecerdasan Buatan JPP POLISAS — Analisis Prestasi Kelab
@@ -93,7 +94,7 @@ export function AiAnalysisModal({ isOpen, onClose, clubId, clubData }: AiAnalysi
                   disabled={!clubId}
                   className="h-13 px-8 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-black text-sm shadow-xl shadow-indigo-500/25 disabled:opacity-50"
                 >
-                  <Zap className="mr-2 w-4 h-4" /> Jana Analisis Sekarang
+                  <Sparkles className="mr-2 w-4 h-4" /> Jana Analisis Sekarang
                 </Button>
                 {!clubId && (
                   <p className="text-xs text-rose-500 font-medium -mt-3">Profil anda tidak mempunyai kelab yang dipautkan.</p>
@@ -136,7 +137,7 @@ export function AiAnalysisModal({ isOpen, onClose, clubId, clubData }: AiAnalysi
                                 prose-p:leading-relaxed prose-p:text-slate-600 dark:prose-p:text-slate-300
                                 prose-strong:text-indigo-900 dark:prose-strong:text-indigo-300 prose-strong:font-extrabold
                                 prose-ul:my-4 prose-li:my-1 relative z-10">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{result}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{result}</ReactMarkdown>
                 </div>
               </motion.div>
             )}

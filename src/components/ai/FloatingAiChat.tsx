@@ -9,6 +9,7 @@ import { useAiAssistant, ChatMessage } from '@/hooks/useAiAssistant';
 import { useAiSettings } from '@/contexts/AiSettingsContext';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 
 // ─── Storage helpers ────────────────────────────────────────────────────────
 
@@ -441,7 +442,7 @@ export function FloatingAiChat() {
                       }`}>
                         {msg.role === 'ai' ? (
                           <div className="prose prose-sm dark:prose-invert prose-headings:font-black prose-p:leading-snug max-w-none overflow-hidden">
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{msg.content}</ReactMarkdown>
                           </div>
                         ) : (
                           <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>

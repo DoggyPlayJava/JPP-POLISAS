@@ -26,6 +26,7 @@ import { UrusKelabPage } from '@/pages/UrusKelabPage'; // Import di atas sekali
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { PenasihatLogPage } from './pages/PenasihatLogPage';
 import { KarnivalVotingPage } from './pages/KarnivalVotingPage';
+import { NexusPage } from './pages/NexusPage';
 
 
 function RequireApproval({ children }: { children: React.ReactNode }) {
@@ -87,6 +88,7 @@ function AppRoutes() {
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/logs" element={<PenasihatLogPage />} />
           <Route path="/karnival" element={<KarnivalVotingPage />} />
+          <Route path="/nexus" element={<NexusPage />} />
         </Route>
       </Route>
 

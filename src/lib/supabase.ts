@@ -52,6 +52,8 @@ export interface Profile {
   created_at?: string;
   updated_at?: string;
   account_status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  subscription_tier?: 'free' | 'pro' | 'admin';
+  ai_token_balance?: number;
 }
 
 //LOGS SYSTEM

@@ -74,6 +74,12 @@ export function LoginPage() {
       toast.error('Sila lengkapkan semua maklumat termasuk Nombor Matrik.');
       return;
     }
+
+    if (email.trim().toLowerCase().endsWith('@student.polisas.edu.my')) {
+      toast.error('Sila guna emel peribadi. Emel pelajar @student.polisas.edu.my tidak dapat menerima kotak pengesahan.');
+      return;
+    }
+
     if (!jabatan) {
       toast.error('Sila pilih jabatan anda.');
       return;

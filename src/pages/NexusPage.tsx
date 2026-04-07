@@ -1,0 +1,1029 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Navigate, useSearchParams } from 'react-router-dom';
+import { Bot, FileText, Users, Wand2, Calculator, Save, FileClock, Sparkles, AlertTriangle, X, ImagePlus, Download } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAiSettings } from '@/contexts/AiSettingsContext';
+import { useAiAssistant } from '@/hooks/useAiAssistant';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { toast } from 'react-hot-toast';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import { supabase } from '@/lib/supabase';
+
+function useLocalState<T>(key: string, initialValue: T) {
+  const [state, setState] = useState<T>(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (e) {
+      return initialValue;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(state));
+    } catch (e) {}
+  }, [key, state]);
+
+  return [state, setState] as const;
+}
+
+export function NexusPage() {
+  const [searchParams] = useSearchParams();
+  const { allowAiBudget } = useAiSettings();
+  const { callAi, isLoading } = useAiAssistant();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'kertas-kerja');
+  const [loadingType, setLoadingType] = useState<'kertas-kerja' | 'minit-mesyuarat' | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get('req_pro') === 'true' || searchParams.get('tab') === 'langganan') {
+      setActiveTab('langganan');
+    }
+  }, [searchParams]);
+
+  // State Kertas Kerja dengan LocalStorage Caching
+  const [kertasKerjaStep, setKertasKerjaStep] = useLocalState('nx_kertasKerjaStep', 1);
+  const [jenisProgram, setJenisProgram] = useLocalState<string[]>('nx_jenisProgram', []);
+  const [bentukProgram, setBentukProgram] = useLocalState<string[]>('nx_bentukProgram', []);
+  const [bentukProgramLain, setBentukProgramLain] = useLocalState('nx_bentukProgramLain', '');
+  const [bilanganPegawai, setBilanganPegawai] = useLocalState('nx_bilanganPegawai', '');
+  const [tajukProgram, setTajukProgram] = useLocalState('nx_tajukProgram', '');
+  const [objektifProgram, setObjektifProgram] = useLocalState('nx_objektifProgram', '');
+  const [tarikhProgram, setTarikhProgram] = useLocalState('nx_tarikhProgram', '');
+  const [tempatProgram, setTempatProgram] = useLocalState('nx_tempatProgram', '');
+  const [sasaranPeserta, setSasaranPeserta] = useLocalState('nx_sasaranPeserta', '');
+  const [kelabPenganjur, setKelabPenganjur] = useLocalState('nx_kelabPenganjur', '');
+  const [anggaranKos, setAnggaranKos] = useLocalState('nx_anggaranKos', '');
+  const [namaPengarah, setNamaPengarah] = useLocalState('nx_namaPengarah', '');
+  const [hasilKertasKerja, setHasilKertasKerja] = useLocalState<string | null>('nx_hasilKertasKerja', null);
+
+  // Token Economy State
+  const [selectedAiModel, setSelectedAiModel] = useLocalState<'flash' | 'pro'>('nx_selectedAiModel', 'flash');
+  const [tokenData, setTokenData] = useState<{
+    current_balance: number;
+    tier: string;
+    monthly_allowance: number;
+    all_costs: Record<string, number>;
+  } | null>(null);
+
+  // Tier Request State
+  const { profile } = useAuth();
+  const [showTierModal, setShowTierModal] = useState(false);
+  const [tierReason, setTierReason] = useState('');
+  const [isSubmittingTier, setIsSubmittingTier] = useState(false);
+
+  useEffect(() => {
+    const fetchTokenBalance = async () => {
+      const { data, error } = await supabase.rpc('check_ai_tokens');
+      if (!error && data) {
+        setTokenData(data);
+        // Switch to flash automatically if cannot afford pro
+        if (data.current_balance < (data.all_costs?.pro_kertas_kerja || 50) && selectedAiModel === 'pro') {
+           setSelectedAiModel('flash'); 
+        }
+      }
+    };
+    fetchTokenBalance();
+  }, [activeTab, hasilKertasKerja]);
+
+  // State Minit Mesyuarat
+  const [tajukMesyuarat, setTajukMesyuarat] = useState('');
+  const [notaMesyuarat, setNotaMesyuarat] = useState('');
+  const [images, setImages] = useState<any[]>([]); // { file, base64, mimeType }
+  const [hasilMinit, setHasilMinit] = useState<string | null>(null);
+
+  // Preload logo for DOCX embedding
+  const logoBase64Ref = useRef<string>('');
+  useEffect(() => {
+    const loadLogo = async () => {
+      for (const path of ['/polisas-logo.png', '/jpp-logo.png']) {
+        try {
+          const res = await fetch(path);
+          if (!res.ok) continue;
+          const blob = await res.blob();
+          const b64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+          logoBase64Ref.current = b64;
+          return;
+        } catch { /* try next */ }
+      }
+    };
+    loadLogo();
+  }, []);
+
+  const handleRequestTier = async () => {
+    if (!tierReason.trim()) {
+      toast.error('Sila nyatakan sebab untuk memohon Token / PRO Tier.');
+      return;
+    }
+    setIsSubmittingTier(true);
+    try {
+      const { error } = await supabase.from('ai_tier_requests').insert({
+        user_id: profile?.id,
+        current_tier: tokenData?.tier || 'free',
+        requested_tier: 'pro',
+        reason: tierReason
+      });
+      if (error) throw error;
+      toast.success('Permohonan berjaya dihantar! Admin akan menyemak permohonan anda.');
+      setShowTierModal(false);
+      setTierReason('');
+    } catch (e: any) {
+      toast.error('Gagal menghantar permohonan: ' + (e.message || 'Ralat sistem'));
+    } finally {
+      setIsSubmittingTier(false);
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (images.length + files.length > 3) {
+       toast.error("Maksimum 3 keping gambar sahaja dibenarkan serentak.");
+       return;
+    }
+    
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+         setImages(prev => [...prev, { file, base64: ev.target?.result, mimeType: file.type }]);
+      };
+      reader.readAsDataURL(file);
+    });
+    
+    if (e.target) e.target.value = '';
+  };
+
+  const removeImage = (idx: number) => {
+     setImages(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleDownloadDocx = async (markdownContent: string, defaultFilename: string) => {
+    try {
+      const { marked } = await import('marked');
+      let htmlContent = await marked.parse(markdownContent);
+      
+      // Tukarkan kod tag khas kepada Page Break MS Word secara mutlak
+      htmlContent = htmlContent.replace(/<!-- PAGE_BREAK -->/g, "<br clear=all style='mso-special-character:line-break; page-break-before:always'>");
+      
+      // Inject Logo before KERTAS KERJA on cover page
+      if (logoBase64Ref.current) {
+        htmlContent = htmlContent.replace(
+          /(<center><b>KERTAS KERJA<\/b><\/center>)/i,
+          `<div style="text-align:center;"><img src="${logoBase64Ref.current}" style="width:160px;height:auto;"></div><br><br>\n$1`
+        );
+      }
+
+      // Inject Approval Box after POLITEKNIK SULTAN HAJI AHMAD SHAH on cover page (first occurrence only)
+      const approvalBox = `<br><br>
+<table style="border-collapse:collapse;width:100%;font-size:9pt;">
+<tr>
+<td style="background-color:#4472C4;color:white;font-weight:bold;text-align:center;border:1px solid #333;padding:6px;">OBJEK</td>
+<td style="background-color:#4472C4;color:white;font-weight:bold;text-align:center;border:1px solid #333;padding:6px;">OS21</td>
+<td style="background-color:#4472C4;color:white;font-weight:bold;text-align:center;border:1px solid #333;padding:6px;">O24</td>
+<td style="background-color:#4472C4;color:white;font-weight:bold;text-align:center;border:1px solid #333;padding:6px;">OS26</td>
+<td style="background-color:#4472C4;color:white;font-weight:bold;text-align:center;border:1px solid #333;padding:6px;">OS27</td>
+<td style="background-color:#4472C4;color:white;font-weight:bold;text-align:center;border:1px solid #333;padding:6px;">OS29</td>
+<td style="background-color:#4472C4;color:white;font-weight:bold;text-align:center;border:1px solid #333;padding:6px;">OS29<br>JEEP</td>
+<td style="background-color:#4472C4;color:white;font-weight:bold;text-align:center;border:1px solid #333;padding:6px;">OS42</td>
+<td style="background-color:#4472C4;color:white;font-weight:bold;text-align:center;border:1px solid #333;padding:6px;">Lain-Lain</td>
+</tr>
+<tr><td style="background-color:#FFFF00;font-weight:bold;border:1px solid #333;padding:6px;">Tick (&radic;)</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td></tr>
+<tr><td style="background-color:#FFFF00;font-weight:bold;border:1px solid #333;padding:8px 6px;">No.<br>Waran</td><td style="border:1px solid #333;padding:8px 6px;">&nbsp;</td><td style="border:1px solid #333;padding:8px 6px;">&nbsp;</td><td style="border:1px solid #333;padding:8px 6px;">&nbsp;</td><td style="border:1px solid #333;padding:8px 6px;">&nbsp;</td><td style="border:1px solid #333;padding:8px 6px;">&nbsp;</td><td style="border:1px solid #333;padding:8px 6px;">&nbsp;</td><td style="border:1px solid #333;padding:8px 6px;">&nbsp;</td><td style="border:1px solid #333;padding:8px 6px;">&nbsp;</td></tr>
+<tr><td style="background-color:#FFFF00;font-weight:bold;border:1px solid #333;padding:6px;">WP10.9</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td></tr>
+<tr><td style="background-color:#FFFF00;font-weight:bold;border:1px solid #333;padding:6px;">Kelulusan</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td></tr>
+<tr><td style="background-color:#FFFF00;font-weight:bold;border:1px solid #333;padding:6px;">T.Tangan<br>Pelulus</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td><td style="border:1px solid #333;padding:6px;">&nbsp;</td></tr>
+</table>`;
+      htmlContent = htmlContent.replace(
+        /POLITEKNIK SULTAN HAJI AHMAD SHAH<\/b><\/center>/i,
+        `POLITEKNIK SULTAN HAJI AHMAD SHAH</b></center>${approvalBox}`
+      );
+
+      const htmlString = htmlContent;
+      const styles = `
+      <style>
+        @page WordSection1 {
+          size: 595.3pt 841.9pt; 
+          margin: 72.0pt 72.0pt 72.0pt 72.0pt; 
+          mso-header-margin: 35.4pt; 
+          mso-footer-margin: 35.4pt; 
+          mso-paper-source: 0;
+        }
+        div.WordSection1 { page: WordSection1; font-family: "Arial", sans-serif; font-size: 11pt; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid black; padding: 8px; text-align: left; vertical-align: top; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        p { margin-bottom: 12px; line-height: 1.5; }
+        h1, h2, h3, h4 { font-family: "Arial", sans-serif; font-weight: bold; }
+        center { text-align: center; }
+      </style>
+      `;
+      const docHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>${defaultFilename}</title>${styles}</head><body><div class="WordSection1">${htmlString}</div></body></html>`;
+      const blob = new Blob([docHtml], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${defaultFilename}.doc`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Dokumen MS Word sedia untuk disunting!");
+    } catch (e) {
+      toast.error("Gagal menjana DOCX.");
+    }
+  };
+
+  // Jika kill-switch "Enjin AI" (allowAiBudget) dimatikan, sekat akses.
+  if (!allowAiBudget) {
+    return (
+      <div className="p-8 max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
+        <div className="w-24 h-24 bg-rose-500/10 rounded-3xl flex items-center justify-center text-rose-500 shadow-xl ring-1 ring-rose-500/20 mb-4 overflow-hidden relative">
+          <AlertTriangle className="w-12 h-12 relative z-10" />
+          <div className="absolute inset-0 bg-rose-500/20 animate-pulse" />
+        </div>
+        <h1 className="text-3xl font-black text-rose-500 tracking-tight">AKSES DISEKAT</h1>
+        <p className="text-muted-foreground max-w-md">
+          Enjin Nexus AI telah dinyahaktifkan oleh Admin JPP. Modul ini tidak tersedia buat masa ini. Hubungi pentadbir sistem untuk maklumat lanjut.
+        </p>
+        <Button variant="outline" className="mt-4 border-rose-500/20 hover:bg-rose-500/10 hover:text-rose-400" onClick={() => window.history.back()}>
+          Kembali ke Halaman Sebelumnya
+        </Button>
+      </div>
+    );
+  }
+
+  const handleJanaKertasKerja = async () => {
+    if (!tajukProgram || !objektifProgram) {
+      toast.error('Sila lengkapkan tajuk dan objektif program sekurang-kurangnya.');
+      return;
+    }
+
+    setLoadingType('kertas-kerja');
+    try {
+      const result = await callAi({
+        task: 'jana_kertas_kerja' as any, // Kita tambah ke type nanti
+        data: {
+          tajuk: tajukProgram,
+          objektif: objektifProgram,
+          tarikh: tarikhProgram,
+          sasaran: sasaranPeserta,
+          tempat: tempatProgram,
+          penganjur: kelabPenganjur,
+          kos: anggaranKos,
+          pengarah: namaPengarah,
+          jenisProgram: jenisProgram.join(', '),
+          bentukProgram: [
+            ...bentukProgram,
+            ...(bentukProgramLain.trim() ? [bentukProgramLain.trim()] : [])
+          ].join(', '),
+          bilanganPegawai: bilanganPegawai,
+          selectedModel: selectedAiModel
+        }
+      });
+
+      if (result) {
+        setHasilKertasKerja(result);
+        toast.success('Draf kertas kerja berjaya dijana!');
+      }
+    } catch (e: any) {
+      // Dibendung oleh useAiAssistant, toast akan dikeluarkan di sana
+    } finally {
+      setLoadingType(null);
+    }
+  };
+
+  const handleJanaMinit = async () => {
+    if (!tajukMesyuarat || (!notaMesyuarat && images.length === 0)) {
+      toast.error('Sila masukkan tajuk mesyuarat dan nota (teks atau muat naik gambar).');
+      return;
+    }
+
+    setLoadingType('minit-mesyuarat');
+    try {
+      const result = await callAi({
+        task: 'jana_minit_mesyuarat' as any,
+        data: {
+          tajuk: tajukMesyuarat,
+          nota: notaMesyuarat,
+          images: images
+        }
+      });
+
+      if (result) {
+        setHasilMinit(result);
+        toast.success('Nota berjaya ditukar menjadi minit rasmi!');
+      }
+    } catch (e: any) {
+      //
+    } finally {
+      setLoadingType(null);
+    }
+  };
+
+  return (
+    <div className="p-8 max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-6 relative">
+        <div className="flex items-center gap-5 relative z-10 w-full md:w-auto">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex flex-shrink-0 items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.4)] ring-1 ring-white/10">
+            <Sparkles className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground">Nexus AI Hub</h1>
+              <Badge className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20 font-black tracking-widest text-[10px] uppercase">BETA</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1.5 font-medium max-w-lg leading-relaxed">
+              Pusat penjanaan dokumen pintar. Hasilkan kertas kerja dan minit mesyuarat rasmi dengan pantas menggunakan enjin Nexus AI.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Tabs UI */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="w-full justify-start h-auto p-1.5 mb-6 bg-slate-100/80 dark:bg-slate-900/50 backdrop-blur-sm shadow-sm rounded-2xl border border-slate-200/60 dark:border-border/50">
+          <TabsTrigger value="kertas-kerja" className="gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-indigo-400">
+            <FileText className="w-4 h-4" />
+            <span className="font-bold">Penjana Kertas Kerja</span>
+          </TabsTrigger>
+          <TabsTrigger value="minit-mesyuarat" className="gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-emerald-400">
+            <Users className="w-4 h-4" />
+            <span className="font-bold">Minit Mesyuarat</span>
+          </TabsTrigger>
+          <TabsTrigger value="langganan" className="gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-amber-500">
+            <Sparkles className="w-4 h-4" />
+            <span className="font-bold">Langganan & Token</span>
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Tab Penjana Kertas Kerja */}
+        <TabsContent value="kertas-kerja" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <div className="lg:col-span-5 space-y-6">
+              <Card className="border-slate-200/60 dark:border-border/50 shadow-xl overflow-hidden bg-white dark:bg-[#121214] transition-all relative">
+                <div className="h-1.5 bg-gradient-to-r from-indigo-500 to-purple-500" />
+                
+                {/* Progress Indicator */}
+                <div className="px-6 pt-5 pb-2">
+                  <div className="flex items-center justify-between">
+                    {[1, 2, 3].map((step) => (
+                      <div key={step} className="flex flex-col items-center flex-1 relative">
+                        <div className={cn(
+                          "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold z-10 transition-colors duration-300",
+                          kertasKerjaStep >= step 
+                            ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/20" 
+                            : "bg-slate-100 dark:bg-muted text-muted-foreground"
+                        )}>
+                          {step}
+                        </div>
+                        {step < 3 && (
+                          <div className={cn(
+                            "absolute top-4 left-[50%] right-[-50%] h-[2px] -z-0 transition-colors duration-300",
+                            kertasKerjaStep > step ? "bg-indigo-600" : "bg-slate-200 dark:bg-muted"
+                          )} />
+                        )}
+                        <span className={cn(
+                          "uppercase tracking-widest text-[8px] font-bold mt-2 text-center",
+                          kertasKerjaStep >= step ? "text-indigo-600 dark:text-indigo-400" : "text-muted-foreground"
+                        )}>
+                          {step === 1 ? 'Tajuk & Konsep' : step === 2 ? 'Logistik' : 'Pengurusan'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="px-6 py-2">
+                  <div className="h-[1px] w-full bg-border/40" />
+                </div>
+
+                <CardContent className="space-y-4 pt-2">
+                  {kertasKerjaStep === 1 && (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-widest text-indigo-500/90 dark:text-indigo-400">Tajuk Program</Label>
+                        <Input 
+                          placeholder="Cth: Karnival Kerjaya & Keusahawanan 2026" 
+                          value={tajukProgram} 
+                          onChange={(e) => setTajukProgram(e.target.value)}
+                          className="bg-slate-50 dark:bg-[#0A0A0B]/50 border-slate-200 dark:border-border/60 focus:ring-2 focus:ring-indigo-500/20"
+                        />
+                      </div>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Jenis Program (Boleh pilih lebih dari satu)</Label>
+                          <div className="flex flex-wrap gap-2">
+                            {["Sukan", "Kerohanian", "Kemahiran Teknikal", "Kebudayaan & Kesenian", "Badan Beruniform", "Perpaduan", "Psikologi", "Kepimpinan", "Komunikasi & Bahasa", "Keusahawanan", "Kesukarelawanan", "Kesihatan"].map(opt => {
+                              const isSelected = jenisProgram.includes(opt);
+                              return (
+                                <button
+                                  key={opt}
+                                  type="button"
+                                  onClick={() => setJenisProgram(prev => isSelected ? prev.filter(x => x !== opt) : [...prev, opt])}
+                                  className={cn(
+                                    "px-3 py-1.5 text-xs font-semibold rounded-full border transition-all",
+                                    isSelected ? "bg-indigo-600 text-white border-indigo-600 shadow-[0_2px_10px_rgba(79,70,229,0.3)]" : "bg-white dark:bg-[#121214] text-muted-foreground border-slate-200 dark:border-border hover:border-indigo-400 hover:text-indigo-500"
+                                  )}
+                                >
+                                  {opt}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Bentuk Program (Boleh pilih lebih dari satu)</Label>
+                          <div className="flex flex-wrap gap-2">
+                            {["Bengkel", "Ceramah", "Seminar", "Pertandingan", "Pertandingan E-Sports", "Lawatan Sambil Belajar", "Karnival", "Kem / Perkhemahan"].map(opt => {
+                              const isSelected = bentukProgram.includes(opt);
+                              return (
+                                <button
+                                  key={opt}
+                                  type="button"
+                                  onClick={() => setBentukProgram(prev => isSelected ? prev.filter(x => x !== opt) : [...prev, opt])}
+                                  className={cn(
+                                    "px-3 py-1.5 text-xs font-semibold rounded-full border transition-all",
+                                    isSelected ? "bg-emerald-600 text-white border-emerald-600 shadow-[0_2px_10px_rgba(16,185,129,0.3)]" : "bg-white dark:bg-[#121214] text-muted-foreground border-slate-200 dark:border-border hover:border-emerald-400 hover:text-emerald-500"
+                                  )}
+                                >
+                                  {opt}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <div className="pt-2">
+                             <Input 
+                               placeholder="Lain-lain (Sila nyatakan...)" 
+                               value={bentukProgramLain}
+                               onChange={(e) => setBentukProgramLain(e.target.value)}
+                               className="bg-slate-50 dark:bg-[#0A0A0B]/50 h-9 text-xs focus:ring-2 focus:ring-emerald-500/20"
+                             />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-widest text-indigo-500/90 dark:text-indigo-400">Objektif Utama</Label>
+                        <Textarea 
+                          placeholder="Nyatakan dengan jelas 2-3 objektif program ini dianjurkan..." 
+                          className="min-h-[100px] resize-none bg-background/80 border-border/60 focus:ring-2 focus:ring-indigo-500/20"
+                          value={objektifProgram}
+                          onChange={(e) => setObjektifProgram(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {kertasKerjaStep === 2 && (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-indigo-500/90 dark:text-indigo-400">Penganjur Utama / Rakan Kerjasama</Label>
+                        <Input 
+                          placeholder="Cth: Kelab IT bersama JHEP POLISAS" 
+                          value={kelabPenganjur} 
+                          onChange={(e) => setKelabPenganjur(e.target.value)}
+                          className="bg-slate-50 dark:bg-[#0A0A0B]/50 focus:ring-2 focus:ring-indigo-500/20"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tarikh / Tempoh</Label>
+                          <Input 
+                            placeholder="Cth: 15-18 Mei 2026" 
+                            value={tarikhProgram}
+                            onChange={(e) => setTarikhProgram(e.target.value)}
+                            className="bg-slate-50 dark:bg-[#0A0A0B]/50 h-9 text-sm focus:ring-2 focus:ring-indigo-500/20"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tempat / Platform</Label>
+                          <Input 
+                            placeholder="Cth: Dewan Jubli Perak" 
+                            value={tempatProgram}
+                            onChange={(e) => setTempatProgram(e.target.value)}
+                            className="bg-slate-50 dark:bg-[#0A0A0B]/50 h-9 text-sm focus:ring-2 focus:ring-indigo-500/20"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Bilangan Peserta</Label>
+                          <Input 
+                            placeholder="Cth: 200" 
+                            type="number"
+                            value={sasaranPeserta}
+                            onChange={(e) => setSasaranPeserta(e.target.value)}
+                            className="bg-slate-50 dark:bg-[#0A0A0B]/50 h-9 text-sm focus:ring-2 focus:ring-indigo-500/20"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Bil. Pegawai / AJK</Label>
+                          <Input 
+                            placeholder="Cth: 5" 
+                            type="number"
+                            value={bilanganPegawai}
+                            onChange={(e) => setBilanganPegawai(e.target.value)}
+                            className="bg-slate-50 dark:bg-[#0A0A0B]/50 h-9 text-sm focus:ring-2 focus:ring-indigo-500/20"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {kertasKerjaStep === 3 && (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-widest text-indigo-500/90 dark:text-indigo-400">Jumlah Anggaran Kos (RM)</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm">RM</span>
+                          <Input 
+                            placeholder="Cth: 1500" 
+                            type="number"
+                            value={anggaranKos}
+                            onChange={(e) => setAnggaranKos(e.target.value)}
+                            className="bg-slate-50 dark:bg-[#0A0A0B]/50 pl-10 text-lg font-bold focus:ring-2 focus:ring-indigo-500/20 py-6"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-widest text-indigo-500/90 dark:text-indigo-400">Nama Penuh Pengarah Program</Label>
+                        <Input 
+                          placeholder="Cth: Muhamad Amirul Hakimi Bin Mohd Zawawi" 
+                          value={namaPengarah}
+                          onChange={(e) => setNamaPengarah(e.target.value)}
+                          className="bg-slate-50 dark:bg-[#0A0A0B]/50 focus:ring-2 focus:ring-indigo-500/20"
+                        />
+                      </div>
+                      
+                      <div className="pt-4">
+                        <div className="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex gap-3 text-indigo-800 dark:text-indigo-300 text-sm">
+                          <Sparkles className="w-5 h-5 shrink-0 text-indigo-600 dark:text-indigo-400 mt-0.5" />
+                          <p>
+                            Sistem sedia untuk menjana draf. Nexus AI akan menstruktur teks, anggaran belanjawan, carta organisasi dan tentatif berdasarkan format MESTI (HEP POLISAS).
+                          </p>
+                        </div>
+                      </div>
+                      <div className="pt-4 border-t border-slate-200 dark:border-border/60">
+                        <Label className="text-xs font-bold uppercase tracking-widest text-indigo-500/90 dark:text-indigo-400 mb-3 block">Pilihan Kecerdasan AI</Label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <button
+                            onClick={() => {
+                              const flashCost = tokenData?.all_costs?.flash_kertas_kerja || 0;
+                              if (tokenData && tokenData.current_balance < flashCost) {
+                                toast.error(`Maaf, baki Token Nexus tidak mencukupi. Kos: ${flashCost} Token.`);
+                                return;
+                              }
+                              setSelectedAiModel('flash');
+                            }}
+                            className={cn(
+                              "text-left p-4 rounded-xl border-2 transition-all relative overflow-hidden",
+                              selectedAiModel === 'flash' 
+                                ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10 shadow-sm" 
+                                : (!tokenData || tokenData.current_balance < (tokenData.all_costs?.flash_kertas_kerja || 0)) ? "border-slate-200 dark:border-border/60 opacity-60 cursor-not-allowed" : "border-slate-200 dark:border-border/60 hover:border-indigo-300 dark:hover:border-indigo-500/50"
+                            )}
+                          >
+                            <div className="flex gap-3">
+                              <div className={cn("p-2 rounded-lg shrink-0 h-min", selectedAiModel === 'flash' ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400")}>
+                                <Sparkles className="w-5 h-5" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-bold text-sm text-foreground">Gemini Flash</h4>
+                                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">Kepantasan janaan draf. Keseimbangan prestasi kualiti.</p>
+                                {tokenData && (
+                                  <div className="mt-2 text-[11px] font-medium flex items-center justify-between">
+                                    <span className={tokenData.current_balance < (tokenData.all_costs?.flash_kertas_kerja || 0) ? "text-rose-500" : "text-emerald-600 dark:text-emerald-400"}>
+                                      Baki: {tokenData.current_balance} Token
+                                    </span>
+                                    <span className="text-muted-foreground flex gap-1 items-center bg-slate-100 dark:bg-[#0A0A0B] px-2 py-0.5 rounded-full shadow-sm"><Calculator className="w-3" /> Kos: {tokenData.all_costs?.flash_kertas_kerja || 0}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            {selectedAiModel === 'flash' && <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/10 rounded-bl-full -z-10" />}
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              const proCost = tokenData?.all_costs?.pro_kertas_kerja || 0;
+                              if (tokenData && tokenData.current_balance < proCost) {
+                                toast.error(`Maaf, baki Token Nexus tidak mencukupi untuk Pelan Pro. Kos: ${proCost} Token.`);
+                                return;
+                              }
+                              setSelectedAiModel('pro');
+                            }}
+                            className={cn(
+                              "text-left p-4 rounded-xl border-2 transition-all relative overflow-hidden group",
+                              selectedAiModel === 'pro' 
+                                ? "border-amber-500 bg-amber-50/50 dark:bg-amber-500/10 shadow-sm" 
+                                : (!tokenData || tokenData.current_balance < (tokenData.all_costs?.pro_kertas_kerja || 0)) ? "border-slate-200 dark:border-border/60 opacity-60 cursor-not-allowed" : "border-slate-200 dark:border-border/60 hover:border-amber-300 dark:hover:border-amber-500/50"
+                            )}
+                          >
+                            <div className="flex gap-3">
+                              <div className={cn("p-2 rounded-lg shrink-0 h-min", selectedAiModel === 'pro' ? "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400")}>
+                                <Wand2 className="w-5 h-5" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="font-bold text-sm text-foreground flex items-center gap-1">Gemini Pro <Badge variant="outline" className="text-[9px] border-amber-200 bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 px-1 py-0 h-4">TERBAIK</Badge></h4>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">Penaakulan tinggi. Jadual & Format 100% sempurna.</p>
+                                {tokenData && (
+                                  <div className="mt-2 text-[11px] font-medium flex items-center justify-between">
+                                    <span className={tokenData.current_balance < (tokenData.all_costs?.pro_kertas_kerja || 0) ? "text-rose-500" : "text-emerald-600 dark:text-emerald-400"}>
+                                      Baki: {tokenData.current_balance} Token
+                                    </span>
+                                    <span className="text-amber-600 dark:text-amber-400 flex gap-1 items-center bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 border border-amber-200/50 dark:border-amber-500/20 rounded-full shadow-sm"><Calculator className="w-3" /> Kos: {tokenData.all_costs?.pro_kertas_kerja || 0}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            {selectedAiModel === 'pro' && <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/10 rounded-bl-full -z-10" />}
+                          </button>
+                        </div>
+                        <div className="mt-4 flex items-center justify-center p-3 rounded-xl bg-slate-100/50 dark:bg-[#121214] border border-slate-200/50 dark:border-border/50 transition-all hover:bg-slate-100 dark:hover:bg-[#1A1A1D]">
+                           <span className="text-xs font-semibold text-muted-foreground mr-2">Token semakin kurang atau perlukan hasil bertaraf Pro?</span>
+                           <Button variant="link" size="sm" className="font-bold text-indigo-600 dark:text-indigo-400 p-0 h-auto" onClick={() => setShowTierModal(true)}>
+                             <Sparkles className="w-3.5 h-3.5 mr-1" /> Mohon Token Tambahan
+                           </Button>
+                        </div>
+                      </div>
+
+                    </div>
+                  )}
+                </CardContent>
+
+                <CardFooter className="bg-secondary/30 pt-4 flex gap-3 border-t border-slate-200/50 dark:border-border/50">
+                  {kertasKerjaStep > 1 && (
+                    <Button 
+                      variant="outline"
+                      className="border-slate-200 dark:border-border/60 hover:bg-slate-100 dark:hover:bg-muted font-bold"
+                      onClick={() => setKertasKerjaStep(prev => prev - 1)}
+                    >
+                      Kembali
+                    </Button>
+                  )}
+                  
+                  {kertasKerjaStep < 3 ? (
+                    <Button 
+                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.5)]"
+                      onClick={() => setKertasKerjaStep(prev => prev + 1)}
+                      disabled={
+                        (kertasKerjaStep === 1 && (!tajukProgram || jenisProgram.length === 0 || (bentukProgram.length === 0 && !bentukProgramLain.trim()) || !objektifProgram)) ||
+                        (kertasKerjaStep === 2 && (!kelabPenganjur || !tarikhProgram || !tempatProgram || !sasaranPeserta || !bilanganPegawai))
+                      }
+                    >
+                      Seterusnya
+                    </Button>
+                  ) : (
+                    <Button 
+                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.5)] group"
+                      onClick={handleJanaKertasKerja}
+                      disabled={isLoading || !anggaranKos || !namaPengarah}
+                    >
+                      {isLoading ? (
+                        <span className="flex items-center gap-2">
+                          <Wand2 className="w-4 h-4 animate-spin" /> Menjana Draf...
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <Wand2 className="w-4 h-4 group-hover:rotate-12 transition-transform" /> Jana Kertas Kerja
+                        </span>
+                      )}
+                    </Button>
+                  )}
+                </CardFooter>
+              </Card>
+            </div>
+
+            <div className="lg:col-span-7">
+              <Card className="h-full min-h-[500px] flex flex-col border-slate-200/60 dark:border-border/50 shadow-xl overflow-hidden bg-slate-50/50 dark:bg-[#0A0A0B]">
+                <div className="bg-white/80 dark:bg-muted/30 p-4 border-b border-slate-200/60 dark:border-border/50 flex items-center justify-between backdrop-blur-sm z-10">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-indigo-400" />
+                    <span className="text-sm font-bold tracking-tight text-foreground/80">Dokumen Draf</span>
+                  </div>
+                  {hasilKertasKerja && (
+                    <div className="flex items-center gap-2">
+			<Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-2 bg-indigo-500/10 text-indigo-400 border-indigo-500/20 hover:bg-indigo-500/20" onClick={() => handleDownloadDocx(hasilKertasKerja, tajukProgram || 'Kertas_Kerja')}>
+			   <Download className="w-3.5 h-3.5" /> Muat Turun DOCX
+			</Button>
+			<Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-2" onClick={() => {
+			  navigator.clipboard.writeText(hasilKertasKerja);
+			  toast.success('Draf disalin!');
+			}}>
+			  <Save className="w-3.5 h-3.5" /> Salin Teks
+			</Button>
+		    </div>
+                  )}
+                </div>
+                <div className="flex-1 overflow-y-auto max-h-[600px] relative bg-slate-50 dark:bg-transparent">
+                  <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-40 dark:opacity-20 bg-[length:16px_16px] pointer-events-none" />
+                  <div className="relative h-full p-4 sm:p-8 flex justify-center w-full">
+                    <div className="w-full max-w-3xl bg-white dark:bg-[#121214] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-slate-200/60 dark:border-border/50 rounded-xl p-8 sm:p-12 prose dark:prose-invert prose-indigo prose-sm sm:prose-base transition-all">
+                      {loadingType === 'kertas-kerja' ? (
+                        <AiLoadingView type="kertas-kerja" />
+                      ) : hasilKertasKerja ? (
+                        <>
+                          <div className="mb-8 p-5 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-300 flex items-start gap-4 shadow-sm animate-in fade-in slide-in-from-top-2">
+                            <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                              <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                            </div>
+                            <div className="text-sm leading-relaxed">
+                              <p className="font-bold text-base mb-1">Perhatian: Modul Kecerdasan Buatan (Draf)</p>
+                              Dokumen ini merupakan draf janaan AI bagi memudahkan proses penulisan anda. Model AI mungkin tidak 100% tepat. Anda <strong>DIWAJIBKAN</strong> untuk membaca, menyemak dan mengubah suai dokumen ini dengan teliti sebelum pengesahan rasmi.
+                            </div>
+                          </div>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{hasilKertasKerja}</ReactMarkdown>
+                        </>
+                      ) : (
+                        <div className="h-full flex flex-col items-center justify-center text-muted-foreground/50 space-y-4 pt-10 pb-10">
+                          <div className="w-20 h-20 rounded-full bg-slate-100 dark:bg-secondary/30 flex items-center justify-center border border-slate-200/60 dark:border-border/20 shadow-inner">
+                            <Wand2 className="w-10 h-10 opacity-20 text-indigo-500" />
+                          </div>
+                          <p className="text-sm font-medium">Borang belum diisi. Draf akan dipaparkan di sini.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+          </div>
+        </TabsContent>
+
+        {/* Tab Penjana Minit Mesyuarat */}
+        <TabsContent value="minit-mesyuarat" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <div className="lg:col-span-5 space-y-6">
+              <Card className="border-slate-200/60 dark:border-border/50 shadow-xl overflow-hidden bg-white dark:bg-[#121214]">
+                <div className="h-1.5 bg-gradient-to-r from-emerald-500 to-teal-500" />
+                <CardHeader>
+                  <CardTitle className="text-lg">Nota Kasar Mesyuarat</CardTitle>
+                  <CardDescription>Ubah nota berterabur (contoh WhatsApp) kepada Minit Mesyuarat rasmi.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400">Perkara / Tajuk Mesyuarat</Label>
+                    <Input 
+                      placeholder="Cth: Mesyuarat Agong Tahunan Kelab IT" 
+                      value={tajukMesyuarat} 
+                      onChange={(e) => setTajukMesyuarat(e.target.value)}
+                      className="bg-slate-50 dark:bg-[#0A0A0B]/50 border-slate-200 dark:border-border/60 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 shadow-sm transition-all focus:bg-white dark:focus:bg-[#0A0A0B]"
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                       <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400">Nota Mentah (Pilihan)</Label>
+                       <Textarea 
+                         placeholder="- mula jam 2 petang, ali tak dtg&#10;- bincang pasal yuran, setuju naik RM5&#10;- program sukan bulan depan, ajk sukan kena buat kertas kerja sblm jumaat" 
+                         className="min-h-[150px] resize-none bg-slate-50 dark:bg-[#0A0A0B]/50 border-slate-200 dark:border-border/60 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 shadow-sm transition-all leading-relaxed focus:bg-white dark:focus:bg-[#0A0A0B]"
+                         value={notaMesyuarat}
+                         onChange={(e) => setNotaMesyuarat(e.target.value)}
+                       />
+                    </div>
+                    <div className="space-y-2 relative border-t border-border/40 pt-4">
+                       <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400 flex items-center justify-between">
+                         Input Gambar (Papan Putih/Catatan)
+                         <span className="text-[10px] bg-secondary px-2 rounded-full font-medium">{images.length}/3 Dimuat Naik</span>
+                       </Label>
+                       
+                       <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-border/60 hover:border-emerald-500/50 hover:bg-emerald-500/5 bg-background/50 rounded-xl cursor-pointer transition-all">
+                         <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                           <ImagePlus className="w-5 h-5" />
+                           <span className="text-sm font-medium">Klik untuk muat naik (.jpg/.png)</span>
+                         </div>
+                         <input type="file" disabled={images.length >= 3} className="hidden" accept="image/jpeg, image/png, image/webp" multiple onChange={handleImageUpload} />
+                       </label>
+
+                       {/* Image Previews */}
+                       {images.length > 0 && (
+                          <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
+                            {images.map((img, idx) => (
+                               <div key={idx} className="relative w-16 h-16 rounded-md border overflow-hidden flex-shrink-0 group">
+                                  <img src={img.base64} alt="preview" className="w-full h-full object-cover" />
+                                  <button 
+                                     onClick={() => removeImage(idx)}
+                                     className="absolute bg-background/80 backdrop-blur-sm inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                     <X className="w-4 h-4 text-rose-500" />
+                                  </button>
+                               </div>
+                            ))}
+                          </div>
+                       )}
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="bg-secondary/30 pt-4">
+                  <Button 
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-11 transition-all shadow-[0_0_15px_rgba(52,211,153,0.3)] hover:shadow-[0_0_25px_rgba(52,211,153,0.5)] group"
+                    onClick={handleJanaMinit}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center gap-2">
+                        <Wand2 className="w-4 h-4 animate-spin" /> Menjana Minit Rasmi...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <FileClock className="w-4 h-4 group-hover:-rotate-12 transition-transform" /> Susun Jadi Minit Rasmi
+                      </span>
+                    )}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </div>
+
+            <div className="lg:col-span-7">
+              <Card className="h-full min-h-[500px] flex flex-col border-slate-200/60 dark:border-border/50 shadow-xl overflow-hidden bg-slate-50/50 dark:bg-[#0A0A0B]">
+                <div className="bg-white/80 dark:bg-muted/30 p-4 border-b border-slate-200/60 dark:border-border/50 flex items-center justify-between backdrop-blur-sm z-10">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-emerald-400" />
+                    <span className="text-sm font-bold tracking-tight text-foreground/80">Minit Rasmi</span>
+                  </div>
+                  {hasilMinit && (
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-2 bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20" onClick={() => handleDownloadDocx(hasilMinit, tajukMesyuarat || 'Minit_Mesyuarat')}>
+                           <Download className="w-3.5 h-3.5" /> Muat Turun DOCX
+                        </Button>
+                        <Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-2" onClick={() => {
+                          navigator.clipboard.writeText(hasilMinit);
+                          toast.success('Minit disalin!');
+                        }}>
+                          <Save className="w-3.5 h-3.5" /> Salin Teks
+                        </Button>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 overflow-y-auto max-h-[600px] relative bg-slate-50 dark:bg-transparent">
+                  <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-40 dark:opacity-20 bg-[length:16px_16px] pointer-events-none" />
+                  <div className="relative h-full p-4 sm:p-8 flex justify-center w-full">
+                    <div className="w-full max-w-3xl bg-white dark:bg-[#121214] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-slate-200/60 dark:border-border/50 rounded-xl p-8 sm:p-12 prose dark:prose-invert prose-emerald prose-sm sm:prose-base transition-all">
+                      {loadingType === 'minit-mesyuarat' ? (
+                        <AiLoadingView type="minit-mesyuarat" />
+                      ) : hasilMinit ? (
+                        <>
+                          <div className="mb-8 p-5 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-300 flex items-start gap-4 shadow-sm animate-in fade-in slide-in-from-top-2">
+                            <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                              <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                            </div>
+                            <div className="text-sm leading-relaxed">
+                              <p className="font-bold text-base mb-1">Perhatian: Minit Janaan AI Bertindak Sebagai Panduan</p>
+                              Ini hanyalah sekadar draf awal untuk menukar nota berterabur anda kepada format korporat. Pastikan tiada fakta mesyuarat ditiadakan atau diputarbelit oleh AI secara tidak sengaja.
+                            </div>
+                          </div>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{hasilMinit}</ReactMarkdown>
+                        </>
+                      ) : (
+                        <div className="h-full flex flex-col items-center justify-center text-muted-foreground/50 space-y-4 pt-10 pb-10">
+                          <div className="w-20 h-20 rounded-full bg-slate-100 dark:bg-secondary/30 flex items-center justify-center border border-slate-200/60 dark:border-border/20 shadow-inner">
+                            <FileClock className="w-10 h-10 opacity-20 text-emerald-500" />
+                          </div>
+                          <p className="text-sm font-medium">Nota belum diproses. Format rasmi akan dijana di sini.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Tab Langganan & Token AI */}
+        <TabsContent value="langganan" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card className="border-indigo-500/20 shadow-xl overflow-hidden bg-white dark:bg-[#121214] relative h-min">
+              <div className="absolute top-0 right-0 p-8 opacity-5">
+                  <Sparkles className="w-48 h-48" />
+              </div>
+              <CardHeader className="p-8 pb-4">
+                <CardTitle className="text-2xl font-black flex items-center gap-2">
+                  <Calculator className="w-5 h-5 text-indigo-500" /> Profil Langganan AI
+                </CardTitle>
+                <CardDescription>Urus baki token dan naiktaraf tier langganan anda di sini.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-8 pt-0 space-y-6 relative z-10">
+                <div className="p-6 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20">
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-xs font-bold uppercase tracking-widest text-indigo-500">Baki Semasa</span>
+                    <Badge variant="outline" className="bg-indigo-500/10 text-indigo-500 border-indigo-500/20 font-black">{tokenData?.tier === 'pro' ? 'PRO TIER' : tokenData?.tier === 'admin' ? 'ADMIN TIER' : 'FREE TIER'}</Badge>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-5xl font-black text-indigo-600 dark:text-indigo-400">{tokenData?.current_balance || 0}</span>
+                    <span className="text-sm font-medium text-muted-foreground">/ {tokenData?.monthly_allowance || 0} Token Bulanan</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                   <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Kelebihan PRO Tier</h4>
+                   <ul className="space-y-2 text-sm text-foreground/80 font-medium">
+                      <li className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-emerald-500" /> Baki diperbaharui 1,000 token setiap bulan.</li>
+                      <li className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-emerald-500" /> Akses ke model AI premium yang lebih pantas.</li>
+                      <li className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-emerald-500" /> Tiada had analisis kertas kerja panjang.</li>
+                   </ul>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/50 shadow-xl bg-white dark:bg-[#121214] h-min">
+              <CardHeader className="p-8 pb-4">
+                <CardTitle className="text-xl font-black">Permohonan PRO Tier</CardTitle>
+                <CardDescription>Langganan PRO adalah terhad. Pemohon perlu memasukkan alasan yang munasabah untuk disemak oleh Admin JPP.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-8 pt-0 space-y-5">
+                {tokenData?.tier === 'pro' || tokenData?.tier === 'admin' ? (
+                  <div className="p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 flex gap-4 text-emerald-800 dark:text-emerald-300">
+                     <AlertTriangle className="w-6 h-6 shrink-0 text-emerald-500" />
+                     <div>
+                       <p className="font-bold text-sm mb-1">Anda Telah Dinaik Taraf</p>
+                       <p className="text-xs leading-relaxed opacity-90">Akaun anda pada masa ini berada pada kapasiti penuh dengan langganan tahap tinggi. Anda tidak perlu lagi membuat permohonan baru.</p>
+                     </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Justifikasi / Sebab Permohonan</Label>
+                      <Textarea 
+                        placeholder="Terangkan mengapa anda memerlukan token tambahan (Cth: Pegawai Kelab menganjurkan banyak mesyuarat bulan ini)..."
+                        className="min-h-[120px] resize-none focus:ring-2 focus:ring-indigo-500/20 bg-slate-50 dark:bg-[#0A0A0B]/50"
+                        value={tierReason}
+                        onChange={(e) => setTierReason(e.target.value)}
+                        disabled={isSubmittingTier}
+                      />
+                    </div>
+                    <Button 
+                      className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-[0_0_15px_rgba(79,70,229,0.3)] transition-all"
+                      onClick={handleRequestTier}
+                      disabled={isSubmittingTier || !tierReason.trim()}
+                    >
+                      {isSubmittingTier ? 'Menghantar Permohonan...' : 'Hantar Permohonan PRO'}
+                    </Button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+          </div>
+        </TabsContent>
+
+      </Tabs>
+    </div>
+  );
+}
+
+const AI_LOADING_STEPS = [
+  "Menganalisis profil kelab dan konteks program...",
+  "Merangka struktur utama dokumen rasmi...",
+  "Mengarang jadual belanjawan & perincian pengisian...",
+  "Melaraskan tahap bahasa profesional & terma akademik...",
+  "Mengemaskan format penulisan akhir supaya selari dengan JPA...",
+  "Hampir siap, menyemak ralat teks akhir..."
+];
+
+function AiLoadingView({ type }: { type: 'kertas-kerja' | 'minit-mesyuarat' }) {
+  const [stepIndex, setStepIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setStepIndex(prev => Math.min(prev + 1, AI_LOADING_STEPS.length - 1));
+    }, 2800);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="h-full flex flex-col items-center justify-center space-y-8 pt-16 pb-20 fade-in-0 animate-in duration-500">
+      <div className="relative">
+        <div className="w-24 h-24 rounded-full border-4 border-indigo-100 dark:border-indigo-900 border-t-indigo-500 animate-spin" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Wand2 className="w-10 h-10 text-indigo-500 animate-pulse" />
+        </div>
+      </div>
+      <div className="text-center space-y-3 px-4">
+        <p className="font-black text-indigo-600 dark:text-indigo-400 text-xl animate-pulse tracking-tight">{AI_LOADING_STEPS[stepIndex]}</p>
+        <p className="text-sm font-medium text-muted-foreground/80 max-w-sm mx-auto leading-relaxed">
+          Enjin Nexus AI sedang {type === 'kertas-kerja' ? 'menjana keseluruhan kertas kerja.' : 'mensintesis nota mesyuarat anda.'}<br/>
+          Proses pemikiran kognitif mendalam ini mungkin mengambil sedikit masa.
+        </p>
+      </div>
+      
+      <div className="w-full max-w-sm mt-8 space-y-4 opacity-30">
+         <div className="h-3 bg-muted-foreground rounded-full w-3/4 mx-auto animate-pulse" style={{ animationDelay: '0ms' }} />
+         <div className="h-3 bg-muted-foreground rounded-full w-full animate-pulse" style={{ animationDelay: '200ms' }} />
+         <div className="h-3 bg-muted-foreground rounded-full w-5/6 mx-auto animate-pulse" style={{ animationDelay: '400ms' }} />
+      </div>
+    </div>
+  );
+}

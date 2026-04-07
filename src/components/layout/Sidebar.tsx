@@ -15,6 +15,7 @@ import {
   UserPlus,
   Star,
   Trophy,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { ROLE_LABELS, ALL_CLUBS } from '@/types';
+import { useAiSettings } from '@/contexts/AiSettingsContext';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Papan Pemuka', href: '/dashboard' },
@@ -45,6 +47,7 @@ const adminItems = [
 
 export function Sidebar() {
   const { user, profile, signOut, isSuperAdmin, isPresident, effectiveRole, selectedClubId } = useAuth();
+  const { allowAiBudget } = useAiSettings();
 
   // isPresident kini dari junction table (berubah mengikut kelab yang dipilih)
   const isMemberOnly = !isSuperAdmin && !isPresident;
@@ -141,6 +144,37 @@ export function Sidebar() {
             )}
           </NavLink>
         ))}
+
+        {/* ── SECTION NEXUS AI ── */}
+        {allowAiBudget && (
+          <>
+            <div className="pt-4 pb-2">
+              <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-indigo-400/50">Kepintaran Buatan</p>
+            </div>
+            <NavLink
+              to="/nexus"
+              className={({ isActive }) => cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
+                isActive
+                  ? 'bg-indigo-500/20 text-indigo-300 shadow-inner'
+                  : 'text-indigo-400/50 hover:bg-indigo-500/10 hover:text-indigo-300'
+              )}
+            >
+              {({ isActive }) => (
+                <>
+                  <div className={cn(
+                    'w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200',
+                    isActive ? 'bg-indigo-500/30 shadow-lg' : 'group-hover:bg-indigo-500/15'
+                  )}>
+                    <Sparkles className={cn('w-3.5 h-3.5', isActive ? 'text-indigo-400' : 'text-indigo-400/60')} />
+                  </div>
+                  <span className="text-xs font-bold tracking-tight">Nexus Hub</span>
+                  <Badge className="ml-auto text-[8px] bg-indigo-500/20 text-indigo-400 px-1 py-0 border-indigo-500/20">AI</Badge>
+                </>
+              )}
+            </NavLink>
+          </>
+        )}
 
         {/* ── SERTAI KELAB — hanya untuk ahli biasa ── */}
         {isMemberOnly && (

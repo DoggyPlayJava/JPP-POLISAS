@@ -3,7 +3,7 @@ import {
     ShieldCheck, Database, Users, Trash2, FileWarning, Activity,
     RefreshCw, ChevronRight, LayoutGrid, Server, Info, Lock,
     Plus, CheckCheck, Building2, Palette, Cpu, Settings as SettingsIcon,
-    Zap, AlertTriangle, Search, Clock
+    Sparkles, AlertTriangle, Search, Clock, Shield, Wand2, CalendarRange, Brain, MessageSquare
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -32,6 +32,12 @@ export function JppAdminPage() {
     const { isSuperAdmin } = useAuth();
     const [loading, setLoading] = useState(true);
     const [isCleaning, setIsCleaning] = useState(false);
+    const [globalLogs, setGlobalLogs] = useState<any[]>([]);
+    const [suspiciousUsers, setSuspiciousUsers] = useState<any[]>([]);
+    const [allUsers, setAllUsers] = useState<any[]>([]);
+    const [tierRequests, setTierRequests] = useState<any[]>([]);
+    
+    // TABS
     const [activeTab, setActiveTab] = useState('dashboard');
 
     const [stats, setStats] = useState({
@@ -44,7 +50,6 @@ export function JppAdminPage() {
         reportStats: { name: string; value: number; color: string }[];
     }>({ activeClubs: [], reportStats: [] });
 
-    const [globalLogs, setGlobalLogs] = useState<any[]>([]);
     const [settings, setSettings] = useState<Record<string, any>>({
         allow_auto_pdf: true,
         allow_add_takwim: true,
@@ -65,6 +70,7 @@ export function JppAdminPage() {
     const [showBulkAccept, setShowBulkAccept] = useState(false);
     const [bulkClubId, setBulkClubId] = useState<string>('ALL');
     const [logSearch, setLogSearch] = useState('');
+    const [userSearch, setUserSearch] = useState('');
 
     const fetchAdminData = async () => {
         setLoading(true);
@@ -87,7 +93,7 @@ export function JppAdminPage() {
             });
             const { data: settingsData } = await supabase.from('system_settings').select('*');
             if (settingsData) {
-                const s: Record<string, any> = { allow_auto_pdf: true, allow_add_takwim: true, max_clubs_per_student: 2, allow_ai_chat: true, allow_ai_budget: true, ai_total_tokens: 0, ai_token_limit: 1000000 };
+                const s: Record<string, any> = { allow_auto_pdf: true, allow_add_takwim: true, max_clubs_per_student: 2, allow_ai_chat: true, allow_ai_budget: true, ai_total_tokens: 0, ai_token_limit: 1000000, ai_spam_warning_threshold: 30, ai_spam_block_threshold: 50 };
                 settingsData.forEach(item => { 
                     let val = item.value;
                     if (val === 'true') val = true;
@@ -97,6 +103,21 @@ export function JppAdminPage() {
                 setSettings(s);
             }
             setGlobalLogs(logs || []);
+            
+            // Fetch Suspicious Users
+            const { data: flagged } = await supabase
+                .from('profiles')
+                .select('*')
+                .in('ai_status', ['warned', 'flagged', 'permanent_ban'])
+                .order('ai_daily_usage', { ascending: false });
+            setSuspiciousUsers(flagged || []);
+
+            // Fetch All Users & Tier Requests
+            const { data: usersData } = await supabase.from('profiles').select('*').order('full_name', { ascending: true });
+            setAllUsers(usersData || []);
+            const { data: requestsData } = await supabase.from('ai_tier_requests').select('*, profiles(full_name)').order('created_at', { ascending: false });
+            setTierRequests(requestsData || []);
+
             const { data: activityCounts } = await supabase.from('club_activities').select('club_id');
             const counts: Record<string, number> = {};
             activityCounts?.forEach(a => { counts[a.club_id] = (counts[a.club_id] || 0) + 1; });
@@ -258,6 +279,135 @@ export function JppAdminPage() {
         }
     };
 
+    const updateAiTokenAllowance = async (tier: 'free_tier_tokens' | 'pro_tier_tokens', label: string) => {
+        const currentSettings = settings.ai_token_settings || { free_tier_tokens: 200, pro_tier_tokens: 1000, costs: {} };
+        const currentLimit = currentSettings[tier] || 0;
+        const input = window.prompt(`Masukkan bekalan token sebulan untuk pengguna ${label}:`, currentLimit.toString());
+        if (!input) return;
+        const newLimit = parseInt(input);
+        if (isNaN(newLimit) || newLimit < 0) {
+            toast.error("Sila masukkan nilai nombor sah.");
+            return;
+        }
+
+        const toastId = toast.loading(`Mengemaskini token ${label}...`);
+        try {
+            const newSettings = { ...currentSettings, [tier]: newLimit };
+            const { data, error } = await supabase.from('system_settings').update({ value: newSettings }).eq('key', 'ai_token_settings').select();
+            if (error) throw error;
+            if (!data || data.length === 0) await supabase.from('system_settings').insert({ key: 'ai_token_settings', value: newSettings });
+            setSettings(s => ({ ...s, ai_token_settings: newSettings }));
+            toast.success(`Bekalan Token ${label} dinaik taraf ke ${newLimit}.`, { id: toastId });
+        } catch (e: any) {
+            toast.error(e.message || 'Gagal kemaskini', { id: toastId });
+        }
+    };
+
+    const updateAiTokenCost = async (serviceKey: string, label: string) => {
+        const currentSettings = settings.ai_token_settings || { free_tier_tokens: 200, pro_tier_tokens: 1000, costs: {} };
+        const currentCost = currentSettings.costs?.[serviceKey] || 0;
+        const input = window.prompt(`Masukkan harga kos (token) untuk servis ${label} (Mesti nombor angka. Set '0' untuk jadikannya percuma):`, currentCost.toString());
+        if (!input) return;
+        const newCost = parseInt(input);
+        if (isNaN(newCost) || newCost < 0) {
+            toast.error("Sila masukkan nilai nombor (cth: 50 atau 0 untuk percuma).");
+            return;
+        }
+
+        const toastId = toast.loading(`Mengemaskini kos ${label}...`);
+        try {
+            const newSettings = { 
+              ...currentSettings, 
+              costs: { ...currentSettings.costs, [serviceKey]: newCost }
+            };
+            const { data, error } = await supabase.from('system_settings').update({ value: newSettings }).eq('key', 'ai_token_settings').select();
+            if (error) throw error;
+            if (!data || data.length === 0) await supabase.from('system_settings').insert({ key: 'ai_token_settings', value: newSettings });
+            setSettings(s => ({ ...s, ai_token_settings: newSettings }));
+            toast.success(`Kos token bagi ${label} ditetapkan ke ${newCost}.`, { id: toastId });
+        } catch (e: any) {
+            toast.error(e.message || 'Gagal kemaskini kos', { id: toastId });
+        }
+    };
+
+    const updateSpamThreshold = async (type: 'warning' | 'block') => {
+        const key = type === 'warning' ? 'ai_spam_warning_threshold' : 'ai_spam_block_threshold';
+        const currentVal = settings[key];
+        const label = type === 'warning' ? 'Amaran (Amaran selepas X chat)' : 'Sekatan (Sekat selepas X chat)';
+        const input = window.prompt(`Masukkan had ${label}:`, currentVal?.toString());
+        if (!input) return;
+        const newLimit = parseInt(input);
+        if (isNaN(newLimit) || newLimit < 1) {
+            toast.error("Nilai mesti nombor melebihi 0.");
+            return;
+        }
+
+        const toastId = toast.loading('Mengemaskini had...');
+        try {
+            const { data, error } = await supabase.from('system_settings').update({ value: newLimit }).eq('key', key).select();
+            if (error) throw error;
+            if (!data || data.length === 0) await supabase.from('system_settings').insert({ key, value: newLimit });
+            setSettings(s => ({ ...s, [key]: newLimit }));
+            toast.success(`Berjaya kemaskini had ${type}`, { id: toastId });
+        } catch (e: any) {
+            toast.error(e.message || 'Gagal kemaskini had', { id: toastId });
+        }
+    };
+
+    const handleActionSpamUser = async (userId: string, action: 'unban' | 'permanent_ban') => {
+        const confirmMsg = action === 'unban' 
+            ? 'Adakah anda pasti mahu LEPASKAN akses AI untuk pengguna ini?' 
+            : 'Adakah anda pasti mahu SEKAT SELAMANYA pengguna ini daripada AI?';
+        if (!window.confirm(confirmMsg)) return;
+
+        const toastId = toast.loading('Memproses tindakan...');
+        const newStatus = action === 'unban' ? 'active' : 'permanent_ban';
+        // reset usage if unban
+        const updates = action === 'unban' ? { ai_status: newStatus, ai_daily_usage: 0 } : { ai_status: newStatus };
+
+        try {
+            const { error } = await supabase.from('profiles').update(updates).eq('id', userId);
+            if (error) throw error;
+            toast.success(`Berjaya! Status AI dikemaskini.`, { id: toastId });
+            fetchAdminData();
+        } catch (e: any) {
+            toast.error(e.message || 'Gagal tindakan', { id: toastId });
+        }
+    };
+
+    const handleTierApprove = async (reqId: string, userId: string, newTier: string) => {
+        const toastId = toast.loading('Memproses kelulusan Tier...');
+        try {
+            // First call the RPC to update user tokens & tier
+            const { error: rpcErr } = await supabase.rpc('update_user_ai_tier', {
+                target_user_id: userId,
+                new_tier: newTier
+            });
+            if (rpcErr) throw rpcErr;
+            
+            // Mark request as APPROVED
+            const { error: reqErr } = await supabase.from('ai_tier_requests').update({ status: 'APPROVED', updated_at: new Date() }).eq('id', reqId);
+            if (reqErr) throw reqErr;
+            
+            toast.success('Permohonan Tier berjaya diluluskan!', { id: toastId });
+            fetchAdminData();
+        } catch (e: any) {
+            toast.error(e.message || 'Terdapat ralat teknikal.', { id: toastId });
+        }
+    };
+
+    const handleTierReject = async (reqId: string) => {
+        const toastId = toast.loading('Menolak permohonan...');
+        try {
+            const { error } = await supabase.from('ai_tier_requests').update({ status: 'REJECTED', updated_at: new Date() }).eq('id', reqId);
+            if (error) throw error;
+            toast.success('Permohonan telah ditolak.', { id: toastId });
+            fetchAdminData();
+        } catch (e: any) {
+            toast.error(e.message || 'Terdapat ralat teknikal.', { id: toastId });
+        }
+    };
+
     useEffect(() => { if (isSuperAdmin) fetchAdminData(); }, [isSuperAdmin]);
 
     if (!isSuperAdmin) {
@@ -277,6 +427,7 @@ export function JppAdminPage() {
     const TABS = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid, color: 'text-blue-500', bg: 'bg-blue-500/10' },
         { id: 'nexus', label: 'Nexus Hub', icon: Cpu, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+        { id: 'users', label: 'Pengurusan Pelajar', icon: Users, color: 'text-pink-500', bg: 'bg-pink-500/10' },
         { id: 'management', label: 'Pengurusan Kelab', icon: SettingsIcon, color: 'text-violet-500', bg: 'bg-violet-500/10' },
         { id: 'logs', label: 'Log', icon: Database, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
     ];
@@ -548,7 +699,7 @@ export function JppAdminPage() {
                                         <div className="flex items-center gap-3 mb-8">
                                             <div className="p-3 rounded-2xl bg-white/10 text-indigo-300 backdrop-blur-sm"><Cpu className="w-6 h-6" /></div>
                                             <div>
-                                                <h3 className="font-black text-xl tracking-tight text-white">Metrik Penggunaan Gemini AI</h3>
+                                                <h3 className="font-black text-xl tracking-tight text-white">Metrik Penggunaan Nexus AI</h3>
                                                 <p className="text-xs font-medium text-indigo-300/80">Analitik token (anggaran) bulan April</p>
                                             </div>
                                         </div>
@@ -572,7 +723,7 @@ export function JppAdminPage() {
                                             
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="bg-white/5 rounded-2xl p-5 backdrop-blur-md border border-white/10">
-                                                    <Zap className="w-5 h-5 text-amber-400 mb-3" />
+                                                    <Sparkles className="w-5 h-5 text-amber-400 mb-3" />
                                                     <p className="text-2xl font-black text-white">845</p>
                                                     <p className="text-[10px] font-bold text-indigo-300/80 uppercase tracking-wider mt-1">Panggilan Server</p>
                                                 </div>
@@ -627,6 +778,301 @@ export function JppAdminPage() {
                                         <p className="text-xs font-medium leading-relaxed">
                                             <strong>Nota Pembangun:</strong> Metrik token di atas kini merupakan <span className="font-bold">Bacaan Sebenar</span> yang diambil *live* dari panggilan server Supabase Edge Function Gemini. Integriti dan limitasi token masih kekal diuruskan sepenuhnya oleh pangkalan data.
                                         </p>
+                                    </div>
+                                </Card>
+
+                                {/* AI Anti-Spam Control */}
+                                <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-8">
+                                    <div className="flex items-center gap-3 mb-8 border-b border-border pb-6">
+                                        <ShieldCheck className="w-5 h-5 text-rose-600" />
+                                        <div>
+                                            <h3 className="font-bold text-foreground">Kawalan Anti-Spam (Rate Limit)</h3>
+                                            <p className="text-xs text-muted-foreground mt-1">Lindungi token API daripada penyalahgunaan oleh pelajar secara automatik.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                        <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+                                            <div className="flex justify-between items-center mb-3">
+                                                <div className="flex items-center gap-2">
+                                                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                                                    <p className="text-sm font-black text-amber-900">Had Amaran (Warning)</p>
+                                                </div>
+                                                <Button onClick={() => updateSpamThreshold('warning')} size="sm" variant="outline" className="h-7 text-[10px] rounded-lg">Ubah</Button>
+                                            </div>
+                                            <p className="text-[11px] text-amber-700/80 mb-2 mt-1">Sistem akan memberi amaran automatik selepas mencapai had ini.</p>
+                                            <p className="text-3xl font-black text-amber-600 tabular-nums">{settings.ai_spam_warning_threshold || 30} <span className="text-[10px] font-bold tracking-widest text-amber-600/50 uppercase">chat/hari</span></p>
+                                        </div>
+
+                                        <div className="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/20">
+                                            <div className="flex justify-between items-center mb-3">
+                                                <div className="flex items-center gap-2">
+                                                    <Lock className="w-4 h-4 text-rose-600" />
+                                                    <p className="text-sm font-black text-rose-900">Had Sekatan (Block/Flag)</p>
+                                                </div>
+                                                <Button onClick={() => updateSpamThreshold('block')} size="sm" variant="outline" className="h-7 text-[10px] rounded-lg border-rose-200">Ubah</Button>
+                                            </div>
+                                            <p className="text-[11px] text-rose-700/80 mb-2 mt-1">Sistem akan terus menyekat ("Flagged") sebarang chat AI selepas had ini.</p>
+                                            <p className="text-3xl font-black text-rose-600 tabular-nums">{settings.ai_spam_block_threshold || 50} <span className="text-[10px] font-bold tracking-widest text-rose-600/50 uppercase">chat/hari</span></p>
+                                        </div>
+                                    </div>
+
+                                    {/* Suspicious Users List */}
+                                    <h4 className="font-bold text-sm flex items-center gap-2">
+                                        <Shield className="w-4 h-4 text-muted-foreground" /> Kawalan Sistem Pintar (Quota & Spam)
+                                    </h4>
+
+                                        <div className="p-5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 col-span-1 md:col-span-2">
+                                            <div className="flex justify-between items-center mb-3">
+                                                <div className="flex items-center gap-2">
+                                                    <Wand2 className="w-4 h-4 text-indigo-600" />
+                                                    <p className="text-sm font-black text-indigo-900">Ekonomi Token (Token Economy)</p>
+                                                </div>
+                                            </div>
+                                            <p className="text-[11px] text-indigo-700/80 mb-4 mt-1">Sistem nilai harga bagi setiap servis kecerdasan buatan Nexus. Kitaran akan sentiasa di-reset pada 1hb setiap penukaran bulan.</p>
+                                            
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-white/50 backdrop-blur-sm dark:bg-card/50 p-4 rounded-xl border border-border/50">
+                                              
+                                              <div className="flex flex-col gap-1 border-b md:border-b-0 md:border-r border-border pb-3 md:pb-0 md:pr-3">
+                                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Bekalan Pelan PRO</p>
+                                                <div className="flex justify-between items-end">
+                                                  <span className="font-black text-lg text-indigo-600">{settings.ai_token_settings?.pro_tier_tokens ?? 1000}</span>
+                                                  <Button onClick={() => updateAiTokenAllowance('pro_tier_tokens', 'PRO')} size="icon" variant="ghost" className="h-6 w-6"><SettingsIcon className="w-3" /></Button>
+                                                </div>
+                                              </div>
+
+                                              <div className="flex flex-col gap-1 border-b md:border-b-0 md:border-r border-border pb-3 md:pb-0 md:pr-3">
+                                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Bekalan Pelan PERCUMA</p>
+                                                <div className="flex justify-between items-end">
+                                                  <span className="font-black text-lg text-slate-600">{settings.ai_token_settings?.free_tier_tokens ?? 200}</span>
+                                                  <Button onClick={() => updateAiTokenAllowance('free_tier_tokens', 'PERCUMA')} size="icon" variant="ghost" className="h-6 w-6"><SettingsIcon className="w-3" /></Button>
+                                                </div>
+                                              </div>
+
+                                              <div className="flex flex-col gap-1 border-r border-border pr-3">
+                                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Kos Kertas Kerja (PRO)</p>
+                                                <div className="flex justify-between items-end">
+                                                  <span className="font-black text-lg text-amber-600">{settings.ai_token_settings?.costs?.pro_kertas_kerja ?? 50}</span>
+                                                  <Button onClick={() => updateAiTokenCost('pro_kertas_kerja', 'Janaan Kertas Kerja Pro')} size="icon" variant="ghost" className="h-6 w-6"><SettingsIcon className="w-3" /></Button>
+                                                </div>
+                                              </div>
+
+                                              <div className="flex flex-col gap-1">
+                                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Kos Kertas Kerja (FLASH)</p>
+                                                <div className="flex justify-between items-end">
+                                                  <span className="font-black text-lg text-cyan-600">{settings.ai_token_settings?.costs?.flash_kertas_kerja ?? 20}</span>
+                                                  <Button onClick={() => updateAiTokenCost('flash_kertas_kerja', 'Janaan Kertas Kerja Flash')} size="icon" variant="ghost" className="h-6 w-6"><SettingsIcon className="w-3" /></Button>
+                                                </div>
+                                              </div>
+
+                                              <div className="flex flex-col gap-1 md:border-r border-border md:pr-3 mt-3">
+                                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Kos Analisis Kelab</p>
+                                                <div className="flex justify-between items-end">
+                                                  <span className="font-black text-lg text-rose-600">{settings.ai_token_settings?.costs?.analisis ?? 5}</span>
+                                                  <Button onClick={() => updateAiTokenCost('analisis', 'Analisis Kelab/Review')} size="icon" variant="ghost" className="h-6 w-6"><SettingsIcon className="w-3" /></Button>
+                                                </div>
+                                              </div>
+
+                                              <div className="flex flex-col gap-1 mt-3">
+                                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Kos Semak Tatabahasa</p>
+                                                <div className="flex justify-between items-end">
+                                                  <span className="font-black text-lg text-emerald-600">{settings.ai_token_settings?.costs?.semak_ejaan === 0 ? 'FREE' : (settings.ai_token_settings?.costs?.semak_ejaan ?? 0)}</span>
+                                                  <Button onClick={() => updateAiTokenCost('semak_ejaan', 'Semakan Tatabahasa Laporan')} size="icon" variant="ghost" className="h-6 w-6"><SettingsIcon className="w-3" /></Button>
+                                                </div>
+                                              </div>
+
+                                            </div>
+                                        </div>
+
+                                    <div className="space-y-4 mt-8">
+                                      <h4 className="font-bold text-sm flex items-center gap-2">
+                                          <Users className="w-4 h-4 text-muted-foreground" /> Senarai Pengguna Disyaki ({suspiciousUsers.length})
+                                      </h4>
+                                          
+                                      {suspiciousUsers.length === 0 ? (
+                                            <div className="p-8 text-center border border-dashed border-border rounded-3xl bg-muted/20 flex flex-col items-center">
+                                                <CheckCheck className="w-8 h-8 text-emerald-500 mb-2 opacity-50" />
+                                                <p className="text-sm font-bold text-muted-foreground">Tiada pengguna ditandai (flagged)</p>
+                                                <p className="text-[11px] text-muted-foreground/60 mt-1">Penggunaan AI setakat ini terkawal.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="divide-y divide-border border border-border rounded-3xl overflow-hidden bg-card">
+                                                {suspiciousUsers.map(u => (
+                                                    <div key={u.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
+                                                        <div>
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="text-sm font-bold">{u.full_name || u.email}</p>
+                                                                {u.ai_status === 'permanent_ban' && <Badge className="bg-rose-600 text-white border-none text-[9px] uppercase">BAN KEKAL</Badge>}
+                                                                {u.ai_status === 'flagged' && <Badge className="bg-orange-500 text-white border-none text-[9px] uppercase">FLAGGED</Badge>}
+                                                                {u.ai_status === 'warned' && <Badge className="bg-amber-400 text-black border-none text-[9px] uppercase">WARNED</Badge>}
+                                                            </div>
+                                                            <p className="text-[11px] text-muted-foreground font-medium mt-1">
+                                                                Penggunaan AI: <strong className="text-foreground">{u.ai_daily_usage} / {settings.ai_spam_block_threshold || 50}</strong> kali hari ini.
+                                                            </p>
+                                                        </div>
+                                                        <div className="flex gap-2 shrink-0">
+                                                            {(u.ai_status === 'flagged' || u.ai_status === 'permanent_ban' || u.ai_status === 'warned') && (
+                                                                <Button size="sm" onClick={() => handleActionSpamUser(u.id, 'unban')} className="h-8 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 text-[10px] font-black uppercase tracking-wider">
+                                                                    Lepaskan
+                                                                </Button>
+                                                            )}
+                                                            {u.ai_status !== 'permanent_ban' && (
+                                                                <Button size="sm" onClick={() => handleActionSpamUser(u.id, 'permanent_ban')} className="h-8 rounded-lg bg-rose-600 text-white hover:bg-rose-700 text-[10px] font-black uppercase tracking-wider">
+                                                                    Sekat Kekal
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </Card>
+                            </div>
+                        )}
+
+                        {/* ── TAB: PENGURUSAN PELAJAR ── */}
+                        {activeTab === 'users' && (
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                {/* Tier Requests (PRO Applications) */}
+                                {tierRequests.length > 0 && (
+                                    <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-8">
+                                        <div className="flex items-center gap-3 mb-6 border-b border-border pb-4">
+                                            <div className="p-3 bg-indigo-500/10 rounded-2xl text-indigo-500">
+                                                <Sparkles className="w-5 h-5 fill-current" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-foreground">Permohonan Pelan PRO</h3>
+                                                <p className="text-xs text-muted-foreground mt-1">Senarai pelajar yang memohon untuk naik taraf bagi mendapatkan kapasiti penjanaan lebih tinggi.</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {tierRequests.map((req) => (
+                                                <div key={req.id} className="p-5 rounded-2xl border border-border bg-muted/20 relative">
+                                                    <div className="flex justify-between items-start mb-3">
+                                                        <div>
+                                                            <p className="text-sm font-bold">{req.profiles?.full_name || 'Pelajar'}</p>
+                                                            <p className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(req.created_at), 'dd MMM yyyy, h:mm a')}</p>
+                                                        </div>
+                                                        <Badge variant="outline" className={cn(
+                                                            "text-[9px] uppercase tracking-widest border-none",
+                                                            req.status === 'PENDING' ? 'bg-amber-500/20 text-amber-600' :
+                                                            req.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-600' :
+                                                            'bg-rose-500/20 text-rose-600'
+                                                        )}>
+                                                            {req.status}
+                                                        </Badge>
+                                                    </div>
+                                                    
+                                                    <div className="p-3 bg-card rounded-xl border border-border/50 text-xs mb-4">
+                                                        <span className="font-bold text-muted-foreground block mb-1">Justifikasi:</span>
+                                                        <span className="italic text-foreground/80">"{req.reason}"</span>
+                                                    </div>
+
+                                                    {req.status === 'PENDING' && (
+                                                        <div className="flex gap-2">
+                                                            <Button onClick={() => handleTierApprove(req.id, req.user_id, 'PRO')} size="sm" className="flex-1 h-9 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white">Luluskan</Button>
+                                                            <Button onClick={() => handleTierReject(req.id)} size="sm" variant="outline" className="flex-1 h-9 rounded-xl font-bold border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700">Tolak</Button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </Card>
+                                )}
+
+                                {/* User Search & Edit */}
+                                <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-8">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-3 bg-pink-500/10 rounded-2xl text-pink-500">
+                                                <Users className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-foreground">Pangkalan Data Pelajar</h3>
+                                                <p className="text-xs text-muted-foreground mt-1">Urus langganan dan status pengguna secara manual.</p>
+                                            </div>
+                                        </div>
+                                        <div className="relative max-w-xs w-full">
+                                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                            <Input 
+                                                placeholder="Cari nama atau emel..." 
+                                                value={userSearch}
+                                                onChange={(e) => setUserSearch(e.target.value)}
+                                                className="pl-9 h-11 rounded-2xl bg-muted/40 border-border/50"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm text-left whitespace-nowrap">
+                                            <thead className="text-xs text-muted-foreground uppercase bg-muted/30">
+                                                <tr>
+                                                    <th className="px-4 py-3 rounded-l-xl">Nama / Emel</th>
+                                                    <th className="px-4 py-3">Tier Langganan</th>
+                                                    <th className="px-4 py-3">Baki Token</th>
+                                                    <th className="px-4 py-3 rounded-r-xl w-32 text-center">Tindakan</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {allUsers.filter(u => 
+                                                    (u.full_name?.toLowerCase() || '').includes(userSearch.toLowerCase()) || 
+                                                    (u.email?.toLowerCase() || '').includes(userSearch.toLowerCase())
+                                                ).slice(0, 50).map((user) => (
+                                                    <tr key={user.id} className="border-b border-border/30 last:border-0 hover:bg-muted/10 transition-colors">
+                                                        <td className="px-4 py-4">
+                                                            <div className="font-bold text-foreground">{user.full_name || 'Pelajar'}</div>
+                                                            <div className="text-[11px] text-muted-foreground">{user.email}</div>
+                                                        </td>
+                                                        <td className="px-4 py-4">
+                                                            <Badge variant="outline" className={cn(
+                                                                "border-none text-[9px] uppercase tracking-widest max-w-min",
+                                                                user.subscription_tier === 'PRO' ? "bg-indigo-500/20 text-indigo-600" : "bg-slate-500/20 text-slate-600"
+                                                            )}>
+                                                                {user.subscription_tier || 'FREE'}
+                                                            </Badge>
+                                                        </td>
+                                                        <td className="px-4 py-4 font-black">
+                                                            {user.ai_token_balance || 0} <span className="text-[10px] text-muted-foreground font-medium">Tk</span>
+                                                        </td>
+                                                        <td className="px-4 py-4 text-center">
+                                                            {user.subscription_tier !== 'PRO' ? (
+                                                                <Button 
+                                                                    onClick={async () => {
+                                                                        if(confirm(`Naik taraf ${user.full_name} ke PRO?`)) {
+                                                                            await supabase.rpc('update_user_ai_tier', { target_user_id: user.id, new_tier: 'PRO' });
+                                                                            fetchAdminData();
+                                                                        }
+                                                                    }}
+                                                                    size="sm" 
+                                                                    className="h-8 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] uppercase font-black"
+                                                                >
+                                                                    Buat PRO
+                                                                </Button>
+                                                            ) : (
+                                                                <Button 
+                                                                    onClick={async () => {
+                                                                        if(confirm(`Turun taraf ${user.full_name} ke FREE?`)) {
+                                                                            await supabase.rpc('update_user_ai_tier', { target_user_id: user.id, new_tier: 'FREE' });
+                                                                            fetchAdminData();
+                                                                        }
+                                                                    }}
+                                                                    size="sm" 
+                                                                    variant="outline"
+                                                                    className="h-8 rounded-lg text-[10px] uppercase font-black border-slate-300 hover:bg-slate-100"
+                                                                >
+                                                                    Buat FREE
+                                                                </Button>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                        {allUsers.length > 50 && userSearch === '' && (
+                                            <p className="text-center text-xs text-muted-foreground mt-4 italic">Memaparkan 50 pengguna pertama. Sila gunakan carian untuk mencari pengguna spesifik.</p>
+                                        )}
                                     </div>
                                 </Card>
                             </div>
