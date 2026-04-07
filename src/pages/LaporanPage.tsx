@@ -37,7 +37,7 @@ import { normalizeReportData } from '@/lib/report-utils';
 import { uploadPdfToDrive } from '@/lib/driveUpload';
 
 const ALL_DOC_TYPES = [
-  { value: 'Laporan Aktiviti', label: 'Laporan Aktiviti (Auto-Jana)', icon: Zap },
+  { value: 'Laporan Aktiviti', label: 'Laporan Bulanan (Auto-Jana)', icon: Zap },
   { value: 'Laporan Kewangan', label: 'Laporan Kewangan', icon: FileText },
   { value: 'Takwim Aktiviti', label: 'Takwim Aktiviti', icon: Calendar },
   { value: 'Profil Ahli', label: 'Profil Ahli Kelab', icon: Users },
@@ -249,7 +249,7 @@ export function LaporanPage() {
         submitted_by: user.id,
         report_type: 'Laporan Aktiviti',
         file_url: url,
-        file_name: `Laporan Aktiviti - ${monthLabel}.pdf`,
+        file_name: `Laporan Bulanan - ${monthLabel}.pdf`,
         status: 'Menunggu',
       });
 
@@ -334,7 +334,7 @@ export function LaporanPage() {
               <EmptyHeader>
                 <EmptyTitle className="text-sm font-black uppercase tracking-widest">Tiada Rekod Dokumen</EmptyTitle>
                 <EmptyDescription className="text-xs">
-                  Sila hantar laporan manual atau jana laporan aktiviti bulanan.
+                  Sila hantar laporan manual atau jana laporan bulanan.
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>

@@ -5,8 +5,10 @@ import {
   Trash2, Copy, Check, FileText, BookOpen, Megaphone,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAiAssistant, ChatMessage } from '@/hooks/useAiAssistant';
+import { useAiAssistant, ChatMessage, ChatContext } from '@/hooks/useAiAssistant';
 import { useAiSettings } from '@/contexts/AiSettingsContext';
+import { useLocation } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -89,13 +91,13 @@ const QUICK_ACTIONS = [
   },
   {
     id: 'summarize',
-    label: 'Rumuskan Laporan',
+    label: 'Rumuskan Laporan Bulanan',
     icon: BookOpen,
     bg: 'bg-teal-500/10',
     text: 'text-teal-600',
     border: 'border-teal-500/20',
     committeeOnly: true,
-    scaffold: 'Boleh tolong rumuskan laporan aktiviti untuk program: [NAMA PROGRAM]',
+    scaffold: 'Boleh tolong rumuskan laporan bulanan untuk program: [NAMA PROGRAM]',
   },
   {
     id: 'announce',
@@ -116,10 +118,12 @@ export function FloatingAiChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [chatContext, setChatContext] = useState<ChatContext | null>(null);
 
   const { profile, isSuperAdmin, isAdvisor, isPresident, isMT, selectedClubId } = useAuth();
   const { callAi, sendChatMessage, isLoading: isActionLoading, isChatLoading } = useAiAssistant();
   const { allowAiChat } = useAiSettings();
+  const location = useLocation();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -207,6 +211,60 @@ export function FloatingAiChat() {
     };
   }, [isOpen]);
 
+  // ── Fetch dynamic context when opened ───────────────────────────────────
+  useEffect(() => {
+    if (isOpen && profile?.id) {
+      const fetchContext = async () => {
+        try {
+          // 1. Get notifications
+          const { data: notos } = await supabase
+            .from('notifications')
+            .select('title, content')
+            .eq('user_id', profile.id)
+            .order('created_at', { ascending: false })
+            .limit(3);
+
+          // 2. Get club metadata if applicable
+          let clubMeta = undefined;
+          const targetClubId = selectedClubId ?? profile.club_id;
+          
+          if (targetClubId) {
+            const { data: club } = await supabase
+              .from('clubs')
+              .select('name, members_count')
+              .eq('id', targetClubId)
+              .single();
+            
+            if (club) {
+              // Get pending reports count
+              const { count: pendingReports } = await supabase
+                .from('activity_reports')
+                .select('*', { count: 'exact', head: true })
+                .eq('club_id', targetClubId)
+                .eq('status', 'draft');
+
+              clubMeta = {
+                name: club.name,
+                membersCount: club.members_count,
+                pendingReports: pendingReports || 0
+              };
+            }
+          }
+
+          setChatContext({
+            currentPage: location.pathname,
+            userRole: profile.role,
+            recentNotifications: notos?.map(n => n.title) || [],
+            clubInfo: clubMeta
+          });
+        } catch (err) {
+          console.error('Failed to fetch chat context:', err);
+        }
+      };
+      fetchContext();
+    }
+  }, [isOpen, profile?.id, location.pathname, selectedClubId]);
+
   // ── Clear history ────────────────────────────────────────────────────────
   const clearHistory = () => {
     setMessages([]);
@@ -240,7 +298,7 @@ export function FloatingAiChat() {
     ];
 
     // 5. Call API
-    const aiText = await sendChatMessage(text, historyForApi);
+    const aiText = await sendChatMessage(text, historyForApi, chatContext || undefined);
 
     // 6. Append AI or error response
     if (aiText) {

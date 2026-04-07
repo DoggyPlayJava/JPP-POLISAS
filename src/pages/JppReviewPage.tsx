@@ -281,7 +281,7 @@ export function JppReviewPage() {
           </SelectTrigger>
           <SelectContent className="rounded-2xl shadow-xl border-border/60">
             <SelectItem value="Semua">Semua Jenis</SelectItem>
-            <SelectItem value="Aktiviti">Laporan Aktiviti</SelectItem>
+            <SelectItem value="Aktiviti">Laporan Bulanan</SelectItem>
             <SelectItem value="Kewangan">Laporan Kewangan</SelectItem>
           </SelectContent>
         </Select>

@@ -30,7 +30,7 @@ const features = [
   {
     icon: FileCheck,
     title: 'AI Grammar Check',
-    desc: 'Pastikan laporan aktiviti anda berkualiti tinggi dengan bantuan semakan tatabahasa AI.',
+    desc: 'Pastikan laporan bulanan anda berkualiti tinggi dengan bantuan semakan tatabahasa AI.',
     badge: 'Nexus Ecosystem',
   },
   {

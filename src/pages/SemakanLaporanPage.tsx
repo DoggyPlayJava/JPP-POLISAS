@@ -21,7 +21,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { ALL_CLUBS } from '@/types';
+import { ALL_CLUBS, REPORT_TYPE_LABELS, ReportType } from '@/types';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import PemantauanTakwimTab from '@/components/takwim/PemantauanTakwimTab';
@@ -45,7 +45,7 @@ interface Program {
 }
 
 const ALL_DOC_TYPES = [
-  { value: 'Laporan Aktiviti', icon: Zap, color: 'text-amber-500', bg: 'bg-amber-100' },
+  { value: 'Laporan Aktiviti', label: 'Laporan Bulanan', icon: Zap, color: 'text-amber-500', bg: 'bg-amber-100' },
   { value: 'Laporan Kewangan', icon: DollarSignIcon, color: 'text-emerald-500', bg: 'bg-emerald-100' },
   { value: 'Takwim Aktiviti', icon: Calendar, color: 'text-blue-500', bg: 'bg-blue-100' },
   { value: 'Profil Ahli Kelab', icon: Users, color: 'text-indigo-500', bg: 'bg-indigo-100' },
@@ -636,7 +636,7 @@ export function SemakanLaporanPage() {
                               <div>
                                 <h4 className="font-black text-foreground text-lg leading-tight line-clamp-2">{r.title || r.file_name}</h4>
                                 <div className="flex items-center gap-2 mt-1">
-                                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{r.report_type}</p>
+                                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{REPORT_TYPE_LABELS[r.report_type as ReportType] || r.report_type}</p>
                                   {r.club_id && (
                                     <>
                                       <span className="w-1 h-1 rounded-full bg-border"></span>

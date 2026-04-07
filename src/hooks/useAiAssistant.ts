@@ -11,6 +11,18 @@ export interface ChatMessage {
   timestamp: string; // ISO string
 }
 
+export interface ChatContext {
+  currentPage?: string;
+  clubInfo?: {
+    name: string;
+    membersCount?: number;
+    pendingReports?: number;
+    activePrograms?: number;
+  };
+  userRole?: string;
+  recentNotifications?: string[];
+}
+
 interface AiRequestParams {
   task: AiTask;
   clubId?: string;
@@ -66,7 +78,7 @@ export function useAiAssistant() {
         }
       }
 
-      let systemInstruction = "Anda adalah pembantu AI yang sedia membantu dalam Bahasa Melayu.";
+      let systemInstruction = "Anda adalah pembantu AI yang sedia membantu dalam Bahasa Melayu. PERATURAN TERMINOLOGI: Sila kaitkan 'Laporan Bulanan' dengan 'Laporan Aktiviti' dalam pangkalan data. PENTING: JANGAN SEKALI-KALI menggunakan istilah 'Laporan Aktiviti' dalam jawapan anda kepada pengguna. Anda WAJIB menggunakan 'Laporan Bulanan' sahaja walaupun data mentah menunjukkan sebaliknya.";
       let userPrompt = "";
       let outputLimit = 8192; // Default limit
 
@@ -90,7 +102,7 @@ export function useAiAssistant() {
         userPrompt = `Buat analisis prestasi kelab berdasarkan data objektif ini dalam Bahasa Melayu.\n\nData Kelab:\n${JSON.stringify(clubData, null, 2)}\n\n[ARAHAN KETAT]\nHasilkan laporan yang mengandungi 3 bahagian ini secara teratur:\n## 1. Penilaian Keseluruhan\n## 2. Isu Berpotensi\n## 3. Cadangan Konkrit\n\nPENTING: Gunakan format Markdown yang SANGAT KEMAS. Gunakan \`##\` untuk tajuk, gunakan jarak baris (whitespace/enter) antara perenggan supaya tidak serabut, dan gunakan \*bullet points* untuk menyenaraikan fakta. Jangan jadikan jawapan anda sebagai satu bongkah teks (wall of text). Jangan menggunakan bahasa teknikal seperti bahasa koding.`;
 
       } else if (params.task === 'review_kertas_kerja') {
-        systemInstruction = "Anda adalah Nexus AI, bertindak sebagai Ketua Semakan Dokumentasi Pintar bagi Majlis Perwakilan Pelajar (JPP POLISAS). Anda profesional, teliti, dan menitikberatkan rasional, perancangan kewangan, serta faedah program teknikal.";
+        systemInstruction = "Anda adalah Nexus AI, bertindak sebagai Ketua Semakan Dokumentasi Pintar bagi Majlis Perwakilan Pelajar (JPP POLISAS). Anda profesional, teliti, dan menitikberatkan rasional, perancangan kewangan, serta faedah program teknikal. PERATURAN TERMINOLOGI: Sentiasa gunakan 'Laporan Bulanan' untuk merujuk kepada 'Laporan Aktiviti'.";
         if (!params.programId) throw new Error("programId diperlukan untuk semakan kertas kerja.");
 
         const { data: program } = await supabase.from('programs').select('nama_program, deskripsi, tarikh_mula, tarikh_tamat, location, budget, status, club_id').eq('id', params.programId).single();
@@ -261,12 +273,12 @@ Pulangkan JSON sahaja, tiada teks lain.`;
         outputLimit = 8192;
 
       } else if (params.task === 'custom_query') {
-        systemInstruction = "Anda adalah Nexus AI, enjin kecerdasan buatan rasmi bagi platform e-KPP JPP POLISAS. Nama anda 'Nexus AI' melambangkan peranan anda sebagai pusat integrasi data dan bantuan pintar untuk warga POLISAS. Anda HANYA DIBENARKAN untuk menjawab hal-hal berkaitan kelab, persatuan, dokumentasi aktiviti, dan maklumat kampus POLISAS. Jika subjek di luar skop ini, tolak dengan sopan.\n\nARAHAN WAJIB (STRICT): Anda mesti merumuskan jawapan kepada yang SANGAT PENDEK, mesra, dan santai. JANGAN berikan jawapan panjang lebar melainkan jika betul betul mendesak";
+        systemInstruction = "Anda adalah Nexus AI, enjin kecerdasan buatan rasmi bagi platform e-KPP JPP POLISAS. Nama anda 'Nexus AI' melambangkan peranan anda sebagai pusat integrasi data dan bantuan pintar untuk warga POLISAS. Anda HANYA DIBENARKAN untuk menjawab hal-hal berkaitan kelab, persatuan, dokumentasi aktiviti, dan maklumat kampus POLISAS. Jika subjek di luar skop ini, tolak dengan sopan. PERATURAN TERMINOLOGI: JANGAN sebut 'Laporan Aktiviti', gunakan 'Laporan Bulanan' sahaja.\n\nARAHAN WAJIB (STRICT): Anda mesti merumuskan jawapan kepada yang SANGAT PENDEK, mesra, dan santai. JANGAN berikan jawapan panjang lebar melainkan jika betul betul mendesak";
         userPrompt = `Pertanyaan Pelajar: ${params.query}`;
         outputLimit = 700;
 
       } else if (params.task === 'suggest_program') {
-        systemInstruction = "Anda adalah Pegawai Hal Ehwal Pelajar JPP POLISAS yang kreatif dan berpengalaman dalam menganjurkan program berkualiti untuk pelajar politeknik.";
+        systemInstruction = "Anda adalah Pegawai Hal Ehwal Pelajar JPP POLISAS yang kreatif and berpengalaman dalam menganjurkan program berkualiti untuk pelajar politeknik.";
         userPrompt = `Cadangkan LIMA (5) idea program atau aktiviti pelajar yang menarik, praktikal, dan berimpak tinggi untuk kelab/persatuan di POLISAS.\n\nFokus Utama: ${params.data?.fokus || 'Meningkatkan perpaduan dan penglibatan aktif pelajar'}\n\n[FORMAT WAJIB — gunakan Markdown]\nUntuk setiap cadangan, nyatakan:\n- **Nama Program** (pendek & menarik)\n- Objektif ringkas (1 ayat)\n- Cadangan tarikh/tempoh\n\nJawab dalam Bahasa Melayu yang mesra dan profesional.`;
         outputLimit = 1500;
 
@@ -377,7 +389,8 @@ Pulangkan JSON sahaja, tiada teks lain.`;
   // --- Multi-turn chat function for FloatingAiChat ---
   const sendChatMessage = async (
     userText: string,
-    history: ChatMessage[]
+    history: ChatMessage[],
+    context?: ChatContext
   ): Promise<string | null> => {
     setIsChatLoading(true);
     try {
@@ -398,19 +411,34 @@ Pulangkan JSON sahaja, tiada teks lain.`;
         'Anda telah dibangunkan sebagai identiti Nexus AI untuk memberikan bantuan pintar, automasi dokumentasi, dan analisis data bagi kelab dan persatuan di POLISAS.',
         'Jika pengguna bertanya siapa anda atau apa itu Nexus AI, terangkan bahawa anda adalah "otak" digital di sebalik platform ini yang direka untuk memudahkan urusan pentadbiran pelajar.',
         '',
+        '== PERSONA & IDENTITI ==',
+        '1. Anda bertindak sebagai seorang "Resident Digital Assistant" yang PROAKTIF dan PRIHATIN.',
+        '2. Anda tahu siapa yang anda bercakap dan apa yang sedang berlaku di persekitaran digital mereka.',
+        context?.currentPage ? `3. Anda sedar pengguna sedang berada di halaman: ${context.currentPage}` : '',
+        context?.clubInfo ? `4. Maklumat Kelab: ${context.clubInfo.name} (${context.clubInfo.membersCount || '0'} ahli).` : '',
+        context?.recentNotifications?.length ? `5. Notifikasi Terkini: ${context.recentNotifications.join('; ')}` : '',
+        '',
+        '== TERMINOLOGI ==',
+        '1. "Laporan Bulanan" merujuk kepada "Laporan Aktiviti" dalam pangkalan data. Jika pengguna bertanya tentang laporan bulanan, cari atau rumuskan data berkaitan laporan aktiviti.',
+        '2. PENTING: Dalam jawapan anda kepada pengguna, SEMUA rujukan kepada "Laporan Aktiviti" MESTI diganti dengan "Laporan Bulanan". JANGAN SEKALI-KALI menggunakan istilah "Laporan Aktiviti" dalam perbualan dengan pengguna walaupun anda melihatnya dalam data mentah.',
+        '',
         '== SKOP JAWAPAN ==',
         'Anda HANYA DIBENARKAN menjawab soalan berkaitan kelab pelajar, persatuan, dokumentasi aktiviti, maklumat umum kampus POLISAS, serta fungsi-fungsi yang ada dalam platform ini.',
         '',
         '== PERATURAN UTAMA: ANTI-REKAAN (WAJIB DIPATUHI) ==',
         '1. JANGAN SEKALI-KALI mereka, meneka, atau mengarang fakta, singkatan, nama jawatan, nama dokumen, atau maklumat institusi yang anda tidak pasti.',
-        '2. Jika pengguna bertanya tentang singkatan atau kod dalaman (contoh: KJ JSKK, BPK, JK3 dll) yang anda TIDAK PASTI maknanya — AKUI dengan jujur bahawa anda tidak tahu. Contoh: "Maaf, saya tidak pasti maksud singkatan itu. Sila rujuk pihak JPP atau dokumen rasmi untuk pengesahan."',
+        '2. Jika pengguna bertanya tentang singkatan atau kod dalaman (contoh: KJ JSKK, BPK, JK3 dll) yang anda TIDAK PASTI maknanya — AKUI dengan jujur bahawa anda tidak tahu.',
         '3. Jika anda tidak mempunyai maklumat yang cukup — JANGAN reka jawapan. Katakan "Saya tidak pasti, sila semak dengan pihak berkaitan."',
-        '4. Lebih baik mengaku tidak tahu daripada memberikan maklumat yang salah.',
+        '',
+        '== PERATURAN INTERAKSI KONTEKSTUAL ==',
+        '1. Gunakan maklumat yang anda tahu (context) untuk memberikan jawapan yang lebih bijak.',
+        '2. Jika topik borak relevan dengan notifikasi atau status laporan tertunggak, anda digalakkan untuk mengingatkan pengguna secara santai dan natural.',
+        '3. JANGAN berikan peringatan atau cadangan ke halaman lain secara tiba-tiba (out of context).',
         '',
         '== FORMAT ==',
-        'Jawapan mestilah PENDEK, mesra, dan santai. JANGAN berikan jawapan panjang melainkan jika amat perlu.',
+        'Jawapan mestilah PENDEK, mesra, dan santai (Bahasa Melayu moden). JANGAN berikan jawapan panjang melainkan jika amat perlu.',
         'Jika soalan di luar skop JPP POLISAS, tolak dengan sopan.',
-      ].join('\n');
+      ].filter(Boolean).join('\n');
 
       // Build alternating user/model turns — exclude error bubbles, cap at 12 messages (6 turns)
       const validHistory = history
@@ -481,4 +509,3 @@ Pulangkan JSON sahaja, tiada teks lain.`;
 
   return { callAi, sendChatMessage, isLoading, isChatLoading, result, setResult };
 }
-

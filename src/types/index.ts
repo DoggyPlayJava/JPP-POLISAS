@@ -138,7 +138,7 @@ export const REPORT_STATUS_COLORS: Record<ReportStatus, string> = {
 };
 
 export const REPORT_TYPE_LABELS: Record<ReportType, string> = {
-  'Aktiviti':  'Laporan Aktiviti',
+  'Aktiviti':  'Laporan Bulanan',
   'Kewangan':  'Laporan Kewangan',
 };
 
