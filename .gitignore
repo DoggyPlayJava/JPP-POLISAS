@@ -33,7 +33,8 @@ dist-ssr
 src/lib/*.json
 *service_account*.json
 *credentials*.json
-# .env (Dikeluarkan supaya boleh sync ke GitHub Private)
+# .env (Disekurkan semula selepas Vercel dikonfigurasi)
+.env
 .env.local
 .env.*.local
 src/takwim_rasmi_workflow.md
