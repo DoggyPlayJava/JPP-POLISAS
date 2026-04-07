@@ -133,365 +133,124 @@ Format Mesti Dipatuhi:
         outputLimit = 2000;
 
       } else if (params.task === 'jana_kertas_kerja') {
-        systemInstruction = `Anda adalah Pengarah Program yang mahir merangka kertas kerja rasmi JPP POLISAS. Anda MESTI mengikut format berikut secara TEPAT. Jangan gunakan blok kod \`\`\`markdown. Hasilkan dalam teks Markdown biasa bercampur HTML.
-
-ARAHAN KRITIKAL:
-- JANGAN permudahkan atau buang mana-mana bahagian format ini.
-- Semua teks CENTER mesti guna tag <center>.
-- Lampiran I WAJIB SEMUA unit JK tanpa kecuali.
-- Lampiran III WAJIB ada pengelompokan kategori dengan subtotal DAN bahagian PENDAPATAN di penghujung.
-- Bahagian 1.0 PENDAHULUAN WAJIB hanya 1 perenggan sahaja. DILARANG tulis 2 atau lebih perenggan.
-- Bahagian tandatangan (Disediakan, Disemak, Disokong, Diluluskan) MESTI kekal bersama dalam satu blok.
-
----
-
-<center><b>KERTAS KERJA</b></center>
-<center><b>[TAJUK PROGRAM]</b></center>
-<br>
-<center><b>[TARIKH] ([HARI])</b></center>
-<center><b>[TEMPAT]</b></center>
-<br>
-<center><b>ANJURAN:</b></center>
-<center><b>[PENGANJUR]</b></center>
-<center><b>POLITEKNIK SULTAN HAJI AHMAD SHAH</b></center>
-
-<!-- PAGE_BREAK -->
-
-<center><b>RINGKASAN EKSEKUTIF</b></center>
-<center><b>[TAJUK PROGRAM]</b></center>
-
-<br>
-
-<table>
-<tr><td><b>IPTA</b></td><td>Politeknik Sultan Haji Ahmad Shah</td></tr>
-<tr><td><b>TAJUK PROGRAM</b></td><td>[Tajuk Program]</td></tr>
-<tr><td><b>JENIS PROGRAM</b></td><td>[Jenis Program]</td></tr>
-<tr><td><b>MATLAMAT/<br>PENCAPAIAN PROGRAM</b></td><td>(Tulis 2-3 matlamat dalam bentuk bernombor)</td></tr>
-<tr><td><b>ANJURAN</b></td><td>[Penganjur] dengan kerjasama Jabatan Hal Ehwal Pelajar POLISAS</td></tr>
-<tr><td><b>TARIKH DAN TEMPAT</b></td><td>[Tarikh], [Tempat]</td></tr>
-<tr><td><b>BILANGAN PESERTA</b></td><td>Peserta: [bilangan] orang<br>Pegawai: [bilangan] orang</td></tr>
-<tr><td><b>ANGGARAN KOS</b></td><td>RM [Kos]</td></tr>
-</table>
-
-<!-- PAGE_BREAK -->
-
-**1.0 PENDAHULUAN**
-
-(Tulis HANYA 1 perenggan penuh sahaja yang menghuraikan latar belakang & kepentingan program ini secara ringkas dan padat. DILARANG menulis lebih daripada 1 perenggan. Pastikan ia matang dan profesional.)
-
-**2.0 NAMA PROGRAM**
-
-[Tajuk Program Penuh]
-
-**3.0 TUJUAN**
-
-Kertas kerja ini dikemukakan bagi memohon kelulusan peruntukan, penggunaan peralatan serta kemudahan di POLISAS bagi melaksanakan program ini.
-
-**4.0 MATLAMAT**
-
-1. [Matlamat 1]
-2. [Matlamat 2]
-3. [Matlamat 3]
-
-**5.0 PENGANJUR**
-
-[Penganjur] dengan kerjasama Jabatan Hal Ehwal Pelajar (JHEP) POLISAS.
-
-**6.0 TARIKH, MASA DAN TEMPAT**
-
-Tarikh &nbsp;&nbsp;&nbsp;&nbsp;: [Tarikh]<br>
-Masa &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 8:00 Pagi - 5:00 Petang<br>
-Tempat &nbsp;&nbsp;&nbsp;: [Tempat]
-
-**7.0 PENYERTAAN / SASARAN**
-
-[Bilangan] orang peserta.
-
-**8.0 BENTUK PROGRAM**
-
-[Nyatakan bentuk program - cth: Bengkel / Ceramah / Pertandingan]
-
-**9.0 CARTA ORGANISASI**
-
-Rujuk *Lampiran I*.
-
-**10.0 TENTATIF PROGRAM**
-
-Rujuk *Lampiran II*.
-
-**11.0 ANGGARAN BELANJAWAN**
-
-Rujuk *Lampiran III*.
-
-**12.0 PENUTUP**
-
-Berdasarkan kertas kerja ini, maka dipohon agar pihak pengurusan POLISAS dapat memberi komitmen dan sokongan bagi menjayakan program ini. Semoga yang dirancang ini dapat berjalan dengan lancar dan memenuhi matlamat dan objektif program serta memberi manfaat kepada semua siswa/siswi Politeknik Sultan Haji Ahmad Shah.
-
-<div style="page-break-inside:avoid;">
-
-Disediakan oleh:<br><br><br>
-_____________________<br>
-**[NAMA PENGARAH]**<br>
-Pengarah Program<br>
-[Tajuk Program]
-
-<br><br>
-
-Disemak oleh:<br><br><br>
-_____________________<br>
-**MOHD FADLI BIN ARRIF**<br>
-Penasihat<br>
-Jawatankuasa Perwakilan Pelajar<br>
-Politeknik Sultan Haji Ahmad Shah
-
-<br><br>
-
-Disokong oleh:<br><br><br>
-_____________________<br>
-**MOHD AZLAN BIN IZUDDIN**<br>
-Ketua Jabatan<br>
-Hal Ehwal Pelajar<br>
-Politeknik Sultan Haji Ahmad Shah
-
-<br><br>
-
-Diluluskan oleh:<br><br><br>
-_____________________<br>
-**MUSTAFIZUL HILMIE BIN ABD RAHMAN**<br>
-Timbalan Pengarah (Sokongan Akademik)<br>
-Politeknik Sultan Haji Ahmad Shah
-
-</div>
-
-<!-- PAGE_BREAK -->
-
-<center><i><b>LAMPIRAN I</b></i></center>
-<center><b>AHLI JAWATANKUASA PELAKSANA</b></center>
-<center><b>[TAJUK PROGRAM]</b></center>
-
-<br>
-
-<center><u><b>JAWATANKUASA INDUK</b></u></center>
-
-<br>
-
-<center><b>PENAUNG</b></center>
-<center><b>HISAMUDIN BIN MOHD TAMIM</b></center>
-<center>Pengarah</center>
-<center>Politeknik Sultan Haji Ahmad Shah</center>
-
-<br>
-
-<center><b>PENASIHAT</b></center>
-<center><b>MOHD AZLAN BIN IZUDDIN</b></center>
-<center>Ketua Jabatan Hal Ehwal Pelajar</center>
-
-<br>
-
-<center><b>MARLIANA BINTI MAHAMAD</b></center>
-<center>Pegawai Hal Ehwal Pelajar</center>
-
-<br>
-
-<center><b>MOHD FADLI BIN ARRIF</b></center>
-<center>Penasihat Jawatankuasa Perwakilan Pelajar</center>
-
-<br>
-
-<center><b>PENGERUSI</b></center>
-<center><b>MUHAMAD AMIRUL HAKIMI BIN MOHD ZAWAWI</b></center>
-<center>Yang DiPertua Jawatankuasa Perwakilan Pelajar</center>
-
-<br><br>
-
-<center><u><b>JAWATANKUASA MAJLIS TERTINGGI</b></u></center>
-
-<br>
-
-<center><b>[NAMA PENGARAH]</b></center>
-<center>PENGARAH PROGRAM</center>
-
-<br>
-
-<center><b>(NAMA)</b></center>
-<center>TIMBALAN PENGARAH PROGRAM</center>
-
-<br>
-
-<center><b>(NAMA)</b></center>
-<center>SETIAUSAHA PROGRAM</center>
-
-<br>
-
-<center><b>(NAMA)</b></center>
-<center>BENDAHARI PROGRAM</center>
-
-<!-- PAGE_BREAK -->
-
-<center><u><b>JAWATANKUASA PELAKSANA UNIT</b></u></center>
-
-<br>
-
-<center>JK PROTOKOL & ATURCARA</center>
-<center><b>(NAMA)</b></center>
-<center><b>(NAMA)</b></center>
-
-<br>
-
-<center>JK MULTIMEDIA</center>
-<center><b>(NAMA)</b></center>
-<center><b>(NAMA)</b></center>
-
-<br>
-
-<center>JK MAKANAN</center>
-<center><b>(NAMA)</b></center>
-<center><b>(NAMA)</b></center>
-
-<br>
-
-<center>JK PERALATAN & TEMPAT</center>
-<center><b>(NAMA)</b></center>
-<center><b>(NAMA)</b></center>
-
-<br>
-
-<center>JK KEBERSIHAN</center>
-<center><b>(NAMA)</b></center>
-<center><b>(NAMA)</b></center>
-
-<br>
-
-<center>JK PENGANGKUTAN DAN KESELAMATAN</center>
-<center><b>(NAMA)</b></center>
-<center><b>(NAMA)</b></center>
-
-<br>
-
-<center>JK CENDERAHATI</center>
-<center><b>(NAMA)</b></center>
-<center><b>(NAMA)</b></center>
-
-<br>
-
-<center>JK FASILITATOR</center>
-<center><b>(NAMA)</b></center>
-<center><b>(NAMA)</b></center>
-
-<!-- PAGE_BREAK -->
-
-<center><i><b>LAMPIRAN II</b></i></center>
-<center><b>TENTATIF PROGRAM</b></center>
-<center><b>[TAJUK PROGRAM]</b></center>
-
-<br>
-
-(Hasilkan jadual markdown dengan pengelompokan hari & tarikh sebagai baris header. Format:
-
-| [TARIKH DAN HARI - cth: 8 APRIL 2026] | |
-| --- | --- |
-| **MASA** | **AKTIVITI** |
-| 7:45 am - 8:00 am | Pendaftaran peserta dan agihan sarapan pagi |
-| ... | ... |
-
-Pastikan jadual terperinci dan praktikal dengan slot rehat/makan.)
-
-<!-- PAGE_BREAK -->
-
-<center><i><b>LAMPIRAN III</b></i></center>
-<center><b>ANGGARAN PERBELANJAAN</b></center>
-<center><b>[TAJUK PROGRAM]</b></center>
-
-<br>
-
-(Hasilkan jadual HTML perbelanjaan yang WAJIB dikelompokkan mengikut kategori besar. Setiap kategori ada subtotal JUMLAH tersendiri. Gunakan HTML table SAHAJA (BUKAN markdown table). Format MESTI seperti ini:
-
-<table style="border-collapse:collapse;width:100%;font-size:10pt;">
-<tr style="border:1px solid black;">
-<td style="border:1px solid black;padding:4px 6px;font-weight:bold;text-align:center;width:8%;">BIL</td>
-<td style="border:1px solid black;padding:4px 6px;font-weight:bold;text-align:center;">PERKARA</td>
-<td style="border:1px solid black;padding:4px 6px;font-weight:bold;text-align:center;width:15%;">HARGA<br>SEUNIT</td>
-<td style="border:1px solid black;padding:4px 6px;font-weight:bold;text-align:center;width:14%;">KUANTITI</td>
-<td style="border:1px solid black;padding:4px 6px;font-weight:bold;text-align:center;width:16%;">JUMLAH</td>
-</tr>
-<tr>
-<td style="border:1px solid black;padding:3px 6px;font-weight:bold;">1.</td>
-<td style="border:1px solid black;padding:3px 6px;font-weight:bold;" colspan="4">Makanan & Minuman</td>
-</tr>
-<tr>
-<td style="border:1px solid black;padding:3px 6px;"></td>
-<td style="border:1px solid black;padding:3px 6px;">Makanan Pagi</td>
-<td style="border:1px solid black;padding:3px 6px;text-align:center;">RM X.XX</td>
-<td style="border:1px solid black;padding:3px 6px;text-align:center;">XXX Paket</td>
-<td style="border:1px solid black;padding:3px 6px;text-align:right;">RM XXX.XX</td>
-</tr>
-<tr>
-<td style="border:1px solid black;padding:3px 6px;"></td>
-<td style="border:1px solid black;padding:3px 6px;">Makanan Tengah Hari</td>
-<td style="border:1px solid black;padding:3px 6px;text-align:center;">RM X.XX</td>
-<td style="border:1px solid black;padding:3px 6px;text-align:center;">XXX Paket</td>
-<td style="border:1px solid black;padding:3px 6px;text-align:right;">RM XXX.XX</td>
-</tr>
-<tr>
-<td style="border:1px solid black;padding:3px 6px;" colspan="3"></td>
-<td style="border:1px solid black;padding:3px 6px;text-align:right;font-weight:bold;">JUMLAH</td>
-<td style="border:1px solid black;padding:3px 6px;text-align:right;font-weight:bold;">RM XXX.XX</td>
-</tr>
-<tr>
-<td style="border:1px solid black;padding:3px 6px;font-weight:bold;">2.</td>
-<td style="border:1px solid black;padding:3px 6px;font-weight:bold;" colspan="4">Cenderahati</td>
-</tr>
-<tr>
-<td style="border:1px solid black;padding:3px 6px;"></td>
-<td style="border:1px solid black;padding:3px 6px;">Cenderahati kepada Penceramah</td>
-<td style="border:1px solid black;padding:3px 6px;text-align:center;">RM X.XX</td>
-<td style="border:1px solid black;padding:3px 6px;text-align:center;">X</td>
-<td style="border:1px solid black;padding:3px 6px;text-align:right;">RM XX.XX</td>
-</tr>
-<tr>
-<td style="border:1px solid black;padding:3px 6px;" colspan="3"></td>
-<td style="border:1px solid black;padding:3px 6px;text-align:right;font-weight:bold;">JUMLAH</td>
-<td style="border:1px solid black;padding:3px 6px;text-align:right;font-weight:bold;">RM XX.XX</td>
-</tr>
-<tr>
-<td style="border:2px solid black;padding:5px 6px;font-weight:bold;text-align:center;" colspan="4">JUMLAH KESELURUHAN: RM [KOS]</td>
-<td style="border:2px solid black;padding:5px 6px;font-weight:bold;text-align:right;">RM [KOS]</td>
-</tr>
-</table>
-
-ARAHAN PENTING untuk jadual Lampiran III:
-- Gunakan HTML table SAHAJA, BUKAN markdown table.
-- Setiap sel WAJIB ada style="border:1px solid black;padding:3px 6px;" sebagai minimum.
-- Baris kategori (1., 2., 3. dsb) gunakan colspan="4" dan font-weight:bold.
-- Baris sub-item: lajur BIL kosong, PERKARA tulis nama item, HARGA SEUNIT text-align:center, KUANTITI text-align:center, JUMLAH text-align:right.
-- Baris JUMLAH subtotal: colspan="3" kosong pada 3 lajur pertama, lajur KUANTITI tulis "JUMLAH" (bold, right-align), lajur JUMLAH tulis nilai (bold, right-align).
-- Baris terakhir JUMLAH KESELURUHAN gunakan border:2px solid black dan font-weight:bold.
-- Pastikan JUMLAH KESELURUHAN selari dengan anggaran kos yang diberikan.
-- Cipta sekurang-kurangnya 3-4 kategori yang munasabah berdasarkan jenis program.
-
-Selepas jadual di atas, WAJIB masukkan bahagian ini:
-
-**PENDAPATAN:**<br>
-1. OS42000 = RM 0.00
-)
-`;
-
-        userPrompt = `Tolong jana draf kertas kerja LENGKAP menggunakan format MESTI di atas. Ikutilah setiap bahagian tanpa terkecuali. JANGAN langkau mana-mana bahagian termasuk bahagian PENDAPATAN dalam Lampiran III.
-
-Nota konteks tambahan: Program ini berbentuk ${params.data?.bentukProgram}. Walau bagaimanapun, JANGAN sebutkan bentuk program ini dalam draf anda, gunakan ia sekadar untuk memahami skala program dan merangka tentatif & belanjawan yang logik sahaja.
-
-Input Teras:
+        systemInstruction = `Anda adalah Jurutulis Kertas Kerja Rasmi JPP POLISAS. Tugas anda HANYA menghasilkan data berstruktur dalam format JSON murni.
+
+PERATURAN OUTPUT (WAJIB DIPATUHI TANPA PENGECUALIAN):
+1. Pulangkan JSON SAHAJA. TIADA backticks, tiada markdown, tiada teks tambahan, tiada penerangan.
+2. Output mesti bermula dengan { dan berakhir dengan }.
+3. Semua string dalam JSON mesti dalam Bahasa Melayu formal dan profesional.
+
+PERATURAN MATEMATIK MUTLAK (KRITIKAL):
+- Sistem React akan mengira jumlah setiap item (harga_seunit x kuantiti) secara automatik.
+- ANDA WAJIB memastikan: apabila semua (harga_seunit x kuantiti) dijumlahkan bagi semua kategori, hasilnya SANGAT HAMPIR dengan anggaran_kos yang diberi (selisih maksimum RM 5).
+- Agihkan harga_seunit dan kuantiti yang realistik dan logik.
+
+SKEMA JSON YANG WAJIB DIIKUTI (jangan ubah nama kunci/key):
+{
+  "halaman_muka": {
+    "tajuk_program": "string",
+    "tarikh": "string",
+    "hari": "string",
+    "tempat": "string",
+    "penganjur": "string"
+  },
+  "ringkasan_eksekutif": {
+    "jenis_program": "string",
+    "matlamat": ["string", "string", "string"],
+    "bilangan_peserta": 0,
+    "bilangan_pegawai": 0,
+    "anggaran_kos": 0.00
+  },
+  "isi_kandungan": {
+    "pendahuluan": "string — WAJIB HANYA 1 perenggan sahaja",
+    "nama_program": "string",
+    "tujuan": "Kertas kerja ini dikemukakan bagi memohon kelulusan peruntukan, penggunaan peralatan serta kemudahan di POLISAS bagi melaksanakan program ini.",
+    "matlamat": ["string", "string", "string"],
+    "bentuk_program": "string"
+  },
+  "carta_organisasi": {
+    "jawatankuasa_induk": {
+      "penaung": { "nama": "HISAMUDIN BIN MOHD TAMIM", "jawatan": "Pengarah, Politeknik Sultan Haji Ahmad Shah" },
+      "penasihat": [
+        { "nama": "MOHD AZLAN BIN IZUDDIN", "jawatan": "Ketua Jabatan Hal Ehwal Pelajar" },
+        { "nama": "MARLIANA BINTI MAHAMAD", "jawatan": "Pegawai Hal Ehwal Pelajar" },
+        { "nama": "MOHD FADLI BIN ARRIF", "jawatan": "Penasihat Jawatankuasa Perwakilan Pelajar" }
+      ],
+      "pengerusi": { "nama": "MUHAMAD AMIRUL HAKIMI BIN MOHD ZAWAWI", "jawatan": "Yang DiPertua Jawatankuasa Perwakilan Pelajar" }
+    },
+    "jawatankuasa_majlis_tertinggi": [
+      { "nama": "__PENGARAH__", "jawatan": "PENGARAH PROGRAM" },
+      { "nama": "(NAMA)", "jawatan": "TIMBALAN PENGARAH PROGRAM" },
+      { "nama": "(NAMA)", "jawatan": "SETIAUSAHA PROGRAM" },
+      { "nama": "(NAMA)", "jawatan": "BENDAHARI PROGRAM" }
+    ],
+    "unit_pelaksana": [
+      { "nama_unit": "JK [NAMA UNIT 1]", "ahli": ["(NAMA)", "(NAMA)"] },
+      { "nama_unit": "JK [NAMA UNIT 2]", "ahli": ["(NAMA)", "(NAMA)"] }
+    ]
+  },
+  "tentatif": [
+    {
+      "tarikh": "DD BULAN TAHUN",
+      "hari": "NAMA HARI",
+      "slot": [
+        { "masa_mula": "07:30", "masa_tamat": "08:00", "aktiviti": "string" }
+      ]
+    }
+  ],
+  "belanjawan": {
+    "kategori": [
+      {
+        "nama_kategori": "string",
+        "items": [
+          { "perkara": "string", "harga_seunit": 0.00, "kuantiti": 0, "unit": "pax" }
+        ]
+      }
+    ],
+    "pendapatan": [
+      { "sumber": "OS42000", "jumlah": 0.00 }
+    ]
+  },
+  "tandatangan": {
+    "pengarah_program": "__PENGARAH__",
+    "penasihat_jpp": "MOHD FADLI BIN ARRIF",
+    "ketua_jabatan_hep": "MOHD AZLAN BIN IZUDDIN",
+    "timbalan_pengarah": "MUSTAFIZUL HILMIE BIN ABD RAHMAN"
+  }
+}
+
+ARAHAN KHUSUS unit_pelaksana:
+- Tentukan sendiri 5-8 unit JK yang SESUAI dengan jenis program. Contoh: JK PROTOKOL & ATURCARA, JK MULTIMEDIA & PUBLISITI, JK MAKANAN & MINUMAN, JK PERALATAN & TEMPAT, JK KEBERSIHAN & KECERIAAN, JK PENGANGKUTAN & KESELAMATAN, JK FASILITATOR, JK CENDERAHATI & HADIAH.
+- Nama ahli: gunakan "(NAMA)" sebagai placeholder, KECUALI jika nama ahli disediakan dalam input.
+
+ARAHAN KHUSUS tentatif:
+- Hasilkan satu objek hari BAGI SETIAP HARI dalam tempoh program (cth: tarikh 15-18 Mei = 4 objek hari).
+- Setiap hari WAJIB ada minimum 6 slot termasuk slot rehat/solat/makan tengah hari.
+- Format masa: "HH:MM" dalam 24 jam.
+
+ARAHAN KHUSUS belanjawan:
+- Cipta minimum 4 kategori perbelanjaan yang logik berdasarkan jenis program.
+- harga_seunit mesti realistik (bukan 0). Agihkan supaya jumlah semua kategori ≈ anggaran_kos.`;
+
+        userPrompt = `Jana kertas kerja LENGKAP dalam format JSON yang ditetapkan. Gantikan semua kemunculan "__PENGARAH__" dengan nama pengarah yang diberikan di bawah.
+
+Input Program:
 - Tajuk: ${params.data?.tajuk}
 - Jenis Program: ${params.data?.jenisProgram}
+- Bentuk Program: ${params.data?.bentukProgram}
 - Objektif/Matlamat: ${params.data?.objektif}
 - Tarikh: ${params.data?.tarikh}
 - Tempat: ${params.data?.tempat}
 - Penganjur: ${params.data?.penganjur}
-- Sasaran Peserta: ${params.data?.sasaran} (Sila agihkan "Peserta" dan letakkan ${params.data?.bilanganPegawai || '5'} untuk "Pegawai" di dalam jadual Ringkasan Eksekutif)
+- Bilangan Peserta: ${params.data?.sasaran} orang
+- Bilangan Pegawai/AJK: ${params.data?.bilanganPegawai || '5'} orang
 - Anggaran Kos Keseluruhan: RM ${params.data?.kos}
-- Nama Pengarah Program: ${params.data?.pengarah}`;
-        outputLimit = 8192;
+- Nama Pengarah Program: ${params.data?.pengarah}${params.data?.ahliJK ? `
+- Nama Ahli JK (Optional, sisipkan ke unit yang paling sesuai): ${params.data.ahliJK}` : ''}
 
+PERINGATAN MATEMATIK: Agihkan item belanjawan supaya jumlah semua (harga_seunit x kuantiti) ≈ RM ${params.data?.kos}.
+Pulangkan JSON sahaja, tiada teks lain.`;
+        outputLimit = 8192;
       } else if (params.task === 'jana_minit_mesyuarat') {
         systemInstruction = "Anda adalah Setiausaha Kehormat persatuan yang teliti. Tugas anda ialah mengubah nota atau gambar draf kepada minit mesyuarat rasmi dengan susunan profesional: \n" +
           "MINIT MESYUARAT [TAJUK/PROGRAM] BIL: ___\n" +

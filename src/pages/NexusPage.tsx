@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
-import { Bot, FileText, Users, Wand2, Calculator, Save, FileClock, Sparkles, AlertTriangle, X, ImagePlus, Download } from 'lucide-react';
+import { Bot, FileText, Users, Wand2, Calculator, Save, FileClock, Sparkles, AlertTriangle, X, ImagePlus, Download, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAiSettings } from '@/contexts/AiSettingsContext';
 import { useAiAssistant } from '@/hooks/useAiAssistant';
@@ -16,7 +16,12 @@ import { toast } from 'react-hot-toast';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
+import { KertasKerjaRenderer, type KertasKerjaData } from '@/components/ai/KertasKerjaRenderer';
 import { supabase } from '@/lib/supabase';
+import { Buffer } from 'buffer';
+
+// @ts-ignore - polyfill untuk node js buffer yang diperlukan oleh html-docx-js
+if (typeof window !== 'undefined') window.Buffer = Buffer;
 
 function useLocalState<T>(key: string, initialValue: T) {
   const [state, setState] = useState<T>(() => {
@@ -64,7 +69,29 @@ export function NexusPage() {
   const [kelabPenganjur, setKelabPenganjur] = useLocalState('nx_kelabPenganjur', '');
   const [anggaranKos, setAnggaranKos] = useLocalState('nx_anggaranKos', '');
   const [namaPengarah, setNamaPengarah] = useLocalState('nx_namaPengarah', '');
-  const [hasilKertasKerja, setHasilKertasKerja] = useLocalState<string | null>('nx_hasilKertasKerja', null);
+  const [ahliJK, setAhliJK] = useLocalState('nx_ahliJK', '');
+  const [hasilKertasKerja, setHasilKertasKerja] = useLocalState<KertasKerjaData | null>('nx_hasilKertasKerja', null);
+
+  const handleResetKertasKerja = () => {
+    if (confirm("Adakah anda pasti mahu memadam semua maklumat draf ini dan mula dari awal?")) {
+      setKertasKerjaStep(1);
+      setJenisProgram([]);
+      setBentukProgram([]);
+      setBentukProgramLain('');
+      setBilanganPegawai('');
+      setTajukProgram('');
+      setObjektifProgram('');
+      setTarikhProgram('');
+      setTempatProgram('');
+      setSasaranPeserta('');
+      setKelabPenganjur('');
+      setAnggaranKos('');
+      setNamaPengarah('');
+      setAhliJK('');
+      setHasilKertasKerja(null);
+      toast.success('Borang telah dikosongkan.');
+    }
+  };
 
   // Token Economy State
   const [selectedAiModel, setSelectedAiModel] = useLocalState<'flash' | 'pro'>('nx_selectedAiModel', 'flash');
@@ -243,6 +270,44 @@ export function NexusPage() {
     }
   };
 
+  /** Tukar KertasKerjaData (JSON) → native DOCX → muat turun */
+  const handleDownloadKertasKerjaDocx = async (data: KertasKerjaData, filename: string) => {
+    console.log('▶️ Memulakan proses muat turun DOCX asli...');
+    try {
+      const { generateKertasKerjaDocx } = await import('../utils/docxGenerator');
+      
+      console.log('🔄 Menjana blob DOCX...');
+      const blob = await generateKertasKerjaDocx(data, logoBase64Ref.current);
+
+      if (!blob || blob.size === 0) {
+        throw new Error("Blob dijana kosong.");
+      }
+
+      // Sanitize filename — buang aksara yang tidak selamat
+      const safeFilename = filename.replace(/[/\\?%*:|"<>]/g, '-').trim() || 'Kertas_Kerja';
+      console.log('🔄 Menyedia muat turun untuk:', safeFilename);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${safeFilename}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      // Delay revoking URL so that Chrome's async download manager has time to read 
+      // the 'download' attribute metadata.
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 1000);
+      
+      console.log('✅ Selesai.');
+      toast.success('Fail .docx berjaya dimuat turun! Sedia dibuka dalam Microsoft Word.');
+    } catch (error) {
+      console.error('❌ DOCX Generation Error:', error);
+      toast.error(`Gagal: ${error instanceof Error ? error.message : 'Ralat Tidak Diketahui'}`);
+    }
+  };
+
   // Jika kill-switch "Enjin AI" (allowAiBudget) dimatikan, sekat akses.
   if (!allowAiBudget) {
     return (
@@ -270,8 +335,8 @@ export function NexusPage() {
 
     setLoadingType('kertas-kerja');
     try {
-      const result = await callAi({
-        task: 'jana_kertas_kerja' as any, // Kita tambah ke type nanti
+      const rawResult = await callAi({
+        task: 'jana_kertas_kerja' as any,
         data: {
           tajuk: tajukProgram,
           objektif: objektifProgram,
@@ -281,6 +346,7 @@ export function NexusPage() {
           penganjur: kelabPenganjur,
           kos: anggaranKos,
           pengarah: namaPengarah,
+          ahliJK: ahliJK.trim() || undefined,
           jenisProgram: jenisProgram.join(', '),
           bentukProgram: [
             ...bentukProgram,
@@ -291,9 +357,16 @@ export function NexusPage() {
         }
       });
 
-      if (result) {
-        setHasilKertasKerja(result);
-        toast.success('Draf kertas kerja berjaya dijana!');
+      if (rawResult) {
+        try {
+          // Bersihkan output AI — buang markdown code fences jika ada
+          const cleaned = rawResult.trim().replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/,'');
+          const parsed: KertasKerjaData = JSON.parse(cleaned);
+          setHasilKertasKerja(parsed);
+          toast.success('Draf kertas kerja berjaya dijana!');
+        } catch {
+          toast.error('AI mengembalikan format yang tidak sah. Cuba semula atau gunakan model Pro.');
+        }
       }
     } catch (e: any) {
       // Dibendung oleh useAiAssistant, toast akan dikeluarkan di sana
@@ -376,19 +449,31 @@ export function NexusPage() {
               <Card className="border-slate-200/60 dark:border-border/50 shadow-xl overflow-hidden bg-white dark:bg-[#121214] transition-all relative">
                 <div className="h-1.5 bg-gradient-to-r from-indigo-500 to-purple-500" />
                 
+                {/* Header & Reset Button */}
+                <div className="px-6 pt-4 flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Isi Borang</span>
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] uppercase font-bold tracking-widest text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 px-2" onClick={handleResetKertasKerja}>
+                    <Trash2 className="w-3.5 h-3.5 mr-1" /> Mula Semula
+                  </Button>
+                </div>
+
                 {/* Progress Indicator */}
-                <div className="px-6 pt-5 pb-2">
+                <div className="px-6 pt-3 pb-2">
                   <div className="flex items-center justify-between">
                     {[1, 2, 3].map((step) => (
                       <div key={step} className="flex flex-col items-center flex-1 relative">
-                        <div className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold z-10 transition-colors duration-300",
-                          kertasKerjaStep >= step 
-                            ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/20" 
-                            : "bg-slate-100 dark:bg-muted text-muted-foreground"
-                        )}>
+                        <button 
+                          type="button"
+                          onClick={() => setKertasKerjaStep(step)}
+                          className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold z-10 transition-all duration-300 hover:scale-110",
+                            kertasKerjaStep >= step 
+                              ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/20" 
+                              : "bg-slate-100 dark:bg-muted text-muted-foreground hover:bg-slate-200 dark:hover:bg-muted/80 cursor-pointer"
+                          )}
+                        >
                           {step}
-                        </div>
+                        </button>
                         {step < 3 && (
                           <div className={cn(
                             "absolute top-4 left-[50%] right-[-50%] h-[2px] -z-0 transition-colors duration-300",
@@ -564,8 +649,18 @@ export function NexusPage() {
                           className="bg-slate-50 dark:bg-[#0A0A0B]/50 focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Nama Ahli Jawatankuasa <span className="normal-case text-[10px] font-normal bg-slate-100 dark:bg-secondary px-2 py-0.5 rounded-full ml-1">Optional</span></Label>
+                        <Textarea
+                          placeholder="Cth: Ahmad (Setiausaha), Siti (Bendahari), Rizal (JK Logistik)..."
+                          value={ahliJK}
+                          onChange={(e) => setAhliJK(e.target.value)}
+                          className="min-h-[70px] resize-none bg-slate-50 dark:bg-[#0A0A0B]/50 border-slate-200 dark:border-border/60 focus:ring-2 focus:ring-indigo-500/20 text-sm"
+                        />
+                        <p className="text-[10px] text-muted-foreground">Jika dikosongkan, AI akan menggunakan placeholder "(NAMA)" dalam carta organisasi.</p>
+                      </div>
                       
-                      <div className="pt-4">
+                      <div className="pt-2">
                         <div className="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex gap-3 text-indigo-800 dark:text-indigo-300 text-sm">
                           <Sparkles className="w-5 h-5 shrink-0 text-indigo-600 dark:text-indigo-400 mt-0.5" />
                           <p>
@@ -714,16 +809,16 @@ export function NexusPage() {
                   </div>
                   {hasilKertasKerja && (
                     <div className="flex items-center gap-2">
-			<Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-2 bg-indigo-500/10 text-indigo-400 border-indigo-500/20 hover:bg-indigo-500/20" onClick={() => handleDownloadDocx(hasilKertasKerja, tajukProgram || 'Kertas_Kerja')}>
-			   <Download className="w-3.5 h-3.5" /> Muat Turun DOCX
-			</Button>
-			<Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-2" onClick={() => {
-			  navigator.clipboard.writeText(hasilKertasKerja);
-			  toast.success('Draf disalin!');
-			}}>
-			  <Save className="w-3.5 h-3.5" /> Salin Teks
-			</Button>
-		    </div>
+                      <Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-2 bg-indigo-500/10 text-indigo-400 border-indigo-500/20 hover:bg-indigo-500/20" onClick={() => handleDownloadKertasKerjaDocx(hasilKertasKerja, hasilKertasKerja?.halaman_muka?.tajuk_program || tajukProgram || 'Kertas_Kerja')}>
+                        <Download className="w-3.5 h-3.5" /> Muat Turun DOCX
+                      </Button>
+                      <Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-2" onClick={() => {
+                        navigator.clipboard.writeText(JSON.stringify(hasilKertasKerja, null, 2));
+                        toast.success('Data JSON disalin!');
+                      }}>
+                        <Save className="w-3.5 h-3.5" /> Salin JSON
+                      </Button>
+                    </div>
                   )}
                 </div>
                 <div className="flex-1 overflow-y-auto max-h-[600px] relative bg-slate-50 dark:bg-transparent">
@@ -740,10 +835,10 @@ export function NexusPage() {
                             </div>
                             <div className="text-sm leading-relaxed">
                               <p className="font-bold text-base mb-1">Perhatian: Modul Kecerdasan Buatan (Draf)</p>
-                              Dokumen ini merupakan draf janaan AI bagi memudahkan proses penulisan anda. Model AI mungkin tidak 100% tepat. Anda <strong>DIWAJIBKAN</strong> untuk membaca, menyemak dan mengubah suai dokumen ini dengan teliti sebelum pengesahan rasmi.
+                              Dokumen ini merupakan draf janaan AI. Anda <strong>DIWAJIBKAN</strong> menyemak dan mengubah suai sebelum pengesahan rasmi.
                             </div>
                           </div>
-                          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{hasilKertasKerja}</ReactMarkdown>
+                          <KertasKerjaRenderer data={hasilKertasKerja} />
                         </>
                       ) : (
                         <div className="h-full flex flex-col items-center justify-center text-muted-foreground/50 space-y-4 pt-10 pb-10">
