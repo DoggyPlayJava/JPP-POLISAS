@@ -58,6 +58,7 @@ export function JppAdminPage() {
         allow_ai_budget: true,
         ai_total_tokens: 0,
         ai_token_limit: 1000000,
+        ai_rate_limit: { warning_threshold: 50, block_threshold: 65 }
     });
 
     const [showAddClub, setShowAddClub] = useState(false);
@@ -93,9 +94,19 @@ export function JppAdminPage() {
             });
             const { data: settingsData } = await supabase.from('system_settings').select('*');
             if (settingsData) {
-                const s: Record<string, any> = { allow_auto_pdf: true, allow_add_takwim: true, max_clubs_per_student: 2, allow_ai_chat: true, allow_ai_budget: true, ai_total_tokens: 0, ai_token_limit: 1000000, ai_spam_warning_threshold: 30, ai_spam_block_threshold: 50 };
+                const s: Record<string, any> = { 
+                    allow_auto_pdf: true, 
+                    allow_add_takwim: true, 
+                    max_clubs_per_student: 2, 
+                    allow_ai_chat: true, 
+                    allow_ai_budget: true, 
+                    ai_total_tokens: 0, 
+                    ai_token_limit: 1000000,
+                    ai_rate_limit: { warning_threshold: 50, block_threshold: 65 }
+                };
                 settingsData.forEach(item => { 
                     let val = item.value;
+                    // Auto-parse boolean if string
                     if (val === 'true') val = true;
                     if (val === 'false') val = false;
                     s[item.key] = val; 
@@ -331,24 +342,31 @@ export function JppAdminPage() {
     };
 
     const updateSpamThreshold = async (type: 'warning' | 'block') => {
-        const key = type === 'warning' ? 'ai_spam_warning_threshold' : 'ai_spam_block_threshold';
-        const currentVal = settings[key];
+        const currentRateLimit = settings.ai_rate_limit || { warning_threshold: 50, block_threshold: 65 };
         const label = type === 'warning' ? 'Amaran (Amaran selepas X chat)' : 'Sekatan (Sekat selepas X chat)';
+        const currentVal = type === 'warning' ? currentRateLimit.warning_threshold : currentRateLimit.block_threshold;
+        
         const input = window.prompt(`Masukkan had ${label}:`, currentVal?.toString());
         if (!input) return;
-        const newLimit = parseInt(input);
-        if (isNaN(newLimit) || newLimit < 1) {
+        const newLimitValue = parseInt(input);
+        if (isNaN(newLimitValue) || newLimitValue < 1) {
             toast.error("Nilai mesti nombor melebihi 0.");
             return;
         }
 
-        const toastId = toast.loading('Mengemaskini had...');
+        const toastId = toast.loading('Mengemaskini had keselamatan...');
         try {
-            const { data, error } = await supabase.from('system_settings').update({ value: newLimit }).eq('key', key).select();
+            const newRateLimit = { 
+                ...currentRateLimit, 
+                [type === 'warning' ? 'warning_threshold' : 'block_threshold']: newLimitValue 
+            };
+            
+            const { error } = await supabase.from('system_settings')
+                .upsert({ key: 'ai_rate_limit', value: newRateLimit }, { onConflict: 'key' });
+                
             if (error) throw error;
-            if (!data || data.length === 0) await supabase.from('system_settings').insert({ key, value: newLimit });
-            setSettings(s => ({ ...s, [key]: newLimit }));
-            toast.success(`Berjaya kemaskini had ${type}`, { id: toastId });
+            setSettings(s => ({ ...s, ai_rate_limit: newRateLimit }));
+            toast.success(`Had ${type} dikemaskini ke ${newLimitValue}`, { id: toastId });
         } catch (e: any) {
             toast.error(e.message || 'Gagal kemaskini had', { id: toastId });
         }
@@ -801,7 +819,7 @@ export function JppAdminPage() {
                                                 <Button onClick={() => updateSpamThreshold('warning')} size="sm" variant="outline" className="h-7 text-[10px] rounded-lg">Ubah</Button>
                                             </div>
                                             <p className="text-[11px] text-amber-700/80 mb-2 mt-1">Sistem akan memberi amaran automatik selepas mencapai had ini.</p>
-                                            <p className="text-3xl font-black text-amber-600 tabular-nums">{settings.ai_spam_warning_threshold || 30} <span className="text-[10px] font-bold tracking-widest text-amber-600/50 uppercase">chat/hari</span></p>
+                                            <p className="text-3xl font-black text-amber-600 tabular-nums">{settings.ai_rate_limit?.warning_threshold || 50} <span className="text-[10px] font-bold tracking-widest text-amber-600/50 uppercase">chat/hari</span></p>
                                         </div>
 
                                         <div className="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/20">
@@ -813,7 +831,7 @@ export function JppAdminPage() {
                                                 <Button onClick={() => updateSpamThreshold('block')} size="sm" variant="outline" className="h-7 text-[10px] rounded-lg border-rose-200">Ubah</Button>
                                             </div>
                                             <p className="text-[11px] text-rose-700/80 mb-2 mt-1">Sistem akan terus menyekat ("Flagged") sebarang chat AI selepas had ini.</p>
-                                            <p className="text-3xl font-black text-rose-600 tabular-nums">{settings.ai_spam_block_threshold || 50} <span className="text-[10px] font-bold tracking-widest text-rose-600/50 uppercase">chat/hari</span></p>
+                                            <p className="text-3xl font-black text-rose-600 tabular-nums">{settings.ai_rate_limit?.block_threshold || 65} <span className="text-[10px] font-bold tracking-widest text-rose-600/50 uppercase">chat/hari</span></p>
                                         </div>
                                     </div>
 
@@ -907,7 +925,7 @@ export function JppAdminPage() {
                                                                 {u.ai_status === 'warned' && <Badge className="bg-amber-400 text-black border-none text-[9px] uppercase">WARNED</Badge>}
                                                             </div>
                                                             <p className="text-[11px] text-muted-foreground font-medium mt-1">
-                                                                Penggunaan AI: <strong className="text-foreground">{u.ai_daily_usage} / {settings.ai_spam_block_threshold || 50}</strong> kali hari ini.
+                                                                Penggunaan AI: <strong className="text-foreground">{u.ai_daily_usage} / {settings.ai_rate_limit?.block_threshold || 65}</strong> kali hari ini.
                                                             </p>
                                                         </div>
                                                         <div className="flex gap-2 shrink-0">
