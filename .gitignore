@@ -33,7 +33,7 @@ dist-ssr
 src/lib/*.json
 *service_account*.json
 *credentials*.json
-.env
+# .env (Dikeluarkan supaya boleh sync ke GitHub Private)
 .env.local
 .env.*.local
 src/takwim_rasmi_workflow.md

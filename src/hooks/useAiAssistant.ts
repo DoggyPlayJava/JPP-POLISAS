@@ -42,16 +42,7 @@ export function useAiAssistant() {
       const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
       if (!apiKey) throw new Error("Sila konfigurasikan VITE_GEMINI_API_KEY dalam fail .env anda.");
 
-      // === SEMAKAN ANTI-SPAM (SAFETY LIMIT) ===
-      const { data: usageStatus, error: usageError } = await supabase.rpc('track_ai_usage');
-      if (usageError) {
-        if (usageError.message?.includes('BANNED') || usageError.message?.includes('flagged')) {
-          throw new Error("Sila semak semula penggunaan AI. Akaun anda sedang ditahan oleh sistem keselamatan JPP (Limit: 65 mesej/hari).");
-        }
-        console.error("Safety Limit Error:", usageError);
-      }
-
-      // === SEMAKAN BAKI TOKEN NEXUS AI ===
+      // === SEMAKAN BAKI & KESELAMATAN NEXUS AI ===
       let taskKey = params.task as string;
       if (params.task === 'jana_kertas_kerja') {
         taskKey = params.selectedModel === 'pro' ? 'pro_kertas_kerja' : 'flash_kertas_kerja';
@@ -64,7 +55,10 @@ export function useAiAssistant() {
       if (taskKey) {
         const { data: tokenCheck, error: tokenError } = await supabase.rpc('check_ai_tokens', { task_name: taskKey });
         if (tokenError) {
-           console.error("Token Limit Error:", tokenError);
+           console.error("AI access error:", tokenError);
+           if (tokenError.message?.includes('Akses AI anda sedang digantung')) {
+             throw new Error(tokenError.message);
+           }
            throw new Error("Sistem gagal menyemak baki token Nexus AI anda.");
         }
         if (!tokenCheck?.can_afford) {
@@ -628,11 +622,11 @@ Input Teras:
   ): Promise<string | null> => {
     setIsChatLoading(true);
     try {
-      // === SEMAKAN ANTI-SPAM (CHAT JUGA TERTAKLUK KEPADA HAD 65 MESEJ) ===
-      const { error: usageError } = await supabase.rpc('track_ai_usage');
+      // === SEMAKAN KESELAMATAN & AUDIT CHAT ===
+      const { error: usageError } = await supabase.rpc('check_ai_tokens', { task_name: 'chat' });
       if (usageError) {
-        if (usageError.message?.includes('BANNED') || usageError.message?.includes('flagged')) {
-          throw new Error("Akses sembang anda digantung sementara kerana aktiviti luar biasa. Sila cuba lagi dalam 24 jam.");
+        if (usageError.message?.includes('digantung') || usageError.message?.includes('kekal')) {
+          throw new Error(usageError.message);
         }
       }
 
@@ -704,12 +698,18 @@ Input Teras:
 
       const text = responseData?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!text) throw new Error('Maklumbalas AI kosong atau tidak sah.');
+
+      // === LOG PENGGUNAAN CHAT UNTUK AUDIT (DEEP ANALYSIS) ===
+      await supabase.rpc('spend_ai_tokens', { task_name: 'chat' });
+
       return text;
 
     } catch (e: any) {
       console.error('Chat AI Error:', e);
       const errorMsg = e.message || String(e);
-      if (errorMsg.includes('Polisi Keselamatan') || errorMsg.includes('digantung')) {
+      if (errorMsg.includes('digantung') || errorMsg.includes('kekal')) {
+        toast.error(errorMsg, { duration: 5000 });
+      } else if (errorMsg.includes('Polisi Keselamatan')) {
         toast.error(errorMsg);
       } else {
         toast.error('Sistem sedang sibuk, sila cuba lagi!');
