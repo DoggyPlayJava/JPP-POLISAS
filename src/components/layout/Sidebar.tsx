@@ -16,6 +16,7 @@ import {
   Star,
   Trophy,
   Sparkles,
+  Ticket,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { ROLE_LABELS, ALL_CLUBS } from '@/types';
 import { useAiSettings } from '@/contexts/AiSettingsContext';
+import { useKarnival } from '@/contexts/KarnivalContext';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Papan Pemuka', href: '/dashboard' },
@@ -48,6 +50,7 @@ const adminItems = [
 export function Sidebar() {
   const { user, profile, signOut, isSuperAdmin, isPresident, effectiveRole, selectedClubId } = useAuth();
   const { allowAiBudget } = useAiSettings();
+  const { showKarnival } = useKarnival();
 
   // isPresident kini dari junction table (berubah mengikut kelab yang dipilih)
   const isMemberOnly = !isSuperAdmin && !isPresident;
@@ -276,33 +279,28 @@ export function Sidebar() {
         )}
 
         {/* ── SECTION KARNIVAL — khas untuk semua pengguna ── */}
-        <>
-          <div className="pt-6 pb-2">
-            <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-amber-400/70">🎪 Karnival JPP</p>
-          </div>
-          <NavLink
-            to="/karnival"
-            className={({ isActive }) => cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative',
-              isActive
-                ? 'bg-amber-500/20 text-amber-300 shadow-inner'
-                : 'text-amber-400/60 hover:bg-amber-500/10 hover:text-amber-300'
-            )}
-          >
-            {({ isActive }) => (
-              <>
-                <div className={cn(
-                  'w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200',
-                  isActive ? 'bg-amber-500/30 shadow-lg shadow-amber-500/20' : 'group-hover:bg-amber-500/15'
-                )}>
-                  <Star className={cn('w-3.5 h-3.5', isActive ? 'text-amber-400' : 'text-amber-400/60')} />
-                </div>
-                <span className="text-xs font-bold tracking-tight">Pengundian Karnival</span>
-                <span className="ml-auto text-[8px] font-black uppercase tracking-widest bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full">LIVE</span>
-              </>
-            )}
-          </NavLink>
-        </>
+        {showKarnival && (
+          <>
+            <div className="pt-6 pb-2">
+              <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-amber-400/70">🎪 Karnival JPP</p>
+            </div>
+            <NavLink
+              to="/karnival"
+              className={({ isActive }) => cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all duration-300 group relative overflow-hidden",
+                isActive 
+                  ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" 
+                  : "text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500"
+              )}
+            >
+              <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Ticket className="w-4 h-4 text-amber-500" />
+              </div>
+              <span className="text-xs font-bold tracking-tight">Pengundian Karnival</span>
+              <span className="ml-auto text-[8px] font-black uppercase tracking-widest bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full">LIVE</span>
+            </NavLink>
+          </>
+        )}
 
         </nav>
 

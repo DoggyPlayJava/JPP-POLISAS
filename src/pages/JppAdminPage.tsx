@@ -3,7 +3,8 @@ import {
     ShieldCheck, Database, Users, Trash2, FileWarning, Activity,
     RefreshCw, ChevronRight, LayoutGrid, Server, Info, Lock,
     Plus, CheckCheck, Building2, Palette, Cpu, Settings as SettingsIcon,
-    Sparkles, AlertTriangle, Search, Clock, Shield, Wand2, CalendarRange, Brain, MessageSquare
+    Sparkles, AlertTriangle, Search, Clock, Shield, Wand2, CalendarRange, Brain, MessageSquare,
+    FileText, CalendarDays, Ticket, Star, RotateCcw
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -33,6 +34,8 @@ export function JppAdminPage() {
     const [loading, setLoading] = useState(true);
     const [isCleaning, setIsCleaning] = useState(false);
     const [globalLogs, setGlobalLogs] = useState<any[]>([]);
+    const [aiLogs, setAiLogs] = useState<any[]>([]);
+    const [logView, setLogView] = useState<'club' | 'ai'>('club');
     const [suspiciousUsers, setSuspiciousUsers] = useState<any[]>([]);
     const [allUsers, setAllUsers] = useState<any[]>([]);
     const [tierRequests, setTierRequests] = useState<any[]>([]);
@@ -85,6 +88,7 @@ export function JppAdminPage() {
                 supabase.from('club_reports').select('*', { count: 'exact', head: true }).eq('status', 'Ditolak'),
             ]);
             const { data: logs } = await supabase.from('club_logs').select('*').order('created_at', { ascending: false }).limit(20);
+            const { data: ai_logs } = await supabase.from('ai_usage_logs').select('*, profiles(full_name, email, student_id)').order('created_at', { ascending: false }).limit(50);
             setStats({
                 totalUsers: users.count || 0, totalReports: reports.count || 0,
                 totalActivities: activities.count || 0, pendingUsers: pending.count || 0,
@@ -114,6 +118,7 @@ export function JppAdminPage() {
                 setSettings(s);
             }
             setGlobalLogs(logs || []);
+            setAiLogs(ai_logs || []);
             
             // Fetch Suspicious Users
             const { data: flagged } = await supabase
@@ -444,7 +449,7 @@ export function JppAdminPage() {
 
     const TABS = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-        { id: 'nexus', label: 'Nexus Hub', icon: Cpu, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+        { id: 'ai', label: 'Nexus Hub', icon: Cpu, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
         { id: 'users', label: 'Pengurusan Pelajar', icon: Users, color: 'text-pink-500', bg: 'bg-pink-500/10' },
         { id: 'management', label: 'Pengurusan Kelab', icon: SettingsIcon, color: 'text-violet-500', bg: 'bg-violet-500/10' },
         { id: 'logs', label: 'Log', icon: Database, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
@@ -705,237 +710,273 @@ export function JppAdminPage() {
                             </div>
                         )}
 
-                        {/* ── TAB: NEXUS HUB (AI) ── */}
-                        {activeTab === 'nexus' && (
-                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                {/* Token Analytics Mock */}
-                                <Card className="border-none shadow-sm rounded-[2.5rem] bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-950 p-8 text-white relative overflow-hidden">
-                                    <div className="absolute -top-20 -right-20 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl" />
-                                    <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-violet-500/20 rounded-full blur-3xl" />
+                        {/* ── TAB: NEXUS HUB (AI ADMIN) ── */}
+                        {activeTab === 'ai' && (
+                            <div className="space-y-10 max-w-5xl animate-in fade-in slide-in-from-bottom-6 duration-700 pb-20">
+                                
+                                {/* 1. NEXUS DASHBOARD (METRICS & SWITCHES) */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3 px-2">
+                                        <Sparkles className="w-5 h-5 text-indigo-600" />
+                                        <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Nexus Analytics & Global Switches</h3>
+                                    </div>
                                     
-                                    <div className="relative z-10">
-                                        <div className="flex items-center gap-3 mb-8">
-                                            <div className="p-3 rounded-2xl bg-white/10 text-indigo-300 backdrop-blur-sm"><Cpu className="w-6 h-6" /></div>
-                                            <div>
-                                                <h3 className="font-black text-xl tracking-tight text-white">Metrik Penggunaan Nexus AI</h3>
-                                                <p className="text-xs font-medium text-indigo-300/80">Analitik token (anggaran) bulan April</p>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-end">
-                                            <div>
-                                                <p className="text-5xl font-black tracking-tighter text-white mb-2">{(settings.ai_total_tokens || 0).toLocaleString()}</p>
-                                                <p className="text-xs font-bold uppercase tracking-widest text-indigo-300/70 mb-6">Token Digunakan setakat ini</p>
-                                                
-                                                <div className="space-y-3">
-                                                    <div className="flex justify-between text-xs font-bold text-indigo-200">
-                                                        <span>Had Token Pintar ({(settings.ai_token_limit || 1000000).toLocaleString()})</span>
-                                                        <div className="flex gap-2">
-                                                            <span>{(Math.min(((settings.ai_total_tokens || 0) / (settings.ai_token_limit || 1000000)) * 100, 100)).toFixed(1)}%</span>
-                                                            <button onClick={updateAiTokenLimit} className="text-[10px] bg-indigo-500/20 px-2 py-0.5 rounded hover:bg-indigo-500/40">Ubah Had</button>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        {/* Main Metrics Card */}
+                                        <Card className="md:col-span-2 p-10 rounded-[2.5rem] border-none shadow-2xl bg-gradient-to-br from-indigo-700 via-indigo-600 to-violet-700 relative overflow-hidden group">
+                                            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-white/10 rounded-full blur-3xl opacity-50 group-hover:opacity-70 transition-opacity" />
+                                            <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-indigo-950/30 rounded-full blur-3xl" />
+                                            
+                                            <div className="relative z-10 space-y-8">
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <h3 className="font-black text-2xl tracking-tighter text-white">Metrik Nexus AI</h3>
+                                                        <p className="text-xs font-bold text-indigo-200 uppercase tracking-widest mt-1">Guna Pakai Token Bulan ini</p>
+                                                    </div>
+                                                    <div className="px-4 py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
+                                                        <p className="text-[10px] font-black uppercase text-indigo-100 tracking-widest">Sistem Pintar v2.0</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-end">
+                                                    <div className="space-y-6">
+                                                        <div>
+                                                            <p className="text-6xl font-black tracking-tighter text-white tabular-nums">{(settings.ai_total_tokens || 0).toLocaleString()}</p>
+                                                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-200/60 mt-2">Token Dijana</p>
+                                                        </div>
+                                                        <div className="space-y-3">
+                                                            <div className="flex justify-between text-xs font-black text-indigo-100 uppercase tracking-tight">
+                                                                <span>Had Token Global</span>
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-white">{(Math.min(((settings.ai_total_tokens || 0) / (settings.ai_token_limit || 1000000)) * 100, 100)).toFixed(1)}%</span>
+                                                                    <div className="w-[1px] h-3 bg-white/20 mx-1" />
+                                                                    <button onClick={updateAiTokenLimit} className="text-[10px] hover:text-white underline underline-offset-4 decoration-white/30">Laras Had</button>
+                                                                </div>
+                                                            </div>
+                                                            <Progress value={Math.min(((settings.ai_total_tokens || 0) / (settings.ai_token_limit || 1000000)) * 100, 100)} 
+                                                                className="h-4 bg-indigo-950/40 rounded-full border border-white/5 overflow-hidden [&>div]:bg-gradient-to-r [&>div]:from-indigo-400 [&>div]:to-white shadow-inner" />
+                                                            <p className="text-[10px] font-medium text-indigo-200/70 italic">Kapasiti Server: {(settings.ai_token_limit || 1000000).toLocaleString()} Token</p>
                                                         </div>
                                                     </div>
-                                                    <Progress value={Math.min(((settings.ai_total_tokens || 0) / (settings.ai_token_limit || 1000000)) * 100, 100)} className="h-3 bg-indigo-950/50 rounded-full [&>div]:bg-indigo-400" />
+                                                    
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-5 border border-white/10 group-hover:border-white/20 transition-all duration-500">
+                                                            <Sparkles className="w-5 h-5 text-amber-400 mb-3" />
+                                                            <p className="text-2xl font-black text-white tabular-nums">845</p>
+                                                            <p className="text-[9px] font-black text-indigo-200 uppercase tracking-widest mt-1">Panggilan</p>
+                                                        </div>
+                                                        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-5 border border-white/10 group-hover:border-white/20 transition-all duration-500">
+                                                            <Activity className="w-5 h-5 text-emerald-400 mb-3" />
+                                                            <p className="text-2xl font-black text-emerald-400 uppercase">Aman</p>
+                                                            <p className="text-[9px] font-black text-indigo-200 uppercase tracking-widest mt-1">Status API</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </Card>
+
+                                        {/* Kill Switches Card */}
+                                        <Card className="p-8 rounded-[2.5rem] border-none shadow-xl bg-card flex flex-col justify-between border border-border/50">
+                                            <div className="space-y-6">
+                                                <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center">
+                                                    <Lock className="w-6 h-6" />
+                                                </div>
+                                                <h4 className="font-black text-xs uppercase tracking-[0.2em] text-muted-foreground">Kill-Switches</h4>
+                                                
+                                                <div className="space-y-4">
+                                                    <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/40 hover:bg-muted/60 transition-colors">
+                                                        <p className="text-xs font-black text-foreground">AI Chat Hub</p>
+                                                        <Button onClick={() => toggleSetting('allow_ai_chat', settings.allow_ai_chat)} size="sm"
+                                                            className={cn('rounded-full font-black text-[10px] w-14 h-8 transition-all',
+                                                                settings.allow_ai_chat ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'bg-muted/80 text-muted-foreground')}>
+                                                            {settings.allow_ai_chat ? 'ON' : 'OFF'}
+                                                        </Button>
+                                                    </div>
+                                                    <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/40 hover:bg-muted/60 transition-colors">
+                                                        <p className="text-xs font-black text-foreground">Enjin Bajet AI</p>
+                                                        <Button onClick={() => toggleSetting('allow_ai_budget', settings.allow_ai_budget)} size="sm"
+                                                            className={cn('rounded-full font-black text-[10px] w-14 h-8 transition-all',
+                                                                settings.allow_ai_budget ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'bg-muted/80 text-muted-foreground')}>
+                                                            {settings.allow_ai_budget ? 'ON' : 'OFF'}
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="pt-4 flex items-center gap-2 text-amber-600 opacity-60">
+                                                <AlertTriangle size={12} />
+                                                <span className="text-[9px] font-bold uppercase tracking-tight">Kekal Aktif Kecuali Kecemasan</span>
+                                            </div>
+                                        </Card>
+                                    </div>
+                                </div>
+
+                                {/* 2. NEXUS ECONOMICS (TOKEN COSTS & RATE LIMITS) */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {/* Column: Token Economics (2cols width) */}
+                                    <div className="md:col-span-2 space-y-4">
+                                        <div className="flex items-center gap-3 px-2">
+                                            <Wand2 className="w-5 h-5 text-indigo-600" />
+                                            <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Ekonomi Token & Kos Perkhidmatan</h3>
+                                        </div>
+                                        <Card className="p-8 rounded-[2.5rem] border-none shadow-lg bg-card border border-border/40 overflow-hidden relative">
+                                            <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+                                                <Brain className="w-24 h-24" />
+                                            </div>
+                                            
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
+                                                {/* Allowances */}
+                                                <div className="space-y-4">
+                                                    <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest border-l-2 border-indigo-500 pl-3">Pengagihan Token Bulanan</h4>
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center justify-between p-4 rounded-2xl bg-indigo-500/5 group hover:bg-indigo-500/10 transition-colors">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="p-2 bg-card rounded-lg shadow-sm text-indigo-600"><Sparkles size={14} /></div>
+                                                                <span className="text-xs font-black">Pelan PRO (Monthly)</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-black text-indigo-600 italic">{settings.ai_token_settings?.pro_tier_tokens ?? 1000}</span>
+                                                                <button onClick={() => updateAiTokenAllowance('pro_tier_tokens', 'PRO')} className="p-1.5 hover:bg-card rounded-lg text-muted-foreground hover:text-indigo-600 transition-colors"><SettingsIcon size={12} /></button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-500/5 group hover:bg-slate-500/10 transition-colors">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="p-2 bg-card rounded-lg shadow-sm text-slate-600"><Users size={14} /></div>
+                                                                <span className="text-xs font-black">Pelan FREE (Monthly)</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-black text-slate-600 italic">{settings.ai_token_settings?.free_tier_tokens ?? 200}</span>
+                                                                <button onClick={() => updateAiTokenAllowance('free_tier_tokens', 'PERCUMA')} className="p-1.5 hover:bg-card rounded-lg text-muted-foreground hover:text-slate-600 transition-colors"><SettingsIcon size={12} /></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Costs Section 1 */}
+                                                <div className="space-y-4">
+                                                    <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest border-l-2 border-amber-500 pl-3">Kos Janaan Dokumen</h4>
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center justify-between p-4 rounded-2xl bg-amber-500/5 group hover:bg-amber-500/10 transition-colors">
+                                                            <span className="text-xs font-black">Kertas Kerja PRO</span>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-black text-amber-600 tabular-nums">{settings.ai_token_settings?.costs?.pro_kertas_kerja ?? 50} Tk</span>
+                                                                <button onClick={() => updateAiTokenCost('pro_kertas_kerja', 'Janaan Kertas Kerja Pro')} className="p-1.5 hover:bg-card rounded-lg text-muted-foreground hover:text-amber-600 transition-colors"><SettingsIcon size={12} /></button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center justify-between p-4 rounded-2xl bg-cyan-500/5 group hover:bg-cyan-500/10 transition-colors">
+                                                            <span className="text-xs font-black">Kertas Kerja FLASH</span>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-black text-cyan-600 tabular-nums">{settings.ai_token_settings?.costs?.flash_kertas_kerja ?? 20} Tk</span>
+                                                                <button onClick={() => updateAiTokenCost('flash_kertas_kerja', 'Janaan Kertas Kerja Flash')} className="p-1.5 hover:bg-card rounded-lg text-muted-foreground hover:text-cyan-600 transition-colors"><SettingsIcon size={12} /></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                             
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="bg-white/5 rounded-2xl p-5 backdrop-blur-md border border-white/10">
-                                                    <Sparkles className="w-5 h-5 text-amber-400 mb-3" />
-                                                    <p className="text-2xl font-black text-white">845</p>
-                                                    <p className="text-[10px] font-bold text-indigo-300/80 uppercase tracking-wider mt-1">Panggilan Server</p>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6 border-t border-border/40">
+                                                <div className="flex items-center justify-between p-4 rounded-2xl bg-rose-500/5 group hover:bg-rose-500/10 transition-colors">
+                                                    <span className="text-xs font-black">Analisis Laporan</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-black text-rose-600 tabular-nums">{settings.ai_token_settings?.costs?.analisis ?? 5} Tk</span>
+                                                        <button onClick={() => updateAiTokenCost('analisis', 'Analisis Kelab/Review')} className="p-1.5 hover:bg-card rounded-lg text-muted-foreground hover:text-rose-600 transition-colors"><SettingsIcon size={12} /></button>
+                                                    </div>
                                                 </div>
-                                                <div className="bg-white/5 rounded-2xl p-5 backdrop-blur-md border border-white/10">
-                                                    <Activity className="w-5 h-5 text-emerald-400 mb-3" />
-                                                    <p className="text-2xl font-black text-emerald-400">Aman</p>
-                                                    <p className="text-[10px] font-bold text-indigo-300/80 uppercase tracking-wider mt-1">Status API</p>
+                                                <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-500/5 group hover:bg-emerald-500/10 transition-colors">
+                                                    <span className="text-xs font-black">Semakan Tatabahasa</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-black text-emerald-600 tabular-nums">{settings.ai_token_settings?.costs?.semak_ejaan === 0 ? 'Percuma' : `${settings.ai_token_settings?.costs?.semak_ejaan} Tk`}</span>
+                                                        <button onClick={() => updateAiTokenCost('semak_ejaan', 'Semakan Tatabahasa Laporan')} className="p-1.5 hover:bg-card rounded-lg text-muted-foreground hover:text-emerald-600 transition-colors"><SettingsIcon size={12} /></button>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                </Card>
-
-                                {/* AI Toggles */}
-                                <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-8">
-                                    <div className="flex items-center gap-3 mb-8 border-b border-border pb-6">
-                                        <SettingsIcon className="w-5 h-5 text-indigo-600" />
-                                        <div>
-                                            <h3 className="font-bold text-foreground">Kawalan Enjin AI Global</h3>
-                                            <p className="text-xs text-muted-foreground mt-1">Gunakan fungsi ini sebagai 'Kill-Switch' jika had token sudah mencapai maksimum.</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="flex items-center justify-between p-5 rounded-2xl bg-muted/30 border border-border">
-                                            <div>
-                                                <p className="text-sm font-black text-foreground">Pembantu AI (Floating Chat)</p>
-                                                <p className="text-[11px] text-muted-foreground font-medium mt-1">Buka/Tutup AI Chat terapung untuk ahli.</p>
-                                            </div>
-                                            <Button onClick={() => toggleSetting('allow_ai_chat', settings.allow_ai_chat)} size="sm"
-                                                className={cn('rounded-full font-black text-[11px] w-20 transition-all',
-                                                    settings.allow_ai_chat ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-muted text-muted-foreground hover:bg-muted/80')}>
-                                                {settings.allow_ai_chat ? 'ON' : 'OFF'}
-                                            </Button>
-                                        </div>
-                                        
-                                        <div className="flex items-center justify-between p-5 rounded-2xl bg-muted/30 border border-border">
-                                            <div>
-                                                <p className="text-sm font-black text-foreground">Enjin Nexus AI</p>
-                                                <p className="text-[11px] text-muted-foreground font-medium mt-1">Buka/Tutup penjana bajet & analisis AI dashboard.</p>
-                                            </div>
-                                            <Button onClick={() => toggleSetting('allow_ai_budget', settings.allow_ai_budget)} size="sm"
-                                                className={cn('rounded-full font-black text-[11px] w-20 transition-all',
-                                                    settings.allow_ai_budget ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-muted text-muted-foreground hover:bg-muted/80')}>
-                                                {settings.allow_ai_budget ? 'ON' : 'OFF'}
-                                            </Button>
-                                        </div>
+                                        </Card>
                                     </div>
                                     
-                                    <div className="flex items-start gap-3 mt-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600">
-                                        <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
-                                        <p className="text-xs font-medium leading-relaxed">
-                                            <strong>Nota Pembangun:</strong> Metrik token di atas kini merupakan <span className="font-bold">Bacaan Sebenar</span> yang diambil *live* dari panggilan server Supabase Edge Function Gemini. Integriti dan limitasi token masih kekal diuruskan sepenuhnya oleh pangkalan data.
-                                        </p>
-                                    </div>
-                                </Card>
-
-                                {/* AI Anti-Spam Control */}
-                                <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-8">
-                                    <div className="flex items-center gap-3 mb-8 border-b border-border pb-6">
-                                        <ShieldCheck className="w-5 h-5 text-rose-600" />
-                                        <div>
-                                            <h3 className="font-bold text-foreground">Kawalan Anti-Spam (Rate Limit)</h3>
-                                            <p className="text-xs text-muted-foreground mt-1">Lindungi token API daripada penyalahgunaan oleh pelajar secara automatik.</p>
+                                    {/* Column: Anti-Spam */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-3 px-2">
+                                            <ShieldCheck className="w-5 h-5 text-rose-600" />
+                                            <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Had Anti-Spam</h3>
                                         </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                        <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20">
-                                            <div className="flex justify-between items-center mb-3">
-                                                <div className="flex items-center gap-2">
-                                                    <AlertTriangle className="w-4 h-4 text-amber-600" />
-                                                    <p className="text-sm font-black text-amber-900">Had Amaran (Warning)</p>
+                                        <Card className="p-8 rounded-[2.5rem] border-none shadow-lg bg-card h-[438px] flex flex-col justify-between">
+                                            <div className="space-y-6">
+                                                <div className="p-6 rounded-3xl bg-amber-500/5 border border-amber-500/10 relative group hover:bg-amber-500/10 transition-all">
+                                                    <div className="flex justify-between items-center mb-4">
+                                                        <div className="flex items-center gap-2 text-amber-600">
+                                                            <AlertTriangle size={14} />
+                                                            <p className="text-[10px] font-black uppercase tracking-widest">Amaran Awal</p>
+                                                        </div>
+                                                        <button onClick={() => updateSpamThreshold('warning')} className="text-[10px] font-bold text-amber-600 hover:underline">LARAS</button>
+                                                    </div>
+                                                    <p className="text-4xl font-black text-amber-600 tabular-nums mb-1">{settings.ai_rate_limit?.warning_threshold || 50}</p>
+                                                    <p className="text-[10px] font-medium text-muted-foreground">Permintaan per hari sebelum diberi amaran.</p>
                                                 </div>
-                                                <Button onClick={() => updateSpamThreshold('warning')} size="sm" variant="outline" className="h-7 text-[10px] rounded-lg">Ubah</Button>
-                                            </div>
-                                            <p className="text-[11px] text-amber-700/80 mb-2 mt-1">Sistem akan memberi amaran automatik selepas mencapai had ini.</p>
-                                            <p className="text-3xl font-black text-amber-600 tabular-nums">{settings.ai_rate_limit?.warning_threshold || 50} <span className="text-[10px] font-bold tracking-widest text-amber-600/50 uppercase">chat/hari</span></p>
-                                        </div>
 
-                                        <div className="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/20">
-                                            <div className="flex justify-between items-center mb-3">
-                                                <div className="flex items-center gap-2">
-                                                    <Lock className="w-4 h-4 text-rose-600" />
-                                                    <p className="text-sm font-black text-rose-900">Had Sekatan (Block/Flag)</p>
-                                                </div>
-                                                <Button onClick={() => updateSpamThreshold('block')} size="sm" variant="outline" className="h-7 text-[10px] rounded-lg border-rose-200">Ubah</Button>
-                                            </div>
-                                            <p className="text-[11px] text-rose-700/80 mb-2 mt-1">Sistem akan terus menyekat ("Flagged") sebarang chat AI selepas had ini.</p>
-                                            <p className="text-3xl font-black text-rose-600 tabular-nums">{settings.ai_rate_limit?.block_threshold || 65} <span className="text-[10px] font-bold tracking-widest text-rose-600/50 uppercase">chat/hari</span></p>
-                                        </div>
-                                    </div>
-
-                                    {/* Suspicious Users List */}
-                                    <h4 className="font-bold text-sm flex items-center gap-2">
-                                        <Shield className="w-4 h-4 text-muted-foreground" /> Kawalan Sistem Pintar (Quota & Spam)
-                                    </h4>
-
-                                        <div className="p-5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 col-span-1 md:col-span-2">
-                                            <div className="flex justify-between items-center mb-3">
-                                                <div className="flex items-center gap-2">
-                                                    <Wand2 className="w-4 h-4 text-indigo-600" />
-                                                    <p className="text-sm font-black text-indigo-900">Ekonomi Token (Token Economy)</p>
+                                                <div className="p-6 rounded-3xl bg-rose-500/5 border border-rose-500/10 relative group hover:bg-rose-500/10 transition-all">
+                                                    <div className="flex justify-between items-center mb-4">
+                                                        <div className="flex items-center gap-2 text-rose-600">
+                                                            <Lock size={14} />
+                                                            <p className="text-[10px] font-black uppercase tracking-widest">Sekatan Luar Biasa</p>
+                                                        </div>
+                                                        <button onClick={() => updateSpamThreshold('block')} className="text-[10px] font-bold text-rose-600 hover:underline">LARAS</button>
+                                                    </div>
+                                                    <p className="text-4xl font-black text-rose-600 tabular-nums mb-1">{settings.ai_rate_limit?.block_threshold || 65}</p>
+                                                    <p className="text-[10px] font-medium text-muted-foreground">Individu akan disenaraihitam jika melebihi had ini.</p>
                                                 </div>
                                             </div>
-                                            <p className="text-[11px] text-indigo-700/80 mb-4 mt-1">Sistem nilai harga bagi setiap servis kecerdasan buatan Nexus. Kitaran akan sentiasa di-reset pada 1hb setiap penukaran bulan.</p>
                                             
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-white/50 backdrop-blur-sm dark:bg-card/50 p-4 rounded-xl border border-border/50">
-                                              
-                                              <div className="flex flex-col gap-1 border-b md:border-b-0 md:border-r border-border pb-3 md:pb-0 md:pr-3">
-                                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Bekalan Pelan PRO</p>
-                                                <div className="flex justify-between items-end">
-                                                  <span className="font-black text-lg text-indigo-600">{settings.ai_token_settings?.pro_tier_tokens ?? 1000}</span>
-                                                  <Button onClick={() => updateAiTokenAllowance('pro_tier_tokens', 'PRO')} size="icon" variant="ghost" className="h-6 w-6"><SettingsIcon className="w-3" /></Button>
-                                                </div>
-                                              </div>
-
-                                              <div className="flex flex-col gap-1 border-b md:border-b-0 md:border-r border-border pb-3 md:pb-0 md:pr-3">
-                                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Bekalan Pelan PERCUMA</p>
-                                                <div className="flex justify-between items-end">
-                                                  <span className="font-black text-lg text-slate-600">{settings.ai_token_settings?.free_tier_tokens ?? 200}</span>
-                                                  <Button onClick={() => updateAiTokenAllowance('free_tier_tokens', 'PERCUMA')} size="icon" variant="ghost" className="h-6 w-6"><SettingsIcon className="w-3" /></Button>
-                                                </div>
-                                              </div>
-
-                                              <div className="flex flex-col gap-1 border-r border-border pr-3">
-                                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Kos Kertas Kerja (PRO)</p>
-                                                <div className="flex justify-between items-end">
-                                                  <span className="font-black text-lg text-amber-600">{settings.ai_token_settings?.costs?.pro_kertas_kerja ?? 50}</span>
-                                                  <Button onClick={() => updateAiTokenCost('pro_kertas_kerja', 'Janaan Kertas Kerja Pro')} size="icon" variant="ghost" className="h-6 w-6"><SettingsIcon className="w-3" /></Button>
-                                                </div>
-                                              </div>
-
-                                              <div className="flex flex-col gap-1">
-                                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Kos Kertas Kerja (FLASH)</p>
-                                                <div className="flex justify-between items-end">
-                                                  <span className="font-black text-lg text-cyan-600">{settings.ai_token_settings?.costs?.flash_kertas_kerja ?? 20}</span>
-                                                  <Button onClick={() => updateAiTokenCost('flash_kertas_kerja', 'Janaan Kertas Kerja Flash')} size="icon" variant="ghost" className="h-6 w-6"><SettingsIcon className="w-3" /></Button>
-                                                </div>
-                                              </div>
-
-                                              <div className="flex flex-col gap-1 md:border-r border-border md:pr-3 mt-3">
-                                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Kos Analisis Kelab</p>
-                                                <div className="flex justify-between items-end">
-                                                  <span className="font-black text-lg text-rose-600">{settings.ai_token_settings?.costs?.analisis ?? 5}</span>
-                                                  <Button onClick={() => updateAiTokenCost('analisis', 'Analisis Kelab/Review')} size="icon" variant="ghost" className="h-6 w-6"><SettingsIcon className="w-3" /></Button>
-                                                </div>
-                                              </div>
-
-                                              <div className="flex flex-col gap-1 mt-3">
-                                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Kos Semak Tatabahasa</p>
-                                                <div className="flex justify-between items-end">
-                                                  <span className="font-black text-lg text-emerald-600">{settings.ai_token_settings?.costs?.semak_ejaan === 0 ? 'FREE' : (settings.ai_token_settings?.costs?.semak_ejaan ?? 0)}</span>
-                                                  <Button onClick={() => updateAiTokenCost('semak_ejaan', 'Semakan Tatabahasa Laporan')} size="icon" variant="ghost" className="h-6 w-6"><SettingsIcon className="w-3" /></Button>
-                                                </div>
-                                              </div>
-
+                                            <div className="p-5 bg-muted/40 rounded-[2rem] border border-border/50 text-[10px] font-medium leading-relaxed italic text-muted-foreground text-center">
+                                                "Sistem akan me-reset had harian setiap 12:00 Tengah Malam."
                                             </div>
-                                        </div>
+                                        </Card>
+                                    </div>
+                                </div>
 
-                                    <div className="space-y-4 mt-8">
-                                      <h4 className="font-bold text-sm flex items-center gap-2">
-                                          <Users className="w-4 h-4 text-muted-foreground" /> Senarai Pengguna Disyaki ({suspiciousUsers.length})
-                                      </h4>
-                                          
-                                      {suspiciousUsers.length === 0 ? (
-                                            <div className="p-8 text-center border border-dashed border-border rounded-3xl bg-muted/20 flex flex-col items-center">
-                                                <CheckCheck className="w-8 h-8 text-emerald-500 mb-2 opacity-50" />
-                                                <p className="text-sm font-bold text-muted-foreground">Tiada pengguna ditandai (flagged)</p>
-                                                <p className="text-[11px] text-muted-foreground/60 mt-1">Penggunaan AI setakat ini terkawal.</p>
+                                {/* 3. MONITORING: SUSPICIOUS USERS */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3 px-2">
+                                        <Shield className="w-5 h-5 text-indigo-600" />
+                                        <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Pemantauan Pengguna Disyaki ({suspiciousUsers.length})</h3>
+                                    </div>
+                                    <Card className="p-8 rounded-[2.5rem] border-none shadow-xl bg-card border border-border/40">
+                                        {suspiciousUsers.length === 0 ? (
+                                            <div className="py-16 text-center">
+                                                <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-4">
+                                                    <CheckCheck size={32} />
+                                                </div>
+                                                <p className="text-sm font-black text-foreground">Sistem Dalam Kawalan</p>
+                                                <p className="text-xs text-muted-foreground mt-1">Tiada akaun dikesan menyalahgunakan Nexus AI setakat ini.</p>
                                             </div>
                                         ) : (
-                                            <div className="divide-y divide-border border border-border rounded-3xl overflow-hidden bg-card">
+                                            <div className="divide-y divide-border -mx-8 -my-8 px-8 py-4">
                                                 {suspiciousUsers.map(u => (
-                                                    <div key={u.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
-                                                        <div>
-                                                            <div className="flex items-center gap-2">
-                                                                <p className="text-sm font-bold">{u.full_name || u.email}</p>
-                                                                {u.ai_status === 'permanent_ban' && <Badge className="bg-rose-600 text-white border-none text-[9px] uppercase">BAN KEKAL</Badge>}
-                                                                {u.ai_status === 'flagged' && <Badge className="bg-orange-500 text-white border-none text-[9px] uppercase">FLAGGED</Badge>}
-                                                                {u.ai_status === 'warned' && <Badge className="bg-amber-400 text-black border-none text-[9px] uppercase">WARNED</Badge>}
+                                                    <div key={u.id} className="py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:bg-muted/30 -mx-8 px-8 transition-colors">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center font-black">
+                                                                {(u.full_name || u.email || '?')[0].toUpperCase()}
                                                             </div>
-                                                            <p className="text-[11px] text-muted-foreground font-medium mt-1">
-                                                                Penggunaan AI: <strong className="text-foreground">{u.ai_daily_usage} / {settings.ai_rate_limit?.block_threshold || 65}</strong> kali hari ini.
-                                                            </p>
+                                                            <div>
+                                                                <div className="flex items-center gap-3 mb-1">
+                                                                    <p className="text-sm font-black text-foreground">{u.full_name || u.email}</p>
+                                                                    {u.ai_status === 'permanent_ban' && <Badge className="bg-rose-600 text-white border-none text-[8px] font-black tracking-widest px-2">BANNED</Badge>}
+                                                                    {u.ai_status === 'flagged' && <Badge className="bg-orange-600 text-white border-none text-[8px] font-black tracking-widest px-2">FLAGGED</Badge>}
+                                                                    {u.ai_status === 'warned' && <Badge className="bg-amber-500 text-black border-none text-[8px] font-black tracking-widest px-2">WARNED</Badge>}
+                                                                </div>
+                                                                <p className="text-[11px] text-muted-foreground font-medium">
+                                                                    Aktiviti Harian: <span className="text-foreground font-bold">{u.ai_daily_usage} / {settings.ai_rate_limit?.block_threshold || 65}</span>
+                                                                </p>
+                                                            </div>
                                                         </div>
-                                                        <div className="flex gap-2 shrink-0">
-                                                            {(u.ai_status === 'flagged' || u.ai_status === 'permanent_ban' || u.ai_status === 'warned') && (
-                                                                <Button size="sm" onClick={() => handleActionSpamUser(u.id, 'unban')} className="h-8 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 text-[10px] font-black uppercase tracking-wider">
-                                                                    Lepaskan
+                                                        <div className="flex items-center gap-2">
+                                                            {(u.ai_status === 'flagged' || u.ai_status === 'permanent_ban' || u.ai_status === 'warned') ? (
+                                                                <Button onClick={() => handleActionSpamUser(u.id, 'unban')} 
+                                                                    className="h-9 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[9px] uppercase tracking-widest shadow-md shadow-emerald-500/10">
+                                                                    Lepaskan Sekatan
                                                                 </Button>
-                                                            )}
+                                                            ) : null}
                                                             {u.ai_status !== 'permanent_ban' && (
-                                                                <Button size="sm" onClick={() => handleActionSpamUser(u.id, 'permanent_ban')} className="h-8 rounded-lg bg-rose-600 text-white hover:bg-rose-700 text-[10px] font-black uppercase tracking-wider">
+                                                                <Button onClick={() => handleActionSpamUser(u.id, 'permanent_ban')} 
+                                                                    className="h-9 px-5 rounded-xl bg-card border border-rose-200 text-rose-600 hover:bg-rose-50 font-black text-[9px] uppercase tracking-widest">
                                                                     Sekat Kekal
                                                                 </Button>
                                                             )}
@@ -944,8 +985,8 @@ export function JppAdminPage() {
                                                 ))}
                                             </div>
                                         )}
-                                    </div>
-                                </Card>
+                                    </Card>
+                                </div>
                             </div>
                         )}
 
@@ -1098,127 +1139,207 @@ export function JppAdminPage() {
 
                         {/* ── TAB: PENGURUSAN KELAB ── */}
                         {activeTab === 'management' && (
-                            <div className="space-y-6 max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                {/* Settings Panel */}
-                                <div className="p-8 rounded-[2.5rem] bg-card shadow-sm border-none flex flex-col gap-6">
-                                    <div className="flex items-center gap-3 border-b border-border/60 pb-4">
-                                        <ShieldCheck className="w-6 h-6 text-violet-600" />
-                                        <h3 className="font-bold text-foreground text-lg">Kawalan Akses Sistem</h3>
+                            <div className="space-y-10 max-w-4xl animate-in fade-in slide-in-from-bottom-6 duration-700 pb-20">
+                                
+                                {/* 1. KETETAPAN SISTEM & AKSES GLOBAL */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3 px-2">
+                                        <ShieldCheck className="w-5 h-5 text-violet-600" />
+                                        <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Ketetapan Sistem & Akses</h3>
                                     </div>
-
-                                    {/* PDF Toggle */}
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm font-black text-foreground leading-tight">Laporan Auto-Jana PDF</p>
-                                            <p className="text-[11px] text-muted-foreground font-medium mt-1">Benarkan ahli menjana PDF laporan.</p>
-                                        </div>
-                                        <Button onClick={() => toggleSetting('allow_auto_pdf', settings.allow_auto_pdf)} size="sm"
-                                            className={cn('rounded-full font-black text-[11px] w-16 transition-all',
-                                                settings.allow_auto_pdf ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-muted text-muted-foreground hover:bg-muted/80')}>
-                                            {settings.allow_auto_pdf ? 'ON' : 'OFF'}
-                                        </Button>
-                                    </div>
-
-                                    {/* Takwim Toggle */}
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm font-black text-foreground leading-tight">Tambah Takwim Rasmi</p>
-                                            <p className="text-[11px] text-muted-foreground font-medium mt-1">Buka daftar program takwim baru.</p>
-                                        </div>
-                                        <Button onClick={() => toggleSetting('allow_add_takwim', settings.allow_add_takwim)} size="sm"
-                                            className={cn('rounded-full font-black text-[11px] w-16 transition-all',
-                                                settings.allow_add_takwim ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-muted text-muted-foreground hover:bg-muted/80')}>
-                                            {settings.allow_add_takwim ? 'ON' : 'OFF'}
-                                        </Button>
-                                    </div>
-
-                                    {/* Accept All */}
-                                    <div className="flex items-center justify-between pt-4 border-t border-border/40">
-                                        <div>
-                                            <p className="text-sm font-black text-foreground leading-tight flex items-center gap-1.5">
-                                                <CheckCheck className="w-4 h-4 text-emerald-500" /> Terima Semua Permohonan
-                                            </p>
-                                            <p className="text-[11px] text-muted-foreground font-medium mt-1">Aktif semasa Karnival Perpaduan.</p>
-                                        </div>
-                                        <Button onClick={() => setShowBulkAccept(true)} size="sm"
-                                            className="rounded-full font-black text-[11px] px-5 bg-emerald-500 text-white hover:bg-emerald-600">
-                                            Luluskan Pukal
-                                        </Button>
-                                    </div>
-
-                                    {/* Had Keahlian */}
-                                    <div className="flex items-center justify-between pt-4 border-t border-border/40">
-                                        <div>
-                                            <p className="text-sm font-black text-foreground leading-tight">Had Keahlian Kelab</p>
-                                            <p className="text-[11px] text-muted-foreground font-medium mt-1">Maks kelab per pelajar (1–10).</p>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <Button onClick={() => updateClubLimit(-1)} size="icon" variant="outline"
-                                                disabled={Number(settings.max_clubs_per_student) <= 1}
-                                                className="h-10 w-10 rounded-xl font-black text-lg border-border hover:bg-muted disabled:opacity-30">
-                                                −
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {/* Row 1: PDF & Takwim */}
+                                        <Card className="p-6 border-none shadow-sm rounded-[2rem] bg-card flex items-center justify-between group hover:shadow-md transition-all">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-600 flex items-center justify-center">
+                                                    <FileText className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-black text-foreground">Laporan Auto-PDF</p>
+                                                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Benarkan jana PDF</p>
+                                                </div>
+                                            </div>
+                                            <Button onClick={() => toggleSetting('allow_auto_pdf', settings.allow_auto_pdf)} size="sm"
+                                                className={cn('rounded-full font-black text-[10px] w-14 h-8 transition-all',
+                                                    settings.allow_auto_pdf ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-muted text-muted-foreground')}>
+                                                {settings.allow_auto_pdf ? 'ON' : 'OFF'}
                                             </Button>
-                                            <span className="font-black text-2xl text-foreground w-8 text-center tabular-nums">
-                                                {settings.max_clubs_per_student ?? 2}
-                                            </span>
-                                            <Button onClick={() => updateClubLimit(1)} size="icon" variant="outline"
-                                                disabled={Number(settings.max_clubs_per_student) >= 10}
-                                                className="h-10 w-10 rounded-xl font-black text-lg border-border hover:bg-muted disabled:opacity-30">
-                                                +
+                                        </Card>
+
+                                        <Card className="p-6 border-none shadow-sm rounded-[2rem] bg-card flex items-center justify-between group hover:shadow-md transition-all">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center">
+                                                    <CalendarDays className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-black text-foreground">Tambah Takwim</p>
+                                                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Buka daftar program</p>
+                                                </div>
+                                            </div>
+                                            <Button onClick={() => toggleSetting('allow_add_takwim', settings.allow_add_takwim)} size="sm"
+                                                className={cn('rounded-full font-black text-[10px] w-14 h-8 transition-all',
+                                                    settings.allow_add_takwim ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-muted text-muted-foreground')}>
+                                                {settings.allow_add_takwim ? 'ON' : 'OFF'}
                                             </Button>
-                                        </div>
+                                        </Card>
+
+                                        {/* Had Keahlian - Full Width inside Grid if needed, or 1 col */}
+                                        <Card className="p-6 border-none shadow-sm rounded-[2rem] bg-card flex items-center justify-between md:col-span-2 group hover:shadow-md transition-all">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center">
+                                                    <Users className="w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-base font-black text-foreground">Had Keahlian Kelab</p>
+                                                    <p className="text-xs text-muted-foreground font-medium">Maksimum kelab yang boleh disertai oleh setiap pelajar.</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-4 bg-muted/30 p-2 rounded-2xl">
+                                                <Button onClick={() => updateClubLimit(-1)} size="icon" variant="ghost"
+                                                    disabled={Number(settings.max_clubs_per_student) <= 1}
+                                                    className="h-10 w-10 rounded-xl font-black text-lg hover:bg-card">
+                                                    −
+                                                </Button>
+                                                <span className="font-black text-3xl text-foreground w-10 text-center tabular-nums">
+                                                    {settings.max_clubs_per_student ?? 2}
+                                                </span>
+                                                <Button onClick={() => updateClubLimit(1)} size="icon" variant="ghost"
+                                                    disabled={Number(settings.max_clubs_per_student) >= 10}
+                                                    className="h-10 w-10 rounded-xl font-black text-lg hover:bg-card">
+                                                    +
+                                                </Button>
+                                            </div>
+                                        </Card>
                                     </div>
                                 </div>
 
-                                {/* Tambah Kelab */}
-                                <div className="p-6 rounded-[2.5rem] bg-violet-500/10 border border-violet-500/20 flex items-center justify-between">
-                                    <div className="flex items-center gap-5">
-                                        <div className="w-14 h-14 rounded-2xl bg-card shadow-sm flex items-center justify-center text-violet-600">
-                                            <Building2 className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-violet-900">Urus Senarai Kelab</p>
-                                            <p className="text-[11px] font-medium text-violet-600/80 mt-1">Tambah kelab baharu secara pantas</p>
-                                        </div>
+                                {/* 2. ZON KARNIVAL (BENTO STYLE) */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3 px-2">
+                                        <Ticket className="w-5 h-5 text-amber-500" />
+                                        <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Pengurusan Hari Karnival</h3>
                                     </div>
-                                    <Button onClick={() => setShowAddClub(true)} 
-                                        className="rounded-full bg-violet-600 hover:bg-violet-700 text-white font-bold text-[11px] px-6 gap-2">
-                                        <Plus className="w-4 h-4" /> Tambah 
-                                    </Button>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        {/* Toggle Sidebar & Toggles in 2 columns of 3x3 or similar */}
+                                        <Card className="md:col-span-2 p-8 border-none shadow-xl rounded-[2.5rem] bg-gradient-to-br from-amber-500/5 via-amber-500/[0.02] to-transparent border border-amber-500/10 relative overflow-hidden">
+                                            <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                                                <Ticket className="w-16 h-16 text-amber-600 rotate-12" />
+                                            </div>
+                                            <h4 className="font-black text-sm uppercase tracking-widest text-amber-600 mb-6 flex items-center gap-2">
+                                                <Star className="w-4 h-4 fill-amber-500" /> Kawalan Karnival
+                                            </h4>
+                                            
+                                            <div className="grid grid-cols-1 gap-6">
+                                                {/* Sidebar Visibility */}
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-sm font-black text-foreground leading-tight">Hari Karnival (Sidebar)</p>
+                                                        <p className="text-[11px] text-muted-foreground font-medium mt-1">Paparkan menu karnival untuk semua pelajar.</p>
+                                                    </div>
+                                                    <Button onClick={() => toggleSetting('show_karnival', settings.show_karnival)} size="sm"
+                                                        className={cn('rounded-full font-black text-[10px] w-14 h-8 transition-all',
+                                                            settings.show_karnival ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-muted text-muted-foreground')}>
+                                                        {settings.show_karnival ? 'ON' : 'OFF'}
+                                                    </Button>
+                                                </div>
+
+                                                {/* Voting Toggle */}
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-sm font-black text-foreground leading-tight">Bukak Voting Jawatankuasa</p>
+                                                        <p className="text-[11px] text-muted-foreground font-medium mt-1">Benarkan pelajar mengundi kelab pempamer terbaik.</p>
+                                                    </div>
+                                                    <Button onClick={() => toggleSetting('karnival_voting_enabled', settings.karnival_voting_enabled)} size="sm"
+                                                        className={cn('rounded-full font-black text-[10px] w-14 h-8 transition-all',
+                                                            settings.karnival_voting_enabled ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-muted text-muted-foreground')}>
+                                                        {settings.karnival_voting_enabled ? 'ON' : 'OFF'}
+                                                    </Button>
+                                                </div>
+
+                                                {/* Registration Toggle */}
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-sm font-black text-foreground leading-tight">Pendaftaran Pelajar (Karnival)</p>
+                                                        <p className="text-[11px] text-muted-foreground font-medium mt-1">Buka borang daftar masuk ahli pempamer karnival.</p>
+                                                    </div>
+                                                    <Button onClick={() => toggleSetting('karnival_registration_open', settings.karnival_registration_open)} size="sm"
+                                                        className={cn('rounded-full font-black text-[10px] w-14 h-8 transition-all',
+                                                            settings.karnival_registration_open ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-muted text-muted-foreground')}>
+                                                        {settings.karnival_registration_open ? 'ON' : 'OFF'}
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </Card>
+
+                                        {/* Action Card: Pukal */}
+                                        <Card className="p-8 border-none shadow-lg rounded-[2.5rem] bg-emerald-500/5 border border-emerald-500/10 flex flex-col justify-between">
+                                            <div>
+                                                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-6">
+                                                    <CheckCheck className="w-6 h-6" />
+                                                </div>
+                                                <h4 className="font-black text-sm uppercase tracking-widest text-emerald-600 mb-2">Luluskan Pukal</h4>
+                                                <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                                                    Luluskan semua permohonan keahlian yang sedang menunggu (PENDING) secara sertamerta.
+                                                </p>
+                                            </div>
+                                            <Button onClick={() => setShowBulkAccept(true)} 
+                                                className="w-full rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[10px] uppercase tracking-widest mt-6 py-6 shadow-lg shadow-emerald-500/20">
+                                                Jalankan Operasi
+                                            </Button>
+                                        </Card>
+                                    </div>
                                 </div>
 
-                                {/* Purge */}
-                                <div className="p-6 rounded-[2.5rem] bg-rose-500/10 border border-rose-500/20 flex items-center justify-between">
-                                    <div className="flex items-center gap-5">
-                                        <div className="w-14 h-14 rounded-2xl bg-card shadow-sm flex items-center justify-center text-rose-500">
-                                            <Trash2 className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-rose-900">Pembersihan Rekod</p>
-                                            <p className="text-[11px] font-medium text-rose-500 mt-1">{loading ? '...' : `${stats.rejectedReports} laporan ditolak`}</p>
-                                        </div>
+                                {/* 3. PENYELENGGARAAN & TINDAKAN KRITIKAL */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3 px-2">
+                                        <Activity className="w-5 h-5 text-rose-500" />
+                                        <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Penyelenggaraan Pangkalan Data</h3>
                                     </div>
-                                    <Button onClick={handleCleanRejected} disabled={isCleaning || stats.rejectedReports === 0 || loading}
-                                        className="rounded-full bg-rose-500 hover:bg-rose-600 text-white font-bold text-[11px] px-6">
-                                        {isCleaning ? 'PADAM...' : 'PADAM'}
-                                    </Button>
-                                </div>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {/* Action: Tambah Kelab */}
+                                        <button onClick={() => setShowAddClub(true)}
+                                            className="group p-6 rounded-[2rem] bg-card hover:bg-violet-600 transition-all duration-500 text-left flex flex-col justify-between h-44 shadow-sm hover:shadow-xl hover:shadow-violet-600/20 border border-border/50 hover:border-transparent">
+                                            <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-600 group-hover:bg-white/20 group-hover:text-white flex items-center justify-center transition-colors">
+                                                <Building2 className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-black text-foreground group-hover:text-white transition-colors">Tambah Kelab Baru</p>
+                                                <p className="text-[10px] text-muted-foreground font-medium mt-1 group-hover:text-white/60 transition-colors uppercase tracking-tight">Kembangkan sistem JPP</p>
+                                            </div>
+                                        </button>
 
-                                {/* Pembubaran Kohort Badan Beruniform */}
-                                <div className="p-6 rounded-[2.5rem] bg-amber-500/10 border border-amber-500/20 flex items-center justify-between">
-                                    <div className="flex items-center gap-5">
-                                        <div className="w-14 h-14 rounded-2xl bg-card shadow-sm flex items-center justify-center text-amber-600">
-                                            <Users className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-amber-900">Pembubaran Kohort</p>
-                                            <p className="text-[11px] font-medium text-amber-600 mt-1">Padam semua ahli kelab Badan Beruniform</p>
-                                        </div>
+                                        {/* Action: Purge Logs */}
+                                        <button onClick={handleCleanRejected} disabled={isCleaning || stats.rejectedReports === 0 || loading}
+                                            className={cn(
+                                                "group p-6 rounded-[2rem] bg-card hover:bg-rose-500 transition-all duration-500 text-left flex flex-col justify-between h-44 shadow-sm hover:shadow-xl hover:shadow-rose-500/20 border border-border/50 hover:border-transparent",
+                                                (isCleaning || stats.rejectedReports === 0 || loading) && "opacity-50 cursor-not-allowed saturate-0"
+                                            )}>
+                                            <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-500 group-hover:bg-white/20 group-hover:text-white flex items-center justify-center transition-colors">
+                                                {isCleaning ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-black text-foreground group-hover:text-white transition-colors">Padam Rekod Ditolak</p>
+                                                <p className="text-[10px] text-muted-foreground font-medium mt-1 group-hover:text-white/60 transition-colors uppercase tracking-tight">
+                                                    {stats.rejectedReports} Rekod Dijumpai
+                                                </p>
+                                            </div>
+                                        </button>
+
+                                        {/* Action: Bubar Kohort */}
+                                        <button onClick={handleBubarKohort} disabled={isCleaning}
+                                            className="group p-6 rounded-[2rem] bg-card hover:bg-amber-600 transition-all duration-500 text-left flex flex-col justify-between h-44 shadow-sm hover:shadow-xl hover:shadow-amber-600/20 border border-border/50 hover:border-transparent">
+                                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 group-hover:bg-white/20 group-hover:text-white flex items-center justify-center transition-colors">
+                                                <RotateCcw className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-black text-foreground group-hover:text-white transition-colors">Pembubaran Kohort</p>
+                                                <p className="text-[10px] text-muted-foreground font-medium mt-1 group-hover:text-white/60 transition-colors uppercase tracking-tight">Khas Badan Beruniform</p>
+                                            </div>
+                                        </button>
                                     </div>
-                                    <Button onClick={handleBubarKohort} disabled={isCleaning} 
-                                        className="rounded-full bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] px-6 gap-2">
-                                        <Trash2 className="w-4 h-4" /> Bubar
-                                    </Button>
                                 </div>
                             </div>
                         )}
@@ -1244,53 +1365,135 @@ export function JppAdminPage() {
 
                                 <Card className="border-none shadow-sm rounded-[2.5rem] bg-card overflow-hidden">
                                     <CardHeader className="px-8 pt-8 pb-6 border-b border-border/50 bg-muted/20">
-                                        <CardTitle className="text-xl font-bold flex items-center gap-3">
-                                            <Database className="w-6 h-6 text-emerald-500" /> Log Transaksi / Audit Siber Global
-                                        </CardTitle>
-                                        <p className="text-xs font-medium text-muted-foreground mt-1">Senarai penuh jejak rekod perubahan dan transaksi AI di seluruh kelab.</p>
+                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                            <div>
+                                                <CardTitle className="text-xl font-bold flex items-center gap-3">
+                                                    {logView === 'club' ? (
+                                                        <><Database className="w-6 h-6 text-emerald-500" /> Log Transaksi / Audit Siber Global</>
+                                                    ) : (
+                                                        <><Sparkles className="w-6 h-6 text-indigo-500" /> Log Penggunaan Nexus AI</>
+                                                    )}
+                                                </CardTitle>
+                                                <p className="text-xs font-medium text-muted-foreground mt-1">
+                                                    {logView === 'club' 
+                                                        ? 'Senarai penuh jejak rekod perubahan dan transaksi di seluruh kelab.' 
+                                                        : 'Jejak penggunaan kecerdasan buatan Nexus AI oleh semua warga POLISAS.'}
+                                                </p>
+                                            </div>
+                                            <div className="flex bg-muted p-1 rounded-xl">
+                                                <button 
+                                                    onClick={() => setLogView('club')}
+                                                    className={cn(
+                                                        "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                                                        logView === 'club' ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                                                    )}
+                                                >
+                                                    Audit Kelab
+                                                </button>
+                                                <button 
+                                                    onClick={() => setLogView('ai')}
+                                                    className={cn(
+                                                        "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                                                        logView === 'ai' ? "bg-card shadow-sm text-indigo-600" : "text-muted-foreground hover:text-foreground"
+                                                    )}
+                                                >
+                                                    Nexus AI
+                                                </button>
+                                            </div>
+                                        </div>
                                     </CardHeader>
                                     <CardContent className="p-0">
                                         <div className="divide-y divide-border">
-                                            {globalLogs.filter(log => {
-                                                const club = ALL_CLUBS.find(c => c.id === log.club_id);
-                                                const searchStr = `${log.description} ${log.action_type ?? 'AKTIVITI'} ${log.actor_name} ${club?.shortName || ''}`.toLowerCase();
-                                                return searchStr.includes(logSearch.toLowerCase());
-                                            }).length === 0 ? (
-                                                <div className="p-20 text-center text-muted-foreground italic text-sm">Tiada log sepadan dengan carian anda.</div>
-                                            ) : (
+                                            {logView === 'club' ? (
                                                 globalLogs.filter(log => {
                                                     const club = ALL_CLUBS.find(c => c.id === log.club_id);
                                                     const searchStr = `${log.description} ${log.action_type ?? 'AKTIVITI'} ${log.actor_name} ${club?.shortName || ''}`.toLowerCase();
                                                     return searchStr.includes(logSearch.toLowerCase());
-                                                }).map((log) => {
-                                                    const club = ALL_CLUBS.find(c => c.id === log.club_id);
-                                                    const isCritical = log.action_type?.includes('DELETE') || log.action_type?.includes('REJECT') || log.action_type?.includes('DISSOLVED');
-                                                    const isSuccess = log.action_type?.includes('CREATE') || log.action_type?.includes('APPROVE') || log.action_type?.includes('SUCCESS');
+                                                }).length === 0 ? (
+                                                    <div className="p-20 text-center text-muted-foreground italic text-sm">Tiada log sepadan dengan carian anda.</div>
+                                                ) : (
+                                                    globalLogs.filter(log => {
+                                                        const club = ALL_CLUBS.find(c => c.id === log.club_id);
+                                                        const searchStr = `${log.description} ${log.action_type ?? 'AKTIVITI'} ${log.actor_name} ${club?.shortName || ''}`.toLowerCase();
+                                                        return searchStr.includes(logSearch.toLowerCase());
+                                                    }).map((log) => {
+                                                        const club = ALL_CLUBS.find(c => c.id === log.club_id);
+                                                        const isCritical = log.action_type?.includes('DELETE') || log.action_type?.includes('REJECT') || log.action_type?.includes('DISSOLVED');
+                                                        const isSuccess = log.action_type?.includes('CREATE') || log.action_type?.includes('APPROVE') || log.action_type?.includes('SUCCESS');
 
-                                                    return (
+                                                        return (
+                                                            <div key={log.id} className="px-8 py-5 flex items-start gap-5 hover:bg-muted/50 transition-colors group">
+                                                                <div className={cn('w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-110',
+                                                                    isCritical ? 'bg-rose-500/10 text-rose-500' : 
+                                                                    isSuccess ? 'bg-emerald-500/10 text-emerald-600' :
+                                                                    'bg-blue-500/10 text-blue-500')}>
+                                                                    {isCritical ? <AlertTriangle size={20} /> : isSuccess ? <CheckCheck size={20} /> : <Activity size={20} />}
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="flex items-center gap-2 mb-2">
+                                                                        <Badge className={cn('text-[10px] font-black uppercase px-2.5 py-0.5 border-none',
+                                                                            isCritical ? 'bg-rose-600 text-white' : 
+                                                                            isSuccess ? 'bg-emerald-600 text-white' :
+                                                                            'bg-slate-900 text-white')}>
+                                                                            {(log.action_type ?? 'AKTIVITI').replace(/_/g, ' ')}
+                                                                        </Badge>
+                                                                        <Badge variant="outline" className="text-[10px] font-bold border-border text-muted-foreground bg-muted/30">
+                                                                            {club?.shortName || 'SISTEM'}
+                                                                        </Badge>
+                                                                    </div>
+                                                                    <p className="text-sm font-bold text-foreground leading-snug">{log.description}</p>
+                                                                    <div className="flex items-center gap-2 mt-3">
+                                                                        <span className="text-[11px] text-muted-foreground font-medium flex items-center gap-1.5">
+                                                                            <Users className="w-3.5 h-3.5 opacity-50" /> Oleh: <span className="text-foreground font-black uppercase tracking-tight">{log.actor_name}</span>
+                                                                        </span>
+                                                                        <span className="text-[10px] text-muted-foreground/30">•</span>
+                                                                        <span className="text-[11px] text-muted-foreground font-medium flex items-center gap-1.5">
+                                                                            <Clock size={12} className="opacity-50" />
+                                                                            {format(new Date(log.created_at), 'HH:mm • d MMM yyyy', { locale: ms })}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })
+                                                )
+                                            ) : (
+                                                aiLogs.filter(log => {
+                                                    const searchStr = `${log.task_name} ${log.profiles?.full_name || ''} ${log.profiles?.email || ''} ${log.profiles?.student_id || ''}`.toLowerCase();
+                                                    return searchStr.includes(logSearch.toLowerCase());
+                                                }).length === 0 ? (
+                                                    <div className="p-20 text-center text-muted-foreground italic text-sm">Tiada log penggunaan AI dijumpai.</div>
+                                                ) : (
+                                                    aiLogs.filter(log => {
+                                                        const searchStr = `${log.task_name} ${log.profiles?.full_name || ''} ${log.profiles?.email || ''} ${log.profiles?.student_id || ''}`.toLowerCase();
+                                                        return searchStr.includes(logSearch.toLowerCase());
+                                                    }).map((log) => (
                                                         <div key={log.id} className="px-8 py-5 flex items-start gap-5 hover:bg-muted/50 transition-colors group">
-                                                            <div className={cn('w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-110',
-                                                                isCritical ? 'bg-rose-500/10 text-rose-500' : 
-                                                                isSuccess ? 'bg-emerald-500/10 text-emerald-600' :
-                                                                'bg-blue-500/10 text-blue-500')}>
-                                                                {isCritical ? <AlertTriangle size={20} /> : isSuccess ? <CheckCheck size={20} /> : <Activity size={20} />}
+                                                            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-110">
+                                                                <Sparkles size={20} />
                                                             </div>
                                                             <div className="flex-1 min-w-0">
                                                                 <div className="flex items-center gap-2 mb-2">
-                                                                    <Badge className={cn('text-[10px] font-black uppercase px-2.5 py-0.5 border-none',
-                                                                        isCritical ? 'bg-rose-600 text-white' : 
-                                                                        isSuccess ? 'bg-emerald-600 text-white' :
-                                                                        'bg-slate-900 text-white')}>
-                                                                        {(log.action_type ?? 'AKTIVITI').replace(/_/g, ' ')}
+                                                                    <Badge className="text-[10px] font-black uppercase px-2.5 py-0.5 border-none bg-indigo-600 text-white">
+                                                                        NEXUS AI
                                                                     </Badge>
-                                                                    <Badge variant="outline" className="text-[10px] font-bold border-border text-muted-foreground bg-muted/30">
-                                                                        {club?.shortName || 'SISTEM'}
+                                                                    <Badge variant="outline" className="text-[10px] font-bold border-border text-indigo-500 bg-indigo-500/10 uppercase tracking-widest">
+                                                                        {log.task_name.replace(/_/g, ' ')}
                                                                     </Badge>
                                                                 </div>
-                                                                <p className="text-sm font-bold text-foreground leading-snug">{log.description}</p>
+                                                                <p className="text-sm font-bold text-foreground leading-snug">
+                                                                    Tugasan <span className="text-indigo-600">{log.task_name.replace(/_/g, ' ')}</span> telah dilaksanakan dengan jayanya.
+                                                                </p>
                                                                 <div className="flex items-center gap-2 mt-3">
                                                                     <span className="text-[11px] text-muted-foreground font-medium flex items-center gap-1.5">
-                                                                        <Users className="w-3.5 h-3.5 opacity-50" /> Oleh: <span className="text-foreground font-black uppercase tracking-tight">{log.actor_name}</span>
+                                                                        <Users className="w-3.5 h-3.5 opacity-50" /> Oleh: <span className="text-foreground font-black uppercase tracking-tight">{log.profiles?.full_name || 'Pelajar'}</span>
+                                                                        {log.profiles?.student_id && (
+                                                                            <span className="text-[9px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground font-mono ml-1">{log.profiles.student_id}</span>
+                                                                        )}
+                                                                    </span>
+                                                                    <span className="text-[10px] text-muted-foreground/30">•</span>
+                                                                    <span className="text-[11px] text-muted-foreground font-medium flex items-center gap-1.5">
+                                                                        <Database size={12} className="opacity-50" /> Kos: <span className="text-indigo-600 font-bold">{log.token_cost} Token</span>
                                                                     </span>
                                                                     <span className="text-[10px] text-muted-foreground/30">•</span>
                                                                     <span className="text-[11px] text-muted-foreground font-medium flex items-center gap-1.5">
@@ -1300,8 +1503,8 @@ export function JppAdminPage() {
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    );
-                                                })
+                                                    ))
+                                                )
                                             )}
                                         </div>
                                     </CardContent>
