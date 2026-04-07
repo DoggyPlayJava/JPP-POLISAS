@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   User, Bell, Shield, CreditCard, Mail, Lock, Camera, Check, Award, Globe, Loader2, FileText, Activity, HelpCircle, MessageSquare, Headphones, ExternalLink, Sparkles
 } from 'lucide-react';
@@ -24,6 +24,7 @@ export function SettingsPage() {
   const { user, profile, refetchProfile, effectiveRole } = useAuth();
   const { theme, setTheme } = useTheme();
 
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'general';
 
@@ -449,8 +450,11 @@ export function SettingsPage() {
                     <span className="text-4xl font-black tracking-tighter">RM10</span>
                     <span className="text-xs font-bold text-indigo-300/60 uppercase tracking-widest pb-1.5">/ Month</span>
                   </div>
-                  <Button className="w-full h-14 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] bg-indigo-500 hover:bg-indigo-400 text-white shadow-[0_20px_40px_-5px_rgba(99,102,241,0.4)] transition-all hover:scale-105 active:scale-95 group/btn overflow-hidden relative">
-                    <span className="relative z-10">Upgrade ke Nexus AI</span>
+                  <Button 
+                    onClick={() => navigate('/nexus?tab=langganan')}
+                    className="w-full h-14 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] bg-indigo-500 hover:bg-indigo-400 text-white shadow-[0_20px_40px_-5px_rgba(99,102,241,0.4)] transition-all hover:scale-105 active:scale-95 group/btn overflow-hidden relative"
+                  >
+                    <span className="relative z-10">Upgrade ke PRO Tier</span>
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000" />
                   </Button>
                 </div>

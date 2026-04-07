@@ -7,7 +7,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useAiAssistant, ChatMessage, ChatContext } from '@/hooks/useAiAssistant';
 import { useAiSettings } from '@/contexts/AiSettingsContext';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -124,6 +124,7 @@ export function FloatingAiChat() {
   const { callAi, sendChatMessage, isLoading: isActionLoading, isChatLoading } = useAiAssistant();
   const { allowAiChat } = useAiSettings();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -139,7 +140,30 @@ export function FloatingAiChat() {
   const lastUserIdRef = useRef<string | null>(null);
 
   const isCommittee = isSuperAdmin || isAdvisor || isPresident || isMT;
-  const visibleActions = QUICK_ACTIONS.filter((a) => !a.committeeOnly || isCommittee);
+  
+  const getDynamicActions = () => {
+    let actions = QUICK_ACTIONS.filter((a) => !a.committeeOnly || isCommittee);
+    const path = location.pathname;
+
+    if (path.includes('/laporan')) {
+      actions = actions.filter(a => ['summarize', 'draft'].includes(a.id));
+    } else if (path.includes('/aktiviti')) {
+      actions = actions.filter(a => ['suggest', 'draft', 'announce'].includes(a.id));
+    } else if (path === '/' || path.includes('/dashboard')) {
+      actions = actions.filter(a => ['analyze', 'suggest'].includes(a.id));
+    } else if (path.includes('/ahli') || path.includes('/ajk')) {
+      actions = actions.filter(a => ['analyze', 'announce'].includes(a.id));
+    }
+    
+    // Ensure we always have actions to show if none strictly matched
+    if (actions.length === 0) {
+      actions = QUICK_ACTIONS.filter((a) => !a.committeeOnly || isCommittee);
+    }
+    
+    return actions.slice(0, 4);
+  };
+
+  const visibleActions = getDynamicActions();
 
   // ── Single message appender — always functional update, never stale ──────
   const appendMsg = useCallback((msg: Omit<ChatMessage, 'id' | 'timestamp'>): ChatMessage => {
@@ -298,7 +322,21 @@ export function FloatingAiChat() {
     ];
 
     // 5. Call API
-    const aiText = await sendChatMessage(text, historyForApi, chatContext || undefined);
+    let aiText = await sendChatMessage(text, historyForApi, chatContext || undefined);
+
+    // ── Smart Routing Interceptor ──
+    if (aiText) {
+      const navMatch = aiText.match(/\[NAVIGATE:([^\]]+)\]/);
+      if (navMatch && navMatch[1]) {
+        const targetRoute = navMatch[1].trim();
+        // Remove the command tag from the text displayed to the user
+        aiText = aiText.replace(/\[NAVIGATE:([^\]]+)\]/g, '').trim();
+        // Trigger navigation after a short delay to allow reading
+        setTimeout(() => {
+          navigate(targetRoute);
+        }, 1500);
+      }
+    }
 
     // 6. Append AI or error response
     if (aiText) {

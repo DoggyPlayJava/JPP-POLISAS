@@ -397,8 +397,19 @@ export function JppAdminPage() {
             toast.error(e.message || 'Gagal tindakan', { id: toastId });
         }
     };
+    const handleViewReceipt = async (path: string) => {
+        const toastId = toast.loading('Membuka resit...');
+        try {
+            const { data, error } = await supabase.storage.from('receipts').createSignedUrl(path, 60);
+            if (error) throw error;
+            toast.dismiss(toastId);
+            window.open(data.signedUrl, '_blank');
+        } catch (e: any) {
+            toast.error('Gagal membuka resit: ' + e.message, { id: toastId });
+        }
+    };
 
-    const handleTierApprove = async (reqId: string, userId: string, newTier: string) => {
+    const handleTierApprove = async (reqId: string, userId: string, newTier: string, receiptPath: string | null) => {
         const toastId = toast.loading('Memproses kelulusan Tier...');
         try {
             // First call the RPC to update user tokens & tier
@@ -411,19 +422,46 @@ export function JppAdminPage() {
             // Mark request as APPROVED
             const { error: reqErr } = await supabase.from('ai_tier_requests').update({ status: 'APPROVED', updated_at: new Date() }).eq('id', reqId);
             if (reqErr) throw reqErr;
-            
             toast.success('Permohonan Tier berjaya diluluskan!', { id: toastId });
+            
+            // Auto Delete Receipt from Storage to prevent blob bloat
+            if (receiptPath && !receiptPath.includes('drive.google.com')) {
+                 await supabase.storage.from('receipts').remove([receiptPath]);
+            }
+            
+            // Notify User
+            await supabase.from('notifications').insert({
+                user_id: userId,
+                title: 'Tahniah! Akaun PRO Berjaya',
+                content: 'Permohonan Nexus AI PRO anda telah diluluskan. Anda kini menikmati kapasiti 1,000 Token pelan premium.',
+                is_read: false
+            });
+
             fetchAdminData();
         } catch (e: any) {
             toast.error(e.message || 'Terdapat ralat teknikal.', { id: toastId });
         }
     };
 
-    const handleTierReject = async (reqId: string) => {
+    const handleTierReject = async (reqId: string, receiptPath: string | null, userId: string) => {
         const toastId = toast.loading('Menolak permohonan...');
         try {
             const { error } = await supabase.from('ai_tier_requests').update({ status: 'REJECTED', updated_at: new Date() }).eq('id', reqId);
             if (error) throw error;
+            
+            // Cleanup deleted receipt
+            if (receiptPath && !receiptPath.includes('drive.google.com')) {
+                 await supabase.storage.from('receipts').remove([receiptPath]);
+            }
+            
+            // Notify User
+            await supabase.from('notifications').insert({
+                user_id: userId,
+                title: 'Permohonan PRO Ditolak',
+                content: 'Harap maaf, permohonan PRO anda tidak melepasi piawaian semakan (Sebab: Masalah Resit/Pembayaran). Sila cuba lagi atau hubungi JPP.',
+                is_read: false
+            });
+
             toast.success('Permohonan telah ditolak.', { id: toastId });
             fetchAdminData();
         } catch (e: any) {
@@ -1002,12 +1040,19 @@ export function JppAdminPage() {
                                             </div>
                                             <div>
                                                 <h3 className="font-bold text-foreground">Permohonan Pelan PRO</h3>
-                                                <p className="text-xs text-muted-foreground mt-1">Senarai pelajar yang memohon untuk naik taraf bagi mendapatkan kapasiti penjanaan lebih tinggi.</p>
+                                                <p className="text-xs text-muted-foreground mt-1">Hanya permohonan aktif dikesan. Pelan yang telah diproses (Lulus/Tolak) akan disembunyikan secara automatik selepas 24 jam.</p>
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {tierRequests.map((req) => (
+                                            {tierRequests
+                                                .filter(req => {
+                                                    if (req.status === 'PENDING') return true;
+                                                    const updatedAt = req.updated_at ? new Date(req.updated_at) : new Date(req.created_at);
+                                                    const diffInMs = new Date().getTime() - updatedAt.getTime();
+                                                    return diffInMs < 24 * 60 * 60 * 1000; // 24 Hours
+                                                })
+                                                .map((req) => (
                                                 <div key={req.id} className="p-5 rounded-2xl border border-border bg-muted/20 relative">
                                                     <div className="flex justify-between items-start mb-3">
                                                         <div>
@@ -1027,12 +1072,33 @@ export function JppAdminPage() {
                                                     <div className="p-3 bg-card rounded-xl border border-border/50 text-xs mb-4">
                                                         <span className="font-bold text-muted-foreground block mb-1">Justifikasi:</span>
                                                         <span className="italic text-foreground/80">"{req.reason}"</span>
+                                                        {req.receipt_url && (
+                                                            <div className="mt-3 pt-3 border-t border-border/50">
+                                                                {req.receipt_url.includes('drive.google.com') ? (
+                                                                    <a 
+                                                                        href={req.receipt_url} 
+                                                                        target="_blank" 
+                                                                        rel="noopener noreferrer" 
+                                                                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-500/20 font-bold text-[11px] uppercase tracking-widest transition-colors"
+                                                                    >
+                                                                        Papar Resit Pembayaran (Drive)
+                                                                    </a>
+                                                                ) : (
+                                                                    <button 
+                                                                        onClick={() => handleViewReceipt(req.receipt_url)}
+                                                                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-500/20 font-bold text-[11px] uppercase tracking-widest transition-colors cursor-pointer"
+                                                                    >
+                                                                        Buka Fail Resit (Imej/PDF)
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     {req.status === 'PENDING' && (
                                                         <div className="flex gap-2">
-                                                            <Button onClick={() => handleTierApprove(req.id, req.user_id, 'PRO')} size="sm" className="flex-1 h-9 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white">Luluskan</Button>
-                                                            <Button onClick={() => handleTierReject(req.id)} size="sm" variant="outline" className="flex-1 h-9 rounded-xl font-bold border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700">Tolak</Button>
+                                                            <Button onClick={() => handleTierApprove(req.id, req.user_id, 'pro', req.receipt_url)} size="sm" className="flex-1 h-9 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white">Luluskan</Button>
+                                                            <Button onClick={() => handleTierReject(req.id, req.receipt_url, req.user_id)} size="sm" variant="outline" className="flex-1 h-9 rounded-xl font-bold border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700">Tolak</Button>
                                                         </div>
                                                     )}
                                                 </div>
@@ -1085,22 +1151,33 @@ export function JppAdminPage() {
                                                             <div className="text-[11px] text-muted-foreground">{user.email}</div>
                                                         </td>
                                                         <td className="px-4 py-4">
-                                                            <Badge variant="outline" className={cn(
-                                                                "border-none text-[9px] uppercase tracking-widest max-w-min",
-                                                                user.subscription_tier === 'PRO' ? "bg-indigo-500/20 text-indigo-600" : "bg-slate-500/20 text-slate-600"
-                                                            )}>
-                                                                {user.subscription_tier || 'FREE'}
-                                                            </Badge>
+                                                            <div className="flex flex-col gap-1 items-start">
+                                                                <Badge variant="outline" className={cn(
+                                                                    "border-none text-[9px] uppercase tracking-widest max-w-min",
+                                                                    user.subscription_tier?.toLowerCase() === 'pro' ? "bg-indigo-500/20 text-indigo-600" : "bg-slate-500/20 text-slate-600"
+                                                                )}>
+                                                                    {user.subscription_tier || 'FREE'}
+                                                                </Badge>
+                                                                {user.subscription_tier?.toLowerCase() === 'pro' && user.ai_tier_expiration && (
+                                                                    <span className="text-[10px] whitespace-nowrap text-muted-foreground font-medium pt-0.5" title={new Date(user.ai_tier_expiration).toLocaleString()}>
+                                                                        {(() => {
+                                                                            const diff = Math.ceil((new Date(user.ai_tier_expiration).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                                                                            if (diff < 0) return <span className="text-rose-500 font-bold">LUPUT</span>;
+                                                                            return `${diff} Hari Lagi`;
+                                                                        })()}
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </td>
                                                         <td className="px-4 py-4 font-black">
                                                             {user.ai_token_balance || 0} <span className="text-[10px] text-muted-foreground font-medium">Tk</span>
                                                         </td>
                                                         <td className="px-4 py-4 text-center">
-                                                            {user.subscription_tier !== 'PRO' ? (
+                                                            {user.subscription_tier?.toLowerCase() !== 'pro' ? (
                                                                 <Button 
                                                                     onClick={async () => {
                                                                         if(confirm(`Naik taraf ${user.full_name} ke PRO?`)) {
-                                                                            await supabase.rpc('update_user_ai_tier', { target_user_id: user.id, new_tier: 'PRO' });
+                                                                            await supabase.rpc('update_user_ai_tier', { target_user_id: user.id, new_tier: 'pro' });
                                                                             fetchAdminData();
                                                                         }
                                                                     }}
@@ -1113,7 +1190,7 @@ export function JppAdminPage() {
                                                                 <Button 
                                                                     onClick={async () => {
                                                                         if(confirm(`Turun taraf ${user.full_name} ke FREE?`)) {
-                                                                            await supabase.rpc('update_user_ai_tier', { target_user_id: user.id, new_tier: 'FREE' });
+                                                                            await supabase.rpc('update_user_ai_tier', { target_user_id: user.id, new_tier: 'free' });
                                                                             fetchAdminData();
                                                                         }
                                                                     }}
@@ -1121,7 +1198,7 @@ export function JppAdminPage() {
                                                                     variant="outline"
                                                                     className="h-8 rounded-lg text-[10px] uppercase font-black border-slate-300 hover:bg-slate-100"
                                                                 >
-                                                                    Buat FREE
+                                                                    Tarik Balik PRO
                                                                 </Button>
                                                             )}
                                                         </td>

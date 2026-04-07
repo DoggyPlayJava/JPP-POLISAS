@@ -19,6 +19,7 @@ import rehypeRaw from 'rehype-raw';
 import { KertasKerjaRenderer, type KertasKerjaData } from '@/components/ai/KertasKerjaRenderer';
 import { supabase } from '@/lib/supabase';
 import { Buffer } from 'buffer';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // @ts-ignore - polyfill untuk node js buffer yang diperlukan oleh html-docx-js
 if (typeof window !== 'undefined') window.Buffer = Buffer;
@@ -106,6 +107,7 @@ export function NexusPage() {
   const { profile } = useAuth();
   const [showTierModal, setShowTierModal] = useState(false);
   const [tierReason, setTierReason] = useState('');
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [isSubmittingTier, setIsSubmittingTier] = useState(false);
 
   useEffect(() => {
@@ -130,6 +132,8 @@ export function NexusPage() {
 
   // Preload logo for DOCX embedding
   const logoBase64Ref = useRef<string>('');
+  const isoLogoBase64Ref = useRef<string>('');
+
   useEffect(() => {
     const loadLogo = async () => {
       for (const path of ['/polisas-logo.png', '/jpp-logo.png']) {
@@ -147,7 +151,23 @@ export function NexusPage() {
         } catch { /* try next */ }
       }
     };
+    
+    const loadIsoLogo = async () => {
+      try {
+        const res = await fetch('/iso-logos.png');
+        if (!res.ok) return;
+        const blob = await res.blob();
+        const b64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+        isoLogoBase64Ref.current = b64;
+      } catch { /* ignore */ }
+    };
+
     loadLogo();
+    loadIsoLogo();
   }, []);
 
   const handleRequestTier = async () => {
@@ -155,20 +175,60 @@ export function NexusPage() {
       toast.error('Sila nyatakan sebab untuk memohon Token / PRO Tier.');
       return;
     }
+    if (!receiptFile) {
+      toast.error('Sila muat naik resit pembayaran anda.');
+      return;
+    }
+    
+    // Check file size (5MB max)
+    if (receiptFile.size > 5 * 1024 * 1024) {
+       toast.error('Saiz fail terlalu besar. Maksimum 5MB dibenarkan.');
+       return;
+    }
+
     setIsSubmittingTier(true);
+    const toastId = toast.loading('Memuat naik resit...');
     try {
+      // Upload to Supabase Storage
+      const fileExt = receiptFile.name.split('.').pop();
+      const fileName = `${profile?.id}/${Date.now()}_receipt.${fileExt}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('receipts')
+        .upload(fileName, receiptFile);
+
+      if (uploadError) throw new Error('Gagal memuat naik resit: ' + uploadError.message);
+
+      toast.loading('Menghantar permohonan...', { id: toastId });
+      
       const { error } = await supabase.from('ai_tier_requests').insert({
         user_id: profile?.id,
         current_tier: tokenData?.tier || 'free',
         requested_tier: 'pro',
-        reason: tierReason
+        reason: tierReason || 'Naik Taraf DuitNow',
+        receipt_url: uploadData.path
       });
       if (error) throw error;
-      toast.success('Permohonan berjaya dihantar! Admin akan menyemak permohonan anda.');
+      
+      // Notify System Admins
+      toast.loading('Menghantar notifikasi kepada Admin...', { id: toastId });
+      const { data: admins } = await supabase.from('profiles').select('id').eq('is_super_admin', true);
+      if (admins && admins.length > 0) {
+          const notifications = admins.map(a => ({
+              user_id: a.id,
+              title: 'INVOIS BAHARU (NEXUS AI)',
+              content: `Terdapat resit pembayaran langganan PRO Tier baharu daripada ${profile?.full_name || 'Pelajar'} untuk disemak.`,
+              is_read: false
+          }));
+          await supabase.from('notifications').insert(notifications);
+      }
+
+      toast.success('Permohonan berjaya dihantar! Admin akan menyemak resit anda.', { id: toastId });
       setShowTierModal(false);
       setTierReason('');
+      setReceiptFile(null);
     } catch (e: any) {
-      toast.error('Gagal menghantar permohonan: ' + (e.message || 'Ralat sistem'));
+      toast.error('Gagal menghantar permohonan: ' + (e.message || 'Ralat sistem'), { id: toastId });
     } finally {
       setIsSubmittingTier(false);
     }
@@ -277,7 +337,7 @@ export function NexusPage() {
       const { generateKertasKerjaDocx } = await import('../utils/docxGenerator');
       
       console.log('🔄 Menjana blob DOCX...');
-      const blob = await generateKertasKerjaDocx(data, logoBase64Ref.current);
+      const blob = await generateKertasKerjaDocx(data, logoBase64Ref.current, isoLogoBase64Ref.current);
 
       if (!blob || blob.size === 0) {
         throw new Error("Blob dijana kosong.");
@@ -998,80 +1058,292 @@ export function NexusPage() {
         </TabsContent>
 
         {/* Tab Langganan & Token AI */}
-        <TabsContent value="langganan" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card className="border-indigo-500/20 shadow-xl overflow-hidden bg-white dark:bg-[#121214] relative h-min">
-              <div className="absolute top-0 right-0 p-8 opacity-5">
-                  <Sparkles className="w-48 h-48" />
-              </div>
-              <CardHeader className="p-8 pb-4">
-                <CardTitle className="text-2xl font-black flex items-center gap-2">
-                  <Calculator className="w-5 h-5 text-indigo-500" /> Profil Langganan AI
-                </CardTitle>
-                <CardDescription>Urus baki token dan naiktaraf tier langganan anda di sini.</CardDescription>
-              </CardHeader>
-              <CardContent className="p-8 pt-0 space-y-6 relative z-10">
-                <div className="p-6 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20">
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-xs font-bold uppercase tracking-widest text-indigo-500">Baki Semasa</span>
-                    <Badge variant="outline" className="bg-indigo-500/10 text-indigo-500 border-indigo-500/20 font-black">{tokenData?.tier === 'pro' ? 'PRO TIER' : tokenData?.tier === 'admin' ? 'ADMIN TIER' : 'FREE TIER'}</Badge>
+        <TabsContent value="langganan" className="space-y-10 focus-visible:outline-none outline-none border-none">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+          >
+            {/* Left Section: Dashboard & Status */}
+            <div className="lg:col-span-5 space-y-8">
+              <Card className="border-indigo-500/10 shadow-2xl overflow-hidden bg-white/80 dark:bg-[#121214]/80 backdrop-blur-xl relative">
+                <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+                
+                <CardHeader className="p-8 pb-4 relative z-10">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant="outline" className="bg-indigo-500/10 text-indigo-500 border-indigo-500/20 font-black tracking-widest text-[10px] py-1 px-3">
+                      STATUS AKAUN
+                    </Badge>
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                   </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-5xl font-black text-indigo-600 dark:text-indigo-400">{tokenData?.current_balance || 0}</span>
-                    <span className="text-sm font-medium text-muted-foreground">/ {tokenData?.monthly_allowance || 0} Token Bulanan</span>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                   <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Kelebihan PRO Tier</h4>
-                   <ul className="space-y-2 text-sm text-foreground/80 font-medium">
-                      <li className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-emerald-500" /> Baki diperbaharui 1,000 token setiap bulan.</li>
-                      <li className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-emerald-500" /> Akses ke model AI premium yang lebih pantas.</li>
-                      <li className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-emerald-500" /> Tiada had analisis kertas kerja panjang.</li>
-                   </ul>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/50 shadow-xl bg-white dark:bg-[#121214] h-min">
-              <CardHeader className="p-8 pb-4">
-                <CardTitle className="text-xl font-black">Permohonan PRO Tier</CardTitle>
-                <CardDescription>Langganan PRO adalah terhad. Pemohon perlu memasukkan alasan yang munasabah untuk disemak oleh Admin JPP.</CardDescription>
-              </CardHeader>
-              <CardContent className="p-8 pt-0 space-y-5">
-                {tokenData?.tier === 'pro' || tokenData?.tier === 'admin' ? (
-                  <div className="p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 flex gap-4 text-emerald-800 dark:text-emerald-300">
-                     <AlertTriangle className="w-6 h-6 shrink-0 text-emerald-500" />
-                     <div>
-                       <p className="font-bold text-sm mb-1">Anda Telah Dinaik Taraf</p>
-                       <p className="text-xs leading-relaxed opacity-90">Akaun anda pada masa ini berada pada kapasiti penuh dengan langganan tahap tinggi. Anda tidak perlu lagi membuat permohonan baru.</p>
-                     </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Justifikasi / Sebab Permohonan</Label>
-                      <Textarea 
-                        placeholder="Terangkan mengapa anda memerlukan token tambahan (Cth: Pegawai Kelab menganjurkan banyak mesyuarat bulan ini)..."
-                        className="min-h-[120px] resize-none focus:ring-2 focus:ring-indigo-500/20 bg-slate-50 dark:bg-[#0A0A0B]/50"
-                        value={tierReason}
-                        onChange={(e) => setTierReason(e.target.value)}
-                        disabled={isSubmittingTier}
-                      />
+                  <CardTitle className="text-3xl font-black tracking-tight">Profil Langganan</CardTitle>
+                  <CardDescription className="text-base">Pantau penggunaan Nexus AI anda secara masa nyata.</CardDescription>
+                </CardHeader>
+                
+                <CardContent className="p-8 pt-0 space-y-8 relative z-10">
+                  {/* Token Status Display */}
+                  <div className="group relative">
+                    <div className="p-8 rounded-[2rem] bg-gradient-to-br from-indigo-600 to-purple-700 shadow-xl shadow-indigo-500/20 transition-all duration-500 group-hover:scale-[1.02] overflow-hidden">
+                      <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10 mix-blend-overlay" />
+                      <div className="relative z-10 flex flex-col items-center text-center text-white">
+                        <span className="text-xs font-black uppercase tracking-[0.2em] text-white/70 mb-2">Baki Token Semasa</span>
+                        <div className="flex items-baseline gap-3 mb-6">
+                           <motion.span 
+                            initial={{ scale: 0.5 }}
+                            animate={{ scale: 1 }}
+                            className="text-7xl font-black drop-shadow-lg"
+                           >
+                            {tokenData?.current_balance || 0}
+                           </motion.span>
+                           <span className="text-lg font-bold text-white/50 tracking-tighter">tkns</span>
+                        </div>
+                        
+                        <div className="w-full bg-white/10 rounded-full h-3 mb-3 p-0.5 border border-white/5 overflow-hidden">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.min(((tokenData?.current_balance || 0) / (tokenData?.monthly_allowance || 100)) * 100, 100)}%` }}
+                            transition={{ delay: 0.5, duration: 1 }}
+                            className="bg-white h-full rounded-full shadow-[0_0_15px_rgba(255,255,255,0.5)]" 
+                          />
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-sm font-bold text-white/80">
+                          <Calculator className="w-4 h-4" />
+                          <span>{tokenData?.monthly_allowance || 0} Peruntukan Bulanan</span>
+                        </div>
+                      </div>
                     </div>
-                    <Button 
-                      className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-[0_0_15px_rgba(79,70,229,0.3)] transition-all"
-                      onClick={handleRequestTier}
-                      disabled={isSubmittingTier || !tierReason.trim()}
-                    >
-                      {isSubmittingTier ? 'Menghantar Permohonan...' : 'Hantar Permohonan PRO'}
-                    </Button>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                  </div>
 
-          </div>
+                  {/* Tier Badge Row */}
+                  <div className="flex flex-wrap gap-4 items-center justify-between p-5 rounded-2xl bg-secondary/30 border border-border/40 backdrop-blur-sm">
+                    <span className="text-sm font-bold text-muted-foreground mr-auto text-dark">Tahap Akses</span>
+                    <Badge className={cn(
+                      "font-black tracking-widest text-[11px] px-4 py-1.5 rounded-full border-none shadow-lg",
+                      tokenData?.tier === 'pro' 
+                        ? "bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-amber-500/30" 
+                        : tokenData?.tier === 'admin' 
+                          ? "bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-indigo-500/30" 
+                          : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                    )}>
+                      {tokenData?.tier === 'pro' ? 'PRO TIER' : tokenData?.tier === 'admin' ? 'ADMIN TIER' : 'FREE TIER'}
+                    </Badge>
+                  </div>
+
+                  {/* Benefit Cards Grid */}
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                       <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Manfaat PRO Eksklusif
+                    </h4>
+                    <div className="grid grid-cols-1 gap-3">
+                       {[
+                         { icon: Bot, title: "Model AI Pro (GPT-4o/Pro)", desc: "Penaakulan lebih mendalam & tepat." },
+                         { icon: FileText, title: "1,000+ Permata Token", desc: "Kapasiti janaan 5x ganda lebih luas." },
+                         { icon: Wand2, title: "Format MESTI 100% Tepat", desc: "Struktur dokumen rasmi tanpa ralat." }
+                       ].map((item, i) => (
+                         <div key={i} className="group p-4 rounded-xl border border-border/50 hover:border-indigo-500/30 bg-background/40 hover:bg-indigo-500/5 transition-all duration-300 flex items-start gap-4">
+                           <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-indigo-500 group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
+                             <item.icon className="w-5 h-5" />
+                           </div>
+                           <div>
+                             <p className="font-bold text-sm">{item.title}</p>
+                             <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
+                           </div>
+                         </div>
+                       ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Right Section: Upgrade / Action Area */}
+            <div className="lg:col-span-7">
+              <Card className="border-border/50 shadow-2xl bg-white dark:bg-[#121214] relative overflow-hidden h-full min-h-[600px]">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/[0.03] rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                
+                <CardHeader className="p-8 pb-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
+                    <CardTitle className="text-2xl font-black">Naik Taraf ke PRO</CardTitle>
+                  </div>
+                  <CardDescription className="text-base">Maksimumkan produktiviti pengurusan dokumen anda sekarang.</CardDescription>
+                </CardHeader>
+                
+                <CardContent className="p-8 pt-0 space-y-10">
+                  {tokenData?.tier === 'pro' || tokenData?.tier === 'admin' ? (
+                    <motion.div 
+                      initial={{ scale: 0.95, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="flex flex-col items-center justify-center py-20 text-center space-y-6"
+                    >
+                      <div className="w-24 h-24 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 ring-4 ring-emerald-500/5">
+                        <Sparkles className="w-12 h-12" />
+                      </div>
+                      <div className="space-y-2 max-w-sm">
+                        <h3 className="text-2xl font-black text-foreground">Kuasa Penuh Diaktifkan</h3>
+                        <p className="text-muted-foreground font-medium">Akaun anda sudah berada pada tahap premium tertinggi. Terima kasih kerana menyokong Nexus AI!</p>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <div className="space-y-12">
+                      {/* Step-by-Step Stepper UI */}
+                      <div className="flex items-start gap-8">
+                        {/* Step 1: Payment */}
+                        <div className="flex-1 space-y-6">
+                           <div className="flex items-center gap-4 mb-6">
+                              <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-black shadow-lg shadow-indigo-600/20">1</div>
+                              <h4 className="text-lg font-black tracking-tight text-foreground">Langganan Token</h4>
+                           </div>
+                           
+                           <div className="p-6 rounded-[2rem] bg-slate-50 dark:bg-[#0A0A0B] border border-slate-200/60 dark:border-border/30 shadow-inner group">
+                              <div className="flex flex-col gap-6 items-center">
+                                 <div className="relative p-4 bg-white rounded-3xl shadow-xl border-4 border-indigo-500/5 group-hover:scale-105 transition-transform duration-500 overflow-hidden">
+                                     <div className="absolute inset-0 bg-indigo-500/5 animate-[pulse_3s_infinite] pointer-events-none" />
+                                     <img 
+                                      src="/payment-qr.png" 
+                                      alt="DuitNow QR Code" 
+                                      className="w-48 h-48 sm:w-56 sm:h-56 object-contain relative z-10" 
+                                      onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.parentElement!.innerHTML = '<div class="w-48 h-48 flex items-center justify-center text-xs text-center p-4 text-muted-foreground uppercase font-black tracking-widest leading-loose">QR Code<br/>Tidak Dijumpai</div>'; }} 
+                                     />
+                                 </div>
+                                 <div className="text-center space-y-4">
+                                     <div className="inline-block px-5 py-2 rounded-2xl bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 font-black text-2xl tracking-tight shadow-sm">
+                                       RM 10.00
+                                     </div>
+                                     <p className="text-sm font-bold text-muted-foreground leading-relaxed px-2">
+                                       Imbas DuitNow QR untuk mendapatkan <span className="text-foreground">1,000 Token AI</span> & akses <span className="text-foreground">PRO selama 30 hari</span>.
+                                     </p>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+
+                        {/* Step 2: Verification */}
+                        <div className="flex-1 space-y-6">
+                           <div className="flex items-center gap-4 mb-6">
+                              <div className="w-10 h-10 rounded-full bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 flex items-center justify-center font-black shadow-lg">2</div>
+                              <h4 className="text-lg font-black tracking-tight text-foreground">Pengesahan</h4>
+                           </div>
+                           
+                           <div className="space-y-6">
+                              {/* File Uploader Node */}
+                              <div className="relative group">
+                                <input 
+                                    type="file" 
+                                    id="receipt-upload"
+                                    accept="image/*,application/pdf"
+                                    disabled={isSubmittingTier}
+                                    className="peer sr-only"
+                                    onChange={(e) => {
+                                       if(e.target.files && e.target.files[0]) {
+                                          setReceiptFile(e.target.files[0]);
+                                       }
+                                    }}
+                                />
+                                <label 
+                                    htmlFor="receipt-upload"
+                                    className={cn(
+                                        "flex flex-col items-center justify-center min-h-[160px] p-8 border-2 border-dashed rounded-[2rem] cursor-pointer transition-all duration-500",
+                                        receiptFile 
+                                            ? "border-emerald-500 bg-emerald-50/30 dark:bg-emerald-500/5 bg-[url('/grid-pattern.svg')] bg-[length:20px_20px]" 
+                                            : "border-slate-300 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0A0A0B]/50 hover:border-indigo-500 hover:bg-slate-100 dark:hover:bg-[#1A1A20] group-hover:scale-[0.98]"
+                                    )}
+                                >
+                                    <AnimatePresence mode="wait">
+                                      {receiptFile ? (
+                                          <motion.div 
+                                            key="selected"
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            exit={{ scale: 0.8, opacity: 0 }}
+                                            className="text-center space-y-3"
+                                          >
+                                              <div className="mx-auto w-14 h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center mb-2 shadow-xl shadow-emerald-500/30 rotate-3">
+                                                  <Sparkles className="w-7 h-7" />
+                                              </div>
+                                              <div className="space-y-1">
+                                                <p className="text-sm font-black text-emerald-700 dark:text-emerald-400 truncate max-w-[180px]">{receiptFile.name}</p>
+                                                <p className="text-xs font-bold text-emerald-600/50">{(receiptFile.size / 1024 / 1024).toFixed(2)} MB • Klik untuk tukar</p>
+                                              </div>
+                                          </motion.div>
+                                      ) : (
+                                          <motion.div 
+                                            key="empty"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="text-center space-y-4"
+                                          >
+                                              <div className="w-16 h-16 rounded-3xl bg-slate-100 dark:bg-slate-800/50 flex flex-col items-center justify-center mx-auto transition-transform group-hover:rotate-12">
+                                                <FileClock className="w-8 h-8 text-slate-400" />
+                                              </div>
+                                              <div className="space-y-1">
+                                                <p className="text-sm font-black text-slate-700 dark:text-slate-300">Muat Naik Resit</p>
+                                                <p className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">JPG, PNG, WEBP, PDF</p>
+                                              </div>
+                                          </motion.div>
+                                      )}
+                                    </AnimatePresence>
+                                </label>
+                              </div>
+
+                              {/* Optional Note Field */}
+                              <div className="space-y-3">
+                                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-2">Catatan Tambahan (Pilihan)</Label>
+                                <Textarea 
+                                  placeholder="Contoh: Lampiran bukti pemindahan DuitNow..."
+                                  className="min-h-[100px] resize-none focus:ring-4 focus:ring-indigo-500/10 bg-slate-50/50 dark:bg-[#0A0A0B]/30 rounded-[1.5rem] border-slate-200 dark:border-border/60 transition-all font-medium text-sm"
+                                  value={tierReason}
+                                  onChange={(e) => setTierReason(e.target.value)}
+                                  disabled={isSubmittingTier}
+                                />
+                              </div>
+                           </div>
+                        </div>
+                      </div>
+
+                      {/* Warning & Submit Footer */}
+                      <div className="pt-10 border-t border-border/40 space-y-6">
+                        <div className="flex items-start gap-4 p-5 rounded-3xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 relative overflow-hidden">
+                           <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12">
+                              <AlertTriangle className="w-16 h-16" />
+                           </div>
+                           <AlertTriangle className="w-6 h-6 shrink-0 mt-0.5" />
+                           <div className="space-y-1 relative z-10">
+                             <p className="text-sm font-black uppercase tracking-tight">Perhatian Penting</p>
+                             <p className="text-xs font-bold leading-relaxed opacity-80">
+                               Sila muat naik resit yang sah dan jelas. Admin akan mengesahkan pembayaran manual anda dalam tempoh 1-3 hari bekerja. Pengesahan palsu boleh mengakibatkan akaun anda disekat secara kekal daripada ekosistem Nexus.
+                             </p>
+                           </div>
+                        </div>
+
+                        <Button 
+                          className="w-full h-16 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black text-lg rounded-[2rem] shadow-[0_15px_30px_-10px_rgba(79,70,229,0.5)] hover:shadow-[0_20px_40px_-10px_rgba(79,70,229,0.7)] transition-all duration-300 hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:grayscale"
+                          onClick={handleRequestTier}
+                          disabled={isSubmittingTier || !receiptFile}
+                        >
+                          {isSubmittingTier ? (
+                            <span className="flex items-center gap-3">
+                              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full" />
+                              Memproses Permohonan...
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-2">
+                              <Sparkles className="w-6 h-6" /> Aktifkan Kuasa PRO Sekarang
+                            </span>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </motion.div>
         </TabsContent>
 
       </Tabs>

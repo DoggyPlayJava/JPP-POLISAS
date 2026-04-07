@@ -138,7 +138,7 @@ export function Header({ onOpenSearch }: { onOpenSearch?: () => void }) {
                      </Button>
                    ) : (
                      <Button 
-                        onClick={() => navigate('/nexus?tab=langganan')}
+                        onClick={() => navigate('/tetapan?tab=billing')}
                         className="w-full bg-foreground hover:bg-foreground/90 text-background font-bold h-11 rounded-xl transition-all"
                      >
                         <span className="flex items-center gap-2"><ArrowUpRight className="w-4 h-4" /> Urus Langganan / {subTier === 'free' ? 'Dapatkan Pro' : 'Semak Langganan'}</span>

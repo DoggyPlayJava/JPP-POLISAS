@@ -109,7 +109,7 @@ const createSpacedTextCell = (text: string, opts?: { bg?: string, bold?: boolean
   }), opts);
 }
 
-export const generateKertasKerjaDocx = async (data: KertasKerjaData, logoBase64: string | null): Promise<Blob> => {
+export const generateKertasKerjaDocx = async (data: KertasKerjaData, logoBase64: string | null, isoLogoBase64?: string | null): Promise<Blob> => {
   const hm = data.halaman_muka;
   const re = data.ringkasan_eksekutif;
   const ik = data.isi_kandungan;
@@ -167,17 +167,50 @@ export const generateKertasKerjaDocx = async (data: KertasKerjaData, logoBase64:
   
   frontPageElems.push(
     emptyLine(28),
-    frontP("KERTAS KERJA"),
-    frontP(hm.tajuk_program),
     emptyLine(28),
-    frontP(`${hm.tarikh} (${hm.hari})`),
-    frontP(hm.tempat),
-    emptyLine(28),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: SPACING_SINGLE,
+      children: [new TextRun({ text: "KERTAS KERJA", bold: true, font: "Arial", size: 28 })]
+    }),
+    frontP(hm.tajuk_program.toUpperCase()),
+    
+    emptyLine(28), emptyLine(28), emptyLine(28), // Large space
+    
+    frontP(`${hm.tarikh} (${hm.hari.toUpperCase()})`),
+    frontP(hm.tempat.toUpperCase()),
+    
+    emptyLine(28), emptyLine(28), emptyLine(28), // Large space
+    
     frontP("ANJURAN:"),
-    frontP(hm.penganjur),
+    frontP(hm.penganjur.toUpperCase()),
     frontP("POLITEKNIK SULTAN HAJI AHMAD SHAH"),
+    
     emptyLine(28), emptyLine(28),
-    approvalTable,
+    approvalTable
+  );
+
+  // Inject ISO Logos if available
+  if (isoLogoBase64) {
+    try {
+      const base64Data = isoLogoBase64.split("base64,")[1];
+      frontPageElems.push(
+        emptyLine(28),
+        emptyLine(28),
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: SPACING_SINGLE,
+          children: [new ImageRun({ 
+            data: Buffer.from(base64Data, 'base64'), 
+            transformation: { width: 480, height: 60 },
+            type: "png"
+          })] 
+        })
+      );
+    } catch(e) { console.error("ISO Logo error", e); }
+  }
+
+  frontPageElems.push(
     new Paragraph({ children: [new PageBreak()] }) // Force next page
   );
 
