@@ -34,17 +34,35 @@ export function ClubDetailPage() {
           supabase.from('club_committee').select('*').eq('club_id', id).order('order_index', { ascending: true }),
           supabase.from('club_activities').select('id, title, status, created_at').eq('club_id', id).order('created_at', { ascending: false }).limit(5),
           supabase.from('club_reports').select('id').eq('club_id', id).limit(100),
-          supabase.from('profiles').select('full_name, avatar_url').eq('club_id', id) // 🔥 Ambil profile pics
+          supabase.from('profiles').select('full_name, avatar_url, role').eq('club_id', id) // 🔥 Ambil role juga
         ]);
 
         if (clubRes.error) throw clubRes.error;
 
         // 🔥 LOGIK GABUNGAN AVATAR
         const registeredProfiles = profilesRes.data || [];
-        const mergedCommittee = (commRes.data || []).map(member => {
+        let mergedCommittee = (commRes.data || []).map(member => {
           const match = registeredProfiles.find(p => p.full_name === member.full_name);
           return { ...member, avatar_url: match?.avatar_url || null };
         });
+
+        // 🔥 AUTO-INJECT PRESIDEN JIKA BELUM ADA DALAM SENARAI
+        const presidentProfile = registeredProfiles.find(p => p.role === 'CLUB_PRESIDENT');
+        if (presidentProfile) {
+           const alreadyInCommittee = mergedCommittee.some(m => m.full_name === presidentProfile.full_name);
+           if (!alreadyInCommittee) {
+              const pseudoPresident = {
+                id: 'auto-pres-' + presidentProfile.full_name,
+                full_name: presidentProfile.full_name,
+                position_title: 'Presiden Kelab',
+                category: 'MT',
+                avatar_url: presidentProfile.avatar_url,
+                club_id: id,
+                order_index: -1 // Supaya sentiasa di atas
+              };
+              mergedCommittee = [pseudoPresident, ...mergedCommittee];
+           }
+        }
 
         setClub(clubRes.data);
         setCommittee(mergedCommittee);

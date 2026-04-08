@@ -12,7 +12,7 @@ import { UserRole, JABATAN_LIST, JabatanValue, ALL_CLUBS, ROLE_LABELS, getAkadem
 import { cn } from '@/lib/utils';
 
 // Roles yang boleh self-register (Presiden dan MT perlu pilih kelab)
-const LEADER_ROLES: UserRole[] = ['CLUB_PRESIDENT', 'CLUB_MT'];
+const LEADER_ROLES: UserRole[] = ['CLUB_PRESIDENT', 'CLUB_MT', 'CLUB_ADVISOR'];
 
 type RegisterMode = 'student' | 'leader';
 type Step = 1 | 2;
@@ -140,6 +140,22 @@ export function LoginPage() {
             account_status: 'PENDING',
             is_primary: false,
           }).select();
+
+          // NOTIFY JPP ADMIN FOR LEADER APPLICATIONS
+          if (leaderRole === 'CLUB_PRESIDENT' || leaderRole === 'CLUB_ADVISOR') {
+            const { data: admins } = await supabase.from('profiles').select('id').in('role', ['SUPER_ADMIN_JPP', 'ADMIN', 'JPP']);
+            if (admins && admins.length > 0) {
+              const notifs = admins.map(a => ({
+                 user_id: a.id,
+                 title: 'Pendaftaran Pimpinan Baharu',
+                 message: `Terdapat satu permohonan pendaftaran baru sebagai ${leaderRole === 'CLUB_PRESIDENT' ? 'Presiden' : 'Penasihat'} untuk kelab. Sila semak permohonan dalam tab "Permohonan Baru" di halaman Pengurusan Ahli.`,
+                 type: 'SYSTEM',
+                 link: '/ahli',
+                 is_read: false
+              }));
+              await supabase.from('notifications').insert(notifs);
+            }
+          }
         }
       }
 

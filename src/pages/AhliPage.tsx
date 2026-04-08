@@ -87,10 +87,9 @@ export function AhliPage() {
         query = query.ilike('profiles.full_name', `%${search.trim()}%`);
       }
 
-      // Limit data untuk prestasi pantas
+      // Ambil semua data tanpa had (limit_30 dibuang) untuk pastikan MT dan Ahli lama tidak ghaib
       const { data, error } = await query
-        .order('created_at', { ascending: false })
-        .limit(30);
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error("Supabase Error:", error);
@@ -216,10 +215,20 @@ export function AhliPage() {
 
   // Tapis data untuk tab
   const CLUB_ROLES = ['CLUB_MEMBER', 'CLUB_MT', 'CLUB_PRESIDENT', 'CLUB_ADVISOR'];
-  const pendingMembers = memberships.filter(m =>
-    (m.account_status === 'PENDING' || m.account_status === 'RESIGN_PENDING') &&
-    CLUB_ROLES.includes(m.role)
-  );
+  const pendingMembers = memberships.filter(m => {
+    const isPending = m.account_status === 'PENDING' || m.account_status === 'RESIGN_PENDING';
+    if (!isPending || !CLUB_ROLES.includes(m.role)) return false;
+
+    // SUPER_ADMIN_JPP sahaja boleh approve Penasihat & Presiden
+    if (m.role === 'CLUB_PRESIDENT' || m.role === 'CLUB_ADVISOR') {
+      return effectiveRole === 'SUPER_ADMIN_JPP' || effectiveRole === 'JPP' || effectiveRole === 'ADMIN';
+    }
+    
+    // Jawatan lain, JPP, Presiden dan Penasihat boleh approve
+    return effectiveRole === 'SUPER_ADMIN_JPP' || effectiveRole === 'JPP' || effectiveRole === 'ADMIN' || 
+           effectiveRole === 'CLUB_PRESIDENT' || effectiveRole === 'PRESIDEN' || 
+           effectiveRole === 'CLUB_ADVISOR' || effectiveRole === 'PENASIHAT';
+  });
   const approvedMembers = memberships.filter(m =>
     m.account_status === 'APPROVED'
   );
