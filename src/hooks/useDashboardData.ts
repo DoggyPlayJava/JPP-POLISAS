@@ -98,6 +98,7 @@ export function useDashboardData() {
           .from('programs')
           .select('*')
           .eq('club_id', clubId)
+          .eq('is_archived', false)
           .order('created_at', { ascending: false }),
           
         // 4. Tasks (Tugasan)
@@ -116,6 +117,7 @@ export function useDashboardData() {
           .from('club_activities')
           .select('*')
           .eq('club_id', clubId)
+          .eq('is_archived', false)
           .order('created_at', { ascending: false })
       ]);
 

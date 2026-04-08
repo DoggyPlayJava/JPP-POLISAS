@@ -14,10 +14,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
-import { ALL_CLUBS } from '@/types';
+import { ALL_CLUBS, ROLE_LABELS, ROLE_COLORS } from '@/types';
 import { format } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -39,6 +40,8 @@ export function JppAdminPage() {
     const [suspiciousUsers, setSuspiciousUsers] = useState<any[]>([]);
     const [allUsers, setAllUsers] = useState<any[]>([]);
     const [tierRequests, setTierRequests] = useState<any[]>([]);
+    const [pendingLeaderRequests, setPendingLeaderRequests] = useState<any[]>([]);
+    const [showPendingLeadersDialog, setShowPendingLeadersDialog] = useState(false);
     
     // TABS
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -72,6 +75,8 @@ export function JppAdminPage() {
     
     // Bulk Accept Scoped
     const [showBulkAccept, setShowBulkAccept] = useState(false);
+    const [showClubDissolveDialog, setShowClubDissolveDialog] = useState(false);
+    const [selectedDissolveClub, setSelectedDissolveClub] = useState<string>('');
     const [bulkClubId, setBulkClubId] = useState<string>('ALL');
     const [logSearch, setLogSearch] = useState('');
     const [userSearch, setUserSearch] = useState('');
@@ -80,18 +85,47 @@ export function JppAdminPage() {
         setLoading(true);
         try {
             const { data: storageData } = await supabase.rpc('get_storage_stats');
-            const [users, reports, activities, pending, rejected] = await Promise.all([
+            const [users, reports, activities, pendingProfiles, pendingMemberships, rejected] = await Promise.all([
                 supabase.from('profiles').select('*', { count: 'exact', head: true }),
                 supabase.from('club_reports').select('*', { count: 'exact', head: true }),
                 supabase.from('club_activities').select('*', { count: 'exact', head: true }),
-                supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('account_status', 'PENDING'),
+                supabase.from('profiles').select('*')
+                    .eq('account_status', 'PENDING')
+                    .in('role', ['CLUB_PRESIDENT', 'CLUB_ADVISOR', 'PRESIDEN', 'PENASIHAT']),
+                supabase.from('student_club_memberships').select('*, profiles(*)')
+                    .eq('account_status', 'PENDING')
+                    .in('role', ['CLUB_PRESIDENT', 'CLUB_ADVISOR', 'PRESIDEN', 'PENASIHAT']),
                 supabase.from('club_reports').select('*', { count: 'exact', head: true }).eq('status', 'Ditolak'),
             ]);
             const { data: logs } = await supabase.from('club_logs').select('*').order('created_at', { ascending: false }).limit(20);
             const { data: ai_logs } = await supabase.from('ai_usage_logs').select('*, profiles(full_name, email, student_id)').order('created_at', { ascending: false }).limit(50);
+            
+            // Merge Data
+            const combined: any[] = [...(pendingProfiles.data || []).map(p => ({ ...p, source: 'profile' }))];
+            (pendingMemberships.data || []).forEach(m => {
+                const existing = combined.find(c => c.id === m.user_id);
+                if (existing) {
+                    existing.source = 'both';
+                    existing.membership_id = m.id;
+                    existing.target_club_id = m.club_id;
+                } else {
+                    if (m.profiles) {
+                        combined.push({
+                            ...m.profiles,
+                            id: m.user_id,
+                            role: m.role,
+                            source: 'membership',
+                            membership_id: m.id,
+                            target_club_id: m.club_id
+                        });
+                    }
+                }
+            });
+
+            setPendingLeaderRequests(combined);
             setStats({
                 totalUsers: users.count || 0, totalReports: reports.count || 0,
-                totalActivities: activities.count || 0, pendingUsers: pending.count || 0,
+                totalActivities: activities.count || 0, pendingUsers: combined.length,
                 rejectedReports: rejected.count || 0,
                 storageMB: storageData?.[0]?.total_mb || 0,
                 storageLimit: storageData?.[0]?.limit_mb || 5120,
@@ -139,7 +173,7 @@ export function JppAdminPage() {
             activityCounts?.forEach(a => { counts[a.club_id] = (counts[a.club_id] || 0) + 1; });
             const activeClubsData = ALL_CLUBS.map(c => ({ name: c.shortName, count: counts[c.id] || 0 }))
                 .sort((a, b) => b.count - a.count).slice(0, 6);
-            const { data: reportStatusData } = await supabase.from('club_reports').select('status');
+            const { data: reportStatusData } = await supabase.from('club_reports').select('status').eq('is_archived', false);
             const rStats: Record<string, number> = { 'Diluluskan': 0, 'Menunggu': 0, 'Ditolak': 0, 'Dalam Semakan': 0 };
             reportStatusData?.forEach(r => { if (rStats[r.status] !== undefined) rStats[r.status]++; });
             const reportStatsData = [
@@ -207,31 +241,111 @@ export function JppAdminPage() {
     };
 
     const handleBubarKohort = async () => {
-        if (!window.confirm('AMARAN KHAS: Anda pasti mahu BUBAR semua kohort Kelab Badan Beruniform? Semua keahlian kelab Badan Beruniform akan dipadam. Tindakan ini tidak boleh diundur.')) return;
+        if (!window.confirm('AMARAN KHAS: Anda pasti mahu BUBAR semua kohort untuk KESEMUA Kelab? Tindakan ini tidak boleh diundur. Semua MT akan menjadi ahli biasa, akaun tidak aktif > 6 bulan akan dipadam, dan laporan tidak lulus akan dibuang.')) return;
         setIsCleaning(true);
-        const toastId = toast.loading('Membubarkan kohort uniform...');
+        const toastId = toast.loading('Membubarkan kohort secara menyeluruh...');
         try {
-            const { data: clubs } = await supabase.from('clubs').select('id').ilike('category', '%Beruniform%');
-            const clubIds = clubs?.map(c => c.id) || [];
+            const { error } = await supabase.rpc('rpc_pembubaran_kohort');
+            if (error) throw error;
             
-            if (clubIds.length > 0) {
-                const { error } = await supabase.from('student_club_memberships').delete().in('club_id', clubIds);
-                if (error) throw error;
-                
-                await supabase.from('club_logs').insert({
-                    action_type: 'COHORT_DISSOLVED',
-                    actor_id: null,
-                    actor_name: 'SISTEM (JPP)',
-                    description: `Sistem telah membubarkan semua keahlian kohort Badan Beruniform.`,
-                });
-                
-                toast.success('Pembubaran Kohort Kelab Beruniform Berjaya!', { id: toastId });
-                fetchAdminData();
-            } else {
-                toast.error('Tiada kelab Badan Beruniform dijumpai.', { id: toastId });
-            }
+            toast.success('Pembubaran Kohort Keseluruhan Berjaya!', { id: toastId });
+            fetchAdminData();
         } catch (e: any) {
             toast.error(e.message || 'Ralat semasa pembubaran', { id: toastId });
+        } finally {
+            setIsCleaning(false);
+        }
+    };
+
+    const handleBubarKelabSpesifik = async () => {
+        if (!selectedDissolveClub) return;
+        const clubName = ALL_CLUBS.find(c => c.id === selectedDissolveClub)?.name || 'Kelab Terpilih';
+        if (!window.confirm(`Adakah anda pasti mahu BUBAR kohort untuk ${clubName}? Tindakan ini tidak boleh diundur.`)) return;
+
+        const toastId = toast.loading(`Membubarkan kohort ${clubName}...`);
+        setIsCleaning(true);
+        try {
+            const clubId = selectedDissolveClub;
+
+            // 1. Arkib aktiviti kelab yang selesai
+            await supabase.from('club_activities')
+                .update({ is_archived: true })
+                .eq('club_id', clubId)
+                .eq('status', 'selesai')
+                .eq('is_archived', false);
+
+            // 2. Arkib laporan kelab yang diluluskan
+            await supabase.from('club_reports')
+                .update({ is_archived: true })
+                .eq('club_id', clubId)
+                .eq('status', 'Diluluskan')
+                .eq('is_archived', false);
+
+            // 3. Arkib program kelab yang selesai
+            await supabase.from('programs')
+                .update({ is_archived: true })
+                .eq('club_id', clubId)
+                .eq('status', 'COMPLETED')
+                .eq('is_archived', false);
+
+            // 4. Padam aktiviti yang belum diarkib (draf/tidak lulus)
+            await supabase.from('club_activities')
+                .delete()
+                .eq('club_id', clubId)
+                .eq('is_archived', false);
+
+            // 5. Padam laporan yang belum diarkib
+            await supabase.from('club_reports')
+                .delete()
+                .eq('club_id', clubId)
+                .eq('is_archived', false);
+
+            // 6. Padam program yang belum diarkib
+            await supabase.from('programs')
+                .delete()
+                .eq('club_id', clubId)
+                .eq('is_archived', false);
+
+            // 7. Demote semua MT/Presiden/Penasihat kelab ini kepada MEMBER
+            await supabase.from('student_club_memberships')
+                .update({ role: 'CLUB_MEMBER' })
+                .eq('club_id', clubId)
+                .neq('role', 'CLUB_MEMBER');
+
+            // 8. Rekod log
+            await supabase.from('club_logs').insert({
+                action_type: 'COHORT_DISSOLVED',
+                actor_name: 'SISTEM (JPP)',
+                description: `Pembubaran Kohort ${clubName} telah dijalankan. Arkib dikemaskini dan MT di-reset.`,
+                club_id: clubId,
+            });
+
+            toast.success(`Pembubaran Kohort ${clubName} Berjaya!`, { id: toastId });
+            setShowClubDissolveDialog(false);
+            setSelectedDissolveClub('');
+            fetchAdminData();
+        } catch (e: any) {
+            console.error(e);
+            toast.error(e.message || 'Ralat semasa pembubaran kelab', { id: toastId });
+        } finally {
+            setIsCleaning(false);
+        }
+    };
+
+
+    const handlePembersihanAkaun = async () => {
+        if (!window.confirm('AMARAN KHAS: Padam secara kekal semua akaun pengguna yang tidak aktif lebih dari 6 bulan? (Termasuk rekod auth.users). Tindakan ini muktamad.')) return;
+
+        const toastId = toast.loading('Memadam data akaun terbiar...');
+        setIsCleaning(true);
+        try {
+            const { data, error } = await supabase.rpc('rpc_pembersihan_akaun_lama');
+            if (error) throw error;
+            toast.success(`Berjaya memadam ${data || 0} akaun terbiar!`, { id: toastId });
+            fetchAdminData();
+        } catch (e: any) {
+            console.error(e);
+            toast.error(e.message || 'Ralat semasa pembersihan akaun', { id: toastId });
         } finally {
             setIsCleaning(false);
         }
@@ -463,9 +577,43 @@ export function JppAdminPage() {
             });
 
             toast.success('Permohonan telah ditolak.', { id: toastId });
-            fetchAdminData();
+            await fetchAdminData();
         } catch (e: any) {
             toast.error(e.message || 'Terdapat ralat teknikal.', { id: toastId });
+        }
+    };
+
+    const handleLeaderStatusAction = async (userId: string, status: 'APPROVED' | 'REJECTED', membershipId?: string) => {
+        const toastId = toast.loading(`${status === 'APPROVED' ? 'Meluluskan' : 'Menolak'} akaun pemimpin...`);
+        try {
+            if (status === 'REJECTED') {
+                if (membershipId) {
+                    await supabase.from('student_club_memberships').delete().eq('id', membershipId);
+                } else {
+                    await supabase.from('profiles').delete().eq('id', userId);
+                }
+            } else {
+                // Approve Profile
+                await supabase.from('profiles').update({ account_status: 'APPROVED' }).eq('id', userId);
+                
+                // Approve all leadership memberships for this user
+                await supabase.from('student_club_memberships').update({ account_status: 'APPROVED' })
+                    .eq('user_id', userId)
+                    .in('role', ['CLUB_PRESIDENT', 'CLUB_ADVISOR', 'PRESIDEN', 'PENASIHAT']);
+                
+                // Notify
+                await supabase.from('notifications').insert({
+                    user_id: userId,
+                    title: 'Akaun/Kepimpinan Diluluskan',
+                    content: 'Akaun anda dan permohonan jawatan kepimpinan telah disahkan oleh JPP. Sila log keluar dan masuk semula untuk melihat perubahan.',
+                    is_read: false
+                });
+            }
+            
+            toast.success('Tindakan Berjaya', { id: toastId });
+            await fetchAdminData();
+        } catch (e: any) {
+            toast.error(e.message || 'Terdapat ralat.', { id: toastId });
         }
     };
 
@@ -602,6 +750,111 @@ export function JppAdminPage() {
                 </DialogContent>
             </Dialog>
 
+            {/* Dialog: Pembubaran Kelab Spesifik */}
+            <Dialog open={showClubDissolveDialog} onOpenChange={setShowClubDissolveDialog}>
+                <DialogContent className="rounded-[2rem] max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="font-black text-xl tracking-tight flex items-center gap-2 text-rose-500">
+                            <RotateCcw className="w-6 h-6" /> Pembubaran Kelab
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <p className="text-sm text-muted-foreground font-medium">Bubar kohort untuk kelab tertentu. Arkibkan semua laporan lulus dan tamatkan khidmat MT kelab secara berasingan tanpa memadam data kelab lain.</p>
+                        <div className="space-y-2">
+                            <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Pilih Kelab / Badan Beruniform</Label>
+                            <Select value={selectedDissolveClub} onValueChange={setSelectedDissolveClub}>
+                                <SelectTrigger className="h-12 rounded-xl bg-card border-border/40 focus:ring-rose-500">
+                                    <SelectValue placeholder="Pilih kelab di sini" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl border-border/40 shadow-xl max-h-64">
+                                    {ALL_CLUBS.map(club => (
+                                        <SelectItem key={club.id} value={club.id} className="rounded-lg cursor-pointer">
+                                            {club.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => setShowClubDissolveDialog(false)}
+                            className="rounded-xl font-black text-[10px] uppercase tracking-widest">Batal</Button>
+                        <Button onClick={handleBubarKelabSpesifik} disabled={!selectedDissolveClub || isCleaning}
+                            className="rounded-xl font-black text-[10px] uppercase tracking-widest bg-rose-600 hover:bg-rose-700 text-white">
+                            {isCleaning ? 'Memproses...' : 'Bubar Sekarang'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Dialog: Kelulusan Pemimpin (Presiden/Penasihat) */}
+            <Dialog open={showPendingLeadersDialog} onOpenChange={setShowPendingLeadersDialog}>
+                <DialogContent className="rounded-[2.5rem] max-w-2xl border-none shadow-2xl p-0 overflow-hidden">
+                    <div className="bg-orange-500 p-8 text-white relative">
+                        <div className="relative z-10">
+                            <h2 className="text-2xl font-black tracking-tight flex items-center gap-3">
+                                <Users className="w-8 h-8" /> Pengesahan Kepimpinan
+                            </h2>
+                            <p className="text-orange-50/80 text-xs font-bold uppercase tracking-[0.2em] mt-2">
+                                {pendingLeaderRequests.length} Permohonan Menunggu Tindakan
+                            </p>
+                        </div>
+                        <Users className="absolute -bottom-6 -right-6 w-32 h-32 text-white/10" />
+                    </div>
+                    
+                    <div className="max-h-[60vh] overflow-y-auto p-8 space-y-4 bg-muted/20">
+                        {pendingLeaderRequests.length === 0 ? (
+                            <div className="text-center py-10">
+                                <p className="text-muted-foreground font-medium italic">Tiada permohonan kepimpinan buat masa ini.</p>
+                            </div>
+                        ) : (
+                            pendingLeaderRequests.map(u => (
+                                <div key={u.id} className="bg-card rounded-3xl p-5 border border-border/50 shadow-sm flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <Avatar className="h-12 w-12 rounded-2xl border-2 border-background shadow-md">
+                                            <AvatarImage src={u.avatar_url} />
+                                            <AvatarFallback className="bg-orange-500/10 text-orange-600 font-black text-lg">
+                                                {u.full_name?.[0] || 'U'}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="min-w-0">
+                                            <h4 className="font-black text-sm truncate">{u.full_name}</h4>
+                                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                                                <Badge className={cn('text-[9px] font-black uppercase border-none', ROLE_COLORS[u.role])}>
+                                                    {ROLE_LABELS[u.role] || u.role}
+                                                </Badge>
+                                                {u.target_club_id && (
+                                                    <span className="text-[10px] bg-card border border-border/60 text-muted-foreground px-2 py-0.5 rounded-lg font-bold">
+                                                        {ALL_CLUBS.find(c => c.id === u.target_club_id)?.shortName || 'Kelab'}
+                                                    </span>
+                                                )}
+                                                <span className="text-[10px] text-muted-foreground font-bold font-mono bg-muted px-1.5 py-0.5 rounded italic">
+                                                    {u.student_id || u.matric_no || 'NO ID'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <Button variant="ghost" onClick={() => handleLeaderStatusAction(u.id, 'REJECTED', u.membership_id)}
+                                            className="rounded-xl h-10 w-10 p-0 text-rose-500 hover:bg-rose-500/10">
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                        <Button onClick={() => handleLeaderStatusAction(u.id, 'APPROVED', u.membership_id)}
+                                            className="rounded-xl h-10 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[10px] uppercase tracking-widest px-4">
+                                            Lulus
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                    <div className="p-6 bg-card border-t border-border/30 flex justify-end">
+                        <Button variant="outline" onClick={() => setShowPendingLeadersDialog(false)} className="rounded-xl font-black text-[10px] uppercase tracking-widest">Tutup</Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+
             {/* ── MAIN PAGE ── */}
             <div className="min-h-screen bg-background pb-20">
                 {/* Top Nav */}
@@ -658,9 +911,9 @@ export function JppAdminPage() {
                                         { label: 'Kelab', val: ALL_CLUBS.length, color: 'bg-blue-500', icon: LayoutGrid },
                                         { label: 'Aktiviti', val: stats.totalActivities, color: 'bg-emerald-500', icon: Activity },
                                         { label: 'Laporan', val: stats.totalReports, color: 'bg-indigo-500', icon: FileWarning },
-                                        { label: 'Menunggu', val: stats.pendingUsers, color: 'bg-orange-500', icon: Users, alert: stats.pendingUsers > 0 },
+                                        { label: 'Menunggu', val: stats.pendingUsers, color: 'bg-orange-500', icon: Users, alert: stats.pendingUsers > 0, onClick: () => setShowPendingLeadersDialog(true) },
                                     ].map((s, i) => (
-                                        <Card key={i} className="border-none shadow-sm rounded-[2rem] bg-card overflow-hidden">
+                                        <Card key={i} onClick={s.onClick} className={cn("border-none shadow-sm rounded-[2rem] bg-card overflow-hidden", s.onClick && "cursor-pointer hover:shadow-xl hover:shadow-orange-500/10 transition-all active:scale-95")}>
                                             <CardContent className="p-6">
                                                 <div className={cn('w-10 h-10 rounded-2xl flex items-center justify-center mb-4 text-white shadow-lg', s.color)}>
                                                     <s.icon className="w-5 h-5" />
@@ -1412,8 +1665,32 @@ export function JppAdminPage() {
                                                 <RotateCcw className="w-5 h-5" />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-black text-foreground group-hover:text-white transition-colors">Pembubaran Kohort</p>
-                                                <p className="text-[10px] text-muted-foreground font-medium mt-1 group-hover:text-white/60 transition-colors uppercase tracking-tight">Khas Badan Beruniform</p>
+                                                <p className="text-sm font-black text-foreground group-hover:text-white transition-colors">Pembubaran Menyeluruh</p>
+                                                <p className="text-[10px] text-muted-foreground font-medium mt-1 group-hover:text-white/60 transition-colors uppercase tracking-tight">Semua Kelab & Badan Beruniform</p>
+                                            </div>
+                                        </button>
+
+                                        {/* Action: Bubar Kelab Spesifik */}
+                                        <button onClick={() => setShowClubDissolveDialog(true)} disabled={isCleaning}
+                                            className="group p-6 rounded-[2rem] bg-card hover:bg-orange-600 transition-all duration-500 text-left flex flex-col justify-between h-44 shadow-sm hover:shadow-xl hover:shadow-orange-600/20 border border-border/50 hover:border-transparent">
+                                            <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-600 group-hover:bg-white/20 group-hover:text-white flex items-center justify-center transition-colors">
+                                                <RotateCcw className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-black text-foreground group-hover:text-white transition-colors">Pembubaran Kelab</p>
+                                                <p className="text-[10px] text-muted-foreground font-medium mt-1 group-hover:text-white/60 transition-colors uppercase tracking-tight">Pilih Kelab Spesifik</p>
+                                            </div>
+                                        </button>
+
+                                        {/* Action: Pembersihan Akaun Terbiar */}
+                                        <button onClick={handlePembersihanAkaun} disabled={isCleaning}
+                                            className="group p-6 rounded-[2rem] bg-card hover:bg-slate-800 dark:hover:bg-slate-100 transition-all duration-500 text-left flex flex-col justify-between h-44 shadow-sm hover:shadow-xl hover:shadow-slate-500/20 border border-border/50 hover:border-transparent">
+                                            <div className="w-10 h-10 rounded-xl bg-slate-500/10 text-slate-600 dark:text-slate-400 group-hover:bg-white/20 group-hover:text-white dark:group-hover:text-black flex items-center justify-center transition-colors">
+                                                <Users className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-black text-foreground group-hover:text-white dark:group-hover:text-black transition-colors">Pembersihan Akaun</p>
+                                                <p className="text-[10px] text-muted-foreground font-medium mt-1 group-hover:text-white/60 dark:group-hover:text-black/60 transition-colors uppercase tracking-tight">Pengguna tiada log masuk {'>'} 6 bulan</p>
                                             </div>
                                         </button>
                                     </div>

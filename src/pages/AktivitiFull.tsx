@@ -132,6 +132,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
       .from('club_activities')
       .select('*, creator:profiles!user_id(full_name)')
       .eq('club_id', selectedClubId)
+      .eq('is_archived', false)
       .order('start_date', { ascending: false });
     if (!error) setActivities(data || []);
     setLoading(false);
@@ -638,6 +639,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
       .from('programs')
       .select('*')
       .eq('club_id', selectedClubId)
+      .eq('is_archived', false)
       .order('tarikh_mula', { ascending: true });
 
     if (progByClub && progByClub.length > 0) {

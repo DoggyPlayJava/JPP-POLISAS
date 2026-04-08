@@ -118,7 +118,7 @@ export function LoginPage() {
           full_name: fullName.trim(),
           matric_no: matricNo.trim(),
           club_id: academikClubId,
-          role: 'CLUB_MEMBER', // Role asal profil sentiasa bermula sebagai ahli
+          role: isLeader ? leaderRole : 'CLUB_MEMBER', 
           department: jabatan,
           account_status: initialStatus,
         }).eq('id', data.user.id);
@@ -157,7 +157,7 @@ export function LoginPage() {
             const notifs = admins.map(a => ({
                user_id: a.id,
                title: 'Pendaftaran Pimpinan Baharu',
-               message: `Terdapat satu permohonan pendaftaran baru sebagai ${leaderRole === 'CLUB_PRESIDENT' ? 'Presiden' : 'Penasihat'} untuk kelab ${clubName}. Sila semak permohonan dalam tab "Permohonan Baru" di halaman Pengurusan Ahli.`,
+               message: `Terdapat satu permohonan pendaftaran baru sebagai ${ROLE_LABELS[leaderRole] || leaderRole} untuk kelab ${clubName}. Sila semak permohonan dalam tab "Permohonan Baru" di halaman Pengurusan Ahli.`,
                type: 'SYSTEM',
                is_read: false
             }));

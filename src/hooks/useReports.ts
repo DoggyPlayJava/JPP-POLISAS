@@ -12,6 +12,7 @@ export interface Report {
   status: ReportStatus;
   admin_feedback?: string;
   created_at: string;
+  is_archived?: boolean;
 }
 
 export function useReports(clubId?: string) {
@@ -19,7 +20,7 @@ export function useReports(clubId?: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchReports = useCallback(async () => {
+    const fetchReports = useCallback(async () => {
     if (!clubId) return;
     try {
       setLoading(true);

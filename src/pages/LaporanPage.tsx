@@ -62,6 +62,7 @@ export function LaporanPage() {
   const [submitting, setSubmitting] = useState(false);
   const effectiveClubId = selectedClubId ?? profile?.club_id;
   const { reports, loading, refresh: loadReports } = useReports(effectiveClubId || undefined);
+  const [filterTab, setFilterTab] = useState<'aktif' | 'arkib'>('aktif');
   const [allowAutoPdf, setAllowAutoPdf] = useState(true);
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -323,32 +324,58 @@ export function LaporanPage() {
         </Card>
 
         <div className="lg:col-span-3 space-y-4">
-          <div className="flex justify-between items-center"><h2 className="text-xl font-black">Rekod Dokumen</h2><Button variant="ghost" size="sm" onClick={loadReports} className="text-xs font-bold uppercase tracking-widest text-accent"><RefreshCw className="w-3 h-3 mr-2" /> Segarkan</Button></div>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-black">Rekod Dokumen</h2>
+            <Button variant="ghost" size="sm" onClick={loadReports} className="text-xs font-bold uppercase tracking-widest text-accent"><RefreshCw className="w-3 h-3 mr-2" /> Segarkan</Button>
+          </div>
+          
+          <div className="flex gap-2 mb-4 bg-muted/30 p-1 rounded-2xl w-full max-w-[300px]">
+             <Button
+                variant={filterTab === 'aktif' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setFilterTab('aktif')}
+                className="flex-1 rounded-xl text-xs font-bold uppercase tracking-widest"
+             >
+                Semasa
+             </Button>
+             <Button
+                variant={filterTab === 'arkib' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setFilterTab('arkib')}
+                className="flex-1 rounded-xl text-xs font-bold uppercase tracking-widest"
+             >
+                Arkib Laporan
+             </Button>
+          </div>
+
           {loading ? (
             <div className="flex justify-center py-10 opacity-40"><RefreshCw className="w-6 h-6 animate-spin" /></div>
-          ) : reports.length === 0 ? (
+          ) : reports.filter(r => filterTab === 'arkib' ? r.is_archived : !r.is_archived).length === 0 ? (
             <Empty className="py-20 rounded-[3rem] border-dashed border-2 bg-card shadow-sm">
               <EmptyMedia variant="icon">
                 <FileText className="w-8 h-8" />
               </EmptyMedia>
               <EmptyHeader>
-                <EmptyTitle className="text-sm font-black uppercase tracking-widest">Tiada Rekod Dokumen</EmptyTitle>
+                <EmptyTitle className="text-sm font-black uppercase tracking-widest">Tiada Rekod Di {filterTab === 'aktif' ? 'Semasa' : 'Arkib'}</EmptyTitle>
                 <EmptyDescription className="text-xs">
-                  Sila hantar laporan manual atau jana laporan bulanan.
+                  {filterTab === 'aktif' ? 'Sila hantar laporan manual atau jana laporan bulanan.' : 'Tiada dokumen yang diarkibkan untuk kohort lepas.'}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : (
             <AnimatePresence mode="popLayout">
-              {reports.map((r) => (
+              {reports.filter(r => filterTab === 'arkib' ? r.is_archived : !r.is_archived).map((r) => (
                 <motion.div key={r.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}>
-                  <Card className="bento-card border-none p-5">
+                  <Card className={cn("bento-card border-none p-5", r.is_archived && "opacity-70 grayscale-[20%] border-border/50")}>
                     <div className="flex flex-col gap-3">
                       <div className="flex justify-between items-start">
                         <div className="flex gap-4">
                           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0"><FileText className="w-5 h-5 text-primary" /></div>
                           <div>
-                            <p className="font-bold text-sm">{r.file_name}</p>
+                            <div className="flex items-center gap-2">
+                               <p className="font-bold text-sm">{r.file_name}</p>
+                               {r.is_archived && <Badge variant="outline" className="text-[9px] uppercase">Arkib</Badge>}
+                            </div>
                             <p className="text-[10px] opacity-50 uppercase tracking-widest font-black mt-1">{format(new Date(r.created_at), 'dd MMM yyyy, h:mm a')}</p>
                           </div>
                         </div>
@@ -357,7 +384,7 @@ export function LaporanPage() {
                           <a href={r.file_url} target="_blank" rel="noreferrer" className="text-[10px] font-bold text-primary underline tracking-widest uppercase">LIHAT FAIL</a>
                         </div>
                       </div>
-                      {r.status === 'Ditolak' && r.admin_feedback && (
+                      {r.status === 'Ditolak' && r.admin_feedback && !r.is_archived && (
                         <div className="mt-1 p-3 bg-rose-50/50 border border-rose-100/50 rounded-xl">
                           <p className="text-[10px] font-black uppercase tracking-widest text-rose-500 mb-1">Nota Penolakan JPP</p>
                           <p className="text-xs font-semibold text-rose-700 italic">{r.admin_feedback}</p>
