@@ -45,11 +45,11 @@ function RequireApproval({ children }: { children: React.ReactNode }) {
     return <RejectedPage />;
   }
 
-  // B. Oleh sebab account_status kini secara automatik APPROVED sebaik pendaftaran,
-  // mana-mana 'PENDING' lama (atau kelulusan terbantut) kita halang ke paparan ringkas
-  // atau terus lepaskan jika selamat. TETAPI pengguna mengadu: "lepas register kena approval".
-  // Maka, secara drastik kita buang rintangan PENDING ini terus. 
-  // Biar pengguna masuk asalkan mereka dah Verify Email dan Login.
+  // B. Jika status PENDING (untuk pengguna yang mohon sebagai PIMPINAN),
+  // kita halang ke skrin Pending supaya mereka tunggu kelulusan pentadbir.
+  if (profile?.account_status === 'PENDING') {
+    return <PendingPage />;
+  }
 
   // C. Lepaskan log masuk jika sah
   return <>{children}</>;

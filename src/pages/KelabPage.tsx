@@ -16,7 +16,9 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
-import { JOINABLE_CATEGORIES, AUTO_ASSIGN_CATEGORIES, RESTRICTED_CATEGORIES } from '@/types';
+import { JOINABLE_CATEGORIES, AUTO_ASSIGN_CATEGORIES, RESTRICTED_CATEGORIES, UserRole, ROLE_LABELS } from '@/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 const CATEGORY_META: Record<string, { icon: any; color: string; bg: string }> = {
   'AKADEMIK': { icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-500/10' },
@@ -43,6 +45,7 @@ export function KelabPage() {
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState<string | null>(null);
   const [confirmClub, setConfirmClub] = useState<any | null>(null);
+  const [applyRole, setApplyRole] = useState<UserRole>('CLUB_MEMBER');
   const [maxClubs, setMaxClubs] = useState(2);
 
   const categories = ['Semua', 'Akademik', 'Sukan', 'Umum', 'Badan Beruniform'];
@@ -112,13 +115,31 @@ export function KelabPage() {
       const { error } = await supabase.from('student_club_memberships').insert({
         user_id: user.id,
         club_id: confirmClub.id,
-        role: 'CLUB_MEMBER',
+        role: applyRole,
         account_status: 'PENDING',
         is_primary: false,
       });
       if (error) throw error;
-      toast.success(`Permohonan untuk ${confirmClub.name} telah dihantar! Tunggu kelulusan Presiden/Penasihat.`);
+
+      // NOTIFY JPP ADMIN FOR LEADER APPLICATIONS
+      if (applyRole === 'CLUB_PRESIDENT' || applyRole === 'CLUB_ADVISOR') {
+        const { data: admins } = await supabase.from('profiles').select('id').in('role', ['SUPER_ADMIN_JPP', 'ADMIN', 'JPP']);
+        if (admins && admins.length > 0) {
+          const notifs = admins.map(a => ({
+             user_id: a.id,
+             title: 'Permohonan Pimpinan Baharu (Sedia Ada)',
+             message: `Terdapat satu permohonan kepimpinan baru sebagai ${applyRole === 'CLUB_PRESIDENT' ? 'Presiden' : 'Penasihat'} untuk kelab ${confirmClub.name}. Sila semak dalam tab "Permohonan Baru" di Pengurusan Ahli.`,
+             type: 'SYSTEM',
+             is_read: false
+          }));
+          const { error: notifErr } = await supabase.from('notifications').insert(notifs);
+          if (notifErr) console.error("Gagal hantar notifikasi:", notifErr);
+        }
+      }
+
+      toast.success(`Permohonan sebagai ${ROLE_LABELS[applyRole]} untuk ${confirmClub.name} telah dihantar! Tunggu kelulusan.`);
       setConfirmClub(null);
+      setApplyRole('CLUB_MEMBER');
       load();
     } catch (e: any) {
       toast.error(e.message || 'Gagal hantar permohonan');
@@ -423,7 +444,7 @@ export function KelabPage() {
       )}
 
       {/* ── DIALOG PENGESAHAN APPLY ── */}
-      <Dialog open={!!confirmClub} onOpenChange={() => setConfirmClub(null)}>
+      <Dialog open={!!confirmClub} onOpenChange={(open) => { if (!open) { setConfirmClub(null); setApplyRole('CLUB_MEMBER'); } }}>
         <DialogContent className="rounded-[2rem] max-w-sm">
           <DialogHeader>
             <DialogTitle className="font-black text-xl tracking-tight">Mohon Sertai Kelab</DialogTitle>
@@ -445,13 +466,28 @@ export function KelabPage() {
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Permohonan anda akan dihantar kepada <strong>MT, Presiden, atau Penasihat</strong> kelab ini untuk kelulusan. Anda akan menerima notifikasi setelah status dikemaskini.
               </p>
+              
+              <div className="space-y-1.5 mt-2">
+                <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Peranan Dipilih</Label>
+                <Select value={applyRole} onValueChange={(r: UserRole) => setApplyRole(r)}>
+                  <SelectTrigger className="h-12 rounded-xl bg-muted/40 border-border/60 font-medium w-full">
+                    <SelectValue placeholder="Pilih peranan..." />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl border-border/60 shadow-2xl">
+                     <SelectItem value="CLUB_MEMBER" className="font-bold py-2">Ahli Biasa</SelectItem>
+                     <SelectItem value="CLUB_PRESIDENT" className="font-bold py-2">Presiden Kelab</SelectItem>
+                     <SelectItem value="CLUB_ADVISOR" className="font-bold py-2">Penasihat Kelab</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/60">
                 Had keahlian: {approvedCount}/{(confirmClub.short_name?.toUpperCase() === 'GEOSAS' && profile?.department === 'awam') ? maxClubs + 1 : effectiveMaxClubs} kelab digunakan
               </p>
             </div>
           )}
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setConfirmClub(null)} className="rounded-xl font-black text-[10px] uppercase tracking-widest">
+            <Button variant="outline" onClick={() => { setConfirmClub(null); setApplyRole('CLUB_MEMBER'); }} className="rounded-xl font-black text-[10px] uppercase tracking-widest">
               Batal
             </Button>
             <Button onClick={confirmApply} disabled={!!applying} className="rounded-xl font-black text-[10px] uppercase tracking-widest bg-primary">

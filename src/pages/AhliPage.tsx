@@ -168,18 +168,47 @@ export function AhliPage() {
         });
         
         // Padam keahlian terus jika dibuang atau direject permohonan baru
-        await supabase.from('student_club_memberships')
+        const { error: delErr } = await supabase.from('student_club_memberships')
           .delete()
           .eq('user_id', userId)
           .eq('club_id', clubId);
+        if (delErr) throw delErr;
+
+        // Jika mereka ditolak permohonan, pastikan akaun utama mereka dibuka semula sebagai ahli biasa
+        if (status === 'REJECTED') {
+          const { error: profErr } = await supabase.from('profiles').update({ account_status: 'APPROVED' }).eq('id', userId);
+          if (profErr) throw profErr;
+        }
           
       } else {
         // Luluskan
-        await supabase.from('student_club_memberships')
+        const { error: updErr } = await supabase.from('student_club_memberships')
           .update(updateData)
           .eq('user_id', userId)
           .eq('club_id', clubId);
+        if (updErr) throw updErr;
+          
+        // Buka pintu untuk pengguna ini memandangkan mereka dah diluluskan
+        await supabase.from('profiles').update({ account_status: 'APPROVED' }).eq('id', userId);
       }
+
+      // Hantar Notifikasi kepada Pengguna Sendiri
+      const clubName = ALL_CLUBS.find(c => c.id === clubId)?.name || 'Kelab tersebut';
+      const notifTitle = status === 'APPROVED' ? 'Permohonan Diluluskan' : (status === 'REJECTED' ? 'Permohonan Ditolak' : 'Keahlian Dibatalkan');
+      const notifMsg = status === 'APPROVED' 
+          ? `Tahniah! Permohonan anda untuk menyertai ${clubName} telah diluluskan.`
+          : (status === 'REJECTED' 
+              ? `Dukacita dimaklumkan permohonan anda untuk menyertai ${clubName} telah ditolak.` 
+              : `Keahlian anda dalam ${clubName} telah disingkirkan/ditarik balik.${kickReason ? ` Sebab: ${kickReason}` : ''}`);
+
+      const { error: notifErr } = await supabase.from('notifications').insert({
+          user_id: userId,
+          title: notifTitle,
+          message: notifMsg,
+          type: 'SYSTEM',
+          is_read: false
+      });
+      if (notifErr) console.error("Gagal hantar notifikasi pengguna:", notifErr);
 
       toast.success(status === 'APPROVED' ? 'Tindakan berjaya!' : 'Ahli/Permohonan telah disingkirkan.');
       setKickingMember(null);
