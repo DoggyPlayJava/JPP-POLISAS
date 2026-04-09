@@ -155,7 +155,7 @@
   }
 
   .page-container {
-    @apply max-w-7xl mx-auto px-6 py-12 lg:px-12 lg:py-24;
+    @apply max-w-7xl mx-auto p-4 sm:px-6 sm:py-12 lg:px-12 lg:py-24;
   }
 
   .sidebar-jpp {

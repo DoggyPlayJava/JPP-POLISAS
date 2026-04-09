@@ -154,15 +154,15 @@ export function SettingsPage() {
         <div className="space-y-4">
           <Badge variant="secondary" className="px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] bg-accent/10 text-accent border-none glow-accent">Pusat Kawalan</Badge>
           <div className="space-y-1">
-            <h1 className="text-5xl md:text-6xl font-black tracking-tighter gradient-text">Tetapan</h1>
-            <p className="text-muted-foreground text-lg md:text-xl max-w-2xl font-medium leading-relaxed">Urus parameter <span className="text-primary font-bold text-base uppercase tracking-widest">Tetapan Peribadi</span> dan operasi keselamatan sistem anda.</p>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter gradient-text leading-none">Tetapan</h1>
+            <p className="text-muted-foreground text-base sm:text-lg md:text-xl max-w-2xl font-medium leading-relaxed">Urus parameter <span className="text-primary font-bold text-base uppercase tracking-widest">Tetapan Peribadi</span> dan operasi keselamatan sistem anda.</p>
           </div>
         </div>
       </motion.div>
 
       {/* TABS PENGEMUDIAN */}
       <Tabs value={currentTab} onValueChange={(value) => setSearchParams({ tab: value })} className="w-full">
-        <TabsList className="bg-muted/30 h-auto p-1.5 rounded-[1.5rem] gap-2 border border-border/50 shadow-inner mb-12 flex-wrap">
+        <TabsList className="bg-muted/30 h-auto p-1.5 rounded-[1.5rem] gap-2 border border-border/50 shadow-inner mb-12 flex-col sm:flex-row overflow-x-auto">
           {[
             { value: 'general', icon: User, label: 'Profil' },
             { value: 'notifications', icon: Bell, label: 'Pemberitahuan' },
@@ -170,7 +170,7 @@ export function SettingsPage() {
             { value: 'billing', icon: CreditCard, label: 'Langganan' },
             { value: 'help', icon: HelpCircle, label: 'Bantuan & Isu' },
           ].map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value} className="data-[state=active]:bg-background data-[state=active]:shadow-xl data-[state=active]:text-primary rounded-xl px-10 py-3 font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground transition-all duration-300 flex items-center gap-3 border border-transparent data-[state=active]:border-border/50">
+            <TabsTrigger key={tab.value} value={tab.value} className="flex-1 sm:flex-none justify-start sm:justify-center data-[state=active]:bg-background data-[state=active]:shadow-xl data-[state=active]:text-primary rounded-xl px-6 sm:px-10 py-3 font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground transition-all duration-300 flex items-center gap-3 border border-transparent data-[state=active]:border-border/50">
               <tab.icon className="w-4 h-4" /> {tab.label}
             </TabsTrigger>
           ))}
@@ -181,11 +181,11 @@ export function SettingsPage() {
           <TabsContent value="general" className="space-y-10 focus-visible:ring-0">
             <motion.div initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} exit={{ opacity: 0, y: -20, filter: 'blur(10px)' }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="space-y-10">
               <Card className="premium-card bg-background/60 backdrop-blur-md border-border/30 overflow-hidden shadow-sm">
-                <CardHeader className="p-10 pb-8 border-b border-border/30">
-                  <CardTitle className="text-2xl font-black tracking-tight uppercase tracking-[0.1em]">Profil Awam</CardTitle>
+                <CardHeader className="p-6 sm:p-10 pb-6 sm:pb-8 border-b border-border/30">
+                  <CardTitle className="text-xl sm:text-2xl font-black tracking-tight uppercase tracking-[0.1em]">Profil Awam</CardTitle>
                   <CardDescription className="text-sm font-medium">Bagaimana profil anda dipaparkan di seluruh sistem.</CardDescription>
                 </CardHeader>
-                <CardContent className="p-10 space-y-12">
+                <CardContent className="p-6 sm:p-10 space-y-10 sm:space-y-12">
                   <div className="flex flex-col md:flex-row items-start md:items-center gap-10">
 
                     {/* 🔥 RUANGAN AVATAR DENGAN FUNGSI MUAT NAIK 🔥 */}
@@ -320,11 +320,11 @@ export function SettingsPage() {
           <TabsContent value="security" className="space-y-10 focus-visible:ring-0">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-6">
               <Card className="premium-card bg-background/60 backdrop-blur-md border-border/30 overflow-hidden shadow-sm">
-                <CardHeader className="p-10 pb-8 border-b border-border/30">
-                  <CardTitle className="text-2xl font-black tracking-tight uppercase">Keselamatan Akaun</CardTitle>
+                <CardHeader className="p-6 sm:p-10 pb-6 sm:pb-8 border-b border-border/30">
+                  <CardTitle className="text-xl sm:text-2xl font-black tracking-tight uppercase">Keselamatan Akaun</CardTitle>
                   <CardDescription>Kekalkan keselamatan akaun anda dengan kata laluan yang kuat.</CardDescription>
                 </CardHeader>
-                <CardContent className="p-10 space-y-8">
+                <CardContent className="p-6 sm:p-10 space-y-8">
                   <div className="space-y-6">
                     <div className="space-y-4">
                       <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">Kata Laluan Baru</Label>
@@ -348,14 +348,14 @@ export function SettingsPage() {
                     </div>
                   </div>
                 </CardContent>
-                <div className="p-8 bg-muted/20 border-t border-border/30 flex justify-end">
-                  <Button 
+                <div className="p-6 sm:p-8 bg-muted/20 border-t border-border/30 flex justify-end">
+                  <button 
                     onClick={handleUpdatePassword} 
                     disabled={loading || !newPassword}
-                    className="h-14 px-12 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:scale-105 transition-transform"
+                    className="w-full sm:w-auto h-14 px-12 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:scale-105 transition-transform"
                   >
                     {loading ? 'Mengemaskini...' : 'Kemaskini Kata Laluan'}
-                  </Button>
+                  </button>
                 </div>
               </Card>
               
@@ -378,7 +378,7 @@ export function SettingsPage() {
               className="grid grid-cols-1 lg:grid-cols-2 gap-8"
             >
               {/* --- FREE TIER --- */}
-              <Card className="premium-card bg-card/40 backdrop-blur-md border-border/40 rounded-[3rem] p-10 flex flex-col justify-between relative overflow-hidden group">
+              <Card className="premium-card bg-card/40 backdrop-blur-md border-border/40 rounded-[3rem] p-6 sm:p-10 flex flex-col justify-between relative overflow-hidden group">
                 <div className="space-y-8 relative z-10">
                   <div className="flex items-center justify-between">
                     <Badge variant="outline" className="rounded-full px-4 py-1.5 border-border/50 text-[10px] font-black uppercase tracking-widest bg-muted/20">Active Plan</Badge>
@@ -414,7 +414,7 @@ export function SettingsPage() {
               </Card>
 
               {/* --- PRO TIER (NEXUS AI) --- */}
-              <Card className="premium-card bg-gradient-to-br from-indigo-950 via-indigo-900 to-indigo-950 dark:from-slate-950 dark:via-indigo-950 dark:to-slate-950 text-indigo-50 border-none shadow-2xl shadow-indigo-500/10 rounded-[3rem] p-10 flex flex-col justify-between relative overflow-hidden group">
+              <Card className="premium-card bg-gradient-to-br from-indigo-950 via-indigo-900 to-indigo-950 dark:from-slate-950 dark:via-indigo-950 dark:to-slate-950 text-indigo-50 border-none shadow-2xl shadow-indigo-500/10 rounded-[3rem] p-6 sm:p-10 flex flex-col justify-between relative overflow-hidden group">
                 {/* Glow & Backdrop Decor */}
                 <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-125 transition-transform duration-1000 group-hover:rotate-12"><Sparkles size={280} className="text-indigo-400" /></div>
                 <div className="absolute -inset-2 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 blur-lg pointer-events-none" />

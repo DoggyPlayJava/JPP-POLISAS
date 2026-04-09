@@ -370,7 +370,7 @@ export function SemakanLaporanPage() {
     <div className="page-container space-y-10 pb-24 max-w-7xl mx-auto">
 
       {/* ── Header Premium ── */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-900 dark:from-black dark:via-slate-950 dark:to-slate-950 p-10 md:p-12 rounded-[3.5rem] text-white shadow-2xl shadow-slate-900/30 relative overflow-hidden border border-white/5 group">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-900 dark:from-black dark:via-slate-950 dark:to-slate-950 p-6 sm:p-8 md:p-12 rounded-[3.5rem] text-white shadow-2xl shadow-slate-900/30 relative overflow-hidden border border-white/5 group">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 group-hover:bg-primary/20 transition-colors duration-1000" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3" />
 
@@ -378,7 +378,7 @@ export function SemakanLaporanPage() {
           <Badge className="bg-white/5 text-amber-400 border border-white/10 px-5 py-2 font-black uppercase tracking-widest text-[10px] backdrop-blur-md rounded-2xl shadow-xl">
             Super Admin Panel
           </Badge>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-none text-white drop-shadow-2xl">Pusat Kawalan JPP</h1>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-none text-white drop-shadow-2xl">Pusat Kawalan JPP</h1>
           <p className="text-slate-400 font-medium max-w-lg leading-relaxed text-sm md:text-base">Sahkan takwim program dan pantau kelulusan dokumen rasmi persatuan pelajar.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center relative z-10 shrink-0">
@@ -412,7 +412,7 @@ export function SemakanLaporanPage() {
 
         {/* --- TAB 1: PENGURUSAN PROGRAM --- */}
         <TabsContent value="programs" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <AnimatePresence>
               {programs.filter(p => p.status === 'PENDING_APPROVAL').map((p, i) => {
                 const diffInDays = (new Date().getTime() - new Date(p.updated_at).getTime()) / (1000 * 3600 * 24);
@@ -550,7 +550,7 @@ export function SemakanLaporanPage() {
                 <ChevronRight className={cn("w-4 h-4 text-slate-300 ml-auto transition-transform", showArchive && "rotate-90")} />
               </button>
               {showArchive && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                   {archivedPrograms.map((p) => (
                     <div key={p.id} className="flex items-center gap-4 p-4 bg-card/70 border border-border rounded-2xl">
                       <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground shrink-0">

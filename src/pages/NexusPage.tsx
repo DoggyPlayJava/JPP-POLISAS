@@ -37,7 +37,7 @@ function useLocalState<T>(key: string, initialValue: T) {
   useEffect(() => {
     try {
       window.localStorage.setItem(key, JSON.stringify(state));
-    } catch (e) {}
+    } catch (e) { }
   }, [key, state]);
 
   return [state, setState] as const;
@@ -117,7 +117,7 @@ export function NexusPage() {
         setTokenData(data);
         // Switch to flash automatically if cannot afford pro
         if (data.current_balance < (data.all_costs?.pro_kertas_kerja || 50) && selectedAiModel === 'pro') {
-           setSelectedAiModel('flash'); 
+          setSelectedAiModel('flash');
         }
       }
     };
@@ -151,7 +151,7 @@ export function NexusPage() {
         } catch { /* try next */ }
       }
     };
-    
+
     const loadIsoLogo = async () => {
       try {
         const res = await fetch('/iso-logos.png');
@@ -179,11 +179,11 @@ export function NexusPage() {
       toast.error('Sila muat naik resit pembayaran anda.');
       return;
     }
-    
+
     // Check file size (5MB max)
     if (receiptFile.size > 5 * 1024 * 1024) {
-       toast.error('Saiz fail terlalu besar. Maksimum 5MB dibenarkan.');
-       return;
+      toast.error('Saiz fail terlalu besar. Maksimum 5MB dibenarkan.');
+      return;
     }
 
     setIsSubmittingTier(true);
@@ -192,7 +192,7 @@ export function NexusPage() {
       // Upload to Supabase Storage
       const fileExt = receiptFile.name.split('.').pop();
       const fileName = `${profile?.id}/${Date.now()}_receipt.${fileExt}`;
-      
+
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('receipts')
         .upload(fileName, receiptFile);
@@ -200,7 +200,7 @@ export function NexusPage() {
       if (uploadError) throw new Error('Gagal memuat naik resit: ' + uploadError.message);
 
       toast.loading('Menghantar permohonan...', { id: toastId });
-      
+
       const { error } = await supabase.from('ai_tier_requests').insert({
         user_id: profile?.id,
         current_tier: tokenData?.tier || 'free',
@@ -209,18 +209,18 @@ export function NexusPage() {
         receipt_url: uploadData.path
       });
       if (error) throw error;
-      
+
       // Notify System Admins
       toast.loading('Menghantar notifikasi kepada Admin...', { id: toastId });
       const { data: admins } = await supabase.from('profiles').select('id').eq('is_super_admin', true);
       if (admins && admins.length > 0) {
-          const notifications = admins.map(a => ({
-              user_id: a.id,
-              title: 'INVOIS BAHARU (NEXUS AI)',
-              content: `Terdapat resit pembayaran langganan PRO Tier baharu daripada ${profile?.full_name || 'Pelajar'} untuk disemak.`,
-              is_read: false
-          }));
-          await supabase.from('notifications').insert(notifications);
+        const notifications = admins.map(a => ({
+          user_id: a.id,
+          title: 'INVOIS BAHARU (NEXUS AI)',
+          content: `Terdapat resit pembayaran langganan PRO Tier baharu daripada ${profile?.full_name || 'Pelajar'} untuk disemak.`,
+          is_read: false
+        }));
+        await supabase.from('notifications').insert(notifications);
       }
 
       toast.success('Permohonan berjaya dihantar! Admin akan menyemak resit anda.', { id: toastId });
@@ -237,33 +237,33 @@ export function NexusPage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (images.length + files.length > 3) {
-       toast.error("Maksimum 3 keping gambar sahaja dibenarkan serentak.");
-       return;
+      toast.error("Maksimum 3 keping gambar sahaja dibenarkan serentak.");
+      return;
     }
-    
+
     files.forEach(file => {
       const reader = new FileReader();
       reader.onload = (ev) => {
-         setImages(prev => [...prev, { file, base64: ev.target?.result, mimeType: file.type }]);
+        setImages(prev => [...prev, { file, base64: ev.target?.result, mimeType: file.type }]);
       };
       reader.readAsDataURL(file);
     });
-    
+
     if (e.target) e.target.value = '';
   };
 
   const removeImage = (idx: number) => {
-     setImages(prev => prev.filter((_, i) => i !== idx));
+    setImages(prev => prev.filter((_, i) => i !== idx));
   };
 
   const handleDownloadDocx = async (markdownContent: string, defaultFilename: string) => {
     try {
       const { marked } = await import('marked');
       let htmlContent = await marked.parse(markdownContent);
-      
+
       // Tukarkan kod tag khas kepada Page Break MS Word secara mutlak
       htmlContent = htmlContent.replace(/<!-- PAGE_BREAK -->/g, "<br clear=all style='mso-special-character:line-break; page-break-before:always'>");
-      
+
       // Inject Logo before KERTAS KERJA on cover page
       if (logoBase64Ref.current) {
         htmlContent = htmlContent.replace(
@@ -335,7 +335,7 @@ export function NexusPage() {
     console.log('▶️ Memulakan proses muat turun DOCX asli...');
     try {
       const { generateKertasKerjaDocx } = await import('../utils/docxGenerator');
-      
+
       console.log('🔄 Menjana blob DOCX...');
       const blob = await generateKertasKerjaDocx(data, logoBase64Ref.current, isoLogoBase64Ref.current);
 
@@ -353,13 +353,13 @@ export function NexusPage() {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      
+
       // Delay revoking URL so that Chrome's async download manager has time to read 
       // the 'download' attribute metadata.
       setTimeout(() => {
         URL.revokeObjectURL(url);
       }, 1000);
-      
+
       console.log('✅ Selesai.');
       toast.success('Fail .docx berjaya dimuat turun! Sedia dibuka dalam Microsoft Word.');
     } catch (error) {
@@ -420,7 +420,7 @@ export function NexusPage() {
       if (rawResult) {
         try {
           // Bersihkan output AI — buang markdown code fences jika ada
-          const cleaned = rawResult.trim().replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/,'');
+          const cleaned = rawResult.trim().replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/, '');
           const parsed: KertasKerjaData = JSON.parse(cleaned);
           setHasilKertasKerja(parsed);
           toast.success('Draf kertas kerja berjaya dijana!');
@@ -464,8 +464,8 @@ export function NexusPage() {
   };
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      
+    <div className="p-5 sm:p-8 max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
       {/* Header Section */}
       <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-6 relative">
         <div className="flex items-center gap-5 relative z-10 w-full md:w-auto">
@@ -486,16 +486,16 @@ export function NexusPage() {
 
       {/* Main Tabs UI */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full justify-start h-auto p-1.5 mb-6 bg-slate-100/80 dark:bg-slate-900/50 backdrop-blur-sm shadow-sm rounded-2xl border border-slate-200/60 dark:border-border/50">
-          <TabsTrigger value="kertas-kerja" className="gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-indigo-400">
+        <TabsList className="w-full justify-start h-auto p-1.5 mb-6 bg-slate-100/80 dark:bg-slate-900/50 backdrop-blur-sm shadow-sm rounded-2xl border border-slate-200/60 dark:border-border/50 flex-col sm:flex-row overflow-x-auto">
+          <TabsTrigger value="kertas-kerja" className="flex-1 sm:flex-none justify-start sm:justify-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-indigo-400">
             <FileText className="w-4 h-4" />
             <span className="font-bold">Penjana Kertas Kerja</span>
           </TabsTrigger>
-          <TabsTrigger value="minit-mesyuarat" className="gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-emerald-400">
+          <TabsTrigger value="minit-mesyuarat" className="flex-1 sm:flex-none justify-start sm:justify-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-emerald-400">
             <Users className="w-4 h-4" />
             <span className="font-bold">Minit Mesyuarat</span>
           </TabsTrigger>
-          <TabsTrigger value="langganan" className="gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-amber-500">
+          <TabsTrigger value="langganan" className="flex-1 sm:flex-none justify-start sm:justify-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-amber-500">
             <Sparkles className="w-4 h-4" />
             <span className="font-bold">Langganan & Token</span>
           </TabsTrigger>
@@ -504,11 +504,11 @@ export function NexusPage() {
         {/* Tab Penjana Kertas Kerja */}
         <TabsContent value="kertas-kerja" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
+
             <div className="lg:col-span-5 space-y-6">
               <Card className="border-slate-200/60 dark:border-border/50 shadow-xl overflow-hidden bg-white dark:bg-[#121214] transition-all relative">
                 <div className="h-1.5 bg-gradient-to-r from-indigo-500 to-purple-500" />
-                
+
                 {/* Header & Reset Button */}
                 <div className="px-6 pt-4 flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Isi Borang</span>
@@ -522,13 +522,13 @@ export function NexusPage() {
                   <div className="flex items-center justify-between">
                     {[1, 2, 3].map((step) => (
                       <div key={step} className="flex flex-col items-center flex-1 relative">
-                        <button 
+                        <button
                           type="button"
                           onClick={() => setKertasKerjaStep(step)}
                           className={cn(
                             "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold z-10 transition-all duration-300 hover:scale-110",
-                            kertasKerjaStep >= step 
-                              ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/20" 
+                            kertasKerjaStep >= step
+                              ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/20"
                               : "bg-slate-100 dark:bg-muted text-muted-foreground hover:bg-slate-200 dark:hover:bg-muted/80 cursor-pointer"
                           )}
                         >
@@ -560,9 +560,9 @@ export function NexusPage() {
                     <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                       <div className="space-y-2">
                         <Label className="text-xs font-bold uppercase tracking-widest text-indigo-500/90 dark:text-indigo-400">Tajuk Program</Label>
-                        <Input 
-                          placeholder="Cth: Karnival Kerjaya & Keusahawanan 2026" 
-                          value={tajukProgram} 
+                        <Input
+                          placeholder="Cth: Karnival Kerjaya & Keusahawanan 2026"
+                          value={tajukProgram}
                           onChange={(e) => setTajukProgram(e.target.value)}
                           className="bg-slate-50 dark:bg-[#0A0A0B]/50 border-slate-200 dark:border-border/60 focus:ring-2 focus:ring-indigo-500/20"
                         />
@@ -610,19 +610,19 @@ export function NexusPage() {
                             })}
                           </div>
                           <div className="pt-2">
-                             <Input 
-                               placeholder="Lain-lain (Sila nyatakan...)" 
-                               value={bentukProgramLain}
-                               onChange={(e) => setBentukProgramLain(e.target.value)}
-                               className="bg-slate-50 dark:bg-[#0A0A0B]/50 h-9 text-xs focus:ring-2 focus:ring-emerald-500/20"
-                             />
+                            <Input
+                              placeholder="Lain-lain (Sila nyatakan...)"
+                              value={bentukProgramLain}
+                              onChange={(e) => setBentukProgramLain(e.target.value)}
+                              className="bg-slate-50 dark:bg-[#0A0A0B]/50 h-9 text-xs focus:ring-2 focus:ring-emerald-500/20"
+                            />
                           </div>
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-xs font-bold uppercase tracking-widest text-indigo-500/90 dark:text-indigo-400">Objektif Utama</Label>
-                        <Textarea 
-                          placeholder="Nyatakan dengan jelas 2-3 objektif program ini dianjurkan..." 
+                        <Textarea
+                          placeholder="Nyatakan dengan jelas 2-3 objektif program ini dianjurkan..."
                           className="min-h-[100px] resize-none bg-background/80 border-border/60 focus:ring-2 focus:ring-indigo-500/20"
                           value={objektifProgram}
                           onChange={(e) => setObjektifProgram(e.target.value)}
@@ -635,18 +635,18 @@ export function NexusPage() {
                     <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-bold uppercase tracking-widest text-indigo-500/90 dark:text-indigo-400">Penganjur Utama / Rakan Kerjasama</Label>
-                        <Input 
-                          placeholder="Cth: Kelab IT bersama JHEP POLISAS" 
-                          value={kelabPenganjur} 
+                        <Input
+                          placeholder="Cth: Kelab IT bersama JHEP POLISAS"
+                          value={kelabPenganjur}
                           onChange={(e) => setKelabPenganjur(e.target.value)}
                           className="bg-slate-50 dark:bg-[#0A0A0B]/50 focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tarikh / Tempoh</Label>
-                          <Input 
-                            placeholder="Cth: 15-18 Mei 2026" 
+                          <Input
+                            placeholder="Cth: 15-18 Mei 2026"
                             value={tarikhProgram}
                             onChange={(e) => setTarikhProgram(e.target.value)}
                             className="bg-slate-50 dark:bg-[#0A0A0B]/50 h-9 text-sm focus:ring-2 focus:ring-indigo-500/20"
@@ -654,8 +654,8 @@ export function NexusPage() {
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tempat / Platform</Label>
-                          <Input 
-                            placeholder="Cth: Dewan Jubli Perak" 
+                          <Input
+                            placeholder="Cth: Dewan Jubli Perak"
                             value={tempatProgram}
                             onChange={(e) => setTempatProgram(e.target.value)}
                             className="bg-slate-50 dark:bg-[#0A0A0B]/50 h-9 text-sm focus:ring-2 focus:ring-indigo-500/20"
@@ -663,8 +663,8 @@ export function NexusPage() {
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Bilangan Peserta</Label>
-                          <Input 
-                            placeholder="Cth: 200" 
+                          <Input
+                            placeholder="Cth: 200"
                             type="number"
                             value={sasaranPeserta}
                             onChange={(e) => setSasaranPeserta(e.target.value)}
@@ -673,8 +673,8 @@ export function NexusPage() {
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Bil. Pegawai / AJK</Label>
-                          <Input 
-                            placeholder="Cth: 5" 
+                          <Input
+                            placeholder="Cth: 5"
                             type="number"
                             value={bilanganPegawai}
                             onChange={(e) => setBilanganPegawai(e.target.value)}
@@ -691,8 +691,8 @@ export function NexusPage() {
                         <Label className="text-xs font-bold uppercase tracking-widest text-indigo-500/90 dark:text-indigo-400">Jumlah Anggaran Kos (RM)</Label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm">RM</span>
-                          <Input 
-                            placeholder="Cth: 1500" 
+                          <Input
+                            placeholder="Cth: 1500"
                             type="number"
                             value={anggaranKos}
                             onChange={(e) => setAnggaranKos(e.target.value)}
@@ -702,8 +702,8 @@ export function NexusPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-xs font-bold uppercase tracking-widest text-indigo-500/90 dark:text-indigo-400">Nama Penuh Pengarah Program</Label>
-                        <Input 
-                          placeholder="Cth: Muhamad Amirul Hakimi Bin Mohd Zawawi" 
+                        <Input
+                          placeholder="Cth: Muhamad Amirul Hakimi Bin Mohd Zawawi"
                           value={namaPengarah}
                           onChange={(e) => setNamaPengarah(e.target.value)}
                           className="bg-slate-50 dark:bg-[#0A0A0B]/50 focus:ring-2 focus:ring-indigo-500/20"
@@ -719,7 +719,7 @@ export function NexusPage() {
                         />
                         <p className="text-[10px] text-muted-foreground">Jika dikosongkan, AI akan menggunakan placeholder "(NAMA)" dalam carta organisasi.</p>
                       </div>
-                      
+
                       <div className="pt-2">
                         <div className="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex gap-3 text-indigo-800 dark:text-indigo-300 text-sm">
                           <Sparkles className="w-5 h-5 shrink-0 text-indigo-600 dark:text-indigo-400 mt-0.5" />
@@ -730,7 +730,7 @@ export function NexusPage() {
                       </div>
                       <div className="pt-4 border-t border-slate-200 dark:border-border/60">
                         <Label className="text-xs font-bold uppercase tracking-widest text-indigo-500/90 dark:text-indigo-400 mb-3 block">Pilihan Kecerdasan AI</Label>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <button
                             onClick={() => {
                               const flashCost = tokenData?.all_costs?.flash_kertas_kerja || 0;
@@ -742,8 +742,8 @@ export function NexusPage() {
                             }}
                             className={cn(
                               "text-left p-4 rounded-xl border-2 transition-all relative overflow-hidden",
-                              selectedAiModel === 'flash' 
-                                ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10 shadow-sm" 
+                              selectedAiModel === 'flash'
+                                ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10 shadow-sm"
                                 : (!tokenData || tokenData.current_balance < (tokenData.all_costs?.flash_kertas_kerja || 0)) ? "border-slate-200 dark:border-border/60 opacity-60 cursor-not-allowed" : "border-slate-200 dark:border-border/60 hover:border-indigo-300 dark:hover:border-indigo-500/50"
                             )}
                           >
@@ -778,8 +778,8 @@ export function NexusPage() {
                             }}
                             className={cn(
                               "text-left p-4 rounded-xl border-2 transition-all relative overflow-hidden group",
-                              selectedAiModel === 'pro' 
-                                ? "border-amber-500 bg-amber-50/50 dark:bg-amber-500/10 shadow-sm" 
+                              selectedAiModel === 'pro'
+                                ? "border-amber-500 bg-amber-50/50 dark:bg-amber-500/10 shadow-sm"
                                 : (!tokenData || tokenData.current_balance < (tokenData.all_costs?.pro_kertas_kerja || 0)) ? "border-slate-200 dark:border-border/60 opacity-60 cursor-not-allowed" : "border-slate-200 dark:border-border/60 hover:border-amber-300 dark:hover:border-amber-500/50"
                             )}
                           >
@@ -806,10 +806,10 @@ export function NexusPage() {
                           </button>
                         </div>
                         <div className="mt-4 flex items-center justify-center p-3 rounded-xl bg-slate-100/50 dark:bg-[#121214] border border-slate-200/50 dark:border-border/50 transition-all hover:bg-slate-100 dark:hover:bg-[#1A1A1D]">
-                           <span className="text-xs font-semibold text-muted-foreground mr-2">Token semakin kurang atau perlukan hasil bertaraf Pro?</span>
-                           <Button variant="link" size="sm" className="font-bold text-indigo-600 dark:text-indigo-400 p-0 h-auto" onClick={() => setShowTierModal(true)}>
-                             <Sparkles className="w-3.5 h-3.5 mr-1" /> Mohon Token Tambahan
-                           </Button>
+                          <span className="text-xs font-semibold text-muted-foreground mr-2">Token semakin kurang atau perlukan hasil bertaraf Pro?</span>
+                          <Button variant="link" size="sm" className="font-bold text-indigo-600 dark:text-indigo-400 p-0 h-auto" onClick={() => setShowTierModal(true)}>
+                            <Sparkles className="w-3.5 h-3.5 mr-1" /> Mohon Token Tambahan
+                          </Button>
                         </div>
                       </div>
 
@@ -819,7 +819,7 @@ export function NexusPage() {
 
                 <CardFooter className="bg-secondary/30 pt-4 flex gap-3 border-t border-slate-200/50 dark:border-border/50">
                   {kertasKerjaStep > 1 && (
-                    <Button 
+                    <Button
                       variant="outline"
                       className="border-slate-200 dark:border-border/60 hover:bg-slate-100 dark:hover:bg-muted font-bold"
                       onClick={() => setKertasKerjaStep(prev => prev - 1)}
@@ -827,9 +827,9 @@ export function NexusPage() {
                       Kembali
                     </Button>
                   )}
-                  
+
                   {kertasKerjaStep < 3 ? (
-                    <Button 
+                    <Button
                       className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.5)]"
                       onClick={() => setKertasKerjaStep(prev => prev + 1)}
                       disabled={
@@ -840,7 +840,7 @@ export function NexusPage() {
                       Seterusnya
                     </Button>
                   ) : (
-                    <Button 
+                    <Button
                       className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.5)] group"
                       onClick={handleJanaKertasKerja}
                       disabled={isLoading || !anggaranKos || !namaPengarah}
@@ -920,7 +920,7 @@ export function NexusPage() {
         {/* Tab Penjana Minit Mesyuarat */}
         <TabsContent value="minit-mesyuarat" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
+
             <div className="lg:col-span-5 space-y-6">
               <Card className="border-slate-200/60 dark:border-border/50 shadow-xl overflow-hidden bg-white dark:bg-[#121214]">
                 <div className="h-1.5 bg-gradient-to-r from-emerald-500 to-teal-500" />
@@ -931,58 +931,58 @@ export function NexusPage() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400">Perkara / Tajuk Mesyuarat</Label>
-                    <Input 
-                      placeholder="Cth: Mesyuarat Agong Tahunan Kelab IT" 
-                      value={tajukMesyuarat} 
+                    <Input
+                      placeholder="Cth: Mesyuarat Agong Tahunan Kelab IT"
+                      value={tajukMesyuarat}
                       onChange={(e) => setTajukMesyuarat(e.target.value)}
                       className="bg-slate-50 dark:bg-[#0A0A0B]/50 border-slate-200 dark:border-border/60 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 shadow-sm transition-all focus:bg-white dark:focus:bg-[#0A0A0B]"
                     />
                   </div>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                       <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400">Nota Mentah (Pilihan)</Label>
-                       <Textarea 
-                         placeholder="- mula jam 2 petang, ali tak dtg&#10;- bincang pasal yuran, setuju naik RM5&#10;- program sukan bulan depan, ajk sukan kena buat kertas kerja sblm jumaat" 
-                         className="min-h-[150px] resize-none bg-slate-50 dark:bg-[#0A0A0B]/50 border-slate-200 dark:border-border/60 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 shadow-sm transition-all leading-relaxed focus:bg-white dark:focus:bg-[#0A0A0B]"
-                         value={notaMesyuarat}
-                         onChange={(e) => setNotaMesyuarat(e.target.value)}
-                       />
+                      <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400">Nota Mentah (Pilihan)</Label>
+                      <Textarea
+                        placeholder="- mula jam 2 petang, ali tak dtg&#10;- bincang pasal yuran, setuju naik RM5&#10;- program sukan bulan depan, ajk sukan kena buat kertas kerja sblm jumaat"
+                        className="min-h-[150px] resize-none bg-slate-50 dark:bg-[#0A0A0B]/50 border-slate-200 dark:border-border/60 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 shadow-sm transition-all leading-relaxed focus:bg-white dark:focus:bg-[#0A0A0B]"
+                        value={notaMesyuarat}
+                        onChange={(e) => setNotaMesyuarat(e.target.value)}
+                      />
                     </div>
                     <div className="space-y-2 relative border-t border-border/40 pt-4">
-                       <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400 flex items-center justify-between">
-                         Input Gambar (Papan Putih/Catatan)
-                         <span className="text-[10px] bg-secondary px-2 rounded-full font-medium">{images.length}/3 Dimuat Naik</span>
-                       </Label>
-                       
-                       <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-border/60 hover:border-emerald-500/50 hover:bg-emerald-500/5 bg-background/50 rounded-xl cursor-pointer transition-all">
-                         <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                           <ImagePlus className="w-5 h-5" />
-                           <span className="text-sm font-medium">Klik untuk muat naik (.jpg/.png)</span>
-                         </div>
-                         <input type="file" disabled={images.length >= 3} className="hidden" accept="image/jpeg, image/png, image/webp" multiple onChange={handleImageUpload} />
-                       </label>
+                      <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400 flex items-center justify-between">
+                        Input Gambar (Papan Putih/Catatan)
+                        <span className="text-[10px] bg-secondary px-2 rounded-full font-medium">{images.length}/3 Dimuat Naik</span>
+                      </Label>
 
-                       {/* Image Previews */}
-                       {images.length > 0 && (
-                          <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
-                            {images.map((img, idx) => (
-                               <div key={idx} className="relative w-16 h-16 rounded-md border overflow-hidden flex-shrink-0 group">
-                                  <img src={img.base64} alt="preview" className="w-full h-full object-cover" />
-                                  <button 
-                                     onClick={() => removeImage(idx)}
-                                     className="absolute bg-background/80 backdrop-blur-sm inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                  >
-                                     <X className="w-4 h-4 text-rose-500" />
-                                  </button>
-                               </div>
-                            ))}
-                          </div>
-                       )}
+                      <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-border/60 hover:border-emerald-500/50 hover:bg-emerald-500/5 bg-background/50 rounded-xl cursor-pointer transition-all">
+                        <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                          <ImagePlus className="w-5 h-5" />
+                          <span className="text-sm font-medium">Klik untuk muat naik (.jpg/.png)</span>
+                        </div>
+                        <input type="file" disabled={images.length >= 3} className="hidden" accept="image/jpeg, image/png, image/webp" multiple onChange={handleImageUpload} />
+                      </label>
+
+                      {/* Image Previews */}
+                      {images.length > 0 && (
+                        <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
+                          {images.map((img, idx) => (
+                            <div key={idx} className="relative w-16 h-16 rounded-md border overflow-hidden flex-shrink-0 group">
+                              <img src={img.base64} alt="preview" className="w-full h-full object-cover" />
+                              <button
+                                onClick={() => removeImage(idx)}
+                                className="absolute bg-background/80 backdrop-blur-sm inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X className="w-4 h-4 text-rose-500" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
                 <CardFooter className="bg-secondary/30 pt-4">
-                  <Button 
+                  <Button
                     className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-11 transition-all shadow-[0_0_15px_rgba(52,211,153,0.3)] hover:shadow-[0_0_25px_rgba(52,211,153,0.5)] group"
                     onClick={handleJanaMinit}
                     disabled={isLoading}
@@ -1010,15 +1010,15 @@ export function NexusPage() {
                   </div>
                   {hasilMinit && (
                     <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-2 bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20" onClick={() => handleDownloadDocx(hasilMinit, tajukMesyuarat || 'Minit_Mesyuarat')}>
-                           <Download className="w-3.5 h-3.5" /> Muat Turun DOCX
-                        </Button>
-                        <Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-2" onClick={() => {
-                          navigator.clipboard.writeText(hasilMinit);
-                          toast.success('Minit disalin!');
-                        }}>
-                          <Save className="w-3.5 h-3.5" /> Salin Teks
-                        </Button>
+                      <Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-2 bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20" onClick={() => handleDownloadDocx(hasilMinit, tajukMesyuarat || 'Minit_Mesyuarat')}>
+                        <Download className="w-3.5 h-3.5" /> Muat Turun DOCX
+                      </Button>
+                      <Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-2" onClick={() => {
+                        navigator.clipboard.writeText(hasilMinit);
+                        toast.success('Minit disalin!');
+                      }}>
+                        <Save className="w-3.5 h-3.5" /> Salin Teks
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -1059,7 +1059,7 @@ export function NexusPage() {
 
         {/* Tab Langganan & Token AI */}
         <TabsContent value="langganan" className="space-y-10 focus-visible:outline-none outline-none border-none">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -1070,7 +1070,7 @@ export function NexusPage() {
               <Card className="border-indigo-500/10 shadow-2xl overflow-hidden bg-white/80 dark:bg-[#121214]/80 backdrop-blur-xl relative">
                 <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-                
+
                 <CardHeader className="p-8 pb-4 relative z-10">
                   <div className="flex items-center justify-between mb-2">
                     <Badge variant="outline" className="bg-indigo-500/10 text-indigo-500 border-indigo-500/20 font-black tracking-widest text-[10px] py-1 px-3">
@@ -1081,7 +1081,7 @@ export function NexusPage() {
                   <CardTitle className="text-3xl font-black tracking-tight">Profil Langganan</CardTitle>
                   <CardDescription className="text-base">Pantau penggunaan Nexus AI anda secara masa nyata.</CardDescription>
                 </CardHeader>
-                
+
                 <CardContent className="p-8 pt-0 space-y-8 relative z-10">
                   {/* Token Status Display */}
                   <div className="group relative">
@@ -1090,25 +1090,25 @@ export function NexusPage() {
                       <div className="relative z-10 flex flex-col items-center text-center text-white">
                         <span className="text-xs font-black uppercase tracking-[0.2em] text-white/70 mb-2">Baki Token Semasa</span>
                         <div className="flex items-baseline gap-3 mb-6">
-                           <motion.span 
+                          <motion.span
                             initial={{ scale: 0.5 }}
                             animate={{ scale: 1 }}
                             className="text-7xl font-black drop-shadow-lg"
-                           >
+                          >
                             {tokenData?.current_balance || 0}
-                           </motion.span>
-                           <span className="text-lg font-bold text-white/50 tracking-tighter">tkns</span>
+                          </motion.span>
+                          <span className="text-lg font-bold text-white/50 tracking-tighter">tkns</span>
                         </div>
-                        
+
                         <div className="w-full bg-white/10 rounded-full h-3 mb-3 p-0.5 border border-white/5 overflow-hidden">
-                          <motion.div 
+                          <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${Math.min(((tokenData?.current_balance || 0) / (tokenData?.monthly_allowance || 100)) * 100, 100)}%` }}
                             transition={{ delay: 0.5, duration: 1 }}
-                            className="bg-white h-full rounded-full shadow-[0_0_15px_rgba(255,255,255,0.5)]" 
+                            className="bg-white h-full rounded-full shadow-[0_0_15px_rgba(255,255,255,0.5)]"
                           />
                         </div>
-                        
+
                         <div className="flex items-center gap-2 text-sm font-bold text-white/80">
                           <Calculator className="w-4 h-4" />
                           <span>{tokenData?.monthly_allowance || 0} Peruntukan Bulanan</span>
@@ -1122,10 +1122,10 @@ export function NexusPage() {
                     <span className="text-sm font-bold text-muted-foreground mr-auto text-dark">Tahap Akses</span>
                     <Badge className={cn(
                       "font-black tracking-widest text-[11px] px-4 py-1.5 rounded-full border-none shadow-lg",
-                      tokenData?.tier === 'pro' 
-                        ? "bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-amber-500/30" 
-                        : tokenData?.tier === 'admin' 
-                          ? "bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-indigo-500/30" 
+                      tokenData?.tier === 'pro'
+                        ? "bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-amber-500/30"
+                        : tokenData?.tier === 'admin'
+                          ? "bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-indigo-500/30"
                           : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
                     )}>
                       {tokenData?.tier === 'pro' ? 'PRO TIER' : tokenData?.tier === 'admin' ? 'ADMIN TIER' : 'FREE TIER'}
@@ -1135,24 +1135,24 @@ export function NexusPage() {
                   {/* Benefit Cards Grid */}
                   <div className="space-y-4">
                     <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                       <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Manfaat PRO Eksklusif
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Manfaat PRO Eksklusif
                     </h4>
                     <div className="grid grid-cols-1 gap-3">
-                       {[
-                         { icon: Bot, title: "Model AI Pro (GPT-4o/Pro)", desc: "Penaakulan lebih mendalam & tepat." },
-                         { icon: FileText, title: "1,000+ Permata Token", desc: "Kapasiti janaan 5x ganda lebih luas." },
-                         { icon: Wand2, title: "Format MESTI 100% Tepat", desc: "Struktur dokumen rasmi tanpa ralat." }
-                       ].map((item, i) => (
-                         <div key={i} className="group p-4 rounded-xl border border-border/50 hover:border-indigo-500/30 bg-background/40 hover:bg-indigo-500/5 transition-all duration-300 flex items-start gap-4">
-                           <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-indigo-500 group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
-                             <item.icon className="w-5 h-5" />
-                           </div>
-                           <div>
-                             <p className="font-bold text-sm">{item.title}</p>
-                             <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
-                           </div>
-                         </div>
-                       ))}
+                      {[
+                        { icon: Bot, title: "Model AI Pro (Nexus-4o Pro)", desc: "Penaakulan lebih mendalam & tepat." },
+                        { icon: FileText, title: "1,000+ Permata Token", desc: "Kapasiti janaan 5x ganda lebih luas." },
+                        { icon: Wand2, title: "Format MESTI 100% Tepat", desc: "Struktur dokumen rasmi tanpa ralat." }
+                      ].map((item, i) => (
+                        <div key={i} className="group p-4 rounded-xl border border-border/50 hover:border-indigo-500/30 bg-background/40 hover:bg-indigo-500/5 transition-all duration-300 flex items-start gap-4">
+                          <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-indigo-500 group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
+                            <item.icon className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm">{item.title}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </CardContent>
@@ -1163,7 +1163,7 @@ export function NexusPage() {
             <div className="lg:col-span-7">
               <Card className="border-border/50 shadow-2xl bg-white dark:bg-[#121214] relative overflow-hidden h-full min-h-[600px]">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/[0.03] rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-                
+
                 <CardHeader className="p-8 pb-4">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
@@ -1173,10 +1173,10 @@ export function NexusPage() {
                   </div>
                   <CardDescription className="text-base">Maksimumkan produktiviti pengurusan dokumen anda sekarang.</CardDescription>
                 </CardHeader>
-                
+
                 <CardContent className="p-8 pt-0 space-y-10">
                   {tokenData?.tier === 'pro' || tokenData?.tier === 'admin' ? (
-                    <motion.div 
+                    <motion.div
                       initial={{ scale: 0.95, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       className="flex flex-col items-center justify-center py-20 text-center space-y-6"
@@ -1195,133 +1195,133 @@ export function NexusPage() {
                       <div className="flex items-start gap-8">
                         {/* Step 1: Payment */}
                         <div className="flex-1 space-y-6">
-                           <div className="flex items-center gap-4 mb-6">
-                              <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-black shadow-lg shadow-indigo-600/20">1</div>
-                              <h4 className="text-lg font-black tracking-tight text-foreground">Langganan Token</h4>
-                           </div>
-                           
-                           <div className="p-6 rounded-[2rem] bg-slate-50 dark:bg-[#0A0A0B] border border-slate-200/60 dark:border-border/30 shadow-inner group">
-                              <div className="flex flex-col gap-6 items-center">
-                                 <div className="relative p-4 bg-white rounded-3xl shadow-xl border-4 border-indigo-500/5 group-hover:scale-105 transition-transform duration-500 overflow-hidden">
-                                     <div className="absolute inset-0 bg-indigo-500/5 animate-[pulse_3s_infinite] pointer-events-none" />
-                                     <img 
-                                      src="/payment-qr.png" 
-                                      alt="DuitNow QR Code" 
-                                      className="w-48 h-48 sm:w-56 sm:h-56 object-contain relative z-10" 
-                                      onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.parentElement!.innerHTML = '<div class="w-48 h-48 flex items-center justify-center text-xs text-center p-4 text-muted-foreground uppercase font-black tracking-widest leading-loose">QR Code<br/>Tidak Dijumpai</div>'; }} 
-                                     />
-                                 </div>
-                                 <div className="text-center space-y-4">
-                                     <div className="inline-block px-5 py-2 rounded-2xl bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 font-black text-2xl tracking-tight shadow-sm">
-                                       RM 10.00
-                                     </div>
-                                     <p className="text-sm font-bold text-muted-foreground leading-relaxed px-2">
-                                       Imbas DuitNow QR untuk mendapatkan <span className="text-foreground">1,000 Token AI</span> & akses <span className="text-foreground">PRO selama 30 hari</span>.
-                                     </p>
-                                 </div>
+                          <div className="flex items-center gap-4 mb-6">
+                            <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-black shadow-lg shadow-indigo-600/20">1</div>
+                            <h4 className="text-lg font-black tracking-tight text-foreground">Langganan Token</h4>
+                          </div>
+
+                          <div className="p-6 rounded-[2rem] bg-slate-50 dark:bg-[#0A0A0B] border border-slate-200/60 dark:border-border/30 shadow-inner group">
+                            <div className="flex flex-col gap-6 items-center">
+                              <div className="relative p-4 bg-white rounded-3xl shadow-xl border-4 border-indigo-500/5 group-hover:scale-105 transition-transform duration-500 overflow-hidden">
+                                <div className="absolute inset-0 bg-indigo-500/5 animate-[pulse_3s_infinite] pointer-events-none" />
+                                <img
+                                  src="/payment-qr.png"
+                                  alt="DuitNow QR Code"
+                                  className="w-48 h-48 sm:w-56 sm:h-56 object-contain relative z-10"
+                                  onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML = '<div class="w-48 h-48 flex items-center justify-center text-xs text-center p-4 text-muted-foreground uppercase font-black tracking-widest leading-loose">QR Code<br/>Tidak Dijumpai</div>'; }}
+                                />
                               </div>
-                           </div>
+                              <div className="text-center space-y-4">
+                                <div className="inline-block px-5 py-2 rounded-2xl bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 font-black text-2xl tracking-tight shadow-sm">
+                                  RM 10.00
+                                </div>
+                                <p className="text-sm font-bold text-muted-foreground leading-relaxed px-2">
+                                  Imbas DuitNow QR untuk mendapatkan <span className="text-foreground">1,000 Token AI</span> & akses <span className="text-foreground">PRO selama 30 hari</span>.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                         </div>
 
                         {/* Step 2: Verification */}
                         <div className="flex-1 space-y-6">
-                           <div className="flex items-center gap-4 mb-6">
-                              <div className="w-10 h-10 rounded-full bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 flex items-center justify-center font-black shadow-lg">2</div>
-                              <h4 className="text-lg font-black tracking-tight text-foreground">Pengesahan</h4>
-                           </div>
-                           
-                           <div className="space-y-6">
-                              {/* File Uploader Node */}
-                              <div className="relative group">
-                                <input 
-                                    type="file" 
-                                    id="receipt-upload"
-                                    accept="image/*,application/pdf"
-                                    disabled={isSubmittingTier}
-                                    className="peer sr-only"
-                                    onChange={(e) => {
-                                       if(e.target.files && e.target.files[0]) {
-                                          setReceiptFile(e.target.files[0]);
-                                       }
-                                    }}
-                                />
-                                <label 
-                                    htmlFor="receipt-upload"
-                                    className={cn(
-                                        "flex flex-col items-center justify-center min-h-[160px] p-8 border-2 border-dashed rounded-[2rem] cursor-pointer transition-all duration-500",
-                                        receiptFile 
-                                            ? "border-emerald-500 bg-emerald-50/30 dark:bg-emerald-500/5 bg-[url('/grid-pattern.svg')] bg-[length:20px_20px]" 
-                                            : "border-slate-300 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0A0A0B]/50 hover:border-indigo-500 hover:bg-slate-100 dark:hover:bg-[#1A1A20] group-hover:scale-[0.98]"
-                                    )}
-                                >
-                                    <AnimatePresence mode="wait">
-                                      {receiptFile ? (
-                                          <motion.div 
-                                            key="selected"
-                                            initial={{ scale: 0.8, opacity: 0 }}
-                                            animate={{ scale: 1, opacity: 1 }}
-                                            exit={{ scale: 0.8, opacity: 0 }}
-                                            className="text-center space-y-3"
-                                          >
-                                              <div className="mx-auto w-14 h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center mb-2 shadow-xl shadow-emerald-500/30 rotate-3">
-                                                  <Sparkles className="w-7 h-7" />
-                                              </div>
-                                              <div className="space-y-1">
-                                                <p className="text-sm font-black text-emerald-700 dark:text-emerald-400 truncate max-w-[180px]">{receiptFile.name}</p>
-                                                <p className="text-xs font-bold text-emerald-600/50">{(receiptFile.size / 1024 / 1024).toFixed(2)} MB • Klik untuk tukar</p>
-                                              </div>
-                                          </motion.div>
-                                      ) : (
-                                          <motion.div 
-                                            key="empty"
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            className="text-center space-y-4"
-                                          >
-                                              <div className="w-16 h-16 rounded-3xl bg-slate-100 dark:bg-slate-800/50 flex flex-col items-center justify-center mx-auto transition-transform group-hover:rotate-12">
-                                                <FileClock className="w-8 h-8 text-slate-400" />
-                                              </div>
-                                              <div className="space-y-1">
-                                                <p className="text-sm font-black text-slate-700 dark:text-slate-300">Muat Naik Resit</p>
-                                                <p className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">JPG, PNG, WEBP, PDF</p>
-                                              </div>
-                                          </motion.div>
-                                      )}
-                                    </AnimatePresence>
-                                </label>
-                              </div>
+                          <div className="flex items-center gap-4 mb-6">
+                            <div className="w-10 h-10 rounded-full bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 flex items-center justify-center font-black shadow-lg">2</div>
+                            <h4 className="text-lg font-black tracking-tight text-foreground">Pengesahan</h4>
+                          </div>
 
-                              {/* Optional Note Field */}
-                              <div className="space-y-3">
-                                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-2">Catatan Tambahan (Pilihan)</Label>
-                                <Textarea 
-                                  placeholder="Contoh: Lampiran bukti pemindahan DuitNow..."
-                                  className="min-h-[100px] resize-none focus:ring-4 focus:ring-indigo-500/10 bg-slate-50/50 dark:bg-[#0A0A0B]/30 rounded-[1.5rem] border-slate-200 dark:border-border/60 transition-all font-medium text-sm"
-                                  value={tierReason}
-                                  onChange={(e) => setTierReason(e.target.value)}
-                                  disabled={isSubmittingTier}
-                                />
-                              </div>
-                           </div>
+                          <div className="space-y-6">
+                            {/* File Uploader Node */}
+                            <div className="relative group">
+                              <input
+                                type="file"
+                                id="receipt-upload"
+                                accept="image/*,application/pdf"
+                                disabled={isSubmittingTier}
+                                className="peer sr-only"
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    setReceiptFile(e.target.files[0]);
+                                  }
+                                }}
+                              />
+                              <label
+                                htmlFor="receipt-upload"
+                                className={cn(
+                                  "flex flex-col items-center justify-center min-h-[160px] p-8 border-2 border-dashed rounded-[2rem] cursor-pointer transition-all duration-500",
+                                  receiptFile
+                                    ? "border-emerald-500 bg-emerald-50/30 dark:bg-emerald-500/5 bg-[url('/grid-pattern.svg')] bg-[length:20px_20px]"
+                                    : "border-slate-300 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0A0A0B]/50 hover:border-indigo-500 hover:bg-slate-100 dark:hover:bg-[#1A1A20] group-hover:scale-[0.98]"
+                                )}
+                              >
+                                <AnimatePresence mode="wait">
+                                  {receiptFile ? (
+                                    <motion.div
+                                      key="selected"
+                                      initial={{ scale: 0.8, opacity: 0 }}
+                                      animate={{ scale: 1, opacity: 1 }}
+                                      exit={{ scale: 0.8, opacity: 0 }}
+                                      className="text-center space-y-3"
+                                    >
+                                      <div className="mx-auto w-14 h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center mb-2 shadow-xl shadow-emerald-500/30 rotate-3">
+                                        <Sparkles className="w-7 h-7" />
+                                      </div>
+                                      <div className="space-y-1">
+                                        <p className="text-sm font-black text-emerald-700 dark:text-emerald-400 truncate max-w-[180px]">{receiptFile.name}</p>
+                                        <p className="text-xs font-bold text-emerald-600/50">{(receiptFile.size / 1024 / 1024).toFixed(2)} MB • Klik untuk tukar</p>
+                                      </div>
+                                    </motion.div>
+                                  ) : (
+                                    <motion.div
+                                      key="empty"
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                      className="text-center space-y-4"
+                                    >
+                                      <div className="w-16 h-16 rounded-3xl bg-slate-100 dark:bg-slate-800/50 flex flex-col items-center justify-center mx-auto transition-transform group-hover:rotate-12">
+                                        <FileClock className="w-8 h-8 text-slate-400" />
+                                      </div>
+                                      <div className="space-y-1">
+                                        <p className="text-sm font-black text-slate-700 dark:text-slate-300">Muat Naik Resit</p>
+                                        <p className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">JPG, PNG, WEBP, PDF</p>
+                                      </div>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </label>
+                            </div>
+
+                            {/* Optional Note Field */}
+                            <div className="space-y-3">
+                              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-2">Catatan Tambahan (Pilihan)</Label>
+                              <Textarea
+                                placeholder="Contoh: Lampiran bukti pemindahan DuitNow..."
+                                className="min-h-[100px] resize-none focus:ring-4 focus:ring-indigo-500/10 bg-slate-50/50 dark:bg-[#0A0A0B]/30 rounded-[1.5rem] border-slate-200 dark:border-border/60 transition-all font-medium text-sm"
+                                value={tierReason}
+                                onChange={(e) => setTierReason(e.target.value)}
+                                disabled={isSubmittingTier}
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
 
                       {/* Warning & Submit Footer */}
                       <div className="pt-10 border-t border-border/40 space-y-6">
                         <div className="flex items-start gap-4 p-5 rounded-3xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 relative overflow-hidden">
-                           <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12">
-                              <AlertTriangle className="w-16 h-16" />
-                           </div>
-                           <AlertTriangle className="w-6 h-6 shrink-0 mt-0.5" />
-                           <div className="space-y-1 relative z-10">
-                             <p className="text-sm font-black uppercase tracking-tight">Perhatian Penting</p>
-                             <p className="text-xs font-bold leading-relaxed opacity-80">
-                               Sila muat naik resit yang sah dan jelas. Admin akan mengesahkan pembayaran manual anda dalam tempoh 1-3 hari bekerja. Pengesahan palsu boleh mengakibatkan akaun anda disekat secara kekal daripada ekosistem Nexus.
-                             </p>
-                           </div>
+                          <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12">
+                            <AlertTriangle className="w-16 h-16" />
+                          </div>
+                          <AlertTriangle className="w-6 h-6 shrink-0 mt-0.5" />
+                          <div className="space-y-1 relative z-10">
+                            <p className="text-sm font-black uppercase tracking-tight">Perhatian Penting</p>
+                            <p className="text-xs font-bold leading-relaxed opacity-80">
+                              Sila muat naik resit yang sah dan jelas. Admin akan mengesahkan pembayaran manual anda dalam tempoh 1-3 hari bekerja. Pengesahan palsu boleh mengakibatkan akaun anda disekat secara kekal daripada ekosistem Nexus.
+                            </p>
+                          </div>
                         </div>
 
-                        <Button 
+                        <Button
                           className="w-full h-16 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black text-lg rounded-[2rem] shadow-[0_15px_30px_-10px_rgba(79,70,229,0.5)] hover:shadow-[0_20px_40px_-10px_rgba(79,70,229,0.7)] transition-all duration-300 hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:grayscale"
                           onClick={handleRequestTier}
                           disabled={isSubmittingTier || !receiptFile}
@@ -1381,15 +1381,15 @@ function AiLoadingView({ type }: { type: 'kertas-kerja' | 'minit-mesyuarat' }) {
       <div className="text-center space-y-3 px-4">
         <p className="font-black text-indigo-600 dark:text-indigo-400 text-xl animate-pulse tracking-tight">{AI_LOADING_STEPS[stepIndex]}</p>
         <p className="text-sm font-medium text-muted-foreground/80 max-w-sm mx-auto leading-relaxed">
-          Enjin Nexus AI sedang {type === 'kertas-kerja' ? 'menjana keseluruhan kertas kerja.' : 'mensintesis nota mesyuarat anda.'}<br/>
+          Enjin Nexus AI sedang {type === 'kertas-kerja' ? 'menjana keseluruhan kertas kerja.' : 'mensintesis nota mesyuarat anda.'}<br />
           Proses pemikiran kognitif mendalam ini mungkin mengambil sedikit masa.
         </p>
       </div>
-      
+
       <div className="w-full max-w-sm mt-8 space-y-4 opacity-30">
-         <div className="h-3 bg-muted-foreground rounded-full w-3/4 mx-auto animate-pulse" style={{ animationDelay: '0ms' }} />
-         <div className="h-3 bg-muted-foreground rounded-full w-full animate-pulse" style={{ animationDelay: '200ms' }} />
-         <div className="h-3 bg-muted-foreground rounded-full w-5/6 mx-auto animate-pulse" style={{ animationDelay: '400ms' }} />
+        <div className="h-3 bg-muted-foreground rounded-full w-3/4 mx-auto animate-pulse" style={{ animationDelay: '0ms' }} />
+        <div className="h-3 bg-muted-foreground rounded-full w-full animate-pulse" style={{ animationDelay: '200ms' }} />
+        <div className="h-3 bg-muted-foreground rounded-full w-5/6 mx-auto animate-pulse" style={{ animationDelay: '400ms' }} />
       </div>
     </div>
   );

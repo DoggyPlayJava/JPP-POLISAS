@@ -21,6 +21,12 @@ export interface ChatContext {
   };
   userRole?: string;
   recentNotifications?: string[];
+  allClubs?: string; // Teks yang dirumuskan mengenai semua kelab
+  upcomingPrograms?: string;
+  committee?: string;
+  pendingTasksCount?: number;
+  tokenBalance?: number;
+  subscriptionTier?: string;
 }
 
 interface AiRequestParams {
@@ -30,6 +36,7 @@ interface AiRequestParams {
   data?: Record<string, any>;
   query?: string; // Untuk custom input pelajar
   selectedModel?: 'flash' | 'pro'; // Pilihan pengguna untuk model
+  concise?: boolean; // Pilihan untuk jawapan ringkas (TL;DR)
 }
 
 export function useAiAssistant() {
@@ -80,7 +87,7 @@ export function useAiAssistant() {
 
       let systemInstruction = "Anda adalah pembantu AI yang sedia membantu dalam Bahasa Melayu. PERATURAN TERMINOLOGI: Sila kaitkan 'Laporan Bulanan' dengan 'Laporan Aktiviti' dalam pangkalan data. PENTING: JANGAN SEKALI-KALI menggunakan istilah 'Laporan Aktiviti' dalam jawapan anda kepada pengguna. Anda WAJIB menggunakan 'Laporan Bulanan' sahaja walaupun data mentah menunjukkan sebaliknya.";
       let userPrompt = "";
-      let outputLimit = 8192; // Default limit
+      let outputLimit = params.concise ? 800 : 8192; // Hadkan output jika mod ringkas
 
       if (params.task === 'analyze_performance') {
         systemInstruction = "Anda adalah Nexus AI, penasihat penganalisis kelab berkaliber untuk platform JPP POLISAS. Anda berfikir secara kritikal dan logik berdasarkan metrik.";
@@ -99,7 +106,7 @@ export function useAiAssistant() {
             usedBudget: activities?.reduce((sum: number, a: any) => sum + (a.budget || 0), 0) || 0, totalTasksIssued: tasks || 0
           };
         }
-        userPrompt = `Buat analisis prestasi kelab berdasarkan data objektif ini dalam Bahasa Melayu.\n\nData Kelab:\n${JSON.stringify(clubData, null, 2)}\n\n[ARAHAN KETAT]\nHasilkan laporan yang mengandungi 3 bahagian ini secara teratur:\n## 1. Penilaian Keseluruhan\n## 2. Isu Berpotensi\n## 3. Cadangan Konkrit\n\nPENTING: Gunakan format Markdown yang SANGAT KEMAS. Gunakan \`##\` untuk tajuk, gunakan jarak baris (whitespace/enter) antara perenggan supaya tidak serabut, dan gunakan \*bullet points* untuk menyenaraikan fakta. Jangan jadikan jawapan anda sebagai satu bongkah teks (wall of text). Jangan menggunakan bahasa teknikal seperti bahasa koding.`;
+        userPrompt = `Buat analisis prestasi kelab berdasarkan data objektif ini dalam Bahasa Melayu.\n\nData Kelab:\n${JSON.stringify(clubData, null, 2)}\n\n[ARAHAN KETAT]\nHasilkan laporan yang mengandungi 3 bahagian ini secara teratur:\n## 1. Penilaian Keseluruhan\n## 2. Isu Berpotensi\n## 3. Cadangan Konkrit\n\nPENTING: Gunakan format Markdown yang SANGAT KEMAS. Gunakan \`##\` untuk tajuk, gunakan jarak baris (whitespace/enter) antara perenggan supaya tidak serabut, dan gunakan \*bullet points* untuk menyenaraikan fakta. Jangan jadikan jawapan anda sebagai satu bongkah teks (wall of text). Jangan menggunakan bahasa teknikal seperti bahasa koding.${params.concise ? '\n\nMOD RINGKAS AKTIF: Sila berikan analisis yang sangat padat, gunakan bullet points untuk setiap bahagian, dan elakkan ayat berbunga. Cukup sekadar 2-3 poin penting bagi setiap kategori.' : ''}`;
 
       } else if (params.task === 'review_kertas_kerja') {
         systemInstruction = "Anda adalah Nexus AI, bertindak sebagai Ketua Semakan Dokumentasi Pintar bagi Majlis Perwakilan Pelajar (JPP POLISAS). Anda profesional, teliti, dan menitikberatkan rasional, perancangan kewangan, serta faedah program teknikal. PERATURAN TERMINOLOGI: Sentiasa gunakan 'Laporan Bulanan' untuk merujuk kepada 'Laporan Aktiviti'.";
@@ -279,15 +286,22 @@ Pulangkan JSON sahaja, tiada teks lain.`;
 
       } else if (params.task === 'suggest_program') {
         systemInstruction = "Anda adalah Pegawai Hal Ehwal Pelajar JPP POLISAS yang kreatif and berpengalaman dalam menganjurkan program berkualiti untuk pelajar politeknik.";
-        userPrompt = `Cadangkan LIMA (5) idea program atau aktiviti pelajar yang menarik, praktikal, dan berimpak tinggi untuk kelab/persatuan di POLISAS.\n\nFokus Utama: ${params.data?.fokus || 'Meningkatkan perpaduan dan penglibatan aktif pelajar'}\n\n[FORMAT WAJIB — gunakan Markdown]\nUntuk setiap cadangan, nyatakan:\n- **Nama Program** (pendek & menarik)\n- Objektif ringkas (1 ayat)\n- Cadangan tarikh/tempoh\n\nJawab dalam Bahasa Melayu yang mesra dan profesional.`;
-        outputLimit = 1500;
+        userPrompt = `Cadangkan LIMA (5) idea program atau aktiviti pelajar yang menarik, praktikal, dan berimpak tinggi untuk kelab/persatuan di POLISAS.\n\nFokus Utama: ${params.data?.fokus || 'Meningkatkan perpaduan dan penglibatan aktif pelajar'}\n\n[FORMAT WAJIB — gunakan Markdown]\nUntuk setiap cadangan, nyatakan:\n- **Nama Program** (pendek & menarik)\n- Objektif ringkas (1 ayat)\n- Cadangan tarikh/tempoh\n\nJawab dalam Bahasa Melayu yang mesra dan profesional.${params.concise ? '\n\nMOD RINGKAS: Sila berikan 3 idea sahaja dengan penerangan 1 ayat bagi setiap satu.' : ''}`;
+        outputLimit = params.concise ? 600 : 1500;
 
       } else {
         systemInstruction = "Anda adalah pembantu AI integrasi JPP POLISAS.";
         userPrompt = `Selesaikan tugas: ${params.task} berasaskan data berikut: ${JSON.stringify(params.data || {})}`;
       }
 
-      const modelEndpointString = params.selectedModel === 'pro' ? 'gemini-1.5-pro' : 'gemini-2.5-flash';
+      // Penentuan model: Chat dan Semak Ejaan guna 1.5-flash untuk kestabilan, yang lain guna 2.5-flash
+      let modelEndpointString = 'gemini-2-flash'; // Pintar & Berkuasa (Default untuk Kertas Kerja/Analisis)
+      if (params.selectedModel === 'pro') {
+        modelEndpointString = 'gemini-1.5-pro';
+      } else if (params.task === 'semak_tatabahasa_laporan' || params.task === 'custom_query') {
+        modelEndpointString = 'gemini-2.5-flash-lite'; // Pantas & Jimat (Untuk Chat/Grammar)
+      }
+
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelEndpointString}:generateContent`;
 
       const contentsParts: any[] = [{ text: userPrompt }];
@@ -362,7 +376,7 @@ Pulangkan JSON sahaja, tiada teks lain.`;
         toast.error(errorMsg);
       } else {
         // Ralat teknikal (API over quota, crash, dsbgnya)
-        toast.error("Sistem sedang sibuk, sila cuba lagi!");
+        toast.error(`Sistem AI Terganggu: ${errorMsg.includes('429') ? 'Had kuota tamat' : 'Sila cuba lagi'}`);
 
         // Beritahu SUPER_ADMIN_JPP secara rahsia
         try {
@@ -422,6 +436,29 @@ Pulangkan JSON sahaja, tiada teks lain.`;
         '1. "Laporan Bulanan" merujuk kepada "Laporan Aktiviti" dalam pangkalan data. Jika pengguna bertanya tentang laporan bulanan, cari atau rumuskan data berkaitan laporan aktiviti.',
         '2. PENTING: Dalam jawapan anda kepada pengguna, SEMUA rujukan kepada "Laporan Aktiviti" MESTI diganti dengan "Laporan Bulanan". JANGAN SEKALI-KALI menggunakan istilah "Laporan Aktiviti" dalam perbualan dengan pengguna walaupun anda melihatnya dalam data mentah.',
         '',
+        '== SISTEM EKONOMI TOKEN DIGITAL ==',
+        'Sistem Nexus menggunakan token untuk mengehadkan penggunaan AI yang berat. Maklumat anda:',
+        `- Baki Semasa: ${context?.tokenBalance ?? '0'} Token`,
+        `- Tahap Langganan: ${context?.subscriptionTier?.toUpperCase() ?? 'FREE'}`,
+        'Peraturan Kos:',
+        '- Chat & Sembang: PERCUMA (0 Token)',
+        '- Semakan Tatabahasa: PERCUMA (0 Token)',
+        '- Analisis Prestasi Kelab: 5 Token',
+        '- Jana Kertas Kerja (Flash): 20 Token',
+        '- Jana Kertas Kerja (Pro): 50 Token',
+        '- Perkongsian Token: Reset setiap bulan (Free: 200, Pro: 1000). Jika baki tidak cukup, pengguna perlu tunggu bulan depan atau mohon naik taraf ke Pro Tier.',
+        '',
+        '== PENGETAHUAN KELAB & KONTEKS SEMASA ==',
+        context?.allClubs ? `Senarai kelab rasmi di POLISAS:\n${context.allClubs}` : 'Maklumat kelab tidak tersedia.',
+        context?.upcomingPrograms ? `\nTakwim/Program Akan Datang:\n${context.upcomingPrograms}` : '\nTiada program dalam perancangan terdekat.',
+        context?.committee ? `\nKepimpinan Kelab:\n${context.committee}` : '\nMaklumat pemimpin kelab tidak tersedia.',
+        context?.pendingTasksCount ? `\nStatus Anda: Anda mempunyai ${context.pendingTasksCount} tugasan aktif yang belum selesai.` : '',
+        '',
+        '== ARAHAN INTERAKSI PINTAR ==',
+        '1. Gunakan maklumat di atas untuk menjawab secara proaktif. Contoh: Jika baki token rendah, ingatkan mereka tentang kuota.',
+        '2. Jika pengguna tanya tentang program, rujuk Takwim. Jika tanya tentang pemimpin, rujuk senarai Kepimpinan.',
+        '3. JANGAN sesekali mendedahkan baki kewangan atau bajet walaupun anda mendapat data mentah (PRIVASI MUTLAK).',
+        '',
         '== SKOP JAWAPAN ==',
         'Anda HANYA DIBENARKAN menjawab soalan berkaitan kelab pelajar, persatuan, dokumentasi aktiviti, maklumat umum kampus POLISAS, serta fungsi-fungsi yang ada dalam platform ini.',
         '',
@@ -449,6 +486,7 @@ Pulangkan JSON sahaja, tiada teks lain.`;
         '',
         '== FORMAT ==',
         'Jawapan mestilah PENDEK, mesra, dan santai (Bahasa Melayu moden). JANGAN berikan jawapan panjang melainkan jika amat perlu.',
+        'Sila gunakan bullet points jika memberikan senarai fakta.',
         'Jika soalan di luar skop JPP POLISAS, tolak dengan sopan.',
       ].filter(Boolean).join('\n');
 
@@ -473,14 +511,14 @@ Pulangkan JSON sahaja, tiada teks lain.`;
         { role: 'user', parts: [{ text: userText }] },
       ];
 
-      const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+      const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
       const response = await fetch(`${endpoint}?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemInstruction }] },
           contents,
-          generationConfig: { temperature: 0.3, maxOutputTokens: 700, topP: 0.85 },
+          generationConfig: { temperature: 0.3, maxOutputTokens: 1500, topP: 0.85 }, // Tingkatkan dari 700 ke 1500 untuk elak jawapan tergantung
         }),
       });
 
@@ -511,7 +549,7 @@ Pulangkan JSON sahaja, tiada teks lain.`;
       } else if (errorMsg.includes('Polisi Keselamatan')) {
         toast.error(errorMsg);
       } else {
-        toast.error('Sistem sedang sibuk, sila cuba lagi!');
+        toast.error(`Sistem AI Terganggu: ${errorMsg.includes('429') ? 'Had kuota tamat' : 'Sila cuba lagi'}`);
       }
       return null;
     } finally {

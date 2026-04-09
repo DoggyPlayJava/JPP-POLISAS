@@ -201,10 +201,10 @@ export function KelabPage() {
 
       {/* ── HERO & SEARCH ── */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center text-center space-y-6">
-        <h1 className="text-5xl md:text-6xl font-black tracking-tighter leading-tight">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-tight">
           Cari <span className="gradient-text">Keluarga Baru</span>.
         </h1>
-        <p className="text-muted-foreground font-medium max-w-lg">
+        <p className="text-muted-foreground font-medium max-w-lg text-sm sm:text-base">
           Terokai kelab dan persatuan Polisas. Apply kelab yang anda minati — Presiden/Penasihat akan meluluskan.
         </p>
 
@@ -227,7 +227,7 @@ export function KelabPage() {
             <Search className="w-6 h-6 text-muted-foreground/40 ml-4 shrink-0" />
             <Input placeholder="Taip nama kelab (cth: Elektron, Ketema)..."
               value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-              className="border-none shadow-none text-lg h-12 focus-visible:ring-0 placeholder:text-muted-foreground/30 font-medium px-4" />
+              className="border-none shadow-none text-base sm:text-lg h-10 sm:h-12 focus-visible:ring-0 placeholder:text-muted-foreground/30 font-medium px-4" />
             {searchQuery && (
               <Button variant="ghost" size="icon" onClick={() => setSearchQuery('')}
                 className="rounded-full text-muted-foreground hover:text-rose-500 mr-2 shrink-0">
@@ -245,7 +245,7 @@ export function KelabPage() {
             <Star className="w-4 h-4 fill-amber-500" />
             <h3 className="text-xs font-black uppercase tracking-widest">Kelab Saya ({myApprovedClubs.length})</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {myApprovedClubs.map(club => (
               <div key={club.id} onClick={() => navigate(`/kelab/${club.id}`)}
                 className="group relative bg-card rounded-[2rem] p-5 border-2 border-amber-500/20 shadow-lg hover:border-amber-500/40 transition-all cursor-pointer flex items-center gap-4 overflow-hidden">

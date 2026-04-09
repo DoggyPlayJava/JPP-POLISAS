@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAiAssistant, ChatMessage, ChatContext } from '@/hooks/useAiAssistant';
+import { ALL_CLUBS } from '@/types';
 import { useAiSettings } from '@/contexts/AiSettingsContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -56,61 +57,6 @@ function fmt(iso: string) {
   return new Date(iso).toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' });
 }
 
-// ─── Quick actions config ───────────────────────────────────────────────────
-
-const QUICK_ACTIONS = [
-  {
-    id: 'analyze',
-    label: 'Analisis Kelab',
-    icon: FileLineChart,
-    bg: 'bg-indigo-500/10',
-    text: 'text-indigo-600',
-    border: 'border-indigo-500/20',
-    committeeOnly: true,
-    task: 'analyze_performance' as const,
-  },
-  {
-    id: 'suggest',
-    label: 'Cadangan Aktiviti',
-    icon: Sparkles,
-    bg: 'bg-violet-500/10',
-    text: 'text-violet-600',
-    border: 'border-violet-500/20',
-    committeeOnly: false,
-    task: 'suggest_program' as const,
-  },
-  {
-    id: 'draft',
-    label: 'Draf Kertas Kerja',
-    icon: FileText,
-    bg: 'bg-blue-500/10',
-    text: 'text-blue-600',
-    border: 'border-blue-500/20',
-    committeeOnly: true,
-    scaffold: 'Tolong bantu saya buat draf kertas kerja untuk program: [NAMA PROGRAM]',
-  },
-  {
-    id: 'summarize',
-    label: 'Rumuskan Laporan Bulanan',
-    icon: BookOpen,
-    bg: 'bg-teal-500/10',
-    text: 'text-teal-600',
-    border: 'border-teal-500/20',
-    committeeOnly: true,
-    scaffold: 'Boleh tolong rumuskan laporan bulanan untuk program: [NAMA PROGRAM]',
-  },
-  {
-    id: 'announce',
-    label: 'Cadangan Pengumuman',
-    icon: Megaphone,
-    bg: 'bg-orange-500/10',
-    text: 'text-orange-600',
-    border: 'border-orange-500/20',
-    committeeOnly: true,
-    scaffold: 'Bantu saya buat teks pengumuman rasmi untuk: [TAJUK PENGUMUMAN]',
-  },
-];
-
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export function FloatingAiChat() {
@@ -139,31 +85,6 @@ export function FloatingAiChat() {
   // ── Guards: only load localStorage once per user ──
   const lastUserIdRef = useRef<string | null>(null);
 
-  const isCommittee = isSuperAdmin || isAdvisor || isPresident || isMT;
-  
-  const getDynamicActions = () => {
-    let actions = QUICK_ACTIONS.filter((a) => !a.committeeOnly || isCommittee);
-    const path = location.pathname;
-
-    if (path.includes('/laporan')) {
-      actions = actions.filter(a => ['summarize', 'draft'].includes(a.id));
-    } else if (path.includes('/aktiviti')) {
-      actions = actions.filter(a => ['suggest', 'draft', 'announce'].includes(a.id));
-    } else if (path === '/' || path.includes('/dashboard')) {
-      actions = actions.filter(a => ['analyze', 'suggest'].includes(a.id));
-    } else if (path.includes('/ahli') || path.includes('/ajk')) {
-      actions = actions.filter(a => ['analyze', 'announce'].includes(a.id));
-    }
-    
-    // Ensure we always have actions to show if none strictly matched
-    if (actions.length === 0) {
-      actions = QUICK_ACTIONS.filter((a) => !a.committeeOnly || isCommittee);
-    }
-    
-    return actions.slice(0, 4);
-  };
-
-  const visibleActions = getDynamicActions();
 
   // ── Single message appender — always functional update, never stale ──────
   const appendMsg = useCallback((msg: Omit<ChatMessage, 'id' | 'timestamp'>): ChatMessage => {
@@ -248,11 +169,16 @@ export function FloatingAiChat() {
             .order('created_at', { ascending: false })
             .limit(3);
 
-          // 2. Get club metadata if applicable
+          // 2. Get club metadata & Deep Context
           let clubMeta = undefined;
-          const targetClubId = selectedClubId ?? profile.club_id;
+          let upcomingProgs: string | undefined = undefined;
+          let committeeStr: string | undefined = undefined;
+          let pendingTasks: number = 0;
+          
+          const targetClubId = selectedClubId || profile.club_id;
           
           if (targetClubId) {
+            // A. Basic Club Info
             const { data: club } = await supabase
               .from('clubs')
               .select('name, members_count')
@@ -260,8 +186,7 @@ export function FloatingAiChat() {
               .single();
             
             if (club) {
-              // Get pending reports count
-              const { count: pendingReports } = await supabase
+              const { count: pr } = await supabase
                 .from('activity_reports')
                 .select('*', { count: 'exact', head: true })
                 .eq('club_id', targetClubId)
@@ -270,16 +195,59 @@ export function FloatingAiChat() {
               clubMeta = {
                 name: club.name,
                 membersCount: club.members_count,
-                pendingReports: pendingReports || 0
+                pendingReports: pr || 0
               };
+
+              // B. Takwim (Next 3 Programs)
+              const { data: progs } = await supabase
+                .from('programs')
+                .select('nama_program, tarikh_mula, location')
+                .eq('club_id', targetClubId)
+                .not('status', 'eq', 'COMPLETED')
+                .order('tarikh_mula', { ascending: true })
+                .limit(3);
+              
+              if (progs && progs.length > 0) {
+                upcomingProgs = progs.map(p => `- ${p.nama_program} (${p.tarikh_mula || 'TBA'}) @ ${p.location || 'TBA'}`).join('\n');
+              }
+
+              // C. Committee (Leaders) from profiles table (Primary)
+              const { data: leaders } = await supabase
+                .from('profiles')
+                .select('full_name, role')
+                .eq('club_id', targetClubId)
+                .in('role', ['CLUB_PRESIDENT', 'CLUB_ADVISOR', 'PRESIDEN', 'PENASIHAT'])
+                .limit(5);
+              
+              if (leaders && leaders.length > 0) {
+                committeeStr = leaders.map(l => `- ${l.full_name} (${l.role})`).join('\n');
+              }
             }
+
+            // D. Pending Tasks for current user
+            const { count: tasksCount } = await supabase
+              .from('club_tasks')
+              .select('*', { count: 'exact', head: true })
+              .eq('assigned_to', profile.id)
+              .eq('club_id', targetClubId)
+              .eq('status', 'ACTIVE');
+            
+            pendingTasks = tasksCount || 0;
           }
 
           setChatContext({
             currentPage: location.pathname,
             userRole: profile.role,
             recentNotifications: notos?.map(n => n.title) || [],
-            clubInfo: clubMeta
+            clubInfo: clubMeta,
+            allClubs: ALL_CLUBS.length > 0 
+              ? ALL_CLUBS.map(c => `- ${c.name} (${c.shortName || 'N/A'}) [${c.category}]`).join('\n')
+              : undefined,
+            upcomingPrograms: upcomingProgs,
+            committee: committeeStr,
+            pendingTasksCount: pendingTasks,
+            tokenBalance: profile.ai_token_balance,
+            subscriptionTier: profile.subscription_tier
           });
         } catch (err) {
           console.error('Failed to fetch chat context:', err);
@@ -362,44 +330,6 @@ export function FloatingAiChat() {
     }
   };
 
-  // ── Quick action ─────────────────────────────────────────────────────────
-  const handleQuickAction = async (action: typeof QUICK_ACTIONS[0]) => {
-    // Scaffold-prompt: inject template into textarea
-    if ('scaffold' in action && action.scaffold) {
-      setInputValue(action.scaffold);
-      setTimeout(() => {
-        const el = textareaRef.current;
-        if (!el) return;
-        el.focus();
-        const start = action.scaffold!.indexOf('[');
-        const end = action.scaffold!.indexOf(']') + 1;
-        el.setSelectionRange(start, end);
-      }, 50);
-      return;
-    }
-
-    // Direct API action
-    appendMsg({ role: 'user', content: `📊 ${action.label}` });
-
-    let res: string | null = null;
-    if (action.task === 'analyze_performance') {
-      const clubId = selectedClubId ?? profile?.club_id;
-      if (!clubId) {
-        appendMsg({ role: 'error', content: 'Sila pilih sebuah kelab dahulu melalui menu utama sebelum menjalankan analisis.' });
-        return;
-      }
-      res = await callAi({ task: 'analyze_performance', clubId });
-    } else if (action.task === 'suggest_program') {
-      res = await callAi({ task: 'suggest_program', data: { fokus: 'Meningkatkan perpaduan dan penyertaan pelajar POLISAS' } });
-    }
-
-    if (res) {
-      appendMsg({ role: 'ai', content: res });
-    } else {
-      appendMsg({ role: 'error', content: 'Sistem sedang sibuk. Sila cuba sekali lagi!' });
-    }
-  };
-
   // ── Copy to clipboard ────────────────────────────────────────────────────
   const handleCopy = async (id: string, content: string) => {
     await navigator.clipboard.writeText(content);
@@ -447,8 +377,8 @@ export function FloatingAiChat() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 12 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="absolute bottom-[4.5rem] right-0 w-80 md:w-96 rounded-[2rem] shadow-2xl bg-card overflow-hidden flex flex-col"
-            style={{ height: '580px', border: 'none' }}
+            className="absolute bottom-[4.5rem] right-0 w-[calc(100vw-2rem)] sm:w-80 md:w-96 rounded-[2.5rem] shadow-2xl bg-card overflow-hidden flex flex-col"
+            style={{ height: 'min(580px, calc(100dvh - 12rem))', border: 'none' }}
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-indigo-600 to-violet-600 p-5 text-white relative shrink-0 flex items-center justify-between">
@@ -482,26 +412,8 @@ export function FloatingAiChat() {
                 <div className="bg-card border border-border/50 p-4 rounded-2xl rounded-tl-sm text-sm text-foreground shadow-sm flex-1">
                   <p className="font-bold mb-1">Hai {profile?.full_name?.split(' ')[0] ?? 'Pelajar'}! 👋</p>
                   <p className="text-muted-foreground text-xs leading-relaxed">
-                    Saya pembantu AI JPP anda. Pilih tindakan pantas atau tanya apa sahaja!
+                    Saya pembantu AI JPP anda. Sila tanya apa sahaja soalan berkaitan kelab atau aktiviti POLISAS!
                   </p>
-                  {/* Quick-action grid */}
-                  <div className={`grid gap-2 mt-3 ${visibleActions.length > 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                    {visibleActions.map((action) => (
-                      <motion.button
-                        key={action.id}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={() => handleQuickAction(action)}
-                        disabled={isBusy}
-                        className={`flex items-center gap-2 p-2.5 rounded-xl border ${action.border} ${action.bg} hover:brightness-95 transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${action.bg}`}>
-                          <action.icon size={13} className={action.text} />
-                        </div>
-                        <span className={`text-[11px] font-bold leading-tight ${action.text}`}>{action.label}</span>
-                      </motion.button>
-                    ))}
-                  </div>
                 </div>
               </motion.div>
 

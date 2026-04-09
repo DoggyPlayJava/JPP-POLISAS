@@ -4,7 +4,7 @@ import {
     RefreshCw, ChevronRight, LayoutGrid, Server, Info, Lock,
     Plus, CheckCheck, Building2, Palette, Cpu, Settings as SettingsIcon,
     Sparkles, AlertTriangle, Search, Clock, Shield, Wand2, CalendarRange, Brain, MessageSquare,
-    FileText, CalendarDays, Ticket, Star, RotateCcw
+    FileText, CalendarDays, Ticket, Star, RotateCcw, Globe
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -876,25 +876,36 @@ export function JppAdminPage() {
                     </div>
                 </div>
 
-                <div className="max-w-7xl mx-auto px-6 mt-10 space-y-8">
-                    <header>
-                        <h1 className="text-4xl font-black tracking-tight text-foreground">Status Sistem</h1>
-                        <p className="text-muted-foreground font-medium mt-1">Sistem Pemantauan Infrastruktur & AI Global.</p>
+                <div className="max-w-7xl mx-auto px-6 mt-10 space-y-10">
+                    <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-2">
+                        <div className="space-y-1">
+                            <h1 className="text-4xl font-black tracking-tight text-foreground leading-none">Pusat Kawalan Sistem</h1>
+                            <p className="text-muted-foreground font-medium font-mono text-[10px] uppercase tracking-widest bg-muted px-2 py-0.5 rounded-md w-fit">Infrastructure & Global AI Core v4.0</p>
+                        </div>
                     </header>
 
-                    {/* STICKY TABS */}
-                    <div className="sticky top-[73px] z-40 bg-background/95 backdrop-blur-xl py-3 -mx-6 px-6 border-b border-border/50 overflow-x-auto hide-scrollbar">
-                        <div className="flex items-center gap-2 min-w-max">
-                            {TABS.map(tab => (
-                                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                                    className={cn('flex items-center gap-2.5 px-5 py-2.5 rounded-2xl font-bold transition-all duration-300',
-                                        activeTab === tab.id 
-                                            ? `bg-card shadow-sm border border-border ${tab.color}`
-                                            : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground')}>
-                                    <div className={cn('p-1.5 rounded-lg transition-colors', activeTab === tab.id ? tab.bg : 'bg-transparent')}>
-                                        <tab.icon className="w-4 h-4" />
-                                    </div>
-                                    <span className="text-sm tracking-wide">{tab.label}</span>
+                    {/* --- NAVIGATION TABS --- */}
+                    <div className="sticky top-[72px] z-40 bg-background/80 backdrop-blur-md py-4 border-b border-border/10">
+                        <div className="flex items-center gap-2 p-1.5 bg-muted/30 rounded-2xl border border-border/50 overflow-x-auto no-scrollbar scroll-smooth w-full sm:w-fit">
+                            {[
+                                { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid },
+                                { id: 'ai', label: 'Nexus Hub', icon: Sparkles },
+                                { id: 'users', label: 'Pelajar', icon: Users },
+                                { id: 'logs', label: 'Audit Log', icon: FileWarning },
+                                { id: 'settings', label: 'Tetapan', icon: Globe },
+                            ].map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={cn(
+                                        "flex items-center gap-2 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest whitespace-nowrap transition-all duration-300",
+                                        activeTab === tab.id
+                                            ? "bg-background text-primary shadow-xl shadow-primary/5 ring-1 ring-border/50"
+                                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                                    )}
+                                >
+                                    <tab.icon className={cn("w-3.5 h-3.5", activeTab === tab.id ? "text-primary" : "text-muted-foreground/40")} />
+                                    {tab.label}
                                 </button>
                             ))}
                         </div>
@@ -906,7 +917,7 @@ export function JppAdminPage() {
                         {activeTab === 'dashboard' && (
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 {/* Stats Cards */}
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                     {[
                                         { label: 'Kelab', val: ALL_CLUBS.length, color: 'bg-blue-500', icon: LayoutGrid },
                                         { label: 'Aktiviti', val: stats.totalActivities, color: 'bg-emerald-500', icon: Activity },
@@ -1032,7 +1043,7 @@ export function JppAdminPage() {
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-end">
                                                     <div className="space-y-6">
                                                         <div>
-                                                            <p className="text-6xl font-black tracking-tighter text-white tabular-nums">{(settings.ai_total_tokens || 0).toLocaleString()}</p>
+                                                            <p className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-white tabular-nums">{(settings.ai_total_tokens || 0).toLocaleString()}</p>
                                                             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-200/60 mt-2">Token Dijana</p>
                                                         </div>
                                                         <div className="space-y-3">

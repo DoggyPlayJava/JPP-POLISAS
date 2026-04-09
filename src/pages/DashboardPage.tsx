@@ -303,15 +303,15 @@ export function DashboardPage() {
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="page-container space-y-10 pb-20">
 
       {/* ── HEADER ── */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 bg-card/40 p-6 rounded-[2.5rem] border border-border/60 backdrop-blur-sm">
-        <div className="space-y-2">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-card/40 p-5 sm:p-8 rounded-[2.5rem] border border-border/60 backdrop-blur-sm">
+        <div className="space-y-4">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-primary rounded-xl text-white"><LayoutDashboard size={20} /></div>
             <Badge className="bg-primary/10 text-primary border-none px-3 uppercase text-[10px] font-black">{effectiveRole}</Badge>
           </div>
-          <h1 className="text-5xl font-black tracking-tighter leading-none">Papan <span className="gradient-text">Pemuka</span></h1>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none">Papan <span className="gradient-text">Pemuka</span></h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto md:justify-end">
           <NotificationBell />
           {allowAiBudget && (isPresident || isMT || isAdvisor) && (
             <Button onClick={() => setShowAiModal(true)} variant="outline" className="rounded-xl font-black text-[10px] uppercase h-10 border-indigo-500/30 text-indigo-600 bg-indigo-500/10 hover:bg-indigo-500/20 hover:text-indigo-700 shadow-sm transition-all group">
@@ -331,7 +331,7 @@ export function DashboardPage() {
       <ClubSwitcher />
 
       {/* ── STAT CARDS ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {(isAdvisor || isPresident) && <StatCard label="Perlu Kelulusan" val={tasks.filter((t: any) => t.approval_status === 'WAITING').length} color="text-rose-600" icon={Clock} bg="bg-rose-500/10" />}
         <StatCard label="Ahli Aktif" val={members.length} color="text-primary" icon={Users} bg="bg-primary/10" />
         <StatCard label="Tugasan" val={tasks.length} color="text-amber-600" icon={Activity} bg="bg-amber-500/10" />
@@ -340,7 +340,7 @@ export function DashboardPage() {
 
       {/* ── CLUB ANALYTICS ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="border-none shadow-premium rounded-[2.5rem] bg-card p-8 border border-border/50 backdrop-blur-md">
+        <Card className="border-none shadow-premium rounded-[2.5rem] bg-card p-5 sm:p-8 border border-border/50 backdrop-blur-md">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-xl font-black italic">Prestasi Tugasan</h3>
@@ -424,15 +424,15 @@ export function DashboardPage() {
 
           {/* SEKSYEN: JEJAK PROGRAM (MT & PRESIDENT SAHAJA) */}
           {(isPresident || isMT) && (
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-card p-8">
-              <div className="flex items-center justify-between mb-8">
+            <Card className="border-none shadow-xl rounded-[2.5rem] bg-card p-5 sm:p-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                 <div>
-                  <h3 className="text-2xl font-black tracking-tight flex items-center gap-2">
+                  <h3 className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2">
                     <FileCheck className="text-primary" size={24} /> Jejak Program
                   </h3>
                   <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">Status Kertas Kerja di JPP</p>
                 </div>
-                <Button onClick={() => navigate('/aktiviti')} size="sm" className="rounded-xl font-black text-[10px] uppercase h-10 bg-slate-900 px-6">
+                <Button onClick={() => navigate('/aktiviti')} size="sm" className="w-full sm:w-auto rounded-xl font-black text-[10px] uppercase h-10 bg-slate-900 px-6">
                   <Send className="w-3 h-3 mr-2" /> Daftar Program
                 </Button>
               </div>
@@ -463,17 +463,17 @@ export function DashboardPage() {
           )}
 
           <Card className="border-none shadow-xl rounded-[2.5rem] bg-card/70 backdrop-blur-md overflow-hidden">
-            <CardHeader className="border-b border-border/40 bg-card/30 flex flex-row items-center justify-between px-8 py-6">
-              <CardTitle className="text-2xl font-black tracking-tight flex items-center gap-2">
+            <CardHeader className="border-b border-border/40 bg-card/30 flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 sm:px-8 py-6 gap-4">
+              <CardTitle className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2">
                 {taskView === 'active' ? (isNormalMember ? 'Tugasan Saya' : 'Senarai Tugasan') : 'Arkib Tugasan'}
                 {taskView === 'archive' && <Archive size={20} className="text-muted-foreground" />}
               </CardTitle>
-              <div className="flex bg-muted/30 p-1 rounded-xl border border-border/50">
-                <button onClick={() => setTaskView('active')} className={cn("px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all", taskView === 'active' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}>Aktif</button>
-                <button onClick={() => setTaskView('archive')} className={cn("px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all", taskView === 'archive' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}>Arkib</button>
+              <div className="flex bg-muted/30 p-1 rounded-xl border border-border/50 w-full sm:w-auto">
+                <button onClick={() => setTaskView('active')} className={cn("flex-1 sm:flex-none px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all", taskView === 'active' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}>Aktif</button>
+                <button onClick={() => setTaskView('archive')} className={cn("flex-1 sm:flex-none px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all", taskView === 'archive' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground")}>Arkib</button>
               </div>
             </CardHeader>
-            <CardContent className="p-8 space-y-4">
+            <CardContent className="p-5 sm:p-8 space-y-4">
               {tasks.length === 0 ? (
                 <Empty className="py-12 border-none">
                   <EmptyMedia variant="icon">
