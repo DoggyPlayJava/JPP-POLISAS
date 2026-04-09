@@ -9,7 +9,151 @@ export type UserRole = 'SUPER_ADMIN_JPP' | 'JPP' | 'CLUB_ADVISOR' | 'CLUB_PRESID
 // CLUB_PRESIDENT  = Presiden Kelab
 // CLUB_MT         = Ahli Jawatankuasa Kelab
 // CLUB_MEMBER     = Ahli Biasa
+
+// ─── JPP Hierarchy Types ──────────────────────────────────────────────────────
+
+/** Jawatan dalam Majlis Tertinggi (MT) JPP atau Exco JPP */
+export type JppPosition =
+  // Majlis Tertinggi (MT)
+  | 'YDP'                  // Yang Di-pertua
+  | 'TIMBALAN_YDP'         // Timbalan Yang Di-pertua
+  | 'NAIB_YDP'             // Naib Yang Di-pertua
+  | 'SETIAUSAHA_KERJA'     // Setiausaha Kerja
+  | 'SETIAUSAHA_KEHORMAT'  // Setiausaha Kehormat
+  | 'BENDAHARI'            // Bendahari
+  // Exco
+  | 'KETUA_EXCO'           // Ketua Exco (ketua sesuatu unit exco)
+  | 'TIMBALAN_EXCO'        // Timbalan Ketua Exco
+  | 'EXCO_BIASA';          // Ahli Exco biasa
+
+/** Unit exco dalam JPP — boleh tambah unit baharu tanpa ubah type */
+export type JppUnit =
+  | 'KEUSAHAWANAN'
+  | 'KPP'          // Kelab, Persatuan & Perpaduan
+  | 'KEBAJIKAN'
+  | 'SUKAN'
+  | 'KEDIAMAN'     // Kediaman Luar Kampus
+  | 'AKADEMIK'
+  | 'DISIPLIN'
+  | string;        // Untuk unit tambahan masa hadapan
+
+/** Label display untuk JppPosition */
+export const JPP_POSITION_LABELS: Record<JppPosition, string> = {
+  YDP:                 'Yang Di-pertua',
+  TIMBALAN_YDP:        'Timbalan Yang Di-pertua',
+  NAIB_YDP:            'Naib Yang Di-pertua',
+  SETIAUSAHA_KERJA:    'Setiausaha Kerja',
+  SETIAUSAHA_KEHORMAT: 'Setiausaha Kehormat',
+  BENDAHARI:           'Bendahari',
+  KETUA_EXCO:          'Ketua Exco',
+  TIMBALAN_EXCO:       'Timbalan Exco',
+  EXCO_BIASA:          'Ahli Exco',
+};
+
+/** Label display untuk JppUnit (fallback — data sebenar dari jpp_exco_units table) */
+export const JPP_UNIT_LABELS: Record<string, string> = {
+  KEUSAHAWANAN: 'Exco Keusahawanan',
+  KPP:          'Exco Kelab, Persatuan dan Perpaduan',
+  KK:           'Exco Kediaman dan Kerohanian',
+  AKADEMIK:     'Exco Akademik dan Pembangunan Mahasiswa',
+  KEBAJIKAN:    'Exco Kebajikan dan Pengaduan Awam',
+  MULTIMEDIA:   'Exco Multimedia, Informasi dan Perhubungan Awam',
+  KLS:          'Exco Kediaman Luar Kampus',
+  KOLAB:        'Exco Kolaborasi dan Kesukarelawanan',
+  SRK:          'Exco Sukan, Rekreasi dan Kebudayaan',
+};
+
+/** Unit-unit exco (fallback — data sebenar dari jpp_exco_units table) */
+export const JPP_UNITS: JppUnit[] = [
+  'KEUSAHAWANAN','KPP','KK','AKADEMIK','KEBAJIKAN','MULTIMEDIA','KLS','KOLAB','SRK',
+];
+
+/** Jawatan MT (tiada unit spesifik) */
+export const JPP_MT_POSITIONS: JppPosition[] = [
+  'YDP','TIMBALAN_YDP','NAIB_YDP',
+  'SETIAUSAHA_KERJA','SETIAUSAHA_KEHORMAT','BENDAHARI',
+];
+
+/** Jawatan Exco (perlu unit) */
+export const JPP_EXCO_POSITIONS: JppPosition[] = [
+  'KETUA_EXCO','TIMBALAN_EXCO','EXCO_BIASA',
+];
+
+/** Rekod satu unit exco dari database jpp_exco_units */
+export interface JppExcoUnit {
+  id:         string;
+  code:       string;   // Identifier unik: 'KPP', 'SRK', dll.
+  name:       string;   // Nama penuh
+  short_name: string;   // Nama pendek untuk badge
+  color:      string;   // Hex color
+  is_active:  boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+/** Rekod tugasan MT → unit exco */
+export interface JppMtAssignment {
+  id:          string;
+  mt_user_id:  string;
+  unit:        JppUnit;
+  assigned_by: string | null;
+  assigned_at: string;
+}
+
+// ─── Gerai Types ──────────────────────────────────────────────────────────────
+
+export type GeraishiftStatus = 'SCHEDULED' | 'PRESENT' | 'ABSENT' | 'SWAPPED';
+export type GeraiSwapStatus  = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED';
+export type GeraiSessionStatus = 'OPEN' | 'CLOSED';
+
+export interface GeraiShift {
+  id:          string;
+  shift_date:  string;
+  shift_hour:  number;       // 8–16 (mewakili 08:00–09:00 hingga 16:00–17:00)
+  assigned_to: string | null;
+  created_by:  string | null;
+  notes:       string | null;
+  status:      GeraishiftStatus;
+  created_at:  string;
+  // Joined
+  assignee?:   { id: string; full_name: string; avatar_url?: string };
+}
+
+export interface GeraiShiftSwap {
+  id:           string;
+  shift_id:     string;
+  requested_by: string;
+  swap_with:    string | null;
+  reason:       string;
+  status:       GeraiSwapStatus;
+  responded_by: string | null;
+  responded_at: string | null;
+  created_at:   string;
+}
+
+export interface GeraiSession {
+  id:             string;
+  session_date:   string;
+  opened_by:      string | null;
+  closed_by:      string | null;
+  opening_cash:   number;
+  closing_cash:   number | null;
+  total_sales:    number | null;
+  total_expenses: number;
+  opening_time:   string | null;
+  closing_time:   string | null;
+  opening_notes:  string | null;
+  closing_notes:  string | null;
+  status:         GeraiSessionStatus;
+  created_at:     string;
+  // Computed
+  net_profit?:    number | null;
+  opener?:        { full_name: string };
+  closer?:        { full_name: string };
+}
+
 export type ActivityStatus = 'perancangan' | 'aktif' | 'selesai' | 'ditangguh';
+
 export type ActivityPriority = 'rendah' | 'sederhana' | 'tinggi';
 export type ReportStatus = 'Menunggu' | 'Dalam Semakan' | 'Diluluskan' | 'Ditolak';
 export type ReportType = 'Aktiviti' | 'Kewangan';

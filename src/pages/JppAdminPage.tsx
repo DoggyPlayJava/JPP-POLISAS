@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
     ShieldCheck, Database, Users, Trash2, FileWarning, Activity,
     RefreshCw, ChevronRight, LayoutGrid, Server, Info, Lock,
     Plus, CheckCheck, Building2, Palette, Cpu, Settings as SettingsIcon,
     Sparkles, AlertTriangle, Search, Clock, Shield, Wand2, CalendarRange, Brain, MessageSquare,
-    FileText, CalendarDays, Ticket, Star, RotateCcw, Globe
+    FileText, CalendarDays, Ticket, Star, RotateCcw, Globe, Crown, Store, X, Check, ChevronDown,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -891,6 +891,7 @@ export function JppAdminPage() {
                                 { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid },
                                 { id: 'ai', label: 'Nexus Hub', icon: Sparkles },
                                 { id: 'users', label: 'Pelajar', icon: Users },
+                                { id: 'jpp', label: 'Ahli JPP', icon: Crown },
                                 { id: 'logs', label: 'Audit Log', icon: FileWarning },
                                 { id: 'settings', label: 'Tetapan', icon: Globe },
                             ].map((tab) => (
@@ -1876,9 +1877,604 @@ export function JppAdminPage() {
                                 </Card>
                             </div>
                         )}
+
+                        {/* ── TAB: AHLI JPP HIERARCHY ── */}
+                        {activeTab === 'jpp' && <JppMemberPanel allUsers={allUsers} onRefresh={fetchAdminData} />}
                     </div>
                 </div>
             </div>
         </>
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// JPP Member Management Panel (A5)
+// ═══════════════════════════════════════════════════════════════════
+
+import {
+    JPP_POSITION_LABELS, JPP_MT_POSITIONS,
+    JPP_EXCO_POSITIONS, type JppPosition, type JppExcoUnit,
+} from '@/types';
+import { useJppExcoUnits } from '@/hooks/useJppExcoUnits';
+
+function JppMemberPanel({ allUsers, onRefresh }: { allUsers: any[]; onRefresh: () => void }) {
+    const jppUsers = allUsers.filter(u => u.role === 'JPP' || u.role === 'SUPER_ADMIN_JPP');
+    const { units: excoUnits, unitLabels, unitColors, refresh: refreshUnits } = useJppExcoUnits();
+    const [activeView, setActiveView] = useState<'members' | 'units'>('members');
+    const [search, setSearch] = useState('');
+    const [editModal, setEditModal] = useState<any | null>(null);
+    const [editPos, setEditPos] = useState<string>('');
+    const [editUnit, setEditUnit] = useState<string>('');
+    const [mtAssignments, setMtAssignments] = useState<{unit: string}[]>([]);
+    const [saving, setSaving] = useState(false);
+    const [assignments, setAssignments] = useState<Record<string, string[]>>({}); // userId → unit[]
+
+
+    // Fetch all MT assignments on mount
+    useEffect(() => {
+        supabase.from('jpp_mt_assignments').select('mt_user_id, unit')
+            .then(({ data }) => {
+                if (!data) return;
+                const map: Record<string, string[]> = {};
+                data.forEach(a => {
+                    if (!map[a.mt_user_id]) map[a.mt_user_id] = [];
+                    map[a.mt_user_id].push(a.unit);
+                });
+                setAssignments(map);
+            });
+    }, []);
+
+    const openEdit = (user: any) => {
+        setEditModal(user);
+        setEditPos(user.jpp_position || '');
+        setEditUnit(user.jpp_unit || '');
+        setMtAssignments(
+            (assignments[user.id] || []).map(u => ({ unit: u }))
+        );
+    };
+
+    const isMT = JPP_MT_POSITIONS.includes(editPos as JppPosition);
+
+    const toggleMtUnit = (unit: string) => {
+        setMtAssignments(prev =>
+            prev.find(a => a.unit === unit)
+                ? prev.filter(a => a.unit !== unit)
+                : [...prev, { unit }]
+        );
+    };
+
+    const handleSave = async () => {
+        if (!editModal) return;
+        setSaving(true);
+        try {
+            // Update profile
+            const { error: profileErr } = await supabase.from('profiles').update({
+                jpp_position: editPos || null,
+                jpp_unit: isMT ? null : (editUnit || null),
+            }).eq('id', editModal.id);
+            if (profileErr) throw profileErr;
+
+            if (isMT) {
+                // Delete all existing assignments for this MT
+                await supabase.from('jpp_mt_assignments').delete().eq('mt_user_id', editModal.id);
+                // Insert new ones
+                if (mtAssignments.length > 0) {
+                    await supabase.from('jpp_mt_assignments').insert(
+                        mtAssignments.map(a => ({ mt_user_id: editModal.id, unit: a.unit }))
+                    );
+                }
+            } else {
+                // If not MT, remove any leftover MT assignments
+                await supabase.from('jpp_mt_assignments').delete().eq('mt_user_id', editModal.id);
+            }
+
+            toast.success(`${editModal.full_name} berjaya dikemaskini!`);
+            setEditModal(null);
+            onRefresh();
+            // Refresh local assignments
+            const { data } = await supabase.from('jpp_mt_assignments').select('mt_user_id, unit');
+            if (data) {
+                const map: Record<string, string[]> = {};
+                data.forEach(a => {
+                    if (!map[a.mt_user_id]) map[a.mt_user_id] = [];
+                    map[a.mt_user_id].push(a.unit);
+                });
+                setAssignments(map);
+            }
+        } catch (e: any) {
+            toast.error(e.message || 'Gagal menyimpan');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const filtered = jppUsers.filter(u =>
+        u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+        u.email?.toLowerCase().includes(search.toLowerCase())
+    );
+
+    const mtUsers   = filtered.filter(u => JPP_MT_POSITIONS.includes(u.jpp_position));
+    const excoUsers = filtered.filter(u => JPP_EXCO_POSITIONS.includes(u.jpp_position));
+    const unsetUsers = filtered.filter(u => !u.jpp_position);
+
+    const renderGroup = (title: string, icon: React.ReactNode, users: any[], badge?: string) => {
+        if (users.length === 0) return null;
+        return (
+            <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                    {icon}
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{title}</p>
+                    <span className="ml-auto text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                        {users.length} orang
+                    </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {users.map(u => {
+                        const unitColor = unitColors[u.jpp_unit] || '#6366f1';
+                        const userMtUnits = assignments[u.id] || [];
+                        return (
+                            <div key={u.id}
+                                className="group relative flex items-center gap-3 p-3 rounded-2xl bg-card border border-border hover:border-border/80 hover:shadow-md transition-all cursor-pointer"
+                                onClick={() => openEdit(u)}
+                            >
+                                <Avatar className="h-10 w-10 rounded-xl flex-shrink-0">
+                                    <AvatarImage src={u.avatar_url || ''} className="object-cover" />
+                                    <AvatarFallback className="rounded-xl font-black text-xs text-white"
+                                        style={{ background: u.jpp_unit ? unitColor : '#6366f1' }}>
+                                        {u.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-black truncate">{u.full_name}</p>
+                                    <p className="text-[10px] text-muted-foreground truncate">{u.email}</p>
+                                    <div className="flex flex-wrap gap-1 mt-1.5">
+                                        {u.jpp_position ? (
+                                            <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">
+                                                {JPP_POSITION_LABELS[u.jpp_position as JppPosition] || u.jpp_position}
+                                            </span>
+                                        ) : (
+                                            <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600">
+                                                Belum Ditetapkan
+                                            </span>
+                                        )}
+                                        {u.jpp_unit && (
+                                            <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md text-white"
+                                                style={{ background: unitColor }}>
+                                                {unitLabels[u.jpp_unit] || u.jpp_unit}
+                                            </span>
+                                        )}
+                                        {userMtUnits.map((unit: string) => (
+                                            <span key={unit} className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md text-white"
+                                                style={{ background: unitColors[unit] || '#6366f1' }}>
+                                                {unitLabels[unit] || unit}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/30 flex-shrink-0 group-hover:text-muted-foreground/60 transition-colors" />
+                            </div>
+                        );
+                    })}
+                </div>
+
+            </div>
+        );
+    };
+
+    return (
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Header + View Toggler */}
+            <div className="flex items-start justify-between flex-wrap gap-4">
+                <div>
+                    <h2 className="text-2xl font-black tracking-tight flex items-center gap-2">
+                        <Crown className="w-6 h-6 text-amber-500" />
+                        Pengurusan Ahli JPP
+                    </h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                        Tetapkan jawatan dan unit exco setiap ahli JPP.
+                    </p>
+                </div>
+                {/* View Switcher */}
+                <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-2xl border border-border/50">
+                    {[
+                        { id: 'members', label: 'Ahli', icon: Users },
+                        { id: 'units',   label: 'Senarai Exco', icon: SettingsIcon },
+                    ].map(v => (
+                        <button key={v.id} onClick={() => setActiveView(v.id as any)}
+                            className={cn(
+                                'flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all',
+                                activeView === v.id
+                                    ? 'bg-background text-primary shadow ring-1 ring-border/50'
+                                    : 'text-muted-foreground hover:bg-muted/50'
+                            )}>
+                            <v.icon className="w-3.5 h-3.5" />{v.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* ── VIEW: AHLI JPP ── */}
+            {activeView === 'members' && (
+                <>
+                    {/* Hierarchy Legend */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {[
+                            { title: 'MT JPP', desc: 'Majlis Tertinggi', color: 'bg-amber-500/10 border-amber-500/20 text-amber-600', count: jppUsers.filter(u => JPP_MT_POSITIONS.includes(u.jpp_position)).length },
+                            { title: 'Exco Unit', desc: 'Ahli Exco berunit', color: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-600', count: jppUsers.filter(u => JPP_EXCO_POSITIONS.includes(u.jpp_position)).length },
+                            { title: 'Belum Set', desc: 'Perlu jawatan', color: 'bg-muted border-border text-muted-foreground', count: jppUsers.filter(u => !u.jpp_position).length },
+                        ].map(s => (
+                            <div key={s.title} className={`p-3 rounded-2xl border ${s.color}`}>
+                                <p className="text-lg font-black leading-none">{s.count}</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest mt-1">{s.title}</p>
+                                <p className="text-[10px] opacity-60">{s.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Search */}
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
+                        <input value={search} onChange={e => setSearch(e.target.value)}
+                            placeholder="Cari ahli JPP dengan nama atau email..."
+                            className="w-full h-11 pl-10 pr-4 rounded-2xl border border-border bg-card text-sm font-medium outline-none focus:border-border/80" />
+                    </div>
+
+                    {/* Groups */}
+                    <div className="space-y-8">
+                        {renderGroup('Majlis Tertinggi JPP', <Crown className="w-3.5 h-3.5 text-amber-500" />,
+                            jppUsers.filter(u => u.full_name?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase())).filter(u => JPP_MT_POSITIONS.includes(u.jpp_position)))}
+                        {renderGroup('Exco JPP', <Store className="w-3.5 h-3.5 text-indigo-500" />,
+                            jppUsers.filter(u => u.full_name?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase())).filter(u => JPP_EXCO_POSITIONS.includes(u.jpp_position)))}
+                        {renderGroup('Belum Ditetapkan', <AlertTriangle className="w-3.5 h-3.5 text-amber-500/60" />,
+                            jppUsers.filter(u => u.full_name?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase())).filter(u => !u.jpp_position))}
+                    </div>
+
+                    {jppUsers.length === 0 && (
+                        <div className="text-center py-16 text-muted-foreground/40">
+                            <Crown className="w-10 h-10 mx-auto mb-3" />
+                            <p className="text-[11px] font-black uppercase tracking-widest">Tiada ahli JPP dalam sistem lagi</p>
+                        </div>
+                    )}
+                </>
+            )}
+
+            {/* ── VIEW: SENARAI EXCO ── */}
+            {activeView === 'units' && (
+                <JppExcoUnitsManager excoUnits={excoUnits} onRefresh={refreshUnits} />
+            )}
+
+            {/* Edit Member Modal */}
+            {editModal && (
+                <>
+                    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={() => setEditModal(null)} />
+                    <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-md mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl max-h-[90vh] overflow-y-auto">
+                        {/* Modal Header */}
+                        <div className="flex items-center gap-3 mb-6">
+                            <Avatar className="h-12 w-12 rounded-2xl flex-shrink-0">
+                                <AvatarImage src={editModal.avatar_url || ''} className="object-cover" />
+                                <AvatarFallback className="rounded-2xl font-black text-sm text-white bg-indigo-600">
+                                    {editModal.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-black truncate">{editModal.full_name}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">{editModal.email}</p>
+                            </div>
+                            <button onClick={() => setEditModal(null)} className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center hover:bg-muted/80">
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-5">
+                            {/* Jawatan */}
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">Jawatan / Position</p>
+                                <div className="space-y-1">
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 px-1 mb-1.5">Majlis Tertinggi (MT)</p>
+                                    <div className="grid grid-cols-2 gap-1.5">
+                                        {JPP_MT_POSITIONS.map(pos => (
+                                            <button key={pos} onClick={() => { setEditPos(pos); setEditUnit(''); }}
+                                                className={cn('px-3 py-2 rounded-xl text-[10px] font-black text-left transition-all border',
+                                                    editPos === pos ? 'bg-amber-500 text-white border-amber-500' : 'bg-muted/30 border-border hover:border-border/60')}>
+                                                {JPP_POSITION_LABELS[pos]}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 px-1 mt-3 mb-1.5">Exco</p>
+                                    <div className="grid grid-cols-3 gap-1.5">
+                                        {JPP_EXCO_POSITIONS.map(pos => (
+                                            <button key={pos} onClick={() => setEditPos(pos)}
+                                                className={cn('px-3 py-2 rounded-xl text-[10px] font-black text-left transition-all border',
+                                                    editPos === pos ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-muted/30 border-border hover:border-border/60')}>
+                                                {JPP_POSITION_LABELS[pos]}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <button onClick={() => { setEditPos(''); setEditUnit(''); setMtAssignments([]); }}
+                                        className={cn('w-full mt-1 px-3 py-2 rounded-xl text-[10px] font-black transition-all border',
+                                            !editPos ? 'bg-muted border-muted-foreground/30 text-foreground' : 'border-dashed border-border text-muted-foreground hover:border-border')}>
+                                        ✕ Tiada Jawatan
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Unit/Exco (untuk Exco sahaja) */}
+                            {editPos && !isMT && (
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">Unit Exco</p>
+                                    <div className="grid grid-cols-2 gap-1.5">
+                                        {excoUnits.map(unit => (
+                                            <button key={unit.code} onClick={() => setEditUnit(unit.code)}
+                                                className={cn('px-3 py-2 rounded-xl text-[10px] font-black text-left transition-all border',
+                                                    editUnit === unit.code ? 'text-white border-transparent' : 'bg-muted/30 border-border hover:border-border/60')}
+                                                style={editUnit === unit.code ? { background: unit.color } : {}}>
+                                                {unit.short_name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* MT Assignments */}
+                            {isMT && (
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">
+                                        Oversee Unit Exco <span className="text-muted-foreground/40">(boleh pilih lebih satu)</span>
+                                    </p>
+                                    <div className="grid grid-cols-2 gap-1.5">
+                                        {excoUnits.map(unit => {
+                                            const selected = mtAssignments.some(a => a.unit === unit.code);
+                                            return (
+                                                <button key={unit.code} onClick={() => toggleMtUnit(unit.code)}
+                                                    className={cn('flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black transition-all border',
+                                                        selected ? 'text-white border-transparent' : 'bg-muted/30 border-border hover:border-border/60')}
+                                                    style={selected ? { background: unit.color } : {}}>
+                                                    {selected ? <Check className="w-3 h-3 flex-shrink-0" /> : <div className="w-3 h-3 flex-shrink-0" />}
+                                                    {unit.short_name}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex gap-2 mt-6">
+                            <button onClick={() => setEditModal(null)}
+                                className="flex-1 h-11 rounded-2xl border border-border text-[11px] font-black uppercase">Batal</button>
+                            <button onClick={handleSave} disabled={saving}
+                                className="flex-1 h-11 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black uppercase disabled:opacity-40 transition-colors">
+                                {saving ? 'Menyimpan...' : '✓ Simpan Perubahan'}
+                            </button>
+                        </div>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// JPP Exco Units Manager — CRUD untuk senarai exco
+// ═══════════════════════════════════════════════════════════════════
+
+const PRESET_COLORS = [
+    '#1B5E20','#B71C1C','#4A148C','#1565C0','#E65100',
+    '#006064','#4E342E','#1A237E','#BF360C','#6366f1',
+    '#f59e0b','#10b981','#ec4899','#14b8a6','#8b5cf6',
+];
+
+function JppExcoUnitsManager({ excoUnits, onRefresh }: { excoUnits: JppExcoUnit[]; onRefresh: () => void }) {
+    const [editUnit, setEditUnit] = useState<JppExcoUnit | null>(null);
+    const [showAdd, setShowAdd] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [form, setForm] = useState({ code: '', name: '', short_name: '', color: '#6366f1' });
+
+    const openAdd = () => {
+        setForm({ code: '', name: '', short_name: '', color: '#6366f1' });
+        setShowAdd(true);
+        setEditUnit(null);
+    };
+
+    const openEdit = (unit: JppExcoUnit) => {
+        setForm({ code: unit.code, name: unit.name, short_name: unit.short_name, color: unit.color });
+        setEditUnit(unit);
+        setShowAdd(true);
+    };
+
+    const handleSave = async () => {
+        if (!form.code.trim() || !form.name.trim() || !form.short_name.trim()) {
+            toast.error('Sila isi semua ruangan yang diperlukan.');
+            return;
+        }
+        setSaving(true);
+        try {
+            if (editUnit) {
+                // Update
+                const { error } = await supabase.from('jpp_exco_units').update({
+                    name: form.name.trim(),
+                    short_name: form.short_name.trim(),
+                    color: form.color,
+                }).eq('id', editUnit.id);
+                if (error) throw error;
+                toast.success(`Unit "${form.short_name}" dikemaskini!`);
+            } else {
+                // Insert
+                const { error } = await supabase.from('jpp_exco_units').insert({
+                    code: form.code.trim().toUpperCase().replace(/\s+/g, '_'),
+                    name: form.name.trim(),
+                    short_name: form.short_name.trim(),
+                    color: form.color,
+                    sort_order: excoUnits.length,
+                });
+                if (error) throw error;
+                toast.success(`Unit "${form.short_name}" berjaya ditambah!`);
+            }
+            setShowAdd(false);
+            onRefresh();
+        } catch (e: any) {
+            toast.error(e.message || 'Gagal menyimpan');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleDelete = async (unit: JppExcoUnit) => {
+        if (!window.confirm(`Padam unit "${unit.name}"? Ahli yang ditetapkan ke unit ini perlu diubah secara manual.`)) return;
+        const { error } = await supabase.from('jpp_exco_units').delete().eq('id', unit.id);
+        if (error) { toast.error(error.message); return; }
+        toast.success(`Unit "${unit.short_name}" dipadam.`);
+        onRefresh();
+    };
+
+    const handleToggleActive = async (unit: JppExcoUnit) => {
+        const { error } = await supabase.from('jpp_exco_units').update({ is_active: !unit.is_active }).eq('id', unit.id);
+        if (error) { toast.error(error.message); return; }
+        toast.success(`Unit "${unit.short_name}" ${unit.is_active ? 'dimatikan' : 'diaktifkan'}.`);
+        onRefresh();
+    };
+
+    return (
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h3 className="text-lg font-black tracking-tight">Senarai Exco JPP</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">{excoUnits.length} unit aktif · Klik kad untuk edit</p>
+                </div>
+                <button onClick={openAdd}
+                    className="flex items-center gap-2 h-10 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black uppercase tracking-widest transition-colors">
+                    <Plus className="w-3.5 h-3.5" />
+                    Tambah Unit
+                </button>
+            </div>
+
+            {/* Unit Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {excoUnits.map((unit, idx) => (
+                    <div key={unit.id} className="group relative flex items-center gap-3 p-4 rounded-2xl bg-card border border-border hover:shadow-md transition-all">
+                        {/* Color swatch */}
+                        <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center text-white font-black text-xs shadow"
+                            style={{ background: unit.color }}>
+                            {unit.short_name.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-black truncate">{unit.name}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                                <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground font-mono">
+                                    {unit.code}
+                                </span>
+                                <span className="text-[9px] text-muted-foreground/50">·</span>
+                                <span className="text-[9px] text-muted-foreground font-medium">{unit.short_name}</span>
+                            </div>
+                        </div>
+                        {/* Actions – muncul on hover */}
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => openEdit(unit)}
+                                className="w-7 h-7 rounded-lg bg-muted hover:bg-indigo-500/20 flex items-center justify-center transition-colors"
+                                title="Edit">
+                                <Wand2 className="w-3 h-3 text-indigo-600" />
+                            </button>
+                            <button onClick={() => handleDelete(unit)}
+                                className="w-7 h-7 rounded-lg bg-muted hover:bg-rose-500/20 flex items-center justify-center transition-colors"
+                                title="Padam">
+                                <Trash2 className="w-3 h-3 text-rose-600" />
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {excoUnits.length === 0 && (
+                <div className="text-center py-12 text-muted-foreground/40">
+                    <Store className="w-10 h-10 mx-auto mb-3" />
+                    <p className="text-[11px] font-black uppercase tracking-widest">Tiada unit exco</p>
+                </div>
+            )}
+
+            {/* Add/Edit Modal */}
+            {showAdd && (
+                <>
+                    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={() => setShowAdd(false)} />
+                    <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-sm mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl">
+                        <div className="flex items-center justify-between mb-5">
+                            <h4 className="font-black text-base tracking-tight">
+                                {editUnit ? 'Edit Unit Exco' : 'Tambah Unit Exco'}
+                            </h4>
+                            <button onClick={() => setShowAdd(false)} className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center">
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            {/* Code — readonly when editing */}
+                            <div>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block mb-1.5">
+                                    Kod Unit <span className="text-muted-foreground/30">(contoh: KPP, SRK)</span>
+                                </label>
+                                <input value={form.code} disabled={!!editUnit}
+                                    onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase().replace(/\s+/g,'_') }))}
+                                    placeholder="cth: KOLAB"
+                                    className="w-full h-11 px-4 rounded-2xl border border-border bg-muted/30 disabled:opacity-40 text-sm font-black uppercase tracking-widest outline-none focus:border-indigo-500" />
+                                {!editUnit && <p className="text-[9px] text-muted-foreground/40 mt-1 px-1">Kod tidak boleh diubah selepas dibuat.</p>}
+                            </div>
+
+                            {/* Nama Penuh */}
+                            <div>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block mb-1.5">Nama Penuh</label>
+                                <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                                    placeholder="cth: Exco Kolaborasi dan Kesukarelawanan"
+                                    className="w-full h-11 px-4 rounded-2xl border border-border bg-muted/30 text-sm font-medium outline-none focus:border-indigo-500" />
+                            </div>
+
+                            {/* Short Name */}
+                            <div>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block mb-1.5">Nama Pendek / Badge</label>
+                                <input value={form.short_name} onChange={e => setForm(f => ({ ...f, short_name: e.target.value }))}
+                                    placeholder="cth: Kolab"
+                                    className="w-full h-11 px-4 rounded-2xl border border-border bg-muted/30 text-sm font-medium outline-none focus:border-indigo-500" />
+                            </div>
+
+                            {/* Color Picker */}
+                            <div>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block mb-2">Warna Tema</label>
+                                <div className="flex flex-wrap gap-2 p-3 bg-muted/30 rounded-2xl border border-border">
+                                    {PRESET_COLORS.map(c => (
+                                        <button key={c} onClick={() => setForm(f => ({ ...f, color: c }))}
+                                            className={cn('w-7 h-7 rounded-full transition-transform', form.color === c ? 'scale-125 ring-2 ring-offset-1 ring-foreground' : 'hover:scale-110')}
+                                            style={{ background: c }} />
+                                    ))}
+                                    {/* Custom color */}
+                                    <label className="w-7 h-7 rounded-full border-2 border-dashed border-border cursor-pointer flex items-center justify-center hover:border-foreground/40 transition-colors relative overflow-hidden" title="Warna kustom">
+                                        <Palette className="w-3.5 h-3.5 text-muted-foreground/40" />
+                                        <input type="color" value={form.color} onChange={e => setForm(f => ({ ...f, color: e.target.value }))}
+                                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+                                    </label>
+                                </div>
+                                {/* Preview */}
+                                <div className="mt-2 flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/20 border border-border/40">
+                                    <div className="w-6 h-6 rounded-lg flex items-center justify-center text-white text-[9px] font-black"
+                                        style={{ background: form.color }}>
+                                        {form.short_name?.slice(0, 2) || 'AB'}
+                                    </div>
+                                    <span className="text-xs font-black">{form.short_name || 'Nama Pendek'}</span>
+                                    <span className="text-xs text-muted-foreground">·</span>
+                                    <span className="text-[10px] text-muted-foreground">{form.color}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-2 mt-6">
+                            <button onClick={() => setShowAdd(false)}
+                                className="flex-1 h-11 rounded-2xl border border-border text-[11px] font-black uppercase">Batal</button>
+                            <button onClick={handleSave} disabled={saving}
+                                className="flex-1 h-11 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black uppercase disabled:opacity-40 transition-colors">
+                                {saving ? 'Menyimpan...' : (editUnit ? '✓ Kemaskini' : '+ Tambah')}
+                            </button>
+                        </div>
+                    </div>
+                </>
+            )}
+        </div>
     );
 }

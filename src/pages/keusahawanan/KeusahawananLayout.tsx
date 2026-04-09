@@ -11,8 +11,9 @@ import { cn, getContrastText, hexToRgba } from '@/lib/utils';
 import { Navigate } from 'react-router-dom';
 import {
   LayoutDashboard, CalendarDays, Lightbulb,
-  Award, FileText, LogOut, ChevronLeft, LayoutGrid, Menu, X,
+  Award, FileText, LogOut, ChevronLeft, LayoutGrid, Menu, X, Store,
 } from 'lucide-react';
+
 
 const MODULE_ID = 'keusahawanan';
 const DEFAULT_COLOR = '#1B5E20';
@@ -33,12 +34,14 @@ function getSidebarBg(hex: string): { top: string; bottom: string } {
 }
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Papan Pemuka',  href: '/keusahawanan/dashboard' },
-  { icon: CalendarDays,    label: 'Program',        href: '/keusahawanan/program' },
-  { icon: Lightbulb,       label: 'Cadangan Idea',  href: '/keusahawanan/idea' },
-  { icon: Award,           label: 'Geran & Hadiah', href: '/keusahawanan/geran' },
-  { icon: FileText,        label: 'Laporan',         href: '/keusahawanan/laporan' },
+  { icon: LayoutDashboard, label: 'Papan Pemuka',  href: '/keusahawanan/dashboard', jppOnly: false },
+  { icon: CalendarDays,    label: 'Program',        href: '/keusahawanan/program',   jppOnly: false },
+  { icon: Store,           label: 'Gerai JPP',      href: '/keusahawanan/gerai',     jppOnly: true  },
+  { icon: Lightbulb,       label: 'Cadangan Idea',  href: '/keusahawanan/idea',      jppOnly: false },
+  { icon: Award,           label: 'Geran & Hadiah', href: '/keusahawanan/geran',     jppOnly: false },
+  { icon: FileText,        label: 'Laporan',         href: '/keusahawanan/laporan',   jppOnly: false },
 ];
+
 
 // ── Sidebar ───────────────────────────────────────────────────────────────
 function KeusahawananSidebar({ color }: { color: string }) {
@@ -84,34 +87,46 @@ function KeusahawananSidebar({ color }: { color: string }) {
       {/* Nav */}
       <nav className="flex-1 py-6 px-3 space-y-0.5 overflow-y-auto scrollbar-hide">
         <p className="px-3 mb-3 text-[10px] font-black uppercase tracking-[0.25em] text-white/30">Menu Utama</p>
-        {navItems.map(item => (
-          <NavLink
-            key={item.href}
-            to={item.href}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200"
-            style={({ isActive }) => ({
-              background: isActive ? hexToRgba(color, 0.18) : 'transparent',
-              /* Teks: active = putih terang, inactive = putih sederhana (BUKAN warna tema) */
-              color: isActive ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.50)',
-            })}
-          >
-            {({ isActive }) => (
-              <>
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
-                  style={{ background: isActive ? hexToRgba(color, 0.25) : 'transparent' }}>
-                  <item.icon
-                    className="w-3.5 h-3.5 transition-all"
-                    style={{ color: isActive ? color : 'rgba(255,255,255,0.45)' }}
-                  />
-                </div>
-                <span className="text-xs font-bold tracking-tight">{item.label}</span>
-                {isActive && (
-                  <div className="ml-auto w-1 h-4 rounded-full" style={{ background: color, boxShadow: `0 0 6px 2px ${hexToRgba(color, 0.4)}` }} />
-                )}
-              </>
+        {navItems.map((item, idx) => (
+          <React.Fragment key={item.href}>
+            {/* Garis pemisah sebelum item JPP-only */}
+            {item.jppOnly && idx > 0 && (
+              <div className="my-2 mx-3 h-px" style={{ background: hexToRgba(color, 0.12) }} />
             )}
-          </NavLink>
+            <NavLink
+              to={item.href}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200"
+              style={({ isActive }) => ({
+                background: isActive ? hexToRgba(color, 0.18) : 'transparent',
+                color: isActive ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.50)',
+              })}
+            >
+              {({ isActive }) => (
+                <>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+                    style={{ background: isActive ? hexToRgba(color, 0.25) : 'transparent' }}>
+                    <item.icon
+                      className="w-3.5 h-3.5 transition-all"
+                      style={{ color: isActive ? color : 'rgba(255,255,255,0.45)' }}
+                    />
+                  </div>
+                  <span className="text-xs font-bold tracking-tight flex-1">{item.label}</span>
+                  {/* Badge JPP Only */}
+                  {item.jppOnly && !isActive && (
+                    <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md"
+                      style={{ background: hexToRgba(color, 0.2), color }}>
+                      JPP
+                    </span>
+                  )}
+                  {isActive && (
+                    <div className="ml-auto w-1 h-4 rounded-full" style={{ background: color, boxShadow: `0 0 6px 2px ${hexToRgba(color, 0.4)}` }} />
+                  )}
+                </>
+              )}
+            </NavLink>
+          </React.Fragment>
         ))}
+
       </nav>
 
       {/* Footer */}
