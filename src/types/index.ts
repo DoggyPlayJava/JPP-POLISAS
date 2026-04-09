@@ -2,7 +2,13 @@
 // JPP POLISAS — Core Types (matches Supabase DB schema)
 // ============================================================
 
-export type UserRole = 'SUPER_ADMIN_JPP' | 'CLUB_ADVISOR' | 'CLUB_PRESIDENT' | 'CLUB_MT' | 'CLUB_MEMBER';
+export type UserRole = 'SUPER_ADMIN_JPP' | 'JPP' | 'CLUB_ADVISOR' | 'CLUB_PRESIDENT' | 'CLUB_MT' | 'CLUB_MEMBER';
+// SUPER_ADMIN_JPP = Pentadbir Mutlak (akses penuh ke semua sistem)
+// JPP             = Ahli Jawatankuasa Perwakilan Pelajar (akses modul exco berkenaan)
+// CLUB_ADVISOR    = Penasihat Kelab
+// CLUB_PRESIDENT  = Presiden Kelab
+// CLUB_MT         = Ahli Jawatankuasa Kelab
+// CLUB_MEMBER     = Ahli Biasa
 export type ActivityStatus = 'perancangan' | 'aktif' | 'selesai' | 'ditangguh';
 export type ActivityPriority = 'rendah' | 'sederhana' | 'tinggi';
 export type ReportStatus = 'Menunggu' | 'Dalam Semakan' | 'Diluluskan' | 'Ditolak';
@@ -89,6 +95,7 @@ export interface ClubReport {
 // -------------------------------------------------------
 export const ROLE_LABELS: Record<UserRole, string> = {
   SUPER_ADMIN_JPP: 'Super Admin JPP',
+  JPP:             'Ahli JPP',
   CLUB_ADVISOR:    'Penasihat Kelab',
   CLUB_PRESIDENT:  'Presiden',
   CLUB_MT:         'MT Kelab',
@@ -97,6 +104,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 
 export const ROLE_COLORS: Record<UserRole, string> = {
   SUPER_ADMIN_JPP: 'bg-rose-100 text-rose-700',
+  JPP:             'bg-orange-100 text-orange-700',
   CLUB_ADVISOR:    'bg-indigo-100 text-indigo-700',
   CLUB_PRESIDENT:  'bg-amber-100 text-amber-700',
   CLUB_MT:         'bg-blue-100 text-blue-700',

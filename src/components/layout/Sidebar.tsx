@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -11,12 +11,13 @@ import {
   FileText,
   ClipboardCheck,
   Settings2,
-  HelpCircle,
   UserPlus,
   Star,
   Trophy,
   Sparkles,
   Ticket,
+  LayoutGrid,
+  ChevronLeft,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -26,34 +27,279 @@ import { cn } from '@/lib/utils';
 import { ROLE_LABELS, ALL_CLUBS } from '@/types';
 import { useAiSettings } from '@/contexts/AiSettingsContext';
 import { useKarnival } from '@/contexts/KarnivalContext';
+import { EXCO_MODULES, getExcoModule } from '@/config/excoModules';
 
-const navItems = [
-  { icon: LayoutDashboard, label: 'Papan Pemuka', href: '/dashboard' },
-  { icon: Flag, label: 'Kelab & Persatuan', href: '/kelab' },
-  { icon: CalendarDays, label: 'Aktiviti', href: '/aktiviti' },
-  { icon: Users, label: 'Ahli Jawatankuasa', href: '/ahli' },
-  { icon: FileText, label: 'Laporan Kelab', href: '/laporan' },
-  { icon: Settings, label: 'Tetapan', href: '/tetapan' },
+// ─────────────────────────────────────────────────────────────────────────────
+// Jenis nav item
+// ─────────────────────────────────────────────────────────────────────────────
+type NavItem = {
+  icon: React.ElementType;
+  label: string;
+  href: string;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Fungsi detect exco aktif dari pathname
+// Setiap exco ada basePath, dan route-routenya bermula dengan prefix tersebut.
+// e-KPP adalah kes khas — routenya TIDAK ada prefix /ekpp/ (konvensyen lama).
+// ─────────────────────────────────────────────────────────────────────────────
+const EKPP_ROUTES = [
+  '/dashboard', '/kelab', '/sertai-kelab', '/aktiviti', '/ahli',
+  '/tetapan', '/carian', '/laporan', '/urus-kelab', '/semakan-laporan',
+  '/jpp-admin', '/leaderboard', '/logs', '/karnival', '/nexus',
 ];
 
-// 🎨 Menu Khas Presiden
-const presidentItems = [
+function detectActiveExco(pathname: string): string | null {
+  // Semak e-KPP (route tanpa prefix — konvensyen sedia ada)
+  if (EKPP_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) {
+    return 'ekpp';
+  }
+  // Semak modul lain berdasarkan basePath prefix
+  for (const mod of EXCO_MODULES) {
+    if (mod.id === 'ekpp') continue;
+    if (pathname.startsWith(mod.basePath)) {
+      return mod.id;
+    }
+  }
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Konfigurasi nav per exco — TAMBAH di sini bila modul baru dibina
+// ─────────────────────────────────────────────────────────────────────────────
+const EKPP_NAV: NavItem[] = [
+  { icon: LayoutDashboard, label: 'Papan Pemuka', href: '/dashboard' },
+  { icon: Flag,            label: 'Kelab & Persatuan', href: '/kelab' },
+  { icon: CalendarDays,    label: 'Aktiviti', href: '/aktiviti' },
+  { icon: Users,           label: 'Ahli Jawatankuasa', href: '/ahli' },
+  { icon: FileText,        label: 'Laporan Kelab', href: '/laporan' },
+  { icon: Settings,        label: 'Tetapan', href: '/tetapan' },
+];
+
+const EKPP_PRESIDENT_NAV: NavItem[] = [
   { icon: Settings2, label: 'Urus Profil Kelab', href: '/urus-kelab' },
 ];
 
-// 🚩 Menu Khas Super Admin
-const adminItems = [
+const EKPP_ADMIN_NAV: NavItem[] = [
   { icon: ClipboardCheck, label: 'Semakan Laporan', href: '/semakan-laporan' },
-  { icon: ShieldCheck, label: 'JPP Admin', href: '/jpp-admin' },
+  { icon: ShieldCheck,    label: 'JPP Admin', href: '/jpp-admin' },
 ];
 
-export function Sidebar() {
-  const { user, profile, signOut, isSuperAdmin, isPresident, effectiveRole, selectedClubId } = useAuth();
+// ─────────────────────────────────────────────────────────────────────────────
+// SubKomponen: NavItem generik
+// ─────────────────────────────────────────────────────────────────────────────
+function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accentColor?: string }) {
+  const colorMap: Record<string, { active: string; dot: string; iconBg: string }> = {
+    amber: {
+      active: 'bg-white/12 text-white shadow-inner',
+      dot: 'bg-amber-400 shadow-[0_0_6px_2px_rgba(212,160,23,0.4)]',
+      iconBg: 'bg-amber-500/25 shadow-lg',
+    },
+    rose: {
+      active: 'bg-rose-500/20 text-rose-300 shadow-inner',
+      dot: 'bg-rose-400 shadow-[0_0_6px_2px_rgba(244,63,94,0.4)]',
+      iconBg: 'bg-rose-500/30 shadow-lg',
+    },
+    emerald: {
+      active: 'bg-emerald-500/20 text-emerald-300 shadow-inner',
+      dot: 'bg-emerald-400 shadow-[0_0_6px_2px_rgba(52,211,153,0.4)]',
+      iconBg: 'bg-emerald-500/30 shadow-lg',
+    },
+    indigo: {
+      active: 'bg-indigo-500/20 text-indigo-300 shadow-inner',
+      dot: 'bg-indigo-400',
+      iconBg: 'bg-indigo-500/30 shadow-lg',
+    },
+  };
+  const c = colorMap[accentColor] ?? colorMap.amber;
+
+  return (
+    <NavLink
+      to={item.href}
+      className={({ isActive }) => cn(
+        'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
+        isActive ? c.active : 'text-white/50 hover:bg-white/7 hover:text-white/85'
+      )}
+    >
+      {({ isActive }) => (
+        <>
+          <div className={cn(
+            'w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200',
+            isActive ? c.iconBg : 'group-hover:bg-white/8'
+          )}>
+            <item.icon className={cn('w-3.5 h-3.5', isActive ? `text-${accentColor}-400` : '')} />
+          </div>
+          <span className="text-xs font-bold tracking-tight">{item.label}</span>
+          {isActive && <div className={cn('ml-auto w-1 h-4 rounded-full', c.dot)} />}
+        </>
+      )}
+    </NavLink>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SubKomponen: e-KPP Sidebar Content
+// ─────────────────────────────────────────────────────────────────────────────
+function EkppSidebarContent() {
+  const { isSuperAdmin, isPresident, effectiveRole } = useAuth();
   const { allowAiBudget } = useAiSettings();
   const { showKarnival } = useKarnival();
-
-  // isPresident kini dari junction table (berubah mengikut kelab yang dipilih)
   const isMemberOnly = !isSuperAdmin && !isPresident;
+  const isJpp = useAuth().profile?.role === 'JPP';
+
+  return (
+    <nav className="flex-1 py-6 px-3 space-y-0.5 overflow-y-auto scrollbar-hide">
+      {/* Menu Utama */}
+      <p className="px-3 mb-3 text-[10px] font-black uppercase tracking-[0.25em] text-white/25">Menu Utama</p>
+      {EKPP_NAV.map(item => (
+        <SidebarNavItem key={item.href} item={item} accentColor="amber" />
+      ))}
+
+      {/* Nexus AI */}
+      {allowAiBudget && (
+        <>
+          <div className="pt-4 pb-2">
+            <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-indigo-400/50">Kepintaran Buatan</p>
+          </div>
+          <NavLink
+            to="/nexus"
+            className={({ isActive }) => cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
+              isActive
+                ? 'bg-indigo-500/20 text-indigo-300 shadow-inner'
+                : 'text-indigo-400/50 hover:bg-indigo-500/10 hover:text-indigo-300'
+            )}
+          >
+            {({ isActive }) => (
+              <>
+                <div className={cn(
+                  'w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200',
+                  isActive ? 'bg-indigo-500/30 shadow-lg' : 'group-hover:bg-indigo-500/15'
+                )}>
+                  <Sparkles className={cn('w-3.5 h-3.5', isActive ? 'text-indigo-400' : 'text-indigo-400/60')} />
+                </div>
+                <span className="text-xs font-bold tracking-tight">Nexus Hub</span>
+                <Badge className="ml-auto text-[8px] bg-indigo-500/20 text-indigo-400 px-1 py-0 border-indigo-500/20">AI</Badge>
+              </>
+            )}
+          </NavLink>
+        </>
+      )}
+
+      {/* Sertai Kelab — ahli biasa sahaja */}
+      {isMemberOnly && (
+        <>
+          <div className="pt-4 pb-2">
+            <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-emerald-400/50">Keanggotaan</p>
+          </div>
+          <NavLink
+            to="/sertai-kelab"
+            className={({ isActive }) => cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
+              isActive
+                ? 'bg-emerald-500/20 text-emerald-300 shadow-inner'
+                : 'text-emerald-400/50 hover:bg-emerald-500/10 hover:text-emerald-300'
+            )}
+          >
+            {({ isActive }) => (
+              <>
+                <div className={cn(
+                  'w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200',
+                  isActive ? 'bg-emerald-500/30 shadow-lg' : 'group-hover:bg-emerald-500/15'
+                )}>
+                  <UserPlus className={cn('w-3.5 h-3.5', isActive ? 'text-emerald-400' : 'text-emerald-400/60')} />
+                </div>
+                <span className="text-xs font-bold tracking-tight">Sertai Kelab</span>
+                {isActive && <div className="ml-auto w-1 h-4 rounded-full bg-emerald-400 shadow-[0_0_6px_2px_rgba(52,211,153,0.4)]" />}
+              </>
+            )}
+          </NavLink>
+        </>
+      )}
+
+      {/* Pentadbiran Kelab — Presiden */}
+      {isPresident && (
+        <>
+          <div className="pt-6 pb-2">
+            <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-amber-400/50">Pentadbiran Kelab</p>
+          </div>
+          {EKPP_PRESIDENT_NAV.map(item => (
+            <SidebarNavItem key={item.href} item={item} accentColor="amber" />
+          ))}
+        </>
+      )}
+
+      {/* Admin JPP */}
+      {(isSuperAdmin || isJpp) && (
+        <>
+          <div className="pt-6 pb-2">
+            <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-rose-400/50">Admin JPP</p>
+          </div>
+          {EKPP_ADMIN_NAV.map(item => (
+            <SidebarNavItem key={item.href} item={item} accentColor="rose" />
+          ))}
+        </>
+      )}
+
+      {/* Karnival */}
+      {showKarnival && (
+        <>
+          <div className="pt-6 pb-2">
+            <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-amber-400/70">🎪 Karnival JPP</p>
+          </div>
+          <NavLink
+            to="/karnival"
+            className={({ isActive }) => cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all duration-300 group relative overflow-hidden',
+              isActive
+                ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20'
+                : 'text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500'
+            )}
+          >
+            <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Ticket className="w-4 h-4 text-amber-500" />
+            </div>
+            <span className="text-xs font-bold tracking-tight">Pengundian Karnival</span>
+            <span className="ml-auto text-[8px] font-black uppercase tracking-widest bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full">LIVE</span>
+          </NavLink>
+        </>
+      )}
+    </nav>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Placeholder untuk exco lain yang akan datang
+// Bila e-Kebajikan siap, buat KebajikanSidebarContent() dsb.
+// ─────────────────────────────────────────────────────────────────────────────
+function PlaceholderSidebarContent({ excoId }: { excoId: string }) {
+  const mod = getExcoModule(excoId);
+  return (
+    <nav className="flex-1 py-6 px-3 overflow-y-auto scrollbar-hide">
+      <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+        <span className="text-4xl">{mod?.icon ?? '🔧'}</span>
+        <p className="text-xs font-black text-white/30 uppercase tracking-widest">{mod?.name ?? excoId}</p>
+        <p className="text-[10px] text-white/20 leading-relaxed px-4">Modul ini sedang dalam pembangunan.</p>
+      </div>
+    </nav>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Komponen Sidebar utama
+// ─────────────────────────────────────────────────────────────────────────────
+export function Sidebar() {
+  const { user, profile, signOut, isSuperAdmin, isPresident, effectiveRole, selectedClubId } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const activeExco = detectActiveExco(location.pathname);
+  const excoModule = activeExco ? getExcoModule(activeExco) : null;
+
+  // Warna accent berdasarkan exco aktif
+  const excoAccentStyle = excoModule
+    ? { color: excoModule.defaultColor }
+    : {};
 
   const displayName = profile?.full_name || user?.email?.split('@')[0] || '?';
   const initials = displayName
@@ -70,7 +316,6 @@ export function Sidebar() {
       ? 'JPP Admin'
       : '—';
 
-  // Generate random but deterministic color based on activeClubId
   const getClubColor = (id: string | undefined) => {
     if (!id || id.startsWith('jpp')) return 'bg-rose-500 shadow-[0_0_6px_2px_rgba(244,63,94,0.5)]';
     const sum = id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
@@ -89,28 +334,48 @@ export function Sidebar() {
   return (
     <aside className="w-64 h-screen flex flex-col z-50 select-none sidebar-jpp">
 
-      {/* Header — Logo + Brand */}
-      <div className="h-20 flex items-center px-6 border-b border-white/10">
-        <div className="flex items-center gap-3">
+      {/* ── Header: Logo + Brand + Balik ke Portal ── */}
+      <div className="h-auto flex flex-col border-b border-white/10">
+        {/* Butang balik ke Portal */}
+        <button
+          onClick={() => navigate('/portal')}
+          className="flex items-center gap-2 px-5 pt-4 pb-2 text-white/30 hover:text-white/70 transition-colors group"
+        >
+          <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+          <span className="text-[10px] font-black uppercase tracking-[0.25em]">Portal JPP</span>
+          <LayoutGrid className="w-3 h-3 ml-0.5" />
+        </button>
+
+        {/* Brand — nama exco aktif */}
+        <div className="flex items-center gap-3 px-5 pb-4 pt-1">
           <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center overflow-hidden shadow-lg ring-1 ring-white/20">
-            <img src="/jpp-logo.png" alt="JPP" className="w-8 h-8 object-contain" />
+            {excoModule ? (
+              <span className="text-lg">{excoModule.icon}</span>
+            ) : (
+              <img src="/jpp-logo.png" alt="JPP" className="w-8 h-8 object-contain" />
+            )}
           </div>
           <div className="leading-tight">
-            <p className="font-black text-white text-sm tracking-tight">e-KPP</p>
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-amber-400/80">JPP Polisas</p>
+            <p className="font-black text-white text-sm tracking-tight">
+              {excoModule?.name ?? 'JPP Portal'}
+            </p>
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-amber-400/80">
+              JPP Polisas
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Club / role badge */}
-      <div className="mx-4 mt-4">
+
+
+      {/* ── Club / Role Badge ── */}
+      <div className="mx-4 mt-2">
         <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/6 border border-white/10">
-          <div className={cn("w-2 h-2 rounded-full", clubColorClass)} />
+          <div className={cn('w-2 h-2 rounded-full', clubColorClass)} />
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Status</p>
             <p className="text-xs font-black text-white truncate">{clubName}</p>
           </div>
-          {/* Sembunyikan badge ADMIN jika role semasa BUKAN SuperAdmin/Presiden/Advisor di kelab ini */}
           {(isSuperAdmin || isPresident) && effectiveRole !== 'CLUB_MEMBER' && effectiveRole !== 'AHLI' && (
             <Badge className="text-[10px] px-1.5 py-0 bg-amber-500/20 text-amber-400 border-none font-black">
               ADMIN
@@ -119,202 +384,25 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 py-6 px-3 space-y-0.5 overflow-y-auto scrollbar-hide">
-        <p className="px-3 mb-3 text-[10px] font-black uppercase tracking-[0.25em] text-white/25">Menu Utama</p>
-        {navItems.map(navItem => (
-          <NavLink
-            key={navItem.href}
-            to={navItem.href}
-            className={({ isActive }) => cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
-              isActive
-                ? 'bg-white/12 text-white shadow-inner'
-                : 'text-white/50 hover:bg-white/7 hover:text-white/85'
-            )}
-          >
-            {({ isActive }) => (
-              <>
-                <div className={cn(
-                  'w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200',
-                  isActive ? 'bg-amber-500/25 shadow-lg' : 'group-hover:bg-white/8'
-                )}>
-                  <navItem.icon className={cn('w-3.5 h-3.5', isActive ? 'text-amber-400' : '')} />
-                </div>
-                <span className="text-xs font-bold tracking-tight">{navItem.label}</span>
-                {isActive && <div className="ml-auto w-1 h-4 rounded-full bg-amber-400 shadow-[0_0_6px_2px_rgba(212,160,23,0.4)]" />}
-              </>
-            )}
-          </NavLink>
-        ))}
+      {/* ── Nav Content — bertukar mengikut exco aktif ── */}
+      {activeExco === 'ekpp' && <EkppSidebarContent />}
+      {activeExco === 'kebajikan' && <PlaceholderSidebarContent excoId="kebajikan" />}
+      {activeExco === 'keusahawanan' && <PlaceholderSidebarContent excoId="keusahawanan" />}
+      {activeExco === 'sukan' && <PlaceholderSidebarContent excoId="sukan" />}
+      {activeExco === null && <EkppSidebarContent />}
 
-        {/* ── SECTION NEXUS AI ── */}
-        {allowAiBudget && (
-          <>
-            <div className="pt-4 pb-2">
-              <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-indigo-400/50">Kepintaran Buatan</p>
-            </div>
-            <NavLink
-              to="/nexus"
-              className={({ isActive }) => cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
-                isActive
-                  ? 'bg-indigo-500/20 text-indigo-300 shadow-inner'
-                  : 'text-indigo-400/50 hover:bg-indigo-500/10 hover:text-indigo-300'
-              )}
-            >
-              {({ isActive }) => (
-                <>
-                  <div className={cn(
-                    'w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200',
-                    isActive ? 'bg-indigo-500/30 shadow-lg' : 'group-hover:bg-indigo-500/15'
-                  )}>
-                    <Sparkles className={cn('w-3.5 h-3.5', isActive ? 'text-indigo-400' : 'text-indigo-400/60')} />
-                  </div>
-                  <span className="text-xs font-bold tracking-tight">Nexus Hub</span>
-                  <Badge className="ml-auto text-[8px] bg-indigo-500/20 text-indigo-400 px-1 py-0 border-indigo-500/20">AI</Badge>
-                </>
-              )}
-            </NavLink>
-          </>
-        )}
-
-        {/* ── SERTAI KELAB — hanya untuk ahli biasa ── */}
-        {isMemberOnly && (
-          <>
-            <div className="pt-4 pb-2">
-              <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-emerald-400/50">Keanggotaan</p>
-            </div>
-            <NavLink
-              to="/sertai-kelab"
-              className={({ isActive }) => cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
-                isActive
-                  ? 'bg-emerald-500/20 text-emerald-300 shadow-inner'
-                  : 'text-emerald-400/50 hover:bg-emerald-500/10 hover:text-emerald-300'
-              )}
-            >
-              {({ isActive }) => (
-                <>
-                  <div className={cn(
-                    'w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200',
-                    isActive ? 'bg-emerald-500/30 shadow-lg' : 'group-hover:bg-emerald-500/15'
-                  )}>
-                    <UserPlus className={cn('w-3.5 h-3.5', isActive ? 'text-emerald-400' : 'text-emerald-400/60')} />
-                  </div>
-                  <span className="text-xs font-bold tracking-tight">Sertai Kelab</span>
-                  {isActive && <div className="ml-auto w-1 h-4 rounded-full bg-emerald-400 shadow-[0_0_6px_2px_rgba(52,211,153,0.4)]" />}
-                </>
-              )}
-            </NavLink>
-          </>
-        )}
-
-        {/* ── SECTION KHAS PRESIDEN ── */}
-        {isPresident && (
-          <>
-            <div className="pt-6 pb-2">
-              <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-amber-400/50">Pentadbiran Kelab</p>
-            </div>
-            {presidentItems.map(navItem => (
-              <NavLink
-                key={navItem.href}
-                to={navItem.href}
-                className={({ isActive }) => cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
-                  isActive
-                    ? 'bg-amber-500/20 text-amber-300 shadow-inner'
-                    : 'text-amber-400/50 hover:bg-amber-500/10 hover:text-amber-300'
-                )}
-              >
-                {({ isActive }) => (
-                  <>
-                    <div className={cn(
-                      'w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200',
-                      isActive ? 'bg-amber-500/30 shadow-lg' : 'group-hover:bg-amber-500/15'
-                    )}>
-                      <navItem.icon className={cn('w-3.5 h-3.5', isActive ? 'text-amber-400' : 'text-amber-400/60')} />
-                    </div>
-                    <span className="text-xs font-bold tracking-tight">{navItem.label}</span>
-                    {isActive && <div className="ml-auto w-1 h-4 rounded-full bg-amber-400 shadow-[0_0_6px_2px_rgba(212,160,23,0.4)]" />}
-                  </>
-                )}
-              </NavLink>
-            ))}
-          </>
-        )}
-
-        {/* ── SECTION KHAS JPP ── */}
-        {isSuperAdmin && (
-          <>
-            <div className="pt-6 pb-2">
-              <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-rose-400/50">Admin JPP</p>
-            </div>
-            {adminItems.map(navItem => (
-              <NavLink
-                key={navItem.href}
-                to={navItem.href}
-                className={({ isActive }) => cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
-                  isActive
-                    ? 'bg-rose-500/20 text-rose-300 shadow-inner'
-                    : 'text-rose-400/50 hover:bg-rose-500/10 hover:text-rose-300'
-                )}
-              >
-                {({ isActive }) => (
-                  <>
-                    <div className={cn(
-                      'w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200',
-                      isActive ? 'bg-rose-500/30 shadow-lg' : 'group-hover:bg-rose-500/15'
-                    )}>
-                      <navItem.icon className={cn('w-3.5 h-3.5', isActive ? 'text-rose-400' : 'text-rose-400/60')} />
-                    </div>
-                    <span className="text-xs font-bold tracking-tight">{navItem.label}</span>
-                    {isActive && <div className="ml-auto w-1 h-4 rounded-full bg-rose-400 shadow-[0_0_6px_2px_rgba(244,63,94,0.4)]" />}
-                  </>
-                )}
-              </NavLink>
-            ))}
-          </>
-        )}
-
-        {/* ── SECTION KARNIVAL — khas untuk semua pengguna ── */}
-        {showKarnival && (
-          <>
-            <div className="pt-6 pb-2">
-              <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-amber-400/70">🎪 Karnival JPP</p>
-            </div>
-            <NavLink
-              to="/karnival"
-              className={({ isActive }) => cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all duration-300 group relative overflow-hidden",
-                isActive 
-                  ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" 
-                  : "text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500"
-              )}
-            >
-              <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Ticket className="w-4 h-4 text-amber-500" />
-              </div>
-              <span className="text-xs font-bold tracking-tight">Pengundian Karnival</span>
-              <span className="ml-auto text-[8px] font-black uppercase tracking-widest bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full">LIVE</span>
-            </NavLink>
-          </>
-        )}
-
-        </nav>
-
-      {/* User footer */}
+      {/* ── User Footer ── */}
       <div className="p-4 border-t border-white/10 space-y-3">
         <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-white/6 transition-colors cursor-pointer">
           <Avatar className="h-8 w-8 rounded-xl ring-2 ring-white/15 shadow-md">
-            <AvatarImage src={profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${initials}&backgroundColor=8B1A1A&textColor=FFF8F0`} className="object-cover" />
+            <AvatarImage
+              src={profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${initials}&backgroundColor=8B1A1A&textColor=FFF8F0`}
+              className="object-cover"
+            />
             <AvatarFallback className="bg-primary text-primary-foreground font-black text-xs">{initials}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-black text-white truncate leading-tight">
-              {displayName}
-            </p>
+            <p className="text-xs font-black text-white truncate leading-tight">{displayName}</p>
             <p className="text-[10px] text-white/40 font-black uppercase tracking-widest truncate">
               {effectiveRole ? ROLE_LABELS[effectiveRole] || effectiveRole : 'Pengguna'}
             </p>

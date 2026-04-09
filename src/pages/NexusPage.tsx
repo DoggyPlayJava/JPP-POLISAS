@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
-import { Bot, FileText, Users, Wand2, Calculator, Save, FileClock, Sparkles, AlertTriangle, X, ImagePlus, Download, Trash2 } from 'lucide-react';
+import { Bot, FileText, MessageSquarePlus, Users, Wand2, Calculator, Save, FileClock, Sparkles, AlertTriangle, X, ImagePlus, Download, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAiSettings } from '@/contexts/AiSettingsContext';
 import { useAiAssistant } from '@/hooks/useAiAssistant';
@@ -71,6 +71,7 @@ export function NexusPage() {
   const [anggaranKos, setAnggaranKos] = useLocalState('nx_anggaranKos', '');
   const [namaPengarah, setNamaPengarah] = useLocalState('nx_namaPengarah', '');
   const [ahliJK, setAhliJK] = useLocalState('nx_ahliJK', '');
+  const [konteksTambahan, setKonteksTambahan] = useLocalState('nx_konteksTambahan', '');
   const [hasilKertasKerja, setHasilKertasKerja] = useLocalState<KertasKerjaData | null>('nx_hasilKertasKerja', null);
 
   const handleResetKertasKerja = () => {
@@ -89,6 +90,7 @@ export function NexusPage() {
       setAnggaranKos('');
       setNamaPengarah('');
       setAhliJK('');
+      setKonteksTambahan('');
       setHasilKertasKerja(null);
       toast.success('Borang telah dikosongkan.');
     }
@@ -407,6 +409,7 @@ export function NexusPage() {
           kos: anggaranKos,
           pengarah: namaPengarah,
           ahliJK: ahliJK.trim() || undefined,
+          konteksTambahan: konteksTambahan.trim() || undefined,
           jenisProgram: jenisProgram.join(', '),
           bentukProgram: [
             ...bentukProgram,
@@ -614,7 +617,7 @@ export function NexusPage() {
                               placeholder="Lain-lain (Sila nyatakan...)"
                               value={bentukProgramLain}
                               onChange={(e) => setBentukProgramLain(e.target.value)}
-                              className="bg-slate-50 dark:bg-[#0A0A0B]/50 h-9 text-xs focus:ring-2 focus:ring-emerald-500/20"
+                              className="bg-muted/40 dark:bg-background/40 h-10 text-xs focus:ring-2 focus:ring-emerald-500/20 border-border/50"
                             />
                           </div>
                         </div>
@@ -639,7 +642,7 @@ export function NexusPage() {
                           placeholder="Cth: Kelab IT bersama JHEP POLISAS"
                           value={kelabPenganjur}
                           onChange={(e) => setKelabPenganjur(e.target.value)}
-                          className="bg-slate-50 dark:bg-[#0A0A0B]/50 focus:ring-2 focus:ring-indigo-500/20"
+                          className="bg-muted/40 dark:bg-background/40 border-border/50 focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -649,7 +652,7 @@ export function NexusPage() {
                             placeholder="Cth: 15-18 Mei 2026"
                             value={tarikhProgram}
                             onChange={(e) => setTarikhProgram(e.target.value)}
-                            className="bg-slate-50 dark:bg-[#0A0A0B]/50 h-9 text-sm focus:ring-2 focus:ring-indigo-500/20"
+                            className="bg-muted/40 dark:bg-background/40 h-10 text-sm border-border/50 focus:ring-2 focus:ring-indigo-500/20"
                           />
                         </div>
                         <div className="space-y-2">
@@ -658,7 +661,7 @@ export function NexusPage() {
                             placeholder="Cth: Dewan Jubli Perak"
                             value={tempatProgram}
                             onChange={(e) => setTempatProgram(e.target.value)}
-                            className="bg-slate-50 dark:bg-[#0A0A0B]/50 h-9 text-sm focus:ring-2 focus:ring-indigo-500/20"
+                            className="bg-muted/40 dark:bg-background/40 h-10 text-sm border-border/50 focus:ring-2 focus:ring-indigo-500/20"
                           />
                         </div>
                         <div className="space-y-2">
@@ -668,7 +671,7 @@ export function NexusPage() {
                             type="number"
                             value={sasaranPeserta}
                             onChange={(e) => setSasaranPeserta(e.target.value)}
-                            className="bg-slate-50 dark:bg-[#0A0A0B]/50 h-9 text-sm focus:ring-2 focus:ring-indigo-500/20"
+                            className="bg-muted/40 dark:bg-background/40 h-10 text-sm border-border/50 focus:ring-2 focus:ring-indigo-500/20"
                           />
                         </div>
                         <div className="space-y-2">
@@ -678,7 +681,7 @@ export function NexusPage() {
                             type="number"
                             value={bilanganPegawai}
                             onChange={(e) => setBilanganPegawai(e.target.value)}
-                            className="bg-slate-50 dark:bg-[#0A0A0B]/50 h-9 text-sm focus:ring-2 focus:ring-indigo-500/20"
+                            className="bg-muted/40 dark:bg-background/40 h-10 text-sm border-border/50 focus:ring-2 focus:ring-indigo-500/20"
                           />
                         </div>
                       </div>
@@ -696,7 +699,7 @@ export function NexusPage() {
                             type="number"
                             value={anggaranKos}
                             onChange={(e) => setAnggaranKos(e.target.value)}
-                            className="bg-slate-50 dark:bg-[#0A0A0B]/50 pl-10 text-lg font-bold focus:ring-2 focus:ring-indigo-500/20 py-6"
+                            className="bg-muted/40 dark:bg-background/40 border-border/50 pl-10 text-lg font-bold focus:ring-2 focus:ring-indigo-500/20 py-6"
                           />
                         </div>
                       </div>
@@ -706,7 +709,7 @@ export function NexusPage() {
                           placeholder="Cth: Muhamad Amirul Hakimi Bin Mohd Zawawi"
                           value={namaPengarah}
                           onChange={(e) => setNamaPengarah(e.target.value)}
-                          className="bg-slate-50 dark:bg-[#0A0A0B]/50 focus:ring-2 focus:ring-indigo-500/20"
+                          className="bg-muted/40 dark:bg-background/40 border-border/50 focus:ring-2 focus:ring-indigo-500/20"
                         />
                       </div>
                       <div className="space-y-2">
@@ -720,14 +723,24 @@ export function NexusPage() {
                         <p className="text-[10px] text-muted-foreground">Jika dikosongkan, AI akan menggunakan placeholder "(NAMA)" dalam carta organisasi.</p>
                       </div>
 
-                      <div className="pt-2">
-                        <div className="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex gap-3 text-indigo-800 dark:text-indigo-300 text-sm">
-                          <Sparkles className="w-5 h-5 shrink-0 text-indigo-600 dark:text-indigo-400 mt-0.5" />
-                          <p>
-                            Sistem sedia untuk menjana draf. Nexus AI akan menstruktur teks, anggaran belanjawan, carta organisasi dan tentatif berdasarkan format MESTI (HEP POLISAS).
-                          </p>
-                        </div>
+                      <div className="space-y-2 pt-1">
+                        <Label className="text-xs font-bold uppercase tracking-widest text-indigo-500/90 dark:text-indigo-400 flex items-center gap-2">
+                          <MessageSquarePlus className="w-3.5 h-3.5" />
+                          Maklumat Tambahan / Konteks Khas
+                          <span className="normal-case text-[10px] font-normal bg-slate-100 dark:bg-secondary px-2 py-0.5 rounded-full">Optional</span>
+                        </Label>
+                        <Textarea
+                          placeholder={"Beritahu AI apa yang perlu diambil kira:\n• Cth: Program ini ada perarakan, jadi perlu ada JK Kawalan Lalulintas\n• Cth: Tiada sesi makan minum disediakan oleh penganjur\n• Cth: Peserta perlu bawa alat sendiri, sesi outdoor\n• Cth: Ada sesi bersenam, jadi slot rehat lebih panjang"}
+                          value={konteksTambahan}
+                          onChange={(e) => setKonteksTambahan(e.target.value)}
+                          className="min-h-[110px] resize-none bg-violet-50/50 dark:bg-violet-500/5 border-violet-200 dark:border-violet-500/20 focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-600 transition-colors"
+                        />
+                        <p className="text-[10px] text-muted-foreground/80 leading-relaxed">
+                          💡 Semakin terperinci konteks anda, semakin tepat draf yang akan dijana oleh AI. Gunakan ruangan ini untuk menyatakan keperluan khas program yang tidak ada dalam borang di atas.
+                        </p>
                       </div>
+
+
                       <div className="pt-4 border-t border-slate-200 dark:border-border/60">
                         <Label className="text-xs font-bold uppercase tracking-widest text-indigo-500/90 dark:text-indigo-400 mb-3 block">Pilihan Kecerdasan AI</Label>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -752,7 +765,7 @@ export function NexusPage() {
                                 <Sparkles className="w-5 h-5" />
                               </div>
                               <div className="flex-1">
-                                <h4 className="font-bold text-sm text-foreground">Gemini Flash</h4>
+                                <h4 className="font-bold text-sm text-foreground">Nexus Flash</h4>
                                 <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">Kepantasan janaan draf. Keseimbangan prestasi kualiti.</p>
                                 {tokenData && (
                                   <div className="mt-2 text-[11px] font-medium flex items-center justify-between">
@@ -789,7 +802,7 @@ export function NexusPage() {
                               </div>
                               <div className="flex-1">
                                 <div className="flex items-center justify-between">
-                                  <h4 className="font-bold text-sm text-foreground flex items-center gap-1">Gemini Pro <Badge variant="outline" className="text-[9px] border-amber-200 bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 px-1 py-0 h-4">TERBAIK</Badge></h4>
+                                  <h4 className="font-bold text-sm text-foreground flex items-center gap-1">Nexus Pro <Badge variant="outline" className="text-[9px] border-amber-200 bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 px-1 py-0 h-4">TERBAIK</Badge></h4>
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">Penaakulan tinggi. Jadual & Format 100% sempurna.</p>
                                 {tokenData && (
@@ -861,7 +874,7 @@ export function NexusPage() {
             </div>
 
             <div className="lg:col-span-7">
-              <Card className="h-full min-h-[500px] flex flex-col border-slate-200/60 dark:border-border/50 shadow-xl overflow-hidden bg-slate-50/50 dark:bg-[#0A0A0B]">
+              <Card className="h-full min-h-[500px] flex flex-col border-border/40 shadow-2xl overflow-hidden bg-card/50 dark:bg-muted/5 backdrop-blur-md">
                 <div className="bg-white/80 dark:bg-muted/30 p-4 border-b border-slate-200/60 dark:border-border/50 flex items-center justify-between backdrop-blur-sm z-10">
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-indigo-400" />
@@ -881,10 +894,10 @@ export function NexusPage() {
                     </div>
                   )}
                 </div>
-                <div className="flex-1 overflow-y-auto max-h-[600px] relative bg-slate-50 dark:bg-transparent">
-                  <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-40 dark:opacity-20 bg-[length:16px_16px] pointer-events-none" />
-                  <div className="relative h-full p-4 sm:p-8 flex justify-center w-full">
-                    <div className="w-full max-w-3xl bg-white dark:bg-[#121214] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-slate-200/60 dark:border-border/50 rounded-xl p-8 sm:p-12 prose dark:prose-invert prose-indigo prose-sm sm:prose-base transition-all">
+                <div className="flex-1 overflow-y-auto max-h-[750px] relative bg-slate-100/30 dark:bg-transparent/20 custom-scrollbar">
+                  <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-20 dark:opacity-10 bg-[length:24px_24px] pointer-events-none" />
+                  <div className="relative p-4 sm:p-8 flex justify-center w-full">
+                    <div className="w-full max-w-3xl bg-white dark:bg-[#121214] shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-slate-200/60 dark:border-border/40 rounded-[2rem] p-8 sm:p-12 pb-10 sm:pb-12 prose dark:prose-invert prose-indigo prose-sm sm:prose-base transition-all duration-500 scale-[0.99] hover:scale-100">
                       {loadingType === 'kertas-kerja' ? (
                         <AiLoadingView type="kertas-kerja" />
                       ) : hasilKertasKerja ? (
@@ -1002,7 +1015,7 @@ export function NexusPage() {
             </div>
 
             <div className="lg:col-span-7">
-              <Card className="h-full min-h-[500px] flex flex-col border-slate-200/60 dark:border-border/50 shadow-xl overflow-hidden bg-slate-50/50 dark:bg-[#0A0A0B]">
+              <Card className="h-full min-h-[500px] flex flex-col border-border/40 shadow-2xl overflow-hidden bg-card/50 dark:bg-muted/5 backdrop-blur-md">
                 <div className="bg-white/80 dark:bg-muted/30 p-4 border-b border-slate-200/60 dark:border-border/50 flex items-center justify-between backdrop-blur-sm z-10">
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-emerald-400" />
@@ -1022,10 +1035,10 @@ export function NexusPage() {
                     </div>
                   )}
                 </div>
-                <div className="flex-1 overflow-y-auto max-h-[600px] relative bg-slate-50 dark:bg-transparent">
-                  <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-40 dark:opacity-20 bg-[length:16px_16px] pointer-events-none" />
-                  <div className="relative h-full p-4 sm:p-8 flex justify-center w-full">
-                    <div className="w-full max-w-3xl bg-white dark:bg-[#121214] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-slate-200/60 dark:border-border/50 rounded-xl p-8 sm:p-12 prose dark:prose-invert prose-emerald prose-sm sm:prose-base transition-all">
+                <div className="flex-1 overflow-y-auto max-h-[750px] relative bg-slate-100/30 dark:bg-transparent/20 custom-scrollbar">
+                  <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-20 dark:opacity-10 bg-[length:24px_24px] pointer-events-none" />
+                  <div className="relative p-4 sm:p-8 flex justify-center w-full">
+                    <div className="w-full max-w-3xl bg-white dark:bg-[#121214] shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-slate-200/60 dark:border-border/40 rounded-[2rem] p-8 sm:p-12 pb-10 sm:pb-12 prose dark:prose-invert prose-emerald prose-sm sm:prose-base transition-all duration-500 scale-[0.99] hover:scale-100">
                       {loadingType === 'minit-mesyuarat' ? (
                         <AiLoadingView type="minit-mesyuarat" />
                       ) : hasilMinit ? (
@@ -1126,7 +1139,7 @@ export function NexusPage() {
                         ? "bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-amber-500/30"
                         : tokenData?.tier === 'admin'
                           ? "bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-indigo-500/30"
-                          : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                          : "bg-muted dark:bg-muted/30 text-muted-foreground border border-border/20"
                     )}>
                       {tokenData?.tier === 'pro' ? 'PRO TIER' : tokenData?.tier === 'admin' ? 'ADMIN TIER' : 'FREE TIER'}
                     </Badge>
@@ -1141,10 +1154,10 @@ export function NexusPage() {
                       {[
                         { icon: Bot, title: "Model AI Pro (Nexus-4o Pro)", desc: "Penaakulan lebih mendalam & tepat." },
                         { icon: FileText, title: "1,000+ Permata Token", desc: "Kapasiti janaan 5x ganda lebih luas." },
-                        { icon: Wand2, title: "Format MESTI 100% Tepat", desc: "Struktur dokumen rasmi tanpa ralat." }
+                        { icon: Wand2, title: "Format Menepati Standard", desc: "Struktur dokumen rasmi tanpa ralat." }
                       ].map((item, i) => (
                         <div key={i} className="group p-4 rounded-xl border border-border/50 hover:border-indigo-500/30 bg-background/40 hover:bg-indigo-500/5 transition-all duration-300 flex items-start gap-4">
-                          <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-indigo-500 group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
+                          <div className="w-10 h-10 rounded-lg bg-muted/50 dark:bg-background group-hover:bg-indigo-500 group-hover:text-white flex items-center justify-center shrink-0 transition-colors border border-border/30 shadow-inner group-hover:border-indigo-400">
                             <item.icon className="w-5 h-5" />
                           </div>
                           <div>
@@ -1200,7 +1213,7 @@ export function NexusPage() {
                             <h4 className="text-lg font-black tracking-tight text-foreground">Langganan Token</h4>
                           </div>
 
-                          <div className="p-6 rounded-[2rem] bg-slate-50 dark:bg-[#0A0A0B] border border-slate-200/60 dark:border-border/30 shadow-inner group">
+                          <div className="p-6 rounded-[2rem] bg-muted/20 dark:bg-background/40 border border-border/40 shadow-inner group backdrop-blur-sm">
                             <div className="flex flex-col gap-6 items-center">
                               <div className="relative p-4 bg-white rounded-3xl shadow-xl border-4 border-indigo-500/5 group-hover:scale-105 transition-transform duration-500 overflow-hidden">
                                 <div className="absolute inset-0 bg-indigo-500/5 animate-[pulse_3s_infinite] pointer-events-none" />
@@ -1251,7 +1264,7 @@ export function NexusPage() {
                                   "flex flex-col items-center justify-center min-h-[160px] p-8 border-2 border-dashed rounded-[2rem] cursor-pointer transition-all duration-500",
                                   receiptFile
                                     ? "border-emerald-500 bg-emerald-50/30 dark:bg-emerald-500/5 bg-[url('/grid-pattern.svg')] bg-[length:20px_20px]"
-                                    : "border-slate-300 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0A0A0B]/50 hover:border-indigo-500 hover:bg-slate-100 dark:hover:bg-[#1A1A20] group-hover:scale-[0.98]"
+                                    : "border-border bg-muted/30 dark:bg-muted/10 hover:border-indigo-500 hover:bg-muted/50 dark:hover:bg-indigo-500/5 group-hover:scale-[0.98] drop-shadow-sm"
                                 )}
                               >
                                 <AnimatePresence mode="wait">
@@ -1278,7 +1291,7 @@ export function NexusPage() {
                                       animate={{ opacity: 1 }}
                                       className="text-center space-y-4"
                                     >
-                                      <div className="w-16 h-16 rounded-3xl bg-slate-100 dark:bg-slate-800/50 flex flex-col items-center justify-center mx-auto transition-transform group-hover:rotate-12">
+                                      <div className="w-16 h-16 rounded-3xl bg-muted dark:bg-background/60 flex flex-col items-center justify-center mx-auto transition-transform group-hover:rotate-12 border border-border/40">
                                         <FileClock className="w-8 h-8 text-slate-400" />
                                       </div>
                                       <div className="space-y-1">
@@ -1296,7 +1309,7 @@ export function NexusPage() {
                               <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-2">Catatan Tambahan (Pilihan)</Label>
                               <Textarea
                                 placeholder="Contoh: Lampiran bukti pemindahan DuitNow..."
-                                className="min-h-[100px] resize-none focus:ring-4 focus:ring-indigo-500/10 bg-slate-50/50 dark:bg-[#0A0A0B]/30 rounded-[1.5rem] border-slate-200 dark:border-border/60 transition-all font-medium text-sm"
+                                className="min-h-[100px] resize-none focus:ring-4 focus:ring-indigo-500/10 bg-muted/20 dark:bg-background/40 rounded-[1.5rem] border-border/60 transition-all font-medium text-sm"
                                 value={tierReason}
                                 onChange={(e) => setTierReason(e.target.value)}
                                 disabled={isSubmittingTier}

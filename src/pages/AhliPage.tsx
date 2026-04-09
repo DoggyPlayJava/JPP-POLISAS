@@ -269,27 +269,27 @@ export function AhliPage() {
         <Badge className="mb-3 px-3 py-1 text-[10px] font-black uppercase tracking-widest bg-accent/12 text-accent border-none">
           {clubName} · {approvedMembers.length} Ahli Aktif
         </Badge>
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <h1 className="text-5xl font-black tracking-tighter gradient-text">Pengurusan Ahli</h1>
-            <p className="text-muted-foreground mt-1 font-medium leading-relaxed">
-              Urus permohonan pendaftaran baru dan senarai jawatankuasa sedia ada.
+        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
+          <div className="space-y-1">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter gradient-text leading-none">Pengurusan Ahli</h1>
+            <p className="text-muted-foreground font-medium leading-relaxed text-sm sm:text-base max-w-xl">
+              Urus permohonan pendaftaran baru dan senarai jawatankuasa sedia ada untuk kelab anda.
             </p>
           </div>
           {(effectiveRole === 'CLUB_PRESIDENT' || effectiveRole === 'CLUB_ADVISOR' || effectiveRole?.includes('JPP')) && (
-             <Button onClick={() => navigate('/urus-kelab')} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-black text-[11px] uppercase tracking-widest px-6 h-12 shadow-xl shadow-primary/20 shrink-0">
-               <UserPlus className="w-4 h-4 mr-2" /> Urus Ahli Jawatankuasa
+             <Button onClick={() => navigate('/urus-kelab')} className="w-full md:w-auto bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-black text-[11px] uppercase tracking-widest px-8 h-12 shadow-xl shadow-primary/20 shrink-0">
+               <UserPlus className="w-4 h-4 mr-2" /> Urus Jawatankuasa
              </Button>
           )}
         </div>
       </motion.div>
 
       <Tabs defaultValue="senarai" className="w-full">
-        <TabsList className="bg-muted/40 p-1 rounded-2xl mb-8 border border-border/50 shadow-inner">
-          <TabsTrigger value="senarai" className="rounded-xl px-8 font-black text-[10px] uppercase tracking-widest transition-all">
+        <TabsList className="bg-muted/40 p-1 rounded-2xl mb-8 border border-border/50 shadow-inner flex-nowrap overflow-x-auto no-scrollbar justify-start sm:justify-start w-full sm:w-fit h-auto">
+          <TabsTrigger value="senarai" className="rounded-xl px-6 sm:px-8 py-3 font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap">
             Senarai Jawatankuasa
           </TabsTrigger>
-          <TabsTrigger value="pending" className="rounded-xl px-8 font-black text-[10px] uppercase tracking-widest transition-all relative">
+          <TabsTrigger value="pending" className="rounded-xl px-6 sm:px-8 py-3 font-black text-[10px] uppercase tracking-widest transition-all relative whitespace-nowrap">
             Permohonan Baru
             {pendingMembers.length > 0 && (
               <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white flex items-center justify-center rounded-full text-[10px] animate-bounce border-2 border-background">
@@ -301,13 +301,13 @@ export function AhliPage() {
 
         {/* ── TAB 1: SENARAI AHLI (GRID ASAL ANDA) ── */}
         <TabsContent value="senarai" className="space-y-8">
-          <div className="relative group max-w-md">
+          <div className="relative group w-full max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
             <Input
               placeholder="Cari nama atau jawatan..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-11 h-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40"
+              className="pl-11 h-12 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 text-sm"
             />
           </div>
 
@@ -364,12 +364,12 @@ export function AhliPage() {
                     <div className="h-1.5 w-full bg-amber-400 absolute top-0 left-0" />
                     <CardContent className="p-6 pt-8">
                       <div className="flex items-center gap-4 mb-6">
-                        <Avatar className="h-12 w-12 rounded-xl">
-                          <AvatarFallback className="bg-amber-500/10 text-amber-600 font-black">{m.full_name?.[0]}</AvatarFallback>
+                        <Avatar className="h-14 w-14 rounded-2xl border-4 border-background shadow-lg">
+                          <AvatarFallback className="bg-amber-500/10 text-amber-600 font-black text-lg">{m.full_name?.[0]}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <h3 className="font-black text-base">{m.full_name}</h3>
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">
+                          <h3 className="font-black text-base leading-tight">{m.full_name}</h3>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
                             {m.account_status === 'RESIGN_PENDING' ? 'MOHON BERHENTI' : m.role.replace('_', ' ')}
                           </p>
                         </div>
@@ -451,7 +451,7 @@ function MemberCard({ member: m, isPresident, onRefresh, actorRole, onRoleChange
       <Card className="bento-card border-none h-full overflow-hidden relative bg-card">
         <CardContent className="p-6">
           <div className="flex items-start justify-between mb-5">
-            <Avatar className="h-16 w-16 rounded-2xl border-4 border-background shadow-xl ring-2 ring-border/20 group-hover:scale-105 transition-all">
+            <Avatar className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl border-4 border-background shadow-xl ring-2 ring-border/20 group-hover:scale-105 transition-all">
               <AvatarImage src={(m as any).avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${displayName}&backgroundColor=8B1A1A&textColor=FFF8F0`} />
               <AvatarFallback className="bg-primary text-primary-foreground font-black text-lg">{initials}</AvatarFallback>
             </Avatar>

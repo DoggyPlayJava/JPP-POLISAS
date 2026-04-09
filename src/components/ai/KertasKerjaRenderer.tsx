@@ -107,8 +107,9 @@ function hitungJumlahKeseluruhan(kategori: BelanjawanKategori[]): number {
 // ─── STYLE CONSTANTS (format rasmi) ──────────────────────────────────────────
 
 const tdBase: React.CSSProperties = {
-  border: '1px solid black',
-  padding: '4px 6px',
+  border: '1px solid currentColor',
+  opacity: 0.8,
+  padding: '6px 8px',
   verticalAlign: 'top',
 };
 
@@ -392,7 +393,8 @@ function LampiranII({ data, tajuk }: { data: TentatifHari[]; tajuk: string }) {
                     ...tdBase,
                     fontWeight: 'bold',
                     textAlign: 'center',
-                    backgroundColor: '#e8e8e8',
+                    backgroundColor: 'rgba(var(--muted), 0.3)',
+                    color: 'inherit',
                   }}
                 >
                   {hari.tarikh} ({hari.hari})
@@ -490,8 +492,8 @@ function LampiranIII({
             <td
               colSpan={4}
               style={{
-                border: '2px solid black',
-                padding: '5px 6px',
+                border: '2px solid currentColor',
+                padding: '8px 10px',
                 fontWeight: 'bold',
                 textAlign: 'center',
               }}
@@ -500,8 +502,8 @@ function LampiranIII({
             </td>
             <td
               style={{
-                border: '2px solid black',
-                padding: '5px 6px',
+                border: '2px solid currentColor',
+                padding: '8px 10px',
                 fontWeight: 'bold',
                 textAlign: 'right',
               }}
@@ -532,28 +534,42 @@ function LampiranIII({
 function PageBreak() {
   return (
     <div
-      style={{
-        borderTop: '1px dashed #c4c4c4',
-        margin: '32px 0',
-        position: 'relative',
-      }}
+      className="my-12 relative flex items-center justify-center pointer-events-none select-none"
     >
+      <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="absolute inset-x-0 h-px mt-1 bg-gradient-to-r from-transparent via-border/30 to-transparent" />
+      
       <span
-        style={{
-          position: 'absolute',
-          top: '-10px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'white',
-          padding: '0 8px',
-          fontSize: '10px',
-          color: '#aaa',
-          letterSpacing: '2px',
-          fontWeight: 'bold',
-        }}
+        className="relative px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 bg-background dark:bg-[#121214] border border-border/50 rounded-full shadow-sm backdrop-blur-sm"
       >
         MUKA SURAT BARU
       </span>
+    </div>
+  );
+}
+
+function DocumentFooter() {
+  return (
+    <div className="mt-10 flex flex-col items-center gap-6 pointer-events-none select-none border-t border-dashed border-border/30 pt-8">
+      {/* Oval / Pill Badge */}
+      <div className="px-8 py-2.5 rounded-full border border-indigo-500/20 bg-indigo-500/5 backdrop-blur-sm flex items-center gap-3 shadow-sm">
+        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+        <span className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-500/80">
+          Tamat Dokumen
+        </span>
+        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+      </div>
+      
+      {/* Decorative Brand */}
+      <div className="flex flex-col items-center gap-2 opacity-30 grayscale hover:grayscale-0 transition-all">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-lg bg-indigo-500 flex items-center justify-center">
+            <span className="text-[10px] text-white font-bold">N</span>
+          </div>
+          <span className="text-xs font-black tracking-tighter text-foreground">NEXUS AI</span>
+        </div>
+        <p className="text-[9px] font-medium text-muted-foreground italic">Generated officially by Nexus AI Hub</p>
+      </div>
     </div>
   );
 }
@@ -568,7 +584,7 @@ export function KertasKerjaRenderer({ data }: KertasKerjaRendererProps) {
   if (!data) return null;
 
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', fontSize: '11pt', lineHeight: 1.6, color: '#000' }}>
+    <div style={{ fontFamily: 'Arial, sans-serif', fontSize: '11pt', lineHeight: 1.6 }}>
       {/* ── HALAMAN MUKA ── */}
       <HalamanMuka data={data.halaman_muka} />
 
@@ -601,6 +617,9 @@ export function KertasKerjaRenderer({ data }: KertasKerjaRendererProps) {
 
       {/* ── LAMPIRAN III: ANGGARAN BELANJAWAN ── */}
       <LampiranIII data={data.belanjawan} tajuk={data.halaman_muka.tajuk_program} />
+
+      {/* ── PENUTUP ESTETIK ── */}
+      <DocumentFooter />
     </div>
   );
 }

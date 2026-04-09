@@ -45,10 +45,11 @@ export interface Profile {
   id: string;        // uuid — matches auth.users.id
   email: string;
   full_name: string | null;
-  role: 'SUPER_ADMIN_JPP' | 'CLUB_PRESIDENT' | 'CLUB_MT' | 'CLUB_MEMBER' | 'CLUB_ADVISOR';
+  role: 'SUPER_ADMIN_JPP' | 'JPP' | 'CLUB_PRESIDENT' | 'CLUB_MT' | 'CLUB_MEMBER' | 'CLUB_ADVISOR';
   club_id: string | null;
   department?: string | null;
   avatar_url?: string | null;
+  matric_no?: string | null;
   created_at?: string;
   updated_at?: string;
   account_status: 'PENDING' | 'APPROVED' | 'REJECTED';

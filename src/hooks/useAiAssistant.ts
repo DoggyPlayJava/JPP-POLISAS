@@ -109,7 +109,7 @@ export function useAiAssistant() {
         userPrompt = `Buat analisis prestasi kelab berdasarkan data objektif ini dalam Bahasa Melayu.\n\nData Kelab:\n${JSON.stringify(clubData, null, 2)}\n\n[ARAHAN KETAT]\nHasilkan laporan yang mengandungi 3 bahagian ini secara teratur:\n## 1. Penilaian Keseluruhan\n## 2. Isu Berpotensi\n## 3. Cadangan Konkrit\n\nPENTING: Gunakan format Markdown yang SANGAT KEMAS. Gunakan \`##\` untuk tajuk, gunakan jarak baris (whitespace/enter) antara perenggan supaya tidak serabut, dan gunakan \*bullet points* untuk menyenaraikan fakta. Jangan jadikan jawapan anda sebagai satu bongkah teks (wall of text). Jangan menggunakan bahasa teknikal seperti bahasa koding.${params.concise ? '\n\nMOD RINGKAS AKTIF: Sila berikan analisis yang sangat padat, gunakan bullet points untuk setiap bahagian, dan elakkan ayat berbunga. Cukup sekadar 2-3 poin penting bagi setiap kategori.' : ''}`;
 
       } else if (params.task === 'review_kertas_kerja') {
-        systemInstruction = "Anda adalah Nexus AI, bertindak sebagai Ketua Semakan Dokumentasi Pintar bagi Majlis Perwakilan Pelajar (JPP POLISAS). Anda profesional, teliti, dan menitikberatkan rasional, perancangan kewangan, serta faedah program teknikal. PERATURAN TERMINOLOGI: Sentiasa gunakan 'Laporan Bulanan' untuk merujuk kepada 'Laporan Aktiviti'.";
+        systemInstruction = "Anda adalah Nexus AI, bertindak sebagai Ketua Semakan Dokumentasi Pintar bagi Jawatankuasa Perwakilan Pelajar (JPP POLISAS). Anda profesional, teliti, dan menitikberatkan rasional, perancangan kewangan, serta faedah program teknikal. PERATURAN TERMINOLOGI: Sentiasa gunakan 'Laporan Bulanan' untuk merujuk kepada 'Laporan Aktiviti'.";
         if (!params.programId) throw new Error("programId diperlukan untuk semakan kertas kerja.");
 
         const { data: program } = await supabase.from('programs').select('nama_program, deskripsi, tarikh_mula, tarikh_tamat, location, budget, status, club_id').eq('id', params.programId).single();
@@ -265,7 +265,10 @@ Input Program:
 - Bilangan Pegawai/AJK: ${params.data?.bilanganPegawai || '5'} orang
 - Anggaran Kos Keseluruhan: RM ${params.data?.kos}
 - Nama Pengarah Program: ${params.data?.pengarah}${params.data?.ahliJK ? `
-- Nama Ahli JK (Optional, sisipkan ke unit yang paling sesuai): ${params.data.ahliJK}` : ''}
+- Nama Ahli JK (Optional, sisipkan ke unit yang paling sesuai): ${params.data.ahliJK}` : ''}${params.data?.konteksTambahan ? `
+
+KONTEKS TAMBAHAN DARIPADA PEMOHON (WAJIB DIAMBIL KIRA):
+${params.data.konteksTambahan}` : ''}
 
 PERINGATAN MATEMATIK: Agihkan item belanjawan supaya jumlah semua (harga_seunit x kuantiti) ≈ RM ${params.data?.kos}.
 Pulangkan JSON sahaja, tiada teks lain.`;
@@ -295,7 +298,7 @@ Pulangkan JSON sahaja, tiada teks lain.`;
       }
 
       // Penentuan model: Chat dan Semak Ejaan guna 1.5-flash untuk kestabilan, yang lain guna 2.5-flash
-      let modelEndpointString = 'gemini-2-flash'; // Pintar & Berkuasa (Default untuk Kertas Kerja/Analisis)
+      let modelEndpointString = 'gemini-2.5-flash'; // Pintar & Berkuasa (Default untuk Kertas Kerja/Analisis)
       if (params.selectedModel === 'pro') {
         modelEndpointString = 'gemini-1.5-pro';
       } else if (params.task === 'semak_tatabahasa_laporan' || params.task === 'custom_query') {

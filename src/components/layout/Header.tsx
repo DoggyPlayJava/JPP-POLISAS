@@ -84,18 +84,18 @@ export function Header({ onOpenSearch }: { onOpenSearch?: () => void }) {
                 )}>
                   <Sparkles className={cn("w-3.5 h-3.5 fill-current", isLowToken && "animate-bounce")} />
                 </div>
-                <div className="flex flex-col text-left">
+                <div className="flex flex-col text-left min-w-0">
                   <span className={cn(
-                    "text-[12px] font-black leading-none",
+                    "text-[11px] sm:text-[12px] font-black leading-none truncate",
                     isLowToken ? "text-rose-600 dark:text-rose-400" : "text-foreground"
                   )}>
                     {tokenBalance.toLocaleString()} Token
                   </span>
                   <div className="flex items-center gap-1 mt-0.5">
-                    <span className={cn("text-[9px] font-bold uppercase tracking-wider", isLowToken ? "text-rose-500/70" : "text-muted-foreground")}>
-                      {isSuperAdmin ? 'ADMIN TIER' : (subTier === 'pro' ? 'PRO TIER' : 'FREE TIER')}
+                    <span className={cn("text-[8px] sm:text-[9px] font-bold uppercase tracking-wider truncate", isLowToken ? "text-rose-500/70" : "text-muted-foreground")}>
+                      {isSuperAdmin ? 'ADMIN' : (subTier === 'pro' ? 'PRO' : 'FREE')}
                     </span>
-                    {isLowToken && <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-ping ml-1" />}
+                    {isLowToken && <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-ping ml-1 shrink-0" />}
                   </div>
                 </div>
               </div>

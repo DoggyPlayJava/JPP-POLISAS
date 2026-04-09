@@ -54,8 +54,8 @@ export function JppReviewPage() {
   if (!isSuperAdmin) {
     return (
       <div className="page-container flex flex-col items-center justify-center h-96 gap-5 text-center">
-        <div className="w-20 h-20 rounded-[2rem] bg-rose-50 flex items-center justify-center">
-          <Lock className="w-10 h-10 text-rose-400" />
+        <div className="w-20 h-20 rounded-[2rem] bg-rose-500/10 flex items-center justify-center">
+          <Lock className="w-10 h-10 text-rose-500" />
         </div>
         <div>
           <h2 className="text-2xl font-black tracking-tight text-primary">Akses Ditolak</h2>
@@ -226,11 +226,11 @@ export function JppReviewPage() {
         className="grid grid-cols-2 lg:grid-cols-5 gap-4"
       >
         {[
-          { label: 'Jumlah',       val: counts.total,    bg: 'bg-slate-100',   text: 'text-slate-700' },
-          { label: 'Menunggu',     val: counts.pending,  bg: 'bg-amber-50',    text: 'text-amber-700' },
-          { label: 'Dalam Semakan',val: counts.review,   bg: 'bg-blue-50',     text: 'text-blue-700'  },
-          { label: 'Diluluskan',   val: counts.approved, bg: 'bg-emerald-50',  text: 'text-emerald-700' },
-          { label: 'Ditolak',      val: counts.declined, bg: 'bg-rose-50',     text: 'text-rose-700'  },
+          { label: 'Jumlah',       val: counts.total,    bg: 'bg-muted/50',   text: 'text-foreground' },
+          { label: 'Menunggu',     val: counts.pending,  bg: 'bg-amber-500/10',    text: 'text-amber-600 dark:text-amber-400'  },
+          { label: 'Dalam Semakan',val: counts.review,   bg: 'bg-blue-500/10',     text: 'text-blue-600 dark:text-blue-400'   },
+          { label: 'Diluluskan',   val: counts.approved, bg: 'bg-emerald-500/10',  text: 'text-emerald-600 dark:text-emerald-400' },
+          { label: 'Ditolak',      val: counts.declined, bg: 'bg-rose-500/10',     text: 'text-rose-600 dark:text-rose-400'   },
         ].map((s, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 + i * 0.05 }}>
             <Card
@@ -529,7 +529,7 @@ function ReviewReportRow({ report, idx, onStartReview, onDecision }: ReviewRowPr
                 <span className="text-[10px] text-muted-foreground/40">Â·</span>
                 <span className={cn(
                   'text-[10px] font-bold px-1.5 py-0.5 rounded-md',
-                  report.type === 'Kewangan' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-700'
+                  report.type === 'Kewangan' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                 )}>
                   {REPORT_TYPE_LABELS[report.type]}
                 </span>
@@ -563,8 +563,8 @@ function ReviewReportRow({ report, idx, onStartReview, onDecision }: ReviewRowPr
                     <div className={cn(
                       'mt-2 px-3 py-2.5 rounded-xl border text-xs leading-relaxed font-medium',
                       report.status === 'Ditolak'
-                        ? 'bg-rose-50 border-rose-100 text-rose-700'
-                        : 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                        ? 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
+                        : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
                     )}>
                       <span className="font-black uppercase tracking-widest text-[9px] block mb-1">
                         Maklum Balas JPP

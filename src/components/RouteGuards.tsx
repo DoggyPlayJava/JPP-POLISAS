@@ -13,7 +13,7 @@ function LoadingScreen() {
         <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
       <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">
-        Memuatkan e-KPP...
+        Memuatkan JPP Digital Portal...
       </p>
     </div>
   );
@@ -27,11 +27,17 @@ export function ProtectedRoute() {
 }
 
 export function PublicRoute() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, profile } = useAuth();
   if (isLoading) return <LoadingScreen />;
   if (isAuthenticated) {
-    const isNewRegister = localStorage.getItem('is_new_register') === 'true';
-    return <Navigate to={isNewRegister ? "/sertai-kelab" : "/dashboard"} replace />;
+    // SUPER_ADMIN_JPP & JPP (Ahli JPP) → terus ke admin panel, skip portal
+    if (profile?.role === 'SUPER_ADMIN_JPP' || profile?.role === 'JPP') {
+      return <Navigate to="/jpp-admin" replace />;
+    }
+    // Semua pengguna lain → Portal Hub untuk pilih exco
+    // (localStorage is_new_register dikekalkan untuk backward compat)
+    localStorage.removeItem('is_new_register');
+    return <Navigate to="/portal" replace />;
   }
   return <Outlet />;
 }

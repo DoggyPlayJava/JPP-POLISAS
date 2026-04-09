@@ -498,12 +498,12 @@ export function DashboardPage() {
 
         {/* ── KANAN: SIDEBAR ── */}
         <div className="space-y-8">
-          <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-950 p-8 text-white shadow-2xl">
-            <div className="absolute -right-8 -top-8 text-white/5 opacity-20">
+          <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-950 p-6 sm:p-8 text-white shadow-2xl">
+            <div className="absolute -right-8 -top-8 text-white/5 opacity-10">
               <Activity size={200} />
             </div>
-            <div className="relative space-y-6">
-              <div className="flex items-center justify-between border-b border-white/10 pb-6">
+            <div className="relative space-y-4 sm:space-y-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4 sm:pb-6">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-white">
                     <Medal size={20} />

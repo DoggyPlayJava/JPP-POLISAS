@@ -91,8 +91,8 @@ export function LandingPage() {
               <img src="/jpp-logo.png" alt="JPP" className="w-7 h-7 object-contain" />
             </div>
             <div className="leading-tight">
-              <span className="font-black text-sm text-primary tracking-tight">e-KPP</span>
-              <span className="text-[9px] font-black uppercase tracking-widest text-accent/80 block -mt-0.5">JPP Polisas</span>
+              <span className="font-black text-sm text-primary tracking-tight">JPP DIGITAL</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-accent/80 block -mt-0.5">Polisas</span>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -125,15 +125,15 @@ export function LandingPage() {
               Platform Digital JPP Polisas
             </Badge>
             <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-8">
-              <span className="text-primary">e-KPP</span>
+              <span className="text-primary">Portal</span>
               <br />
-              <span className="text-foreground/80">Kelab, Persatuan</span>
+              <span className="text-foreground/80">Jawatankuasa Perwakilan</span>
               <br />
-              <span className="text-accent">& Perpaduan</span>
+              <span className="text-accent">Pelajar</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground font-medium max-w-2xl mx-auto leading-relaxed mb-10">
               Sistem pengurusan digital untuk <strong className="text-primary font-black">Jawatankuasa Perwakilan Pelajar (JPP)</strong> Politeknik Sultan Haji Ahmad Shah.
-              Urus semua kelab dan persatuan JPP Polisas dalam satu platform yang tersusun.
+              Akses berpusat untuk semua perkhidmatan Exco JPP termasuk e-KPP, e-Kebajikan dan e-Keusahawanan.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/login">
@@ -296,7 +296,7 @@ export function LandingPage() {
                 Enjin AI yang Menggerakkan <span className="text-primary">Masa Hadapan</span>
               </h2>
               <p className="text-lg text-muted-foreground font-medium leading-relaxed">
-                Platform e-KPP bukan sekadar sistem pengurusan biasa. Dengan integrasi bot Nexus, setiap langkah pentadbiran kelab dipermudahkan melalui kecerdasan buatan.
+                Platform digital JPP bukan sekadar sistem biasa. Dengan integrasi bot Nexus, setiap proses dan dokumentasi dipermudahkan melalui kecerdasan buatan.
               </p>
               <div className="space-y-4">
                 {[
@@ -362,12 +362,12 @@ export function LandingPage() {
               <img src="/jpp-logo.png" alt="JPP" className="w-6 h-6 object-contain" />
             </div>
             <div>
-              <p className="font-black text-sm text-primary tracking-tight">e-KPP JPP Polisas</p>
-              <p className="text-[10px] font-medium text-muted-foreground/50">Kelab · Persatuan · Perpaduan</p>
+              <p className="font-black text-sm text-primary tracking-tight">JPP DIGITAL POLISAS</p>
+              <p className="text-[10px] font-medium text-muted-foreground/50">Pemacu Kepimpinan Digital</p>
             </div>
           </div>
           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
-            © 2026 e-KPP JPP Polisas. Hak cipta terpelihara.
+            © 2026 Jawatankuasa Perwakilan Pelajar Polisas. Hak cipta terpelihara.
           </p>
         </div>
       </footer>

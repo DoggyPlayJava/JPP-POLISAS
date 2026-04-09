@@ -4,19 +4,37 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { CommandPalette } from '../ui/CommandPalette';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, HelpCircle, MessageSquare, Send, ChevronRight } from 'lucide-react';
-import { 
-  Popover, PopoverContent, PopoverTrigger 
-} from '@/components/ui/popover';
+import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { BottomNav } from './BottomNav';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
+import { EXCO_MODULES } from '@/config/excoModules';
+
+// Detect exco aktif dari pathname (sama logik dengan Sidebar.tsx)
+const EKPP_ROUTES = [
+  '/dashboard', '/kelab', '/sertai-kelab', '/aktiviti', '/ahli',
+  '/tetapan', '/carian', '/laporan', '/urus-kelab', '/semakan-laporan',
+  '/jpp-admin', '/leaderboard', '/logs', '/karnival', '/nexus',
+];
+function detectExcoFromPath(pathname: string) {
+  if (EKPP_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) {
+    return EXCO_MODULES.find(m => m.id === 'ekpp')!;
+  }
+  for (const mod of EXCO_MODULES) {
+    if (mod.id === 'ekpp') continue;
+    if (pathname.startsWith(mod.basePath)) return mod;
+  }
+  return EXCO_MODULES.find(m => m.id === 'ekpp')!;
+}
 
 export function AppLayout() {
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Detect exco aktif untuk header mobile
+  const activeExco = detectExcoFromPath(location.pathname);
 
   // Auto-tutup sidebar bila tukar page di mobile
   useEffect(() => {
@@ -70,18 +88,17 @@ export function AppLayout() {
           </Button>
 
           <div className="flex items-center gap-3">
-            {/* ⚠️ Nota: Folder public tak perlu tulis /public/ dalam src */}
-            <img
-              src="/jpp-logo.png"
-              alt="Logo JPP"
-              className="w-8 h-8 object-contain rounded-lg shadow-sm"
-              onError={(e) => {
-                (e.target as any).src = 'https://api.dicebear.com/7.x/identicon/svg?seed=JPP';
-              }}
-            />
-            <span className="font-black text-[14px] uppercase tracking-tighter text-foreground">
-              e-KPP POLISAS
-            </span>
+            <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center text-lg shadow-sm">
+              {activeExco.icon}
+            </div>
+            <div className="leading-tight">
+              <span className="font-black text-[13px] uppercase tracking-tighter text-foreground block">
+                {activeExco.name}
+              </span>
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 block">
+                JPP Polisas
+              </span>
+            </div>
           </div>
         </div>
 

@@ -51,7 +51,7 @@ const ALL_DOC_TYPES = [
   { value: 'Profil Ahli Kelab', icon: Users, color: 'text-indigo-500', bg: 'bg-indigo-100' },
   { value: 'Struktur Jawatan', icon: Award, color: 'text-purple-500', bg: 'bg-purple-100' },
   { value: 'Carta Organisasi', icon: Users, color: 'text-pink-500', bg: 'bg-pink-100' },
-  { value: 'Perlembagaan Kelab', icon: BookOpen, color: 'text-slate-700', bg: 'bg-slate-200' },
+  { value: 'Perlembagaan Kelab', icon: BookOpen, color: 'text-slate-700 dark:text-slate-300', bg: 'bg-muted' },
 ];
 
 function DollarSignIcon(props: any) {
@@ -443,7 +443,7 @@ export function SemakanLaporanPage() {
                         p.status === 'PENDING_APPROVAL' ? "bg-gradient-to-br from-amber-400 to-orange-500" :
                           p.status === 'CONFIRMED' ? "bg-gradient-to-br from-emerald-400 to-teal-500" :
                             p.status === 'REQUEST_UNLOCK' ? "bg-gradient-to-br from-indigo-500 to-purple-600 animate-pulse" :
-                              "bg-slate-300")}>
+                            "bg-muted")}>
                         {p.status === 'REQUEST_UNLOCK' ? <Unlock size={24} /> : <Calendar size={24} />}
                       </div>
 
@@ -462,7 +462,7 @@ export function SemakanLaporanPage() {
                                 {isRejectedPostmortem ? 'POSTMORTEM (REJECTED)' : p.status.replace('_', ' ')}
                               </Badge>
                               {club && (
-                                <Badge className="bg-slate-100 text-slate-500 hover:bg-slate-200 border-none font-bold text-[10px] px-2 py-0.5 uppercase tracking-widest transition-colors">
+                                <Badge className="bg-muted text-muted-foreground hover:bg-muted/80 border-none font-bold text-[10px] px-2 py-0.5 uppercase tracking-widest transition-colors">
                                   {club.shortName}
                                 </Badge>
                               )}
@@ -788,7 +788,7 @@ export function SemakanLaporanPage() {
                             </Badge>
                             {club && (
                               <>
-                                <span className="w-1 h-1 rounded-full bg-slate-200"></span>
+                                <span className="w-1 h-1 rounded-full bg-border"></span>
                                 <span className="text-[10px] font-bold text-muted-foreground truncate">{club.name}</span>
                               </>
                             )}

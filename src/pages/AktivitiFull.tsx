@@ -303,16 +303,17 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
       {loading ? (
         <AktivitiSkeleton />
       ) : filtered.length === 0 ? (
-        <Empty className="py-20 rounded-[3rem] border-dashed border-2 bg-slate-50/50">
-          <EmptyMedia variant="icon">
-            <Activity className="w-8 h-8" />
+        <Empty className="py-20 rounded-[3rem] border-dashed border-2 bg-muted/30 dark:bg-accent/5 dark:border-accent/20 backdrop-blur-sm relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <EmptyMedia variant="icon" className="w-16 h-16 rounded-3xl bg-background shadow-xl border border-border group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+            <Activity className="w-8 h-8 text-primary animate-pulse" />
           </EmptyMedia>
-          <EmptyHeader>
-            <EmptyTitle className="text-sm font-black uppercase tracking-widest">Tiada Aktiviti Ditemui</EmptyTitle>
-            <EmptyDescription className="text-xs">
+          <EmptyHeader className="relative z-10">
+            <EmptyTitle className="text-xl font-black uppercase tracking-[0.2em] gradient-text">Tiada Aktiviti Ditemui</EmptyTitle>
+            <EmptyDescription className="text-sm font-medium text-muted-foreground/80 max-w-[280px] leading-relaxed">
               {filterStatus === 'semua'
-                ? 'Kelab anda belum merekodkan sebarang aktiviti spontan.'
-                : `Tiada aktiviti dengan status '${filterStatus}' ditemui.`}
+                ? 'Kelab anda baru dan masih segar? Mula rekodkan aktiviti spontan anda di sini.'
+                : `Nampaknya tiada aktiviti dengan status '${filterStatus}' buat masa ini.`}
             </EmptyDescription>
           </EmptyHeader>
           {canManage && (

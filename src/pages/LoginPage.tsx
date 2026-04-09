@@ -206,9 +206,9 @@ export function LoginPage() {
             <img src="/jpp-logo.png" alt="JPP Logo" className="w-14 h-14 object-contain" />
           </div>
           <div className="text-center">
-            <h1 className="text-3xl font-black tracking-tighter text-foreground">e-KPP</h1>
+            <h1 className="text-3xl font-black tracking-tighter text-foreground">JPP Digital Portal</h1>
             <p className="text-[11px] font-black uppercase tracking-[0.35em] text-accent mt-0.5">JPP Polisas</p>
-            <p className="text-[10px] text-muted-foreground/60 mt-1 font-medium">Kelab · Persatuan · Perpaduan</p>
+            <p className="text-[10px] text-muted-foreground/60 mt-1 font-medium">e-KPP · e-Kebajikan · e-Keusahawanan</p>
           </div>
         </div>
 
@@ -470,9 +470,9 @@ export function LoginPage() {
         <div className="mt-8 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Sistem e-KPP Beroperasi</span>
+            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">JPP Digital Portal Beroperasi</span>
           </div>
-          <p className="text-[10px] font-medium text-muted-foreground/40 mt-3">© 2026 e-KPP JPP Polisas. Hak cipta terpelihara.</p>
+          <p className="text-[10px] font-medium text-muted-foreground/40 mt-3">© 2026 JPP Digital Portal · Polisas. Hak cipta terpelihara.</p>
         </div>
       </motion.div>
     </div>

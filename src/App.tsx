@@ -27,6 +27,12 @@ import { LeaderboardPage } from './pages/LeaderboardPage';
 import { PenasihatLogPage } from './pages/PenasihatLogPage';
 import { KarnivalVotingPage } from './pages/KarnivalVotingPage';
 import { NexusPage } from './pages/NexusPage';
+import { PortalPage } from './pages/PortalPage';
+// ── e-Keusahawanan (prefix: /keusahawanan/) ──
+import { KeusahawananLayout } from './pages/keusahawanan/KeusahawananLayout';
+import { KeusahawananDashboard } from './pages/keusahawanan/KeusahawananDashboard';
+import { KeusahawananProgram } from './pages/keusahawanan/KeusahawananProgram';
+import { KeusahawananIdea, KeusahawananGeran, KeusahawananLaporan } from './pages/keusahawanan/KeusahawananPlaceholders';
 
 
 function RequireApproval({ children }: { children: React.ReactNode }) {
@@ -71,8 +77,12 @@ function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route path="/onboarding" element={<OnboardingPage />} />
 
-        {/* ✅ WRAP SEMUA HALAMAN DALAM APPLAYOUT DENGAN REQUIREAPPROVAL */}
+        {/* 🌐 PORTAL HUB — standalone tanpa sidebar */}
+        <Route path="/portal" element={<RequireApproval><PortalPage /></RequireApproval>} />
+
+        {/* ✅ WRAP HALAMAN EXCO DALAM APPLAYOUT (ada sidebar) */}
         <Route element={<RequireApproval><AppLayout /></RequireApproval>}>
+          {/* ── e-KPP (route tanpa prefix — konvensyen sedia ada, JANGAN ubah) ── */}
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/kelab" element={<KelabPage />} />
           <Route path="/sertai-kelab" element={<KelabPage />} />
@@ -89,6 +99,14 @@ function AppRoutes() {
           <Route path="/logs" element={<PenasihatLogPage />} />
           <Route path="/karnival" element={<KarnivalVotingPage />} />
           <Route path="/nexus" element={<NexusPage />} />
+        </Route>
+        {/* ── e-Keusahawanan (prefix: /keusahawanan/) ── AKSES: SUPER_ADMIN_JPP sahaja buat masa ini ── */}
+        <Route element={<RequireApproval><KeusahawananLayout /></RequireApproval>}>
+          <Route path="/keusahawanan/dashboard" element={<KeusahawananDashboard />} />
+          <Route path="/keusahawanan/program"   element={<KeusahawananProgram />} />
+          <Route path="/keusahawanan/idea"      element={<KeusahawananIdea />} />
+          <Route path="/keusahawanan/geran"     element={<KeusahawananGeran />} />
+          <Route path="/keusahawanan/laporan"   element={<KeusahawananLaporan />} />
         </Route>
       </Route>
 
@@ -113,7 +131,7 @@ function App() {
                 <Toaster
                   position="top-right"
                   toastOptions={{
-                    className: 'glass !bg-white/70 dark:!bg-slate-900/70 !backdrop-blur-xl !border-white/20 !shadow-2xl rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest text-slate-900 dark:text-white py-4 px-6',
+                    className: 'glass !bg-white/90 dark:!bg-slate-900/90 !backdrop-blur-xl !border-white/20 !shadow-2xl rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest !text-slate-900 dark:!text-white py-4 px-6',
                     duration: 4000,
                     success: {
                       iconTheme: { primary: '#10b981', secondary: '#fff' },
