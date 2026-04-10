@@ -49,3 +49,27 @@ export function hexToRgba(hex: string, alpha: number): string {
   const b = parseInt(clean.substr(4, 2), 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
+
+/**
+ * Ekstrak 'Nama Panggilan' (Nickname) yang sesuai untuk konteks Malaysia.
+ * Mengabaikan imbuhan awal yang terlalu umum (Muhammad, Nur, Siti, dll.).
+ */
+export function getMalaysianNickname(fullName?: string | null): string {
+  if (!fullName) return 'Pengguna';
+  
+  const ignoreList = [
+    'muhammad', 'mohamad', 'mohd', 'muhd', 'ahmad', 'abdul',
+    'nur', 'nurul', 'siti', 'puteri', 'putera', 'wan', 'megat',
+    'syed', 'sharifah', 'tengku', 'raja', 'nik'
+  ];
+
+  const words = fullName.trim().split(/\s+/);
+  if (words.length <= 1) return words[0] || 'Pengguna';
+
+  // Cari perkataan pertama yang TIDAK ada dalam senarai abaikan
+  const nickname = words.find(w => !ignoreList.includes(w.toLowerCase()));
+  
+  // Jika entah bagaimana semua perkataan ada dalam ignoreList (contoh: "Mohd Ahmad"), 
+  // ambil perkataan terakhir sebagai fallback.
+  return nickname || words[words.length - 1];
+}

@@ -64,17 +64,17 @@ export function KeusahawananProgram() {
     <div className="min-h-full p-4 sm:p-6 md:p-8 space-y-6">
 
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5 mb-2">
             <div className="w-1 h-5 rounded-full" style={{ background: color }} />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">e-Keusahawanan</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">e-Keusahawanan</p>
           </div>
-          <h1 className="text-2xl font-black tracking-tight text-foreground">Program Keusahawanan</h1>
-          <p className="text-sm mt-0.5 text-muted-foreground">Urus semua program, workshop dan pertandingan</p>
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-foreground leading-tight">Program Keusahawanan</h1>
+          <p className="text-xs md:text-sm font-medium text-muted-foreground">Urus semua program, workshop dan pertandingan</p>
         </div>
         <Button
-          className="gap-2 font-black text-[11px] uppercase tracking-wider rounded-xl flex-shrink-0 text-white w-full sm:w-auto"
+          className="gap-2.5 font-black text-[11px] uppercase tracking-[0.15em] h-12 rounded-2xl flex-shrink-0 text-white w-full sm:w-auto shadow-lg active:scale-95 transition-all"
           style={{ background: color }}
         >
           <Plus className="w-4 h-4" />
@@ -83,27 +83,27 @@ export function KeusahawananProgram() {
       </motion.div>
 
       {/* Carian + Filter */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-4">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Cari program..."
-            className="w-full h-11 pl-11 pr-4 rounded-xl text-sm font-medium outline-none bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-1"
+            className="w-full h-12 pl-12 pr-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border focus:ring-1 transition-all"
             style={{ '--tw-ring-color': hexToRgba(color, 0.3) } as any}
           />
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
           {(['all', 'active', 'upcoming', 'completed'] as const).map(s => (
             <button
               key={s}
               onClick={() => setFilterStatus(s)}
-              className="px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border"
+              className="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-all border shrink-0 active:scale-95"
               style={
                 filterStatus === s
                   ? { background: hexToRgba(color, 0.1), borderColor: hexToRgba(color, 0.35), color }
-                  : { background: 'transparent', borderColor: 'hsl(var(--border))', color: 'hsl(var(--muted-foreground))' }
+                  : { background: 'transparent', borderColor: 'hsl(var(--border)/0.5)', color: 'hsl(var(--muted-foreground)/0.6)' }
               }
             >
               {s === 'all' ? 'Semua' : statusMap[s].label}

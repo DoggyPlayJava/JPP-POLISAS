@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useExcoTheme } from '@/contexts/ExcoThemeContext';
 import { supabase } from '@/lib/supabase';
-import { hexToRgba, getContrastText, cn } from '@/lib/utils';
+import { hexToRgba, getContrastText, cn, getMalaysianNickname } from '@/lib/utils';
 import {
   Store, Calendar, Wallet, ShieldOff,
   Clock, ChevronLeft, ChevronRight, Plus, RotateCcw,
@@ -84,6 +84,7 @@ function GeraiJadual({
   const [swapReason, setSwapReason] = useState('');
 
   const [saving, setSaving] = useState(false);
+  const [mobileDate, setMobileDate] = useState(today());
 
   const { unitColors } = useJppExcoUnits();
 
@@ -91,6 +92,14 @@ function GeraiJadual({
   const dateStrings = days.map(isoDate);
   const startDate   = dateStrings[0];
   const endDate     = dateStrings[6];
+
+  // Auto-init mobileDate to today if in current week, else first day of week
+  useEffect(() => {
+    const t = today();
+    const currentDays = weekDates(weekOffset).map(isoDate);
+    if (currentDays.includes(t)) setMobileDate(t);
+    else setMobileDate(currentDays[0]);
+  }, [weekOffset]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -273,121 +282,203 @@ function GeraiJadual({
           Memuatkan jadual...
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs min-w-[600px]">
-            <thead>
-              <tr>
-                <th className="text-left py-2 pr-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 w-28">Slot</th>
-                {days.map(d => {
-                  const ds      = isoDate(d);
-                  const isToday = ds === todayStr;
-                  return (
-                    <th key={ds} className="text-center pb-2 px-1">
-                      <div className={cn('px-2 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider',
-                        isToday ? 'text-white' : 'text-muted-foreground/60')}
-                        style={isToday ? { background: color } : {}}>
-                        <p>{DAY_SHORT[d.getDay()]}</p>
-                        <p className="text-[11px]">{d.getDate()}</p>
+        <>
+          {/* Mobile View: Day Selector + Vertical List */}
+          <div className="block md:hidden space-y-6">
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x">
+              {days.map(d => {
+                const ds = isoDate(d);
+                const isActive = mobileDate === ds;
+                const isToday = ds === todayStr;
+                return (
+                  <button
+                    key={ds}
+                    onClick={() => {
+                      console.log('Mobile date selected:', ds);
+                      setMobileDate(ds);
+                    }}
+                    className={cn(
+                      "flex-shrink-0 w-14 py-3 rounded-2xl border transition-all snap-start relative z-10 cursor-pointer touch-action-manipulation active:scale-[0.85]",
+                      isActive ? "shadow-lg scale-105" : "bg-card border-border/50 opacity-60"
+                    )}
+                    style={isActive ? { background: color, borderColor: color, color: getContrastText(color) } : {}}
+                  >
+                    <p className="text-[10px] font-black uppercase tracking-widest mb-1">{DAY_SHORT[d.getDay()]}</p>
+                    <p className="text-lg font-black">{d.getDate()}</p>
+                    {isToday && !isActive && <div className="w-1 h-1 rounded-full mx-auto mt-1" style={{ background: color }} />}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="space-y-3">
+              {SHIFT_HOURS.map(hour => {
+                const shift = getShift(mobileDate, hour);
+                const isMyShift = shift?.assigned_to === currentUserId;
+                const mColor = shift?.assigned_to ? (unitColors[(jppMembers.find(m => m.id === shift.assigned_to)?.jpp_unit) || ''] || color) : color;
+
+                return (
+                  <div key={hour} className="flex items-center gap-4">
+                    <div className="w-20 text-[10px] font-black text-muted-foreground/40 uppercase whitespace-nowrap">
+                      {fmt(hour).split('–')[0]}
+                    </div>
+                    {shift?.assignee ? (
+                      <div 
+                        onClick={() => {
+                          if (canManage) setAssignModal({ date: mobileDate, hour });
+                          else if (isMyShift) setSwapModal(shift);
+                        }}
+                        className="flex-1 flex items-center gap-3 p-3 rounded-2xl border relative transition-all active:scale-[0.98]"
+                        style={{ background: hexToRgba(mColor, 0.08), borderColor: hexToRgba(mColor, 0.2) }}
+                      >
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black text-white" style={{ background: mColor }}>
+                          {shift.assignee.full_name.split(' ').map((n: any) => n[0]).join('').slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-black truncate text-foreground">{shift.assignee.full_name}</p>
+                          <p className="text-[9px] font-bold uppercase tracking-widest opacity-50" style={{ color: mColor }}>
+                            {jppMembers.find(m => m.id === shift.assigned_to)?.jpp_position || 'Exco'}
+                          </p>
+                        </div>
+                        {isMyShift && <Repeat2 className="w-3.5 h-3.5 opacity-40" style={{ color: mColor }} />}
+                        {canManage && (
+                          <button onClick={e => { e.stopPropagation(); handleRemove(shift); }} className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500">
+                             <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-            <tbody>
-              {SHIFT_HOURS.map(hour => (
-                <tr key={hour} className="border-t border-border/30">
-                  <td className="py-1.5 pr-3 text-[10px] font-black text-muted-foreground/50 whitespace-nowrap">
-                    {fmt(hour)}
-                  </td>
+                    ) : canManage ? (
+                      <button 
+                        onClick={() => setAssignModal({ date: mobileDate, hour })}
+                        className="flex-1 h-12 rounded-2xl border border-dashed border-border/40 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/30 hover:bg-muted/30"
+                      >
+                        <Plus className="w-3 h-3" /> Tugaskan
+                      </button>
+                    ) : (
+                      <div className="flex-1 h-12 rounded-2xl bg-muted/10 border border-dashed border-border/10" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Desktop View: Full Table */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-xs min-w-[600px]">
+              <thead>
+                <tr>
+                  <th className="text-left py-2 pr-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 w-28">Slot</th>
                   {days.map(d => {
                     const ds      = isoDate(d);
-                    const shift   = getShift(ds, hour);
                     const isToday = ds === todayStr;
-                    const isMyShift = shift?.assigned_to === currentUserId;
-                    const memberColor = shift?.assigned_to ? (unitColors[(jppMembers.find(m => m.id === shift.assigned_to)?.jpp_unit) || ''] || color) : color;
-
                     return (
-                      <td key={ds} className="px-1 py-1">
-                        {shift?.assignee ? (
-                          <div
-                            className="rounded-lg px-2 py-1.5 text-center cursor-pointer group relative"
-                            style={{ background: hexToRgba(memberColor, 0.12), border: `1px solid ${hexToRgba(memberColor, 0.3)}` }}
-                            onClick={() => {
-                              if (canManage) setAssignModal({ date: ds, hour });
-                              else if (isMyShift) setSwapModal(shift);
-                            }}
-                          >
-                            <p className="font-black text-[10px] truncate" style={{ color: memberColor }}>
-                              {shift.assignee.full_name.split(' ')[0]}
-                            </p>
-                            {isMyShift && !canManage && (
-                              <Repeat2 className="w-2.5 h-2.5 mx-auto mt-0.5 opacity-40" style={{ color: memberColor }} />
-                            )}
-                            {canManage && (
-                              <button
-                                onClick={e => { e.stopPropagation(); handleRemove(shift); }}
-                                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                              >
-                                <X className="w-2.5 h-2.5" />
-                              </button>
-                            )}
-                          </div>
-                        ) : canManage ? (
-                          <button
-                            onClick={() => setAssignModal({ date: ds, hour })}
-                            className={cn('w-full rounded-lg px-2 py-1.5 text-center border border-dashed transition-all',
-                              isToday ? 'border-border/60 hover:bg-muted/50' : 'border-transparent hover:border-border/40 hover:bg-muted/30')}
-                          >
-                            <Plus className="w-3 h-3 mx-auto text-muted-foreground/30" />
-                          </button>
-                        ) : (
-                          <div className="h-7 rounded-lg bg-muted/20 border border-dashed border-border/20" />
-                        )}
-                      </td>
+                      <th key={ds} className="text-center pb-2 px-1">
+                        <div className={cn('px-2 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider',
+                          isToday ? 'text-white' : 'text-muted-foreground/60')}
+                          style={isToday ? { background: color } : {}}>
+                          <p>{DAY_SHORT[d.getDay()]}</p>
+                          <p className="text-[11px]">{d.getDate()}</p>
+                        </div>
+                      </th>
                     );
                   })}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {SHIFT_HOURS.map(hour => (
+                  <tr key={hour} className="border-t border-border/30">
+                    <td className="py-1.5 pr-3 text-[10px] font-black text-muted-foreground/50 whitespace-nowrap">
+                      {fmt(hour)}
+                    </td>
+                    {days.map(d => {
+                      const ds      = isoDate(d);
+                      const shift   = getShift(ds, hour);
+                      const isToday = ds === todayStr;
+                      const isMyShift = shift?.assigned_to === currentUserId;
+                      const memberColor = shift?.assigned_to ? (unitColors[(jppMembers.find(m => m.id === shift.assigned_to)?.jpp_unit) || ''] || color) : color;
+
+                      return (
+                        <td key={ds} className="px-1 py-1">
+                          {shift?.assignee ? (
+                            <div
+                              className="rounded-lg px-2 py-1.5 text-center cursor-pointer group relative"
+                              style={{ background: hexToRgba(memberColor, 0.12), border: `1px solid ${hexToRgba(memberColor, 0.3)}` }}
+                              onClick={() => {
+                                if (canManage) setAssignModal({ date: ds, hour });
+                                else if (isMyShift) setSwapModal(shift);
+                              }}
+                            >
+                              <p className="font-black text-[10px] truncate" style={{ color: memberColor }}>
+                                {getMalaysianNickname(shift.assignee.full_name)}
+                              </p>
+                              {isMyShift && !canManage && (
+                                <Repeat2 className="w-2.5 h-2.5 mx-auto mt-0.5 opacity-40" style={{ color: memberColor }} />
+                              )}
+                              {canManage && (
+                                <button
+                                  onClick={e => { e.stopPropagation(); handleRemove(shift); }}
+                                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                >
+                                  <X className="w-2.5 h-2.5" />
+                                </button>
+                              )}
+                            </div>
+                          ) : canManage ? (
+                            <button
+                              onClick={() => setAssignModal({ date: ds, hour })}
+                              className={cn('w-full rounded-lg px-2 py-1.5 text-center border border-dashed transition-all',
+                                isToday ? 'border-border/60 hover:bg-muted/50' : 'border-transparent hover:border-border/40 hover:bg-muted/30')}
+                            >
+                              <Plus className="w-3 h-3 mx-auto text-muted-foreground/30" />
+                            </button>
+                          ) : (
+                            <div className="h-7 rounded-lg bg-muted/20 border border-dashed border-border/20" />
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {/* ── Member Roster ── */}
       {!loading && jppMembers.length > 0 && (
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-3 flex items-center gap-2">
+        <div className="space-y-4">
+          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 flex items-center gap-2">
             <Users className="w-3 h-3" /> Ahli JPP ({jppMembers.length} orang)
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2.5">
             {jppMembers.map(m => {
               const mc = unitColors[m.jpp_unit] || '#6366f1';
               const shiftCount = memberShiftCount[m.id] || 0;
               const hasPendingSwap = swapRequests.some(r => r.requester?.id === m.id && r.status === 'PENDING');
               return (
                 <div key={m.id}
-                  className="flex items-center gap-2 px-3 py-2 rounded-2xl border border-border bg-card hover:shadow-sm transition-all"
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-2xl border border-border bg-card hover:shadow-sm transition-all"
                   style={{ borderLeftColor: mc, borderLeftWidth: 3 }}>
-                  {/* Avatar */}
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0"
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0"
                     style={{ background: mc }}>
                     {m.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-black truncate leading-tight">{m.full_name.split(' ')[0]}</p>
-                    <p className="text-[9px] text-muted-foreground leading-tight">
+                    <p className="text-[11px] font-black truncate leading-tight">{getMalaysianNickname(m.full_name)}</p>
+                    <p className="text-[9px] text-muted-foreground leading-tight mt-0.5">
                       {shiftCount > 0 ? `${shiftCount} syif` : 'tiada syif'}
                     </p>
                   </div>
                   {hasPendingSwap && (
-                    <Repeat2 className="w-3 h-3 text-amber-500 flex-shrink-0" />
+                    <Repeat2 className="w-3 h-3 text-amber-500 ml-auto flex-shrink-0" />
                   )}
                 </div>
               );
             })}
           </div>
-          <p className="text-[9px] text-muted-foreground/40 mt-2">
+          <p className="text-[9px] text-muted-foreground/40 mt-1 italic px-1">
             Klik slot syif anda untuk minta tukar syif dengan ahli lain.
           </p>
         </div>
@@ -628,54 +719,54 @@ function GeraiSesi({ color, profile }: { color: string; profile: any }) {
   return (
     <div className="space-y-6">
       {/* Status Card Hari Ini */}
-      <div className="rounded-3xl overflow-hidden border border-border">
-        <div className="px-6 py-5" style={{ background: hexToRgba(color, 0.08) }}>
-          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground mb-1">
+      <div className="rounded-[2rem] overflow-hidden border border-border shadow-sm bg-card">
+        <div className="px-5 py-6 sm:px-6 sm:py-5" style={{ background: hexToRgba(color, 0.08) }}>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-3">
             Status Hari Ini — {new Date().toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
           {todaySession ? (
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
                   <div className={cn(
-                    'w-2.5 h-2.5 rounded-full',
+                    'w-3 h-3 rounded-full',
                     todaySession.status === 'OPEN' ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/40'
                   )} />
-                  <p className="text-lg font-black">
+                  <p className="text-xl font-black tracking-tight">
                     Kedai {todaySession.status === 'OPEN' ? 'BUKA' : 'TUTUP'}
                   </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Modal awal: <span className="font-bold text-foreground">{fmtRM(todaySession.opening_cash)}</span>
-                  {' · '}Dibuka oleh: <span className="font-bold text-foreground">
-                    {(todaySession as any).opener?.full_name ?? '—'}
-                  </span>
-                </p>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground font-medium">
+                  <p>Modal: <span className="font-bold text-foreground">{fmtRM(todaySession.opening_cash)}</span></p>
+                  <p>Staf: <span className="font-bold text-foreground">{getMalaysianNickname((todaySession as any).opener?.full_name)}</span></p>
+                </div>
                 {todaySession.status === 'CLOSED' && (
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-bold">
-                    Untung bersih: {fmtRM(netProfit(todaySession))}
-                  </p>
+                  <div className="inline-flex px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-widest">
+                      Untung: {fmtRM(netProfit(todaySession))}
+                    </p>
+                  </div>
                 )}
               </div>
               {todaySession.status === 'OPEN' && (
                 <button onClick={() => setCloseModal(true)}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all"
-                  style={{ background: color, color: getContrastText(color) }}>
+                  className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] transition-all hover:brightness-110 active:scale-95 shadow-lg shadow-rose-500/10"
+                  style={{ background: '#f43f5e', color: '#fff' }}>
                   <Lock className="w-4 h-4" /> Tutup Kedai
                 </button>
               )}
             </div>
           ) : (
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30" />
-                  <p className="text-lg font-black text-muted-foreground">Belum Dibuka</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full bg-muted-foreground/20" />
+                  <p className="text-xl font-black tracking-tight text-muted-foreground/60">Belum Dibuka</p>
                 </div>
-                <p className="text-xs text-muted-foreground">Tiada rekod sesi untuk hari ini.</p>
+                <p className="text-xs text-muted-foreground font-medium italic">Tiada rekod sesi untuk hari ini.</p>
               </div>
               <button onClick={() => setOpenModal(true)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all"
+                className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] transition-all hover:brightness-110 active:scale-95 shadow-lg shadow-indigo-500/10"
                 style={{ background: color, color: getContrastText(color) }}>
                 <Unlock className="w-4 h-4" /> Buka Kedai
               </button>

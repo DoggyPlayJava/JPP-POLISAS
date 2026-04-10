@@ -224,16 +224,30 @@ export function KeusahawananLayout() {
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
           {/* Mobile header */}
-          <div className="md:hidden flex items-center p-4 border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
-            <button onClick={() => setIsSidebarOpen(true)} className="mr-3 p-2 rounded-xl bg-muted/50">
-              <Menu className="w-5 h-5 text-foreground" />
-            </button>
-            <div className="flex items-center gap-2">
-              <span className="text-lg">💡</span>
-              <span className="font-black text-sm tracking-tight text-foreground">e-Keusahawanan</span>
+          <div className="md:hidden flex items-center justify-between px-6 py-4 border-b border-border/10 bg-background/60 backdrop-blur-2xl sticky top-0 z-50">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setIsSidebarOpen(true)} 
+                className="p-2 -ml-2 rounded-xl transition-all active:scale-95 bg-muted/30 text-foreground"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-2.5">
+                <div 
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-base shadow-lg"
+                  style={{ background: hexToRgba(themeColor, 0.1), border: `1px solid ${hexToRgba(themeColor, 0.2)}` }}
+                >
+                  💡
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-black text-xs tracking-tight text-foreground uppercase">e-Keusahawanan</span>
+                  <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-30 text-foreground">JPP Polisas</span>
+                </div>
+              </div>
             </div>
+
             {!moduleEnabled && isSuperAdmin && (
-              <div className="ml-auto px-2 py-1 rounded-full text-[10px] font-black bg-amber-500/10 border border-amber-500/20 text-amber-500">
+              <div className="px-2.5 py-1 rounded-full text-[9px] font-black bg-amber-500/10 border border-amber-500/20 text-amber-500 uppercase tracking-widest">
                 Pratonton
               </div>
             )}

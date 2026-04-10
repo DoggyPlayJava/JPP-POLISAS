@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
+import { getMalaysianNickname } from '@/lib/utils';
 
 // ─── Storage helpers ────────────────────────────────────────────────────────
 
@@ -410,7 +411,7 @@ export function FloatingAiChat() {
                   <Sparkles size={14} />
                 </div>
                 <div className="bg-card border border-border/50 p-4 rounded-2xl rounded-tl-sm text-sm text-foreground shadow-sm flex-1">
-                  <p className="font-bold mb-1">Hai {profile?.full_name?.split(' ')[0] ?? 'Pelajar'}! 👋</p>
+                  <p className="font-bold mb-1">Hai {getMalaysianNickname(profile?.full_name)}! 👋</p>
                   <p className="text-muted-foreground text-xs leading-relaxed">
                     Saya pembantu AI JPP anda. Sila tanya apa sahaja soalan berkaitan kelab atau aktiviti POLISAS!
                   </p>

@@ -8,7 +8,7 @@ import { Sparkles, LogOut, ArrowRight, Lock, Eye, ShieldCheck, ToggleLeft, Toggl
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { toast } from 'react-hot-toast';
-import { cn, hexToRgba, getContrastText } from '@/lib/utils';
+import { cn, hexToRgba, getContrastText, getMalaysianNickname } from '@/lib/utils';
 
 
 
@@ -49,109 +49,66 @@ function ColorPickerPopover({ moduleId, moduleName, currentColor, onSave, onClos
   };
 
   const PRESET_GROUPS = [
-    { label: 'Merah & Burgundy', colors: ['#7B1C1C','#B71C1C','#C62828','#880E4F'] },
-    { label: 'Biru & Indigo',    colors: ['#1A237E','#1565C0','#0D47A1','#283593'] },
-    { label: 'Hijau & Teal',     colors: ['#1B5E20','#2E7D32','#004D40','#0D7377'] },
-    { label: 'Oren & Emas',      colors: ['#E65100','#BF360C','#F57F17','#FF6F00'] },
-    { label: 'Ungu & Hitam',     colors: ['#4A148C','#6A1B9A','#212121','#263238'] },
+    { label: 'Primary & Corporate', colors: ['#7B1C1C','#1A237E','#1B5E20','#E65100','#4A148C'] },
+    { label: 'Modern Vibrancy',    colors: ['#F43F5E','#3B82F6','#10B981','#F59E0B','#8B5CF6'] },
   ];
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, scale: 0.95, y: 8 }}
+      initial={{ opacity: 0, scale: 0.95, y: 12 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95, y: 8 }}
-      transition={{ duration: 0.15 }}
-      className="absolute top-full mt-2 right-0 z-50 w-80 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
-      style={{
-        background: 'rgba(12,12,16,0.98)',
-        border: `1px solid ${hexToRgba(selectedColor, 0.4)}`,
-        backdropFilter: 'blur(24px)',
-        maxHeight: '400px',
-      }}
+      exit={{ opacity: 0, scale: 0.95, y: 12 }}
+      className="absolute top-full mt-4 right-0 z-[100] w-72 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col border border-white/10 dark:border-white/5 bg-card/80 backdrop-blur-3xl"
       onClick={e => e.stopPropagation()}
     >
-      {/* ── Live Preview Bar ── */}
-      <div
-        className="px-5 py-4 transition-all duration-300 flex-shrink-0"
-        style={{ background: selectedColor }}
-      >
-        <p
-          className="text-[9px] font-black uppercase tracking-[0.3em] opacity-60 mb-0.5"
-          style={{ color: getContrastText(selectedColor) }}
-        >
-          Pratonton Tema
-        </p>
-        <p
-          className="text-sm font-black tracking-tight"
-          style={{ color: getContrastText(selectedColor) }}
-        >
-          {moduleName}
-        </p>
-        <p
-          className="font-mono text-[11px] font-bold mt-0.5 opacity-70"
-          style={{ color: getContrastText(selectedColor) }}
-        >
-          {selectedColor.toUpperCase()}
-        </p>
-      </div>
+      <div className="p-5 space-y-5">
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Customize Theme</h4>
+            <p className="text-xs font-bold truncate max-w-[140px]">{moduleName}</p>
+          </div>
+          <div 
+            className="w-10 h-10 rounded-2xl shadow-inner border border-white/20"
+            style={{ background: selectedColor }}
+          />
+        </div>
 
-      <div className="p-4 space-y-4 overflow-y-auto overflow-x-hidden flex-1 custom-scrollbar">
-
-        {/* ── Color Wheel (sama macam UrusKelab) ── */}
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Pilih Warna Bebas</p>
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
-            <label className="relative cursor-pointer group flex-shrink-0">
-              {/* Preview bulatan atas color input */}
-              <div
-                className="w-12 h-12 rounded-xl shadow-lg transition-transform group-hover:scale-105 border-2 border-white/20"
-                style={{ background: selectedColor }}
-              />
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 p-2 rounded-2xl bg-black/5 dark:bg-white/5 border border-white/10">
+            <div className="relative w-8 h-8 rounded-xl overflow-hidden shadow-sm">
               <input
                 type="color"
                 value={selectedColor}
                 onChange={e => sync(e.target.value)}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                className="absolute inset-[-50%] w-[200%] h-[200%] cursor-pointer"
               />
-            </label>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">Kod Hex</p>
-              <div className="flex items-center gap-2">
-                <span className="text-white/40 font-mono text-sm">#</span>
-                <input
-                  value={hexInput.replace('#', '')}
-                  onChange={e => handleHexChange(e.target.value)}
-                  placeholder="000000"
-                  maxLength={7}
-                  className="flex-1 w-full h-8 px-2 rounded-lg text-sm font-mono font-black uppercase tracking-widest outline-none bg-white/5 border border-white/10 text-white"
-                />
-              </div>
+            </div>
+            <div className="flex-1 flex items-center px-2">
+              <span className="text-muted-foreground font-mono text-xs mr-1 opacity-50">#</span>
+              <input
+                value={hexInput.replace('#', '')}
+                onChange={e => handleHexChange(e.target.value)}
+                maxLength={6}
+                className="w-full bg-transparent outline-none font-mono text-xs font-bold uppercase tracking-widest"
+              />
             </div>
           </div>
-        </div>
 
-        {/* ── Preset Groups ── */}
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Warna Prasetel</p>
-          <div className="space-y-2">
+          <div className="space-y-4">
             {PRESET_GROUPS.map(group => (
-              <div key={group.label}>
-                <p className="text-[9px] text-white/25 font-bold uppercase tracking-wider mb-1.5">{group.label}</p>
-                <div className="flex gap-2">
+              <div key={group.label} className="space-y-2">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/60">{group.label}</p>
+                <div className="flex justify-between">
                   {group.colors.map(c => (
                     <button
                       key={c}
-                      title={c}
                       onClick={() => sync(c)}
-                      className="w-10 h-10 rounded-xl transition-all hover:scale-110 active:scale-95 flex-1"
-                      style={{
-                        background: c,
-                        outline: selectedColor === c ? '2px solid white' : '2px solid transparent',
-                        outlineOffset: '2px',
-                        boxShadow: selectedColor === c ? `0 0 12px ${hexToRgba(c, 0.6)}` : 'none',
-                      }}
+                      className={cn(
+                        "w-8 h-8 rounded-xl transition-all hover:scale-110 active:scale-90 border-2",
+                        selectedColor.toLowerCase() === c.toLowerCase() ? "border-white" : "border-transparent"
+                      )}
+                      style={{ background: c }}
                     />
                   ))}
                 </div>
@@ -160,15 +117,17 @@ function ColorPickerPopover({ moduleId, moduleName, currentColor, onSave, onClos
           </div>
         </div>
 
-        {/* ── Butang Simpan ── */}
-        <button
+        <Button
           onClick={() => onSave(moduleId, selectedColor)}
-          className="w-full flex items-center justify-center gap-2 h-10 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all hover:opacity-90 active:scale-[0.98]"
-          style={{ background: selectedColor, color: getContrastText(selectedColor) }}
+          className="w-full rounded-2xl h-11 font-bold text-xs uppercase tracking-widest transition-all"
+          style={{ 
+            background: selectedColor, 
+            color: getContrastText(selectedColor),
+            boxShadow: `0 8px 20px -6px ${hexToRgba(selectedColor, 0.4)}`
+          }}
         >
-          <Check className="w-4 h-4" />
-          Simpan Warna Tema
-        </button>
+          Apply Theme
+        </Button>
       </div>
     </motion.div>
   );
@@ -204,9 +163,9 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
     }
     
     if (isPreviewMode) {
-      toast('Mode Pratonton Admin — modul belum diaktifkan untuk pengguna.', {
+      toast.success('Admin Preview Mode Active', {
         icon: '👁️',
-        style: { fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' },
+        style: { borderRadius: '12px', fontSize: '12px', fontWeight: 600 },
       });
     }
     navigate(module.basePath);
@@ -214,68 +173,64 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      whileHover={{ y: -8, scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ delay: index * 0.08, duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        "relative group rounded-[2.5rem] cursor-pointer select-none h-full min-h-[220px] transition-all duration-500",
-        !canAccess && "opacity-80",
-        showColorPicker ? "z-50" : "z-10 hover:z-40"
+        "relative group rounded-[2.5rem] overflow-visible transition-all duration-500",
+        !canAccess && "opacity-80 grayscale-[0.5]"
       )}
-      onClick={handleClick}
     >
-      {/* Background layer */}
-      <div className="absolute inset-0 rounded-[2.5rem] overflow-hidden pointer-events-none">
-        <div 
-          className="absolute inset-0 transition-all duration-700 bg-card/40 backdrop-blur-2xl border border-white/10 dark:border-white/5 shadow-premium group-hover:border-white/30 rounded-[2.5rem]"
-          style={{ boxShadow: `0 20px 40px -15px ${hexToRgba(color, 0.15)}` }}
-        />
-        <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: `radial-gradient(circle, ${color} 1px, transparent 0)`, backgroundSize: '24px 24px' }} />
-      </div>
+      <div 
+        className="absolute inset-x-0 -bottom-2 h-full rounded-[2.5rem] bg-black/5 dark:bg-black/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        style={{ background: hexToRgba(color, 0.1) }}
+      />
 
-      <div className="relative z-10 p-7 sm:p-9 h-full flex flex-col justify-between">
-        <div className="space-y-6">
+      <div 
+        onClick={handleClick}
+        className={cn(
+          "relative h-full min-h-[260px] p-8 rounded-[2.5rem] border border-white/10 dark:border-white/5 bg-card/40 backdrop-blur-2xl transition-all duration-500 cursor-pointer flex flex-col justify-between overflow-hidden",
+          "hover:bg-card/60 hover:border-white/20 dark:hover:border-white/10",
+          !canAccess && "cursor-not-allowed"
+        )}
+      >
+        {/* Decorative Background Blob */}
+        <div 
+          className="absolute -right-8 -top-8 w-32 h-32 rounded-full blur-[60px] opacity-10 group-hover:opacity-20 transition-opacity duration-700" 
+          style={{ background: color }}
+        />
+
+        <div className="relative z-10 space-y-6">
           <div className="flex items-start justify-between">
             <div 
-              className="w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-3xl shadow-xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3"
+              className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3"
               style={{ 
-                background: `linear-gradient(135deg, ${hexToRgba(color, 0.25)} 0%, ${hexToRgba(color, 0.1)} 100%)`,
-                border: `1.5px solid ${hexToRgba(color, 0.4)}`,
-                boxShadow: `0 10px 20px -5px ${hexToRgba(color, 0.3)}`
+                background: `linear-gradient(135deg, ${hexToRgba(color, 0.3)} 0%, ${hexToRgba(color, 0.1)} 100%)`,
+                border: `1.5px solid ${hexToRgba(color, 0.2)}`,
+                boxShadow: `0 12px 24px -8px ${hexToRgba(color, 0.4)}`
               }}
             >
-              {module.icon}
+              <div className="drop-shadow-sm">{module.icon}</div>
             </div>
 
             <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
               {/* Status Badge */}
               <div 
                 className={cn(
-                  "px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all duration-300",
+                  "px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-widest border backdrop-blur-md transition-all duration-300",
                   isEnabled 
-                    ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400" 
+                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
                     : isPreviewMode 
-                      ? "bg-amber-500/10 border-amber-500/40 text-amber-600 dark:text-amber-400"
-                      : "bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-black/40 dark:text-white/40"
+                      ? "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400"
+                      : "bg-white/5 border-white/10 text-muted-foreground/60"
                 )}
               >
                 {isEnabled ? (
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Aktif
-                  </div>
+                  <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live</span>
                 ) : isPreviewMode ? (
-                  <div className="flex items-center gap-1.5">
-                    <Eye className="w-3.5 h-3.5" />
-                    Pratonton
-                  </div>
+                  <span className="flex items-center gap-1.5"><Eye className="w-3 h-3" /> Preview</span>
                 ) : (
-                  <div className="flex items-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5" />
-                    Digital
-                  </div>
+                  <span className="flex items-center gap-1.5"><Lock className="w-3 h-3" /> Locked</span>
                 )}
               </div>
 
@@ -285,7 +240,10 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
                   <div className="relative">
                     <button
                       onClick={() => setShowColorPicker(!showColorPicker)}
-                      className="p-1.5 rounded-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-foreground/60 hover:text-foreground transition-all"
+                      className={cn(
+                        "p-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all",
+                        showColorPicker && "bg-white/15 text-foreground ring-2 ring-white/10"
+                      )}
                     >
                       <Palette className="w-4 h-4" />
                     </button>
@@ -305,13 +263,13 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
                     <button
                       onClick={() => onToggle(module.id, !isEnabled)}
                       className={cn(
-                        "p-1.5 rounded-full border transition-all duration-300",
+                        "p-2 rounded-xl border border-white/10 bg-white/5 transition-all duration-300",
                         isEnabled 
-                          ? "bg-rose-500/10 border-rose-500/30 text-rose-500 hover:bg-rose-500/20" 
-                          : "bg-emerald-500/10 border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/20"
+                          ? "text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/20" 
+                          : "text-emerald-500 hover:bg-emerald-500/10 hover:border-emerald-500/20"
                       )}
                     >
-                      {isEnabled ? <ToggleRight className="w-4.5 h-4.5" /> : <ToggleLeft className="w-4.5 h-4.5" />}
+                      {isEnabled ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
                     </button>
                   )}
                 </div>
@@ -319,31 +277,29 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
             </div>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80 dark:opacity-50" style={{ color: color }}>
-              {module.tagline}
-            </p>
-            <h2 className="text-2xl font-black tracking-tight text-foreground group-hover:translate-x-1 transition-transform duration-300">
+          <div className="space-y-3">
+            <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
               {module.name}
-            </h2>
-            <p className="text-xs font-medium text-foreground/70 dark:text-muted-foreground leading-relaxed max-w-[280px]">
+            </h3>
+            <p className="text-xs font-medium text-muted-foreground leading-relaxed">
               {module.description}
             </p>
           </div>
         </div>
 
-        <div className="mt-8 flex items-center justify-between">
+        <div className="relative z-10 mt-8 flex items-center justify-between">
+          <div className={cn(
+            "flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300",
+            canAccess ? "text-foreground group-hover:gap-4" : "text-muted-foreground/30"
+          )}>
+            <span>{canAccess ? "Access Module" : "Coming Soon"}</span>
+            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+          </div>
+          
           <div 
-            className={cn(
-              "inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-300",
-              canAccess ? "text-foreground group-hover:gap-4" : "text-foreground/30 dark:text-muted-foreground/30"
-            )}
+            className="text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-lg bg-black/5 dark:bg-white/5 text-muted-foreground/40"
           >
-            <span>{canAccess ? "Masuk Portal" : "Akan Datang"}</span>
-            <ArrowRight className={cn(
-              "w-4 h-4 transition-all duration-300",
-              canAccess && "translate-x-0 group-hover:translate-x-2"
-            )} />
+            {module.tagline}
           </div>
         </div>
       </div>
@@ -367,7 +323,6 @@ export function PortalPage() {
   }, []);
 
   const fetchSettings = useCallback(async () => {
-    // Timeout selepas 5 saat jika Supabase PostgREST unhealthy/tersangkut
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
@@ -377,13 +332,12 @@ export function PortalPage() {
         .select('exco_module, color, is_enabled')
         .abortSignal(controller.signal);
         
-      // Sembunyikan error missing table atau RLS, kita cuma ambil kisah kalau ada data
       if (data) setSettings(data as ExcoColorSetting[]);
     } catch (e: any) {
       if (e.name === 'AbortError') {
-        console.warn('⚠️ Supabase lambat merespon (Timeout 5s). Memuatkan tetapan lalai.');
+        console.warn('⚠️ Supabase slow response (Timeout 5s). Using defaults.');
       } else {
-        console.error('Ralat ketika memuatkan tetapan portal:', e);
+        console.error('Portal settings fetch error:', e);
       }
     } finally {
       clearTimeout(timeoutId);
@@ -404,10 +358,10 @@ export function PortalPage() {
       .update({ is_enabled: newState, updated_by: profile?.id, updated_at: new Date().toISOString() })
       .eq('exco_module', moduleId);
 
-    if (error) { toast.error('Gagal kemaskini tetapan modul.'); return; }
+    if (error) { toast.error('Failed to update status.'); return; }
 
     setSettings(prev => prev.map(s => s.exco_module === moduleId ? { ...s, is_enabled: newState } : s));
-    toast.success(`${moduleId} ${newState ? 'diaktifkan' : 'dinyahaktifkan'}.`);
+    toast.success(`${moduleId} ${newState ? 'enabled' : 'disabled'}.`);
   };
 
   const handleColorSave = async (moduleId: string, newColor: string) => {
@@ -416,101 +370,138 @@ export function PortalPage() {
       .update({ color: newColor, updated_by: profile?.id, updated_at: new Date().toISOString() })
       .eq('exco_module', moduleId);
 
-    if (error) { toast.error('Gagal simpan warna.'); return; }
+    if (error) { toast.error('Failed to save color.'); return; }
 
     setSettings(prev => prev.map(s => s.exco_module === moduleId ? { ...s, color: newColor } : s));
-    toast.success('Warna tema dikemaskini! 🎨');
+    toast.success('Theme color updated! 🎨');
   };
 
-  const displayName = useMemo(() => profile?.full_name?.split(' ')[0] || 'Pelajar', [profile]);
+  const displayName = useMemo(() => getMalaysianNickname(profile?.full_name) || 'Student', [profile]);
   const mainColor = getExcoColor('ekpp', settings);
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 overflow-x-hidden transition-colors duration-500">
       
+      {/* Cinematic Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <motion.div 
-          animate={{ x: [0, 40, 0], y: [0, -30, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-1/4 -right-1/4 w-[800px] h-[800px] rounded-full blur-[160px] opacity-[0.15] dark:opacity-[0.08]" 
+          animate={{ x: [0, 60, 0], y: [0, -40, 0], scale: [1, 1.1, 1] }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute -top-[10%] -right-[10%] w-[70vw] h-[70vw] rounded-full blur-[120px] opacity-[0.1] dark:opacity-[0.05]" 
           style={{ background: mainColor }} 
         />
         <motion.div 
-          animate={{ x: [0, -50, 0], y: [0, 60, 0] }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute -bottom-1/4 -left-1/4 w-[600px] h-[600px] rounded-full blur-[140px] opacity-[0.12] bg-amber-500/20" 
+          animate={{ x: [0, -80, 0], y: [0, 100, 0], scale: [1, 1.2, 1] }}
+          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+          className="absolute -bottom-[20%] -left-[10%] w-[60vw] h-[60vw] rounded-full blur-[140px] opacity-[0.08] bg-amber-500/10" 
         />
-        <div className="absolute inset-0 opacity-[0.015] dark:opacity-[0.03]" style={{ backgroundImage: `radial-gradient(circle at 1px 1px, ${mainColor} 1px, transparent 0)`, backgroundSize: '48px 48px' }} />
+        
+        {/* Subtle Grid Pattern */}
+        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" 
+          style={{ 
+            backgroundImage: `radial-gradient(circle at 1px 1px, ${mainColor} 1px, transparent 0)`, 
+            backgroundSize: '40px 40px' 
+          }} 
+        />
       </div>
 
-      <nav className={cn("fixed top-0 inset-x-0 z-50 transition-all duration-500 px-6 py-4 flex items-center justify-between", isScrolled ? "bg-background/80 backdrop-blur-xl border-b border-black/5 dark:border-white/5 py-3 shadow-sm" : "bg-transparent")}>
+      {/* Navigation */}
+      <nav className={cn(
+        "fixed top-0 inset-x-0 z-[100] transition-all duration-700 px-4 md:px-8 py-4 flex items-center justify-between",
+        isScrolled 
+          ? "bg-background/60 backdrop-blur-2xl border-b border-white/5 py-3 shadow-2xl" 
+          : "bg-transparent"
+      )}>
         <div className="flex items-center gap-4">
           <motion.div 
-            whileHover={{ scale: 1.05, rotate: 5 }} 
-            className="w-12 h-12 rounded-2xl bg-white dark:bg-card flex items-center justify-center p-1 shadow-premium border border-black/5 dark:border-white/10"
+            whileHover={{ scale: 1.05, rotate: 2 }} 
+            className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-card flex items-center justify-center p-1.5 shadow-2xl border border-white/10"
           >
             <img src="/jpp-logo.png" alt="JPP" className="w-full h-full object-contain" />
           </motion.div>
           <div className="flex flex-col">
-            <span className="text-sm font-black tracking-tighter leading-none">JPP PORTAL</span>
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40">Politeknik Polisas</span>
+            <span className="text-sm md:text-base font-bold tracking-tighter leading-none text-foreground">JPP PORTAL</span>
+            <span className="text-[8px] md:text-[10px] font-medium uppercase tracking-[0.2em] opacity-40 text-foreground">Politeknik Polisas</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 md:gap-4">
           {isSuperAdmin && (
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-500">
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400">
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-[9px]">Admin</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest">Admin Control</span>
             </div>
           )}
           
-          <div className="hidden md:flex items-center gap-3 px-4 border-l border-black/10 dark:border-white/10 ml-2">
+          <div className="hidden sm:flex items-center gap-3 px-4 py-1 border-x border-white/10 dark:border-white/5">
             <div className="text-right">
-              <p className="text-xs font-black leading-none">{profile?.full_name}</p>
-              <p className="text-[9px] text-foreground/50 dark:text-muted-foreground font-medium uppercase tracking-tight">{profile?.matric_no}</p>
+              <p className="text-xs font-bold leading-none text-foreground">{profile?.full_name?.split(' ').slice(0, 2).join(' ')}</p>
+              <p className="text-[9px] text-muted-foreground font-medium uppercase tracking-tight mt-0.5">{profile?.matric_no}</p>
             </div>
-            <div className="w-9 h-9 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 flex items-center justify-center text-primary overflow-hidden">
-              <User className="w-5 h-5" />
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-white/5 dark:bg-white/10 border border-white/10 dark:border-white/5 flex items-center justify-center text-primary overflow-hidden shadow-inner">
+              <User className="w-5 h-5 opacity-50" />
             </div>
           </div>
 
-          <div className="flex items-center gap-2 ml-2">
+          <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Button variant="outline" size="sm" onClick={signOut} className="rounded-xl h-10 w-10 lg:w-auto lg:px-5 border-black/10 dark:border-white/10 hover:bg-rose-500/10 hover:text-rose-500 hover:border-rose-500/20 transition-all duration-300">
-              <LogOut className="w-4 h-4 lg:mr-2" />
-              <span className="hidden lg:inline font-black text-[10px] uppercase tracking-widest">Logout</span>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={signOut} 
+              className="rounded-xl h-10 w-10 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all"
+            >
+              <LogOut className="w-4 h-4" />
             </Button>
           </div>
         </div>
       </nav>
 
-      <main className="relative z-10 pt-24 md:pt-32 pb-20 px-4 sm:px-6 max-w-7xl mx-auto">
-        <div className="flex flex-col items-center text-center space-y-8 mb-20">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-card/40 backdrop-blur-md border border-black/5 dark:border-white/5 shadow-premium">
-            <div className="relative">
-              <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-              <motion.div animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }} transition={{ duration: 2, repeat: Infinity }} className="absolute inset-0 bg-amber-400/50 blur-lg rounded-full" />
-            </div>
-            <span className="text-[11px] font-black uppercase tracking-[0.15em] text-foreground/80">
-              Welcome back, <span style={{ color: mainColor }}>{displayName}</span>
+      <main className="relative z-10 pt-32 md:pt-40 pb-20 px-4 md:px-8 max-w-7xl mx-auto">
+        {/* Hero Section */}
+        <div className="flex flex-col items-center text-center mb-16 md:mb-24 space-y-6 md:space-y-8">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-card/40 backdrop-blur-xl border border-white/10 dark:border-white/5 shadow-lg"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+              V2.0 DIGITAL ECOSYSTEM
             </span>
           </motion.div>
           
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-4">
-            <h1 className="text-4xl md:text-7xl font-black tracking-tighter leading-[0.9] max-w-3xl">Pusat Digital <span className="block text-primary italic">Jawatankuasa Perwakilan Pelajar</span></h1>
-            <p className="text-base md:text-xl text-foreground/70 dark:text-muted-foreground/60 font-medium max-w-xl mx-auto leading-relaxed">Teknologi pemacu kepimpinan. Akses semua modul exco JPP dalam satu ekosistem yang bersepadu.</p>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="space-y-4"
+          >
+            <h1 className="text-4xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[0.95] max-w-4xl mx-auto text-foreground">
+              Welcome back, <br />
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-amber-500">
+                {displayName}
+              </span>
+            </h1>
+            <p className="text-sm md:text-lg text-muted-foreground font-medium max-w-2xl mx-auto leading-relaxed px-4">
+              Integrated leadership technology platform for JPP Polisas. <br className="hidden md:block" />
+              Access all exco modules within a unified, high-performance ecosystem.
+            </p>
           </motion.div>
         </div>
 
-        <div className="max-w-5xl mx-auto">
+        {/* Modules Grid */}
+        <div className="max-w-6xl mx-auto">
           {isLoadingSettings ? (
-            <div className="flex flex-col items-center justify-center py-24 space-y-4">
-              <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Memuatkan Data Portal</span>
+            <div className="flex flex-col items-center justify-center py-32 space-y-6">
+              <div className="relative">
+                <div className="w-16 h-16 border-2 border-primary/20 rounded-full" />
+                <div className="absolute inset-0 w-16 h-16 border-t-2 border-primary rounded-full animate-spin" />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/50 animate-pulse">Initializing Portal</span>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 lg:gap-10">
               {EXCO_MODULES.map((mod, i) => (
                 <ExcoCard
                   key={mod.id}
@@ -527,23 +518,46 @@ export function PortalPage() {
           )}
         </div>
 
+        {/* Global Admin Status Line */}
         {isSuperAdmin && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="mt-16 flex flex-wrap justify-center items-center gap-x-8 gap-y-4 pt-8 border-t border-black/5 dark:border-white/5">
-             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest opacity-60 dark:opacity-40 hover:opacity-100 transition-opacity"><div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" /> Terbit</div>
-             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest opacity-60 dark:opacity-40 hover:opacity-100 transition-opacity"><div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" /> Pratonton</div>
-             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest opacity-60 dark:opacity-40 hover:opacity-100 transition-opacity"><div className="w-2 h-2 rounded-full bg-black/20 dark:bg-white/20" /> Pembangunan</div>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+            className="mt-20 flex flex-wrap justify-center items-center gap-x-12 gap-y-6 opacity-40 hover:opacity-100 transition-opacity duration-500"
+          >
+            <AdminStatusIndicator color="bg-emerald-500" label="Production Live" />
+            <AdminStatusIndicator color="bg-amber-500" label="Administrative Preview" />
+            <AdminStatusIndicator color="bg-white/20" label="Under Development" />
           </motion.div>
         )}
       </main>
 
-      <footer className="relative z-10 py-12 px-6 flex flex-col items-center border-t border-black/5 dark:border-white/5">
-        <div className="flex items-center gap-3 opacity-30 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500 mb-6">
-          <img src="/jpp-logo.png" alt="JPP" className="h-6" />
-          <div className="h-6 w-[1px] bg-foreground/20" />
-          <span className="font-black text-xs tracking-tighter">POLISAS DIGITAL</span>
+      <footer className="relative z-10 py-16 px-6 border-t border-white/5 bg-background/30 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto flex flex-col items-center text-center space-y-8">
+          <div className="flex items-center gap-4 opacity-30 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-700">
+            <img src="/jpp-logo.png" alt="JPP" className="h-8" />
+            <div className="h-8 w-px bg-foreground/20" />
+            <div className="flex flex-col text-left text-foreground">
+              <span className="font-bold text-xs tracking-tight">POLISAS DIGITAL</span>
+              <span className="text-[8px] font-medium tracking-widest opacity-60">EST. 2026</span>
+            </div>
+          </div>
+          <p className="text-[10px] font-medium text-muted-foreground/40 uppercase tracking-[0.4em] max-w-md mx-auto leading-loose">
+            &copy; 2026 Jawatankuasa Perwakilan Pelajar <br />
+            Politeknik Sultan Haji Ahmad Shah
+          </p>
         </div>
-        <p className="text-[9px] font-medium text-muted-foreground/30 dark:text-muted-foreground/30 uppercase tracking-[0.3em]">&copy; 2026 Jawatankuasa Perwakilan Pelajar Polisas</p>
       </footer>
+    </div>
+  );
+}
+
+function AdminStatusIndicator({ color, label }: { color: string, label: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className={cn("w-2 h-2 rounded-full", color, "shadow-[0_0_10px_rgba(255,255,255,0.2)]")} />
+      <span className="text-[9px] font-bold uppercase tracking-widest text-foreground opacity-60">{label}</span>
     </div>
   );
 }
