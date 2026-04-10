@@ -367,14 +367,26 @@ export function PortalPage() {
   }, []);
 
   const fetchSettings = useCallback(async () => {
+    // Timeout selepas 5 saat jika Supabase PostgREST unhealthy/tersangkut
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('portal_settings')
-        .select('exco_module, color, is_enabled');
+        .select('exco_module, color, is_enabled')
+        .abortSignal(controller.signal);
+        
+      // Sembunyikan error missing table atau RLS, kita cuma ambil kisah kalau ada data
       if (data) setSettings(data as ExcoColorSetting[]);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      if (e.name === 'AbortError') {
+        console.warn('⚠️ Supabase lambat merespon (Timeout 5s). Memuatkan tetapan lalai.');
+      } else {
+        console.error('Ralat ketika memuatkan tetapan portal:', e);
+      }
     } finally {
+      clearTimeout(timeoutId);
       setIsLoadingSettings(false);
     }
   }, []);

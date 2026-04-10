@@ -1438,34 +1438,56 @@ export function JppAdminPage() {
                                                             {user.ai_token_balance || 0} <span className="text-[10px] text-muted-foreground font-medium">Tk</span>
                                                         </td>
                                                         <td className="px-4 py-4 text-center">
-                                                            {user.subscription_tier?.toLowerCase() !== 'pro' ? (
-                                                                <Button 
-                                                                    onClick={async () => {
-                                                                        if(confirm(`Naik taraf ${user.full_name} ke PRO?`)) {
-                                                                            await supabase.rpc('update_user_ai_tier', { target_user_id: user.id, new_tier: 'pro' });
-                                                                            fetchAdminData();
-                                                                        }
-                                                                    }}
-                                                                    size="sm" 
-                                                                    className="h-8 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] uppercase font-black"
-                                                                >
-                                                                    Buat PRO
-                                                                </Button>
-                                                            ) : (
-                                                                <Button 
-                                                                    onClick={async () => {
-                                                                        if(confirm(`Turun taraf ${user.full_name} ke FREE?`)) {
-                                                                            await supabase.rpc('update_user_ai_tier', { target_user_id: user.id, new_tier: 'free' });
-                                                                            fetchAdminData();
-                                                                        }
-                                                                    }}
-                                                                    size="sm" 
-                                                                    variant="outline"
-                                                                    className="h-8 rounded-lg text-[10px] uppercase font-black border-slate-300 hover:bg-slate-100"
-                                                                >
-                                                                    Tarik Balik PRO
-                                                                </Button>
-                                                            )}
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                {user.role !== 'SUPER_ADMIN_JPP' && (
+                                                                    <Button 
+                                                                        onClick={async () => {
+                                                                            if(confirm(user.role === 'JPP' ? `Turunkan ${user.full_name || 'pengguna'} dari JPP ke AHLI biasa?` : `Lantik ${user.full_name || 'pengguna'} sebagai JPP?`)) {
+                                                                                await supabase.from('profiles').update({ role: user.role === 'JPP' ? 'AHLI' : 'JPP' }).eq('id', user.id);
+                                                                                toast.success(`Peranan telah dikemaskini.`);
+                                                                                fetchAdminData();
+                                                                            }
+                                                                        }}
+                                                                        size="sm" 
+                                                                        variant={user.role === 'JPP' ? "outline" : "default"}
+                                                                        className={cn("h-8 rounded-lg text-[10px] uppercase font-black", 
+                                                                            user.role === 'JPP' 
+                                                                                ? "border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700" 
+                                                                                : "bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20"
+                                                                        )}
+                                                                    >
+                                                                        {user.role === 'JPP' ? 'Buang JPP' : 'Lantik JPP'}
+                                                                    </Button>
+                                                                )}
+                                                                {user.subscription_tier?.toLowerCase() !== 'pro' ? (
+                                                                    <Button 
+                                                                        onClick={async () => {
+                                                                            if(confirm(`Naik taraf ${user.full_name || 'pengguna'} ke PRO?`)) {
+                                                                                await supabase.rpc('update_user_ai_tier', { target_user_id: user.id, new_tier: 'pro' });
+                                                                                fetchAdminData();
+                                                                            }
+                                                                        }}
+                                                                        size="sm" 
+                                                                        className="h-8 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] uppercase font-black"
+                                                                    >
+                                                                        Buat PRO
+                                                                    </Button>
+                                                                ) : (
+                                                                    <Button 
+                                                                        onClick={async () => {
+                                                                            if(confirm(`Turun taraf ${user.full_name || 'pengguna'} ke FREE?`)) {
+                                                                                await supabase.rpc('update_user_ai_tier', { target_user_id: user.id, new_tier: 'free' });
+                                                                                fetchAdminData();
+                                                                            }
+                                                                        }}
+                                                                        size="sm" 
+                                                                        variant="outline"
+                                                                        className="h-8 rounded-lg text-[10px] uppercase font-black border-slate-300 hover:bg-slate-100 text-slate-600"
+                                                                    >
+                                                                        Tarik PRO
+                                                                    </Button>
+                                                                )}
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 ))}
