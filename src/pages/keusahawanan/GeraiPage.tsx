@@ -471,7 +471,15 @@ function GeraiJadual({
                     <p className="text-[9px] text-muted-foreground leading-tight mt-0.5">
                       {shiftCount > 0 ? `${shiftCount} syif` : 'tiada syif'}
                     </p>
-                  </div      {/* ── Modal: Tugaskan (Manager) ── */}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Tugaskan (Manager) ── */}
       {typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
           {assignModal && (
@@ -612,15 +620,7 @@ function GeraiJadual({
             </div>
           )}
         </AnimatePresence>
-      , document.body)}        <button onClick={handleSwapRequest} disabled={!swapReason.trim() || saving}
-                  className="flex-1 h-11 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-black uppercase transition-colors disabled:opacity-40">
-                  {saving ? 'Menghantar...' : '🔄 Hantar Request'}
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      , document.body)}
     </div>
   );
 }
