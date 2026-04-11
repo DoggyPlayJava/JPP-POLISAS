@@ -58,6 +58,15 @@ function fmt(iso: string) {
   return new Date(iso).toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' });
 }
 
+// ─── ID Generator ─────────────────────────────────────────────────────────────
+
+function generateId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export function FloatingAiChat() {
@@ -91,7 +100,7 @@ export function FloatingAiChat() {
   const appendMsg = useCallback((msg: Omit<ChatMessage, 'id' | 'timestamp'>): ChatMessage => {
     const newMsg: ChatMessage = {
       ...msg,
-      id: crypto.randomUUID(),
+      id: generateId(),
       timestamp: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, newMsg]);
@@ -274,7 +283,7 @@ export function FloatingAiChat() {
 
     // 2. Build user message object manually
     const userMsg: ChatMessage = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       role: 'user',
       content: text,
       timestamp: new Date().toISOString(),
@@ -312,7 +321,7 @@ export function FloatingAiChat() {
       setMessages((prev) => [
         ...prev,
         {
-          id: crypto.randomUUID(),
+          id: generateId(),
           role: 'ai',
           content: aiText,
           timestamp: new Date().toISOString(),
@@ -322,7 +331,7 @@ export function FloatingAiChat() {
       setMessages((prev) => [
         ...prev,
         {
-          id: crypto.randomUUID(),
+          id: generateId(),
           role: 'error',
           content: 'Sistem sedang sibuk. Sila cuba lagi sebentar!',
           timestamp: new Date().toISOString(),

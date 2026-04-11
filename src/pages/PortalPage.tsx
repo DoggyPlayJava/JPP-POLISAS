@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { EXCO_MODULES, getExcoColor, ExcoColorSetting, ExcoModule } from '@/config/excoModules';
-import { Sparkles, LogOut, ArrowRight, Lock, Eye, ShieldCheck, ToggleLeft, ToggleRight, Palette, X, Check, User } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { toast } from 'react-hot-toast';
@@ -152,6 +152,7 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
 
   const canAccess = isEnabled || isSuperAdmin;
   const isPreviewMode = !isEnabled && isSuperAdmin;
+  const IconComponent = (LucideIcons as any)[module.icon] || LucideIcons.LayoutDashboard;
 
   const handleClick = () => {
     if (!canAccess) {
@@ -165,7 +166,7 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
     if (isPreviewMode) {
       toast.success('Admin Preview Mode Active', {
         icon: '👁️',
-        style: { borderRadius: '12px', fontSize: '12px', fontWeight: 600 },
+        style: { borderRadius: '12px', fontSize: '12px', fontWeight: 600, background: '#1e293b', color: '#fff' },
       });
     }
     navigate(module.basePath);
@@ -176,131 +177,118 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      onClick={handleClick}
       className={cn(
-        "relative group rounded-[2.5rem] overflow-visible transition-all duration-500",
-        !canAccess && "opacity-80 grayscale-[0.5]"
+        "group relative cursor-pointer overflow-hidden rounded-[2.5rem] bg-white/5 border border-white/10 backdrop-blur-2xl p-8 hover:bg-white/10 transition-all duration-500 min-h-[280px] flex flex-col justify-between",
+        !canAccess && "opacity-80 grayscale-[0.5] cursor-not-allowed"
       )}
     >
+      {/* Hover Gradient Overlay */}
       <div 
-        className="absolute inset-x-0 -bottom-2 h-full rounded-[2.5rem] bg-black/5 dark:bg-black/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-        style={{ background: hexToRgba(color, 0.1) }}
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" 
+        style={{ background: `linear-gradient(to bottom right, ${hexToRgba(color, 0.1)}, transparent)` }}
       />
 
-      <div 
-        onClick={handleClick}
-        className={cn(
-          "relative h-full min-h-[260px] p-8 rounded-[2.5rem] border border-white/10 dark:border-white/5 bg-card/40 backdrop-blur-2xl transition-all duration-500 cursor-pointer flex flex-col justify-between overflow-hidden",
-          "hover:bg-card/60 hover:border-white/20 dark:hover:border-white/10",
-          !canAccess && "cursor-not-allowed"
-        )}
-      >
-        {/* Decorative Background Blob */}
-        <div 
-          className="absolute -right-8 -top-8 w-32 h-32 rounded-full blur-[60px] opacity-10 group-hover:opacity-20 transition-opacity duration-700" 
-          style={{ background: color }}
-        />
-
-        <div className="relative z-10 space-y-6">
-          <div className="flex items-start justify-between">
-            <div 
-              className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3"
-              style={{ 
-                background: `linear-gradient(135deg, ${hexToRgba(color, 0.3)} 0%, ${hexToRgba(color, 0.1)} 100%)`,
-                border: `1.5px solid ${hexToRgba(color, 0.2)}`,
-                boxShadow: `0 12px 24px -8px ${hexToRgba(color, 0.4)}`
-              }}
-            >
-              <div className="drop-shadow-sm">{module.icon}</div>
-            </div>
-
-            <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-              {/* Status Badge */}
-              <div 
-                className={cn(
-                  "px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-widest border backdrop-blur-md transition-all duration-300",
-                  isEnabled 
-                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
-                    : isPreviewMode 
-                      ? "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400"
-                      : "bg-white/5 border-white/10 text-muted-foreground/60"
-                )}
-              >
-                {isEnabled ? (
-                  <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live</span>
-                ) : isPreviewMode ? (
-                  <span className="flex items-center gap-1.5"><Eye className="w-3 h-3" /> Preview</span>
-                ) : (
-                  <span className="flex items-center gap-1.5"><Lock className="w-3 h-3" /> Locked</span>
-                )}
-              </div>
-
-              {/* Admin Tools */}
-              {isSuperAdmin && (
-                <div className="flex items-center gap-1.5">
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowColorPicker(!showColorPicker)}
-                      className={cn(
-                        "p-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all",
-                        showColorPicker && "bg-white/15 text-foreground ring-2 ring-white/10"
-                      )}
-                    >
-                      <Palette className="w-4 h-4" />
-                    </button>
-                    <AnimatePresence>
-                      {showColorPicker && (
-                        <ColorPickerPopover
-                          moduleId={module.id}
-                          moduleName={module.name}
-                          currentColor={color}
-                          onSave={(id, c) => { onColorSave(id, c); setShowColorPicker(false); }}
-                          onClose={() => setShowColorPicker(false)}
-                        />
-                      )}
-                    </AnimatePresence>
-                  </div>
-                  {module.id !== 'ekpp' && (
-                    <button
-                      onClick={() => onToggle(module.id, !isEnabled)}
-                      className={cn(
-                        "p-2 rounded-xl border border-white/10 bg-white/5 transition-all duration-300",
-                        isEnabled 
-                          ? "text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/20" 
-                          : "text-emerald-500 hover:bg-emerald-500/10 hover:border-emerald-500/20"
-                      )}
-                    >
-                      {isEnabled ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
-                    </button>
-                  )}
-                </div>
-              )}
+      <div className="relative z-10 space-y-6">
+        <div className="flex items-start justify-between">
+          <div 
+            className="w-16 h-16 rounded-2xl flex items-center justify-center mb-2 shadow-inner transition-transform duration-500 group-hover:scale-110"
+            style={{ 
+              background: hexToRgba(color, 0.2),
+              color: canAccess ? '#FFFFFF' : 'rgba(255,255,255,0.4)',
+              boxShadow: `inset 0 0 0 1px ${hexToRgba(color, 0.3)}`
+            }}
+          >
+            <div className="drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+              <IconComponent className="w-8 h-8" />
             </div>
           </div>
 
-          <div className="space-y-3">
-            <h3 className="text-xl md:text-2xl font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
-              {module.name}
-            </h3>
-            <p className="text-xs font-medium text-muted-foreground leading-relaxed">
-              {module.description}
-            </p>
+          <div className="flex flex-col items-end gap-2" onClick={e => e.stopPropagation()}>
+            {/* Status Badge */}
+            <div 
+              className={cn(
+                "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all duration-300",
+                isEnabled 
+                  ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400" 
+                  : isPreviewMode 
+                    ? "bg-amber-500/20 border-amber-500/30 text-amber-400"
+                    : "bg-white/5 border-white/10 text-white/40"
+              )}
+            >
+              {isEnabled ? (
+                <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]" /> Aktif</span>
+              ) : isPreviewMode ? (
+                <span className="flex items-center gap-1.5"><LucideIcons.Eye className="w-3 h-3" /> Pratonton</span>
+              ) : (
+                <span className="flex items-center gap-1.5"><LucideIcons.Lock className="w-3 h-3" /> Dikunci</span>
+              )}
+            </div>
+
+            {/* Admin Tools */}
+            {isSuperAdmin && (
+              <div className="flex items-center gap-1.5">
+                <div className="relative">
+                  <button
+                    onClick={() => setShowColorPicker(!showColorPicker)}
+                    className={cn(
+                      "p-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all",
+                      showColorPicker && "bg-white/15 text-white ring-2 ring-white/10"
+                    )}
+                  >
+                    <LucideIcons.Palette className="w-4 h-4" />
+                  </button>
+                  <AnimatePresence>
+                    {showColorPicker && (
+                      <ColorPickerPopover
+                        moduleId={module.id}
+                        moduleName={module.name}
+                        currentColor={color}
+                        onSave={(id, c) => { onColorSave(id, c); setShowColorPicker(false); }}
+                        onClose={() => setShowColorPicker(false)}
+                      />
+                    )}
+                  </AnimatePresence>
+                </div>
+                {module.id !== 'ekpp' && (
+                  <button
+                    onClick={() => onToggle(module.id, !isEnabled)}
+                    className={cn(
+                      "p-2 rounded-xl border border-white/10 bg-white/5 transition-all duration-300",
+                      isEnabled 
+                        ? "text-rose-400 hover:bg-rose-500/20 hover:border-rose-500/30" 
+                        : "text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/30"
+                    )}
+                  >
+                    {isEnabled ? <LucideIcons.ToggleRight className="w-5 h-5" /> : <LucideIcons.ToggleLeft className="w-5 h-5" />}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="relative z-10 mt-8 flex items-center justify-between">
-          <div className={cn(
-            "flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300",
-            canAccess ? "text-foreground group-hover:gap-4" : "text-muted-foreground/30"
-          )}>
-            <span>{canAccess ? "Access Module" : "Coming Soon"}</span>
-            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-          </div>
-          
-          <div 
-            className="text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-lg bg-black/5 dark:bg-white/5 text-muted-foreground/40"
-          >
-            {module.tagline}
-          </div>
+        <div>
+          <h2 className={cn("text-2xl font-black mb-2 transition-colors", canAccess ? "text-white" : "text-white/60")}>
+            {module.name}
+          </h2>
+          <p className="text-white/70 tracking-tight leading-relaxed">
+            {module.description}
+          </p>
+        </div>
+      </div>
+
+      <div className="relative z-10 mt-8 flex items-center justify-between">
+        <div className={cn(
+          "flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300",
+          canAccess ? "text-white group-hover:gap-4" : "text-white/30"
+        )}>
+          <span>{canAccess ? "Akses Modul" : "Bakal Tiba"}</span>
+          <LucideIcons.ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+        </div>
+        
+        <div className="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-lg bg-white/5 text-white/40">
+          {module.tagline}
         </div>
       </div>
     </motion.div>
@@ -312,9 +300,12 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
 // ─────────────────────────────────────────────
 export function PortalPage() {
   const { profile, signOut, isSuperAdmin } = useAuth();
+  const navigate = useNavigate();
   const [settings, setSettings] = useState<ExcoColorSetting[]>([]);
   const [isLoadingSettings, setIsLoadingSettings] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  const isJPPMode = profile?.role === 'JPP' || isSuperAdmin;
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -380,94 +371,85 @@ export function PortalPage() {
   const mainColor = getExcoColor('ekpp', settings);
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 overflow-x-hidden transition-colors duration-500">
+    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-emerald-500/20 overflow-x-hidden transition-colors duration-500 relative flex flex-col">
       
-      {/* Cinematic Background */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <motion.div 
-          animate={{ x: [0, 60, 0], y: [0, -40, 0], scale: [1, 1.1, 1] }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-[10%] -right-[10%] w-[70vw] h-[70vw] rounded-full blur-[120px] opacity-[0.1] dark:opacity-[0.05]" 
-          style={{ background: mainColor }} 
-        />
-        <motion.div 
-          animate={{ x: [0, -80, 0], y: [0, 100, 0], scale: [1, 1.2, 1] }}
-          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-          className="absolute -bottom-[20%] -left-[10%] w-[60vw] h-[60vw] rounded-full blur-[140px] opacity-[0.08] bg-amber-500/10" 
-        />
-        
-        {/* Subtle Grid Pattern */}
-        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" 
-          style={{ 
-            backgroundImage: `radial-gradient(circle at 1px 1px, ${mainColor} 1px, transparent 0)`, 
-            backgroundSize: '40px 40px' 
-          }} 
-        />
+      {/* Keusahawanan Onboarding Style Background */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none fixed">
+        <div className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full mix-blend-screen filter blur-[120px] opacity-20 bg-amber-600 animate-slow-spin" />
+        <div className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full mix-blend-screen filter blur-[100px] opacity-10 bg-teal-600" />
       </div>
 
       {/* Navigation */}
       <nav className={cn(
         "fixed top-0 inset-x-0 z-[100] transition-all duration-700 px-4 md:px-8 py-4 flex items-center justify-between",
         isScrolled 
-          ? "bg-background/60 backdrop-blur-2xl border-b border-white/5 py-3 shadow-2xl" 
+          ? "bg-slate-950/80 backdrop-blur-2xl border-b border-white/5 py-3 shadow-2xl" 
           : "bg-transparent"
       )}>
         <div className="flex items-center gap-4">
           <motion.div 
             whileHover={{ scale: 1.05, rotate: 2 }} 
-            className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-card flex items-center justify-center p-1.5 shadow-2xl border border-white/10"
+            className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-white/5 flex items-center justify-center p-1.5 shadow-2xl border border-white/10 backdrop-blur-xl"
           >
             <img src="/jpp-logo.png" alt="JPP" className="w-full h-full object-contain" />
           </motion.div>
           <div className="flex flex-col">
-            <span className="text-sm md:text-base font-bold tracking-tighter leading-none text-foreground">JPP PORTAL</span>
-            <span className="text-[8px] md:text-[10px] font-medium uppercase tracking-[0.2em] opacity-40 text-foreground">Politeknik Polisas</span>
+            <span className="text-sm md:text-base font-black tracking-tighter leading-none text-white">JPP PORTAL</span>
+            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Politeknik Polisas</span>
           </div>
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
+          {isJPPMode && (
+            <button 
+              onClick={() => navigate('/jpp-admin')}
+              className="hidden lg:flex items-center gap-2 px-4 py-2 hover:bg-white/10 transition-colors rounded-full bg-white/5 border border-white/10 text-white shadow-xl"
+            >
+              <LucideIcons.Crown className="w-3.5 h-3.5 text-amber-500" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Global JPP Dashboard</span>
+            </button>
+          )}
           {isSuperAdmin && (
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-bold uppercase tracking-widest">Admin Control</span>
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400">
+              <LucideIcons.ShieldCheck className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Akses Admin</span>
             </div>
           )}
           
-          <div className="hidden sm:flex items-center gap-3 px-4 py-1 border-x border-white/10 dark:border-white/5">
+          <div className="hidden sm:flex items-center gap-3 px-4 py-1 border-x border-white/10">
             <div className="text-right">
-              <p className="text-xs font-bold leading-none text-foreground">{profile?.full_name?.split(' ').slice(0, 2).join(' ')}</p>
-              <p className="text-[9px] text-muted-foreground font-medium uppercase tracking-tight mt-0.5">{profile?.matric_no}</p>
+              <p className="text-xs font-black leading-none text-white">{profile?.full_name?.split(' ').slice(0, 2).join(' ')}</p>
+              <p className="text-[9px] text-white/50 font-black uppercase tracking-widest mt-0.5">{profile?.matric_no}</p>
             </div>
-            <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-white/5 dark:bg-white/10 border border-white/10 dark:border-white/5 flex items-center justify-center text-primary overflow-hidden shadow-inner">
-              <User className="w-5 h-5 opacity-50" />
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 overflow-hidden shadow-inner">
+              <LucideIcons.User className="w-5 h-5" />
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <ThemeToggle />
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={signOut} 
-              className="rounded-xl h-10 w-10 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-all"
+              className="rounded-xl h-10 w-10 text-white/50 hover:text-white hover:bg-white/10 transition-all border border-transparent hover:border-white/10"
             >
-              <LogOut className="w-4 h-4" />
+              <LucideIcons.LogOut className="w-4 h-4" />
             </Button>
           </div>
         </div>
       </nav>
 
       <main className="relative z-10 pt-32 md:pt-40 pb-20 px-4 md:px-8 max-w-7xl mx-auto">
-        {/* Hero Section */}
+        {/* Title Section */}
         <div className="flex flex-col items-center text-center mb-16 md:mb-24 space-y-6 md:space-y-8">
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-card/40 backdrop-blur-xl border border-white/10 dark:border-white/5 shadow-lg"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 shadow-lg backdrop-blur-md"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
-              V2.0 DIGITAL ECOSYSTEM
+            <LucideIcons.Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-white/50">
+              EKOSISTEM DIGITAL V2.0
             </span>
           </motion.div>
           
@@ -476,16 +458,16 @@ export function PortalPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="space-y-4"
-          >
-            <h1 className="text-4xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[0.95] max-w-4xl mx-auto text-foreground">
-              Welcome back, <br />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-amber-500">
+           ber>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1] max-w-4xl mx-auto text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60">
+              Selamat kembali, <br />
+              <span className="text-emerald-400">
                 {displayName}
               </span>
             </h1>
-            <p className="text-sm md:text-lg text-muted-foreground font-medium max-w-2xl mx-auto leading-relaxed px-4">
-              Integrated leadership technology platform for JPP Polisas. <br className="hidden md:block" />
-              Access all exco modules within a unified, high-performance ecosystem.
+            <p className="text-sm md:text-lg text-white/50 font-medium max-w-2xl mx-auto leading-relaxed px-4">
+              Platform bersepadu untuk pengurusan kelab, perniagaan, dan aktiviti JPP Polisas. <br className="hidden md:block" />
+              Bawa kepimpinan anda ke tahap seterusnya.
             </p>
           </motion.div>
         </div>
@@ -526,24 +508,24 @@ export function PortalPage() {
             transition={{ delay: 1 }}
             className="mt-20 flex flex-wrap justify-center items-center gap-x-12 gap-y-6 opacity-40 hover:opacity-100 transition-opacity duration-500"
           >
-            <AdminStatusIndicator color="bg-emerald-500" label="Production Live" />
-            <AdminStatusIndicator color="bg-amber-500" label="Administrative Preview" />
-            <AdminStatusIndicator color="bg-white/20" label="Under Development" />
+            <AdminStatusIndicator color="bg-emerald-400" label="Sistem Operasi (Live)" />
+            <AdminStatusIndicator color="bg-amber-400" label="Pratonton Pentadbir" />
+            <AdminStatusIndicator color="bg-white/20" label="Dalam Pembangunan" />
           </motion.div>
         )}
       </main>
 
-      <footer className="relative z-10 py-16 px-6 border-t border-white/5 bg-background/30 backdrop-blur-sm">
+      <footer className="relative z-10 py-16 px-6 border-t border-white/10 mt-auto bg-black/20 backdrop-blur-lg">
         <div className="max-w-7xl mx-auto flex flex-col items-center text-center space-y-8">
-          <div className="flex items-center gap-4 opacity-30 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-700">
-            <img src="/jpp-logo.png" alt="JPP" className="h-8" />
-            <div className="h-8 w-px bg-foreground/20" />
-            <div className="flex flex-col text-left text-foreground">
-              <span className="font-bold text-xs tracking-tight">POLISAS DIGITAL</span>
-              <span className="text-[8px] font-medium tracking-widest opacity-60">EST. 2026</span>
+          <div className="flex items-center gap-4 opacity-50 hover:opacity-100 transition-all duration-700">
+            <img src="/jpp-logo.png" alt="JPP" className="h-8 brightness-0 invert" />
+            <div className="h-8 w-px bg-white/20" />
+            <div className="flex flex-col text-left text-white">
+              <span className="font-black text-xs tracking-tight">POLISAS DIGITAL</span>
+              <span className="text-[8px] font-black uppercase tracking-widest opacity-60">EST. 2026</span>
             </div>
           </div>
-          <p className="text-[10px] font-medium text-muted-foreground/40 uppercase tracking-[0.4em] max-w-md mx-auto leading-loose">
+          <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em] max-w-md mx-auto leading-loose">
             &copy; 2026 Jawatankuasa Perwakilan Pelajar <br />
             Politeknik Sultan Haji Ahmad Shah
           </p>
@@ -557,7 +539,7 @@ function AdminStatusIndicator({ color, label }: { color: string, label: string }
   return (
     <div className="flex items-center gap-3">
       <div className={cn("w-2 h-2 rounded-full", color, "shadow-[0_0_10px_rgba(255,255,255,0.2)]")} />
-      <span className="text-[9px] font-bold uppercase tracking-widest text-foreground opacity-60">{label}</span>
+      <span className="text-[9px] font-black uppercase tracking-widest text-white/50">{label}</span>
     </div>
   );
 }

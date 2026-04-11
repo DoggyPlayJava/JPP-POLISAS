@@ -1,0 +1,157 @@
+import { useState, useCallback, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
+import { KeusahawananBusiness, KeusahawananCategory, StudentBusinessMembership } from '@/types';
+import toast from 'react-hot-toast';
+
+export function useBusinessData() {
+  const { user } = useAuth();
+  
+  const [categories, setCategories] = useState<KeusahawananCategory[]>([]);
+  const [businesses, setBusinesses] = useState<KeusahawananBusiness[]>([]);
+  const [myMemberships, setMyMemberships] = useState<StudentBusinessMembership[]>([]);
+  
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchInitialData = useCallback(async () => {
+    if (!user) return;
+    setIsLoading(true);
+    try {
+      // Fetch categories
+      const { data: cats, error: catError } = await supabase
+        .from('keusahawanan_categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+      
+      if (catError) throw catError;
+      setCategories(cats || []);
+
+      // Fetch active/approved businesses to join
+      const { data: bus, error: busError } = await supabase
+        .from('keusahawanan_businesses')
+        .select(`
+          *,
+          category:keusahawanan_categories(*),
+          owner:profiles!keusahawanan_businesses_owner_id_fkey(id, full_name, avatar_url)
+        `)
+        .eq('is_active', true)
+        .eq('status', 'ACTIVE');
+        
+      if (busError) throw busError;
+      setBusinesses(bus || []);
+
+      // Fetch my memberships (which could be pending/active) + if I created a business that is pending
+      const { data: mems, error: memError } = await supabase
+        .from('student_business_memberships')
+        .select(`
+          *,
+          business:keusahawanan_businesses(
+            *,
+            category:keusahawanan_categories(*)
+          )
+        `)
+        .eq('user_id', user.id);
+        
+      if (memError) throw memError;
+      setMyMemberships(mems || []);
+
+    } catch (err: any) {
+      console.error('Bror fetching business data:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchInitialData();
+  }, [fetchInitialData]);
+
+  // Method to create a business
+  const createBusiness = async (name: string, description: string, categoryId: string) => {
+    if (!user) return { error: 'Tiada sesi' };
+    try {
+      // 1. Insert business
+      const { data: businessInfo, error: businessError } = await supabase
+        .from('keusahawanan_businesses')
+        .insert([{
+          name,
+          description,
+          category_id: categoryId,
+          owner_id: user.id,
+          status: 'PENDING_INTERVIEW'
+        }])
+        .select()
+        .single();
+        
+      if (businessError) throw businessError;
+
+      // 2. Insert Membership as OWNER
+      const { error: memError } = await supabase
+        .from('student_business_memberships')
+        .insert([{
+          user_id: user.id,
+          business_id: businessInfo.id,
+          role: 'OWNER',
+          status: 'PENDING'
+        }]);
+        
+      if (memError) throw memError;
+
+      // 3. Trigger Notification
+      await supabase.from('notifications').insert([{
+        user_id: user.id,
+        title: 'Permohonan Perniagaan Dihantar',
+        message: 'Permohonan untuk menubuhkan perniagaan anda telah direkodkan. Sistem / pentadbir akan menetapkan tarikh temuduga.',
+        type: 'SYSTEM',
+        is_read: false
+      }]);
+
+      await fetchInitialData();
+      return { success: true };
+    } catch (err: any) {
+      console.error('Error creating business:', err);
+      return { error: err.message };
+    }
+  };
+
+  // Method to join an existing business
+  const joinBusiness = async (businessId: string) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase
+        .from('student_business_memberships')
+        .insert([{
+          user_id: user.id,
+          business_id: businessId,
+          role: 'MEMBER',
+          status: 'PENDING'
+        }]);
+
+      if (error) {
+        if (error.code === '23505') {
+           throw new Error('Anda sudah membuat permohonan untuk perniagaan ini.');
+        }
+        throw error;
+      };
+
+      toast.success('Permohonan menyertai perniagaan telah dihantar.');
+      await fetchInitialData();
+    } catch (err: any) {
+      console.error('Error joining business:', err);
+      toast.error(err.message || 'Gagal menghantar permohonan.');
+    }
+  };
+
+  return {
+    categories,
+    businesses,
+    myMemberships,
+    isLoading,
+    refresh: fetchInitialData,
+    refreshBusinesses: fetchInitialData,
+    createBusiness,
+    joinBusiness,
+  };
+}
+

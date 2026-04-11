@@ -360,3 +360,125 @@ export const JOINABLE_CATEGORIES = ['UMUM', 'SUKAN', 'Umum', 'Sukan'];
 export const AUTO_ASSIGN_CATEGORIES = ['AKADEMIK', 'Akademik', 'akademik'];
 // Kategori terhad — tidak boleh diapply langsung
 export const RESTRICTED_CATEGORIES  = ['Badan Beruniform', 'BADAN BERUNIFORM'];
+
+// ─── Keusahawanan Business Types ──────────────────────────────────────────────
+
+export type KeusahawananBusinessStatus = 'PENDING_INTERVIEW' | 'ACTIVE' | 'REJECTED';
+export type KeusahawananMembershipRole = 'OWNER' | 'MEMBER';
+export type KeusahawananMembershipStatus = 'PENDING' | 'ACTIVE' | 'REJECTED';
+
+export interface KeusahawananCategory {
+  id: string;
+  name: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface KeusahawananBusiness {
+  id: string;
+  name: string;
+  description: string | null;
+  category_id: string | null;
+  owner_id: string;
+  status: KeusahawananBusinessStatus;
+  interview_date: string | null;
+  logo_url: string | null;
+  is_active: boolean;
+  created_at: string;
+  // Joined
+  category?: KeusahawananCategory;
+  owner?: { id: string; full_name: string; avatar_url?: string };
+}
+
+export interface StudentBusinessMembership {
+  id: string;
+  user_id: string;
+  business_id: string;
+  role: KeusahawananMembershipRole;
+  status: KeusahawananMembershipStatus;
+  joined_at: string;
+  // Joined
+  business?: KeusahawananBusiness;
+  user?: { id: string; full_name: string; avatar_url?: string };
+}
+
+// ─── POS System Types ──────────────────────────────────────────────────────────
+
+export type PosPaymentMethod = 'CASH' | 'QR' | 'TRANSFER';
+export type PosDiscountType  = 'FIXED' | 'PERCENT';
+export type PosTransactionStatus = 'COMPLETED' | 'VOIDED';
+export type PosLogAction =
+  | 'TRANSACTION_CREATE' | 'TRANSACTION_VOID'
+  | 'PRODUCT_ADD' | 'PRODUCT_EDIT' | 'PRODUCT_DELETE' | 'STOCK_EDIT'
+  | 'POS_ASSIGNED' | 'STAFF_APPROVED' | 'STAFF_REMOVED' | 'SETTINGS_UPDATED';
+
+export interface BusinessProduct {
+  id:                    string;
+  business_id:           string;
+  name:                  string;
+  description:           string | null;
+  price:                 number;
+  category:              string;
+  stock_quantity:        number;
+  stock_alert_threshold: number;
+  image_url:             string | null;
+  is_available:          boolean;
+  created_at:            string;
+}
+
+export interface BusinessTransactionItem {
+  product_id:  string;
+  name:        string;
+  qty:         number;
+  unit_price:  number;
+  total_price: number;
+}
+
+export interface BusinessTransaction {
+  id:              string;
+  business_id:     string;
+  invoice_number:  string;
+  items:           BusinessTransactionItem[];
+  subtotal:        number;
+  discount_type:   PosDiscountType | null;
+  discount_amount: number;
+  discount_note:   string | null;
+  total_amount:    number;
+  payment_method:  PosPaymentMethod;
+  received_amount: number | null;
+  change_amount:   number | null;
+  customer_name:   string | null;
+  customer_note:   string | null;
+  served_by:       string | null;
+  status:          PosTransactionStatus;
+  voided_by:       string | null;
+  voided_at:       string | null;
+  created_at:      string;
+  // Joined
+  server?:         { id: string; full_name: string };
+  voider?:         { id: string; full_name: string };
+}
+
+export interface BusinessPosLog {
+  id:             string;
+  business_id:    string;
+  transaction_id: string | null;
+  actor_id:       string | null;
+  actor_name:     string | null;
+  action_type:    PosLogAction;
+  description:    string | null;
+  metadata:       Record<string, any>;
+  created_at:     string;
+}
+
+export interface BusinessPosAssignment {
+  id:          string;
+  business_id: string;
+  user_id:     string;
+  assigned_by: string | null;
+  valid_date:  string;
+  created_at:  string;
+  // Joined
+  user?:       { id: string; full_name: string; avatar_url?: string };
+}
+

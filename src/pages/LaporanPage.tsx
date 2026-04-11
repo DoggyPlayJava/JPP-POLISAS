@@ -126,6 +126,7 @@ export function LaporanPage() {
         file_url: url,
         file_name: `${reportType} - ${file.name}`,
         status: 'Menunggu',
+        is_archived: false,
       });
       if (dbError) throw dbError;
       toast.success('Berjaya dihantar!');
@@ -155,6 +156,7 @@ export function LaporanPage() {
         .from('club_activities')
         .select('id, title, description, status, start_date, end_date, location, budget, tindakan, image_urls')
         .eq('club_id', effectiveClubId).eq('status', 'selesai')
+        .eq('is_archived', false)
         .gte('start_date', start).lte('start_date', end)
         .order('start_date', { ascending: true });
 
@@ -165,6 +167,7 @@ export function LaporanPage() {
         .select('id, nama_program, deskripsi, tarikh_mula, tarikh_tamat, location, budget, tindakan, image_urls')
         .eq('club_id', effectiveClubId)
         .eq('status', 'COMPLETED')
+        .eq('is_archived', false)
         .gte('tarikh_tamat', start)
         .lte('tarikh_tamat', end)
         .order('tarikh_mula', { ascending: true });
@@ -181,6 +184,7 @@ export function LaporanPage() {
             .select('id, nama_program, deskripsi, tarikh_mula, tarikh_tamat, location, budget, tindakan, image_urls')
             .in('user_id', memberIds)
             .eq('status', 'COMPLETED')
+            .eq('is_archived', false)
             .gte('tarikh_tamat', start)
             .lte('tarikh_tamat', end)
             .order('tarikh_mula', { ascending: true });
@@ -245,14 +249,17 @@ export function LaporanPage() {
       const url = await uploadPdfToDrive(pdfFile, effectiveClubId as any, fileName);
       setProgress(90);
 
-      await supabase.from('club_reports').insert({
+      const { error: dbError } = await supabase.from('club_reports').insert({
         club_id: effectiveClubId,
         submitted_by: user.id,
         report_type: 'Laporan Aktiviti',
         file_url: url,
         file_name: `Laporan Bulanan - ${monthLabel}.pdf`,
         status: 'Menunggu',
+        is_archived: false
       });
+
+      if (dbError) throw dbError;
 
       toast.success('Laporan berjaya dijana!');
       loadReports();

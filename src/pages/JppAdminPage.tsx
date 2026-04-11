@@ -18,7 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
-import { ALL_CLUBS, ROLE_LABELS, ROLE_COLORS } from '@/types';
+import { ALL_CLUBS, ROLE_LABELS, ROLE_COLORS, JPP_MT_POSITIONS } from '@/types';
 import { format } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -31,7 +31,50 @@ const ADD_CLUB_CATEGORIES = ['Akademik', 'Umum', 'Sukan', 'Badan Beruniform'];
 const ADD_CLUB_COLORS = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6'];
 
 export function JppAdminPage() {
-    const { isSuperAdmin } = useAuth();
+    const { isSuperAdmin, profile, hasKppAccess } = useAuth();
+    
+    // ── RBAC Variables ─────────────────────────────────────────────────────
+    const isJppRole = profile?.role === 'JPP';
+    const isMTUser  = !!profile?.jpp_position && JPP_MT_POSITIONS.includes(profile.jpp_position as any);
+    const isKppExco = profile?.jpp_unit === 'KPP'; // Exco JPP unit KPP
+
+    // ── Tab List (role-based) ───────────────────────────────────────────────
+    let availableTabs = [];
+    if (isSuperAdmin) {
+        // HEP / Developer — akses penuh sistem
+        availableTabs = [
+            { id: 'dashboard',    label: 'Dashboard MT',   icon: LayoutGrid   },
+            { id: 'mt',          label: 'Analisis MT',    icon: Crown        },
+            { id: 'kpp',         label: 'Dashboard KPP',  icon: Activity     },
+            { id: 'aktiviti',    label: 'Semua Aktiviti', icon: CalendarRange },
+            { id: 'laporan',     label: 'Semua Laporan',  icon: FileText     },
+            { id: 'keahlian',    label: 'Keahlian',       icon: Users        },
+            { id: 'ai',          label: 'Nexus Hub',      icon: Sparkles     },
+            { id: 'users',       label: 'Pelajar',        icon: Users        },
+            { id: 'jpp',         label: 'Ahli JPP',       icon: Crown        },
+            { id: 'management',  label: 'Tetapan Sistem', icon: Globe        },
+            { id: 'logs',        label: 'Audit Log',      icon: FileWarning  },
+            { id: 'takwim',      label: 'Takwim Global',  icon: CalendarDays },
+        ];
+    } else if (hasKppAccess) {
+        // Exco KPP atau MT yang oversee KPP — akses pemantauan kelab penuh
+        availableTabs = [
+            { id: 'kpp',         label: 'Dashboard KPP',  icon: LayoutGrid   },
+            { id: 'aktiviti',    label: 'Semua Aktiviti', icon: CalendarRange },
+            { id: 'laporan',     label: 'Semua Laporan',  icon: FileText     },
+            { id: 'keahlian',    label: 'Keahlian',       icon: Users        },
+            { id: 'kelab',       label: 'Senarai Kelab',  icon: Building2    },
+            { id: 'logs',        label: 'Log Audit',      icon: FileWarning  },
+        ];
+    } else {
+        // JPP biasa atau MT yang bukan oversee KPP — akses terhad
+        availableTabs = [
+            { id: 'users',       label: 'Pangkalan Data Pelajar', icon: Users        },
+            { id: 'takwim',      label: 'Takwim Global',          icon: CalendarDays },
+        ];
+    }
+
+
     const [loading, setLoading] = useState(true);
     const [isCleaning, setIsCleaning] = useState(false);
     const [globalLogs, setGlobalLogs] = useState<any[]>([]);
@@ -43,8 +86,24 @@ export function JppAdminPage() {
     const [pendingLeaderRequests, setPendingLeaderRequests] = useState<any[]>([]);
     const [showPendingLeadersDialog, setShowPendingLeadersDialog] = useState(false);
     
-    // TABS
-    const [activeTab, setActiveTab] = useState('dashboard');
+    // KPP Activity Popout
+    const [showAktivitiPopout, setShowAktivitiPopout] = useState(false);
+    const [aktivitiFilter, setAktivitiFilter] = useState<string>('ALL');
+    const [aktivitiData, setAktivitiData] = useState<any[]>([]);
+    const [aktivitiLoading, setAktivitiLoading] = useState(false);
+
+    // KPP Monitoring States (tabs baharu: aktiviti, laporan, keahlian, kelab)
+    const [kppClubFilter, setKppClubFilter] = useState<string>('ALL');
+    const [allActivities, setAllActivities] = useState<any[]>([]);
+    const [allReports, setAllReports] = useState<any[]>([]);
+    const [allMemberships, setAllMemberships] = useState<any[]>([]);
+    const [kppLoading, setKppLoading] = useState(false);
+    const [reportSearch, setReportSearch] = useState('');
+    const [memberSearch, setMemberSearch] = useState('');
+    
+    // TABS — initialize to first available tab for the role
+    const [activeTab, setActiveTab] = useState(() => availableTabs[0]?.id ?? 'dashboard');
+
 
     const [stats, setStats] = useState({
         totalUsers: 0, totalReports: 0, totalActivities: 0,
@@ -617,19 +676,95 @@ export function JppAdminPage() {
         }
     };
 
-    useEffect(() => { if (isSuperAdmin) fetchAdminData(); }, [isSuperAdmin]);
+    // Fetch for both superadmin and JPP users
+    useEffect(() => { 
+        const isJpp = profile?.role === 'JPP';
+        if (isSuperAdmin || isJpp) fetchAdminData(); 
+    }, [isSuperAdmin, profile?.role]);
 
-    if (!isSuperAdmin) {
+    // Fetch KPP monitoring data (aktiviti, laporan, keahlian rentas-kelab)
+    const fetchKppData = async () => {
+        setKppLoading(true);
+        try {
+            const clubEq = kppClubFilter !== 'ALL' ? kppClubFilter : undefined;
+            const [acts, reps, mems] = await Promise.all([
+                // Aktiviti
+                (() => {
+                    let q = supabase.from('club_activities')
+                        .select('id, title, status, start_date, end_date, club_id, created_at')
+                        .eq('is_archived', false)
+                        .order('start_date', { ascending: false })
+                        .limit(100);
+                    if (clubEq) q = q.eq('club_id', clubEq);
+                    return q;
+                })(),
+                // Laporan
+                (() => {
+                    let q = supabase.from('club_reports')
+                        .select('id, title, type, status, club_id, created_at, file_name')
+                        .eq('is_archived', false)
+                        .order('created_at', { ascending: false })
+                        .limit(100);
+                    if (clubEq) q = q.eq('club_id', clubEq);
+                    return q;
+                })(),
+                // Keahlian menunggu
+                (() => {
+                    let q = supabase.from('student_club_memberships')
+                        .select('id, user_id, club_id, role, account_status, created_at, profiles(full_name, email, matric_no)')
+                        .eq('account_status', 'PENDING')
+                        .order('created_at', { ascending: false })
+                        .limit(100);
+                    if (clubEq) q = q.eq('club_id', clubEq);
+                    return q;
+                })(),
+            ]);
+            setAllActivities(acts.data || []);
+            setAllReports(reps.data || []);
+            setAllMemberships(mems.data || []);
+        } catch (e) {
+            console.error('KPP fetch error:', e);
+        } finally {
+            setKppLoading(false);
+        }
+    };
+
+    // Trigger KPP data fetch when hasKppAccess is determined or filter changes
+    useEffect(() => {
+        if (hasKppAccess || isSuperAdmin) fetchKppData();
+    }, [hasKppAccess, isSuperAdmin, kppClubFilter]);
+
+    // Fetch aktiviti data for KPP popout (legacy)
+    const fetchAktivitiPopout = async () => {
+        setAktivitiLoading(true);
+        try {
+            let q = supabase.from('club_activities').select('*, club_id').eq('is_archived', false).order('start_date', { ascending: false }).limit(60);
+            if (aktivitiFilter !== 'ALL') q = q.eq('club_id', aktivitiFilter);
+            const { data } = await q;
+            setAktivitiData(data || []);
+        } finally {
+            setAktivitiLoading(false);
+        }
+    };
+
+    // Gate: only JPP (any unit/position) or SuperAdmin allowed
+    const isJppMember = profile?.role === 'JPP' || profile?.role === 'SUPER_ADMIN_JPP';
+    
+    // Tunjuk spinner buat MT user semasa fetch assignment selesai (kini dari AuthContext)
+    // (Jika AuthContext sedang loading, ia sudah ditangani di peringkat App.tsx)
+    
+    if (!isSuperAdmin && !hasKppAccess && !isJppRole) {
         return (
             <div className="page-container flex flex-col items-center justify-center h-[70vh] gap-5 text-center">
                 <div className="w-20 h-20 rounded-[2rem] bg-card shadow-xl flex items-center justify-center border border-border">
                     <Lock className="w-8 h-8 text-muted-foreground/30" />
                 </div>
                 <h2 className="text-2xl font-bold tracking-tight text-foreground">Akses Terhad</h2>
-                <p className="text-muted-foreground text-sm max-w-xs">Hanya pentadbir utama HEP dibenarkan mengakses sistem pusat.</p>
+                <p className="text-muted-foreground text-sm max-w-xs">Halaman ini hanya untuk ahli JPP dan pentadbir utama.</p>
             </div>
         );
     }
+
 
     const storagePercentage = Math.min((stats.storageMB / stats.storageLimit) * 100, 100);
 
@@ -643,6 +778,61 @@ export function JppAdminPage() {
 
     return (
         <>
+            {/* ── KPP AKTIVITI POPOUT DIALOG ── */}
+            <Dialog open={showAktivitiPopout} onOpenChange={(open) => { setShowAktivitiPopout(open); if (open) fetchAktivitiPopout(); }}>
+                <DialogContent className="rounded-[2.5rem] max-w-3xl border-none shadow-2xl p-0 overflow-hidden max-h-[85vh] flex flex-col">
+                    <div className="bg-indigo-600 p-6 text-white flex items-center justify-between">
+                        <div>
+                            <h2 className="text-lg font-black tracking-tight">Semakan Aktiviti Kelab</h2>
+                            <p className="text-indigo-100 text-[10px] uppercase tracking-widest font-bold mt-1">Aktiviti rentas semua kelab & persatuan</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Select value={aktivitiFilter} onValueChange={(v) => { setAktivitiFilter(v); setTimeout(fetchAktivitiPopout, 50); }}>
+                                <SelectTrigger className="h-9 rounded-xl bg-white/20 border-white/20 text-white text-xs font-bold w-40">
+                                    <SelectValue placeholder="Tapis Kelab" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl max-h-60">
+                                    <SelectItem value="ALL" className="font-bold">Semua Kelab</SelectItem>
+                                    {ALL_CLUBS.map(c => (
+                                        <SelectItem key={c.id} value={c.id} className="font-medium">{c.shortName}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <div className="flex-1 overflow-y-auto divide-y divide-border bg-muted/10">
+                        {aktivitiLoading ? (
+                            <div className="flex items-center justify-center py-16"><RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" /></div>
+                        ) : aktivitiData.length === 0 ? (
+                            <div className="text-center py-16 text-muted-foreground italic text-sm">Tiada aktiviti dijumpai.</div>
+                        ) : aktivitiData.map(a => {
+                            const club = ALL_CLUBS.find(c => c.id === a.club_id);
+                            const statusColors: Record<string, string> = {
+                                'aktif': 'bg-emerald-500/20 text-emerald-600',
+                                'selesai': 'bg-blue-500/20 text-blue-600',
+                                'belum_mula': 'bg-amber-500/20 text-amber-600',
+                            };
+                            return (
+                                <div key={a.id} className="px-6 py-4 flex items-center gap-4 hover:bg-muted/30 transition-colors">
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-xs shadow-md" style={{ backgroundColor: club?.color || '#6366f1' }}>
+                                        {club?.shortName?.slice(0,2) || 'K'}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-bold text-sm text-foreground truncate">{a.name || 'Aktiviti'}</p>
+                                        <p className="text-[10px] text-muted-foreground font-medium">{club?.name || a.club_id} • {a.start_date ? format(new Date(a.start_date), 'd MMM yyyy') : '—'}</p>
+                                    </div>
+                                    <Badge className={cn('text-[9px] font-black border-none uppercase tracking-widest', statusColors[a.status] || 'bg-muted text-muted-foreground')}>
+                                        {a.status || '—'}
+                                    </Badge>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <div className="p-4 border-t border-border bg-card flex justify-end">
+                        <Button variant="outline" onClick={() => setShowAktivitiPopout(false)} className="rounded-xl font-black text-[10px] uppercase tracking-widest">Tutup</Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
             {/* ── MODALS ── */}
             <Dialog open={showBulkAccept} onOpenChange={setShowBulkAccept}>
                 {/* ... (Bulk Accept Modal Content - unchanged) ... */}
@@ -856,83 +1046,76 @@ export function JppAdminPage() {
 
 
             {/* ── MAIN PAGE ── */}
-            <div className="min-h-screen bg-background pb-20">
+            <div className="min-h-screen bg-background pb-24">
                 {/* Top Nav */}
-                <div className="sticky top-0 z-50 bg-background/70 backdrop-blur-2xl border-b border-border px-6 py-4">
-                    <div className="max-w-7xl mx-auto flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
-                                <ShieldCheck className="text-white w-6 h-6" />
+                <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-2xl border-b border-border/40 px-4 sm:px-6 py-3">
+                    <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
+                                <ShieldCheck className="text-white w-5 h-5" />
                             </div>
-                            <div>
-                                <h2 className="text-sm font-bold text-foreground leading-none">Pusat Kawalan</h2>
-                                <p className="text-[10px] font-medium text-muted-foreground mt-1 uppercase tracking-wider">HEP e-KPP v4.0</p>
+                            <div className="min-w-0">
+                                <h2 className="text-sm font-black text-foreground leading-none truncate">Global JPP Dashboard</h2>
+                                <p className="text-[9px] font-bold text-muted-foreground mt-0.5 uppercase tracking-wider hidden sm:block">HEP e-KPP v4.0</p>
                             </div>
                         </div>
-                        <Button onClick={fetchAdminData} variant="ghost"
-                            className="rounded-full bg-muted hover:bg-muted/80 text-muted-foreground h-10 px-4 gap-2 text-xs font-bold">
-                            <RefreshCw className={cn('w-3.5 h-3.5', loading && 'animate-spin')} /> Segarkan
+                        <Button onClick={fetchAdminData} variant="ghost" size="icon"
+                            className="rounded-xl bg-muted hover:bg-muted/80 text-muted-foreground h-9 w-9 shrink-0">
+                            <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
                         </Button>
                     </div>
                 </div>
 
-                <div className="max-w-7xl mx-auto px-6 mt-10 space-y-10">
-                    <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-2">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-6 space-y-8">
+                    <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-2">
                         <div className="space-y-1">
-                            <h1 className="text-4xl font-black tracking-tight text-foreground leading-none">Pusat Kawalan Sistem</h1>
-                            <p className="text-muted-foreground font-medium font-mono text-[10px] uppercase tracking-widest bg-muted px-2 py-0.5 rounded-md w-fit">Infrastructure & Global AI Core v4.0</p>
+                            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-foreground leading-none">Pusat Kawalan Sistem</h1>
+                            <p className="text-muted-foreground font-medium font-mono text-[9px] sm:text-[10px] uppercase tracking-widest bg-muted px-2 py-0.5 rounded-md w-fit">Infrastructure & Global AI Core v4.0</p>
                         </div>
                     </header>
 
                     {/* --- NAVIGATION TABS --- */}
-                    <div className="sticky top-[72px] z-40 bg-background/80 backdrop-blur-md py-4 border-b border-border/10">
-                        <div className="flex items-center gap-2 p-1.5 bg-muted/30 rounded-2xl border border-border/50 overflow-x-auto no-scrollbar scroll-smooth w-full sm:w-fit">
-                            {[
-                                { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid },
-                                { id: 'ai', label: 'Nexus Hub', icon: Sparkles },
-                                { id: 'users', label: 'Pelajar', icon: Users },
-                                { id: 'jpp', label: 'Ahli JPP', icon: Crown },
-                                { id: 'logs', label: 'Audit Log', icon: FileWarning },
-                                { id: 'settings', label: 'Tetapan', icon: Globe },
-                            ].map((tab) => (
+                    <div className="sticky top-[56px] z-40 bg-background/90 backdrop-blur-md py-3 -mx-4 sm:-mx-6 px-4 sm:px-6 border-b border-border/20">
+                        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth">
+                            {availableTabs.map((tab) => (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={cn(
-                                        "flex items-center gap-2 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest whitespace-nowrap transition-all duration-300",
+                                        "flex items-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest whitespace-nowrap transition-all duration-200 shrink-0",
                                         activeTab === tab.id
-                                            ? "bg-background text-primary shadow-xl shadow-primary/5 ring-1 ring-border/50"
-                                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                                            ? "bg-primary/10 text-primary ring-1 ring-primary/20"
+                                            : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                                     )}
                                 >
-                                    <tab.icon className={cn("w-3.5 h-3.5", activeTab === tab.id ? "text-primary" : "text-muted-foreground/40")} />
-                                    {tab.label}
+                                    <tab.icon className={cn("w-3.5 h-3.5 shrink-0", activeTab === tab.id ? "text-primary" : "text-muted-foreground/50")} />
+                                    <span className="hidden sm:inline">{tab.label}</span>
                                 </button>
                             ))}
                         </div>
                     </div>
 
                     {/* TAB CONTENT */}
-                    <div className="mt-8">
+                    <div className="mt-5 pb-10">
                         {/* ── TAB: DASHBOARD ── */}
                         {activeTab === 'dashboard' && (
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 {/* Stats Cards */}
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                     {[
                                         { label: 'Kelab', val: ALL_CLUBS.length, color: 'bg-blue-500', icon: LayoutGrid },
                                         { label: 'Aktiviti', val: stats.totalActivities, color: 'bg-emerald-500', icon: Activity },
                                         { label: 'Laporan', val: stats.totalReports, color: 'bg-indigo-500', icon: FileWarning },
                                         { label: 'Menunggu', val: stats.pendingUsers, color: 'bg-orange-500', icon: Users, alert: stats.pendingUsers > 0, onClick: () => setShowPendingLeadersDialog(true) },
                                     ].map((s, i) => (
-                                        <Card key={i} onClick={s.onClick} className={cn("border-none shadow-sm rounded-[2rem] bg-card overflow-hidden", s.onClick && "cursor-pointer hover:shadow-xl hover:shadow-orange-500/10 transition-all active:scale-95")}>
-                                            <CardContent className="p-6">
-                                                <div className={cn('w-10 h-10 rounded-2xl flex items-center justify-center mb-4 text-white shadow-lg', s.color)}>
-                                                    <s.icon className="w-5 h-5" />
+                                        <Card key={i} onClick={s.onClick} className={cn("border-none shadow-sm rounded-3xl bg-card overflow-hidden", s.onClick && "cursor-pointer hover:shadow-xl hover:shadow-orange-500/10 transition-all active:scale-95")}>
+                                            <CardContent className="p-4 sm:p-6">
+                                                <div className={cn('w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl flex items-center justify-center mb-3 text-white shadow-md', s.color)}>
+                                                    <s.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                                                 </div>
-                                                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{s.label}</p>
+                                                <p className="text-[9px] sm:text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{s.label}</p>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-3xl font-black text-foreground">{loading ? '...' : s.val}</span>
+                                                    <span className="text-2xl sm:text-3xl font-black text-foreground">{loading ? '…' : s.val}</span>
                                                     {s.alert && <div className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />}
                                                 </div>
                                             </CardContent>
@@ -941,47 +1124,47 @@ export function JppAdminPage() {
                                 </div>
 
                                 {/* Charts */}
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                    <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-8 border border-border/50">
-                                        <div className="flex items-center justify-between mb-8">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                                    <Card className="border-none shadow-sm rounded-3xl bg-card p-5 sm:p-8 border border-border/50">
+                                        <div className="flex items-center justify-between mb-5 sm:mb-8">
                                             <div>
-                                                <h3 className="font-bold text-foreground">Kelab Paling Aktif</h3>
-                                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Bilangan Aktiviti Keseluruhan</p>
+                                                <h3 className="font-bold text-sm sm:text-base text-foreground">Kelab Paling Aktif</h3>
+                                                <p className="text-[9px] sm:text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Bilangan Aktiviti</p>
                                             </div>
-                                            <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500"><Activity className="w-5 h-5" /></div>
+                                            <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500"><Activity className="w-4 h-4 sm:w-5 sm:h-5" /></div>
                                         </div>
-                                        <div className="h-[280px] w-full">
+                                        <div className="h-[220px] sm:h-[280px] w-full">
                                             <ResponsiveContainer width="100%" height="100%">
-                                                <BarChart data={chartData.activeClubs} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                                <BarChart data={chartData.activeClubs} margin={{ top: 10, right: 5, left: -25, bottom: 0 }}>
                                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }} dy={10} />
-                                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: '#cbd5e1' }} />
-                                                    <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px' }} />
-                                                    <Bar dataKey="count" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={32} />
+                                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 700, fill: '#64748b' }} dy={8} />
+                                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 700, fill: '#cbd5e1' }} />
+                                                    <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '10px' }} />
+                                                    <Bar dataKey="count" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={24} />
                                                 </BarChart>
                                             </ResponsiveContainer>
                                         </div>
                                     </Card>
 
-                                    <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-8 border border-border/50">
-                                        <div className="flex items-center justify-between mb-8">
+                                    <Card className="border-none shadow-sm rounded-3xl bg-card p-5 sm:p-8 border border-border/50">
+                                        <div className="flex items-center justify-between mb-5 sm:mb-8">
                                             <div>
-                                                <h3 className="font-bold text-foreground">Prestasi Laporan</h3>
-                                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Status Laporan Global</p>
+                                                <h3 className="font-bold text-sm sm:text-base text-foreground">Prestasi Laporan</h3>
+                                                <p className="text-[9px] sm:text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Status Laporan Global</p>
                                             </div>
-                                            <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500"><FileWarning className="w-5 h-5" /></div>
+                                            <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500"><FileWarning className="w-4 h-4 sm:w-5 sm:h-5" /></div>
                                         </div>
-                                        <div className="h-[280px] w-full flex items-center">
+                                        <div className="h-[220px] sm:h-[280px] w-full flex items-center">
                                             <ResponsiveContainer width="100%" height="100%">
                                                 <PieChart>
-                                                    <Pie data={chartData.reportStats} innerRadius={70} outerRadius={95} paddingAngle={10} dataKey="value" stroke="none">
+                                                    <Pie data={chartData.reportStats} innerRadius={55} outerRadius={75} paddingAngle={8} dataKey="value" stroke="none">
                                                         {chartData.reportStats.map((entry, index) => (
                                                             <Cell key={`cell-${index}`} fill={entry.color} fillOpacity={0.85} />
                                                         ))}
                                                     </Pie>
                                                     <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} />
                                                     <Legend verticalAlign="middle" align="right" layout="vertical" iconType="circle"
-                                                        formatter={(value) => <span className="text-[11px] font-black text-muted-foreground uppercase tracking-widest ml-2">{value}</span>} />
+                                                        formatter={(value) => <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">{value}</span>} />
                                                 </PieChart>
                                             </ResponsiveContainer>
                                         </div>
@@ -989,7 +1172,7 @@ export function JppAdminPage() {
                                 </div>
                                 
                                 {/* Storage */}
-                                <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-8 w-full md:w-1/2">
+                                <Card className="border-none shadow-sm rounded-3xl bg-card p-5 sm:p-8 w-full">
                                     <div className="flex items-center gap-3 mb-8">
                                         <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-600"><Server className="w-5 h-5" /></div>
                                         <h3 className="font-bold text-foreground">Storan Data Berkembang</h3>
@@ -1008,6 +1191,385 @@ export function JppAdminPage() {
                                             </div>
                                             <Progress value={storagePercentage} className="h-2.5 bg-muted rounded-full [&>div]:bg-blue-600" />
                                         </div>
+                                    </div>
+                                </Card>
+                            </div>
+                        )}
+
+                        {/* ── TAB: DASHBOARD KPP ── */}
+                        {activeTab === 'kpp' && (
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                {/* KPP Stats Cards */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <Card className="border-none shadow-sm rounded-[2rem] bg-card overflow-hidden">
+                                        <CardContent className="p-6">
+                                            <div className="w-10 h-10 rounded-2xl flex items-center justify-center mb-4 text-white shadow-lg bg-orange-500">
+                                                <Users className="w-5 h-5" />
+                                            </div>
+                                            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Akaun Tertunggak: Kepimpinan</p>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-3xl font-black text-foreground">
+                                                    {pendingLeaderRequests.filter(u => ['CLUB_PRESIDENT', 'CLUB_ADVISOR', 'PRESIDEN', 'PENASIHAT'].includes(u.role)).length}
+                                                </span>
+                                                <Button size="sm" onClick={() => setShowPendingLeadersDialog(true)} className="rounded-xl px-4 text-[10px] uppercase font-black">
+                                                    Urus Kepimpinan
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+
+                                    <Card className="border-none shadow-sm rounded-[2rem] bg-card overflow-hidden">
+                                        <CardContent className="p-6">
+                                            <div className="w-10 h-10 rounded-2xl flex items-center justify-center mb-4 text-white shadow-lg bg-blue-500">
+                                                <Users className="w-5 h-5" />
+                                            </div>
+                                            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Akaun Tertunggak: Ahli Biasa</p>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-3xl font-black text-foreground">
+                                                    {pendingLeaderRequests.filter(u => !['CLUB_PRESIDENT', 'CLUB_ADVISOR', 'PRESIDEN', 'PENASIHAT'].includes(u.role)).length}
+                                                </span>
+                                                <Button size="sm" onClick={() => setShowPendingLeadersDialog(true)} className="rounded-xl px-4 text-[10px] uppercase font-black bg-blue-500 hover:bg-blue-600">
+                                                    Urus Ahli Biasa
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+
+                                {/* Popout Aktiviti Access */}
+                                <Card className="border-none shadow-sm rounded-[2.5rem] bg-gradient-to-br from-indigo-500/10 to-transparent p-8 border border-indigo-500/20">
+                                    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="p-3 bg-indigo-500 text-white rounded-2xl">
+                                                <Activity className="w-6 h-6" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-black text-lg text-foreground">Semakan Pantas Aktiviti Kelab</h3>
+                                                <p className="text-xs text-muted-foreground font-medium mt-1">Pantau aktiviti yang dianjurkan oleh setiap kelab secara terus tanpa perlu membuka pengurusan kelab tersebut.</p>
+                                            </div>
+                                        </div>
+                                        <Button 
+                                            onClick={() => setShowAktivitiPopout(true)}
+                                            className="h-12 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-xs"
+                                        >
+                                            Papar Aktiviti
+                                        </Button>
+                                    </div>
+                                </Card>
+                            </div>
+                        )}
+
+                        {/* ── SHARED: CLUB FILTER SELECTOR (KPP Tabs) ─────────────── */}
+                        {(activeTab === 'aktiviti' || activeTab === 'laporan' || activeTab === 'keahlian' || activeTab === 'kelab') && (
+                            <div className="flex flex-wrap items-center gap-3 bg-card border border-border/50 rounded-2xl px-4 py-3 mb-2">
+                                <span className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Tapis Kelab:</span>
+                                <div className="flex flex-wrap gap-2 flex-1">
+                                    <button
+                                        onClick={() => setKppClubFilter('ALL')}
+                                        className={cn('px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all',
+                                            kppClubFilter === 'ALL' ? 'bg-indigo-600 text-white shadow-md' : 'bg-muted text-muted-foreground hover:bg-muted/80')}
+                                    >
+                                        Semua Kelab
+                                    </button>
+                                    {ALL_CLUBS.slice(0, 12).map(c => (
+                                        <button key={c.id}
+                                            onClick={() => setKppClubFilter(c.id)}
+                                            className={cn('px-3 py-1.5 rounded-xl text-[11px] font-black transition-all',
+                                                kppClubFilter === c.id ? 'text-white shadow-md' : 'bg-muted text-muted-foreground hover:bg-muted/80')}
+                                            style={kppClubFilter === c.id ? { backgroundColor: c.color || '#6366f1' } : {}}
+                                        >
+                                            {c.shortName}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── TAB: SEMUA AKTIVITI ── */}
+                        {activeTab === 'aktiviti' && (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="rounded-[2rem] bg-gradient-to-br from-indigo-600 to-blue-700 p-7 text-white relative overflow-hidden shadow-xl">
+                                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+                                    <div className="relative z-10">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-200 mb-1">Pemantauan Rentas-Kelab</p>
+                                        <h2 className="text-2xl font-black">Semua Aktiviti Kelab</h2>
+                                        <p className="text-indigo-100/70 text-xs mt-1">{allActivities.length} aktiviti {kppClubFilter !== 'ALL' ? `— ${ALL_CLUBS.find(c=>c.id===kppClubFilter)?.name || ''}` : '— semua kelab'}</p>
+                                    </div>
+                                    <CalendarRange className="absolute bottom-4 right-8 w-20 h-20 text-white/10" />
+                                </div>
+                                {kppLoading ? (
+                                    <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"/></div>
+                                ) : allActivities.length === 0 ? (
+                                    <div className="text-center py-16 text-muted-foreground text-sm">Tiada aktiviti ditemui.</div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {allActivities.map(a => {
+                                            const club = ALL_CLUBS.find(c => c.id === a.club_id);
+                                            const statusColor: Record<string, string> = { aktif: 'bg-emerald-100 text-emerald-700', perancangan: 'bg-blue-100 text-blue-700', selesai: 'bg-slate-100 text-slate-600', ditangguh: 'bg-orange-100 text-orange-700' };
+                                            return (
+                                                <div key={a.id} className="flex items-center gap-4 bg-card border border-border/40 rounded-2xl px-4 py-3 hover:border-indigo-300 transition-all">
+                                                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: club?.color || '#6366f1' }} />
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-semibold text-sm text-foreground truncate">{a.title}</p>
+                                                        <p className="text-[11px] text-muted-foreground">{club?.shortName || '—'} · {a.start_date ? new Date(a.start_date).toLocaleDateString('ms-MY') : 'Tiada tarikh'}</p>
+                                                    </div>
+                                                    <span className={cn('text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-xl flex-shrink-0', statusColor[a.status] || 'bg-slate-100 text-slate-600')}>{a.status}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* ── TAB: SEMUA LAPORAN ── */}
+                        {activeTab === 'laporan' && (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="rounded-[2rem] bg-gradient-to-br from-violet-600 to-purple-700 p-7 text-white relative overflow-hidden shadow-xl">
+                                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+                                    <div className="relative z-10">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-violet-200 mb-1">Semakan Laporan</p>
+                                        <h2 className="text-2xl font-black">Semua Laporan Kelab</h2>
+                                        <p className="text-violet-100/70 text-xs mt-1">{allReports.length} laporan aktif</p>
+                                    </div>
+                                    <FileText className="absolute bottom-4 right-8 w-20 h-20 text-white/10" />
+                                </div>
+                                <div className="relative">
+                                    <input
+                                        value={reportSearch} onChange={e => setReportSearch(e.target.value)}
+                                        placeholder="Cari laporan..."
+                                        className="w-full bg-card border border-border/50 rounded-2xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-violet-500/30 outline-none"
+                                    />
+                                </div>
+                                {kppLoading ? (
+                                    <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"/></div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {allReports
+                                            .filter(r => !reportSearch || r.title?.toLowerCase().includes(reportSearch.toLowerCase()))
+                                            .map(r => {
+                                                const club = ALL_CLUBS.find(c => c.id === r.club_id);
+                                                const stColors: Record<string, string> = { Menunggu: 'bg-yellow-100 text-yellow-700', 'Dalam Semakan': 'bg-blue-100 text-blue-700', Diluluskan: 'bg-emerald-100 text-emerald-700', Ditolak: 'bg-red-100 text-red-700' };
+                                                return (
+                                                    <div key={r.id} className="flex items-center gap-4 bg-card border border-border/40 rounded-2xl px-4 py-3 hover:border-violet-300 transition-all">
+                                                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: club?.color || '#7c3aed' }} />
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-semibold text-sm text-foreground truncate">{r.title}</p>
+                                                            <p className="text-[11px] text-muted-foreground">{club?.shortName || '—'} · {r.type} · {new Date(r.created_at).toLocaleDateString('ms-MY')}</p>
+                                                        </div>
+                                                        <span className={cn('text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-xl flex-shrink-0', stColors[r.status] || 'bg-slate-100 text-slate-600')}>{r.status}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        {allReports.filter(r => !reportSearch || r.title?.toLowerCase().includes(reportSearch.toLowerCase())).length === 0 && (
+                                            <div className="text-center py-16 text-muted-foreground text-sm">Tiada laporan ditemui.</div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* ── TAB: KEAHLIAN (MENUNGGU) ── */}
+                        {activeTab === 'keahlian' && (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="rounded-[2rem] bg-gradient-to-br from-orange-500 to-amber-600 p-7 text-white relative overflow-hidden shadow-xl">
+                                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+                                    <div className="relative z-10">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-100 mb-1">Permohonan Keahlian</p>
+                                        <h2 className="text-2xl font-black">Keahlian Menunggu Kelulusan</h2>
+                                        <p className="text-orange-100/70 text-xs mt-1">{allMemberships.length} permohonan tertunggak</p>
+                                    </div>
+                                    <Users className="absolute bottom-4 right-8 w-20 h-20 text-white/10" />
+                                </div>
+                                <div className="relative">
+                                    <input
+                                        value={memberSearch} onChange={e => setMemberSearch(e.target.value)}
+                                        placeholder="Cari nama / matrik..."
+                                        className="w-full bg-card border border-border/50 rounded-2xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500/30 outline-none"
+                                    />
+                                </div>
+                                {kppLoading ? (
+                                    <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"/></div>
+                                ) : allMemberships.length === 0 ? (
+                                    <div className="text-center py-16 text-muted-foreground text-sm">✅ Tiada permohonan tertunggak.</div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {allMemberships
+                                            .filter(m => {
+                                                const p = m.profiles as any;
+                                                if (!memberSearch) return true;
+                                                return p?.full_name?.toLowerCase().includes(memberSearch.toLowerCase()) || p?.matric_no?.toLowerCase().includes(memberSearch.toLowerCase());
+                                            })
+                                            .map(m => {
+                                                const p = m.profiles as any;
+                                                const club = ALL_CLUBS.find(c => c.id === m.club_id);
+                                                return (
+                                                    <div key={m.id} className="flex items-center gap-4 bg-card border border-border/40 rounded-2xl px-4 py-3 hover:border-orange-300 transition-all">
+                                                        <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 font-black text-sm flex-shrink-0">
+                                                            {p?.full_name?.[0] || '?'}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-semibold text-sm text-foreground truncate">{p?.full_name || m.user_id}</p>
+                                                            <p className="text-[11px] text-muted-foreground">{p?.matric_no || p?.email} · {club?.shortName || '—'}</p>
+                                                        </div>
+                                                        <span className="text-[10px] font-black uppercase bg-orange-100 text-orange-700 px-2.5 py-1 rounded-xl flex-shrink-0">{m.role}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* ── TAB: SENARAI KELAB ── */}
+                        {activeTab === 'kelab' && (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="rounded-[2rem] bg-gradient-to-br from-teal-600 to-cyan-700 p-7 text-white relative overflow-hidden shadow-xl">
+                                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+                                    <div className="relative z-10">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-200 mb-1">Direktori</p>
+                                        <h2 className="text-2xl font-black">Senarai Kelab & Persatuan</h2>
+                                        <p className="text-teal-100/70 text-xs mt-1">{ALL_CLUBS.length} kelab berdaftar dalam sistem</p>
+                                    </div>
+                                    <Building2 className="absolute bottom-4 right-8 w-20 h-20 text-white/10" />
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {ALL_CLUBS.map(c => (
+                                        <div key={c.id} className="bg-card border border-border/40 rounded-2xl p-4 hover:border-teal-300 hover:shadow-sm transition-all">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm flex-shrink-0" style={{ backgroundColor: c.color || '#0d9488' }}>
+                                                    {c.shortName?.[0] || '?'}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-bold text-sm text-foreground truncate">{c.name}</p>
+                                                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{c.shortName}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <span className="text-[10px] font-black bg-teal-50 text-teal-700 px-2 py-0.5 rounded-lg">{c.category}</span>
+                                                <span className="text-[10px] text-muted-foreground ml-auto">
+                                                    {allActivities.filter(a => a.club_id === c.id).length} aktiviti
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── TAB: DASHBOARD MT ── */}
+                        {activeTab === 'mt' && (
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                {/* MT Overview Header */}
+                                <div className="rounded-[2.5rem] bg-gradient-to-br from-purple-700 via-purple-600 to-violet-700 p-10 text-white relative overflow-hidden shadow-2xl">
+                                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
+                                    <div className="relative z-10">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-200 mb-2">Laporan Makro</p>
+                                        <h2 className="text-3xl font-black tracking-tight">Analisis Tahap MT</h2>
+                                        <p className="text-purple-100/70 text-sm mt-2">Paparan terhad: Majlis Tertinggi & SUPER_ADMIN_JPP sahaja.</p>
+                                    </div>
+                                    <Crown className="absolute bottom-4 right-8 w-24 h-24 text-white/10" />
+                                </div>
+
+                                {/* MT Stat Cards */}
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    {[
+                                        { label: 'Jumlah Pelajar', val: stats.totalUsers, color: 'bg-violet-500', icon: Users },
+                                        { label: 'Jumlah Aktiviti', val: stats.totalActivities, color: 'bg-indigo-500', icon: Activity },
+                                        { label: 'Laporan Semasa', val: stats.totalReports, color: 'bg-blue-500', icon: FileWarning },
+                                        { label: 'Akaun Menunggu', val: stats.pendingUsers, color: 'bg-orange-500', icon: Clock, alert: stats.pendingUsers > 0 },
+                                    ].map((s, i) => (
+                                        <Card key={i} className="border-none shadow-sm rounded-[2rem] bg-card overflow-hidden">
+                                            <CardContent className="p-6">
+                                                <div className={cn('w-10 h-10 rounded-2xl flex items-center justify-center mb-4 text-white shadow-lg', s.color)}>
+                                                    <s.icon className="w-5 h-5" />
+                                                </div>
+                                                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{s.label}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-3xl font-black text-foreground">{loading ? '...' : s.val}</span>
+                                                    {s.alert && <div className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+
+                                {/* Activity By Club Chart */}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-8 border border-border/50">
+                                        <div className="flex items-center justify-between mb-6">
+                                            <div>
+                                                <h3 className="font-bold text-foreground">Kelab Paling Aktif</h3>
+                                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Bilangan Aktiviti</p>
+                                            </div>
+                                            <div className="p-2 bg-violet-500/10 rounded-xl text-violet-500"><Activity className="w-5 h-5" /></div>
+                                        </div>
+                                        <div className="h-[220px] w-full">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <BarChart data={chartData.activeClubs} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }} dy={10} />
+                                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: '#cbd5e1' }} />
+                                                    <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '1rem', border: 'none', padding: '12px' }} />
+                                                    <Bar dataKey="count" fill="#7c3aed" radius={[6, 6, 0, 0]} barSize={28} />
+                                                </BarChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </Card>
+
+                                    <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-8 border border-border/50">
+                                        <div className="flex items-center justify-between mb-6">
+                                            <div>
+                                                <h3 className="font-bold text-foreground">Status Laporan Global</h3>
+                                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Keseluruhan Laporan</p>
+                                            </div>
+                                            <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500"><FileWarning className="w-5 h-5" /></div>
+                                        </div>
+                                        <div className="h-[220px] w-full flex items-center">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <PieChart>
+                                                    <Pie data={chartData.reportStats} innerRadius={60} outerRadius={80} paddingAngle={8} dataKey="value" stroke="none">
+                                                        {chartData.reportStats.map((entry, index) => (
+                                                            <Cell key={`cell-${index}`} fill={entry.color} fillOpacity={0.85} />
+                                                        ))}
+                                                    </Pie>
+                                                    <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none' }} />
+                                                    <Legend verticalAlign="middle" align="right" layout="vertical" iconType="circle"
+                                                        formatter={(value) => <span className="text-[11px] font-black text-muted-foreground uppercase tracking-widest ml-2">{value}</span>} />
+                                                </PieChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </Card>
+                                </div>
+
+                                {/* JPP MT Members quick view */}
+                                <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-8">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="p-3 bg-purple-500/10 rounded-2xl text-purple-600"><Crown className="w-5 h-5" /></div>
+                                        <div>
+                                            <h3 className="font-bold text-foreground">Ahli Majlis Tertinggi (MT)</h3>
+                                            <p className="text-xs text-muted-foreground mt-0.5">Senarai ahli MT JPP aktif dalam sistem.</p>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                        {allUsers
+                                            .filter(u => JPP_MT_POSITIONS.includes(u.jpp_position))
+                                            .map(u => (
+                                                <div key={u.id} className="flex items-center gap-3 p-3 rounded-2xl bg-muted/30 border border-border/40">
+                                                    <Avatar className="h-9 w-9 rounded-xl">
+                                                        <AvatarImage src={u.avatar_url} />
+                                                        <AvatarFallback className="bg-purple-500/10 text-purple-600 font-black text-xs rounded-xl">{u.full_name?.[0] || '?'}</AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="min-w-0">
+                                                        <p className="font-bold text-xs text-foreground truncate">{u.full_name || '—'}</p>
+                                                        <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-black truncate">{u.jpp_position || 'MT'}</p>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        }
+                                        {allUsers.filter(u => JPP_MT_POSITIONS.includes(u.jpp_position)).length === 0 && (
+                                            <p className="col-span-3 text-sm text-muted-foreground italic text-center py-6">Tiada ahli MT dikesan dalam sistem buat masa ini.</p>
+                                        )}
                                     </div>
                                 </Card>
                             </div>
@@ -1297,7 +1859,7 @@ export function JppAdminPage() {
                         {activeTab === 'users' && (
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 {/* Tier Requests (PRO Applications) */}
-                                {tierRequests.length > 0 && (
+                                {(isMTUser || isSuperAdmin) && tierRequests.length > 0 && (
                                     <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-8">
                                         <div className="flex items-center gap-3 mb-6 border-b border-border pb-4">
                                             <div className="p-3 bg-indigo-500/10 rounded-2xl text-indigo-500">
@@ -1402,7 +1964,7 @@ export function JppAdminPage() {
                                                     <th className="px-4 py-3 rounded-l-xl">Nama / Emel</th>
                                                     <th className="px-4 py-3">Tier Langganan</th>
                                                     <th className="px-4 py-3">Baki Token</th>
-                                                    <th className="px-4 py-3 rounded-r-xl w-32 text-center">Tindakan</th>
+                                                    {(isMTUser || isSuperAdmin) && <th className="px-4 py-3 rounded-r-xl w-32 text-center">Tindakan</th>}
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -1437,58 +1999,60 @@ export function JppAdminPage() {
                                                         <td className="px-4 py-4 font-black">
                                                             {user.ai_token_balance || 0} <span className="text-[10px] text-muted-foreground font-medium">Tk</span>
                                                         </td>
-                                                        <td className="px-4 py-4 text-center">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                {user.role !== 'SUPER_ADMIN_JPP' && (
-                                                                    <Button 
-                                                                        onClick={async () => {
-                                                                            if(confirm(user.role === 'JPP' ? `Turunkan ${user.full_name || 'pengguna'} dari JPP ke AHLI biasa?` : `Lantik ${user.full_name || 'pengguna'} sebagai JPP?`)) {
-                                                                                await supabase.from('profiles').update({ role: user.role === 'JPP' ? 'AHLI' : 'JPP' }).eq('id', user.id);
-                                                                                toast.success(`Peranan telah dikemaskini.`);
-                                                                                fetchAdminData();
-                                                                            }
-                                                                        }}
-                                                                        size="sm" 
-                                                                        variant={user.role === 'JPP' ? "outline" : "default"}
-                                                                        className={cn("h-8 rounded-lg text-[10px] uppercase font-black", 
-                                                                            user.role === 'JPP' 
-                                                                                ? "border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700" 
-                                                                                : "bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20"
-                                                                        )}
-                                                                    >
-                                                                        {user.role === 'JPP' ? 'Buang JPP' : 'Lantik JPP'}
-                                                                    </Button>
-                                                                )}
-                                                                {user.subscription_tier?.toLowerCase() !== 'pro' ? (
-                                                                    <Button 
-                                                                        onClick={async () => {
-                                                                            if(confirm(`Naik taraf ${user.full_name || 'pengguna'} ke PRO?`)) {
-                                                                                await supabase.rpc('update_user_ai_tier', { target_user_id: user.id, new_tier: 'pro' });
-                                                                                fetchAdminData();
-                                                                            }
-                                                                        }}
-                                                                        size="sm" 
-                                                                        className="h-8 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] uppercase font-black"
-                                                                    >
-                                                                        Buat PRO
-                                                                    </Button>
-                                                                ) : (
-                                                                    <Button 
-                                                                        onClick={async () => {
-                                                                            if(confirm(`Turun taraf ${user.full_name || 'pengguna'} ke FREE?`)) {
-                                                                                await supabase.rpc('update_user_ai_tier', { target_user_id: user.id, new_tier: 'free' });
-                                                                                fetchAdminData();
-                                                                            }
-                                                                        }}
-                                                                        size="sm" 
-                                                                        variant="outline"
-                                                                        className="h-8 rounded-lg text-[10px] uppercase font-black border-slate-300 hover:bg-slate-100 text-slate-600"
-                                                                    >
-                                                                        Tarik PRO
-                                                                    </Button>
-                                                                )}
-                                                            </div>
-                                                        </td>
+                                                        {(isMTUser || isSuperAdmin) && (
+                                                            <td className="px-4 py-4 text-center">
+                                                                <div className="flex items-center justify-center gap-2">
+                                                                    {user.role !== 'SUPER_ADMIN_JPP' && (
+                                                                        <Button 
+                                                                            onClick={async () => {
+                                                                                if(confirm(user.role === 'JPP' ? `Turunkan ${user.full_name || 'pengguna'} dari JPP ke AHLI biasa?` : `Lantik ${user.full_name || 'pengguna'} sebagai JPP?`)) {
+                                                                                    await supabase.from('profiles').update({ role: user.role === 'JPP' ? 'AHLI' : 'JPP' }).eq('id', user.id);
+                                                                                    toast.success(`Peranan telah dikemaskini.`);
+                                                                                    fetchAdminData();
+                                                                                }
+                                                                            }}
+                                                                            size="sm" 
+                                                                            variant={user.role === 'JPP' ? "outline" : "default"}
+                                                                            className={cn("h-8 rounded-lg text-[10px] uppercase font-black", 
+                                                                                user.role === 'JPP' 
+                                                                                    ? "border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700" 
+                                                                                    : "bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20"
+                                                                            )}
+                                                                        >
+                                                                            {user.role === 'JPP' ? 'Buang JPP' : 'Lantik JPP'}
+                                                                        </Button>
+                                                                    )}
+                                                                    {user.subscription_tier?.toLowerCase() !== 'pro' ? (
+                                                                        <Button 
+                                                                            onClick={async () => {
+                                                                                if(confirm(`Naik taraf ${user.full_name || 'pengguna'} ke PRO?`)) {
+                                                                                    await supabase.rpc('update_user_ai_tier', { target_user_id: user.id, new_tier: 'pro' });
+                                                                                    fetchAdminData();
+                                                                                }
+                                                                            }}
+                                                                            size="sm" 
+                                                                            className="h-8 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] uppercase font-black"
+                                                                        >
+                                                                            Buat PRO
+                                                                        </Button>
+                                                                    ) : (
+                                                                        <Button 
+                                                                            onClick={async () => {
+                                                                                if(confirm(`Turun taraf ${user.full_name || 'pengguna'} ke FREE?`)) {
+                                                                                    await supabase.rpc('update_user_ai_tier', { target_user_id: user.id, new_tier: 'free' });
+                                                                                    fetchAdminData();
+                                                                                }
+                                                                            }}
+                                                                            size="sm" 
+                                                                            variant="outline"
+                                                                            className="h-8 rounded-lg text-[10px] uppercase font-black border-slate-300 hover:bg-slate-100 text-slate-600"
+                                                                        >
+                                                                            Tarik PRO
+                                                                        </Button>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        )}
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -1902,6 +2466,22 @@ export function JppAdminPage() {
 
                         {/* ── TAB: AHLI JPP HIERARCHY ── */}
                         {activeTab === 'jpp' && <JppMemberPanel allUsers={allUsers} onRefresh={fetchAdminData} />}
+
+                        {/* ── TAB: TAKWIM GLOBAL ── */}
+                        {activeTab === 'takwim' && (
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <Card className="border-none shadow-sm rounded-[2.5rem] bg-card p-12 text-center border border-border/50">
+                                    <CalendarDays className="w-16 h-16 text-orange-500 mx-auto mb-6 opacity-80" />
+                                    <h3 className="text-2xl font-black text-foreground">Takwim Pusat JPP</h3>
+                                    <p className="text-sm text-muted-foreground mt-2 max-w-lg mx-auto">
+                                        Modul kalendar global untuk memantau semua aktiviti merentas pelbagai bahagian dan kelab akan dibangunkan dalam fasa seterusnya.
+                                    </p>
+                                    <Button className="mt-8 rounded-xl bg-orange-500 hover:bg-orange-600 font-black tracking-widest uppercase text-[10px]">
+                                        Modul Dalam Pembinaan
+                                    </Button>
+                                </Card>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -1914,7 +2494,7 @@ export function JppAdminPage() {
 // ═══════════════════════════════════════════════════════════════════
 
 import {
-    JPP_POSITION_LABELS, JPP_MT_POSITIONS,
+    JPP_POSITION_LABELS,
     JPP_EXCO_POSITIONS, type JppPosition, type JppExcoUnit,
 } from '@/types';
 import { useJppExcoUnits } from '@/hooks/useJppExcoUnits';

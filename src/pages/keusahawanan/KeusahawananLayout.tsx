@@ -7,24 +7,25 @@ import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn, getContrastText, hexToRgba } from '@/lib/utils';
-
 import { Navigate } from 'react-router-dom';
 import {
   LayoutDashboard, CalendarDays, Lightbulb,
   Award, FileText, LogOut, ChevronLeft, LayoutGrid, Menu, X, Store,
+  ShoppingCart, Package, BarChart3, History, Settings2,
+  ChevronDown, Building2, ShieldCheck,
 } from 'lucide-react';
-
+import {
+  BusinessSwitcherProvider,
+  useBusinessSwitcher,
+} from '@/contexts/BusinessSwitcherContext';
 
 const MODULE_ID = 'keusahawanan';
 const DEFAULT_COLOR = '#1B5E20';
 
-// Sidebar sentiasa gelap — tinted dengan warna tema pada kadar sangat rendah
-// Sama konsep dengan e-KPP sidebar yang sentiasa gelap-maroon tanpa ikut light mode
 function getSidebarBg(hex: string): { top: string; bottom: string } {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
-  // 8% kecerahan asal → hampir hitam dengan nada warna yang sangat subtle
   const f1 = 0.07;
   const f2 = 0.12;
   return {
@@ -34,23 +35,122 @@ function getSidebarBg(hex: string): { top: string; bottom: string } {
 }
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Papan Pemuka',  href: '/keusahawanan/dashboard', jppOnly: false },
-  { icon: CalendarDays,    label: 'Program',        href: '/keusahawanan/program',   jppOnly: false },
-  { icon: Store,           label: 'Gerai JPP',      href: '/keusahawanan/gerai',     jppOnly: true  },
-  { icon: Lightbulb,       label: 'Cadangan Idea',  href: '/keusahawanan/idea',      jppOnly: false },
-  { icon: Award,           label: 'Geran & Hadiah', href: '/keusahawanan/geran',     jppOnly: false },
-  { icon: FileText,        label: 'Laporan',         href: '/keusahawanan/laporan',   jppOnly: false },
-];
+  { icon: LayoutDashboard, label: 'Papan Pemuka',     href: '/keusahawanan/dashboard',      jppOnly: false, ownerOnly: false },
+  { icon: CalendarDays,    label: 'Program',           href: '/keusahawanan/program',         jppOnly: false, ownerOnly: false },
+  { icon: Store,           label: 'Gerai JPP',         href: '/keusahawanan/gerai',           jppOnly: true,  ownerOnly: false },
+  // POS System
+  { icon: ShoppingCart,    label: 'Kedai POS',         href: '/keusahawanan/pos',             jppOnly: false, ownerOnly: false, posSection: true },
+  { icon: Package,         label: 'Katalog Produk',    href: '/keusahawanan/pos/products',    jppOnly: false, ownerOnly: false },
+  { icon: BarChart3,       label: 'Statistik',         href: '/keusahawanan/pos/stats',       jppOnly: false, ownerOnly: false },
+  { icon: History,         label: 'Sejarah Transaksi', href: '/keusahawanan/pos/history',     jppOnly: false, ownerOnly: false },
+  { icon: Settings2,       label: 'Urus Perniagaan',   href: '/keusahawanan/urus-perniagaan', jppOnly: false, ownerOnly: true  },
+  // Lain-lain
+  { icon: Lightbulb,       label: 'Cadangan Idea',     href: '/keusahawanan/idea',            jppOnly: false, ownerOnly: false },
+  { icon: Award,           label: 'Geran & Hadiah',    href: '/keusahawanan/geran',           jppOnly: false, ownerOnly: false },
+  { icon: FileText,        label: 'Laporan',           href: '/keusahawanan/laporan',         jppOnly: false, ownerOnly: false },
+] as const;
 
 
-// ── Sidebar ───────────────────────────────────────────────────────────────
+// ── Business Switcher Dropdown (in sidebar) ───────────────────────────────────
+
+function BusinessSwitcherDropdown({ color }: { color: string }) {
+  const { selectedBusiness, allBusinesses, canSwitch, setSelectedBusinessId, isLoading } = useBusinessSwitcher();
+  const [open, setOpen] = useState(false);
+
+  if (!canSwitch || allBusinesses.length <= 1) return null;
+
+  return (
+    <div className="px-3 pb-3 relative">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all hover:bg-white/5 border border-white/[0.07]"
+      >
+        {/* Logo / Icon */}
+        <div className="w-8 h-8 rounded-xl flex-shrink-0 overflow-hidden bg-white/10 flex items-center justify-center">
+          {selectedBusiness?.logo_url
+            ? <img src={selectedBusiness.logo_url} className="w-full h-full object-cover" alt="logo" />
+            : <Building2 className="w-4 h-4 text-white/40" />
+          }
+        </div>
+        <div className="flex-1 min-w-0 text-left">
+          <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Perniagaan</p>
+          <p className="text-xs font-black text-white/80 truncate">{selectedBusiness?.name ?? '—'}</p>
+        </div>
+        <ChevronDown className={`w-3.5 h-3.5 text-white/30 transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ duration: 0.15 }}
+            className="absolute left-3 right-3 top-full z-50 mt-1 rounded-2xl overflow-hidden shadow-2xl border border-white/10"
+            style={{ background: getSidebarBg(color).bottom }}
+          >
+            <div className="p-1.5 max-h-64 overflow-y-auto scrollbar-hide space-y-0.5">
+              {allBusinesses.map(biz => {
+                const isSelected = biz.id === selectedBusiness?.id;
+                return (
+                  <button
+                    key={biz.id}
+                    onClick={() => { setSelectedBusinessId(biz.id); setOpen(false); }}
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-all"
+                    style={isSelected
+                      ? { background: hexToRgba(color, 0.2), color: '#fff' }
+                      : { color: 'rgba(255,255,255,0.55)' }
+                    }
+                  >
+                    <div className="w-7 h-7 rounded-lg flex-shrink-0 overflow-hidden bg-white/10 flex items-center justify-center">
+                      {biz.logo_url
+                        ? <img src={biz.logo_url} className="w-full h-full object-cover" alt="logo" />
+                        : <Building2 className="w-3.5 h-3.5 opacity-50" />
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-black truncate">{biz.name}</p>
+                      <p className="text-[9px] opacity-40 truncate">{(biz as any).category?.name ?? ''}</p>
+                    </div>
+                    {isSelected && <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: color }} />}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+
 function KeusahawananSidebar({ color }: { color: string }) {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, isSuperAdmin } = useAuth();
+  const { canSwitch, isKeusahawananAdmin, selectedBusiness } = useBusinessSwitcher();
   const navigate = useNavigate();
   const bg = getSidebarBg(color);
 
+  // For ownerOnly items: admin can always see; students only if they own the selected biz
+  const isOwner = isKeusahawananAdmin || selectedBusiness?.owner_id === user?.id;
+  const isJpp = profile?.role === 'SUPER_ADMIN_JPP' || profile?.role === 'JPP';
+
   const displayName = profile?.full_name || user?.email?.split('@')[0] || '?';
   const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+
+  // Role badge for footer
+  const roleBadge = isSuperAdmin
+    ? 'Super Admin'
+    : canSwitch
+    ? 'Unit Keusahawanan'
+    : 'Perniagaan';
+
+  const visibleItems = navItems.filter(item => {
+    if (item.jppOnly  && !isJpp && !isSuperAdmin)  return false;
+    if (item.ownerOnly && !isOwner)                 return false;
+    return true;
+  });
 
   return (
     <aside
@@ -82,19 +182,35 @@ function KeusahawananSidebar({ color }: { color: string }) {
         </div>
       </div>
 
-
+      {/* ── Business Switcher (admin only) ── */}
+      {canSwitch && (
+        <div className="pt-3" style={{ borderBottom: `1px solid ${hexToRgba(color, 0.1)}` }}>
+          <p className="px-6 pb-1.5 text-[9px] font-black uppercase tracking-[0.3em] text-white/20 flex items-center gap-1.5">
+            <ShieldCheck className="w-3 h-3" /> Pantau Perniagaan
+          </p>
+          <BusinessSwitcherDropdown color={color} />
+        </div>
+      )}
 
       {/* Nav */}
-      <nav className="flex-1 py-6 px-3 space-y-0.5 overflow-y-auto scrollbar-hide">
+      <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto scrollbar-hide">
         <p className="px-3 mb-3 text-[10px] font-black uppercase tracking-[0.25em] text-white/30">Menu Utama</p>
-        {navItems.map((item, idx) => (
+        {visibleItems.map((item, idx) => (
           <React.Fragment key={item.href}>
-            {/* Garis pemisah sebelum item JPP-only */}
-            {item.jppOnly && idx > 0 && (
+            {/* POS section separator */}
+            {item.posSection && idx > 0 && (
+              <>
+                <div className="my-3 mx-3 h-px" style={{ background: hexToRgba(color, 0.12) }} />
+                <p className="px-3 mb-1.5 text-[9px] font-black uppercase tracking-[0.25em] text-white/20">Sistem POS</p>
+              </>
+            )}
+            {/* Separator before JPP-only group */}
+            {item.jppOnly && idx > 0 && !visibleItems[idx - 1]?.jppOnly && (
               <div className="my-2 mx-3 h-px" style={{ background: hexToRgba(color, 0.12) }} />
             )}
             <NavLink
               to={item.href}
+              end={item.href === '/keusahawanan/pos'}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200"
               style={({ isActive }) => ({
                 background: isActive ? hexToRgba(color, 0.18) : 'transparent',
@@ -111,11 +227,16 @@ function KeusahawananSidebar({ color }: { color: string }) {
                     />
                   </div>
                   <span className="text-xs font-bold tracking-tight flex-1">{item.label}</span>
-                  {/* Badge JPP Only */}
                   {item.jppOnly && !isActive && (
                     <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md"
                       style={{ background: hexToRgba(color, 0.2), color }}>
                       JPP
+                    </span>
+                  )}
+                  {item.ownerOnly && !isActive && (
+                    <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md"
+                      style={{ background: hexToRgba(color, 0.15), color: 'rgba(255,255,255,0.4)' }}>
+                      Owner
                     </span>
                   )}
                   {isActive && (
@@ -126,7 +247,6 @@ function KeusahawananSidebar({ color }: { color: string }) {
             </NavLink>
           </React.Fragment>
         ))}
-
       </nav>
 
       {/* Footer */}
@@ -134,7 +254,6 @@ function KeusahawananSidebar({ color }: { color: string }) {
         <div className="flex items-center gap-3 px-2 py-2">
           <Avatar className="h-8 w-8 rounded-xl ring-2 ring-white/10 shadow-md">
             <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
-            {/* Avatar fallback — latar solid warna tema, teks dikira kontras */}
             <AvatarFallback
               className="font-black text-xs"
               style={{ background: color, color: getContrastText(color) }}
@@ -144,7 +263,7 @@ function KeusahawananSidebar({ color }: { color: string }) {
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-black truncate leading-tight text-white/85">{displayName}</p>
-            <p className="text-[10px] font-black uppercase tracking-widest truncate text-white/40">e-Keusahawanan</p>
+            <p className="text-[10px] font-black uppercase tracking-widest truncate text-white/40">{roleBadge}</p>
           </div>
         </div>
         <Button variant="ghost" onClick={signOut}
@@ -157,9 +276,10 @@ function KeusahawananSidebar({ color }: { color: string }) {
   );
 }
 
-// ── Layout ────────────────────────────────────────────────────────────────
+// ── Layout ────────────────────────────────────────────────────────────────────
+
 export function KeusahawananLayout() {
-  const { isSuperAdmin, isLoading } = useAuth();
+  const { isSuperAdmin, isLoading, profile } = useAuth();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [themeColor, setThemeColor] = useState(DEFAULT_COLOR);
@@ -177,7 +297,6 @@ export function KeusahawananLayout() {
 
   if (isLoading || moduleEnabled === null) {
     return (
-      // Loading screen pakai bg-background (respects dark/light mode)
       <div className="h-screen w-screen flex items-center justify-center bg-background">
         <div className="relative w-10 h-10">
           <div className="absolute inset-0 border-4 rounded-full border-border" />
@@ -192,8 +311,39 @@ export function KeusahawananLayout() {
   }
 
   return (
+    <BusinessSwitcherProvider>
+      <LayoutInner
+        themeColor={themeColor}
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+        moduleEnabled={moduleEnabled}
+        isSuperAdmin={isSuperAdmin}
+      />
+    </BusinessSwitcherProvider>
+  );
+}
+
+// ── Inner layout (inside BusinessSwitcherProvider) ─────────────────────────────
+
+function LayoutInner({
+  themeColor, isSidebarOpen, setIsSidebarOpen, moduleEnabled, isSuperAdmin,
+}: {
+  themeColor: string;
+  isSidebarOpen: boolean;
+  setIsSidebarOpen: (v: boolean) => void;
+  moduleEnabled: boolean | null;
+  isSuperAdmin: boolean;
+}) {
+  const location = useLocation();
+  const { isLoading: isSwitcherLoading, canSwitch, allBusinesses } = useBusinessSwitcher();
+
+  // Redirect to onboarding if: not an admin AND no business found
+  if (!isSuperAdmin && !canSwitch && !isSwitcherLoading && allBusinesses.length === 0) {
+    return <Navigate to="/keusahawanan/onboarding" replace />;
+  }
+
+  return (
     <ExcoThemeProvider color={themeColor} moduleId={MODULE_ID}>
-      {/* Wrapper TIDAK ada warna tema — pakai bg-background sama seperti e-KPP */}
       <div className="flex h-screen overflow-hidden bg-background">
 
         {/* Backdrop mobile */}
@@ -205,35 +355,34 @@ export function KeusahawananLayout() {
           )}
         </AnimatePresence>
 
-        {/* Sidebar — gelap, bertint warna tema */}
+        {/* Sidebar */}
         <aside className={cn(
           'fixed inset-y-0 left-0 z-[110] w-64 transform transition-transform duration-300 ease-in-out',
           'md:relative md:translate-x-0 md:flex-shrink-0',
           isSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
         )}>
           <div className="md:hidden absolute right-4 top-5">
-            <button onClick={() => setIsSidebarOpen(false)}
-              className="p-2 rounded-full text-white/40 hover:text-white/70">
+            <button onClick={() => setIsSidebarOpen(false)} className="p-2 rounded-full text-white/40 hover:text-white/70">
               <X className="w-5 h-5" />
             </button>
           </div>
           <KeusahawananSidebar color={themeColor} />
         </aside>
 
-        {/* Main content — bg-background, SAMA seperti e-KPP */}
+        {/* Main content */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
           {/* Mobile header */}
           <div className="md:hidden flex items-center justify-between px-6 py-4 border-b border-border/10 bg-background/60 backdrop-blur-2xl sticky top-0 z-50">
             <div className="flex items-center gap-4">
-              <button 
-                onClick={() => setIsSidebarOpen(true)} 
+              <button
+                onClick={() => setIsSidebarOpen(true)}
                 className="p-2 -ml-2 rounded-xl transition-all active:scale-95 bg-muted/30 text-foreground"
               >
                 <Menu className="w-5 h-5" />
               </button>
               <div className="flex items-center gap-2.5">
-                <div 
+                <div
                   className="w-8 h-8 rounded-xl flex items-center justify-center text-base shadow-lg"
                   style={{ background: hexToRgba(themeColor, 0.1), border: `1px solid ${hexToRgba(themeColor, 0.2)}` }}
                 >
@@ -253,15 +402,17 @@ export function KeusahawananLayout() {
             )}
           </div>
 
-          {/* Pages — bg-background (dark/light mode aware) */}
-          <main className="flex-1 overflow-y-auto bg-background scrollbar-hide pb-20 md:pb-0">
+          {/* Pages */}
+          {/* PENTING: Jangan guna y/x transforms di sini — ia akan merosakkan
+              position:fixed modal di semua sub-pages (stacking context bug) */}
+          <main className="flex-1 overflow-y-auto bg-background scrollbar-hide pb-20 md:pb-0 relative">
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
                 className="h-full"
               >
                 <Outlet />

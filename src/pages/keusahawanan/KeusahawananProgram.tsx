@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useExcoTheme } from '@/contexts/ExcoThemeContext';
 import { hexToRgba } from '@/lib/utils';
@@ -175,51 +176,54 @@ export function KeusahawananProgram() {
       </div>
 
       {/* Modal Butiran */}
-      <AnimatePresence>
-        {selectedProgram && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
-              onClick={() => setSelectedProgram(null)} />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-lg mx-auto rounded-3xl p-6 sm:p-8 bg-card border border-border shadow-2xl max-h-[90vh] overflow-y-auto scrollbar-hide"
-            >
-              <button onClick={() => setSelectedProgram(null)}
-                className="absolute top-5 right-5 p-1.5 rounded-lg bg-muted text-muted-foreground hover:text-foreground transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-              <div className="text-4xl mb-4">{selectedProgram.icon}</div>
-              <div className="mb-2">
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase"
-                  style={{ background: statusMap[selectedProgram.status].chipBg, color: statusMap[selectedProgram.status].chipColor }}>
-                  {statusMap[selectedProgram.status].label}
-                </span>
-              </div>
-              <h2 className="text-lg font-black mb-3 text-foreground">{selectedProgram.title}</h2>
-              <p className="text-sm mb-5 leading-relaxed text-muted-foreground">{selectedProgram.description}</p>
-              <div className="space-y-2 text-sm font-medium text-muted-foreground">
-                <p className="flex items-center gap-2"><CalendarDays className="w-4 h-4" style={{ color }} />{selectedProgram.date}</p>
-                <p className="flex items-center gap-2"><MapPin className="w-4 h-4" style={{ color }} />{selectedProgram.venue}</p>
-                <p className="flex items-center gap-2"><Users className="w-4 h-4" style={{ color }} />{selectedProgram.participants} / {selectedProgram.maxParticipants} peserta</p>
-              </div>
-              {/* Divider bertema warna */}
-              <div className="h-px my-5" style={{ background: hexToRgba(color, 0.2) }} />
-              <div className="flex gap-3">
-                <Button className="flex-1 font-black text-[11px] uppercase tracking-wider rounded-xl text-white" style={{ background: color }}>
-                  Kemaskini Program
-                </Button>
-                <Button variant="outline" className="font-black text-[11px] uppercase rounded-xl">
-                  Laporan
-                </Button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      {/* Modal Butiran */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {selectedProgram && (
+            <div className="fixed inset-0 z-[9999]">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                onClick={() => setSelectedProgram(null)} />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="absolute inset-x-4 top-1/2 -translate-y-1/2 max-w-lg mx-auto rounded-3xl p-6 sm:p-8 bg-card border border-border shadow-2xl max-h-[90vh] overflow-y-auto scrollbar-hide"
+              >
+                <button onClick={() => setSelectedProgram(null)}
+                  className="absolute top-5 right-5 p-1.5 rounded-lg bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+                <div className="text-4xl mb-4">{selectedProgram.icon}</div>
+                <div className="mb-2">
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase"
+                    style={{ background: statusMap[selectedProgram.status].chipBg, color: statusMap[selectedProgram.status].chipColor }}>
+                    {statusMap[selectedProgram.status].label}
+                  </span>
+                </div>
+                <h2 className="text-lg font-black mb-3 text-foreground">{selectedProgram.title}</h2>
+                <p className="text-sm mb-5 leading-relaxed text-muted-foreground">{selectedProgram.description}</p>
+                <div className="space-y-2 text-sm font-medium text-muted-foreground">
+                  <p className="flex items-center gap-2"><CalendarDays className="w-4 h-4" style={{ color }} />{selectedProgram.date}</p>
+                  <p className="flex items-center gap-2"><MapPin className="w-4 h-4" style={{ color }} />{selectedProgram.venue}</p>
+                  <p className="flex items-center gap-2"><Users className="w-4 h-4" style={{ color }} />{selectedProgram.participants} / {selectedProgram.maxParticipants} peserta</p>
+                </div>
+                {/* Divider bertema warna */}
+                <div className="h-px my-5" style={{ background: hexToRgba(color, 0.2) }} />
+                <div className="flex gap-3">
+                  <Button className="flex-1 font-black text-[11px] uppercase tracking-wider rounded-xl text-white" style={{ background: color }}>
+                    Kemaskini Program
+                  </Button>
+                  <Button variant="outline" className="font-black text-[11px] uppercase rounded-xl">
+                    Laporan
+                  </Button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+      , document.body)}
     </div>
   );
 }

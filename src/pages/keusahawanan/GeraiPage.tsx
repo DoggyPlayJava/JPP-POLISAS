@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useExcoTheme } from '@/contexts/ExcoThemeContext';
@@ -470,152 +471,148 @@ function GeraiJadual({
                     <p className="text-[9px] text-muted-foreground leading-tight mt-0.5">
                       {shiftCount > 0 ? `${shiftCount} syif` : 'tiada syif'}
                     </p>
+                  </div      {/* ── Modal: Tugaskan (Manager) ── */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {assignModal && (
+            <div className="fixed inset-0 z-[9999]">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                onClick={() => setAssignModal(null)} />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="absolute inset-x-4 top-1/2 -translate-y-1/2 max-w-sm mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl"
+              >
+                <h3 className="font-black text-sm mb-0.5">Tugaskan Ahli</h3>
+                <p className="text-[11px] text-muted-foreground mb-4">
+                  {assignModal.date} · {fmt(assignModal.hour)}
+                </p>
+                <div className="space-y-2 max-h-56 overflow-y-auto mb-4">
+                  {jppMembers.length === 0 ? (
+                    <p className="text-[11px] text-muted-foreground text-center py-4">
+                      Tiada ahli JPP dalam sistem lagi.
+                    </p>
+                  ) : jppMembers.map(m => {
+                    const mc = unitColors[m.jpp_unit] || color;
+                    return (
+                      <button key={m.id} onClick={() => setSelectedMember(m.id)}
+                        className={cn('w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left',
+                          selectedMember === m.id ? 'border-transparent text-white' : 'border-border bg-muted/30 hover:border-border/60')}
+                        style={selectedMember === m.id ? { background: mc } : {}}>
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-white"
+                          style={{ background: selectedMember === m.id ? 'rgba(255,255,255,0.25)' : mc }}>
+                          {m.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-black truncate">{m.full_name}</p>
+                          <p className="text-[10px] opacity-60">{m.jpp_position ?? 'Exco'} · {memberShiftCount[m.id] || 0} syif minggu ini</p>
+                        </div>
+                        {selectedMember === m.id && <Check className="w-4 h-4 flex-shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setAssignModal(null)}
+                    className="flex-1 h-10 rounded-xl border border-border text-[11px] font-black uppercase">Batal</button>
+                  <button onClick={handleAssign} disabled={!selectedMember || saving}
+                    className="flex-1 h-10 rounded-xl text-[11px] font-black uppercase transition-opacity disabled:opacity-40"
+                    style={{ background: color, color: getContrastText(color) }}>
+                    {saving ? 'Menyimpan...' : 'Tugaskan'}
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+      , document.body)}leAs      {/* ── Modal: Minta Tukar Syif (Member) ── */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {swapModal && (
+            <div className="fixed inset-0 z-[9999]">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                onClick={() => setSwapModal(null)} />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="absolute inset-x-4 top-1/2 -translate-y-1/2 max-w-sm mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-amber-500/10">
+                    <Repeat2 className="w-5 h-5 text-amber-600" />
                   </div>
-                  {hasPendingSwap && (
-                    <Repeat2 className="w-3 h-3 text-amber-500 ml-auto flex-shrink-0" />
-                  )}
+                  <div>
+                    <h3 className="font-black text-sm">Minta Tukar Syif</h3>
+                    <p className="text-[10px] text-muted-foreground">
+                      {swapModal.shift_date} · {fmt(swapModal.shift_hour)}
+                    </p>
+                  </div>
+                  <button onClick={() => setSwapModal(null)} className="ml-auto w-8 h-8 rounded-xl bg-muted flex items-center justify-center">
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-              );
-            })}
-          </div>
-          <p className="text-[9px] text-muted-foreground/40 mt-1 italic px-1">
-            Klik slot syif anda untuk minta tukar syif dengan ahli lain.
-          </p>
-        </div>
-      )}
 
-      {/* ── Modal: Tugaskan (Manager) ── */}
-      <AnimatePresence>
-        {assignModal && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
-              onClick={() => setAssignModal(null)} />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-sm mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl"
-            >
-              <h3 className="font-black text-sm mb-0.5">Tugaskan Ahli</h3>
-              <p className="text-[11px] text-muted-foreground mb-4">
-                {assignModal.date} · {fmt(assignModal.hour)}
-              </p>
-              <div className="space-y-2 max-h-56 overflow-y-auto mb-4">
-                {jppMembers.length === 0 ? (
-                  <p className="text-[11px] text-muted-foreground text-center py-4">
-                    Tiada ahli JPP dalam sistem lagi.
-                  </p>
-                ) : jppMembers.map(m => {
-                  const mc = unitColors[m.jpp_unit] || color;
-                  return (
-                    <button key={m.id} onClick={() => setSelectedMember(m.id)}
-                      className={cn('w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left',
-                        selectedMember === m.id ? 'border-transparent text-white' : 'border-border bg-muted/30 hover:border-border/60')}
-                      style={selectedMember === m.id ? { background: mc } : {}}>
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-white"
-                        style={{ background: selectedMember === m.id ? 'rgba(255,255,255,0.25)' : mc }}>
-                        {m.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-black truncate">{m.full_name}</p>
-                        <p className="text-[10px] opacity-60">{m.jpp_position ?? 'Exco'} · {memberShiftCount[m.id] || 0} syif minggu ini</p>
-                      </div>
-                      {selectedMember === m.id && <Check className="w-4 h-4 flex-shrink-0" />}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="flex gap-2">
-                <button onClick={() => setAssignModal(null)}
-                  className="flex-1 h-10 rounded-xl border border-border text-[11px] font-black uppercase">Batal</button>
-                <button onClick={handleAssign} disabled={!selectedMember || saving}
-                  className="flex-1 h-10 rounded-xl text-[11px] font-black uppercase transition-opacity disabled:opacity-40"
-                  style={{ background: color, color: getContrastText(color) }}>
-                  {saving ? 'Menyimpan...' : 'Tugaskan'}
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+                <div className="space-y-4">
+                  {/* Pilih siapa nak swap dengan */}
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">
+                      Tukar Dengan <span className="text-muted-foreground/40 normal-case">(pilihan)</span>
+                    </p>
+                    <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                      <button onClick={() => setSwapTarget('')}
+                        className={cn('w-full flex items-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-black transition-all text-left',
+                          swapTarget === '' ? 'border-amber-500 bg-amber-500/10 text-amber-600' : 'border-border bg-muted/30 text-muted-foreground hover:border-border/60')}>
+                        <Users className="w-3.5 h-3.5" /> Sesiapa sahaja (buka kepada semua)
+                      </button>
+                      {jppMembers.filter(m => m.id !== currentUserId).map(m => {
+                        const mc = unitColors[m.jpp_unit] || '#6366f1';
+                        return (
+                          <button key={m.id} onClick={() => setSwapTarget(m.id)}
+                            className={cn('w-full flex items-center gap-2 px-3 py-2 rounded-xl border transition-all text-left',
+                              swapTarget === m.id ? 'border-transparent text-white' : 'border-border bg-muted/30 hover:border-border/60')}
+                            style={swapTarget === m.id ? { background: mc } : {}}>
+                            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black text-white flex-shrink-0"
+                              style={{ background: swapTarget === m.id ? 'rgba(255,255,255,0.25)' : mc }}>
+                              {m.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                            </div>
+                            <p className="text-[10px] font-black flex-1 truncate">{m.full_name}</p>
+                            {swapTarget === m.id && <Check className="w-3 h-3 flex-shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-      {/* ── Modal: Minta Tukar Syif (Member) ── */}
-      <AnimatePresence>
-        {swapModal && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
-              onClick={() => setSwapModal(null)} />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-sm mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-amber-500/10">
-                  <Repeat2 className="w-5 h-5 text-amber-600" />
-                </div>
-                <div>
-                  <h3 className="font-black text-sm">Minta Tukar Syif</h3>
-                  <p className="text-[10px] text-muted-foreground">
-                    {swapModal.shift_date} · {fmt(swapModal.shift_hour)}
-                  </p>
-                </div>
-                <button onClick={() => setSwapModal(null)} className="ml-auto w-8 h-8 rounded-xl bg-muted flex items-center justify-center">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {/* Pilih siapa nak swap dengan */}
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">
-                    Tukar Dengan <span className="text-muted-foreground/40 normal-case">(pilihan)</span>
-                  </p>
-                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                    <button onClick={() => setSwapTarget('')}
-                      className={cn('w-full flex items-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-black transition-all text-left',
-                        swapTarget === '' ? 'border-amber-500 bg-amber-500/10 text-amber-600' : 'border-border bg-muted/30 text-muted-foreground hover:border-border/60')}>
-                      <Users className="w-3.5 h-3.5" /> Sesiapa sahaja (buka kepada semua)
-                    </button>
-                    {jppMembers.filter(m => m.id !== currentUserId).map(m => {
-                      const mc = unitColors[m.jpp_unit] || '#6366f1';
-                      return (
-                        <button key={m.id} onClick={() => setSwapTarget(m.id)}
-                          className={cn('w-full flex items-center gap-2 px-3 py-2 rounded-xl border transition-all text-left',
-                            swapTarget === m.id ? 'border-transparent text-white' : 'border-border bg-muted/30 hover:border-border/60')}
-                          style={swapTarget === m.id ? { background: mc } : {}}>
-                          <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black text-white flex-shrink-0"
-                            style={{ background: swapTarget === m.id ? 'rgba(255,255,255,0.25)' : mc }}>
-                            {m.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                          </div>
-                          <p className="text-[10px] font-black flex-1 truncate">{m.full_name}</p>
-                          {swapTarget === m.id && <Check className="w-3 h-3 flex-shrink-0" />}
-                        </button>
-                      );
-                    })}
+                  {/* Sebab */}
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1.5">Sebab / Alasan</p>
+                    <textarea
+                      value={swapReason} onChange={e => setSwapReason(e.target.value)}
+                      placeholder="cth: Ada kelas pada masa tersebut, ujian, dll..."
+                      className="w-full h-20 px-4 py-3 rounded-2xl border border-border bg-muted/30 text-xs font-medium resize-none outline-none focus:border-amber-500/50"
+                    />
                   </div>
                 </div>
 
-                {/* Sebab */}
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1.5">Sebab / Alasan</p>
-                  <textarea
-                    value={swapReason} onChange={e => setSwapReason(e.target.value)}
-                    placeholder="cth: Ada kelas pada masa tersebut, ujian, dll..."
-                    className="w-full h-20 px-4 py-3 rounded-2xl border border-border bg-muted/30 text-xs font-medium resize-none outline-none focus:border-amber-500/50"
-                  />
+                <div className="flex gap-2 mt-4">
+                  <button onClick={() => setSwapModal(null)}
+                    className="flex-1 h-11 rounded-2xl border border-border text-[11px] font-black uppercase">Batal</button>
+                  <button onClick={handleSwapRequest} disabled={!swapReason.trim() || saving}
+                    className="flex-1 h-11 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-black uppercase transition-colors disabled:opacity-40">
+                    {saving ? 'Menghantar...' : '🔄 Hantar Request'}
+                  </button>
                 </div>
-              </div>
-
-              <div className="flex gap-2 mt-4">
-                <button onClick={() => setSwapModal(null)}
-                  className="flex-1 h-11 rounded-2xl border border-border text-[11px] font-black uppercase">Batal</button>
-                <button onClick={handleSwapRequest} disabled={!swapReason.trim() || saving}
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+      , document.body)}        <button onClick={handleSwapRequest} disabled={!swapReason.trim() || saving}
                   className="flex-1 h-11 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-black uppercase transition-colors disabled:opacity-40">
                   {saving ? 'Menghantar...' : '🔄 Hantar Request'}
                 </button>
@@ -818,164 +815,168 @@ function GeraiSesi({ color, profile }: { color: string; profile: any }) {
       </div>
 
       {/* Modal: Buka Kedai */}
-      <AnimatePresence>
-        {openModal && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={() => setOpenModal(false)} />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-sm mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl max-h-[90vh] overflow-y-auto"
-            >
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: hexToRgba(color, 0.15) }}>
-                  <Unlock className="w-5 h-5" style={{ color }} />
-                </div>
-                <div>
-                  <h3 className="font-black text-sm">Buka Kedai</h3>
-                  <p className="text-[10px] text-muted-foreground">{new Date().toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block mb-1.5">
-                    Modal Awal / Float (RM)
-                  </label>
-                  <input
-                    type="number" step="0.01" min="0"
-                    value={openingCash} onChange={e => setOpeningCash(e.target.value)}
-                    placeholder="0.00"
-                    className="w-full h-11 px-4 rounded-xl border border-border bg-muted/30 text-sm font-bold outline-none focus:border-border/60"
-                  />
-                </div>
-
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">Checklist Pembukaan</p>
-                  <div className="space-y-2">
-                    {OPENING_CHECKLIST.map((item, i) => (
-                      <button key={i} onClick={() => setChecklist(c => c.map((v, j) => j === i ? !v : v))}
-                        className="w-full flex items-center gap-3 p-2.5 rounded-xl border border-border/40 hover:border-border transition-colors text-left">
-                        {checklist[i]
-                          ? <CheckSquare className="w-4 h-4 flex-shrink-0" style={{ color }} />
-                          : <Square className="w-4 h-4 flex-shrink-0 text-muted-foreground/30" />}
-                        <span className={cn('text-xs font-medium', checklist[i] ? 'text-foreground' : 'text-muted-foreground')}>{item}</span>
-                      </button>
-                    ))}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {openModal && (
+            <div className="fixed inset-0 z-[9999]">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpenModal(false)} />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="absolute inset-x-4 top-1/2 -translate-y-1/2 max-w-sm mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl max-h-[90vh] overflow-y-auto"
+              >
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: hexToRgba(color, 0.15) }}>
+                    <Unlock className="w-5 h-5" style={{ color }} />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm">Buka Kedai</h3>
+                    <p className="text-[10px] text-muted-foreground">{new Date().toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
                   </div>
                 </div>
 
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block mb-1.5">Nota (Pilihan)</label>
-                  <textarea
-                    value={openNotes} onChange={e => setOpenNotes(e.target.value)}
-                    placeholder="Nota tambahan..."
-                    className="w-full h-16 px-4 py-2.5 rounded-xl border border-border bg-muted/30 text-xs font-medium resize-none outline-none"
-                  />
-                </div>
-
-                {!allChecked && (
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                    <AlertCircle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-                    <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400">Sila lengkapkan semua checklist dahulu.</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-2 mt-5">
-                <button onClick={() => setOpenModal(false)}
-                  className="flex-1 h-11 rounded-2xl border border-border text-[11px] font-black uppercase">Batal</button>
-                <button onClick={handleOpen} disabled={!openingCash || !allChecked || saving}
-                  className="flex-1 h-11 rounded-2xl text-[11px] font-black uppercase disabled:opacity-40 transition-opacity"
-                  style={{ background: color, color: getContrastText(color) }}>
-                  {saving ? 'Membuka...' : '🔓 Buka Sekarang'}
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Modal: Tutup Kedai */}
-      <AnimatePresence>
-        {closeModal && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={() => setCloseModal(false)} />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-sm mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl max-h-[90vh] overflow-y-auto"
-            >
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: hexToRgba(color, 0.15) }}>
-                  <Lock className="w-5 h-5" style={{ color }} />
-                </div>
-                <div>
-                  <h3 className="font-black text-sm">Tutup Kedai</h3>
-                  <p className="text-[10px] text-muted-foreground">Isi rekod penutupan hari ini</p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {[
-                  { label: 'Duit Dalam Till (RM)', value: closingCash, set: setClosingCash, placeholder: '0.00' },
-                  { label: 'Jumlah Jualan (RM)', value: totalSales, set: setTotalSales, placeholder: '0.00' },
-                  { label: 'Perbelanjaan/Stok (RM)', value: expenses, set: setExpenses, placeholder: '0.00' },
-                ].map(({ label, value, set, placeholder }) => (
-                  <div key={label}>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block mb-1">{label}</label>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block mb-1.5">
+                      Modal Awal / Float (RM)
+                    </label>
                     <input
                       type="number" step="0.01" min="0"
-                      value={value} onChange={e => set(e.target.value)}
-                      placeholder={placeholder}
-                      className="w-full h-10 px-4 rounded-xl border border-border bg-muted/30 text-sm font-bold outline-none"
+                      value={openingCash} onChange={e => setOpeningCash(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full h-11 px-4 rounded-xl border border-border bg-muted/30 text-sm font-bold outline-none focus:border-border/60"
                     />
                   </div>
-                ))}
 
-                {/* Auto-kira untung */}
-                {closingCash && todaySession && (
-                  <div className="px-4 py-3 rounded-2xl border"
-                    style={{ background: hexToRgba(color, 0.06), borderColor: hexToRgba(color, 0.2) }}>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Anggaran Untung Bersih</p>
-                    <p className="text-lg font-black" style={{ color }}>
-                      {fmtRM(parseFloat(closingCash) - todaySession.opening_cash - (parseFloat(expenses) || 0))}
-                    </p>
-                    <p className="text-[9px] text-muted-foreground mt-0.5">
-                      Till ({fmtRM(parseFloat(closingCash))}) − Float ({fmtRM(todaySession.opening_cash)}) − Perbelanjaan ({fmtRM(parseFloat(expenses) || 0)})
-                    </p>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">Checklist Pembukaan</p>
+                    <div className="space-y-2">
+                      {OPENING_CHECKLIST.map((item, i) => (
+                        <button key={i} onClick={() => setChecklist(c => c.map((v, j) => j === i ? !v : v))}
+                          className="w-full flex items-center gap-3 p-2.5 rounded-xl border border-border/40 hover:border-border transition-colors text-left">
+                          {checklist[i]
+                            ? <CheckSquare className="w-4 h-4 flex-shrink-0" style={{ color }} />
+                            : <Square className="w-4 h-4 flex-shrink-0 text-muted-foreground/30" />}
+                          <span className={cn('text-xs font-medium', checklist[i] ? 'text-foreground' : 'text-muted-foreground')}>{item}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                )}
 
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block mb-1">Nota Penutupan</label>
-                  <textarea
-                    value={closeNotes} onChange={e => setCloseNotes(e.target.value)}
-                    placeholder="Nota..., isu yang berlaku, dll."
-                    className="w-full h-16 px-4 py-2.5 rounded-xl border border-border bg-muted/30 text-xs font-medium resize-none outline-none"
-                  />
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block mb-1.5">Nota (Pilihan)</label>
+                    <textarea
+                      value={openNotes} onChange={e => setOpenNotes(e.target.value)}
+                      placeholder="Nota tambahan..."
+                      className="w-full h-16 px-4 py-2.5 rounded-xl border border-border bg-muted/30 text-xs font-medium resize-none outline-none"
+                    />
+                  </div>
+
+                  {!allChecked && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                      <AlertCircle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                      <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400">Sila lengkapkan semua checklist dahulu.</p>
+                    </div>
+                  )}
                 </div>
-              </div>
 
-              <div className="flex gap-2 mt-5">
-                <button onClick={() => setCloseModal(false)}
-                  className="flex-1 h-11 rounded-2xl border border-border text-[11px] font-black uppercase">Batal</button>
-                <button onClick={handleClose} disabled={!closingCash || !totalSales || saving}
-                  className="flex-1 h-11 rounded-2xl text-[11px] font-black uppercase disabled:opacity-40"
-                  style={{ background: color, color: getContrastText(color) }}>
-                  {saving ? 'Menyimpan...' : '🔒 Tutup & Simpan'}
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+                <div className="flex gap-2 mt-5">
+                  <button onClick={() => setOpenModal(false)}
+                    className="flex-1 h-11 rounded-2xl border border-border text-[11px] font-black uppercase">Batal</button>
+                  <button onClick={handleOpen} disabled={!openingCash || !allChecked || saving}
+                    className="flex-1 h-11 rounded-2xl text-[11px] font-black uppercase disabled:opacity-40 transition-opacity"
+                    style={{ background: color, color: getContrastText(color) }}>
+                    {saving ? 'Membuka...' : '🔓 Buka Sekarang'}
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+      , document.body)}
+
+      {/* Modal: Tutup Kedai */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {closeModal && (
+            <div className="fixed inset-0 z-[9999]">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setCloseModal(false)} />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="absolute inset-x-4 top-1/2 -translate-y-1/2 max-w-sm mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl max-h-[90vh] overflow-y-auto"
+              >
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: hexToRgba(color, 0.15) }}>
+                    <Lock className="w-5 h-5" style={{ color }} />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm">Tutup Kedai</h3>
+                    <p className="text-[10px] text-muted-foreground">Isi rekod penutupan hari ini</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {[
+                    { label: 'Duit Dalam Till (RM)', value: closingCash, set: setClosingCash, placeholder: '0.00' },
+                    { label: 'Jumlah Jualan (RM)', value: totalSales, set: setTotalSales, placeholder: '0.00' },
+                    { label: 'Perbelanjaan/Stok (RM)', value: expenses, set: setExpenses, placeholder: '0.00' },
+                  ].map(({ label, value, set, placeholder }) => (
+                    <div key={label}>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block mb-1">{label}</label>
+                      <input
+                        type="number" step="0.01" min="0"
+                        value={value} onChange={e => set(e.target.value)}
+                        placeholder={placeholder}
+                        className="w-full h-10 px-4 rounded-xl border border-border bg-muted/30 text-sm font-bold outline-none"
+                      />
+                    </div>
+                  ))}
+
+                  {/* Auto-kira untung */}
+                  {closingCash && todaySession && (
+                    <div className="px-4 py-3 rounded-2xl border"
+                      style={{ background: hexToRgba(color, 0.06), borderColor: hexToRgba(color, 0.2) }}>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Anggaran Untung Bersih</p>
+                      <p className="text-lg font-black" style={{ color }}>
+                        {fmtRM(parseFloat(closingCash) - todaySession.opening_cash - (parseFloat(expenses) || 0))}
+                      </p>
+                      <p className="text-[9px] text-muted-foreground mt-0.5">
+                        Till ({fmtRM(parseFloat(closingCash))}) − Float ({fmtRM(todaySession.opening_cash)}) − Perbelanjaan ({fmtRM(parseFloat(expenses) || 0)})
+                      </p>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block mb-1">Nota Penutupan</label>
+                    <textarea
+                      value={closeNotes} onChange={e => setCloseNotes(e.target.value)}
+                      placeholder="Nota..., isu yang berlaku, dll."
+                      className="w-full h-16 px-4 py-2.5 rounded-xl border border-border bg-muted/30 text-xs font-medium resize-none outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2 mt-5">
+                  <button onClick={() => setCloseModal(false)}
+                    className="flex-1 h-11 rounded-2xl border border-border text-[11px] font-black uppercase">Batal</button>
+                  <button onClick={handleClose} disabled={!closingCash || !totalSales || saving}
+                    className="flex-1 h-11 rounded-2xl text-[11px] font-black uppercase disabled:opacity-40"
+                    style={{ background: color, color: getContrastText(color) }}>
+                    {saving ? 'Menyimpan...' : '🔒 Tutup & Simpan'}
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+      , document.body)}
     </div>
   );
 }

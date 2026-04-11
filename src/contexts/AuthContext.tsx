@@ -31,6 +31,9 @@ interface AuthContextType {
   primaryClubId: string | null;    // Kelab utama (dari profiles.club_id)
   selectedClubId: string | null;   // Kelab yang sedang dilihat (untuk switcher)
   setSelectedClubId: (id: string) => void;
+  hasKppAccess: boolean;         // SuperAdmin || KPP Exco || MT assigned to KPP
+  isKppExco: boolean;
+  isJppMember: boolean;
   refetchProfile: () => Promise<void>;
   refreshClubs: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -56,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSelectedClubIdState(id);
   }, []);
 
+  const [isMTKpp, setIsMTKpp] = useState(false);
   const navigate = useNavigate();
   const currentUserId = useRef<string | null>(null);
 
@@ -158,6 +162,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUserMemberships([]);
         setSelectedClubIdState(null);
         localStorage.removeItem('selectedClubId');
+      }
+
+      // Check if MT is assigned to KPP
+      if (profileData?.role === 'JPP' || profileData?.role === 'SUPER_ADMIN_JPP') {
+        const { data: mtAssign } = await supabase
+          .from('jpp_mt_assignments')
+          .select('unit')
+          .eq('mt_user_id', userId)
+          .eq('unit', 'KPP')
+          .maybeSingle();
+        setIsMTKpp(!!mtAssign);
+      } else {
+        setIsMTKpp(false);
       }
     } catch (err) {
       // Jika junction table belum wujud (sebelum migration), jangan crash
@@ -309,8 +326,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // ── MULTI-ROLE ENGINE ──────────────────────────────────────────────────────
   // Super Admin JPP = role GLOBAL (dari profiles.role), tidak berubah mengikut kelab
+  // PENTING: JPP (ahli biasa JPP) BUKAN super admin — mereka ada peranan tersendiri!
   const profileRole = (profile?.role ?? '') as string;
-  const isSuperAdmin = profileRole === 'SUPER_ADMIN_JPP' || profileRole === 'ADMIN' || profileRole === 'JPP';
+  const isSuperAdmin = profileRole === 'SUPER_ADMIN_JPP' || profileRole === 'ADMIN';
+  const isJppMember  = profileRole === 'JPP'; // Ahli JPP biasa (bukan HEP/developer)
 
   // Primary club = dari profiles.club_id (kekal sebagai fallback)
   const primaryClubId = profile?.club_id ?? null;
@@ -322,6 +341,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const effectiveRole = (() => {
     // Super Admin JPP kekal sebagai Super Admin di mana-mana kelab
     if (isSuperAdmin) return 'SUPER_ADMIN_JPP';
+    
+    // Ahli JPP biasa — kekalkan sebagai 'JPP', JANGAN naikkan ke SUPER_ADMIN_JPP
+    if (isJppMember) return 'JPP';
     
     // Cari role untuk kelab yang sedang dipilih dari junction table
     if (effectiveClubId && userMemberships.length > 0) {
@@ -338,10 +360,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   })();
 
   // ── DERIVE ROLE FLAGS dari effectiveRole (bukan lagi dari profiles.role) ──
-  const isAdvisor   = effectiveRole === 'CLUB_ADVISOR'   || effectiveRole === 'PENASIHAT'   || isSuperAdmin;
+  // KPP Exco mendapat isAdvisor=true GLOBAL supaya boleh switch ke mana-mana kelab
+  const isKppExco   = profileRole === 'JPP' && profile?.jpp_unit === 'KPP';
+  const isAdvisor   = effectiveRole === 'CLUB_ADVISOR'   || effectiveRole === 'PENASIHAT'   || isSuperAdmin || isKppExco;
   const isPresident = effectiveRole === 'CLUB_PRESIDENT' || effectiveRole === 'PRESIDEN'    || isAdvisor;
   const isMT        = effectiveRole === 'CLUB_MT'        || effectiveRole === 'MT'          || isPresident;
   const isMember    = effectiveRole === 'CLUB_MEMBER'    || effectiveRole === 'CLUB_MEMBERS' || effectiveRole === 'AHLI' || isMT;
+
 
   return (
     <AuthContext.Provider
@@ -358,6 +383,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isMT,
         isMember,
         effectiveRole,
+        isKppExco,
+        isJppMember,
+        hasKppAccess: isSuperAdmin || isKppExco || isMTKpp,
         userClubIds,
         userMemberships,
         primaryClubId,

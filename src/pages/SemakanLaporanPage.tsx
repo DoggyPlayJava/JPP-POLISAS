@@ -89,12 +89,14 @@ export function SemakanLaporanPage() {
   const [arkibClub, setArkibClub] = useState<string>('Semua');
 
   // ── Access Guard ──
-  if (!isSuperAdmin) {
+  const { hasKppAccess } = useAuth();
+
+  if (!hasKppAccess) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] gap-5 text-center">
         <div className="w-24 h-24 rounded-full bg-rose-500/10 flex items-center justify-center shadow-inner"><Lock className="text-rose-500 w-10 h-10" /></div>
         <h2 className="text-3xl font-black tracking-tighter">Akses Terhad</h2>
-        <p className="text-muted-foreground font-medium max-w-xs">Halaman ini dikhaskan untuk Admin JPP sahaja.</p>
+        <p className="text-muted-foreground font-medium max-w-xs">Halaman ini dikhaskan untuk Unit KPP & Admin JPP sahaja.</p>
       </div>
     );
   }

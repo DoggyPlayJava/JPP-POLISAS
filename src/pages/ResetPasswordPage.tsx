@@ -34,7 +34,7 @@ export function ResetPasswordPage() {
       if (error) throw error;
       
       toast.success('Kata laluan berjaya dikemaskini!');
-      navigate('/dashboard');
+      navigate('/portal');
     } catch (error: any) {
       toast.error(error.message || 'Gagal menetapkan semula kata laluan');
     } finally {

@@ -29,8 +29,8 @@ export const EXCO_MODULES: ExcoModule[] = [
     fullName: 'Exco Kelab, Persatuan & Perpaduan',
     tagline: 'Kelab · Persatuan · Perpaduan',
     description: 'Pengurusan kelab, aktiviti, laporan bulanan & kertas kerja secara digital.',
-    defaultColor: '#7B1C1C',  // Merah Marun — warna tandatangan e-KPP
-    icon: '🏛️',
+    defaultColor: '#F87171',  // Merah terang untuk kontras dalam dark-mode (Red-400)
+    icon: 'Landmark',
     basePath: '/dashboard',   // Route e-KPP KEKAL tanpa prefix (konvensyen sedia ada)
     isActive: true,
   },
@@ -40,8 +40,8 @@ export const EXCO_MODULES: ExcoModule[] = [
     fullName: 'Exco Kebajikan Pelajar',
     tagline: 'Khidmat · Bantuan · Kesejahteraan',
     description: 'Pengurusan bantuan pelajar, program kebajikan & khidmat masyarakat.',
-    defaultColor: '#0D7377',  // Teal — cadangan warna e-Kebajikan
-    icon: '❤️‍🩹',
+    defaultColor: '#2DD4BF',  // Teal cerah (Teal-400)
+    icon: 'HeartHandshake',
     basePath: '/kebajikan/dashboard',
     isActive: false,          // Akan Datang
   },
@@ -51,8 +51,8 @@ export const EXCO_MODULES: ExcoModule[] = [
     fullName: 'Exco Keusahawanan & Inovasi',
     tagline: 'Inovasi · Usaha · Kejayaan',
     description: 'Program keusahawanan, geran, pameran & pembangunan bakat pelajar.',
-    defaultColor: '#1B5E20',  // Hijau Gelap — cadangan warna e-Keusahawanan
-    icon: '💡',
+    defaultColor: '#4ADE80',  // Hijau terang cergas (Green-400)
+    icon: 'Lightbulb',
     basePath: '/keusahawanan/dashboard',
     isActive: false,          // Akan Datang
   },
@@ -62,8 +62,8 @@ export const EXCO_MODULES: ExcoModule[] = [
     fullName: 'Exco Sukan & Rekreasi',
     tagline: 'Sihat · Cergas · Bersemangat',
     description: 'Pengurusan acara sukan, rekreasi & kesihatan pelajar.',
-    defaultColor: '#1565C0',  // Biru — cadangan warna e-Sukan
-    icon: '⚽',
+    defaultColor: '#60A5FA',  // Biru terang bertenaga (Blue-400)
+    icon: 'Trophy',
     basePath: '/sukan/dashboard',
     isActive: false,          // Akan Datang
   },

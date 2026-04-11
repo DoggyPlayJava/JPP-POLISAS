@@ -34,7 +34,12 @@ import { KeusahawananDashboard } from './pages/keusahawanan/KeusahawananDashboar
 import { KeusahawananProgram } from './pages/keusahawanan/KeusahawananProgram';
 import { GeraiPage } from './pages/keusahawanan/GeraiPage';
 import { KeusahawananIdea, KeusahawananGeran, KeusahawananLaporan } from './pages/keusahawanan/KeusahawananPlaceholders';
-
+import { KeusahawananOnboarding } from './pages/keusahawanan/KeusahawananOnboarding';
+import { UrusPerniagaanPage } from './pages/keusahawanan/UrusPerniagaanPage';
+import { PosOrderPage }   from './pages/keusahawanan/pos/PosOrderPage';
+import { PosProductPage } from './pages/keusahawanan/pos/PosProductPage';
+import { PosStatsPage }   from './pages/keusahawanan/pos/PosStatsPage';
+import { PosHistoryPage } from './pages/keusahawanan/pos/PosHistoryPage';
 
 function RequireApproval({ children }: { children: React.ReactNode }) {
   const { profile, isLoading } = useAuth();
@@ -101,14 +106,23 @@ function AppRoutes() {
           <Route path="/karnival" element={<KarnivalVotingPage />} />
           <Route path="/nexus" element={<NexusPage />} />
         </Route>
-        {/* ── e-Keusahawanan (prefix: /keusahawanan/) ── AKSES: SUPER_ADMIN_JPP sahaja buat masa ini ── */}
+        {/* ── e-Keusahawanan Onboarding (No Sidebar) ── */}
+        <Route path="/keusahawanan/onboarding" element={<RequireApproval><KeusahawananOnboarding /></RequireApproval>} />
+
+        {/* ── e-Keusahawanan (prefix: /keusahawanan/) ── */}
         <Route element={<RequireApproval><KeusahawananLayout /></RequireApproval>}>
-          <Route path="/keusahawanan/dashboard" element={<KeusahawananDashboard />} />
-          <Route path="/keusahawanan/program"   element={<KeusahawananProgram />} />
-          <Route path="/keusahawanan/gerai"     element={<GeraiPage />} />
-          <Route path="/keusahawanan/idea"      element={<KeusahawananIdea />} />
-          <Route path="/keusahawanan/geran"     element={<KeusahawananGeran />} />
-          <Route path="/keusahawanan/laporan"   element={<KeusahawananLaporan />} />
+          <Route path="/keusahawanan/dashboard"     element={<KeusahawananDashboard />} />
+          <Route path="/keusahawanan/program"        element={<KeusahawananProgram />} />
+          <Route path="/keusahawanan/gerai"          element={<GeraiPage />} />
+          <Route path="/keusahawanan/idea"           element={<KeusahawananIdea />} />
+          <Route path="/keusahawanan/geran"          element={<KeusahawananGeran />} />
+          <Route path="/keusahawanan/laporan"        element={<KeusahawananLaporan />} />
+          <Route path="/keusahawanan/urus-perniagaan" element={<UrusPerniagaanPage />} />
+          {/* POS System */}
+          <Route path="/keusahawanan/pos"           element={<PosOrderPage />} />
+          <Route path="/keusahawanan/pos/products"  element={<PosProductPage />} />
+          <Route path="/keusahawanan/pos/stats"     element={<PosStatsPage />} />
+          <Route path="/keusahawanan/pos/history"   element={<PosHistoryPage />} />
         </Route>
       </Route>
 

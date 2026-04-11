@@ -7,9 +7,9 @@ export function OnboardingPage() {
   const navigate = useNavigate();
   const { profile } = useAuth();
 
-  // If they have a profile, go to dashboard
+  // If they have a profile, go to portal
   React.useEffect(() => {
-    if (profile) navigate('/dashboard');
+    if (profile) navigate('/portal');
   }, [profile]);
 
   return (

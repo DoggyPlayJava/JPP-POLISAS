@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -18,6 +18,7 @@ import {
   Ticket,
   LayoutGrid,
   ChevronLeft,
+  Crown,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,9 @@ import { ROLE_LABELS, ALL_CLUBS } from '@/types';
 import { useAiSettings } from '@/contexts/AiSettingsContext';
 import { useKarnival } from '@/contexts/KarnivalContext';
 import { EXCO_MODULES, getExcoModule } from '@/config/excoModules';
+import { ChevronDown } from 'lucide-react';
+
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Jenis nav item
@@ -141,11 +145,10 @@ function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accent
 // SubKomponen: e-KPP Sidebar Content
 // ─────────────────────────────────────────────────────────────────────────────
 function EkppSidebarContent() {
-  const { isSuperAdmin, isPresident, effectiveRole } = useAuth();
+  const { isSuperAdmin, isPresident, effectiveRole, isJppMember, hasKppAccess } = useAuth();
   const { allowAiBudget } = useAiSettings();
   const { showKarnival } = useKarnival();
   const isMemberOnly = !isSuperAdmin && !isPresident;
-  const isJpp = useAuth().profile?.role === 'JPP';
 
   return (
     <nav className="flex-1 py-6 px-3 space-y-0.5 overflow-y-auto scrollbar-hide">
@@ -230,12 +233,15 @@ function EkppSidebarContent() {
       )}
 
       {/* Admin JPP */}
-      {(isSuperAdmin || isJpp) && (
+      {(isSuperAdmin || isJppMember) && (
         <>
           <div className="pt-6 pb-2">
             <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-rose-400/50">Admin JPP</p>
           </div>
-          {EKPP_ADMIN_NAV.map(item => (
+          {EKPP_ADMIN_NAV.filter(item => {
+            if (item.href === '/semakan-laporan') return hasKppAccess;
+            return true; // JPP Admin Dashboard logic is handled internally
+          }).map(item => (
             <SidebarNavItem key={item.href} item={item} accentColor="rose" />
           ))}
         </>
@@ -286,10 +292,83 @@ function PlaceholderSidebarContent({ excoId }: { excoId: string }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Komponen Dropdown Khas untuk Kelab (Custom Select)
+// Mengelakkan masalah native OS select & isu klik Shadcn
+// ─────────────────────────────────────────────────────────────────────────────
+function CustomClubSelect({ value, onChange, clubs }: { value: string | null, onChange: (val: string | null) => void, clubs: typeof ALL_CLUBS }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedClub = clubs.find(c => c.id === value);
+
+  return (
+    <div className="relative mt-2.5 z-[9999]" ref={ref}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between bg-white/5 border border-white/10 border-dashed hover:bg-white/10 rounded-xl px-4 py-2.5 text-[10px] font-black text-white/80 uppercase tracking-widest transition-all backdrop-blur-md shadow-sm"
+      >
+        <div className="flex items-center gap-2.5 truncate">
+          {selectedClub ? (
+            <>
+              <div className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: selectedClub.color || '#6366f1' }} />
+              <span className="truncate">{selectedClub.shortName}</span>
+            </>
+          ) : (
+             <span className="truncate">— PILIH KELAB —</span>
+          )}
+        </div>
+        <ChevronDown className={cn("w-3.5 h-3.5 text-white/40 transition-transform duration-200", isOpen && "rotate-180")} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-1.5 max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full">
+          <button
+            onClick={() => { onChange(null); setIsOpen(false); }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors text-left"
+          >
+            <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse shrink-0" />
+            <span className="truncate">Semua Kelab</span>
+          </button>
+          <div className="my-1.5 border-t border-white/5" />
+          {clubs.map(c => (
+            <button
+              key={c.id}
+              onClick={() => { onChange(c.id); setIsOpen(false); }}
+              className={cn(
+                "w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-left transition-colors group",
+                value === c.id 
+                  ? "bg-white/10 text-white" 
+                  : "text-white/60 hover:bg-white/10 hover:text-white"
+              )}
+            >
+              <div className={cn("w-1.5 h-1.5 rounded-full shadow-sm shrink-0 transition-transform", value === c.id ? "scale-125" : "group-hover:scale-125")} style={{ backgroundColor: c.color || '#6366f1' }} />
+              <div className="truncate flex flex-col justify-center">
+                <span className="truncate leading-tight mb-0.5">{c.shortName}</span>
+                <span className="block text-[8px] text-white/30 font-bold truncate lowercase max-w-[150px]">{c.name}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Komponen Sidebar utama
 // ─────────────────────────────────────────────────────────────────────────────
 export function Sidebar() {
-  const { user, profile, signOut, isSuperAdmin, isPresident, effectiveRole, selectedClubId } = useAuth();
+  const { user, profile, signOut, isSuperAdmin, isPresident, effectiveRole, selectedClubId, setSelectedClubId } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -371,7 +450,7 @@ export function Sidebar() {
       {/* ── Club / Role Badge ── */}
       <div className="mx-4 mt-2">
         <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/6 border border-white/10">
-          <div className={cn('w-2 h-2 rounded-full', clubColorClass)} />
+          <div className={cn('w-2 h-2 rounded-full flex-shrink-0', clubColorClass)} />
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Status</p>
             <p className="text-xs font-black text-white truncate">{clubName}</p>
@@ -381,8 +460,25 @@ export function Sidebar() {
               ADMIN
             </Badge>
           )}
+          {profile?.jpp_unit === 'KPP' && !isSuperAdmin && (
+            <Badge className="text-[10px] px-1.5 py-0 bg-indigo-500/20 text-indigo-300 border-none font-black">
+              KPP
+            </Badge>
+          )}
         </div>
+
+        {/* KPP Club Switcher — tukar kelab untuk pemantauan */}
+        {(profile?.jpp_unit === 'KPP' || isSuperAdmin) && ALL_CLUBS.length > 0 && (
+          <CustomClubSelect 
+            value={selectedClubId} 
+            onChange={setSelectedClubId} 
+            clubs={ALL_CLUBS} 
+          />
+        )}
+
+
       </div>
+
 
       {/* ── Nav Content — bertukar mengikut exco aktif ── */}
       {activeExco === 'ekpp' && <EkppSidebarContent />}
@@ -390,6 +486,24 @@ export function Sidebar() {
       {activeExco === 'keusahawanan' && <PlaceholderSidebarContent excoId="keusahawanan" />}
       {activeExco === 'sukan' && <PlaceholderSidebarContent excoId="sukan" />}
       {activeExco === null && <EkppSidebarContent />}
+
+      {/* ── Global JPP Dashboard Link (Pinned) ── */}
+      {(isSuperAdmin || profile?.role === 'JPP') && (
+        <div className="px-3 py-2 mt-auto pb-4">
+            <NavLink
+                to="/jpp-admin"
+                className={({ isActive }) => cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 border border-rose-500/20',
+                    isActive ? 'shadow-inner ring-1 ring-rose-500/50' : ''
+                )}
+            >
+                <div className="w-7 h-7 rounded-lg bg-rose-500/30 flex items-center justify-center shadow-lg">
+                    <Crown className="w-3.5 h-3.5 text-rose-400" />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest leading-tight">Global JPP<br/>Dashboard</span>
+            </NavLink>
+        </div>
+      )}
 
       {/* ── User Footer ── */}
       <div className="p-4 border-t border-white/10 space-y-3">
