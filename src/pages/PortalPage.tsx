@@ -167,7 +167,7 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
       transition={{ delay: index * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       onClick={handleClick}
       className={cn(
-        "group relative cursor-pointer overflow-hidden rounded-[2.5rem] bg-black/[0.03] dark:bg-white/5 border border-black/5 dark:border-white/10 backdrop-blur-2xl p-8 hover:bg-black/5 dark:bg-white/10 transition-all duration-500 min-h-[280px] flex flex-col justify-between",
+        "group relative cursor-pointer overflow-hidden rounded-[2.5rem] bg-black/[0.03] dark:bg-white/5 border border-black/5 dark:border-white/10 backdrop-blur-md p-8 hover:bg-black/5 dark:bg-white/10 transition-all duration-500 min-h-[280px] flex flex-col justify-between",
         !canAccess && "opacity-80 grayscale-[0.5] cursor-not-allowed"
       )}
     >
@@ -365,16 +365,16 @@ export function PortalPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-white font-sans selection:bg-emerald-500/20 overflow-x-hidden transition-colors duration-500 relative flex flex-col">
       
       {/* Keusahawanan Onboarding Style Background */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none fixed">
-        <div className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full mix-blend-screen filter blur-[120px] opacity-20 bg-amber-600 animate-slow-spin" />
-        <div className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full mix-blend-screen filter blur-[100px] opacity-10 bg-teal-600" />
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full mix-blend-screen opacity-10 bg-amber-600 blur-3xl" />
+        <div className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full mix-blend-screen opacity-10 bg-teal-600 blur-3xl" />
       </div>
 
       {/* Navigation */}
       <nav className={cn(
         "fixed top-0 inset-x-0 z-[100] transition-all duration-700 px-4 md:px-8 py-4 flex items-center justify-between",
         isScrolled 
-          ? "bg-slate-50 dark:bg-slate-950/80 backdrop-blur-2xl border-b border-black-[0.03] dark:border-white/5 py-3 shadow-2xl" 
+          ? "bg-slate-50 dark:bg-slate-950/80 backdrop-blur-md border-b border-black-[0.03] dark:border-white/5 py-3 shadow-2xl" 
           : "bg-transparent"
       )}>
         <div className="flex items-center gap-4">

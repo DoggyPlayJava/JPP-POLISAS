@@ -42,7 +42,7 @@ const fmtDT = (iso: string) => new Date(iso).toLocaleString('ms-MY', {
 export function UrusPerniagaanPage() {
   const { color } = useExcoTheme();
   const { user, profile, isSuperAdmin } = useAuth();
-  const { selectedBusiness, isKeusahawananAdmin } = useBusinessSwitcher();
+  const { selectedBusiness, isKeusahawananAdmin, refreshBusinesses } = useBusinessSwitcher();
 
   const [businessData, setBusinessData] = useState<any>(null);
   const [members, setMembers]           = useState<any[]>([]);
@@ -169,18 +169,28 @@ export function UrusPerniagaanPage() {
   // ── Logo upload ──────────────────────────────────────────────────────────
 
   const uploadLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.[0] || !businessId) return;
-    setUploading(true);
-    const file = e.target.files[0];
-    const path = `logos/${businessId}/${Date.now()}.${file.name.split('.').pop()}`;
-    const { error } = await supabase.storage.from('keusahawanan-products').upload(path, file, { upsert: true });
-    if (error) { toast.error(error.message); setUploading(false); return; }
-    const { data: { publicUrl } } = supabase.storage.from('keusahawanan-products').getPublicUrl(path);
-    await supabase.from('keusahawanan_businesses').update({ logo_url: publicUrl }).eq('id', businessId);
-    setBusinessData((prev: any) => ({ ...prev, logo_url: publicUrl }));
-    toast.success('Logo dikemaskini!');
-    await pos.writeLog(businessId, 'SETTINGS_UPDATED', 'Logo perniagaan dikemaskini.');
-    setUploading(false);
+    try {
+      setUploading(true);
+      if (!e.target.files || e.target.files.length === 0 || !businessId) return;
+      const file = e.target.files[0];
+      const path = `logos/${businessId}/${Date.now()}.${file.name.split('.').pop()}`;
+      
+      const { error } = await supabase.storage.from('keusahawanan-products').upload(path, file, { upsert: true });
+      if (error) throw error;
+      
+      const { data: { publicUrl } } = supabase.storage.from('keusahawanan-products').getPublicUrl(path);
+      
+      await supabase.from('keusahawanan_businesses').update({ logo_url: publicUrl }).eq('id', businessId);
+      setBusinessData((prev: any) => ({ ...prev, logo_url: publicUrl }));
+      
+      await refreshBusinesses();
+      toast.success('Logo dikemaskini!');
+      await pos.writeLog(businessId, 'SETTINGS_UPDATED', 'Pemilik telah memuat naik logo perniagaan yang baharu.');
+    } catch (err: any) {
+      toast.error("Ralat muat naik logo: " + err.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   // ── Staff management ──────────────────────────────────────────────────────

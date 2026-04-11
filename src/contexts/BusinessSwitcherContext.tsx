@@ -34,6 +34,8 @@ interface BusinessSwitcherContextValue {
   isKeusahawananAdmin: boolean;
   /** Loading state */
   isLoading:           boolean;
+  /** Muat semula senarai perniagaan */
+  refreshBusinesses:   () => Promise<void>;
 }
 
 // ── Context ───────────────────────────────────────────────────────────────────
@@ -47,6 +49,7 @@ const BusinessSwitcherContext = createContext<BusinessSwitcherContextValue>({
   isUnitKeusahawanan:    false,
   isKeusahawananAdmin:   false,
   isLoading:             true,
+  refreshBusinesses:     async () => {},
 });
 
 // ── Provider ──────────────────────────────────────────────────────────────────
@@ -161,6 +164,7 @@ export function BusinessSwitcherProvider({ children }: { children: React.ReactNo
       isUnitKeusahawanan,
       isKeusahawananAdmin,
       isLoading,
+      refreshBusinesses: loadData,
     }}>
       {children}
     </BusinessSwitcherContext.Provider>

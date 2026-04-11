@@ -65,6 +65,10 @@ export function AhliPage() {
   const [kickReason, setKickReason] = useState('');
   const [kickingMember, setKickingMember] = useState<any | null>(null);
 
+  // ✅ canApprove — boleh approve jika Presiden, Penasihat, atau JPP
+  const canApprove = isPresident || effectiveRole === 'CLUB_ADVISOR' || 
+    effectiveRole === 'SUPER_ADMIN_JPP' || effectiveRole === 'JPP' || effectiveRole === 'ADMIN';
+
   const load = async () => {
     if (!user || !profile) return;
     try {
@@ -83,11 +87,9 @@ export function AhliPage() {
         query = query.eq('club_id', targetClubId);
       }
 
-      if (search.trim()) {
-        query = query.ilike('profiles.full_name', `%${search.trim()}%`);
-      }
-
-      // Ambil SEMUA status (termasuk PENDING) — jangan filter di sini, biar UI yang filter
+      // ✅ FIX: ilike pada nested join tidak reliable dalam Supabase
+      // Search dilakukan client-side dalam memberships state (lihat bawah)
+      // JANGAN filter search di sini — ambil semua dan tapis dalam komponen
       const { data, error } = await query
         .order('created_at', { ascending: false });
 
@@ -118,13 +120,11 @@ export function AhliPage() {
     }
   };
 
-  // Re-fetch bila search berubah. Guna debouncing logik (useEffect trigger)
+  // Re-fetch bila selectedClubId atau user berubah sahaja
+  // Search kini dilakukan client-side, jadi tidak perlu refetch setiap kali search berubah
   useEffect(() => { 
-    const timeout = setTimeout(() => {
-      load();
-    }, 400); // 400ms debounce
-    return () => clearTimeout(timeout);
-  }, [user, profile, search, selectedClubId]);
+    load();
+  }, [user, profile, selectedClubId]);
 
   // Real-time listener untuk kemaskini UI tanpa refresh page
   useEffect(() => {
@@ -262,21 +262,29 @@ export function AhliPage() {
 
   // Tapis data untuk tab
   const CLUB_ROLES = ['CLUB_MEMBER', 'CLUB_MT', 'CLUB_PRESIDENT', 'CLUB_ADVISOR'];
-  const pendingMembers = memberships.filter(m => {
+
+  // ✅ FIX: Client-side search filter (lebih reliable dari nested ilike)
+  const filteredMemberships = search.trim()
+    ? memberships.filter(m =>
+        m.full_name?.toLowerCase().includes(search.trim().toLowerCase()) ||
+        m.matric_no?.toLowerCase().includes(search.trim().toLowerCase())
+      )
+    : memberships;
+
+  const pendingMembers = filteredMemberships.filter(m => {
     const isPending = m.account_status === 'PENDING' || m.account_status === 'RESIGN_PENDING';
     if (!isPending || !CLUB_ROLES.includes(m.role)) return false;
 
-    // SUPER_ADMIN_JPP sahaja boleh approve Penasihat & Presiden
+    // SUPER_ADMIN_JPP / JPP sahaja boleh approve Penasihat & Presiden
     if (m.role === 'CLUB_PRESIDENT' || m.role === 'CLUB_ADVISOR') {
       return effectiveRole === 'SUPER_ADMIN_JPP' || effectiveRole === 'JPP' || effectiveRole === 'ADMIN';
     }
     
-    // Jawatan lain, JPP, Presiden dan Penasihat boleh approve
-    return effectiveRole === 'SUPER_ADMIN_JPP' || effectiveRole === 'JPP' || effectiveRole === 'ADMIN' || 
-           effectiveRole === 'CLUB_PRESIDENT' || effectiveRole === 'PRESIDEN' || 
-           effectiveRole === 'CLUB_ADVISOR' || effectiveRole === 'PENASIHAT';
+    // ✅ FIX: Gunakan canApprove ATAU isPresident sebagai fallback
+    // supaya walaupun effectiveRole belum sync, presiden masih boleh nampak permohonan
+    return canApprove;
   });
-  const approvedMembers = memberships.filter(m =>
+  const approvedMembers = filteredMemberships.filter(m =>
     m.account_status === 'APPROVED'
   );
 

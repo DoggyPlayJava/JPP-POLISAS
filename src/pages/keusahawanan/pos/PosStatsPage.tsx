@@ -235,7 +235,7 @@ export function PosStatsPage() {
             <div className="grid lg:grid-cols-5 gap-6">
               {/* Bar chart */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-                className="lg:col-span-3 rounded-[2rem] p-6 bg-card border border-border/50">
+                className="lg:col-span-3 rounded-[2rem] p-6 bg-card border border-border/50 min-w-0 overflow-hidden">
                 <div className="flex items-center gap-2 mb-6">
                   <CalendarDays className="w-4 h-4 opacity-40" style={{ color }} />
                   <p className="text-xs font-black uppercase tracking-widest text-foreground">Jualan Harian</p>
@@ -264,7 +264,7 @@ export function PosStatsPage() {
 
               {/* Pie chart */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                className="lg:col-span-2 rounded-[2rem] p-6 bg-card border border-border/50">
+                className="lg:col-span-2 rounded-[2rem] p-6 bg-card border border-border/50 min-w-0 overflow-hidden">
                 <p className="text-xs font-black uppercase tracking-widest text-foreground mb-6">Top Produk</p>
                 {stats.topProducts.length === 0 ? (
                   <div className="h-48 flex items-center justify-center text-sm text-muted-foreground/40 font-black">Tiada data.</div>
@@ -463,7 +463,7 @@ export function PosStatsPage() {
 
               {/* Donut chart pecahan kategori */}
               {stats && stats.expensesByCategory.length > 0 && (
-                <div className="rounded-[2rem] p-6 bg-card border border-border/50">
+                <div className="rounded-[2rem] p-6 bg-card border border-border/50 min-w-0 overflow-hidden">
                   <p className="text-xs font-black uppercase tracking-widest text-foreground mb-4">Pecahan Perbelanjaan</p>
                   <ResponsiveContainer width="100%" height={180}>
                     <PieChart>
