@@ -555,14 +555,14 @@ export function PosOrderPage() {
       {typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
           {successTxn && (
-            <div className="fixed inset-0 z-[9999]">
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setSuccessTxn(null)} />
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="absolute inset-x-4 top-1/2 -translate-y-1/2 max-w-sm mx-auto rounded-3xl p-8 bg-card border border-border shadow-2xl text-center"
+                className="relative w-full max-w-sm mx-auto rounded-3xl p-8 bg-card border border-border shadow-2xl text-center flex flex-col max-h-[90vh] overflow-y-auto"
               >
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1, type: 'spring', stiffness: 300 }}
                   className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"

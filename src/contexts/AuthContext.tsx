@@ -31,8 +31,10 @@ interface AuthContextType {
   primaryClubId: string | null;    // Kelab utama (dari profiles.club_id)
   selectedClubId: string | null;   // Kelab yang sedang dilihat (untuk switcher)
   setSelectedClubId: (id: string) => void;
-  hasKppAccess: boolean;         // SuperAdmin || KPP Exco || MT assigned to KPP
+  hasKppAccess: boolean;           // SuperAdmin || KPP Exco || MT assigned to KPP
   isKppExco: boolean;
+  hasKeusahawananAccess: boolean;  // SuperAdmin || Keusahawanan Exco || MT assigned to KEUSAHAWANAN || Unit Keusahawanan Admin
+  isKeusahawananExco: boolean;
   isJppMember: boolean;
   refetchProfile: () => Promise<void>;
   refreshClubs: () => Promise<void>;
@@ -60,6 +62,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const [isMTKpp, setIsMTKpp] = useState(false);
+  const [isMTKeusahawanan, setIsMTKeusahawanan] = useState(false);
+  const [isUnitKeusahawananAdmin, setIsUnitKeusahawananAdmin] = useState(false);
   const navigate = useNavigate();
   const currentUserId = useRef<string | null>(null);
 
@@ -164,17 +168,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('selectedClubId');
       }
 
-      // Check if MT is assigned to KPP
+      // Check if MT is assigned to KPP or KEUSAHAWANAN
       if (profileData?.role === 'JPP' || profileData?.role === 'SUPER_ADMIN_JPP') {
-        const { data: mtAssign } = await supabase
-          .from('jpp_mt_assignments')
-          .select('unit')
-          .eq('mt_user_id', userId)
-          .eq('unit', 'KPP')
-          .maybeSingle();
-        setIsMTKpp(!!mtAssign);
+        const [kppAssign, keusahawananAssign] = await Promise.all([
+          supabase.from('jpp_mt_assignments').select('unit').eq('mt_user_id', userId).eq('unit', 'KPP').maybeSingle(),
+          supabase.from('jpp_mt_assignments').select('unit').eq('mt_user_id', userId).eq('unit', 'KEUSAHAWANAN').maybeSingle(),
+        ]);
+        setIsMTKpp(!!kppAssign.data);
+        setIsMTKeusahawanan(!!keusahawananAssign.data);
       } else {
         setIsMTKpp(false);
+        setIsMTKeusahawanan(false);
+      }
+
+      // Check if user is a Unit Keusahawanan admin
+      if (profileData?.role === 'JPP' || profileData?.role === 'SUPER_ADMIN_JPP') {
+        const { data: unitAdmin } = await supabase
+          .from('keusahawanan_unit_admins')
+          .select('id')
+          .eq('user_id', userId)
+          .maybeSingle();
+        setIsUnitKeusahawananAdmin(!!unitAdmin);
+      } else {
+        setIsUnitKeusahawananAdmin(false);
       }
     } catch (err) {
       // Jika junction table belum wujud (sebelum migration), jangan crash
@@ -361,7 +377,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // ── DERIVE ROLE FLAGS dari effectiveRole (bukan lagi dari profiles.role) ──
   // KPP Exco mendapat isAdvisor=true GLOBAL supaya boleh switch ke mana-mana kelab
-  const isKppExco   = profileRole === 'JPP' && profile?.jpp_unit === 'KPP';
+  const isKppExco           = profileRole === 'JPP' && profile?.jpp_unit === 'KPP';
+  const isKeusahawananExco  = profileRole === 'JPP' && profile?.jpp_unit === 'KEUSAHAWANAN';
   const isAdvisor   = effectiveRole === 'CLUB_ADVISOR'   || effectiveRole === 'PENASIHAT'   || isSuperAdmin || isKppExco;
   const isPresident = effectiveRole === 'CLUB_PRESIDENT' || effectiveRole === 'PRESIDEN'    || isAdvisor;
   const isMT        = effectiveRole === 'CLUB_MT'        || effectiveRole === 'MT'          || isPresident;
@@ -384,8 +401,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isMember,
         effectiveRole,
         isKppExco,
+        isKeusahawananExco,
         isJppMember,
         hasKppAccess: isSuperAdmin || isKppExco || isMTKpp,
+        hasKeusahawananAccess: isSuperAdmin || isKeusahawananExco || isMTKeusahawanan || isUnitKeusahawananAdmin,
         userClubIds,
         userMemberships,
         primaryClubId,

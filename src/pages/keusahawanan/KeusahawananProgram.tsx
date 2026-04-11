@@ -180,7 +180,7 @@ export function KeusahawananProgram() {
       {typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
           {selectedProgram && (
-            <div className="fixed inset-0 z-[9999]">
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                 onClick={() => setSelectedProgram(null)} />
@@ -189,7 +189,7 @@ export function KeusahawananProgram() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="absolute inset-x-4 top-1/2 -translate-y-1/2 max-w-lg mx-auto rounded-3xl p-6 sm:p-8 bg-card border border-border shadow-2xl max-h-[90vh] overflow-y-auto scrollbar-hide"
+                className="relative w-full max-w-lg mx-auto rounded-3xl p-6 sm:p-8 bg-card border border-border shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto scrollbar-hide"
               >
                 <button onClick={() => setSelectedProgram(null)}
                   className="absolute top-5 right-5 p-1.5 rounded-lg bg-muted text-muted-foreground hover:text-foreground transition-colors">

@@ -43,12 +43,9 @@ export function UrusPerniagaanPage() {
 
   const [businessData, setBusinessData] = useState<any>(null);
   const [members, setMembers]           = useState<any[]>([]);
-  const [unitAdmins, setUnitAdmins]     = useState<any[]>([]);
-  const [searchUser, setSearchUser]     = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [uploading, setUploading]       = useState(false);
   const [saving, setSaving]             = useState(false);
-  const [activeTab, setActiveTab]       = useState<'identiti' | 'staff' | 'pos' | 'log' | 'unit'>('identiti');
+  const [activeTab, setActiveTab]       = useState<'identiti' | 'staff' | 'pos' | 'log'>('identiti');
 
   const [description, setDescription] = useState('');
   const [useShiftSystem, setUseShiftSystem] = useState(true);
@@ -73,47 +70,7 @@ export function UrusPerniagaanPage() {
     await pos.fetchLogs(businessId);
   }, [businessId]);
 
-  // Fetch unit keusahawanan admins
-  const fetchUnitAdmins = useCallback(async () => {
-    const { data } = await supabase
-      .from('keusahawanan_unit_admins')
-      .select('*, user:user_id(id, full_name, avatar_url, matric_number)')
-      .order('created_at', { ascending: false });
-    setUnitAdmins(data || []);
-  }, []);
-
   useEffect(() => { fetchData(); }, [fetchData]);
-  useEffect(() => { if (isSuperAdmin) fetchUnitAdmins(); }, [isSuperAdmin, fetchUnitAdmins]);
-
-  // Search users for unit admin assignment
-  const handleSearchUser = async (q: string) => {
-    setSearchUser(q);
-    if (q.length < 2) { setSearchResults([]); return; }
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, full_name, avatar_url, matric_number')
-      .ilike('full_name', `%${q}%`)
-      .not('id', 'in', `(${unitAdmins.map(a => `'${a.user_id}'`).join(',')||"''"})`)
-      .limit(6);
-    setSearchResults(data || []);
-  };
-
-  const handleAddUnitAdmin = async (userId: string, userName: string) => {
-    const { error } = await supabase
-      .from('keusahawanan_unit_admins')
-      .insert({ user_id: userId, assigned_by: profile?.id, notes: 'Ditugaskan melalui portal e-Keusahawanan' });
-    if (error) { toast.error('Gagal: ' + error.message); return; }
-    toast.success(`${userName} ditambah sebagai Unit Keusahawanan!`);
-    setSearchUser(''); setSearchResults([]);
-    fetchUnitAdmins();
-  };
-
-  const handleRemoveUnitAdmin = async (adminId: string, userName: string) => {
-    if (!window.confirm(`Buang ${userName} dari Unit Keusahawanan?`)) return;
-    await supabase.from('keusahawanan_unit_admins').delete().eq('id', adminId);
-    toast.success(`${userName} dibuang.`);
-    fetchUnitAdmins();
-  };
 
   // ── Identity save ────────────────────────────────────────────────────────
 
@@ -180,7 +137,6 @@ export function UrusPerniagaanPage() {
     { key: 'staff',    label: 'Staff',      icon: Users },
     { key: 'pos',      label: 'POS',        icon: ToggleRight },
     { key: 'log',      label: 'Log',        icon: Logs },
-    ...(isSuperAdmin ? [{ key: 'unit', label: 'Unit Admin', icon: ShieldCheck }] : []),
   ] as const;
 
   return (
@@ -435,83 +391,6 @@ export function UrusPerniagaanPage() {
                 ))}
               </div>
             )}
-          </motion.div>
-        )}
-        {activeTab === 'unit' && isSuperAdmin && (
-          <motion.div key="unit" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="space-y-6">
-            {/* Header info */}
-            <div className="rounded-[2rem] p-5 border border-border/50 bg-amber-500/5 space-y-2">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-amber-500" />
-                <p className="text-xs font-black text-amber-600 uppercase tracking-widest">Unit Keusahawanan — Akses Penuh</p>
-              </div>
-              <p className="text-xs text-muted-foreground/70">
-                Pengguna yang disenaraikan di sini mendapat akses penuh ke semua perniagaan (setaraf Exco Keusahawanan)
-                tanpa perlu ditetapkan sebagai ahli JPP. Sesuai untuk Pegawai Unit Keusahawanan.
-              </p>
-            </div>
-
-            {/* Search + add */}
-            <div className="rounded-[2rem] bg-card border border-border p-6 space-y-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 flex items-center gap-2">
-                <UserPlus className="w-3.5 h-3.5" /> Tambah Pegawai Unit Keusahawanan
-              </p>
-              <div className="relative">
-                <input
-                  value={searchUser}
-                  onChange={e => handleSearchUser(e.target.value)}
-                  placeholder="Cari nama pengguna..."
-                  className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all"
-                />
-                {searchResults.length > 0 && (
-                  <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-2xl bg-card border border-border shadow-xl overflow-hidden">
-                    {searchResults.map(u => (
-                      <button key={u.id} onClick={() => handleAddUnitAdmin(u.id, u.full_name)}
-                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left">
-                        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black text-white flex-shrink-0"
-                          style={{ background: color }}>
-                          {u.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                        </div>
-                        <div>
-                          <p className="text-xs font-black text-foreground">{u.full_name}</p>
-                          <p className="text-[10px] text-muted-foreground/50">{u.matric_number || '—'}</p>
-                        </div>
-                        <span className="ml-auto text-[10px] font-black uppercase px-2 py-0.5 rounded-full"
-                          style={{ background: hexToRgba(color, 0.1), color }}>
-                          + Tambah
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Current unit admins */}
-              <div className="space-y-2 pt-2">
-                {unitAdmins.length === 0 ? (
-                  <p className="text-sm text-muted-foreground/40 text-center py-6">Tiada pegawai unit keusahawanan ditetapkan.</p>
-                ) : unitAdmins.map((a, i) => (
-                  <motion.div key={a.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.03 * i }}
-                    className="flex items-center gap-4 p-4 rounded-2xl bg-muted/20">
-                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm text-white flex-shrink-0"
-                      style={{ background: color }}>
-                      {a.user?.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-black text-foreground">{a.user?.full_name}</p>
-                      <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
-                        <ShieldCheck className="w-3 h-3 text-amber-500" /> Unit Keusahawanan · Akses Penuh
-                      </p>
-                    </div>
-                    <button onClick={() => handleRemoveUnitAdmin(a.id, a.user?.full_name)}
-                      className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center hover:bg-rose-500/20 transition-colors">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>

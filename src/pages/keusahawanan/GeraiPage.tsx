@@ -483,7 +483,7 @@ function GeraiJadual({
       {typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
           {assignModal && (
-            <div className="fixed inset-0 z-[9999]">
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                 onClick={() => setAssignModal(null)} />
@@ -492,7 +492,7 @@ function GeraiJadual({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="absolute inset-x-4 top-1/2 -translate-y-1/2 max-w-sm mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl"
+                className="relative w-full max-w-sm mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto"
               >
                 <h3 className="font-black text-sm mb-0.5">Tugaskan Ahli</h3>
                 <p className="text-[11px] text-muted-foreground mb-4">
@@ -540,7 +540,7 @@ function GeraiJadual({
       {typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
           {swapModal && (
-            <div className="fixed inset-0 z-[9999]">
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                 onClick={() => setSwapModal(null)} />
@@ -549,7 +549,7 @@ function GeraiJadual({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="absolute inset-x-4 top-1/2 -translate-y-1/2 max-w-sm mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl"
+                className="relative w-full max-w-sm mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto"
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-amber-500/10">
@@ -818,7 +818,7 @@ function GeraiSesi({ color, profile }: { color: string; profile: any }) {
       {typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
           {openModal && (
-            <div className="fixed inset-0 z-[9999]">
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpenModal(false)} />
               <motion.div
@@ -826,7 +826,7 @@ function GeraiSesi({ color, profile }: { color: string; profile: any }) {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="absolute inset-x-4 top-1/2 -translate-y-1/2 max-w-sm mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl max-h-[90vh] overflow-y-auto"
+                className="relative w-full max-w-sm mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto"
               >
                 <div className="flex items-center gap-3 mb-5">
                   <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: hexToRgba(color, 0.15) }}>
@@ -902,7 +902,7 @@ function GeraiSesi({ color, profile }: { color: string; profile: any }) {
       {typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
           {closeModal && (
-            <div className="fixed inset-0 z-[9999]">
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setCloseModal(false)} />
               <motion.div
@@ -910,7 +910,7 @@ function GeraiSesi({ color, profile }: { color: string; profile: any }) {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="absolute inset-x-4 top-1/2 -translate-y-1/2 max-w-sm mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl max-h-[90vh] overflow-y-auto"
+                className="relative w-full max-w-sm mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto"
               >
                 <div className="flex items-center gap-3 mb-5">
                   <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: hexToRgba(color, 0.15) }}>

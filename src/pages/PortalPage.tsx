@@ -7,6 +7,7 @@ import { EXCO_MODULES, getExcoColor, ExcoColorSetting, ExcoModule } from '@/conf
 import * as LucideIcons from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'react-hot-toast';
 import { cn, hexToRgba, getContrastText, getMalaysianNickname } from '@/lib/utils';
 
@@ -25,15 +26,6 @@ interface ColorPickerProps {
 function ColorPickerPopover({ moduleId, moduleName, currentColor, onSave, onClose }: ColorPickerProps) {
   const [selectedColor, setSelectedColor] = useState(currentColor);
   const [hexInput, setHexInput]           = useState(currentColor);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [onClose]);
 
   const sync = (hex: string) => { setSelectedColor(hex); setHexInput(hex); };
 
@@ -54,12 +46,8 @@ function ColorPickerPopover({ moduleId, moduleName, currentColor, onSave, onClos
   ];
 
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, scale: 0.95, y: 12 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95, y: 12 }}
-      className="absolute top-full mt-4 right-0 z-[100] w-72 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col border border-white/10 dark:border-white/5 bg-card/80 backdrop-blur-3xl"
+    <div
+      className="flex flex-col"
       onClick={e => e.stopPropagation()}
     >
       <div className="p-5 space-y-5">
@@ -69,13 +57,13 @@ function ColorPickerPopover({ moduleId, moduleName, currentColor, onSave, onClos
             <p className="text-xs font-bold truncate max-w-[140px]">{moduleName}</p>
           </div>
           <div 
-            className="w-10 h-10 rounded-2xl shadow-inner border border-white/20"
+            className="w-10 h-10 rounded-2xl shadow-inner border border-black/10 dark:border-white/20"
             style={{ background: selectedColor }}
           />
         </div>
 
         <div className="space-y-3">
-          <div className="flex items-center gap-2 p-2 rounded-2xl bg-black/5 dark:bg-white/5 border border-white/10">
+          <div className="flex items-center gap-2 p-2 rounded-2xl bg-black/5 dark:bg-black/[0.03] dark:bg-white/5 border border-black/5 dark:border-white/10">
             <div className="relative w-8 h-8 rounded-xl overflow-hidden shadow-sm">
               <input
                 type="color"
@@ -129,7 +117,7 @@ function ColorPickerPopover({ moduleId, moduleName, currentColor, onSave, onClos
           Apply Theme
         </Button>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -179,7 +167,7 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
       transition={{ delay: index * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       onClick={handleClick}
       className={cn(
-        "group relative cursor-pointer overflow-hidden rounded-[2.5rem] bg-white/5 border border-white/10 backdrop-blur-2xl p-8 hover:bg-white/10 transition-all duration-500 min-h-[280px] flex flex-col justify-between",
+        "group relative cursor-pointer overflow-hidden rounded-[2.5rem] bg-black/[0.03] dark:bg-white/5 border border-black/5 dark:border-white/10 backdrop-blur-2xl p-8 hover:bg-black/5 dark:bg-white/10 transition-all duration-500 min-h-[280px] flex flex-col justify-between",
         !canAccess && "opacity-80 grayscale-[0.5] cursor-not-allowed"
       )}
     >
@@ -199,7 +187,7 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
               boxShadow: `inset 0 0 0 1px ${hexToRgba(color, 0.3)}`
             }}
           >
-            <div className="drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+            <div className="drop-shadow-[0_0_15px_rgba(0,0,0,0.1)] dark:shadow-[0_0_15px_rgba(255,255,255,0.3)]">
               <IconComponent className="w-8 h-8" />
             </div>
           </div>
@@ -213,7 +201,7 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
                   ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400" 
                   : isPreviewMode 
                     ? "bg-amber-500/20 border-amber-500/30 text-amber-400"
-                    : "bg-white/5 border-white/10 text-white/40"
+                    : "bg-black/[0.03] dark:bg-white/5 border-black/5 dark:border-white/10 text-slate- dark:text-white/40"
               )}
             >
               {isEnabled ? (
@@ -228,33 +216,36 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
             {/* Admin Tools */}
             {isSuperAdmin && (
               <div className="flex items-center gap-1.5">
-                <div className="relative">
-                  <button
-                    onClick={() => setShowColorPicker(!showColorPicker)}
-                    className={cn(
-                      "p-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all",
-                      showColorPicker && "bg-white/15 text-white ring-2 ring-white/10"
-                    )}
+                <Popover open={showColorPicker} onOpenChange={setShowColorPicker}>
+                  <PopoverTrigger asChild>
+                    <button
+                      className={cn(
+                        "p-2 rounded-xl border border-black/5 dark:border-white/10 bg-black/[0.03] dark:bg-white/5 hover:bg-black/5 dark:bg-white/10 text-slate- dark:text-white/50 hover:text-slate-900 dark:hover:text-white transition-all",
+                        showColorPicker && "bg-black/10 dark:bg-white/15 text-slate-800 dark:text-white ring-2 ring-black/5 dark:ring-white/10"
+                      )}
+                    >
+                      <LucideIcons.Palette className="w-4 h-4" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent 
+                    align="end" 
+                    sideOffset={16} 
+                    className="w-72 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-black/5 dark:border-white/10 bg-slate-900/90 backdrop-blur-3xl p-0 overflow-hidden"
                   >
-                    <LucideIcons.Palette className="w-4 h-4" />
-                  </button>
-                  <AnimatePresence>
-                    {showColorPicker && (
-                      <ColorPickerPopover
-                        moduleId={module.id}
-                        moduleName={module.name}
-                        currentColor={color}
-                        onSave={(id, c) => { onColorSave(id, c); setShowColorPicker(false); }}
-                        onClose={() => setShowColorPicker(false)}
-                      />
-                    )}
-                  </AnimatePresence>
-                </div>
+                    <ColorPickerPopover
+                      moduleId={module.id}
+                      moduleName={module.name}
+                      currentColor={color}
+                      onSave={(id, c) => { onColorSave(id, c); setShowColorPicker(false); }}
+                      onClose={() => setShowColorPicker(false)}
+                    />
+                  </PopoverContent>
+                </Popover>
                 {module.id !== 'ekpp' && (
                   <button
                     onClick={() => onToggle(module.id, !isEnabled)}
                     className={cn(
-                      "p-2 rounded-xl border border-white/10 bg-white/5 transition-all duration-300",
+                      "p-2 rounded-xl border border-black/5 dark:border-white/10 bg-black/[0.03] dark:bg-white/5 transition-all duration-300",
                       isEnabled 
                         ? "text-rose-400 hover:bg-rose-500/20 hover:border-rose-500/30" 
                         : "text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/30"
@@ -269,10 +260,10 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
         </div>
 
         <div>
-          <h2 className={cn("text-2xl font-black mb-2 transition-colors", canAccess ? "text-white" : "text-white/60")}>
+          <h2 className={cn("text-2xl font-black mb-2 transition-colors", canAccess ? "text-slate-800 dark:text-white" : "text-slate- dark:text-white/60")}>
             {module.name}
           </h2>
-          <p className="text-white/70 tracking-tight leading-relaxed">
+          <p className="text-slate- dark:text-white/70 tracking-tight leading-relaxed">
             {module.description}
           </p>
         </div>
@@ -281,13 +272,13 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
       <div className="relative z-10 mt-8 flex items-center justify-between">
         <div className={cn(
           "flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300",
-          canAccess ? "text-white group-hover:gap-4" : "text-white/30"
+          canAccess ? "text-slate-800 dark:text-white group-hover:gap-4" : "text-slate- dark:text-white/30"
         )}>
           <span>{canAccess ? "Akses Modul" : "Bakal Tiba"}</span>
           <LucideIcons.ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
         </div>
         
-        <div className="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-lg bg-white/5 text-white/40">
+        <div className="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-lg bg-black/[0.03] dark:bg-white/5 text-slate- dark:text-white/40">
           {module.tagline}
         </div>
       </div>
@@ -371,7 +362,7 @@ export function PortalPage() {
   const mainColor = getExcoColor('ekpp', settings);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-emerald-500/20 overflow-x-hidden transition-colors duration-500 relative flex flex-col">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-white font-sans selection:bg-emerald-500/20 overflow-x-hidden transition-colors duration-500 relative flex flex-col">
       
       {/* Keusahawanan Onboarding Style Background */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none fixed">
@@ -383,19 +374,19 @@ export function PortalPage() {
       <nav className={cn(
         "fixed top-0 inset-x-0 z-[100] transition-all duration-700 px-4 md:px-8 py-4 flex items-center justify-between",
         isScrolled 
-          ? "bg-slate-950/80 backdrop-blur-2xl border-b border-white/5 py-3 shadow-2xl" 
+          ? "bg-slate-50 dark:bg-slate-950/80 backdrop-blur-2xl border-b border-black-[0.03] dark:border-white/5 py-3 shadow-2xl" 
           : "bg-transparent"
       )}>
         <div className="flex items-center gap-4">
           <motion.div 
             whileHover={{ scale: 1.05, rotate: 2 }} 
-            className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-white/5 flex items-center justify-center p-1.5 shadow-2xl border border-white/10 backdrop-blur-xl"
+            className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-black/[0.03] dark:bg-white/5 flex items-center justify-center p-1.5 shadow-2xl border border-black/5 dark:border-white/10 backdrop-blur-xl"
           >
             <img src="/jpp-logo.png" alt="JPP" className="w-full h-full object-contain" />
           </motion.div>
           <div className="flex flex-col">
-            <span className="text-sm md:text-base font-black tracking-tighter leading-none text-white">JPP PORTAL</span>
-            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Politeknik Polisas</span>
+            <span className="text-sm md:text-base font-black tracking-tighter leading-none text-slate-800 dark:text-white">JPP PORTAL</span>
+            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] text-slate- dark:text-white/50">Politeknik Polisas</span>
           </div>
         </div>
 
@@ -403,7 +394,7 @@ export function PortalPage() {
           {isJPPMode && (
             <button 
               onClick={() => navigate('/jpp-admin')}
-              className="hidden lg:flex items-center gap-2 px-4 py-2 hover:bg-white/10 transition-colors rounded-full bg-white/5 border border-white/10 text-white shadow-xl"
+              className="hidden lg:flex items-center gap-2 px-4 py-2 hover:bg-black/5 dark:bg-white/10 transition-colors rounded-full bg-black/[0.03] dark:bg-white/5 border border-black/5 dark:border-white/10 text-slate-800 dark:text-white shadow-xl"
             >
               <LucideIcons.Crown className="w-3.5 h-3.5 text-amber-500" />
               <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Global JPP Dashboard</span>
@@ -416,22 +407,24 @@ export function PortalPage() {
             </div>
           )}
           
-          <div className="hidden sm:flex items-center gap-3 px-4 py-1 border-x border-white/10">
+          <div className="hidden sm:flex items-center gap-3 px-4 py-1 border-x border-black/5 dark:border-white/10">
             <div className="text-right">
-              <p className="text-xs font-black leading-none text-white">{profile?.full_name?.split(' ').slice(0, 2).join(' ')}</p>
-              <p className="text-[9px] text-white/50 font-black uppercase tracking-widest mt-0.5">{profile?.matric_no}</p>
+              <p className="text-xs font-black leading-none text-slate-800 dark:text-white">{profile?.full_name?.split(' ').slice(0, 2).join(' ')}</p>
+              <p className="text-[9px] text-slate- dark:text-white/50 font-black uppercase tracking-widest mt-0.5">{profile?.matric_no}</p>
             </div>
-            <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 overflow-hidden shadow-inner">
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-black/[0.03] dark:bg-white/5 border border-black/5 dark:border-white/10 flex items-center justify-center text-slate- dark:text-white/50 overflow-hidden shadow-inner">
               <LucideIcons.User className="w-5 h-5" />
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            <div className="hidden sm:block border-r border-black/10 dark:border-white/10 h-6 mx-2" />
+            <ThemeToggle />
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={signOut} 
-              className="rounded-xl h-10 w-10 text-white/50 hover:text-white hover:bg-white/10 transition-all border border-transparent hover:border-white/10"
+              className="rounded-xl h-10 w-10 text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:bg-white/10 transition-all border border-transparent hover:border-black/5 dark:border-white/10"
             >
               <LucideIcons.LogOut className="w-4 h-4" />
             </Button>
@@ -445,10 +438,10 @@ export function PortalPage() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 shadow-lg backdrop-blur-md"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/[0.03] dark:bg-white/5 border border-black/5 dark:border-white/10 shadow-lg backdrop-blur-md"
           >
             <LucideIcons.Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-white/50">
+            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate- dark:text-white/50">
               EKOSISTEM DIGITAL V2.0
             </span>
           </motion.div>
@@ -465,7 +458,7 @@ export function PortalPage() {
                 {displayName}
               </span>
             </h1>
-            <p className="text-sm md:text-lg text-white/50 font-medium max-w-2xl mx-auto leading-relaxed px-4">
+            <p className="text-sm md:text-lg text-slate- dark:text-white/50 font-medium max-w-2xl mx-auto leading-relaxed px-4">
               Platform bersepadu untuk pengurusan kelab, perniagaan, dan aktiviti JPP Polisas. <br className="hidden md:block" />
               Bawa kepimpinan anda ke tahap seterusnya.
             </p>
@@ -510,22 +503,22 @@ export function PortalPage() {
           >
             <AdminStatusIndicator color="bg-emerald-400" label="Sistem Operasi (Live)" />
             <AdminStatusIndicator color="bg-amber-400" label="Pratonton Pentadbir" />
-            <AdminStatusIndicator color="bg-white/20" label="Dalam Pembangunan" />
+            <AdminStatusIndicator color="bg-black/20 dark:bg-white/20" label="Dalam Pembangunan" />
           </motion.div>
         )}
       </main>
 
-      <footer className="relative z-10 py-16 px-6 border-t border-white/10 mt-auto bg-black/20 backdrop-blur-lg">
+      <footer className="relative z-10 py-16 px-6 border-t border-black/5 dark:border-white/10 mt-auto bg-black/20 backdrop-blur-lg">
         <div className="max-w-7xl mx-auto flex flex-col items-center text-center space-y-8">
           <div className="flex items-center gap-4 opacity-50 hover:opacity-100 transition-all duration-700">
             <img src="/jpp-logo.png" alt="JPP" className="h-8 brightness-0 invert" />
-            <div className="h-8 w-px bg-white/20" />
-            <div className="flex flex-col text-left text-white">
+            <div className="h-8 w-px bg-black/20 dark:bg-white/20" />
+            <div className="flex flex-col text-left text-slate-800 dark:text-white">
               <span className="font-black text-xs tracking-tight">POLISAS DIGITAL</span>
               <span className="text-[8px] font-black uppercase tracking-widest opacity-60">EST. 2026</span>
             </div>
           </div>
-          <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em] max-w-md mx-auto leading-loose">
+          <p className="text-[10px] font-black text-slate- dark:text-white/40 uppercase tracking-[0.4em] max-w-md mx-auto leading-loose">
             &copy; 2026 Jawatankuasa Perwakilan Pelajar <br />
             Politeknik Sultan Haji Ahmad Shah
           </p>
@@ -538,8 +531,8 @@ export function PortalPage() {
 function AdminStatusIndicator({ color, label }: { color: string, label: string }) {
   return (
     <div className="flex items-center gap-3">
-      <div className={cn("w-2 h-2 rounded-full", color, "shadow-[0_0_10px_rgba(255,255,255,0.2)]")} />
-      <span className="text-[9px] font-black uppercase tracking-widest text-white/50">{label}</span>
+      <div className={cn("w-2 h-2 rounded-full", color, "shadow-[0_0_10px_rgba(0,0,0,0.1)] dark:shadow-[0_0_10px_rgba(255,255,255,0.2)]")} />
+      <span className="text-[9px] font-black uppercase tracking-widest text-slate- dark:text-white/50">{label}</span>
     </div>
   );
 }

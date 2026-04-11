@@ -412,6 +412,25 @@ export type PosLogAction =
   | 'PRODUCT_ADD' | 'PRODUCT_EDIT' | 'PRODUCT_DELETE' | 'STOCK_EDIT'
   | 'POS_ASSIGNED' | 'STAFF_APPROVED' | 'STAFF_REMOVED' | 'SETTINGS_UPDATED';
 
+export interface CostItem {
+  id:                   string;   // local uuid for key
+  name:                 string;   // nama bahan (e.g. Gula, Balang Air)
+  // Mod kalkulasi: 'measurement' = ratio berat/isipadu, 'yield' = pukal → servis
+  calc_mode:            'measurement' | 'yield';
+  // === MOD SUKATAN (measurement) ===
+  purchase_qty:         number;   // e.g. 1000 (gram yang dibeli)
+  purchase_unit:        string;   // e.g. "g"
+  total_purchase_cost:  number;   // harga beli keseluruhan (e.g. RM 3.50)
+  used_qty:             number;   // e.g. 50g digunakan per produk
+  used_unit:            string;   // e.g. "g" (boleh berbeza, dengan konversi)
+  // === MOD HASIL (yield) ===
+  yield_per_purchase:   number;   // e.g. 25 — 1 balang menghasilkan 25 cawan
+  yield_unit:           string;   // e.g. "cawan" — unit servis/hasil
+  used_per_product:     number;   // e.g. 1 — berapa unit hasil per produk
+  // Auto-kira
+  subtotal:             number;
+}
+
 export interface BusinessProduct {
   id:                    string;
   business_id:           string;
@@ -423,6 +442,10 @@ export interface BusinessProduct {
   stock_alert_threshold: number;
   image_url:             string | null;
   is_available:          boolean;
+  // Smart Product cost fields
+  cost_items:            CostItem[];
+  total_cost:            number;
+  cost_notes:            string | null;
   created_at:            string;
 }
 

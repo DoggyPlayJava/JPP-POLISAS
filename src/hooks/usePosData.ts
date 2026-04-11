@@ -39,7 +39,9 @@ export interface ProcessTransactionPayload {
 }
 
 export interface StatsData {
-  totalRevenue:      number;
+  totalRevenue:      number;  // jumlah selepas diskaun
+  grossRevenue:      number;  // jumlah sebelum diskaun
+  totalDiscounts:    number;  // jumlah diskaun yang diberi
   transactionCount:  number;
   unitsSold:         number;
   averageOrderValue: number;
@@ -313,14 +315,17 @@ export function usePosData(businessId?: string, parentLoading = false) {
 
     if (error) { toast.error('Gagal void: ' + error.message); return; }
 
-    // Restore stock
+    // Restore stock — panggil rpc secara berasingan, bukan inject dalam .update()
     const txn = transactions.find(t => t.id === txnId);
-    if (txn) {
+    if (txn?.items?.length) {
       await Promise.all(
         txn.items.map(item =>
-          supabase
-            .from('business_products')
-            .update({ stock_quantity: supabase.rpc('increment_product_stock', { p_product_id: item.product_id, p_qty: item.qty }) as any })
+          supabase.rpc('increment_product_stock', {
+            p_product_id: item.product_id,
+            p_qty:        item.qty,
+          }).then(({ error: e }) => {
+            if (e) console.warn('[POS] Stock restore failed for', item.product_id, e.message);
+          })
         )
       );
     }
@@ -349,7 +354,7 @@ export function usePosData(businessId?: string, parentLoading = false) {
 
     const { data: txns } = await supabase
       .from('business_transactions')
-      .select('total_amount, items, created_at')
+      .select('total_amount, subtotal, discount_amount, items, created_at')
       .eq('business_id', bId)
       .eq('status', 'COMPLETED')
       .gte('created_at', fromIso)
@@ -357,7 +362,12 @@ export function usePosData(businessId?: string, parentLoading = false) {
 
     const safeArr = txns ?? [];
 
-    const totalRevenue = safeArr.reduce((s: number, t: any) => s + (t.total_amount ?? 0), 0);
+    // Net revenue (selepas diskaun) — nombor sebenar yang diterima
+    const totalRevenue    = safeArr.reduce((s: number, t: any) => s + (t.total_amount ?? 0), 0);
+    // Gross revenue (sebelum diskaun) — guna subtotal jika ada, fallback ke total_amount
+    const grossRevenue    = safeArr.reduce((s: number, t: any) => s + (t.subtotal ?? t.total_amount ?? 0), 0);
+    // Jumlah diskaun
+    const totalDiscounts  = safeArr.reduce((s: number, t: any) => s + (t.discount_amount ?? 0), 0);
     const transactionCount = safeArr.length;
 
     let unitsSold = 0;
@@ -388,6 +398,8 @@ export function usePosData(businessId?: string, parentLoading = false) {
 
     return {
       totalRevenue,
+      grossRevenue,
+      totalDiscounts,
       transactionCount,
       unitsSold,
       averageOrderValue: transactionCount > 0 ? totalRevenue / transactionCount : 0,
