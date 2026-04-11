@@ -12,8 +12,11 @@ import {
   LayoutDashboard, CalendarDays, Lightbulb,
   Award, FileText, LogOut, ChevronLeft, LayoutGrid, Menu, X, Store,
   ShoppingCart, Package, BarChart3, History, Settings2,
-  ChevronDown, Building2, ShieldCheck,
+  ChevronDown, Building2, ShieldCheck, Crown, HelpCircle, MessageSquare, Send, ChevronRight
 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { NotificationBell } from '@/components/ui/NotificationBell';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import {
   BusinessSwitcherProvider,
   useBusinessSwitcher,
@@ -185,8 +188,8 @@ function KeusahawananSidebar({ color }: { color: string }) {
       {/* ── Business Switcher (admin only) ── */}
       {canSwitch && (
         <div className="pt-3" style={{ borderBottom: `1px solid ${hexToRgba(color, 0.1)}` }}>
-          <p className="px-6 pb-1.5 text-[9px] font-black uppercase tracking-[0.3em] text-white/20 flex items-center gap-1.5">
-            <ShieldCheck className="w-3 h-3" /> Pantau Perniagaan
+          <p className="px-6 pb-1.5 text-[9px] font-black uppercase tracking-[0.3em] text-white/30 flex items-center gap-1.5">
+            <Store className="w-3 h-3" /> Tukar Perniagaan
           </p>
           <BusinessSwitcherDropdown color={color} />
         </div>
@@ -248,6 +251,24 @@ function KeusahawananSidebar({ color }: { color: string }) {
           </React.Fragment>
         ))}
       </nav>
+
+      {/* ── Global JPP Dashboard Link (Pinned) ── */}
+      {isJpp && (
+        <div className="px-3 py-2 mt-auto pb-4">
+          <NavLink
+            to="/jpp-admin"
+            className={({ isActive }) => cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border border-amber-500/20',
+              isActive ? 'shadow-inner ring-1 ring-amber-500/50' : ''
+            )}
+          >
+            <div className="w-7 h-7 rounded-lg bg-amber-500/30 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+              <Crown className="w-3.5 h-3.5 text-amber-400" />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-widest leading-tight text-amber-400">Global JPP<br />Dashboard</span>
+          </NavLink>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="p-4 space-y-3" style={{ borderTop: `1px solid ${hexToRgba(color, 0.1)}` }}>
@@ -335,6 +356,7 @@ function LayoutInner({
   isSuperAdmin: boolean;
 }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isLoading: isSwitcherLoading, canSwitch, allBusinesses } = useBusinessSwitcher();
 
   // Redirect to onboarding if: not an admin AND no business found
@@ -372,12 +394,12 @@ function LayoutInner({
         {/* Main content */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-          {/* Mobile header */}
-          <div className="md:hidden flex items-center justify-between px-6 py-4 border-b border-border/10 bg-background/60 backdrop-blur-2xl sticky top-0 z-50">
+          {/* Global header shared on mobile and desktop */}
+          <header className="flex items-center justify-between px-6 py-4 border-b border-border/10 bg-background/60 backdrop-blur-xl sticky top-0 z-50">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setIsSidebarOpen(true)}
-                className="p-2 -ml-2 rounded-xl transition-all active:scale-95 bg-muted/30 text-foreground"
+                className="md:hidden p-2 -ml-2 rounded-xl transition-all active:scale-95 bg-muted/30 text-foreground"
               >
                 <Menu className="w-5 h-5" />
               </button>
@@ -395,12 +417,49 @@ function LayoutInner({
               </div>
             </div>
 
-            {!moduleEnabled && isSuperAdmin && (
-              <div className="px-2.5 py-1 rounded-full text-[9px] font-black bg-amber-500/10 border border-amber-500/20 text-amber-500 uppercase tracking-widest">
-                Pratonton
-              </div>
-            )}
-          </div>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-muted/60 text-muted-foreground/70">
+                    <HelpCircle className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-80 rounded-[2rem] p-5 mt-2 border-none shadow-2xl glass-premium fade-in">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-xl text-primary">
+                        <MessageSquare size={16} />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-black uppercase tracking-widest">Bantuan & Isu</h4>
+                        <p className="text-[9px] font-bold text-muted-foreground mt-0.5">Kami sedia membantu anda.</p>
+                      </div>
+                    </div>
+
+                    <div className="pt-2">
+                       <Button 
+                          variant="outline" 
+                          onClick={() => window.open('https://wa.me/601139413699', '_blank')}
+                          className="w-full rounded-xl h-10 font-black text-[9px] uppercase tracking-widest gap-2 bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20 shadow-none"
+                       >
+                          <Send size={12} /> WhatsApp JPP Support
+                       </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <NotificationBell />
+
+              {!moduleEnabled && isSuperAdmin && (
+                <div className="px-2.5 py-1 rounded-full text-[9px] font-black bg-amber-500/10 border border-amber-500/20 text-amber-500 uppercase tracking-widest hidden sm:block">
+                  Pratonton
+                </div>
+              )}
+            </div>
+          </header>
 
           {/* Pages */}
           {/* PENTING: Jangan guna y/x transforms di sini — ia akan merosakkan
