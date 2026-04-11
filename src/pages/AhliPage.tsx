@@ -74,7 +74,7 @@ export function AhliPage() {
       let query = supabase.from('student_club_memberships')
         .select(`
           *,
-          profiles!inner(
+          profiles(
             id, full_name, matric_no, email, avatar_url
           )
         `);
@@ -87,7 +87,7 @@ export function AhliPage() {
         query = query.ilike('profiles.full_name', `%${search.trim()}%`);
       }
 
-      // Ambil semua data tanpa had (limit_30 dibuang) untuk pastikan MT dan Ahli lama tidak ghaib
+      // Ambil SEMUA status (termasuk PENDING) — jangan filter di sini, biar UI yang filter
       const { data, error } = await query
         .order('created_at', { ascending: false });
 
@@ -98,9 +98,12 @@ export function AhliPage() {
       }
 
       // Mapped to look like profiles for the UI
-      const mapped = (data || []).map(m => ({
+      // PENTING: m.id = membership row id, m.profiles.id = user's profiles.id (= user_id)
+      const mapped = (data || []).filter(m => m.profiles).map(m => ({
         ...m.profiles,
-        membership_id: m.id,
+        // id di sini adalah profiles.id (digunakan sebagai user_id dalam handleStatusAction)
+        id: m.profiles!.id,
+        membership_id: m.id,       // ID row student_club_memberships
         club_id: m.club_id,
         role: m.role,
         account_status: m.account_status,
@@ -190,6 +193,21 @@ export function AhliPage() {
           
         // Buka pintu untuk pengguna ini memandangkan mereka dah diluluskan
         await supabase.from('profiles').update({ account_status: 'APPROVED' }).eq('id', userId);
+
+        // ✅ FIX: Sync profiles.role jika kelab ini adalah primary club user
+        // Semak dulu sama ada ini primary club & apa role yang dimohon
+        const { data: membershipInfo } = await supabase
+          .from('student_club_memberships')
+          .select('role, is_primary')
+          .eq('user_id', userId)
+          .eq('club_id', clubId)
+          .single();
+        
+        if (membershipInfo?.is_primary && membershipInfo?.role) {
+          await supabase.from('profiles')
+            .update({ role: membershipInfo.role })
+            .eq('id', userId);
+        }
       }
 
       // Hantar Notifikasi kepada Pengguna Sendiri
@@ -377,6 +395,7 @@ export function AhliPage() {
                       <div className="flex gap-2 mt-4">
                         {m.account_status === 'RESIGN_PENDING' ? (
                           <>
+                            {/* m.id = profiles.id = user_id yang betul untuk handleStatusAction */}
                             <Button onClick={() => handleStatusAction(m.id, m.club_id, 'KICKED')} className="flex-1 bg-amber-500 hover:bg-amber-500/90 text-white rounded-xl font-black text-[10px] uppercase tracking-widest h-10">
                               Luluskan Berhenti
                             </Button>

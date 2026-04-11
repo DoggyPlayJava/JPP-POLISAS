@@ -29,12 +29,19 @@ export function ClubDetailPage() {
       if (!id) return;
       setLoading(true);
       try {
-        const [clubRes, commRes, actsRes, docsRes, profilesRes] = await Promise.all([
+        const [clubRes, commRes, actsRes, docsRes, profilesRes, membershipRes] = await Promise.all([
           supabase.from('clubs').select('*').eq('id', id).single(),
           supabase.from('club_committee').select('*').eq('club_id', id).order('order_index', { ascending: true }),
           supabase.from('club_activities').select('id, title, status, created_at').eq('club_id', id).order('created_at', { ascending: false }).limit(5),
           supabase.from('club_reports').select('id').eq('club_id', id).limit(100),
-          supabase.from('profiles').select('full_name, avatar_url, role').eq('club_id', id) // 🔥 Ambil role juga
+          supabase.from('profiles').select('full_name, avatar_url, role').eq('club_id', id),
+          // ✅ FIX: Ambil dari student_club_memberships untuk role yang tepat & terkini
+          supabase.from('student_club_memberships')
+            .select('user_id, role, profiles!inner(full_name, avatar_url)')
+            .eq('club_id', id)
+            .eq('account_status', 'APPROVED')
+            .eq('role', 'CLUB_PRESIDENT')
+            .maybeSingle()
         ]);
 
         if (clubRes.error) throw clubRes.error;
@@ -46,17 +53,19 @@ export function ClubDetailPage() {
           return { ...member, avatar_url: match?.avatar_url || null };
         });
 
-        // 🔥 AUTO-INJECT PRESIDEN JIKA BELUM ADA DALAM SENARAI
-        const presidentProfile = registeredProfiles.find(p => p.role === 'CLUB_PRESIDENT');
-        if (presidentProfile) {
-           const alreadyInCommittee = mergedCommittee.some(m => m.full_name === presidentProfile.full_name);
+        // ✅ FIX: AUTO-INJECT PRESIDEN menggunakan student_club_memberships (bukan profiles.role yang stale)
+        const presidentMembership = membershipRes.data as any;
+        if (presidentMembership?.profiles) {
+           const presName = presidentMembership.profiles.full_name;
+           const presAvatar = presidentMembership.profiles.avatar_url;
+           const alreadyInCommittee = mergedCommittee.some(m => m.full_name === presName);
            if (!alreadyInCommittee) {
               const pseudoPresident = {
-                id: 'auto-pres-' + presidentProfile.full_name,
-                full_name: presidentProfile.full_name,
+                id: 'auto-pres-' + presName,
+                full_name: presName,
                 position_title: 'Presiden Kelab',
                 category: 'MT',
-                avatar_url: presidentProfile.avatar_url,
+                avatar_url: presAvatar,
                 club_id: id,
                 order_index: -1 // Supaya sentiasa di atas
               };

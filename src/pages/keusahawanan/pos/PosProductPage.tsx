@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useExcoTheme } from '@/contexts/ExcoThemeContext';
 import { useBusinessSwitcher } from '@/contexts/BusinessSwitcherContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { usePosData } from '@/hooks/usePosData';
 import { supabase } from '@/lib/supabase';
 import { hexToRgba } from '@/lib/utils';
@@ -555,9 +556,10 @@ function MarginPreview({ price, cost, accent }: { price: number; cost: number; a
 
 export function PosProductPage() {
   const { color } = useExcoTheme();
+  const { user, profile, isSuperAdmin } = useAuth();
   const { selectedBusiness, isKeusahawananAdmin } = useBusinessSwitcher();
   const businessId = selectedBusiness?.id;
-  const isOwner = isKeusahawananAdmin || (selectedBusiness as any)?.myRole === 'OWNER';
+  const isOwner = isKeusahawananAdmin || selectedBusiness?.owner_id === user?.id;
 
   const pos = usePosData(businessId);
 
