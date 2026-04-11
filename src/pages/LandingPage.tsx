@@ -319,7 +319,7 @@ export function LandingPage() {
             <div className="flex-1 relative">
               <div className="relative z-10 aspect-square rounded-[3rem] overflow-hidden border-8 border-background shadow-2xl bg-card flex items-center justify-center">
                 <div className="absolute inset-0 bg-primary/5 animate-pulse" />
-                <Cpu className="w-32 h-32 text-primary animate-bounce duration-[3000ms]" />
+                <Cpu className="w-32 h-32 text-primary animate-bounce [animation-duration:3s]" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
                   {[...Array(3)].map((_, i) => (
                     <div key={i} className="absolute border border-primary/20 rounded-full animate-ping"

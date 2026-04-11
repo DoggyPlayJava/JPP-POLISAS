@@ -11,7 +11,7 @@ export default defineConfig({
       injectRegister: 'auto',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       workbox: {
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4MB — bundle ~3.1MB
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024, // 6MB to handle the 4.52MB JS chunk
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
       },
       manifest: {
