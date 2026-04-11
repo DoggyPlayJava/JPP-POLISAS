@@ -179,7 +179,9 @@ export function KeusahawananOnboarding() {
                        <p className="text-white/50">Tiada perniagaan aktif berdaftar buat masa ini.</p>
                     </div>
                   )}
-                  {businesses.map(b => (
+                  {businesses.map(b => {
+                    const hasApplied = myMemberships.some(m => m.business_id === b.id);
+                    return (
                     <div key={b.id} className="bg-white/5 border border-white/10 rounded-3xl p-6 flex flex-col justify-between group hover:bg-white/10 transition-colors">
                       <div>
                         <div className="flex items-start justify-between mb-4">
@@ -203,12 +205,15 @@ export function KeusahawananOnboarding() {
                             </Avatar>
                             <span className="truncate">{b.owner?.full_name}</span>
                          </div>
-                         <Button onClick={() => handleJoin(b.id)} className="w-full font-black uppercase tracking-widest text-xs h-10 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all">
-                           Mohon Sertai
+                         <Button 
+                            onClick={() => handleJoin(b.id)} 
+                            disabled={hasApplied}
+                            className={`w-full font-black uppercase tracking-widest text-xs h-10 ${hasApplied ? 'bg-white/10 text-white/40 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]'} rounded-xl transition-all`}>
+                           {hasApplied ? 'Sedang Diproses' : 'Mohon Sertai'}
                          </Button>
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
               </motion.div>
             )}

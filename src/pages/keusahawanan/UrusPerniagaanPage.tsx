@@ -9,8 +9,10 @@ import { hexToRgba } from '@/lib/utils';
 import {
   Camera, Save, Users, ShieldCheck, Trash2, Check, X, Clock,
   Activity, Building2, ToggleLeft, ToggleRight, UserPlus, Logs,
+  Tag, Ticket, BadgePercent, Plus,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { type BusinessPromotion, type PosDiscountType } from '@/types';
 
 
 type LogActionLabel = Record<string, string>;
@@ -25,6 +27,12 @@ const LOG_LABELS: LogActionLabel = {
   STAFF_APPROVED:     'Ahli Diluluskan',
   STAFF_REMOVED:      'Ahli Dibuang',
   SETTINGS_UPDATED:   'Tetapan Dikemaskini',
+  EXPENSE_ADD:        'Perbelanjaan Direkodkan',
+  EXPENSE_DELETE:     'Perbelanjaan Dipadam',
+  PROMO_CREATE:       'Promosi Dicipta',
+  PROMO_USED:         'Kupon Digunakan',
+  PROMO_TOGGLE:       'Promosi Dikemaskini',
+  CASH_CHECKPOINT:    'Checkpoint Tunai',
 };
 
 const fmtDT = (iso: string) => new Date(iso).toLocaleString('ms-MY', {
@@ -33,22 +41,35 @@ const fmtDT = (iso: string) => new Date(iso).toLocaleString('ms-MY', {
 
 export function UrusPerniagaanPage() {
   const { color } = useExcoTheme();
-  const { profile, isSuperAdmin } = useAuth();
+  const { user, profile, isSuperAdmin } = useAuth();
   const { selectedBusiness, isKeusahawananAdmin } = useBusinessSwitcher();
-
-  const businessId = selectedBusiness?.id;
-  const isOwner = isKeusahawananAdmin;
-
-  const pos = usePosData(businessId);
 
   const [businessData, setBusinessData] = useState<any>(null);
   const [members, setMembers]           = useState<any[]>([]);
   const [uploading, setUploading]       = useState(false);
   const [saving, setSaving]             = useState(false);
-  const [activeTab, setActiveTab]       = useState<'identiti' | 'staff' | 'pos' | 'log'>('identiti');
+  const [activeTab, setActiveTab]       = useState<'identiti' | 'staff' | 'pos' | 'ciri' | 'log'>('identiti');
 
   const [description, setDescription] = useState('');
   const [useShiftSystem, setUseShiftSystem] = useState(true);
+
+  // Derived
+  const businessId = selectedBusiness?.id;
+  const isOwner = isKeusahawananAdmin || 
+    (selectedBusiness?.owner_id === user?.id) || 
+    (members.find(m => m.user_id === user?.id)?.role === 'OWNER');
+
+  const pos = usePosData(businessId);
+
+  // Ciri: toggles & promosi
+  const [promotionsEnabled, setPromotionsEnabled] = useState(false);
+  const [cashSessionEnabled, setCashSessionEnabled] = useState(false);
+  const [toggSaving, setToggSaving] = useState<string | null>(null);
+  const [promotions, setPromotions] = useState<BusinessPromotion[]>([]);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const EMPTY_PROMO = { code: '', name: '', discount_type: 'PERCENT' as PosDiscountType, discount_value: '', min_purchase: '0', max_uses: '', valid_from: '', valid_until: '' };
+  const [promoForm, setPromoForm] = useState({ ...EMPTY_PROMO });
+  const [promoSaving, setPromoSaving] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!businessId) return;
@@ -59,6 +80,9 @@ export function UrusPerniagaanPage() {
       .single();
     setBusinessData(biz);
     setDescription(biz?.description || '');
+    // Toggles
+    setPromotionsEnabled(biz?.promotions_enabled ?? false);
+    setCashSessionEnabled(biz?.cash_session_enabled ?? false);
 
     const { data: mems } = await supabase
       .from('student_business_memberships')
@@ -71,6 +95,64 @@ export function UrusPerniagaanPage() {
   }, [businessId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Load promotions when ciri tab is opened
+  useEffect(() => {
+    if (activeTab === 'ciri' && businessId) loadPromotions();
+  }, [activeTab, businessId]);
+
+  const loadPromotions = async () => {
+    if (!businessId) return;
+    setPromoLoading(true);
+    const data = await pos.fetchPromotions(businessId);
+    setPromotions(data);
+    setPromoLoading(false);
+  };
+
+  const handleToggleFeature = async (field: 'promotions_enabled' | 'cash_session_enabled', value: boolean) => {
+    if (!businessId) return;
+    setToggSaving(field);
+    const { error } = await supabase.from('keusahawanan_businesses').update({ [field]: value }).eq('id', businessId);
+    if (error) { toast.error('Gagal kemaskini tetapan.'); }
+    else {
+      if (field === 'promotions_enabled') setPromotionsEnabled(value);
+      else setCashSessionEnabled(value);
+      await pos.writeLog(businessId, 'SETTINGS_UPDATED', `${field === 'promotions_enabled' ? 'Sistem Promosi' : 'Sesi Tunai'} ${value ? 'diaktifkan' : 'dinyahaktifkan'}.`);
+      toast.success((field === 'promotions_enabled' ? 'Sistem Promosi' : 'Sesi Tunai') + (value ? ' diaktifkan.' : ' dinyahaktifkan.'));
+    }
+    setToggSaving(null);
+  };
+
+  const handleAddPromo = async () => {
+    if (!businessId) return;
+    if (!promoForm.code.trim() || !promoForm.name.trim()) { toast.error('Kod dan nama promosi wajib diisi.'); return; }
+    if (!promoForm.discount_value || parseFloat(promoForm.discount_value) <= 0) { toast.error('Nilai diskaun mesti lebih dari 0.'); return; }
+    setPromoSaving(true);
+    const ok = await pos.addPromotion(businessId, {
+      code:           promoForm.code.toUpperCase().trim(),
+      name:           promoForm.name.trim(),
+      discount_type:  promoForm.discount_type,
+      discount_value: parseFloat(promoForm.discount_value),
+      min_purchase:   parseFloat(promoForm.min_purchase) || 0,
+      max_uses:       promoForm.max_uses ? parseInt(promoForm.max_uses) : null,
+      valid_from:     promoForm.valid_from || null,
+      valid_until:    promoForm.valid_until || null,
+      is_active:      true,
+    });
+    if (ok) { setPromoForm({ ...EMPTY_PROMO }); await loadPromotions(); }
+    setPromoSaving(false);
+  };
+
+  const handleTogglePromo = async (p: BusinessPromotion) => {
+    await pos.togglePromotion(p.id, businessId!, !p.is_active);
+    await loadPromotions();
+  };
+
+  const handleDeletePromo = async (p: BusinessPromotion) => {
+    if (!window.confirm(`Padam promosi "${p.code}"?`)) return;
+    await pos.deletePromotion(p.id, businessId!, p.code);
+    await loadPromotions();
+  };
 
   // ── Identity save ────────────────────────────────────────────────────────
 
@@ -104,21 +186,33 @@ export function UrusPerniagaanPage() {
   // ── Staff management ──────────────────────────────────────────────────────
 
   const handleApproveMember = async (memberId: string, userId: string, userName: string) => {
-    await supabase.from('student_business_memberships').update({ status: 'ACTIVE' }).eq('id', memberId);
+    const { error } = await supabase.from('student_business_memberships').update({ status: 'ACTIVE' }).eq('id', memberId);
+    if (error) {
+      toast.error('Gagal meluluskan: ' + error.message);
+      return;
+    }
     await pos.writeLog(businessId!, 'STAFF_APPROVED', `${userName} telah diluluskan sebagai ahli perniagaan.`, { user_id: userId, user_name: userName });
     toast.success(`${userName} diluluskan!`);
     fetchData();
   };
 
   const handleRejectMember = async (memberId: string, userId: string, userName: string) => {
-    await supabase.from('student_business_memberships').update({ status: 'REJECTED' }).eq('id', memberId);
+    const { error } = await supabase.from('student_business_memberships').update({ status: 'REJECTED' }).eq('id', memberId);
+    if (error) {
+      toast.error('Gagal menolak: ' + error.message);
+      return;
+    }
     toast.success('Permohonan ditolak.');
     fetchData();
   };
 
   const handleRemoveMember = async (memberId: string, userId: string, userName: string) => {
     if (!window.confirm(`Buang ${userName} dari perniagaan?`)) return;
-    await supabase.from('student_business_memberships').delete().eq('id', memberId);
+    const { error } = await supabase.from('student_business_memberships').delete().eq('id', memberId);
+    if (error) {
+      toast.error('Gagal membuang: ' + error.message);
+      return;
+    }
     await pos.writeLog(businessId!, 'STAFF_REMOVED', `${userName} telah dibuang dari perniagaan.`, { user_id: userId, user_name: userName });
     toast.success(`${userName} dibuang.`);
     fetchData();
@@ -136,6 +230,7 @@ export function UrusPerniagaanPage() {
     { key: 'identiti', label: 'Identiti',  icon: Building2 },
     { key: 'staff',    label: 'Staff',      icon: Users },
     { key: 'pos',      label: 'POS',        icon: ToggleRight },
+    { key: 'ciri',     label: 'Ciri',       icon: Tag },
     { key: 'log',      label: 'Log',        icon: Logs },
   ] as const;
 
@@ -358,6 +453,178 @@ export function UrusPerniagaanPage() {
             <div className="text-[10px] text-muted-foreground/40 italic px-1">
               * Pemilik perniagaan dan Exco Keusahawanan sentiasa boleh akses POS tanpa assignment.
             </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'ciri' && (
+          <motion.div key="ciri" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="space-y-6">
+
+            {/* Feature toggles */}
+            <div className="rounded-[2rem] bg-card border border-border p-6 space-y-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-foreground flex items-center gap-2">
+                <ToggleRight className="w-4 h-4" style={{ color }} /> Aktifkan Ciri Komersial
+              </p>
+
+              {/* Promotions toggle */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border/50">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Ticket className="w-4 h-4" style={{ color }} />
+                    <p className="text-sm font-black text-foreground">Sistem Kupon & Promosi</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">Benarkan penggunaan kod kupon semasa proses pembayaran di POS.</p>
+                </div>
+                <button onClick={() => isOwner && handleToggleFeature('promotions_enabled', !promotionsEnabled)}
+                  disabled={toggSaving === 'promotions_enabled' || !isOwner}
+                  className="transition-transform active:scale-95 disabled:opacity-40">
+                  {promotionsEnabled
+                    ? <ToggleRight className="w-8 h-8" style={{ color }} />
+                    : <ToggleLeft className="w-8 h-8 text-muted-foreground/40" />}
+                </button>
+              </div>
+
+              {/* Cash session toggle */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border/50">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <BadgePercent className="w-4 h-4" style={{ color }} />
+                    <p className="text-sm font-black text-foreground">Sesi Baldi Wang (Cash Checkpoint)</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">Rekod amaun tunai dalam baldi pada sebarang masa (buka pagi, semak tengahari, tutup malam).</p>
+                </div>
+                <button onClick={() => isOwner && handleToggleFeature('cash_session_enabled', !cashSessionEnabled)}
+                  disabled={toggSaving === 'cash_session_enabled' || !isOwner}
+                  className="transition-transform active:scale-95 disabled:opacity-40">
+                  {cashSessionEnabled
+                    ? <ToggleRight className="w-8 h-8" style={{ color }} />
+                    : <ToggleLeft className="w-8 h-8 text-muted-foreground/40" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Promotion management — only shown when promotions enabled */}
+            {promotionsEnabled && (
+              <div className="grid lg:grid-cols-5 gap-6">
+                {/* Create form */}
+                <div className="lg:col-span-2 rounded-[2rem] bg-card border border-border p-6 space-y-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-foreground flex items-center gap-2">
+                    <Plus className="w-3.5 h-3.5" /> Cipta Kupon Baharu
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Kod Kupon</p>
+                      <input type="text" value={promoForm.code} onChange={e => setPromoForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
+                        placeholder="JIMAT10" className="w-full h-9 px-3 rounded-xl text-xs font-black outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all tracking-widest" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Jenis Diskaun</p>
+                      <select value={promoForm.discount_type} onChange={e => setPromoForm(f => ({ ...f, discount_type: e.target.value as PosDiscountType }))}
+                        className="w-full h-9 px-3 rounded-xl text-xs font-medium outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all">
+                        <option value="PERCENT">Peratus (%)</option>
+                        <option value="FIXED">Tetap (RM)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Nama Promosi</p>
+                    <input type="text" value={promoForm.name} onChange={e => setPromoForm(f => ({ ...f, name: e.target.value }))}
+                      placeholder="Diskaun Hari Jadi" className="w-full h-9 px-3 rounded-xl text-xs font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Nilai {promoForm.discount_type === 'PERCENT' ? '(%)' : '(RM)'}</p>
+                      <input type="number" min="0" step="0.01" value={promoForm.discount_value} onChange={e => setPromoForm(f => ({ ...f, discount_value: e.target.value }))}
+                        placeholder="10" className="w-full h-9 px-3 rounded-xl text-xs font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Min Beli (RM)</p>
+                      <input type="number" min="0" step="0.01" value={promoForm.min_purchase} onChange={e => setPromoForm(f => ({ ...f, min_purchase: e.target.value }))}
+                        placeholder="0" className="w-full h-9 px-3 rounded-xl text-xs font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Had Guna (kosong=∞)</p>
+                      <input type="number" min="1" value={promoForm.max_uses} onChange={e => setPromoForm(f => ({ ...f, max_uses: e.target.value }))}
+                        placeholder="∞" className="w-full h-9 px-3 rounded-xl text-xs font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Sah Dari</p>
+                      <input type="date" value={promoForm.valid_from} onChange={e => setPromoForm(f => ({ ...f, valid_from: e.target.value }))}
+                        className="w-full h-9 px-3 rounded-xl text-xs font-medium outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Sah Hingga</p>
+                      <input type="date" value={promoForm.valid_until} onChange={e => setPromoForm(f => ({ ...f, valid_until: e.target.value }))}
+                        className="w-full h-9 px-3 rounded-xl text-xs font-medium outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all" />
+                    </div>
+                  </div>
+
+                  <button onClick={handleAddPromo} disabled={promoSaving}
+                    className="w-full h-10 rounded-xl text-xs font-black transition-all hover:opacity-90 disabled:opacity-50"
+                    style={{ background: color, color: '#fff' }}>
+                    {promoSaving ? 'Menyimpan...' : '+ Cipta Kupon'}
+                  </button>
+                </div>
+
+                {/* Promo list */}
+                <div className="lg:col-span-3 rounded-[2rem] bg-card border border-border p-6 space-y-3">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-foreground flex items-center gap-2">
+                    <Ticket className="w-3.5 h-3.5" style={{ color }} /> Senarai Kupon ({promotions.length})
+                  </p>
+                  {promoLoading ? (
+                    <div className="h-20 flex items-center justify-center">
+                      <div className="w-5 h-5 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: color, borderTopColor: 'transparent' }} />
+                    </div>
+                  ) : promotions.length === 0 ? (
+                    <p className="text-sm text-muted-foreground/40 text-center py-8 font-black">Tiada kupon lagi. Cipta yang pertama!</p>
+                  ) : (
+                    <div className="space-y-2 max-h-96 overflow-y-auto scrollbar-hide">
+                      {promotions.map(p => {
+                        const isExpired = p.valid_until && new Date().toISOString().split('T')[0] > p.valid_until;
+                        const isFull    = p.max_uses !== null && p.uses_count >= p.max_uses;
+                        return (
+                          <div key={p.id} className="flex items-center gap-3 p-3 rounded-2xl bg-muted/20 hover:bg-muted/30 transition-colors group">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="px-2 py-0.5 rounded-lg text-[10px] font-black tracking-widest"
+                                  style={{ background: hexToRgba(color, 0.1), color }}>{p.code}</span>
+                                <p className="text-xs font-black text-foreground truncate">{p.name}</p>
+                                {(isExpired || isFull) && <span className="px-1.5 py-0.5 rounded-full text-[8px] font-black bg-rose-500/10 text-rose-500">TAMAT</span>}
+                              </div>
+                              <p className="text-[9px] text-muted-foreground/50 mt-0.5">
+                                {p.discount_type === 'PERCENT' ? `${p.discount_value}% diskaun` : `RM${p.discount_value.toFixed(2)} diskaun`}
+                                {p.min_purchase > 0 ? ` · Min RM${p.min_purchase.toFixed(2)}` : ''}
+                                {p.max_uses !== null ? ` · ${p.uses_count}/${p.max_uses} guna` : ` · ${p.uses_count} kali guna`}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button onClick={() => handleTogglePromo(p)} className="transition-transform active:scale-95">
+                                {p.is_active
+                                  ? <ToggleRight className="w-6 h-6" style={{ color }} />
+                                  : <ToggleLeft className="w-6 h-6 text-muted-foreground/40" />}
+                              </button>
+                              <button onClick={() => handleDeletePromo(p)}
+                                className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-muted-foreground/40 hover:text-rose-500 transition-all">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
 

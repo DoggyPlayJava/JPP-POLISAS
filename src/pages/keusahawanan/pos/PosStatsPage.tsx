@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useExcoTheme } from '@/contexts/ExcoThemeContext';
 import { useBusinessSwitcher } from '@/contexts/BusinessSwitcherContext';
 import { usePosData, StatsData } from '@/hooks/usePosData';
@@ -11,11 +11,21 @@ import {
 import {
   DollarSign, Receipt, Package, TrendingUp, CalendarDays,
   AlertTriangle, Layers, ShoppingBag, BarChart3, ChevronRight,
+  Wallet, MinusCircle, Plus, Trash2, TrendingDown,
 } from 'lucide-react';
+import { type BusinessExpense, type ExpenseCategory } from '@/types';
+import toast from 'react-hot-toast';
 
 type Range = '1d' | '7d' | '1m';
 const RANGE_LABELS: Record<Range, string> = { '1d': '1 Hari', '7d': '7 Hari', '1m': '1 Bulan' };
 const PIE_COLORS = ['#7c3aed', '#2563eb', '#059669', '#d97706', '#dc2626'];
+const EXPENSE_CATEGORIES: ExpenseCategory[] = ['Sewa', 'Bekalan', 'Pengangkutan', 'Pemasaran', 'Lain-lain'];
+const EXPENSE_CAT_COLORS: Record<ExpenseCategory, string> = {
+  Sewa: '#7c3aed', Bekalan: '#2563eb', Pengangkutan: '#f59e0b',
+  Pemasaran: '#059669', 'Lain-lain': '#dc2626',
+};
+
+const EMPTY_EXPENSE_FORM = { amount: '', category: 'Lain-lain' as ExpenseCategory, description: '', expense_date: '' };
 
 function KPICard({ icon: Icon, label, value, sub, color, delay }: any) {
   return (
@@ -32,7 +42,7 @@ function KPICard({ icon: Icon, label, value, sub, color, delay }: any) {
   );
 }
 
-type Tab = 'jualan' | 'produk';
+type Tab = 'jualan' | 'produk' | 'perbelanjaan';
 
 export function PosStatsPage() {
   const { color } = useExcoTheme();
@@ -45,12 +55,65 @@ export function PosStatsPage() {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Ciri 2: Expense state
+  const [expenses, setExpenses] = useState<BusinessExpense[]>([]);
+  const [expLoading, setExpLoading] = useState(false);
+  const [expSaving, setExpSaving] = useState(false);
+  const [expForm, setExpForm] = useState({ ...EMPTY_EXPENSE_FORM });
+
   useEffect(() => {
     if (isBusinessLoading) return;
     if (!businessId) { setLoading(false); return; }
     setLoading(true);
     pos.fetchStats(businessId, range).then(s => { setStats(s); setLoading(false); });
   }, [businessId, range, isBusinessLoading]);
+
+  // Fetch expenses when tab or range changes
+  useEffect(() => {
+    if (tab !== 'perbelanjaan' || !businessId || isBusinessLoading) return;
+    loadExpenses();
+  }, [tab, businessId, range, isBusinessLoading]);
+
+  const loadExpenses = async () => {
+    if (!businessId) return;
+    setExpLoading(true);
+    const now = new Date();
+    const from = new Date(now);
+    if (range === '7d') from.setDate(now.getDate() - 6);
+    if (range === '1m') from.setDate(now.getDate() - 29);
+    const fromDate = from.toISOString().split('T')[0];
+    const toDate   = now.toISOString().split('T')[0];
+    const data = await pos.fetchExpenses(businessId, fromDate, toDate);
+    setExpenses(data);
+    setExpLoading(false);
+  };
+
+  const handleAddExpense = async () => {
+    if (!businessId) return;
+    if (!expForm.amount || parseFloat(expForm.amount) <= 0) { toast.error('Masukkan jumlah yang sah.'); return; }
+    if (!expForm.description.trim()) { toast.error('Keterangan perbelanjaan wajib diisi.'); return; }
+    setExpSaving(true);
+    const ok = await pos.addExpense(businessId, {
+      amount:       parseFloat(expForm.amount),
+      category:     expForm.category,
+      description:  expForm.description.trim(),
+      expense_date: expForm.expense_date || undefined,
+    });
+    if (ok) {
+      setExpForm({ ...EMPTY_EXPENSE_FORM });
+      await loadExpenses();
+      // Refresh stats to update P&L
+      pos.fetchStats(businessId, range).then(s => setStats(s));
+    }
+    setExpSaving(false);
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    if (!businessId || !window.confirm('Padam rekod perbelanjaan ini?')) return;
+    await pos.deleteExpense(id, businessId);
+    await loadExpenses();
+    pos.fetchStats(businessId, range).then(s => setStats(s));
+  };
 
   const fmtRM = (v: number) => `RM ${v.toFixed(2)}`;
 
@@ -103,7 +166,7 @@ export function PosStatsPage() {
         <div className="flex items-center gap-3">
           {/* Tab */}
           <div className="flex gap-1 bg-muted/30 p-1 rounded-2xl">
-            {([['jualan', 'Jualan'], ['produk', 'Produk']] as [Tab, string][]).map(([key, label]) => (
+            {([['jualan', 'Jualan'], ['produk', 'Produk'], ['perbelanjaan', 'Belanja']] as [Tab, string][]).map(([key, label]) => (
               <button key={key} onClick={() => setTab(key)}
                 className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                 style={tab === key
@@ -112,8 +175,8 @@ export function PosStatsPage() {
                 }>{label}</button>
             ))}
           </div>
-          {/* Range filter (only for jualan tab) */}
-          {tab === 'jualan' && (
+          {/* Range filter (jualan & perbelanjaan tabs) */}
+          {(tab === 'jualan' || tab === 'perbelanjaan') && (
             <div className="flex gap-2 bg-muted/30 p-1 rounded-2xl">
               {(Object.entries(RANGE_LABELS) as [Range, string][]).map(([key, label]) => (
                 <button key={key} onClick={() => setRange(key)}
@@ -135,14 +198,23 @@ export function PosStatsPage() {
           </div>
         ) : stats ? (
           <>
-            {/* KPI cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* KPI cards — 5 items: tambah Untung Bersih */}
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
               <KPICard icon={DollarSign} label="Jualan Bersih" value={fmtRM(stats.totalRevenue)}
                 sub={stats.grossRevenue > stats.totalRevenue ? `Bruto: ${fmtRM(stats.grossRevenue)}` : undefined}
                 color={color} delay={0.05} />
               <KPICard icon={Receipt} label="Transaksi" value={stats.transactionCount} color={color} delay={0.1} />
               <KPICard icon={Package} label="Unit Terjual" value={stats.unitsSold} color={color} delay={0.15} />
               <KPICard icon={TrendingUp} label="Purata Order (AOV)" value={fmtRM(stats.averageOrderValue)} color={color} delay={0.2} />
+              {/* Ciri 2: Untung Bersih */}
+              <KPICard
+                icon={stats.netProfit >= 0 ? TrendingUp : TrendingDown}
+                label="Untung Bersih (Anggaran)"
+                value={fmtRM(stats.netProfit)}
+                sub={stats.totalExpenses > 0 ? `Tolak belanja: ${fmtRM(stats.totalExpenses)}` : 'Tiada belanja direkodkan'}
+                color={stats.netProfit >= 0 ? '#22c55e' : '#ef4444'}
+                delay={0.25}
+              />
             </div>
 
             {/* Discount alert — tunjuk jika ada diskaun diberi */}
@@ -236,7 +308,7 @@ export function PosStatsPage() {
         ) : (
           <div className="h-40 flex items-center justify-center text-muted-foreground/40 font-black text-sm">Gagal memuatkan statistik.</div>
         )
-      ) : (
+      ) : tab === 'produk' ? (
         /* ── Tab: Analisis Produk ──────────────────────────────────────────── */
         <div className="space-y-6">
           {/* KPI: Inventory Overview */}
@@ -269,8 +341,6 @@ export function PosStatsPage() {
                 {productAnalysis.map(p => {
                   const mi = p.margin;
                   const mc = getMarginColor(mi);
-                  // Smart restock: estimate days remaining based on totalInventory / avgDailySales
-                  // We use stock_quantity as proxy — can be enhanced with real sales data
                   const daysLeft = (stats && p.stock_quantity > 0)
                     ? (() => {
                         const sold = stats.topProducts.find(tp => tp.name === p.name)?.units ?? 0;
@@ -290,7 +360,6 @@ export function PosStatsPage() {
                           )}
                         </div>
                         <p className="text-[9px] text-muted-foreground/50">{p.category} · Stok: {p.stock_quantity}</p>
-                        {/* Margin bar */}
                         <div className="mt-1 h-1 rounded-full bg-muted/50 overflow-hidden w-32">
                           <div className="h-full rounded-full" style={{ width: `${mi !== null ? Math.min(mi, 100) : 0}%`, background: mc }} />
                         </div>
@@ -321,6 +390,131 @@ export function PosStatsPage() {
               </div>
             )}
           </motion.div>
+        </div>
+      ) : (
+        /* ── Tab: Perbelanjaan Operasi (Ciri 2) ──────────────────────────── */
+        <div className="space-y-6">
+          {/* KPI: P&L Summary */}
+          {stats && (
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              <KPICard icon={DollarSign} label="Jualan Bersih" value={fmtRM(stats.totalRevenue)} color={color} delay={0.05} />
+              <KPICard icon={MinusCircle} label="Jumlah Perbelanjaan" value={fmtRM(stats.totalExpenses)} color="#ef4444" delay={0.1} />
+              <KPICard
+                icon={stats.netProfit >= 0 ? TrendingUp : TrendingDown}
+                label="Untung Bersih (Anggaran)"
+                value={fmtRM(stats.netProfit)}
+                sub={stats.netProfit >= 0 ? '✅ Untung' : '🔴 Rugi'}
+                color={stats.netProfit >= 0 ? '#22c55e' : '#ef4444'}
+                delay={0.15}
+              />
+            </div>
+          )}
+
+          <div className="grid lg:grid-cols-5 gap-6">
+            {/* Form tambah perbelanjaan */}
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+              className="lg:col-span-2 rounded-[2rem] p-6 bg-card border border-border/50 space-y-4">
+              <div className="flex items-center gap-2">
+                <Plus className="w-4 h-4" style={{ color }} />
+                <p className="text-xs font-black uppercase tracking-widest text-foreground">Rekod Perbelanjaan</p>
+              </div>
+
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Jumlah (RM)</p>
+                <input type="number" min="0" step="0.01" value={expForm.amount}
+                  onChange={e => setExpForm(f => ({ ...f, amount: e.target.value }))}
+                  placeholder="0.00"
+                  className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
+              </div>
+
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Kategori</p>
+                <select value={expForm.category} onChange={e => setExpForm(f => ({ ...f, category: e.target.value as ExpenseCategory }))}
+                  className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all">
+                  {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Keterangan</p>
+                <input type="text" value={expForm.description}
+                  onChange={e => setExpForm(f => ({ ...f, description: e.target.value }))}
+                  placeholder="cth: Sewa tapak, Beg plastik..."
+                  className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
+              </div>
+
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Tarikh (kosong = hari ini)</p>
+                <input type="date" value={expForm.expense_date}
+                  onChange={e => setExpForm(f => ({ ...f, expense_date: e.target.value }))}
+                  className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all" />
+              </div>
+
+              <button onClick={handleAddExpense} disabled={expSaving}
+                className="w-full h-10 rounded-xl text-xs font-black transition-all hover:opacity-90 disabled:opacity-50"
+                style={{ background: color, color: '#fff' }}>
+                {expSaving ? 'Menyimpan...' : '+ Tambah Perbelanjaan'}
+              </button>
+            </motion.div>
+
+            {/* Senarai & Pie chart */}
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+              className="lg:col-span-3 space-y-6">
+
+              {/* Donut chart pecahan kategori */}
+              {stats && stats.expensesByCategory.length > 0 && (
+                <div className="rounded-[2rem] p-6 bg-card border border-border/50">
+                  <p className="text-xs font-black uppercase tracking-widest text-foreground mb-4">Pecahan Perbelanjaan</p>
+                  <ResponsiveContainer width="100%" height={180}>
+                    <PieChart>
+                      <Pie data={stats.expensesByCategory} dataKey="amount" nameKey="category"
+                        cx="50%" cy="50%" outerRadius={70} innerRadius={40}
+                        label={({ category, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                        {stats.expensesByCategory.map((e, i) => (
+                          <Cell key={i} fill={EXPENSE_CAT_COLORS[e.category as ExpenseCategory] ?? PIE_COLORS[i % PIE_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 10 }} />
+                      <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 12, fontSize: 11 }} formatter={(v: number) => [`RM ${v.toFixed(2)}`]} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {/* Senarai perbelanjaan */}
+              <div className="rounded-[2rem] p-6 bg-card border border-border/50">
+                <div className="flex items-center gap-2 mb-4">
+                  <Wallet className="w-4 h-4 opacity-40" style={{ color }} />
+                  <p className="text-xs font-black uppercase tracking-widest text-foreground">Rekod Perbelanjaan</p>
+                </div>
+
+                {expLoading ? (
+                  <div className="h-24 flex items-center justify-center">
+                    <div className="w-6 h-6 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: color, borderTopColor: 'transparent' }} />
+                  </div>
+                ) : expenses.length === 0 ? (
+                  <p className="text-sm text-muted-foreground/40 text-center py-6 font-black">Tiada rekod dalam tempoh ini.</p>
+                ) : (
+                  <div className="space-y-2 max-h-80 overflow-y-auto scrollbar-hide">
+                    {expenses.map(e => (
+                      <div key={e.id} className="flex items-center gap-3 p-3 rounded-2xl bg-muted/20 hover:bg-muted/30 transition-colors group">
+                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: EXPENSE_CAT_COLORS[e.category] ?? '#888' }} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-black text-foreground truncate">{e.description}</p>
+                          <p className="text-[9px] text-muted-foreground/50">{e.category} · {new Date(e.expense_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                        </div>
+                        <p className="text-sm font-black text-rose-500 shrink-0">- {fmtRM(e.amount)}</p>
+                        <button onClick={() => handleDeleteExpense(e.id)}
+                          className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-muted-foreground/40 hover:text-rose-500 transition-all">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
         </div>
       )}
     </div>

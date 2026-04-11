@@ -56,8 +56,14 @@ export function BusinessSwitcherProvider({ children }: { children: React.ReactNo
 
   const [allBusinesses,     setAllBusinesses]     = useState<KeusahawananBusiness[]>([]);
   const [myBusinessId,      setMyBusinessId]       = useState<string | undefined>(undefined);
-  const [selectedId,        setSelectedId]         = useState<string | undefined>(undefined);
+  const [selectedId,        setSelectedIdState]    = useState<string | undefined>(() => localStorage.getItem('keusahawanan_selected_business') || undefined);
   const [isUnitKeusahawanan, setIsUnitKeusahawanan] = useState(false);
+
+  const setSelectedId = useCallback((id: string | undefined) => {
+    if (id) localStorage.setItem('keusahawanan_selected_business', id);
+    else localStorage.removeItem('keusahawanan_selected_business');
+    setSelectedIdState(id);
+  }, []);
   const [isLoading,         setIsLoading]          = useState(true);
 
   // ── Derived flags ─────────────────────────────────────────────────────────
@@ -68,7 +74,8 @@ export function BusinessSwitcherProvider({ children }: { children: React.ReactNo
   const isKeusahawananAdmin =
     isSuperAdmin || isExcoKeusahawanan || isUnitKeusahawanan;
 
-  const canSwitch = isKeusahawananAdmin;
+  // Users can switch if they are admin OR they have more than 1 active business.
+  const canSwitch = isKeusahawananAdmin || allBusinesses.length > 1;
 
   // ── Fetch ─────────────────────────────────────────────────────────────────
 
@@ -101,10 +108,10 @@ export function BusinessSwitcherProvider({ children }: { children: React.ReactNo
         setAllBusinesses(bizList || []);
 
         // Start on first business (or keep existing selection)
-        setSelectedId(prev => prev || bizList?.[0]?.id);
+        setSelectedId(selectedId || bizList?.[0]?.id);
       } else {
-        // 3. For regular students — get their own ACTIVE membership's business
-        const { data: mem } = await supabase
+        // 3. For regular students — get all their ACTIVE memberships
+        const { data: mems } = await supabase
           .from('student_business_memberships')
           .select(`
             business:keusahawanan_businesses(
@@ -114,15 +121,21 @@ export function BusinessSwitcherProvider({ children }: { children: React.ReactNo
             )
           `)
           .eq('user_id', user.id)
-          .eq('status', 'ACTIVE')
-          .limit(1)
-          .maybeSingle();
+          .eq('status', 'ACTIVE');
 
-        const biz = (mem?.business as unknown) as KeusahawananBusiness | null;
-        if (biz) {
-          setAllBusinesses([biz]);
-          setSelectedId(biz.id);
-          setMyBusinessId(biz.id);
+        if (mems && mems.length > 0) {
+          const bizList = mems.map(m => m.business as unknown as KeusahawananBusiness).filter(Boolean);
+          setAllBusinesses(bizList);
+          
+          // Try to restore previous selection
+          const savedId = selectedId || localStorage.getItem('keusahawanan_selected_business');
+          const isValid = bizList.some(b => b.id === savedId);
+          const defaultId = isValid ? savedId : bizList[0].id;
+          
+          setSelectedId(defaultId);
+          
+          // Set first business as "myBusinessId" for fallback purposes
+          if (bizList.length > 0) setMyBusinessId(bizList[0].id);
         }
       }
     } finally {

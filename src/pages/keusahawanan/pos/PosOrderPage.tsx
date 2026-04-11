@@ -9,9 +9,9 @@ import { hexToRgba } from '@/lib/utils';
 import {
   ShoppingCart, Search, Plus, Minus, Trash2, X, Percent, Tag,
   CreditCard, Banknote, QrCode, CheckCircle2, FileText, AlertTriangle,
-  ShieldOff, Package, ChevronDown, RotateCcw,
+  ShieldOff, Package, ChevronDown, RotateCcw, Ticket,
 } from 'lucide-react';
-import { type BusinessProduct, type BusinessTransactionItem } from '@/types';
+import { type BusinessProduct, type BusinessTransactionItem, type BusinessPromotion } from '@/types';
 import toast from 'react-hot-toast';
 import { EInvoiceModal } from '@/components/keusahawanan/EInvoiceModal';
 
@@ -167,6 +167,13 @@ export function PosOrderPage() {
   const [successTxn, setSuccessTxn]     = useState<any>(null);
   const [showInvoice, setShowInvoice]   = useState(false);
 
+  // Ciri 5: Kupon / Promosi
+  const promotionsEnabled = (selectedBusiness as any)?.promotions_enabled ?? false;
+  const [couponCode, setCouponCode]         = useState('');
+  const [couponValidating, setCouponValidating] = useState(false);
+  const [appliedPromo, setAppliedPromo]     = useState<BusinessPromotion | null>(null);
+  const [couponError, setCouponError]       = useState('');
+
   const searchRef = useRef<HTMLInputElement>(null);
 
   // ── Derived ───────────────────────────────────────────────────────────────
@@ -185,14 +192,26 @@ export function PosOrderPage() {
   }, [pos.products, search, categoryFilter]);
 
   const subtotal = cart.reduce((s, i) => s + i.total_price, 0);
+
+  // Manual diskaun (hanya aktif jika tiada promo digunakan)
   const discountRM = useMemo(() => {
+    if (appliedPromo) return 0; // mutex: kupon mengatasi manual diskaun
     const v = parseFloat(discountValue) || 0;
     if (!discountEnabled || v <= 0) return 0;
     if (discountType === 'PERCENT') return parseFloat(((v / 100) * subtotal).toFixed(2));
     return Math.min(v, subtotal);
-  }, [discountEnabled, discountType, discountValue, subtotal]);
+  }, [appliedPromo, discountEnabled, discountType, discountValue, subtotal]);
 
-  const totalAmount  = Math.max(0, subtotal - discountRM);
+  // Diskaun dari kupon promosi
+  const promoDiscountRM = useMemo(() => {
+    if (!appliedPromo) return 0;
+    if (appliedPromo.discount_type === 'PERCENT')
+      return parseFloat(((appliedPromo.discount_value / 100) * subtotal).toFixed(2));
+    return Math.min(appliedPromo.discount_value, subtotal);
+  }, [appliedPromo, subtotal]);
+
+  const effectiveDiscountRM = appliedPromo ? promoDiscountRM : discountRM;
+  const totalAmount  = Math.max(0, subtotal - effectiveDiscountRM);
   const receivedRM   = parseFloat(receivedAmount) || 0;
   const changeAmount = paymentMethod === 'CASH' ? receivedRM - totalAmount : 0;
 
@@ -243,6 +262,35 @@ export function PosOrderPage() {
     setDiscountNote('');
     setReceivedAmount('');
     setPaymentMethod('CASH');
+    // Reset kupon
+    setCouponCode('');
+    setAppliedPromo(null);
+    setCouponError('');
+  };
+
+  // Ciri 5: Validate & apply promo code
+  const handleApplyCoupon = async () => {
+    if (!businessId || !couponCode.trim()) return;
+    setCouponValidating(true);
+    setCouponError('');
+    const result = await pos.validatePromoCode(businessId, couponCode.trim(), subtotal);
+    setCouponValidating(false);
+    if (result.valid && result.promotion) {
+      setAppliedPromo(result.promotion);
+      setDiscountEnabled(false); // mutex: clear manual diskaun
+      setDiscountValue('');
+      setDiscountNote('');
+      toast.success(`Kupon "${result.promotion.code}" berjaya digunakan!`);
+    } else {
+      setCouponError(result.error ?? 'Kod tidak sah.');
+      setAppliedPromo(null);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedPromo(null);
+    setCouponCode('');
+    setCouponError('');
   };
 
   // ── Process Payment ───────────────────────────────────────────────────────
@@ -259,12 +307,15 @@ export function PosOrderPage() {
       businessId,
       items: cart,
       paymentMethod,
-      discountType:   discountEnabled ? discountType : undefined,
-      discountAmount: discountEnabled ? (parseFloat(discountValue) || 0) : 0,
-      discountNote:   discountEnabled ? discountNote : undefined,
+      // Jika kupon digunakan, hantar sebagai PERCENT/FIXED diskaun
+      discountType:   appliedPromo ? appliedPromo.discount_type : (discountEnabled ? discountType : undefined),
+      discountAmount: appliedPromo ? appliedPromo.discount_value : (discountEnabled ? (parseFloat(discountValue) || 0) : 0),
+      discountNote:   appliedPromo ? `Kupon: ${appliedPromo.code}` : (discountEnabled ? discountNote : undefined),
       receivedAmount: paymentMethod === 'CASH' ? receivedRM : undefined,
       customerName:   customerName || undefined,
       customerNote:   customerNote || undefined,
+      promotionId:    appliedPromo?.id,
+      promotionCode:  appliedPromo?.code,
     });
     setProcessing(false);
 
@@ -272,7 +323,10 @@ export function PosOrderPage() {
 
     setSuccessTxn({
       ...result?.transaction,
-      subtotal, discountRM, totalAmount, changeAmount,
+      subtotal,
+      discountRM: effectiveDiscountRM,
+      totalAmount,
+      changeAmount,
       businessName: activeBusiness?.name,
       businessLogo: activeBusiness?.logo_url,
       serverName:   profile?.full_name,
@@ -454,12 +508,51 @@ export function PosOrderPage() {
                   ))}
                 </div>
 
-                {/* Discount toggle */}
-                <div className="rounded-2xl border border-border/50 overflow-hidden">
+                {/* Ciri 5: Kupon Promosi — hanya jika promotions_enabled */}
+                {promotionsEnabled && (
+                  <div className="rounded-2xl border border-border/50 overflow-hidden">
+                    <div className="flex items-center gap-2 px-4 py-3 bg-muted/20">
+                      <Ticket className="w-3.5 h-3.5" style={{ color }} />
+                      <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground flex-1">Kod Kupon</span>
+                    </div>
+                    <div className="p-3 border-t border-border/30">
+                      {appliedPromo ? (
+                        <div className="flex items-center justify-between p-2.5 rounded-xl"
+                          style={{ background: hexToRgba(color, 0.08), border: `1px solid ${hexToRgba(color, 0.25)}` }}>
+                          <div>
+                            <p className="text-[10px] font-black tracking-widest" style={{ color }}>{appliedPromo.code}</p>
+                            <p className="text-[9px] text-muted-foreground/60">{appliedPromo.name} · -{fmtRM(promoDiscountRM)}</p>
+                          </div>
+                          <button onClick={handleRemoveCoupon}
+                            className="w-6 h-6 rounded-lg text-rose-500 bg-rose-500/10 hover:bg-rose-500/20 flex items-center justify-center">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <input value={couponCode} onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponError(''); }}
+                            onKeyDown={e => e.key === 'Enter' && handleApplyCoupon()}
+                            placeholder="Masukkan kod kupon..."
+                            className="flex-1 h-9 px-3 rounded-xl text-xs font-black tracking-widest outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all uppercase" />
+                          <button onClick={handleApplyCoupon} disabled={couponValidating || !couponCode.trim()}
+                            className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-wider disabled:opacity-40 transition-all"
+                            style={{ background: hexToRgba(color, 0.1), color }}>
+                            {couponValidating ? '...' : 'Guna'}
+                          </button>
+                        </div>
+                      )}
+                      {couponError && <p className="text-[9px] text-rose-500 mt-1 font-black">{couponError}</p>}
+                    </div>
+                  </div>
+                )}
+
+                {/* Diskaun manual — hanya jika tiada kupon digunakan */}
+                <div className={`rounded-2xl border border-border/50 overflow-hidden ${appliedPromo ? 'opacity-40 pointer-events-none' : ''}`}>
                   <button onClick={() => setDiscountEnabled(v => !v)}
                     className="w-full flex items-center justify-between px-4 py-3 bg-muted/20 hover:bg-muted/30 transition-colors">
                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                      <Tag className="w-3.5 h-3.5" /> Diskaun
+                      <Tag className="w-3.5 h-3.5" /> Diskaun Manual
+                      {appliedPromo && <span className="text-[8px] text-rose-400 normal-case font-black">(tidak aktif — kupon digunakan)</span>}
                     </div>
                     <ChevronDown className={`w-4 h-4 text-muted-foreground/50 transition-transform ${discountEnabled ? 'rotate-180' : ''}`} />
                   </button>
@@ -502,7 +595,13 @@ export function PosOrderPage() {
                     <span>Subtotal</span>
                     <span className="font-black">{fmtRM(subtotal)}</span>
                   </div>
-                  {discountRM > 0 && (
+                  {appliedPromo && promoDiscountRM > 0 && (
+                    <div className="flex justify-between text-xs" style={{ color }}>
+                      <span className="font-black">🎟️ Kupon: {appliedPromo.code}</span>
+                      <span className="font-black">-{fmtRM(promoDiscountRM)}</span>
+                    </div>
+                  )}
+                  {!appliedPromo && discountRM > 0 && (
                     <div className="flex justify-between text-xs text-emerald-600">
                       <span>Diskaun {discountNote ? `(${discountNote})` : ''}</span>
                       <span className="font-black">-{fmtRM(discountRM)}</span>

@@ -839,19 +839,31 @@ export function PosProductPage() {
                   </div>
 
                   {/* Basic Fields */}
-                  {[
-                    { label: 'Nama Produk', key: 'name', type: 'text', placeholder: 'Nasi Lemak Ayam' },
-                    { label: 'Stok Semasa', key: 'stock_quantity', type: 'number', placeholder: '20' },
-                    { label: 'Had Amaran Stok', key: 'stock_alert_threshold', type: 'number', placeholder: '5' },
-                  ].map(field => (
-                    <div key={field.key}>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">{field.label}</p>
-                      <input type={field.type} value={(form as any)[field.key]}
-                        onChange={e => setForm(f => ({ ...f, [field.key]: e.target.value }))}
-                        placeholder={field.placeholder}
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Nama Produk</p>
+                    <input type="text" value={form.name}
+                      onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                      placeholder="Nasi Lemak Ayam"
+                      className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Stok Semasa</p>
+                      <input type="number" min="0" value={form.stock_quantity}
+                        onChange={e => setForm(f => ({ ...f, stock_quantity: e.target.value }))}
+                        placeholder="20"
                         className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
                     </div>
-                  ))}
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Had Amaran Stok</p>
+                      <input type="number" min="0" value={form.stock_alert_threshold}
+                        onChange={e => setForm(f => ({ ...f, stock_alert_threshold: e.target.value }))}
+                        placeholder="5"
+                        className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
+                      <p className="text-[9px] text-muted-foreground/40 mt-1 leading-tight">⚠️ Amaran muncul apabila stok ≤ nilai ini</p>
+                    </div>
+                  </div>
 
                   {/* Category */}
                   <div>

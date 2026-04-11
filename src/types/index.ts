@@ -410,7 +410,11 @@ export type PosTransactionStatus = 'COMPLETED' | 'VOIDED';
 export type PosLogAction =
   | 'TRANSACTION_CREATE' | 'TRANSACTION_VOID'
   | 'PRODUCT_ADD' | 'PRODUCT_EDIT' | 'PRODUCT_DELETE' | 'STOCK_EDIT'
-  | 'POS_ASSIGNED' | 'STAFF_APPROVED' | 'STAFF_REMOVED' | 'SETTINGS_UPDATED';
+  | 'POS_ASSIGNED' | 'STAFF_APPROVED' | 'STAFF_REMOVED' | 'SETTINGS_UPDATED'
+  // Ciri baharu — mesti selari dengan DB enum pos_log_action
+  | 'EXPENSE_ADD' | 'EXPENSE_DELETE'
+  | 'PROMO_CREATE' | 'PROMO_USED' | 'PROMO_TOGGLE'
+  | 'CASH_CHECKPOINT';
 
 export interface CostItem {
   id:                   string;   // local uuid for key
@@ -503,5 +507,53 @@ export interface BusinessPosAssignment {
   created_at:  string;
   // Joined
   user?:       { id: string; full_name: string; avatar_url?: string };
+}
+
+// ─── Ciri Komersial Baharu ──────────────────────────────────────────────────
+
+/** Kategori perbelanjaan operasi */
+export type ExpenseCategory = 'Sewa' | 'Bekalan' | 'Pengangkutan' | 'Pemasaran' | 'Lain-lain';
+
+/** Rekod perbelanjaan operasi (bukan kos produk) */
+export interface BusinessExpense {
+  id:           string;
+  business_id:  string;
+  amount:       number;
+  category:     ExpenseCategory;
+  description:  string;
+  expense_date: string;
+  recorded_by:  string | null;
+  created_at:   string;
+}
+
+/** Kupon / Kod Promosi untuk perniagaan pelajar */
+export interface BusinessPromotion {
+  id:             string;
+  business_id:    string;
+  code:           string;
+  name:           string;
+  discount_type:  PosDiscountType;
+  discount_value: number;
+  min_purchase:   number;
+  max_uses:       number | null;    // null = unlimited
+  uses_count:     number;
+  valid_from:     string | null;
+  valid_until:    string | null;
+  is_active:      boolean;
+  created_by:     string | null;
+  created_at:     string;
+}
+
+/** Checkpoint rekod wang baldi (boleh berbilang sehari) */
+export interface BusinessCashCheckpoint {
+  id:              string;
+  business_id:     string;
+  label:           string;          // e.g. 'Buka Pagi', 'Semak 12pm'
+  cash_amount:     number;
+  note:            string | null;
+  recorded_by:     string | null;
+  checkpoint_time: string;
+  checkpoint_date: string;
+  created_at:      string;
 }
 

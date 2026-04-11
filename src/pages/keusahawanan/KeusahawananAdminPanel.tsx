@@ -319,6 +319,14 @@ export function KeusahawananAdminPanel() {
         .eq('id', b.id);
       if (error) throw error;
 
+      // Update owner's membership status to ACTIVE
+      const { error: memError } = await supabase
+        .from('student_business_memberships')
+        .update({ status: 'ACTIVE' })
+        .eq('business_id', b.id)
+        .eq('user_id', b.owner_id);
+      if (memError) throw memError;
+
       // Notify owner
       await supabase.from('notifications').insert({
         user_id: b.owner_id,
