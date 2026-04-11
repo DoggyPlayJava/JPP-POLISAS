@@ -28,6 +28,12 @@ import { PenasihatLogPage } from './pages/PenasihatLogPage';
 import { KarnivalVotingPage } from './pages/KarnivalVotingPage';
 import { NexusPage } from './pages/NexusPage';
 import { PortalPage } from './pages/PortalPage';
+// ── JPP HQ Portal (prefix: /jpp/) ──
+import { JppLayout }          from './pages/jpp/JppLayout';
+import { JppHomePage }        from './pages/jpp/JppHomePage';
+import { JppMembersPage }     from './pages/jpp/JppMembersPage';
+import { JppOverviewPage }    from './pages/jpp/JppOverviewPage';
+import { JppUnitDashboard }   from './pages/jpp/JppUnitDashboard';
 // ── e-Keusahawanan (prefix: /keusahawanan/) ──
 import { KeusahawananLayout } from './pages/keusahawanan/KeusahawananLayout';
 import { KeusahawananDashboard } from './pages/keusahawanan/KeusahawananDashboard';
@@ -106,6 +112,14 @@ function AppRoutes() {
           <Route path="/karnival" element={<KarnivalVotingPage />} />
           <Route path="/nexus" element={<NexusPage />} />
         </Route>
+        {/* ── JPP HQ Portal (prefix: /jpp/) ── */}
+        <Route element={<RequireApproval><JppLayout /></RequireApproval>}>
+          <Route path="/jpp"                  element={<JppHomePage />} />
+          <Route path="/jpp/members"          element={<JppMembersPage />} />
+          <Route path="/jpp/overview"         element={<JppOverviewPage />} />
+          <Route path="/jpp/unit/:unitCode"   element={<JppUnitDashboard />} />
+        </Route>
+
         {/* ── e-Keusahawanan Onboarding (No Sidebar) ── */}
         <Route path="/keusahawanan/onboarding" element={<RequireApproval><KeusahawananOnboarding /></RequireApproval>} />
 

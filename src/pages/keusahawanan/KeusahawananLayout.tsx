@@ -38,20 +38,20 @@ function getSidebarBg(hex: string): { top: string; bottom: string } {
 }
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Papan Pemuka',     href: '/keusahawanan/dashboard',      jppOnly: false, ownerOnly: false },
-  { icon: CalendarDays,    label: 'Program',           href: '/keusahawanan/program',         jppOnly: false, ownerOnly: false },
-  { icon: Store,           label: 'Gerai JPP',         href: '/keusahawanan/gerai',           jppOnly: true,  ownerOnly: false },
+  { icon: LayoutDashboard, label: 'Papan Pemuka',     href: '/keusahawanan/dashboard',      jppOnly: false, ownerOnly: false, posSection: false },
+  { icon: CalendarDays,    label: 'Program',           href: '/keusahawanan/program',         jppOnly: false, ownerOnly: false, posSection: false },
+  { icon: Store,           label: 'Gerai JPP',         href: '/keusahawanan/gerai',           jppOnly: true,  ownerOnly: false, posSection: false },
   // POS System
-  { icon: ShoppingCart,    label: 'Kedai POS',         href: '/keusahawanan/pos',             jppOnly: false, ownerOnly: false, posSection: true },
-  { icon: Package,         label: 'Katalog Produk',    href: '/keusahawanan/pos/products',    jppOnly: false, ownerOnly: false },
-  { icon: BarChart3,       label: 'Statistik',         href: '/keusahawanan/pos/stats',       jppOnly: false, ownerOnly: false },
-  { icon: History,         label: 'Sejarah Transaksi', href: '/keusahawanan/pos/history',     jppOnly: false, ownerOnly: false },
-  { icon: Settings2,       label: 'Urus Perniagaan',   href: '/keusahawanan/urus-perniagaan', jppOnly: false, ownerOnly: true  },
+  { icon: ShoppingCart,    label: 'Kedai POS',         href: '/keusahawanan/pos',             jppOnly: false, ownerOnly: false, posSection: true  },
+  { icon: Package,         label: 'Katalog Produk',    href: '/keusahawanan/pos/products',    jppOnly: false, ownerOnly: false, posSection: false },
+  { icon: BarChart3,       label: 'Statistik',         href: '/keusahawanan/pos/stats',       jppOnly: false, ownerOnly: false, posSection: false },
+  { icon: History,         label: 'Sejarah Transaksi', href: '/keusahawanan/pos/history',     jppOnly: false, ownerOnly: false, posSection: false },
+  { icon: Settings2,       label: 'Urus Perniagaan',   href: '/keusahawanan/urus-perniagaan', jppOnly: false, ownerOnly: true,  posSection: false },
   // Lain-lain
-  { icon: Lightbulb,       label: 'Cadangan Idea',     href: '/keusahawanan/idea',            jppOnly: false, ownerOnly: false },
-  { icon: Award,           label: 'Geran & Hadiah',    href: '/keusahawanan/geran',           jppOnly: false, ownerOnly: false },
-  { icon: FileText,        label: 'Laporan',           href: '/keusahawanan/laporan',         jppOnly: false, ownerOnly: false },
-] as const;
+  { icon: Lightbulb,       label: 'Cadangan Idea',     href: '/keusahawanan/idea',            jppOnly: false, ownerOnly: false, posSection: false },
+  { icon: Award,           label: 'Geran & Hadiah',    href: '/keusahawanan/geran',           jppOnly: false, ownerOnly: false, posSection: false },
+  { icon: FileText,        label: 'Laporan',           href: '/keusahawanan/laporan',         jppOnly: false, ownerOnly: false, posSection: false },
+];
 
 
 // ── Business Switcher Dropdown (in sidebar) ───────────────────────────────────
@@ -137,7 +137,7 @@ function KeusahawananSidebar({ color }: { color: string }) {
 
   // For ownerOnly items: admin can always see; students only if they own the selected biz
   const isOwner = isKeusahawananAdmin || selectedBusiness?.owner_id === user?.id;
-  const isJpp = profile?.role === 'SUPER_ADMIN_JPP' || profile?.role === 'JPP';
+  const isJpp = isSuperAdmin || profile?.role === 'JPP';
 
   const displayName = profile?.full_name || user?.email?.split('@')[0] || '?';
   const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();

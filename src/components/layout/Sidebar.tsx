@@ -50,7 +50,7 @@ type NavItem = {
 const EKPP_ROUTES = [
   '/dashboard', '/kelab', '/sertai-kelab', '/aktiviti', '/ahli',
   '/tetapan', '/carian', '/laporan', '/urus-kelab', '/semakan-laporan',
-  '/jpp-admin', '/leaderboard', '/logs', '/karnival', '/nexus',
+  '/leaderboard', '/logs', '/karnival', '/nexus',
 ];
 
 function detectActiveExco(pathname: string): string | null {
@@ -86,7 +86,7 @@ const EKPP_PRESIDENT_NAV: NavItem[] = [
 
 const EKPP_ADMIN_NAV: NavItem[] = [
   { icon: ClipboardCheck, label: 'Semakan Laporan', href: '/semakan-laporan' },
-  { icon: ShieldCheck,    label: 'JPP Admin', href: '/jpp-admin' },
+  // /jpp-admin has been removed — accessible via JPP HQ Portal sidebar only
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -487,20 +487,20 @@ export function Sidebar() {
       {activeExco === 'sukan' && <PlaceholderSidebarContent excoId="sukan" />}
       {activeExco === null && <EkppSidebarContent />}
 
-      {/* ── Global JPP Dashboard Link (Pinned) ── */}
+      {/* ── JPP HQ Portal Link (Pinned) ── */}
       {(isSuperAdmin || profile?.role === 'JPP') && (
         <div className="px-3 py-2 mt-auto pb-4">
             <NavLink
-                to="/jpp-admin"
+                to="/jpp"
                 className={({ isActive }) => cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 border border-rose-500/20',
-                    isActive ? 'shadow-inner ring-1 ring-rose-500/50' : ''
+                    'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border border-amber-500/20',
+                    isActive ? 'shadow-inner ring-1 ring-amber-500/50' : ''
                 )}
             >
-                <div className="w-7 h-7 rounded-lg bg-rose-500/30 flex items-center justify-center shadow-lg">
-                    <Crown className="w-3.5 h-3.5 text-rose-400" />
+                <div className="w-7 h-7 rounded-lg bg-amber-500/30 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                    <Crown className="w-3.5 h-3.5 text-amber-400" />
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-widest leading-tight">Global JPP<br/>Dashboard</span>
+                <span className="text-[10px] font-black uppercase tracking-widest leading-tight text-amber-400">JPP HQ<br/>Portal</span>
             </NavLink>
         </div>
       )}
