@@ -2653,7 +2653,7 @@ function JppMemberPanel({ allUsers, onRefresh, isSuperAdmin, profile }: { allUse
 
             {/* Edit Member Modal */}
             {editModal && (
-                <div className="fixed inset-0 z-50 p-4 sm:p-6 flex items-center justify-center overflow-y-auto">
+                <div className="fixed inset-0 z-[200] p-4 pb-20 sm:p-6 flex items-center justify-center overflow-y-auto">
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setEditModal(null)} />
                     <div className="relative z-10 w-full max-w-md bg-card rounded-[2rem] sm:rounded-[2.5rem] p-6 border border-border shadow-2xl flex flex-col max-h-full overflow-y-auto">
                         {/* Modal Header */}
@@ -2902,7 +2902,7 @@ function JppExcoUnitsManager({ excoUnits, onRefresh }: { excoUnits: JppExcoUnit[
 
             {/* Add/Edit Modal */}
             {showAdd && (
-                <div className="fixed inset-0 z-50 p-4 sm:p-6 flex items-center justify-center overflow-y-auto">
+                <div className="fixed inset-0 z-[200] p-4 pb-20 sm:p-6 flex items-center justify-center overflow-y-auto">
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAdd(false)} />
                     <div className="relative z-10 w-full max-w-sm bg-card rounded-[2rem] sm:rounded-[2.5rem] p-6 border border-border shadow-2xl flex flex-col max-h-full overflow-y-auto">
                         <div className="flex items-center justify-between mb-5">
