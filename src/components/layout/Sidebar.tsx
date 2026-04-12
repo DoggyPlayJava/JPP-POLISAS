@@ -19,6 +19,10 @@ import {
   LayoutGrid,
   ChevronLeft,
   Crown,
+  Landmark,
+  Lightbulb,
+  HeartHandshake,
+  HelpCircle,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -88,6 +92,26 @@ const EKPP_ADMIN_NAV: NavItem[] = [
   { icon: ClipboardCheck, label: 'Semakan Laporan', href: '/semakan-laporan' },
   // /jpp-admin has been removed — accessible via JPP HQ Portal sidebar only
 ];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SubKomponen: Render Icon Exco (Lucide atau Emoji)
+// ─────────────────────────────────────────────────────────────────────────────
+function RenderExcoIcon({ iconName, className }: { iconName: string; className?: string }) {
+  const icons: Record<string, React.ElementType> = {
+    Landmark,
+    Lightbulb,
+    HeartHandshake,
+    Trophy,
+  };
+
+  const IconComp = icons[iconName];
+  if (IconComp) {
+    return <IconComp className={className} />;
+  }
+
+  // Jika bukan nama Lucide, mungkin ia emoji
+  return <span className={className}>{iconName}</span>;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SubKomponen: NavItem generik
@@ -283,7 +307,9 @@ function PlaceholderSidebarContent({ excoId }: { excoId: string }) {
   return (
     <nav className="flex-1 py-6 px-3 overflow-y-auto scrollbar-hide">
       <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
-        <span className="text-4xl">{mod?.icon ?? '🔧'}</span>
+        <div className="w-16 h-16 rounded-3xl flex items-center justify-center text-4xl mb-2" style={{ background: mod ? `linear-gradient(135deg, ${mod.defaultColor}20, ${mod.defaultColor}10)` : 'rgba(255,255,255,0.05)', border: `1px dashed ${mod?.defaultColor}40` }}>
+          <RenderExcoIcon iconName={mod?.icon ?? '🔧'} className="w-8 h-8" />
+        </div>
         <p className="text-xs font-black text-white/30 uppercase tracking-widest">{mod?.name ?? excoId}</p>
         <p className="text-[10px] text-white/20 leading-relaxed px-4">Modul ini sedang dalam pembangunan.</p>
       </div>
@@ -427,16 +453,23 @@ export function Sidebar() {
 
         {/* Brand — nama exco aktif */}
         <div className="flex items-center gap-3 px-5 pb-4 pt-1">
-          <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center overflow-hidden shadow-lg ring-1 ring-white/20">
+          <div 
+            className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center overflow-hidden shadow-lg ring-1 ring-white/20 transition-all duration-300 group-hover:ring-white/40"
+            style={{ 
+              boxShadow: excoModule ? `0 0 15px -3px ${excoModule.defaultColor}40` : undefined,
+              background: excoModule ? `linear-gradient(135deg, ${excoModule.defaultColor}20, rgba(255,255,255,0.05))` : undefined
+            }}
+          >
             {excoModule ? (
-              <span className="text-lg">{excoModule.icon}</span>
+              <RenderExcoIcon iconName={excoModule.icon} className="w-5 h-5 text-white" />
             ) : (
               <img src="/jpp-logo.png" alt="JPP" className="w-8 h-8 object-contain" />
             )}
           </div>
           <div className="leading-tight">
-            <p className="font-black text-white text-sm tracking-tight">
+            <p className="font-black text-white text-sm tracking-tight flex items-center gap-1.5">
               {excoModule?.name ?? 'JPP Portal'}
+              {excoModule && <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: excoModule.defaultColor }} />}
             </p>
             <p className="text-[10px] font-black uppercase tracking-[0.25em] text-amber-400/80">
               JPP Polisas

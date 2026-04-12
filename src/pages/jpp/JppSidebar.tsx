@@ -5,6 +5,7 @@ import {
   Lock, ShieldCheck, Palette, Settings, Megaphone,
   Briefcase, CalendarDays, FileWarning, Sparkles,
   Zap, FileText, ClipboardCheck, ChevronDown, ExternalLink, Store,
+  ChevronLeft, LayoutGrid,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -106,10 +107,20 @@ export function JppSidebar() {
     >
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div
-        className="flex-shrink-0"
+        className="flex-shrink-0 flex flex-col"
         style={{ borderBottom: `1px solid ${hexToRgba(themeColor, 0.15)}` }}
       >
-        <div className="flex items-center gap-3 px-5 py-5">
+        {/* Butang balik ke Portal */}
+        <NavLink
+          to="/portal"
+          className="flex items-center gap-2 px-5 pt-4 pb-2 text-white/30 hover:text-white/70 transition-colors group"
+        >
+          <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+          <span className="text-[10px] font-black uppercase tracking-[0.25em]">Portal JPP</span>
+          <LayoutGrid className="w-3 h-3 ml-0.5" />
+        </NavLink>
+
+        <div className="flex items-center gap-3 px-5 pb-4 pt-1">
           <div
             className="w-11 h-11 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg"
             style={{ background: hexToRgba(themeColor, 0.15), border: `1px solid ${hexToRgba(themeColor, 0.3)}` }}
@@ -521,13 +532,6 @@ export function JppSidebar() {
         className="flex-shrink-0 p-4 space-y-1"
         style={{ borderTop: `1px solid ${hexToRgba(themeColor, 0.1)}` }}
       >
-        <NavLink
-          to="/portal"
-          className="flex w-full items-center gap-3 h-9 px-3 font-black text-[10px] uppercase tracking-widest rounded-xl text-white/40 hover:text-white hover:bg-white/10 transition-all"
-        >
-          <LayoutDashboard className="w-3.5 h-3.5 flex-shrink-0" />
-          Kembali ke Portal
-        </NavLink>
         <Button
           variant="ghost"
           onClick={signOut}
