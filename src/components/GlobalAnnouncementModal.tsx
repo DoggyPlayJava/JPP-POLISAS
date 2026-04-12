@@ -223,7 +223,7 @@ export function GlobalAnnouncementModal() {
       <motion.div 
         initial={{ scale: 0.95, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        className="relative w-full max-w-[480px] bg-[#0a0a0f] text-white rounded-[2.5rem] shadow-2xl border border-white/5 overflow-hidden flex flex-col max-h-[90vh]"
+        className="relative w-full max-w-[480px] bg-[#0a0a0f] text-white rounded-[2.5rem] shadow-2xl border border-white/5 overflow-hidden flex flex-col max-h-[85dvh]"
       >
         {!isHigh && (
           <button 
@@ -237,7 +237,7 @@ export function GlobalAnnouncementModal() {
         {current.image_url && (
            <div className="w-full relative overflow-hidden bg-black flex items-center justify-center shrink-0 group">
               <img src={current.image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20 blur-2xl scale-125" />
-              <img src={current.image_url} alt="Poster" className="relative w-full max-h-[40vh] object-contain cursor-zoom-in" onClick={() => setFullScreenImage(current.image_url)} />
+              <img src={current.image_url} alt="Poster" className="relative w-full max-h-[25dvh] sm:max-h-[35dvh] object-contain cursor-zoom-in" onClick={() => setFullScreenImage(current.image_url)} />
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0a0f] pointer-events-none" />
               
               <button 
@@ -295,7 +295,7 @@ export function GlobalAnnouncementModal() {
            )}
         </div>
 
-        <div className="px-8 pb-8 flex flex-col gap-3 shrink-0 relative z-10 pt-2">
+        <div className="px-6 sm:px-8 pb-6 sm:pb-8 flex flex-col gap-3 shrink-0 relative z-10 pt-2">
           {current.form_schema && current.form_schema.length > 0 ? (
              <>
                <Button 

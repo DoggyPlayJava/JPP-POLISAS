@@ -279,6 +279,7 @@ import { something } from '../lib/supabase';  // ❌ Elakkan relative
 - Guna `cn()` dari `@/lib/utils` untuk conditional classes
 - **JANGAN** hardcode warna — guna CSS variables atau Tailwind classes
 - Semua UI perlu **mobile-responsive** (test pada lebar 375px ke atas)
+- **Modals / Popouts Mobile**: WAJIB menggunakan `max-h-[85dvh]` berbanding `vh` atau ketinggian tetap untuk mengelak isu terpotong akibat bar navigasi/alat telefon. Hadkan saiz maksimum gambar dalam modal supaya butang aksi di bawah tidak terkeluar dari skrin.
 
 ### Terminologi (Penting untuk AI & UI):
 - `Laporan Aktiviti` dalam database = `Laporan Bulanan` dalam UI
