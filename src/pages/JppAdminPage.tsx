@@ -2653,9 +2653,9 @@ function JppMemberPanel({ allUsers, onRefresh, isSuperAdmin, profile }: { allUse
 
             {/* Edit Member Modal */}
             {editModal && (
-                <>
-                    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={() => setEditModal(null)} />
-                    <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-md mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 z-50 p-4 sm:p-6 flex items-center justify-center overflow-y-auto">
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setEditModal(null)} />
+                    <div className="relative z-10 w-full max-w-md bg-card rounded-[2rem] sm:rounded-[2.5rem] p-6 border border-border shadow-2xl flex flex-col max-h-full overflow-y-auto">
                         {/* Modal Header */}
                         <div className="flex items-center gap-3 mb-6">
                             <Avatar className="h-12 w-12 rounded-2xl flex-shrink-0">
@@ -2756,7 +2756,7 @@ function JppMemberPanel({ allUsers, onRefresh, isSuperAdmin, profile }: { allUse
                             </button>
                         </div>
                     </div>
-                </>
+                </div>
             )}
         </div>
     );
@@ -2902,9 +2902,9 @@ function JppExcoUnitsManager({ excoUnits, onRefresh }: { excoUnits: JppExcoUnit[
 
             {/* Add/Edit Modal */}
             {showAdd && (
-                <>
-                    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={() => setShowAdd(false)} />
-                    <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-sm mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl">
+                <div className="fixed inset-0 z-50 p-4 sm:p-6 flex items-center justify-center overflow-y-auto">
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAdd(false)} />
+                    <div className="relative z-10 w-full max-w-sm bg-card rounded-[2rem] sm:rounded-[2.5rem] p-6 border border-border shadow-2xl flex flex-col max-h-full overflow-y-auto">
                         <div className="flex items-center justify-between mb-5">
                             <h4 className="font-black text-base tracking-tight">
                                 {editUnit ? 'Edit Unit Exco' : 'Tambah Unit Exco'}
@@ -2981,7 +2981,7 @@ function JppExcoUnitsManager({ excoUnits, onRefresh }: { excoUnits: JppExcoUnit[
                             </button>
                         </div>
                     </div>
-                </>
+                </div>
             )}
         </div>
     );

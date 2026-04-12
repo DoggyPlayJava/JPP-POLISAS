@@ -13,7 +13,7 @@ import {
   ArrowLeftRight, Check, DollarSign, Activity,
   MessageSquare, Bell, ThumbsUp, ThumbsDown, Repeat2,
 } from 'lucide-react';
-import { type GeraiSession, type GeraiShift, type GeraiShiftSwap } from '@/types';
+import { type BusinessSession, type BusinessShift, type BusinessShiftSwap } from '@/types';
 import { useJppExcoUnits } from '@/hooks/useJppExcoUnits';
 import { toast } from 'react-hot-toast';
 
@@ -41,7 +41,7 @@ const isoDate = (d: Date) => d.toISOString().split('T')[0];
 
 // ─── Role Guard ───────────────────────────────────────────────────────────────
 
-function GeraiAccessDenied({ color }: { color: string }) {
+function ShiftAccessDenied({ color }: { color: string }) {
   return (
     <div className="min-h-full flex items-center justify-center p-8 bg-background">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-sm">
@@ -66,12 +66,11 @@ function GeraiAccessDenied({ color }: { color: string }) {
 
 // ─── Tab: Jadual Syif ─────────────────────────────────────────────────────────
 
-function GeraiJadual({
-  color, canManage, currentUserId,
-}: { color: string; canManage: boolean; currentUserId: string }) {
+export function BusinessJadual({
+  businessId, color, canManage, currentUserId, businessMembers
+}: { businessId: string; color: string; canManage: boolean; currentUserId: string; businessMembers: any[] }) {
   const [weekOffset, setWeekOffset] = useState(0);
-  const [shifts, setShifts]         = useState<GeraiShift[]>([]);
-  const [jppMembers, setJppMembers] = useState<any[]>([]);
+  const [shifts, setShifts]         = useState<BusinessShift[]>([]);
   const [swapRequests, setSwapRequests] = useState<any[]>([]);
   const [loading, setLoading]       = useState(true);
 
@@ -80,7 +79,7 @@ function GeraiJadual({
   const [selectedMember, setSelectedMember] = useState('');
 
   // Swap modal (member → request)
-  const [swapModal, setSwapModal]   = useState<GeraiShift | null>(null);
+  const [swapModal, setSwapModal]   = useState<BusinessShift | null>(null);
   const [swapTarget, setSwapTarget] = useState('');
   const [swapReason, setSwapReason] = useState('');
 
@@ -104,32 +103,29 @@ function GeraiJadual({
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const [{ data: shiftData }, { data: members }, { data: swaps }] = await Promise.all([
+    const [{ data: shiftData }, { data: swaps }] = await Promise.all([
       supabase
-        .from('gerai_shifts')
+        .from('business_shifts')
         .select('*, assignee:assigned_to(id, full_name, avatar_url)')
+        .eq('business_id', businessId)
         .gte('shift_date', startDate)
         .lte('shift_date', endDate),
       supabase
-        .from('profiles')
-        .select('id, full_name, jpp_position, jpp_unit')
-        .in('role', ['JPP', 'SUPER_ADMIN_JPP']),
-      supabase
-        .from('gerai_shift_swaps')
+        .from('business_shift_swaps')
         .select(`
           *,
           requester:requested_by(id, full_name),
           target:swap_with(id, full_name),
           shift:shift_id(shift_date, shift_hour)
         `)
+        .eq('business_id', businessId)
         .in('status', ['PENDING'])
-        .or(`requested_by.eq.${currentUserId},swap_with.eq.${currentUserId}`),
+        .or(`requested_by.eq.${currentUserId},swap_with.eq.${currentUserId}`)
     ]);
     setShifts(shiftData || []);
-    setJppMembers(members || []);
     setSwapRequests(swaps || []);
     setLoading(false);
-  }, [startDate, endDate, currentUserId]);
+  }, [businessId, startDate, endDate, currentUserId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -142,17 +138,17 @@ function GeraiJadual({
     if (!assignModal || !selectedMember) return;
     setSaving(true);
     const existing = getShift(assignModal.date, assignModal.hour);
-    const payload  = { shift_date: assignModal.date, shift_hour: assignModal.hour, assigned_to: selectedMember, status: 'SCHEDULED' as const };
+    const payload  = { business_id: businessId, shift_date: assignModal.date, shift_hour: assignModal.hour, assigned_to: selectedMember, status: 'SCHEDULED' as const };
     const { error } = existing
-      ? await supabase.from('gerai_shifts').update(payload).eq('id', existing.id)
-      : await supabase.from('gerai_shifts').insert(payload);
+      ? await supabase.from('business_shifts').update(payload).eq('id', existing.id)
+      : await supabase.from('business_shifts').insert(payload);
     if (error) toast.error('Gagal simpan: ' + error.message);
     else { toast.success('Syif disimpan!'); setAssignModal(null); setSelectedMember(''); fetchData(); }
     setSaving(false);
   };
 
-  const handleRemove = async (shift: GeraiShift) => {
-    const { error } = await supabase.from('gerai_shifts').delete().eq('id', shift.id);
+  const handleRemove = async (shift: BusinessShift) => {
+    const { error } = await supabase.from('business_shifts').delete().eq('id', shift.id);
     if (error) toast.error('Gagal padam.');
     else { toast.success('Syif dipadamkan.'); fetchData(); }
   };
@@ -160,7 +156,8 @@ function GeraiJadual({
   const handleSwapRequest = async () => {
     if (!swapModal || !swapTarget || !swapReason.trim()) return;
     setSaving(true);
-    const { error } = await supabase.from('gerai_shift_swaps').insert({
+    const { error } = await supabase.from('business_shift_swaps').insert({
+      business_id:  businessId,
       shift_id:     swapModal.id,
       requested_by: currentUserId,
       swap_with:    swapTarget || null,
@@ -173,7 +170,7 @@ function GeraiJadual({
   };
 
   const handleSwapRespond = async (swapId: string, accept: boolean) => {
-    const { error } = await supabase.from('gerai_shift_swaps').update({
+    const { error } = await supabase.from('business_shift_swaps').update({
       status:       accept ? 'ACCEPTED' : 'REJECTED',
       responded_by: currentUserId,
       responded_at: new Date().toISOString(),
@@ -183,7 +180,7 @@ function GeraiJadual({
       // Find the swap to get shift and requester info for actual shift update
       const sw = swapRequests.find(r => r.id === swapId);
       if (sw?.shift_id) {
-        await supabase.from('gerai_shifts').update({ assigned_to: currentUserId }).eq('id', sw.shift_id);
+        await supabase.from('business_shifts').update({ assigned_to: currentUserId }).eq('id', sw.shift_id);
       }
       toast.success('Tukar syif diterima! ✅');
     } else {
@@ -316,7 +313,7 @@ function GeraiJadual({
               {SHIFT_HOURS.map(hour => {
                 const shift = getShift(mobileDate, hour);
                 const isMyShift = shift?.assigned_to === currentUserId;
-                const mColor = shift?.assigned_to ? (unitColors[(jppMembers.find(m => m.id === shift.assigned_to)?.jpp_unit) || ''] || color) : color;
+                const mColor = shift?.assigned_to ? (unitColors[(businessMembers.find(m => m.user_id === shift.assigned_to)) || ''] || color) : color;
 
                 return (
                   <div key={hour} className="flex items-center gap-4">
@@ -338,7 +335,7 @@ function GeraiJadual({
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-black truncate text-foreground">{shift.assignee.full_name}</p>
                           <p className="text-[9px] font-bold uppercase tracking-widest opacity-50" style={{ color: mColor }}>
-                            {jppMembers.find(m => m.id === shift.assigned_to)?.jpp_position || 'Exco'}
+                            {businessMembers.find(m => m.user_id === shift.assigned_to)?.role || 'Exco'}
                           </p>
                         </div>
                         {isMyShift && <Repeat2 className="w-3.5 h-3.5 opacity-40" style={{ color: mColor }} />}
@@ -397,7 +394,7 @@ function GeraiJadual({
                       const shift   = getShift(ds, hour);
                       const isToday = ds === todayStr;
                       const isMyShift = shift?.assigned_to === currentUserId;
-                      const memberColor = shift?.assigned_to ? (unitColors[(jppMembers.find(m => m.id === shift.assigned_to)?.jpp_unit) || ''] || color) : color;
+                      const memberColor = shift?.assigned_to ? (unitColors[(businessMembers.find(m => m.user_id === shift.assigned_to)) || ''] || color) : color;
 
                       return (
                         <td key={ds} className="px-1 py-1">
@@ -448,26 +445,26 @@ function GeraiJadual({
       )}
 
       {/* ── Member Roster ── */}
-      {!loading && jppMembers.length > 0 && (
+      {!loading && businessMembers.length > 0 && (
         <div className="space-y-4">
           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 flex items-center gap-2">
-            <Users className="w-3 h-3" /> Ahli JPP ({jppMembers.length} orang)
+            <Users className="w-3 h-3" /> Ahli JPP ({businessMembers.length} orang)
           </p>
           <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2.5">
-            {jppMembers.map(m => {
-              const mc = unitColors[m.jpp_unit] || '#6366f1';
-              const shiftCount = memberShiftCount[m.id] || 0;
-              const hasPendingSwap = swapRequests.some(r => r.requester?.id === m.id && r.status === 'PENDING');
+            {businessMembers.map(m => {
+              const mc = color || '#6366f1';
+              const shiftCount = memberShiftCount[m.user_id] || 0;
+              const hasPendingSwap = swapRequests.some(r => r.requester?.id === m.user_id && r.status === 'PENDING');
               return (
-                <div key={m.id}
+                <div key={m.user_id}
                   className="flex items-center gap-2.5 px-3 py-2.5 rounded-2xl border border-border bg-card hover:shadow-sm transition-all"
                   style={{ borderLeftColor: mc, borderLeftWidth: 3 }}>
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0"
                     style={{ background: mc }}>
-                    {m.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                    {m.user?.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-black truncate leading-tight">{getMalaysianNickname(m.full_name)}</p>
+                    <p className="text-[11px] font-black truncate leading-tight">{getMalaysianNickname(m.user?.full_name)}</p>
                     <p className="text-[9px] text-muted-foreground leading-tight mt-0.5">
                       {shiftCount > 0 ? `${shiftCount} syif` : 'tiada syif'}
                     </p>
@@ -499,26 +496,26 @@ function GeraiJadual({
                   {assignModal.date} · {fmt(assignModal.hour)}
                 </p>
                 <div className="space-y-2 max-h-56 overflow-y-auto mb-4">
-                  {jppMembers.length === 0 ? (
+                  {businessMembers.length === 0 ? (
                     <p className="text-[11px] text-muted-foreground text-center py-4">
                       Tiada ahli JPP dalam sistem lagi.
                     </p>
-                  ) : jppMembers.map(m => {
-                    const mc = unitColors[m.jpp_unit] || color;
+                  ) : businessMembers.map(m => {
+                    const mc = color;
                     return (
-                      <button key={m.id} onClick={() => setSelectedMember(m.id)}
+                      <button key={m.user_id} onClick={() => setSelectedMember(m.user_id)}
                         className={cn('w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left',
-                          selectedMember === m.id ? 'border-transparent text-white' : 'border-border bg-muted/30 hover:border-border/60')}
-                        style={selectedMember === m.id ? { background: mc } : {}}>
+                          selectedMember === m.user_id ? 'border-transparent text-white' : 'border-border bg-muted/30 hover:border-border/60')}
+                        style={selectedMember === m.user_id ? { background: mc } : {}}>
                         <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-white"
-                          style={{ background: selectedMember === m.id ? 'rgba(255,255,255,0.25)' : mc }}>
-                          {m.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                          style={{ background: selectedMember === m.user_id ? 'rgba(255,255,255,0.25)' : mc }}>
+                          {m.user?.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-black truncate">{m.full_name}</p>
-                          <p className="text-[10px] opacity-60">{m.jpp_position ?? 'Exco'} · {memberShiftCount[m.id] || 0} syif minggu ini</p>
+                          <p className="text-xs font-black truncate">{m.user?.full_name}</p>
+                          <p className="text-[10px] opacity-60">{m.role ?? 'Exco'} · {memberShiftCount[m.user_id] || 0} syif minggu ini</p>
                         </div>
-                        {selectedMember === m.id && <Check className="w-4 h-4 flex-shrink-0" />}
+                        {selectedMember === m.user_id && <Check className="w-4 h-4 flex-shrink-0" />}
                       </button>
                     );
                   })}
@@ -536,7 +533,9 @@ function GeraiJadual({
             </div>
           )}
         </AnimatePresence>
-      , document.body)}leAs      {/* ── Modal: Minta Tukar Syif (Member) ── */}
+      , document.body)}
+
+      {/* ── Modal: Minta Tukar Syif (Member) ── */}
       {typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
           {swapModal && (
@@ -578,19 +577,19 @@ function GeraiJadual({
                           swapTarget === '' ? 'border-amber-500 bg-amber-500/10 text-amber-600' : 'border-border bg-muted/30 text-muted-foreground hover:border-border/60')}>
                         <Users className="w-3.5 h-3.5" /> Sesiapa sahaja (buka kepada semua)
                       </button>
-                      {jppMembers.filter(m => m.id !== currentUserId).map(m => {
-                        const mc = unitColors[m.jpp_unit] || '#6366f1';
+                      {businessMembers.filter(m => m.user_id !== currentUserId).map(m => {
+                        const mc = color || '#6366f1';
                         return (
-                          <button key={m.id} onClick={() => setSwapTarget(m.id)}
+                          <button key={m.user_id} onClick={() => setSwapTarget(m.user_id)}
                             className={cn('w-full flex items-center gap-2 px-3 py-2 rounded-xl border transition-all text-left',
-                              swapTarget === m.id ? 'border-transparent text-white' : 'border-border bg-muted/30 hover:border-border/60')}
-                            style={swapTarget === m.id ? { background: mc } : {}}>
+                              swapTarget === m.user_id ? 'border-transparent text-white' : 'border-border bg-muted/30 hover:border-border/60')}
+                            style={swapTarget === m.user_id ? { background: mc } : {}}>
                             <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black text-white flex-shrink-0"
-                              style={{ background: swapTarget === m.id ? 'rgba(255,255,255,0.25)' : mc }}>
-                              {m.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                              style={{ background: swapTarget === m.user_id ? 'rgba(255,255,255,0.25)' : mc }}>
+                              {m.user?.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                             </div>
-                            <p className="text-[10px] font-black flex-1 truncate">{m.full_name}</p>
-                            {swapTarget === m.id && <Check className="w-3 h-3 flex-shrink-0" />}
+                            <p className="text-[10px] font-black flex-1 truncate">{m.user?.full_name}</p>
+                            {swapTarget === m.user_id && <Check className="w-3 h-3 flex-shrink-0" />}
                           </button>
                         );
                       })}
@@ -634,9 +633,9 @@ const OPENING_CHECKLIST = [
   'Duit baki (float) telah dikira',
 ];
 
-function GeraiSesi({ color, profile }: { color: string; profile: any }) {
-  const [todaySession, setTodaySession] = useState<GeraiSession | null>(null);
-  const [pastSessions, setPastSessions] = useState<GeraiSession[]>([]);
+export function SesiBusiness({ businessId, color, profile }: { businessId: string; color: string; profile: any }) {
+  const [todaySession, setTodaySession] = useState<BusinessSession | null>(null);
+  const [pastSessions, setPastSessions] = useState<BusinessSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
   const [closeModal, setCloseModal] = useState(false);
@@ -657,15 +656,17 @@ function GeraiSesi({ color, profile }: { color: string; profile: any }) {
     setLoading(true);
     const t = today();
     const [{ data: todayData }, { data: past }] = await Promise.all([
-      supabase.from('gerai_sessions').select('*, opener:opened_by(full_name), closer:closed_by(full_name)')
+      supabase.from('business_sessions').select('*, opener:opened_by(full_name), closer:closed_by(full_name)')
+        .eq('business_id', businessId)
         .eq('session_date', t).maybeSingle(),
-      supabase.from('gerai_sessions').select('*, opener:opened_by(full_name), closer:closed_by(full_name)')
+      supabase.from('business_sessions').select('*, opener:opened_by(full_name), closer:closed_by(full_name)')
+        .eq('business_id', businessId)
         .neq('session_date', t).order('session_date', { ascending: false }).limit(30),
     ]);
     setTodaySession(todayData);
     setPastSessions(past || []);
     setLoading(false);
-  }, []);
+  }, [businessId]);
 
   useEffect(() => { fetchSessions(); }, [fetchSessions]);
 
@@ -674,7 +675,8 @@ function GeraiSesi({ color, profile }: { color: string; profile: any }) {
   const handleOpen = async () => {
     if (!openingCash || !allChecked) return;
     setSaving(true);
-    const { error } = await supabase.from('gerai_sessions').insert({
+    const { error } = await supabase.from('business_sessions').insert({
+      business_id: businessId,
       session_date: today(),
       opened_by: profile?.id,
       opening_cash: parseFloat(openingCash),
@@ -690,7 +692,7 @@ function GeraiSesi({ color, profile }: { color: string; profile: any }) {
   const handleClose = async () => {
     if (!todaySession || !closingCash || !totalSales) return;
     setSaving(true);
-    const { error } = await supabase.from('gerai_sessions').update({
+    const { error } = await supabase.from('business_sessions').update({
       closed_by: profile?.id,
       closing_cash: parseFloat(closingCash),
       total_sales: parseFloat(totalSales),
@@ -704,7 +706,7 @@ function GeraiSesi({ color, profile }: { color: string; profile: any }) {
     setSaving(false);
   };
 
-  const netProfit = (s: GeraiSession) => {
+  const netProfit = (s: BusinessSession) => {
     if (s.closing_cash == null || s.total_sales == null) return null;
     return s.closing_cash - s.opening_cash - (s.total_expenses || 0);
   };
@@ -984,25 +986,25 @@ function GeraiSesi({ color, profile }: { color: string; profile: any }) {
 // ─── Tab: Kewangan ────────────────────────────────────────────────────────────
 
 function GeraiKewangan({ color }: { color: string }) {
-  const [sessions, setSessions] = useState<GeraiSession[]>([]);
+  const [sessions, setSessions] = useState<BusinessSession[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.from('gerai_sessions')
+    supabase.from('business_sessions')
       .select('*, opener:opened_by(full_name), closer:closed_by(full_name)')
       .eq('status', 'CLOSED')
       .order('session_date', { ascending: false })
       .then(({ data }) => { setSessions(data || []); setLoading(false); });
   }, []);
 
-  const netProfit = (s: GeraiSession) =>
+  const netProfit = (s: BusinessSession) =>
     s.closing_cash != null ? s.closing_cash - s.opening_cash - (s.total_expenses || 0) : 0;
 
   const thisMonth = new Date().toISOString().slice(0, 7);
   const monthSessions = sessions.filter(s => s.session_date.startsWith(thisMonth));
   const totalSalesMonth = monthSessions.reduce((a, s) => a + (s.total_sales || 0), 0);
   const totalProfitMonth = monthSessions.reduce((a, s) => a + netProfit(s), 0);
-  const bestDay = sessions.reduce<GeraiSession | null>((best, s) =>
+  const bestDay = sessions.reduce<BusinessSession | null>((best, s) =>
     best == null || netProfit(s) > netProfit(best) ? s : best, null);
 
   const stats = [
@@ -1072,113 +1074,3 @@ function GeraiKewangan({ color }: { color: string }) {
   );
 }
 
-// ─── Main GeraiPage ───────────────────────────────────────────────────────────
-
-type Tab = 'jadual' | 'sesi' | 'kewangan';
-
-export function GeraiPage() {
-  const { profile } = useAuth();
-  const { color } = useExcoTheme();
-  const [activeTab, setActiveTab] = useState<Tab>('jadual');
-  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
-  const [canManage, setCanManage] = useState(false);
-
-  useEffect(() => {
-    if (!profile) return;
-    const role = profile.role as string;
-    const pos = (profile as any).jpp_position as string | null;
-    const unit = (profile as any).jpp_unit as string | null;
-    if (role === 'SUPER_ADMIN_JPP' || role === 'ADMIN') {
-      setHasAccess(true); setCanManage(true); return;
-    }
-    if (role === 'JPP' && unit === 'KEUSAHAWANAN') {
-      setHasAccess(true);
-      setCanManage(pos === 'KETUA_EXCO' || pos === 'TIMBALAN_EXCO');
-      return;
-    }
-    // MT yang oversee Keusahawanan — semak melalui jpp_mt_assignments
-    if (role === 'JPP') {
-      supabase.from('jpp_mt_assignments')
-        .select('id').eq('mt_user_id', profile.id).eq('unit', 'KEUSAHAWANAN').maybeSingle()
-        .then(({ data }) => {
-          if (data) { setHasAccess(true); setCanManage(true); return; }
-          setHasAccess(false);
-        });
-      return;
-    }
-    setHasAccess(false);
-  }, [profile]);
-
-  if (hasAccess === null) {
-    return (
-      <div className="min-h-full flex items-center justify-center">
-        <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: color, borderTopColor: 'transparent' }} />
-      </div>
-    );
-  }
-
-  if (!hasAccess) return <GeraiAccessDenied color={color} />;
-
-  const tabs: { id: Tab; label: string; icon: typeof Store }[] = [
-    { id: 'jadual',   label: 'Jadual Syif', icon: Calendar },
-    { id: 'sesi',     label: 'Sesi Kedai',  icon: Store },
-    { id: 'kewangan', label: 'Kewangan',    icon: Wallet },
-  ];
-
-  return (
-    <div className="min-h-full p-4 sm:p-6 md:p-8 space-y-6">
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-1 h-5 rounded-full" style={{ background: color }} />
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">e-Keusahawanan</p>
-        </div>
-        <div className="flex items-start justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-2">
-              <Store className="w-6 h-6" style={{ color }} />
-              Gerai JPP
-            </h1>
-            <p className="text-sm mt-0.5 text-muted-foreground">Pengurusan operasi gerai minuman JPP Polisas</p>
-          </div>
-          {canManage && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border"
-              style={{ background: hexToRgba(color, 0.08), borderColor: hexToRgba(color, 0.25), color }}>
-              <Users className="w-3 h-3" /> Mode Pengurusan
-            </div>
-          )}
-        </div>
-      </motion.div>
-
-      {/* Tabs */}
-      <div className="flex gap-1 p-1 rounded-2xl bg-muted/50 border border-border">
-        {tabs.map(({ id, label, icon: Icon }) => (
-          <button key={id} onClick={() => setActiveTab(id)}
-            className={cn(
-              'flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all',
-              activeTab === id ? 'shadow-sm text-white' : 'text-muted-foreground hover:text-foreground'
-            )}
-            style={activeTab === id ? { background: color } : {}}>
-            <Icon className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Tab Content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-        >
-          {activeTab === 'jadual'   && <GeraiJadual color={color} canManage={canManage} currentUserId={profile?.id ?? ''} />}
-          {activeTab === 'sesi'     && <GeraiSesi color={color} profile={profile} />}
-          {activeTab === 'kewangan' && <GeraiKewangan color={color} />}
-        </motion.div>
-      </AnimatePresence>
-    </div>
-  );
-}

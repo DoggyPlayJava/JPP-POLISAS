@@ -171,10 +171,26 @@ export function usePosData(businessId?: string, parentLoading = false) {
     // Owner always has access
     if (membership.role === 'OWNER') { setPosAccess(true); return true; }
 
-    // 4. Check gerai shift (Gerai JPP shift system)
+    // 4. Check business shift system
+    const { data: business } = await supabase
+      .from('keusahawanan_businesses')
+      .select('is_shift_enabled')
+      .eq('id', bid)
+      .single();
+
+    const isShiftEnabled = business?.is_shift_enabled ?? false;
+
+    if (!isShiftEnabled) {
+      // If shift is disabled, all ACTIVE members can access POS
+      setPosAccess(true); 
+      return true;
+    }
+
+    // If shift is enabled, check business_shifts for today
     const { data: shift } = await supabase
-      .from('gerai_shifts')
+      .from('business_shifts')
       .select('id')
+      .eq('business_id', bid)
       .eq('assigned_to', user.id)
       .eq('shift_date', today())
       .maybeSingle();

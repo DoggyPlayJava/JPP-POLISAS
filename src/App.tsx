@@ -38,7 +38,7 @@ import { JppUnitDashboard }   from './pages/jpp/JppUnitDashboard';
 import { KeusahawananLayout } from './pages/keusahawanan/KeusahawananLayout';
 import { KeusahawananDashboard } from './pages/keusahawanan/KeusahawananDashboard';
 import { KeusahawananProgram } from './pages/keusahawanan/KeusahawananProgram';
-import { GeraiPage } from './pages/keusahawanan/GeraiPage';
+
 import { KeusahawananIdea, KeusahawananGeran, KeusahawananLaporan } from './pages/keusahawanan/KeusahawananPlaceholders';
 import { KeusahawananOnboarding } from './pages/keusahawanan/KeusahawananOnboarding';
 import { UrusPerniagaanPage } from './pages/keusahawanan/UrusPerniagaanPage';
@@ -127,7 +127,7 @@ function AppRoutes() {
         <Route element={<RequireApproval><KeusahawananLayout /></RequireApproval>}>
           <Route path="/keusahawanan/dashboard"     element={<KeusahawananDashboard />} />
           <Route path="/keusahawanan/program"        element={<KeusahawananProgram />} />
-          <Route path="/keusahawanan/gerai"          element={<GeraiPage />} />
+
           <Route path="/keusahawanan/idea"           element={<KeusahawananIdea />} />
           <Route path="/keusahawanan/geran"          element={<KeusahawananGeran />} />
           <Route path="/keusahawanan/laporan"        element={<KeusahawananLaporan />} />

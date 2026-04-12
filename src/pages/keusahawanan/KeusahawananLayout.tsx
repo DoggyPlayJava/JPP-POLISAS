@@ -40,7 +40,6 @@ function getSidebarBg(hex: string): { top: string; bottom: string } {
 const navItems = [
   { icon: LayoutDashboard, label: 'Papan Pemuka',     href: '/keusahawanan/dashboard',      jppOnly: false, ownerOnly: false, posSection: false },
   { icon: CalendarDays,    label: 'Program',           href: '/keusahawanan/program',         jppOnly: false, ownerOnly: false, posSection: false },
-  { icon: Store,           label: 'Gerai JPP',         href: '/keusahawanan/gerai',           jppOnly: true,  ownerOnly: false, posSection: false },
   // POS System
   { icon: ShoppingCart,    label: 'Kedai POS',         href: '/keusahawanan/pos',             jppOnly: false, ownerOnly: false, posSection: true  },
   { icon: Package,         label: 'Katalog Produk',    href: '/keusahawanan/pos/products',    jppOnly: false, ownerOnly: false, posSection: false },

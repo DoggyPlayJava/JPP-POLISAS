@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
@@ -302,11 +303,21 @@ export function JppMembersPage() {
             </div>
           </div>
           {canEdit && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 w-fit">
-              <Crown className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">
-                Mod Edit Aktif — Anda boleh ubah jawatan & unit ahli
-              </span>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 w-fit">
+                <Crown className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">
+                  Mod Edit Aktif — Anda boleh ubah jawatan & unit ahli
+                </span>
+              </div>
+              <Link 
+                to="/jpp-admin?tab=jpp"
+                className="flex flex-shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all w-fit group"
+              >
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/50 group-hover:text-white/80 transition-colors">
+                  Sunting Ahli Lanjut (Tetapan JPP)
+                </span>
+              </Link>
             </div>
           )}
         </motion.div>

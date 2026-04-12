@@ -372,15 +372,22 @@ export function JppSidebar() {
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
       <div
-        className="flex-shrink-0 p-4"
+        className="flex-shrink-0 p-4 space-y-1"
         style={{ borderTop: `1px solid ${hexToRgba(themeColor, 0.1)}` }}
       >
+        <NavLink
+            to="/portal"
+            className="flex w-full items-center gap-3 h-9 px-3 font-black text-[10px] uppercase tracking-widest rounded-xl text-white/40 hover:text-white hover:bg-white/10 transition-all"
+        >
+            <LayoutDashboard className="w-3.5 h-3.5 flex-shrink-0" />
+            Kembali ke Portal
+        </NavLink>
         <Button
           variant="ghost"
           onClick={signOut}
-          className="w-full justify-start gap-3 h-9 px-3 font-black text-[10px] uppercase tracking-widest rounded-xl text-white/30 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+          className="w-full justify-start gap-3 h-9 px-3 font-black text-[10px] uppercase tracking-widest rounded-xl text-white/30 hover:text-rose-400 hover:bg-rose-500/10 transition-all text-left"
         >
-          <LogOut className="w-3.5 h-3.5" />
+          <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
           Log Keluar
         </Button>
       </div>

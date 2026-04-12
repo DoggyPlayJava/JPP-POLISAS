@@ -9,10 +9,11 @@ import { hexToRgba } from '@/lib/utils';
 import {
   Camera, Save, Users, ShieldCheck, Trash2, Check, X, Clock,
   Activity, Building2, ToggleLeft, ToggleRight, UserPlus, Logs,
-  Tag, Ticket, BadgePercent, Plus,
+  Tag, Ticket, BadgePercent, Plus, Calendar
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { type BusinessPromotion, type PosDiscountType } from '@/types';
+import { BusinessJadual, SesiBusiness } from './BusinessShiftModule';
 
 
 type LogActionLabel = Record<string, string>;
@@ -48,10 +49,10 @@ export function UrusPerniagaanPage() {
   const [members, setMembers]           = useState<any[]>([]);
   const [uploading, setUploading]       = useState(false);
   const [saving, setSaving]             = useState(false);
-  const [activeTab, setActiveTab]       = useState<'identiti' | 'staff' | 'pos' | 'ciri' | 'log'>('identiti');
+  const [activeTab, setActiveTab]       = useState<'identiti' | 'staff' | 'pos' | 'ciri' | 'log' | 'syif' | 'sesi'>('identiti');
 
   const [description, setDescription] = useState('');
-  const [useShiftSystem, setUseShiftSystem] = useState(true);
+  const [useShiftSystem, setUseShiftSystem] = useState(false);
 
   // Derived
   const businessId = selectedBusiness?.id;
@@ -83,6 +84,7 @@ export function UrusPerniagaanPage() {
     // Toggles
     setPromotionsEnabled(biz?.promotions_enabled ?? false);
     setCashSessionEnabled(biz?.cash_session_enabled ?? false);
+    setUseShiftSystem(biz?.is_shift_enabled ?? false);
 
     const { data: mems } = await supabase
       .from('student_business_memberships')
@@ -109,16 +111,19 @@ export function UrusPerniagaanPage() {
     setPromoLoading(false);
   };
 
-  const handleToggleFeature = async (field: 'promotions_enabled' | 'cash_session_enabled', value: boolean) => {
+  const handleToggleFeature = async (field: 'promotions_enabled' | 'cash_session_enabled' | 'is_shift_enabled', value: boolean) => {
     if (!businessId) return;
     setToggSaving(field);
     const { error } = await supabase.from('keusahawanan_businesses').update({ [field]: value }).eq('id', businessId);
     if (error) { toast.error('Gagal kemaskini tetapan.'); }
     else {
-      if (field === 'promotions_enabled') setPromotionsEnabled(value);
-      else setCashSessionEnabled(value);
-      await pos.writeLog(businessId, 'SETTINGS_UPDATED', `${field === 'promotions_enabled' ? 'Sistem Promosi' : 'Sesi Tunai'} ${value ? 'diaktifkan' : 'dinyahaktifkan'}.`);
-      toast.success((field === 'promotions_enabled' ? 'Sistem Promosi' : 'Sesi Tunai') + (value ? ' diaktifkan.' : ' dinyahaktifkan.'));
+      let label = '';
+      if (field === 'promotions_enabled') { setPromotionsEnabled(value); label = 'Sistem Promosi'; }
+      else if (field === 'cash_session_enabled') { setCashSessionEnabled(value); label = 'Sesi Tunai'; }
+      else { setUseShiftSystem(value); label = 'Sistem Syif'; }
+      
+      await pos.writeLog(businessId, 'SETTINGS_UPDATED', `${label} ${value ? 'diaktifkan' : 'dinyahaktifkan'}.`);
+      toast.success(`${label} ${value ? ' diaktifkan.' : ' dinyahaktifkan.'}`);
     }
     setToggSaving(null);
   };
@@ -241,8 +246,10 @@ export function UrusPerniagaanPage() {
     { key: 'staff',    label: 'Staff',      icon: Users },
     { key: 'pos',      label: 'POS',        icon: ToggleRight },
     { key: 'ciri',     label: 'Ciri',       icon: Tag },
+    ...(useShiftSystem ? [{ key: 'syif' as const, label: 'Syif', icon: Calendar }] : []),
+    ...(useShiftSystem ? [{ key: 'sesi' as const, label: 'Sesi', icon: Clock }] : []),
     { key: 'log',      label: 'Log',        icon: Logs },
-  ] as const;
+  ];
 
   return (
     <div className="min-h-full p-4 sm:p-6 space-y-6">
@@ -416,10 +423,11 @@ export function UrusPerniagaanPage() {
             <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border/50">
               <div>
                 <p className="text-sm font-black text-foreground">Sistem Syif Automatik</p>
-                <p className="text-xs text-muted-foreground mt-0.5">POS diaktifkan secara auto apabila staff ada syif hari ini.</p>
+                <p className="text-xs text-muted-foreground mt-0.5">POS diaktifkan secara auto apabila staff ada syif hari ini. Jika dimatikan, semua staf {isOwner ? '(termasuk anda)' : ''} dibenarkan akses.</p>
               </div>
-              <button onClick={() => setUseShiftSystem(v => !v)}
-                className="transition-transform active:scale-95">
+              <button onClick={() => isOwner && handleToggleFeature('is_shift_enabled', !useShiftSystem)}
+                disabled={toggSaving === 'is_shift_enabled' || !isOwner}
+                className="transition-transform active:scale-95 disabled:opacity-40">
                 {useShiftSystem
                   ? <ToggleRight className="w-8 h-8" style={{ color }} />
                   : <ToggleLeft className="w-8 h-8 text-muted-foreground/40" />
@@ -635,6 +643,30 @@ export function UrusPerniagaanPage() {
                 </div>
               </div>
             )}
+          </motion.div>
+        )}
+
+        {activeTab === 'syif' && useShiftSystem && businessId && (
+          <motion.div key="syif" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+             className="rounded-[2rem] bg-card border border-border p-6 space-y-6 min-h-[500px]">
+             <BusinessJadual 
+               businessId={businessId}
+               color={color}
+               canManage={isOwner}
+               currentUserId={user!.id}
+               businessMembers={members.filter(m => m.status === 'ACTIVE')}
+             />
+          </motion.div>
+        )}
+
+        {activeTab === 'sesi' && useShiftSystem && businessId && (
+          <motion.div key="sesi" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+             className="rounded-[2rem] bg-card border border-border p-6 space-y-6">
+             <SesiBusiness 
+               businessId={businessId}
+               color={color}
+               profile={profile}
+             />
           </motion.div>
         )}
 

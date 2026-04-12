@@ -102,36 +102,36 @@ export interface JppMtAssignment {
 
 // ─── Gerai Types ──────────────────────────────────────────────────────────────
 
-export type GeraishiftStatus = 'SCHEDULED' | 'PRESENT' | 'ABSENT' | 'SWAPPED';
-export type GeraiSwapStatus  = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED';
-export type GeraiSessionStatus = 'OPEN' | 'CLOSED';
+export type BusinessShiftStatus = 'SCHEDULED' | 'PRESENT' | 'ABSENT' | 'SWAPPED';
+export type BusinessSwapStatus  = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED';
+export type BusinessSessionStatus = 'OPEN' | 'CLOSED';
 
-export interface GeraiShift {
+export interface BusinessShift {
   id:          string;
   shift_date:  string;
   shift_hour:  number;       // 8–16 (mewakili 08:00–09:00 hingga 16:00–17:00)
   assigned_to: string | null;
   created_by:  string | null;
   notes:       string | null;
-  status:      GeraishiftStatus;
+  status:      BusinessShiftStatus;
   created_at:  string;
   // Joined
   assignee?:   { id: string; full_name: string; avatar_url?: string };
 }
 
-export interface GeraiShiftSwap {
+export interface BusinessShiftSwap {
   id:           string;
   shift_id:     string;
   requested_by: string;
   swap_with:    string | null;
   reason:       string;
-  status:       GeraiSwapStatus;
+  status:       BusinessSwapStatus;
   responded_by: string | null;
   responded_at: string | null;
   created_at:   string;
 }
 
-export interface GeraiSession {
+export interface BusinessSession {
   id:             string;
   session_date:   string;
   opened_by:      string | null;
@@ -144,7 +144,7 @@ export interface GeraiSession {
   closing_time:   string | null;
   opening_notes:  string | null;
   closing_notes:  string | null;
-  status:         GeraiSessionStatus;
+  status:         BusinessSessionStatus;
   created_at:     string;
   // Computed
   net_profit?:    number | null;
@@ -384,6 +384,7 @@ export interface KeusahawananBusiness {
   interview_date: string | null;
   logo_url: string | null;
   is_active: boolean;
+  is_shift_enabled: boolean;
   created_at: string;
   // Joined
   category?: KeusahawananCategory;
