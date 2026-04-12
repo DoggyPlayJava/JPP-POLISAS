@@ -237,42 +237,42 @@ export function GlobalAnnouncementModal() {
         {current.image_url && (
            <div className="w-full relative overflow-hidden bg-black flex items-center justify-center shrink-0 group">
               <img src={current.image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20 blur-2xl scale-125" />
-              <img src={current.image_url} alt="Poster" className="relative w-full max-h-[25dvh] sm:max-h-[35dvh] object-contain cursor-zoom-in" onClick={() => setFullScreenImage(current.image_url)} />
+              <img src={current.image_url} alt="Poster" className="relative w-full max-h-[18dvh] sm:max-h-[28dvh] object-contain cursor-zoom-in" onClick={() => setFullScreenImage(current.image_url)} />
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0a0f] pointer-events-none" />
               
               <button 
                 onClick={(e) => { e.stopPropagation(); setFullScreenImage(current.image_url); }}
-                className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/80 hover:text-white hover:bg-white/10 text-[10px] font-bold tracking-widest uppercase flex items-center gap-2 transition-all z-20 opacity-80 group-hover:opacity-100 group-hover:-translate-y-1"
+                className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/80 hover:text-white hover:bg-white/10 text-[9px] font-bold tracking-widest uppercase flex items-center gap-1.5 transition-all z-20 opacity-80 group-hover:opacity-100"
               >
-                <Maximize2 size={14} />
+                <Maximize2 size={12} />
                 Papar Skrin Penuh
               </button>
            </div>
         )}
 
-        <div className={`px-8 pt-10 pb-6 flex flex-col items-center text-center relative shrink-0`}>
+        <div className={`px-6 sm:px-8 pt-5 sm:pt-8 pb-3 sm:pb-5 flex flex-col items-center text-center relative shrink-0`}>
            {announcements.length > 1 && !isHigh && currentIdx < announcements.length - 1 && (
              <div className="absolute top-0 left-8 right-8 h-1 bg-white/5 rounded-full overflow-hidden mt-2">
                <div className="h-full bg-white/20 transition-all duration-100 ease-linear" style={{ width: `${progress}%` }} />
              </div>
            )}
 
-           <div className={`p-4 rounded-full flex-shrink-0 z-10 shadow-[0_0_40px_-5px_rgba(0,0,0,0.5)] mb-6 ${getIconColor(current.icon_type, isHigh)}`}>
+           <div className={`p-3 rounded-full flex-shrink-0 z-10 mb-3 ${getIconColor(current.icon_type, isHigh)}`}>
              {getIcon(current.icon_type, isHigh)}
            </div>
            
-           <h2 className="text-2xl sm:text-3xl font-black tracking-tighter leading-tight mb-2 text-white">
+           <h2 className="text-xl sm:text-2xl font-black tracking-tighter leading-tight mb-1 text-white">
               {current.title}
            </h2>
            {isHigh && (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 mt-2 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-black uppercase tracking-widest border border-rose-500/20">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 mt-1 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-black uppercase tracking-widest border border-rose-500/20">
                 Notis Mandatori
               </div>
            )}
         </div>
 
-        <div className="flex-1 overflow-y-auto px-8 pb-8 space-y-6">
-           <div className="text-white/60 text-[13px] whitespace-pre-wrap leading-relaxed text-center font-medium">
+        <div className="flex-1 overflow-y-auto px-6 sm:px-8 pb-4 space-y-4">
+           <div className="text-white/60 text-[13px] leading-relaxed text-center font-medium whitespace-pre-wrap">
              {current.content_body}
            </div>
 
