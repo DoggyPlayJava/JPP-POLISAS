@@ -107,7 +107,7 @@ export function CommandPalette({ open: propOpen, onOpenChange }: CommandPaletteP
 
               <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Pentadbiran</span>}>
                 <Item icon={ClipboardCheck} label="Semakan Laporan (JPP)" onSelect={() => runCommand(() => navigate('/semakan-laporan'))} />
-                <Item icon={ShieldCheck} label="Pusat Kawalan JPP" onSelect={() => runCommand(() => navigate('/jpp-admin'))} />
+                <Item icon={ShieldCheck} label="Pusat Kawalan JPP / JPP HQ Portal" onSelect={() => runCommand(() => navigate('/jpp'))} />
                 <Item icon={Settings} label="Tetapan Sistem" onSelect={() => runCommand(() => navigate('/tetapan'))} />
               </Command.Group>
 

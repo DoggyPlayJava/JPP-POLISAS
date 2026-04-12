@@ -30,9 +30,9 @@ export function PublicRoute() {
   const { isAuthenticated, isLoading, profile } = useAuth();
   if (isLoading) return <LoadingScreen />;
   if (isAuthenticated) {
-    // SUPER_ADMIN_JPP & JPP (Ahli JPP) → terus ke admin panel, skip portal
+    // SUPER_ADMIN_JPP & JPP (Ahli JPP) → terus ke JPP HQ portal
     if (profile?.role === 'SUPER_ADMIN_JPP' || profile?.role === 'JPP') {
-      return <Navigate to="/jpp-admin" replace />;
+      return <Navigate to="/jpp" replace />;
     }
     // Semua pengguna lain → Portal Hub untuk pilih exco
     // (localStorage is_new_register dikekalkan untuk backward compat)

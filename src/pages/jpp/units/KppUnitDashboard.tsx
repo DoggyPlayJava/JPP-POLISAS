@@ -15,7 +15,7 @@ import {
   Users, Activity, FileText, Building2, CalendarRange,
   Search, CheckCheck, X, ChevronRight, RefreshCw,
   AlertTriangle, Flag, BarChart3, Clock, BookOpen,
-  Loader2, ExternalLink,
+  Loader2, ExternalLink, Settings as SettingsIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -209,10 +209,64 @@ export function KppUnitDashboard() {
   const { isSuperAdmin, profile } = useAuth();
   const navigate = useNavigate();
 
-  type KppSubTab = 'overview' | 'aktiviti' | 'laporan' | 'keahlian' | 'kelab';
+  type KppSubTab = 'overview' | 'aktiviti' | 'laporan' | 'keahlian' | 'kelab' | 'tetapan';
   const [kppSubTab, setKppSubTab] = useState<KppSubTab>('overview');
   const [kppClubFilter, setKppClubFilter] = useState('ALL');
   const [kppLoading, setKppLoading] = useState(false);
+
+  // Settings states
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settings, setSettings] = useState<Record<string, any>>({
+    allow_auto_pdf: true,
+    allow_add_takwim: true,
+    max_clubs_per_student: 2,
+  });
+
+  const fetchSettings = useCallback(async () => {
+    setSettingsLoading(true);
+    const { data: settingsData } = await supabase.from('system_settings').select('*');
+    if (settingsData) {
+      const s = { ...settings };
+      settingsData.forEach(item => {
+        let val = item.value;
+        if (val === 'true') val = true;
+        if (val === 'false') val = false;
+        if (typeof val === 'string' && val.startsWith('"') && val.endsWith('"')) { val = val.slice(1, -1); }
+        s[item.key] = val;
+      });
+      setSettings(s);
+    }
+    setSettingsLoading(false);
+  }, []);
+
+  const toggleSetting = async (key: string, currentValue: boolean) => {
+    const newValue = !currentValue;
+    const toastId = toast.loading('Mengemaskini...');
+    try {
+      const { error } = await supabase.from('system_settings').update({ value: newValue }).eq('key', key);
+      if (error) throw error;
+      setSettings(s => ({ ...s, [key]: newValue }));
+      toast.success('Berjaya dilaras.', { id: toastId });
+    } catch (e: any) {
+      toast.error(e.message, { id: toastId });
+    }
+  };
+
+  const updateClubLimit = async (delta: number) => {
+    const current = Number(settings.max_clubs_per_student ?? 2);
+    const newLimit = Math.max(1, Math.min(10, current + delta));
+    if (newLimit === current) return;
+    const toastId = toast.loading('Mengemaskini had...');
+    try {
+      const { data, error } = await supabase.from('system_settings').update({ value: newLimit }).eq('key', 'max_clubs_per_student').select();
+      if (error) throw error;
+      if (!data || data.length === 0) await supabase.from('system_settings').insert({ key: 'max_clubs_per_student', value: newLimit });
+      setSettings(s => ({ ...s, max_clubs_per_student: newLimit }));
+      toast.success(`Had keahlian: ${newLimit} kelab`, { id: toastId });
+    } catch (e: any) {
+      toast.error(e.message || 'Gagal kemaskini had', { id: toastId });
+    }
+  };
 
   // Data states
   const [allActivities, setAllActivities] = useState<KppActivity[]>([]);
@@ -334,6 +388,7 @@ export function KppUnitDashboard() {
 
   useEffect(() => { fetchKppData(); }, [fetchKppData]);
   useEffect(() => { fetchOverviewData(); }, [fetchOverviewData]);
+  useEffect(() => { fetchSettings(); }, [fetchSettings]);
 
   // Derived stats for quick display in overview
   const pendingMembersCount = allMemberships.length;
@@ -352,6 +407,7 @@ export function KppUnitDashboard() {
           { id: 'laporan', label: 'Semua Laporan' },
           { id: 'keahlian', label: 'Keahlian Menunggu' },
           { id: 'kelab', label: 'Senarai Kelab' },
+          { id: 'tetapan', label: 'Tetapan KPP' },
         ] as { id: KppSubTab; label: string }[]).map(t => (
           <SubTabBtn key={t.id} id={t.id} label={t.label} active={kppSubTab === t.id} onClick={() => setKppSubTab(t.id)} />
         ))}
@@ -709,6 +765,93 @@ export function KppUnitDashboard() {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════
+          SUB-TAB: TETAPAN KPP
+      ══════════════════════════════════════════════ */}
+      {kppSubTab === 'tetapan' && (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center border" style={{ background: hexToRgba(KPP_COLOR, 0.1), borderColor: hexToRgba(KPP_COLOR, 0.2), color: KPP_COLOR }}>
+                  <SettingsIcon className="w-6 h-6" />
+              </div>
+              <div>
+                  <h1 className="text-xl font-black text-white leading-tight">Tetapan KPP & e-KPP</h1>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mt-1">Konfigurasi fungsi e-KPP & rekod kelab</p>
+              </div>
+          </div>
+
+          {settingsLoading ? (
+             <div className="flex items-center justify-center py-16">
+               <Loader2 className="w-8 h-8 animate-spin" style={{ color: KPP_COLOR }} />
+             </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Laporan Auto PDF */}
+                <div className="p-6 rounded-[2rem] bg-card border border-border/50 flex flex-col justify-between group hover:border-white/20 transition-all">
+                    <div className="flex items-center gap-4 mb-6">
+                        <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center border border-violet-500/20">
+                            <FileText className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-black text-white">Laporan Auto-PDF</p>
+                            <p className="text-[10px] text-white/50 font-medium uppercase tracking-tight">Benarkan jana PDF</p>
+                        </div>
+                    </div>
+                    <button onClick={() => toggleSetting('allow_auto_pdf', settings.allow_auto_pdf)}
+                        className={cn('rounded-full font-black text-[10px] self-end w-14 h-8 transition-all shadow-md',
+                            settings.allow_auto_pdf ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border border-rose-500/20 text-rose-400')}>
+                        {settings.allow_auto_pdf ? 'ON' : 'OFF'}
+                    </button>
+                </div>
+
+                {/* Tambah Takwim */}
+                <div className="p-6 rounded-[2rem] bg-card border border-border/50 flex flex-col justify-between group hover:border-white/20 transition-all">
+                    <div className="flex items-center gap-4 mb-6">
+                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20">
+                            <CalendarRange className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-black text-white">Tambah Takwim</p>
+                            <p className="text-[10px] text-white/50 font-medium uppercase tracking-tight">Kebenaran daftar program aktiviti</p>
+                        </div>
+                    </div>
+                    <button onClick={() => toggleSetting('allow_add_takwim', settings.allow_add_takwim)}
+                        className={cn('rounded-full font-black text-[10px] self-end w-14 h-8 transition-all shadow-md',
+                            settings.allow_add_takwim ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border border-rose-500/20 text-rose-400')}>
+                        {settings.allow_add_takwim ? 'ON' : 'OFF'}
+                    </button>
+                </div>
+
+                {/* Had Keahlian */}
+                <div className="p-6 rounded-[2rem] bg-card border border-border/50 flex flex-col sm:flex-row items-center justify-between gap-6 md:col-span-2 group hover:border-white/20 transition-all">
+                    <div className="flex items-center gap-4 text-center sm:text-left w-full sm:w-auto flex-col sm:flex-row">
+                        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20">
+                            <Users className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <p className="text-base font-black text-white">Had Keahlian Kelab</p>
+                            <p className="text-xs text-white/50 font-medium">Maksimum pendaftaran kelab untuk pelajar biasa.</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-4 bg-black/40 p-2 rounded-2xl border border-white/5">
+                        <button onClick={() => updateClubLimit(-1)} disabled={Number(settings.max_clubs_per_student) <= 1}
+                            className="h-10 w-10 flex items-center justify-center rounded-xl font-black text-lg bg-white/5 hover:bg-white/10 disabled:opacity-30 transition-colors">
+                            −
+                        </button>
+                        <span className="font-black text-3xl text-white w-10 text-center tabular-nums">
+                            {settings.max_clubs_per_student ?? 2}
+                        </span>
+                        <button onClick={() => updateClubLimit(1)} disabled={Number(settings.max_clubs_per_student) >= 10}
+                            className="h-10 w-10 flex items-center justify-center rounded-xl font-black text-lg bg-white/5 hover:bg-white/10 disabled:opacity-30 transition-colors">
+                            +
+                        </button>
+                    </div>
+                </div>
+            </div>
+          )}
         </div>
       )}
 

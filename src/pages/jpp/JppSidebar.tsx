@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Users, BarChart3, Crown, LogOut,
-  Lock, ShieldCheck, Palette, Shield, ExternalLink, Settings, Megaphone
+  Lock, ShieldCheck, Palette, Settings, Megaphone,
+  Briefcase, CalendarDays, FileWarning, Sparkles,
+  Zap, FileText, ClipboardCheck, ChevronDown, ExternalLink, Store,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,14 +19,6 @@ import {
   getJppSidebarBg, JPP_COLOR_PRESETS,
 } from './jppConfig';
 
-// ── Main navigation ─────────────────────────────────────────────────────────
-const MAIN_NAV = [
-  { icon: LayoutDashboard, label: 'Laman Utama',    href: '/jpp',          end: true  },
-  { icon: Users,           label: 'Ahli JPP',        href: '/jpp/members',  end: false },
-  { icon: BarChart3,       label: 'Gambaran Sistem', href: '/jpp/overview', end: false },
-  { icon: Settings,        label: 'Tetapan',         href: '/tetapan',      end: false },
-];
-
 // ── Component ────────────────────────────────────────────────────────────────
 export function JppSidebar() {
   const { user, profile, signOut, isSuperAdmin } = useAuth();
@@ -34,6 +28,14 @@ export function JppSidebar() {
   const [showPicker, setShowPicker] = useState(false);
   const [saving, setSaving]         = useState(false);
   const [assignedUnits, setAssignedUnits] = useState<string[]>([]);
+  // ── Collapsible sub-nav ───────────────────────────────────────────────────
+  const [expandedUnits, setExpandedUnits] = useState<Set<string>>(new Set());
+  const toggleUnit = (code: string) =>
+    setExpandedUnits(prev => {
+      const next = new Set(prev);
+      if (next.has(code)) next.delete(code); else next.add(code);
+      return next;
+    });
 
   // ── RBAC ─────────────────────────────────────────────────────────────────
   const jppPosition = profile?.jpp_position as string | undefined;
@@ -41,7 +43,7 @@ export function JppSidebar() {
 
   const isYDP      = jppPosition === 'YDP' || jppPosition === 'YANG_DIPERTUA' || isSuperAdmin;
   const isMT       = !isYDP && JPP_MT_POSITIONS.includes(jppPosition as any);
-  const canCustomize = isYDP; // Only YDP/SuperAdmin can change color
+  const canCustomize = isYDP;
 
   // ── Fetch portal theme color ───────────────────────────────────────────
   useEffect(() => {
@@ -57,7 +59,7 @@ export function JppSidebar() {
       });
   }, []);
 
-  // ── Fetch MT unit assignments (non-YDP MT members only) ───────────────
+  // ── Fetch MT unit assignments (non-YDP MT only) ───────────────────────
   useEffect(() => {
     if (!isMT || !user?.id) return;
     supabase.from('jpp_mt_assignments')
@@ -70,8 +72,8 @@ export function JppSidebar() {
 
   // ── Determine visible units based on RBAC ─────────────────────────────
   const visibleUnits = UNIT_ORDER.filter(code => {
-    if (isYDP)  return true;
-    if (isMT)   return assignedUnits.includes(code);
+    if (isYDP) return true;
+    if (isMT)  return assignedUnits.includes(code);
     return code === jppUnit;
   });
 
@@ -90,10 +92,10 @@ export function JppSidebar() {
   };
 
   // ── Derived display ───────────────────────────────────────────────────
-  const bg           = getJppSidebarBg(themeColor);
-  const displayName  = profile?.full_name || user?.email?.split('@')[0] || '?';
-  const initials     = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
-  const posLabel     = jppPosition
+  const bg          = getJppSidebarBg(themeColor);
+  const displayName = profile?.full_name || user?.email?.split('@')[0] || '?';
+  const initials    = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+  const posLabel    = jppPosition
     ? (JPP_POSITION_LABELS[jppPosition as keyof typeof JPP_POSITION_LABELS] ?? jppPosition)
     : isSuperAdmin ? 'Super Admin' : 'Ahli JPP';
 
@@ -108,7 +110,6 @@ export function JppSidebar() {
         style={{ borderBottom: `1px solid ${hexToRgba(themeColor, 0.15)}` }}
       >
         <div className="flex items-center gap-3 px-5 py-5">
-          {/* Logo */}
           <div
             className="w-11 h-11 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg"
             style={{ background: hexToRgba(themeColor, 0.15), border: `1px solid ${hexToRgba(themeColor, 0.3)}` }}
@@ -122,7 +123,6 @@ export function JppSidebar() {
               Politeknik Polisas
             </p>
           </div>
-          {/* Controls */}
           <div className="ml-auto flex items-center gap-1">
             {canCustomize && (
               <button
@@ -136,7 +136,7 @@ export function JppSidebar() {
           </div>
         </div>
 
-        {/* Color picker (YDP / SuperAdmin) */}
+        {/* Color picker */}
         <AnimatePresence>
           {showPicker && (
             <motion.div
@@ -170,7 +170,6 @@ export function JppSidebar() {
                     {saving ? '...' : 'Simpan'}
                   </button>
                 </div>
-                {/* Presets */}
                 <div className="flex gap-2">
                   {JPP_COLOR_PRESETS.map(c => (
                     <button
@@ -226,9 +225,14 @@ export function JppSidebar() {
       {/* ── Navigation ──────────────────────────────────────────────────── */}
       <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto scrollbar-hide">
 
-        {/* Main nav items */}
+        {/* Main nav */}
         <p className="px-3 mb-2 text-[9px] font-black uppercase tracking-[0.3em] text-white/25">Navigasi</p>
-        {MAIN_NAV.map(item => (
+        {[
+          { icon: LayoutDashboard, label: 'Laman Utama',    href: '/jpp',          end: true  },
+          { icon: Users,           label: 'Ahli JPP',        href: '/jpp/members',  end: false },
+          { icon: BarChart3,       label: 'Gambaran Sistem', href: '/jpp/overview', end: false },
+          { icon: CalendarDays,    label: 'Takwim Global',   href: '/jpp/takwim',   end: false },
+        ].map(item => (
           <NavLink
             key={item.href}
             to={item.href}
@@ -266,6 +270,58 @@ export function JppSidebar() {
           </NavLink>
         ))}
 
+        {/* ── Pentadbiran Portal (Admin) ─── */}
+        {(isYDP || isSuperAdmin) && (
+          <>
+            <div className="pt-4 pb-1.5">
+              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-white/25">
+                Pentadbiran Portal
+              </p>
+            </div>
+            {[
+              { icon: Briefcase,   label: 'Pelajar',   href: '/jpp/users' },
+              { icon: Sparkles,    label: 'Nexus Hub', href: '/jpp/nexus' },
+              { icon: FileWarning, label: 'Log Audit', href: '/jpp/logs' },
+              { icon: Settings,    label: 'Tetapan',   href: '/jpp/settings' },
+            ].map(item => (
+              <NavLink
+                key={item.href}
+                to={item.href}
+                className={({ isActive }) => cn(
+                  'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
+                  isActive
+                    ? 'text-white'
+                    : 'text-white/40 hover:text-white/80 hover:bg-white/5'
+                )}
+                style={({ isActive }) => ({
+                  background: isActive ? hexToRgba(themeColor, 0.2) : undefined,
+                })}
+              >
+                {({ isActive }) => (
+                  <>
+                    <div
+                      className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all"
+                      style={{ background: isActive ? hexToRgba(themeColor, 0.3) : 'transparent' }}
+                    >
+                      <item.icon
+                        className="w-3.5 h-3.5"
+                        style={{ color: isActive ? themeColor : undefined }}
+                      />
+                    </div>
+                    <span className="text-xs font-bold tracking-tight flex-1">{item.label}</span>
+                    {isActive && (
+                      <div
+                        className="w-1 h-4 rounded-full flex-shrink-0"
+                        style={{ background: themeColor, boxShadow: `0 0 8px 2px ${hexToRgba(themeColor, 0.5)}` }}
+                      />
+                    )}
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </>
+        )}
+
         {/* ── Unit Exco Shortcuts ─── */}
         {visibleUnits.length > 0 && (
           <>
@@ -276,108 +332,162 @@ export function JppSidebar() {
               </p>
             </div>
 
+
             {visibleUnits.map(code => {
               const cfg = UNIT_CFG[code];
               if (!cfg) return null;
-              const isOwn = code === jppUnit;
-              const hasAccess = isYDP || isOwn || assignedUnits.includes(code);
-              const unitPath = `/jpp/unit/${code.toLowerCase()}`;
+              const isOwn      = code === jppUnit;
+              const hasAccess  = isYDP || isOwn || assignedUnits.includes(code);
+              const unitPath   = `/jpp/unit/${code.toLowerCase()}`;
+              const unitLower  = code.toLowerCase();
+              const isExpanded = expandedUnits.has(code);
+
+              // ── Sub-nav logic ─────────────────────────────────────────────
+              const isExcoUnit = code !== 'KPP' && code !== 'KEUSAHAWANAN';
+              const isOwnExco  = isOwn && isExcoUnit && !isYDP;
+              const isMTOfUnit = isMT && assignedUnits.includes(code) && isExcoUnit;
+              const canReview  = isExcoUnit && hasAccess && !isOwnExco && (isYDP || isMTOfUnit);
+
+              // Build sub-nav list based on unit type + role
+              const subItems: { icon: any; label: string; href: string }[] = [];
+
+              if (code === 'KPP') {
+                // KPP: semak laporan kelab (route lama e-KPP — /semakan-laporan)
+                if (isYDP || isOwn)
+                  subItems.push({ icon: ClipboardCheck, label: 'Semak Laporan Kelab', href: '/semakan-laporan' });
+              } else if (code === 'KEUSAHAWANAN') {
+                // Keusahawanan: link ke modul penuh mereka
+                subItems.push({ icon: Store,        label: 'Dashboard',  href: '/keusahawanan/dashboard' });
+                subItems.push({ icon: FileText,      label: 'Laporan',    href: '/keusahawanan/laporan' });
+                subItems.push({ icon: Zap,           label: 'Program',    href: '/keusahawanan/program' });
+              } else if (isOwnExco) {
+                subItems.push(
+                  { icon: Zap,      label: 'Aktiviti', href: `/exco/${unitLower}/aktiviti` },
+                  { icon: FileText, label: 'Laporan',  href: `/exco/${unitLower}/laporan` },
+                );
+              } else if (canReview) {
+                if (isYDP) {
+                  subItems.push(
+                    { icon: Zap,      label: 'Aktiviti', href: `/exco/${unitLower}/aktiviti` },
+                    { icon: FileText, label: 'Laporan',  href: `/exco/${unitLower}/laporan` },
+                  );
+                }
+                subItems.push({ icon: ClipboardCheck, label: 'Semak Laporan', href: `/jpp/semak-laporan-exco/${unitLower}` });
+              }
+
+              const hasSubNav = hasAccess && subItems.length > 0;
 
               return (
                 <div key={code}>
+                  {/* ── Unit header row ── */}
                   {hasAccess ? (
-                    <NavLink
-                      to={unitPath}
-                      className={({ isActive }) => cn(
-                        'w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 group text-left',
-                        isActive
-                          ? 'text-white'
-                          : 'text-white/50 hover:text-white/85 hover:bg-white/5'
-                      )}
-                      style={({ isActive }) => ({
-                        background: isActive ? hexToRgba(cfg.color, 0.15) : undefined,
-                      })}
-                    >
-                      {({ isActive }) => (
-                        <>
-                          <div
-                            className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all"
-                            style={{ background: isActive ? hexToRgba(cfg.color, 0.25) : hexToRgba(cfg.color, 0.12) }}
-                          >
-                            <cfg.icon className="w-3.5 h-3.5" style={{ color: cfg.color }} />
-                          </div>
-                          <span className="text-xs font-bold tracking-tight flex-1 truncate">{cfg.shortLabel}</span>
-                          {isActive && (
+                    <div className="flex items-center gap-1">
+                      <NavLink
+                        to={unitPath}
+                        className={({ isActive }) => cn(
+                          'flex-1 flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 min-w-0',
+                          isActive
+                            ? 'text-white'
+                            : 'text-white/50 hover:text-white/85 hover:bg-white/5'
+                        )}
+                        style={({ isActive }) => ({
+                          background: isActive ? hexToRgba(cfg.color, 0.15) : undefined,
+                        })}
+                      >
+                        {({ isActive }) => (
+                          <>
                             <div
-                              className="w-1 h-4 rounded-full flex-shrink-0"
-                              style={{ background: cfg.color, boxShadow: `0 0 6px 1px ${hexToRgba(cfg.color, 0.4)}` }}
-                            />
-                          )}
-                          {!isActive && !cfg.isActive && (
-                            <span className="text-[8px] font-black uppercase tracking-widest text-white/20 flex-shrink-0">
-                              Soon
-                            </span>
-                          )}
-                        </>
+                              className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all"
+                              style={{ background: isActive ? hexToRgba(cfg.color, 0.25) : hexToRgba(cfg.color, 0.12) }}
+                            >
+                              <cfg.icon className="w-3.5 h-3.5" style={{ color: cfg.color }} />
+                            </div>
+                            <span className="text-xs font-bold tracking-tight flex-1 truncate">{cfg.shortLabel}</span>
+                            {isActive && (
+                              <div
+                                className="w-1 h-4 rounded-full flex-shrink-0"
+                                style={{ background: cfg.color, boxShadow: `0 0 6px 1px ${hexToRgba(cfg.color, 0.4)}` }}
+                              />
+                            )}
+                          </>
+                        )}
+                      </NavLink>
+
+                      {/* Chevron toggle */}
+                      {hasSubNav && (
+                        <button
+                          onClick={() => toggleUnit(code)}
+                          className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-white/20 hover:text-white/60 hover:bg-white/5 transition-all mr-1"
+                          title={isExpanded ? 'Tutup' : 'Buka'}
+                        >
+                          <ChevronDown
+                            className="w-3.5 h-3.5 transition-transform duration-200"
+                            style={{ transform: isExpanded ? 'rotate(-180deg)' : 'rotate(0deg)' }}
+                          />
+                        </button>
                       )}
-                    </NavLink>
+                    </div>
                   ) : (
                     <div className="flex items-center gap-3 px-3 py-2 rounded-xl opacity-35">
                       <div
                         className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                         style={{ background: hexToRgba(cfg.color, 0.08) }}
                       >
-                        {cfg.isActive
-                          ? <cfg.icon className="w-3.5 h-3.5" style={{ color: hexToRgba(cfg.color, 0.5) }} />
-                          : <Lock className="w-3 h-3 text-white/20" />
-                        }
+                        <Lock className="w-3 h-3 text-white/20" />
                       </div>
                       <span className="text-xs font-bold tracking-tight flex-1 truncate text-white/25">{cfg.shortLabel}</span>
-                      <span className="text-[8px] font-black uppercase tracking-widest text-white/20 flex-shrink-0">
-                        {cfg.isActive ? 'Pantau' : 'Akan Datang'}
-                      </span>
                     </div>
                   )}
+
+                  {/* ── Collapsible sub-nav ── */}
+                  <AnimatePresence initial={false}>
+                    {hasSubNav && isExpanded && (
+                      <motion.div
+                        key="subnav"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.18, ease: 'easeInOut' }}
+                        className="overflow-hidden"
+                      >
+                        <div className="ml-4 pl-3 border-l border-white/[0.06] space-y-0.5 mt-0.5 mb-1">
+                          {subItems.map(sub => (
+                            <NavLink
+                              key={sub.href}
+                              to={sub.href}
+                              className={({ isActive }) => cn(
+                                'flex items-center gap-2 px-2 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all',
+                                isActive ? 'text-white' : 'text-white/30 hover:text-white/60'
+                              )}
+                              style={({ isActive }) => ({
+                                background: isActive ? hexToRgba(cfg.color, 0.12) : undefined,
+                              })}
+                            >
+                              {({ isActive }) => (
+                                <>
+                                  <sub.icon className="w-3 h-3 flex-shrink-0" style={{ color: isActive ? cfg.color : undefined }} />
+                                  <span style={{ color: isActive ? cfg.color : undefined }}>{sub.label}</span>
+                                </>
+                              )}
+                            </NavLink>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             })}
           </>
         )}
 
-        {/* ── Admin Tools (YDP / SuperAdmin only) ─── */}
-        {(isSuperAdmin || isYDP) && (
-          <>
-            <div className="pt-4 pb-1.5">
-              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-white/25">Pentadbiran</p>
-            </div>
-            <NavLink
-              to="/jpp-admin"
-              className={({ isActive }) => cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group border',
-                isActive
-                  ? 'bg-amber-500/15 border-amber-500/30 text-amber-300'
-                  : 'bg-white/[0.03] border-white/5 text-white/35 hover:bg-amber-500/10 hover:border-amber-500/15 hover:text-amber-400'
-              )}
-            >
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-amber-500/20">
-                <Shield className="w-3.5 h-3.5 text-amber-400" />
-              </div>
-              <span className="text-[10px] font-black uppercase tracking-widest flex-1 leading-tight">
-                Admin Tools
-              </span>
-              <ExternalLink className="w-3 h-3 opacity-50 flex-shrink-0" />
-            </NavLink>
-          </>
-        )}
 
-        {/* ── Hebahan Global (YDP / SuperAdmin / Multimedia only) ─── */}
+        {/* ── Hebahan Global ─── */}
         {(isSuperAdmin || isYDP || profile?.jpp_unit === 'MULTIMEDIA') && (
           <>
-            {(!isSuperAdmin && !isYDP) && (
-              <div className="pt-4 pb-1.5">
-                <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-white/25">Pentadbiran</p>
-              </div>
-            )}
+            <div className="pt-4 pb-1.5">
+              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-white/25">Hebahan / Lain-Lain</p>
+            </div>
             <NavLink
               to="/jpp/announcements"
               className={({ isActive }) => cn(
@@ -404,11 +514,11 @@ export function JppSidebar() {
         style={{ borderTop: `1px solid ${hexToRgba(themeColor, 0.1)}` }}
       >
         <NavLink
-            to="/portal"
-            className="flex w-full items-center gap-3 h-9 px-3 font-black text-[10px] uppercase tracking-widest rounded-xl text-white/40 hover:text-white hover:bg-white/10 transition-all"
+          to="/portal"
+          className="flex w-full items-center gap-3 h-9 px-3 font-black text-[10px] uppercase tracking-widest rounded-xl text-white/40 hover:text-white hover:bg-white/10 transition-all"
         >
-            <LayoutDashboard className="w-3.5 h-3.5 flex-shrink-0" />
-            Kembali ke Portal
+          <LayoutDashboard className="w-3.5 h-3.5 flex-shrink-0" />
+          Kembali ke Portal
         </NavLink>
         <Button
           variant="ghost"

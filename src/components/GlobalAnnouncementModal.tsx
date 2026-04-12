@@ -167,19 +167,19 @@ export function GlobalAnnouncementModal() {
           {f.label} {f.required && <span className="text-rose-500">*</span>}
         </Label>
         {f.type === 'select' && f.options ? (
-          <Select value={formData[f.id] || ''} onValueChange={v => setFormData({...formData, [f.id]: v})}>
-             <SelectTrigger className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:ring-1 focus:ring-white/20"><SelectValue/></SelectTrigger>
-             <SelectContent className="bg-[#0a0a0f] border-white/10 text-white">
-                {f.options.map(opt => <SelectItem key={opt} value={opt} className="focus:bg-white/10 focus:text-white">{opt}</SelectItem>)}
-             </SelectContent>
+          <Select value={formData[f.id] || ''} onValueChange={v => setFormData({ ...formData, [f.id]: v })}>
+            <SelectTrigger className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:ring-1 focus:ring-white/20"><SelectValue /></SelectTrigger>
+            <SelectContent className="bg-[#0a0a0f] border-white/10 text-white">
+              {f.options.map(opt => <SelectItem key={opt} value={opt} className="focus:bg-white/10 focus:text-white">{opt}</SelectItem>)}
+            </SelectContent>
           </Select>
         ) : (
-          <Input 
-             type={f.type} 
-             value={formData[f.id] || ''} 
-             onChange={e => setFormData({...formData, [f.id]: e.target.value})}
-             placeholder={f.placeholder}
-             className="bg-white/5 border-white/10 text-white h-12 rounded-xl placeholder:text-white/20 focus-visible:ring-1 focus-visible:ring-white/20"
+          <Input
+            type={f.type}
+            value={formData[f.id] || ''}
+            onChange={e => setFormData({ ...formData, [f.id]: e.target.value })}
+            placeholder={f.placeholder}
+            className="bg-white/5 border-white/10 text-white h-12 rounded-xl placeholder:text-white/20 focus-visible:ring-1 focus-visible:ring-white/20"
           />
         )}
       </div>
@@ -194,7 +194,7 @@ export function GlobalAnnouncementModal() {
       case 'MEGAPHONE': return <Megaphone size={24} />;
       case 'CALENDAR': return <Calendar size={24} />;
       case 'INFO':
-      default: return isHigh ? <AlertCircle size={24} /> : <Info size={24}/>;
+      default: return isHigh ? <AlertCircle size={24} /> : <Info size={24} />;
     }
   };
 
@@ -213,124 +213,129 @@ export function GlobalAnnouncementModal() {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <motion.div 
-        initial={{ opacity: 0 }} 
-        animate={{ opacity: 1 }} 
-        exit={{ opacity: 0 }} 
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
         className="absolute inset-0 bg-background/80 backdrop-blur-md"
       />
-      
-      <motion.div 
+
+      <motion.div
         initial={{ scale: 0.95, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         className="relative w-full max-w-[480px] bg-[#0a0a0f] text-white rounded-[2.5rem] shadow-2xl border border-white/5 overflow-hidden flex flex-col max-h-[85dvh]"
       >
+        {/* Progress bar — fixed at top */}
+        {announcements.length > 1 && !isHigh && currentIdx < announcements.length - 1 && (
+          <div className="absolute top-0 left-0 right-0 h-1 bg-white/5 z-30">
+            <div className="h-full bg-white/30 transition-all duration-100 ease-linear" style={{ width: `${progress}%` }} />
+          </div>
+        )}
+
+        {/* Close button */}
         {!isHigh && (
-          <button 
+          <button
             onClick={() => handleDismiss(false)}
-            className="absolute top-6 right-6 p-2 rounded-full bg-black/20 hover:bg-white/10 text-white/50 hover:text-white transition-colors z-20"
+            className="absolute top-5 right-5 p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-colors z-30"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         )}
 
-        {current.image_url && (
-           <div className="w-full relative overflow-hidden bg-black flex items-center justify-center shrink-0 group">
+        {/* Fixed compact header — icon + title only */}
+        <div className="px-6 pt-8 pb-4 flex flex-col items-center text-center shrink-0">
+          <div className={`p-3 rounded-full flex-shrink-0 z-10 mb-3 ${getIconColor(current.icon_type, isHigh)}`}>
+            {getIcon(current.icon_type, isHigh)}
+          </div>
+          <h2 className="text-xl font-black tracking-tighter leading-tight mb-1 text-white">
+            {current.title}
+          </h2>
+          {isHigh && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 mt-1 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-black uppercase tracking-widest border border-rose-500/20">
+              Notis Mandatori
+            </div>
+          )}
+        </div>
+
+        {/* Scrollable content area — image included */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Image inside scroll so it doesn't steal fixed space */}
+          {current.image_url && (
+            <div className="w-full relative overflow-hidden bg-black flex items-center justify-center group mb-4">
               <img src={current.image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20 blur-2xl scale-125" />
-              <img src={current.image_url} alt="Poster" className="relative w-full max-h-[18dvh] sm:max-h-[28dvh] object-contain cursor-zoom-in" onClick={() => setFullScreenImage(current.image_url)} />
+              <img src={current.image_url} alt="Poster" className="relative w-full max-h-[35vh] object-contain cursor-zoom-in" onClick={() => setFullScreenImage(current.image_url)} />
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0a0f] pointer-events-none" />
-              
-              <button 
+              <button
                 onClick={(e) => { e.stopPropagation(); setFullScreenImage(current.image_url); }}
-                className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/80 hover:text-white hover:bg-white/10 text-[9px] font-bold tracking-widest uppercase flex items-center gap-1.5 transition-all z-20 opacity-80 group-hover:opacity-100"
+                className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/80 hover:text-white hover:bg-white/10 text-[9px] font-bold tracking-widest uppercase flex items-center gap-1.5 transition-all z-20"
               >
                 <Maximize2 size={12} />
                 Papar Skrin Penuh
               </button>
-           </div>
-        )}
+            </div>
+          )}
 
-        <div className={`px-6 sm:px-8 pt-5 sm:pt-8 pb-3 sm:pb-5 flex flex-col items-center text-center relative shrink-0`}>
-           {announcements.length > 1 && !isHigh && currentIdx < announcements.length - 1 && (
-             <div className="absolute top-0 left-8 right-8 h-1 bg-white/5 rounded-full overflow-hidden mt-2">
-               <div className="h-full bg-white/20 transition-all duration-100 ease-linear" style={{ width: `${progress}%` }} />
-             </div>
-           )}
+          <div className="px-6 sm:px-8 pb-6 space-y-4">
+            <div className="text-white/60 text-[13px] leading-relaxed text-center font-medium whitespace-pre-wrap">
+              {current.content_body}
+            </div>
 
-           <div className={`p-3 rounded-full flex-shrink-0 z-10 mb-3 ${getIconColor(current.icon_type, isHigh)}`}>
-             {getIcon(current.icon_type, isHigh)}
-           </div>
-           
-           <h2 className="text-xl sm:text-2xl font-black tracking-tighter leading-tight mb-1 text-white">
-              {current.title}
-           </h2>
-           {isHigh && (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 mt-1 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-black uppercase tracking-widest border border-rose-500/20">
-                Notis Mandatori
-              </div>
-           )}
-        </div>
+            {current.action_url && (
+              <a
+                href={current.action_url}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center gap-2 p-4 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all group mt-2"
+              >
+                <span className="font-bold text-white/80 text-[11px] uppercase tracking-wider">Buka Pautan Tindakan</span>
+                <ExternalLink size={14} className="text-white/40 group-hover:text-white transition-colors" />
+              </a>
+            )}
 
-        <div className="flex-1 overflow-y-auto px-6 sm:px-8 pb-4 space-y-4">
-           <div className="text-white/60 text-[13px] leading-relaxed text-center font-medium whitespace-pre-wrap">
-             {current.content_body}
-           </div>
-
-           {current.action_url && (
-             <a 
-               href={current.action_url} 
-               target="_blank" 
-               rel="noreferrer"
-               className="flex items-center justify-center gap-2 p-4 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all group mt-6"
-             >
-               <span className="font-bold text-white/80 text-[11px] uppercase tracking-wider">Buka Pautan Tindakan</span>
-               <ExternalLink size={14} className="text-white/40 group-hover:text-white transition-colors" />
-             </a>
-           )}
-
-           {current.form_schema && current.form_schema.length > 0 && (
-             <div className="space-y-4 pt-8 mt-6 text-left">
+            {current.form_schema && current.form_schema.length > 0 && (
+              <div className="space-y-4 pt-4 text-left">
                 {current.form_schema.map(renderField)}
-             </div>
-           )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="px-6 sm:px-8 pb-6 sm:pb-8 flex flex-col gap-3 shrink-0 relative z-10 pt-2">
           {current.form_schema && current.form_schema.length > 0 ? (
-             <>
-               <Button 
-                 disabled={submitting}
-                 className={`w-full h-12 rounded-full font-black tracking-wider text-[11px] uppercase shadow-[0_0_40px_-10px_rgba(0,0,0,0.3)] ${isHigh ? 'bg-rose-600 hover:bg-rose-500 text-white' : 'bg-primary hover:bg-primary/90 text-white'}`}
-                 onClick={handleSubmit}
-               >
-                 <CheckCircle2 className="w-4 h-4 mr-2" />
-                 {submitting ? 'Memproses...' : 'Hantar Maklumat'}
-               </Button>
-               {!isHigh && (
-                  <Button variant="ghost" className="w-full h-12 rounded-full font-bold tracking-wider text-[11px] uppercase border border-white/10 text-white/70 hover:text-white hover:bg-white/5" onClick={() => handleNext()}>
-                    Langkau Seterusnya
-                  </Button>
-               )}
-             </>
+            <>
+              <Button
+                disabled={submitting}
+                className={`w-full h-12 rounded-full font-black tracking-wider text-[11px] uppercase shadow-[0_0_40px_-10px_rgba(0,0,0,0.3)] ${isHigh ? 'bg-rose-600 hover:bg-rose-500 text-white' : 'bg-primary hover:bg-primary/90 text-white'}`}
+                onClick={handleSubmit}
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                {submitting ? 'Memproses...' : 'Hantar Maklumat'}
+              </Button>
+              {!isHigh && (
+                <Button variant="ghost" className="w-full h-12 rounded-full font-bold tracking-wider text-[11px] uppercase border border-white/10 text-white/70 hover:text-white hover:bg-white/5" onClick={() => handleNext()}>
+                  Langkau Seterusnya
+                </Button>
+              )}
+            </>
           ) : isHigh ? (
-             <Button 
-               disabled={submitting}
-               className="w-full h-12 rounded-full bg-rose-600 hover:bg-rose-500 text-white font-black tracking-wider text-[11px] uppercase shadow-[0_0_40px_-5px_rgba(225,29,72,0.3)]"
-               onClick={handleSubmit}
-             >
-               <CheckCircle2 className="w-4 h-4 mr-2" />
-               Saya Faham
-             </Button>
+            <Button
+              disabled={submitting}
+              className="w-full h-12 rounded-full bg-rose-600 hover:bg-rose-500 text-white font-black tracking-wider text-[11px] uppercase shadow-[0_0_40px_-5px_rgba(225,29,72,0.3)]"
+              onClick={handleSubmit}
+            >
+              <CheckCircle2 className="w-4 h-4 mr-2" />
+              Saya Faham
+            </Button>
           ) : (
-             <Button className="w-full h-12 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-white/80 font-bold tracking-wider text-[11px] uppercase transition-colors" onClick={() => handleNext()}>
-               {currentIdx < announcements.length - 1 ? 'Seterusnya' : 'Tutup Makluman'}
-             </Button>
+            <Button className="w-full h-12 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-white/80 font-bold tracking-wider text-[11px] uppercase transition-colors" onClick={() => handleNext()}>
+              {currentIdx < announcements.length - 1 ? 'Seterusnya' : 'Tutup Makluman'}
+            </Button>
           )}
 
           {current.priority === 'EASY' && (
-             <button onClick={() => handleDismiss(true)} className="text-[10px] font-bold text-white/30 uppercase tracking-widest mt-2 hover:text-white/70 transition-colors text-center w-full">
-               Jangan Tunjuk Notis Ini Lagi
-             </button>
+            <button onClick={() => handleDismiss(true)} className="text-[10px] font-bold text-white/30 uppercase tracking-widest mt-2 hover:text-white/70 transition-colors text-center w-full">
+              Jangan Tunjuk Notis Ini Lagi
+            </button>
           )}
         </div>
       </motion.div>
@@ -338,28 +343,28 @@ export function GlobalAnnouncementModal() {
       {/* Fullscreen Image Lightbox */}
       <AnimatePresence>
         {fullScreenImage && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 cursor-zoom-out"
             onClick={() => setFullScreenImage(null)}
           >
-            <button 
+            <button
               onClick={() => setFullScreenImage(null)}
               className="absolute top-6 right-6 p-4 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-[210] shadow-2xl"
             >
               <X size={24} />
             </button>
-            <motion.img 
+            <motion.img
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              src={fullScreenImage} 
-              alt="Papar Penuh" 
+              src={fullScreenImage}
+              alt="Papar Penuh"
               className="max-w-full max-h-[95vh] object-contain rounded-xl shadow-2xl"
-              onClick={(e) => e.stopPropagation()} 
+              onClick={(e) => e.stopPropagation()}
             />
           </motion.div>
         )}

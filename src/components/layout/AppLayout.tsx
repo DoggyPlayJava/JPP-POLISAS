@@ -15,7 +15,7 @@ import { EXCO_MODULES } from '@/config/excoModules';
 const EKPP_ROUTES = [
   '/dashboard', '/kelab', '/sertai-kelab', '/aktiviti', '/ahli',
   '/tetapan', '/carian', '/laporan', '/urus-kelab', '/semakan-laporan',
-  '/jpp-admin', '/leaderboard', '/logs', '/karnival', '/nexus',
+  '/leaderboard', '/logs', '/karnival', '/nexus',
 ];
 function detectExcoFromPath(pathname: string) {
   if (EKPP_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) {

@@ -256,7 +256,7 @@ function KeusahawananSidebar({ color }: { color: string }) {
       {isJpp && (
         <div className="px-3 py-2 mt-auto pb-4">
           <NavLink
-            to="/jpp-admin"
+            to="/jpp"
             className={({ isActive }) => cn(
               'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border border-amber-500/20',
               isActive ? 'shadow-inner ring-1 ring-amber-500/50' : ''

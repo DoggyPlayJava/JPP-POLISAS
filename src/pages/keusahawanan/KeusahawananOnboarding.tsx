@@ -180,7 +180,18 @@ export function KeusahawananOnboarding() {
                     </div>
                   )}
                   {businesses.map(b => {
-                    const hasApplied = myMemberships.some(m => m.business_id === b.id);
+                    const membership = myMemberships.find(m => m.business_id === b.id);
+                    const isPending = membership?.status === 'PENDING';
+                    const isActive = membership?.status === 'ACTIVE';
+                    const isRejected = membership?.status === 'REJECTED';
+                    
+                    let btnText = 'Mohon Sertai';
+                    let btnDisabled = false;
+                    
+                    if (isPending) { btnText = 'Sedang Diproses'; btnDisabled = true; }
+                    else if (isActive) { btnText = 'Telah Disertai'; btnDisabled = true; }
+                    else if (isRejected) { btnText = 'Buat Rayuan (Appeal)'; btnDisabled = false; }
+                    
                     return (
                     <div key={b.id} className="bg-white/5 border border-white/10 rounded-3xl p-6 flex flex-col justify-between group hover:bg-white/10 transition-colors">
                       <div>
@@ -207,9 +218,15 @@ export function KeusahawananOnboarding() {
                          </div>
                          <Button 
                             onClick={() => handleJoin(b.id)} 
-                            disabled={hasApplied}
-                            className={`w-full font-black uppercase tracking-widest text-xs h-10 ${hasApplied ? 'bg-white/10 text-white/40 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]'} rounded-xl transition-all`}>
-                           {hasApplied ? 'Sedang Diproses' : 'Mohon Sertai'}
+                            disabled={btnDisabled}
+                            className={`w-full font-black uppercase tracking-widest text-xs h-10 ${
+                               btnDisabled 
+                                 ? 'bg-white/10 text-white/40' 
+                                 : (isRejected 
+                                     ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-[0_0_20px_rgba(225,29,72,0.3)] hover:shadow-[0_0_30px_rgba(225,29,72,0.5)]'
+                                     : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]')
+                            } rounded-xl transition-all`}>
+                           {btnText}
                          </Button>
                       </div>
                     </div>

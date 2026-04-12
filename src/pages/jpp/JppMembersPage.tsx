@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
-  Users, Crown, Search, Pencil, Check, X, ChevronDown, Shield,
+  Users, Crown, Search, Pencil, Shield,
   Loader2, UserCheck,
 } from 'lucide-react';
 import { cn, hexToRgba, getContrastText } from '@/lib/utils';
@@ -25,8 +25,8 @@ interface JppMember {
   jpp_unit: JppUnit | null;
 }
 
-// ── Member row ────────────────────────────────────────────────────────────────
-function MemberRow({
+// ── Member Card ─────────────────────────────────────────────────────────────
+function MemberCard({
   member,
   canEdit,
   themeColor,
@@ -62,158 +62,142 @@ function MemberRow({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/[0.04] border border-transparent hover:border-white/[0.06] transition-all group"
+      className="relative flex flex-col p-4 rounded-[1.5rem] bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.1] hover:bg-white/[0.04] transition-all group overflow-hidden"
     >
-      {/* Avatar */}
-      <Avatar className="h-9 w-9 rounded-xl flex-shrink-0 ring-1 ring-white/10">
-        <AvatarFallback
-          className="font-black text-xs rounded-xl"
-          style={{ background: hexToRgba(themeColor, 0.3), color: 'white' }}
-        >
-          {initials}
-        </AvatarFallback>
-        <AvatarFallback>{initials}</AvatarFallback>
-      </Avatar>
+      {/* Background Glow based on unit/MT */}
+      <div 
+        className="absolute -top-10 -right-10 w-24 h-24 rounded-full blur-[40px] opacity-20 pointer-events-none transition-all group-hover:opacity-30" 
+        style={{ background: unitCfg?.color || (isMT ? themeColor : 'rgba(255,255,255,0.1)') }} 
+      />
 
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-black text-white/85 leading-tight truncate">
-          {member.full_name ?? '—'}
-        </p>
-        <p className="text-[10px] text-white/30 truncate mt-0.5">{member.email ?? '—'}</p>
+      <div className="flex items-start justify-between mb-3 z-10 relative">
+        <Avatar className="h-12 w-12 rounded-xl ring-1 ring-white/10 shadow-lg">
+          <AvatarFallback
+            className="font-black text-sm rounded-xl"
+            style={{ background: hexToRgba(themeColor, 0.2), color: 'white' }}
+          >
+            {initials}
+          </AvatarFallback>
+          <AvatarImage src={member.avatar_url || ''} className="object-cover" />
+        </Avatar>
+
+        {(!editing && canEdit) && (
+          <button
+            onClick={() => setEditing(true)}
+            className="opacity-0 group-hover:opacity-100 p-2 rounded-xl text-white/30 hover:text-white/80 hover:bg-white/10 transition-all focus:opacity-100"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
-      {/* Position + Unit badges */}
-      {!editing ? (
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {member.jpp_position && (
-            <span
-              className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full hidden sm:block"
-              style={{ background: hexToRgba(themeColor, isMT ? 0.2 : 0.1), color: isMT ? themeColor : 'rgba(255,255,255,0.4)' }}
+      <div className="mb-4 z-10 relative">
+        <p className="text-sm font-bold text-white/90 leading-tight line-clamp-1" title={member.full_name ?? ''}>
+          {member.full_name ?? '—'}
+        </p>
+        <p className="text-[10px] text-white/40 truncate mt-0.5">{member.email ?? '—'}</p>
+      </div>
+
+      <div className="mt-auto pt-3 border-t border-white/[0.05] flex flex-col gap-2 z-10 relative">
+        {!editing ? (
+          <div className="flex flex-wrap items-center gap-1.5 h-12 content-start">
+            {member.jpp_position ? (
+              <span
+                className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg"
+                style={{ background: hexToRgba(themeColor, isMT ? 0.2 : 0.1), color: isMT ? themeColor : 'rgba(255,255,255,0.6)' }}
+              >
+                {JPP_POSITION_LABELS[member.jpp_position] ?? member.jpp_position}
+              </span>
+            ) : (
+              <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg bg-white/5 text-white/30">
+                Tiada Jawatan
+              </span>
+            )}
+
+            {unitCfg && (
+              <span
+                className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg"
+                style={{ background: hexToRgba(unitCfg.color, 0.15), color: unitCfg.color }}
+              >
+                {unitCfg.shortLabel}
+              </span>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <select
+              value={position}
+              onChange={e => setPosition(e.target.value)}
+              className="text-xs font-semibold bg-black/40 border border-white/10 text-white rounded-xl px-2 py-1.5 outline-none custom-scrollbar"
             >
-              {JPP_POSITION_LABELS[member.jpp_position] ?? member.jpp_position}
-            </span>
-          )}
-          {unitCfg && (
-            <span
-              className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full hidden md:block"
-              style={{ background: hexToRgba(unitCfg.color, 0.15), color: unitCfg.color }}
+              <option value="">— Pilih Jawatan —</option>
+              {Object.entries(JPP_POSITION_LABELS).map(([k, v]) => (
+                <option key={k} value={k}>{v}</option>
+              ))}
+            </select>
+            <select
+              value={unit}
+              onChange={e => setUnit(e.target.value)}
+              className="text-xs font-semibold bg-black/40 border border-white/10 text-white rounded-xl px-2 py-1.5 outline-none custom-scrollbar"
             >
-              {unitCfg.shortLabel}
-            </span>
-          )}
-          {canEdit && (
-            <button
-              onClick={() => setEditing(true)}
-              className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/10 transition-all"
-            >
-              <Pencil className="w-3 h-3" />
-            </button>
-          )}
-        </div>
-      ) : (
-        /* Edit controls */
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Position selector */}
-          <select
-            value={position}
-            onChange={e => setPosition(e.target.value)}
-            className="text-[10px] font-black bg-white/10 border border-white/15 text-white rounded-lg px-2 py-1 outline-none"
-          >
-            <option value="">— Jawatan —</option>
-            {Object.entries(JPP_POSITION_LABELS).map(([k, v]) => (
-              <option key={k} value={k}>{v}</option>
-            ))}
-          </select>
-          {/* Unit selector */}
-          <select
-            value={unit}
-            onChange={e => setUnit(e.target.value)}
-            className="text-[10px] font-black bg-white/10 border border-white/15 text-white rounded-lg px-2 py-1 outline-none"
-          >
-            <option value="">— Unit —</option>
-            {JPP_UNITS.map(u => (
-              <option key={u} value={u}>{JPP_UNIT_LABELS[u] ?? u}</option>
-            ))}
-          </select>
-          {/* Save / Cancel */}
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all"
-          >
-            {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
-          </button>
-          <button
-            onClick={() => setEditing(false)}
-            className="p-1.5 rounded-lg bg-white/10 text-white/40 hover:bg-white/15 transition-all"
-          >
-            <X className="w-3 h-3" />
-          </button>
-        </div>
-      )}
+              <option value="">— Pilih Unit —</option>
+              {JPP_UNITS.map(u => (
+                <option key={u} value={u}>{JPP_UNIT_LABELS[u] ?? u}</option>
+              ))}
+            </select>
+            <div className="flex items-center gap-2 mt-1">
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex-1 flex items-center justify-center py-1.5 rounded-xl bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all text-xs font-bold"
+              >
+                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Simpan'}
+              </button>
+              <button
+                onClick={() => setEditing(false)}
+                className="flex-1 flex items-center justify-center py-1.5 rounded-xl bg-white/10 text-white/50 hover:bg-white/15 hover:text-white transition-all text-xs font-bold"
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 }
 
-// ── Group section ─────────────────────────────────────────────────────────────
-function MemberGroup({
-  title, members, canEdit, themeColor, unitColor, onUpdate,
+// ── Group Section ─────────────────────────────────────────────────────────────
+function GroupSection({
+  title, members, canEdit, themeColor,
+  onUpdate,
 }: {
   title: string; members: JppMember[]; canEdit: boolean;
-  themeColor: string; unitColor?: string; onUpdate: (id: string, patch: Partial<JppMember>) => void;
+  themeColor: string; onUpdate: (id: string, patch: Partial<JppMember>) => void;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const color = unitColor ?? themeColor;
+  if (members.length === 0) return null;
 
   return (
-    <div className="rounded-[1.5rem] border border-white/[0.06] overflow-hidden">
-      {/* Header */}
-      <button
-        onClick={() => setCollapsed(v => !v)}
-        className="w-full flex items-center gap-3 px-5 py-4 hover:bg-white/[0.03] transition-all"
-      >
-        <div
-          className="w-2 h-2 rounded-full flex-shrink-0"
-          style={{ background: color }}
-        />
-        <span className="text-xs font-black text-white/70 tracking-wide flex-1 text-left">{title}</span>
-        <span className="text-[10px] font-black text-white/25 mr-2">{members.length} ahli</span>
-        <ChevronDown className={cn(
-          'w-4 h-4 text-white/25 transition-transform',
-          collapsed && '-rotate-90'
-        )} />
-      </button>
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <h2 className="text-sm font-black text-white/80 uppercase tracking-widest">{title}</h2>
+        <div className="h-px flex-1 bg-white/[0.06]" />
+        <span className="text-[10px] font-black text-white/30 uppercase tracking-widest bg-white/[0.05] px-2 py-0.5 rounded-full">
+          {members.length} Ahli
+        </span>
+      </div>
 
-      {/* Members */}
-      <AnimatePresence>
-        {!collapsed && (
-          <motion.div
-            initial={{ height: 0 }}
-            animate={{ height: 'auto' }}
-            exit={{ height: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="px-3 pb-3 space-y-0.5">
-              {members.length === 0 ? (
-                <p className="text-center text-[10px] font-black uppercase tracking-widest py-6 text-white/15">
-                  Tiada ahli
-                </p>
-              ) : members.map(m => (
-                <MemberRow
-                  key={m.id}
-                  member={m}
-                  canEdit={canEdit}
-                  themeColor={color}
-                  onUpdate={onUpdate}
-                />
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {members.map(m => (
+          <MemberCard
+            key={m.id}
+            member={m}
+            canEdit={canEdit}
+            themeColor={themeColor}
+            onUpdate={onUpdate}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -311,16 +295,35 @@ export function JppMembersPage() {
                 </span>
               </div>
               <Link 
-                to="/jpp-admin?tab=jpp"
+                to="/jpp/users"
                 className="flex flex-shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all w-fit group"
               >
                 <span className="text-[10px] font-black uppercase tracking-widest text-white/50 group-hover:text-white/80 transition-colors">
-                  Sunting Ahli Lanjut (Tetapan JPP)
+                  Pangkalan Data Pelajar
                 </span>
               </Link>
             </div>
           )}
         </motion.div>
+
+        {/* Top Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="p-5 rounded-[1.5rem] bg-white/[0.02] border border-white/[0.05] flex flex-col justify-center relative overflow-hidden">
+            <Crown className="absolute -right-4 -bottom-4 w-20 h-20 text-white/5 pointer-events-none" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-1">MT JPP</p>
+            <p className="text-3xl font-black text-white">{mtMembers.length}</p>
+          </div>
+          <div className="p-5 rounded-[1.5rem] bg-white/[0.02] border border-white/[0.05] flex flex-col justify-center relative overflow-hidden">
+            <Users className="absolute -right-4 -bottom-4 w-20 h-20 text-white/5 pointer-events-none" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-1">Exco & Unit</p>
+            <p className="text-3xl font-black text-white">{filtered.length - unassigned.length - mtMembers.length}</p>
+          </div>
+          <div className="p-5 rounded-[1.5rem] bg-white/[0.02] border border-white/[0.05] flex flex-col justify-center relative overflow-hidden">
+            <Shield className="absolute -right-4 -bottom-4 w-20 h-20 text-white/5 pointer-events-none" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-rose-400 mb-1">Belum Set</p>
+            <p className="text-3xl font-black text-white">{unassigned.length}</p>
+          </div>
+        </div>
 
         {/* Search */}
         <div className="relative">
@@ -330,61 +333,54 @@ export function JppMembersPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Cari nama atau emel ahli..."
-            className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.07] text-sm text-white/80 placeholder-white/20 outline-none focus:border-white/15 transition-all font-medium"
+            className="w-full pl-11 pr-4 py-4 rounded-2xl bg-white/[0.04] border border-transparent hover:border-white/[0.07] focus:bg-white/[0.06] text-sm text-white/80 placeholder-white/20 outline-none focus:border-white/15 transition-all font-medium"
           />
         </div>
 
         {/* Content */}
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-white/30" />
+            <Loader2 className="w-8 h-8 animate-spin text-white/30" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <UserCheck className="w-8 h-8 text-white/10 mb-3" />
-            <p className="text-xs font-black text-white/20 uppercase tracking-widest">Tiada ahli ditemui</p>
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-white/[0.02] rounded-[2rem] border border-white/[0.05]">
+            <UserCheck className="w-10 h-10 text-white/10 mb-4" />
+            <p className="text-sm font-black text-white/30 uppercase tracking-widest">Tiada ahli ditemui</p>
+            <p className="text-xs text-white/20 mt-2 font-medium">Sila cuba carian yang lain.</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {/* MT */}
-            {mtMembers.length > 0 && (
-              <MemberGroup
-                title="Majlis Tertinggi (MT)"
-                members={mtMembers}
-                canEdit={canEdit}
-                themeColor={themeColor}
-                onUpdate={handleUpdate}
-              />
-            )}
+          <div className="space-y-10">
+            <GroupSection
+              title="Majlis Tertinggi (MT)"
+              members={mtMembers}
+              canEdit={canEdit}
+              themeColor={themeColor}
+              onUpdate={handleUpdate}
+            />
 
-            {/* Unit groups */}
+            {/* Loop through all unit groups combined but separated by title */}
             {JPP_UNITS.map(u => {
               const grpMembers = unitGroups[u] ?? [];
-              if (grpMembers.length === 0 && !canEdit) return null;
-              const unitCfg = UNIT_CFG[u];
+              if (grpMembers.length === 0) return null;
               return (
-                <MemberGroup
+                <GroupSection
                   key={u}
-                  title={JPP_UNIT_LABELS[u] ?? u}
+                  title={`Unit ${JPP_UNIT_LABELS[u] ?? u}`}
                   members={grpMembers}
                   canEdit={canEdit}
                   themeColor={themeColor}
-                  unitColor={unitCfg?.color}
                   onUpdate={handleUpdate}
                 />
               );
             })}
 
-            {/* Unassigned */}
-            {unassigned.length > 0 && (
-              <MemberGroup
-                title="Belum Di-assign"
-                members={unassigned}
-                canEdit={canEdit}
-                themeColor={themeColor}
-                onUpdate={handleUpdate}
-              />
-            )}
+            <GroupSection
+              title="Belum Ditetapkan"
+              members={unassigned}
+              canEdit={canEdit}
+              themeColor="#f43f5e" 
+              onUpdate={handleUpdate}
+            />
           </div>
         )}
       </div>

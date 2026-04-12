@@ -15,14 +15,16 @@
 >
 > Sekarang, ia sedang dikembangkan menjadi **platform JPP penuh** yang merangkumi semua exco:
 > - ✅ e-KPP (siap, route tanpa prefix — konvensyen lama dikekalkan)
-> - 🚧 e-Keusahawanan (dalam pembangunan)
-> - 🔜 e-Kebajikan, e-Sukan, dan lain-lain (belum dimulakan)
+> - ✅ e-Keusahawanan (siap dengan modul POS, inventori, Onboarding Perniagaan, dan Program CRUD)
+> - ✅ Semua unit exco JPP (KK, AKADEMIK, KEBAJIKAN, MULTIMEDIA, KLS, KOLAB, SRK) kini menggunakan **Sistem Laporan Exco Universal** (Seksyen 12)
 >
 > **Akibatnya, struktur fail mungkin kelihatan tidak konsisten:**
 > - Route e-KPP tiada prefix (`/dashboard`, `/aktiviti`) walaupun exco lain ada prefix (`/keusahawanan/*`)
 > - Sesetengah nama komponen masih menggunakan nama lama berorientasikan KPP
-> - `JppAdminPage.tsx` adalah fail terbesar (3000+ baris) kerana ia merangkumi semua logik admin global
-> - Bahagian sidebar, navbar, dan portal masih dalam proses dipisahkan mengikut exco
+> - `JppAdminPage.tsx` adalah fail kawalan utama (JPP HQ Dashboard) kerana ia merangkumi semua logik admin global dan pemantauan rentas-exco
+>
+> **Falsafah Pemusatan (JPP HQ Centric):**
+> Sistem ini dipusatkan melalui *Laman Portal JPP*. Pentadbir (JPP/Developer) sentiasa memantau keadaan kelab/perniagaan secara "Cross-Monitor" (contoh: *Business Switcher Sidebar* untuk Keusahawanan dan *Club Switcher* untuk KPP) dari satu akaun JPP tanpa perlu mencipta pelbagai jenis akaun untuk setiap perniagaan.
 >
 > **Jangan refactor tanpa faham sejarah ini.** Ikut konvensyen yang ditetapkan dalam `ROUTES.md` untuk sebarang modul baharu.
 
@@ -242,8 +244,10 @@ import { supabase } from '@/lib/supabase';
 | `student_club_memberships` | Keahlian per-kelab (role varies per club) |
 | `club_activities` | Aktiviti kelab |
 | `club_reports` | Laporan bulanan kelab |
-| `club_logs` | Audit log semua tindakan |
+| `club_logs` | Audit log semua tindakan kelab |
 | `jpp_mt_assignments` | MT yang oversee unit exco tertentu |
+| `keusahawanan_businesses`| Profil perniagaan e-Keusahawanan pelajar |
+| `student_business_memberships`| Keahlian & hirarki perniagaan pelajar (role: `OWNER`/`MEMBER`, status: `PENDING`/`ACTIVE`/`REJECTED`)|
 | `ai_usage_logs` | Rekod penggunaan AI Nexus |
 | `notifications` | Notifikasi dalam app |
 
@@ -291,7 +295,8 @@ import { something } from '../lib/supabase';  // ❌ Elakkan relative
 
 | Context | Eksport | Kegunaan |
 |---|---|---|
-| `AuthContext` | `useAuth()` | User, profile, role flags, club switching |
+| `AuthContext` | `useAuth()` | User, profile, role flags, JPP HQ states, club switching |
+| `BusinessSwitcherContext` | `useBusinessSwitcher()` | Mengawal & menukar navigasi antara perniagaan yang dipantau (untuk Business Owner & JPP Admin) |
 | `ThemeContext` | `useTheme()` | Dark/light mode, toggle |
 | `AiSettingsContext` | `useAiSettings()` | Tetapan AI (concise mode, model pilihan) |
 | `KarnivalContext` | `useKarnival()` | State undian karnival |
@@ -330,8 +335,141 @@ npm run lint:css     # Stylelint sahaja
 | `src/lib/supabase.ts` | Client singleton. Jangan buat instance baru |
 | `src/lib/driveUpload.ts` | Routing storan hibrid. Silap = data tersalah simpan |
 | `src/types/index.ts` | Type contracts. ALL_CLUBS, constants |
-| `src/config/excoModules.ts` | Config modul exco. `isActive: false` = modul tersembunyi |
+| `src/pages/jpp/jppConfig.ts` | Config semua unit exco JPP. `isActive: false` = unit tersembunyi. `moduleLink` menentukan destinasi klik sidebar |
+| `src/components/exco/ExcoAktivitiPage.tsx` | **Template universal** aktiviti exco — jangan duplicate logik ini |
+| `src/components/exco/ExcoLaporanPage.tsx` | **Template universal** laporan exco — gunakan semula untuk semua unit |
+| `src/components/exco/ExcoSemakanLaporanPage.tsx` | Panel semakan MT — satu komponen untuk semua unit |
 | `supabase/migrations/` | Database schema history. Jangan edit migration lama |
+
+---
+
+## 12. Sistem Laporan Exco JPP Universal ⭐ BACA INI
+
+> Semua unit exco JPP (kecuali KPP dan Keusahawanan yang punya dashboard penuh) menggunakan **templat universal berasaskan komponen** untuk fungsi Aktiviti, Laporan, dan Semakan.
+
+### Falsafah Reka Bentuk
+
+Daripada membina satu komponen besar per-unit (yang menyebabkan kod berulang), kami menggunakan **tiga komponen template universal** yang dikonfigurasikan secara dinamik melalui URL params.
+
+```
+URL                                  → Komponen
+/exco/kebajikan/aktiviti             → ExcoAktivitiPage (excoUnit="KEBAJIKAN")
+/exco/kebajikan/laporan              → ExcoLaporanPage  (excoUnit="KEBAJIKAN")
+/jpp/semak-laporan-exco/kebajikan    → ExcoSemakanLaporanPage (excoUnit="KEBAJIKAN")
+```
+
+### Fail-fail penting
+
+| Fail | Fungsi |
+|---|---|
+| `src/components/exco/ExcoAktivitiPage.tsx` | CRUD aktiviti. Filter by `exco_unit` column dalam `club_activities` |
+| `src/components/exco/ExcoLaporanPage.tsx` | Jana laporan PDF, upload manual, semak status. Filter by `exco_unit` dalam `club_reports` |
+| `src/components/exco/ExcoSemakanLaporanPage.tsx` | Panel MT untuk Lulus/Tolak laporan per unit |
+| `src/pages/jpp/units/ExcoGenericDashboard.tsx` | Dashboard overview (stat, aktiviti terkini, laporan terkini, quick actions) |
+| `src/pages/jpp/ExcoWrappers.tsx` | Thin route wrappers — baca `unitCode` dari URL, hantar ke komponen template |
+| `src/pages/jpp/jppConfig.ts` | Config semua unit: `UNIT_CFG`, `UNIT_ORDER`, `UnitConfig` interface |
+
+### Cara Kerja Auto-PDF (per unit)
+
+```typescript
+// Setting key format: auto_pdf_KEBAJIKAN, auto_pdf_MULTIMEDIA, dll.
+// Jika row tiada, default = true (auto-PDF aktif)
+const { data } = await supabase.from('system_settings')
+  .select('value').eq('key', `auto_pdf_${excoUnit}`).maybeSingle();
+```
+
+### Aliran Kerja Laporan Exco
+
+```
+Exco isi aktiviti                    (ExcoAktivitiPage)
+    ↓
+Exco jana laporan PDF / upload manual (ExcoLaporanPage)
+    ↓
+Laporan status: "Menunggu"
+    ↓
+MT yang oversee unit terima notifikasi
+    ↓
+MT semak dalam ExcoSemakanLaporanPage
+    ↓
+[Lulus] → status: "Diluluskan"
+[Tolak] → status: "Ditolak" + nota penolakan → Exco perlu hantar semula
+```
+
+### RBAC Exco Reporting
+
+| Peranan | Akses |
+|---|---|
+| Ahli exco unit (KETUA\_EXCO / TIMBALAN\_EXCO / EXCO\_BIASA) dengan `jpp_unit = 'KEBAJIKAN'` | Baca & tulis aktiviti/laporan unit sendiri sahaja |
+| MT yang di-assign ke unit (`jpp_mt_assignments`) | Baca semua aktiviti/laporan unit itu + kuasa Lulus/Tolak |
+| YDP / SUPER\_ADMIN\_JPP | Akses penuh semua unit |
+
+> Semak `JPP_MT_POSITIONS` dalam `src/types/index.ts` untuk senarai jawatan MT.
+
+### Cara Tambah Unit Exco Baharu
+
+Jika ada unit exco JPP baharu perlu ditambah:
+
+1. **Tambah dalam `jppConfig.ts`** — Tambah entry baharu dalam `UNIT_CFG` dengan `isActive: true`
+2. **Routing automatik** — Route `/exco/:unitCode/*` dan `/jpp/semak-laporan-exco/:unitCode` sudah wujud dalam `App.tsx`. Tiada perubahan routing diperlukan.
+3. **Sidebar automatik** — `JppSidebar.tsx` akan auto-detect unit baharu dan papar sub-nav Aktiviti/Laporan/Semak mengikut RBAC.
+4. **Dashboard unit** — `JppUnitDashboard.tsx` akan auto-render `ExcoGenericDashboard` untuk unit baharu.
+5. **Database** — Pastikan column `exco_unit` dalam `club_activities` dan `club_reports` boleh terima nilai unit baharu.
+
+> **PENTING**: Jangan buat fail `.tsx` terpisah untuk setiap unit exco. Gunakan templat universal yang sedia ada.
+
+### Database Columns yang Berkaitan
+
+```sql
+-- club_activities: tambahan berbanding e-KPP
+exco_unit TEXT  -- e.g. 'KEBAJIKAN', 'MULTIMEDIA', 'SRK'
+
+-- club_reports: tambahan berbanding e-KPP  
+exco_unit TEXT  -- sama seperti di atas
+
+-- system_settings: toggle auto-PDF per unit
+key  = 'auto_pdf_KEBAJIKAN'  -- value: 'true' atau 'false'
+
+-- jpp_mt_assignments: siapa oversee unit mana
+mt_user_id UUID   -- profile.id MT berkenaan
+unit       TEXT   -- kod unit, cth: 'KEBAJIKAN'
+```
+
+---
+
+## 13. Modul Keusahawanan — Program CRUD
+
+`src/pages/keusahawanan/KeusahawananProgram.tsx` kini adalah **real CRUD** (bukan demo data).
+
+### Jadual Database
+
+| Jadual | Fungsi |
+|---|---|
+| `keusahawanan_programs` | Senarai program/workshop/pertandingan |
+| `keusahawanan_program_registrations` | Daftar minat peserta (auto-count via trigger) |
+
+### Kolum Penting `keusahawanan_programs`
+
+| Kolum | Jenis | Keterangan |
+|---|---|---|
+| `visibility` | `AWAM` / `JPP_SAHAJA` | AWAM = semua boleh lihat; JPP_SAHAJA = ahli JPP sahaja |
+| `participants_count` | integer | Auto-dikira via database trigger dari `registrations` |
+| `max_participants` | integer | Had kapasiti (0 = tiada had) |
+| `image_url` | text | URL poster dari Supabase Storage bucket `keusahawanan` |
+| `icon` | text | Emoji fallback jika tiada poster |
+
+### Storan Poster
+- Bucket: `keusahawanan` (Supabase Storage)
+- Sambungan dibenarkan: gambar sahaja (`image/*`)
+- **JANGAN** guna bucket `reports` atau `announcements` untuk program Keusahawanan
+
+### RBAC Program
+
+| Peranan | Akses |
+|---|---|
+| Unit Keusahawanan (`jpp_unit = 'KEUSAHAWANAN'`) | Buat, edit, padam, tukar visibiliti |
+| Mana-mana JPP position | Boleh lihat semua program (AWAM + JPP_SAHAJA) |
+| SUPER_ADMIN_JPP | Akses penuh |
+| Pelajar biasa | Hanya nampak program AWAM, boleh daftar minat |
 
 ---
 

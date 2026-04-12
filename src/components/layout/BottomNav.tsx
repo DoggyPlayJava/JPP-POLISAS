@@ -4,11 +4,10 @@ import { LayoutGrid, Trophy, Users, Settings, Home, LayoutDashboard, Flag, Calen
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
-// Route-route e-KPP (sama dengan Sidebar.tsx)
 const EKPP_ROUTES = [
   '/dashboard', '/kelab', '/sertai-kelab', '/aktiviti', '/ahli',
   '/tetapan', '/carian', '/laporan', '/urus-kelab', '/semakan-laporan',
-  '/jpp-admin', '/leaderboard', '/logs', '/karnival', '/nexus',
+  '/leaderboard', '/logs', '/karnival', '/nexus',
 ];
 
 function detectActiveExco(pathname: string): string | null {
@@ -37,7 +36,7 @@ export function BottomNav() {
 
   // Nav e-KPP — Super Admin JPP
   const adminItems = [
-    { to: '/jpp-admin',         icon: Home,         label: 'Pusat' },
+    { to: '/jpp',               icon: Home,         label: 'Pusat' },
     { to: '/kelab',             icon: LayoutGrid,   label: 'Kelab' },
     { to: '/semakan-laporan',   icon: ShieldCheck,  label: 'Semakan' },
     { to: '/tetapan',           icon: Settings,     label: 'Tetapan' },

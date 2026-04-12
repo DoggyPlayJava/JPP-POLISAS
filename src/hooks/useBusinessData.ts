@@ -115,10 +115,47 @@ export function useBusinessData() {
     }
   };
 
-  // Method to join an existing business
+  // Method to join an existing business or appeal
   const joinBusiness = async (businessId: string) => {
     if (!user) return;
     try {
+      const existing = myMemberships.find(m => m.business_id === businessId);
+
+      if (existing) {
+        if (existing.status === 'REJECTED') {
+          // Appeal / Update existing row
+          const { error: updErr } = await supabase.from('student_business_memberships')
+            .update({ status: 'PENDING' })
+            .eq('id', existing.id);
+          
+          if (updErr) throw updErr;
+
+          // Fetch student phone number & business owner
+          const [profileRes, businessRes] = await Promise.all([
+             supabase.from('profiles').select('full_name, phone_number').eq('id', user.id).single(),
+             supabase.from('keusahawanan_businesses').select('owner_id, name').eq('id', businessId).single()
+          ]);
+
+          if (businessRes.data && profileRes.data) {
+             const phoneInfo = profileRes.data.phone_number ? `No Tel: ${profileRes.data.phone_number}` : 'Tiada No Tel didaftarkan.';
+             await supabase.from('notifications').insert({
+               user_id: businessRes.data.owner_id,
+               title: 'Rayuan Semula (Appeal)',
+               message: `Pelajar ${profileRes.data.full_name} membuat rayuan semula untuk menyertai ${businessRes.data.name}. Sila semak di menu Urus Perniagaan. ${phoneInfo}`,
+               type: 'SYSTEM',
+               is_read: false,
+             });
+          }
+
+          toast.success('Rayuan telah dihantar. Pemilik perniagaan telah dimaklumkan.');
+          await fetchInitialData();
+          return;
+        } else {
+          throw new Error('Anda sudah mempunyai rekod permohonan untuk perniagaan ini.');
+        }
+      }
+
+      // New insert
       const { error } = await supabase
         .from('student_business_memberships')
         .insert([{

@@ -359,7 +359,7 @@ export function JppHomePage() {
               {[
                 { label: 'Ahli JPP',       icon: Users,      href: '/jpp/members',    color: themeColor },
                 { label: 'Gambaran Sistem', icon: BarChart3,  href: '/jpp/overview',   color: '#60A5FA' },
-                { label: 'Admin Tools',    icon: ShieldCheck, href: '/jpp-admin',      color: '#F59E0B' },
+                { label: 'Pangkalan Pelajar', icon: ShieldCheck, href: '/jpp/users', color: '#F59E0B' },
               ].map(({ label, icon: Icon, href, color }) => (
                 <button
                   key={href}

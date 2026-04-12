@@ -21,7 +21,6 @@ import { CarianPage } from '@/pages/CarianPage';
 import { PendingPage } from '@/pages/PendingPage';
 import { ClubDetailPage } from '@/pages/ClubDetailPage';
 import { RejectedPage } from '@/pages/RejectedPage';
-import { JppAdminPage } from '@/pages/JppAdminPage';
 import { UrusKelabPage } from '@/pages/UrusKelabPage'; // Import di atas sekali
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { PenasihatLogPage } from './pages/PenasihatLogPage';
@@ -35,6 +34,9 @@ import { JppMembersPage }     from './pages/jpp/JppMembersPage';
 import { JppOverviewPage }    from './pages/jpp/JppOverviewPage';
 import { JppUnitDashboard }   from './pages/jpp/JppUnitDashboard';
 import AnnouncementsPage      from './pages/jpp/AnnouncementsPage';
+// ── Exco Reporting System (universal template) ──
+import { ExcoAktivitiWrapper, ExcoLaporanWrapper } from './pages/jpp/ExcoWrappers';
+import { ExcoSemakanLaporanPage } from './components/exco/ExcoSemakanLaporanPage';
 // ── e-Keusahawanan (prefix: /keusahawanan/) ──
 import { KeusahawananLayout } from './pages/keusahawanan/KeusahawananLayout';
 import { KeusahawananDashboard } from './pages/keusahawanan/KeusahawananDashboard';
@@ -47,6 +49,12 @@ import { PosOrderPage }   from './pages/keusahawanan/pos/PosOrderPage';
 import { PosProductPage } from './pages/keusahawanan/pos/PosProductPage';
 import { PosStatsPage }   from './pages/keusahawanan/pos/PosStatsPage';
 import { PosHistoryPage } from './pages/keusahawanan/pos/PosHistoryPage';
+
+import { JppUsersPage } from './pages/jpp/JppUsersPage';
+import { JppTakwimPage } from './pages/jpp/JppTakwimPage';
+import { JppLogsPage } from './pages/jpp/JppLogsPage';
+import { JppSettingsPage } from './pages/jpp/JppSettingsPage';
+import { JppNexusPage } from './pages/jpp/JppNexusPage';
 
 import { ForcePhoneUpdateModal } from '@/components/ui/ForcePhoneUpdateModal';
 import { GlobalAnnouncementModal } from '@/components/GlobalAnnouncementModal';
@@ -118,7 +126,6 @@ function AppRoutes() {
           <Route path="/laporan" element={<LaporanPage />} />
           <Route path="/urus-kelab" element={<UrusKelabPage />} />
           <Route path="/semakan-laporan" element={<SemakanLaporanPage />} />
-          <Route path="/jpp-admin" element={<JppAdminPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/logs" element={<PenasihatLogPage />} />
           <Route path="/karnival" element={<KarnivalVotingPage />} />
@@ -131,6 +138,15 @@ function AppRoutes() {
           <Route path="/jpp/overview"         element={<JppOverviewPage />} />
           <Route path="/jpp/unit/:unitCode"   element={<JppUnitDashboard />} />
           <Route path="/jpp/announcements"    element={<AnnouncementsPage />} />
+          <Route path="/jpp/users"            element={<JppUsersPage />} />
+          <Route path="/jpp/takwim"           element={<JppTakwimPage />} />
+          <Route path="/jpp/logs"             element={<JppLogsPage />} />
+          <Route path="/jpp/settings"         element={<JppSettingsPage />} />
+          <Route path="/jpp/nexus"            element={<JppNexusPage />} />
+          {/* ── Exco Universal Template Routes ── */}
+          <Route path="/exco/:unitCode/aktiviti"          element={<ExcoAktivitiWrapper />} />
+          <Route path="/exco/:unitCode/laporan"           element={<ExcoLaporanWrapper />} />
+          <Route path="/jpp/semak-laporan-exco/:unitCode" element={<ExcoSemakanLaporanPage />} />
         </Route>
 
         {/* ── e-Keusahawanan Onboarding (No Sidebar) ── */}

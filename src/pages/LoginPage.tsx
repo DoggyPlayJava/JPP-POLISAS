@@ -86,7 +86,8 @@ export function LoginPage() {
     }
 
     if (registerMode === 'staff') {
-      if (passcode !== 'STAF-POLISAS') {
+      const { data: isValid, error: rpcError } = await supabase.rpc('verify_staff_code', { p_code: passcode });
+      if (rpcError || !isValid) {
         toast.error('Kod pengesahan staf tidak sah.');
         return;
       }

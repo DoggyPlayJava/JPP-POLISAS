@@ -12,6 +12,7 @@ import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID, UNIT_CFG } from './jppConfig';
 import { JPP_MT_POSITIONS, JPP_UNIT_LABELS } from '@/types';
 import { KppUnitDashboard } from './units/KppUnitDashboard';
 import { KeusahawananUnitDashboard } from './units/KeusahawananUnitDashboard';
+import { ExcoGenericDashboard } from './units/ExcoGenericDashboard';
 
 // ── Units that have a full dedicated dashboard component ─────────────────────
 const FULL_DASHBOARD_UNITS = new Set(['KPP', 'KEUSAHAWANAN']);
@@ -256,17 +257,16 @@ export function JppUnitDashboard() {
             {/* ── Full Unit Dashboard (KPP / Keusahawanan) ─── */}
             {FULL_DASHBOARD_UNITS.has(upperCode) ? (
               <div className="bg-[#0f0f17]/80 backdrop-blur rounded-[2rem] border border-white/[0.05] p-6">
-                {upperCode === 'KPP' && <KppUnitDashboard />}
+                {upperCode === 'KPP'         && <KppUnitDashboard />}
                 {upperCode === 'KEUSAHAWANAN' && <KeusahawananUnitDashboard />}
               </div>
             ) : (
-              /* ── Fallback for other active units without dedicated dashboard ─── */
-              <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
-                <cfg.icon className="w-8 h-8 text-white/10" />
-                <p className="text-xs font-black text-white/20 uppercase tracking-widest">
-                  Dashboard unit sedang dikonfigurasi
-                </p>
-              </div>
+              /* ── Exco Generic Dashboard untuk semua unit aktif lain ─── */
+              <ExcoGenericDashboard
+                excoUnit={upperCode}
+                themeColor={cfg.color}
+                excoLabel={cfg.fullLabel}
+              />
             )}
           </>
         )}
