@@ -582,6 +582,8 @@ export interface SystemAnnouncement {
   target_audience: AnnouncementTarget;
   action_url: string | null;
   form_schema: AnnouncementFormField[] | null;
+  image_url: string | null;
+  icon_type: string | null;
   is_active: boolean;
   created_by: string | null;
   created_at: string;

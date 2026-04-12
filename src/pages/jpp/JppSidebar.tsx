@@ -367,7 +367,17 @@ export function JppSidebar() {
               </span>
               <ExternalLink className="w-3 h-3 opacity-50 flex-shrink-0" />
             </NavLink>
+          </>
+        )}
 
+        {/* ── Hebahan Global (YDP / SuperAdmin / Multimedia only) ─── */}
+        {(isSuperAdmin || isYDP || profile?.jpp_unit === 'MULTIMEDIA') && (
+          <>
+            {(!isSuperAdmin && !isYDP) && (
+              <div className="pt-4 pb-1.5">
+                <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-white/25">Pentadbiran</p>
+              </div>
+            )}
             <NavLink
               to="/jpp/announcements"
               className={({ isActive }) => cn(

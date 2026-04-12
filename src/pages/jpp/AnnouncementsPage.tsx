@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
 import { 
   Bell, Plus, ShieldAlert, AlertTriangle, Info, Lock, 
-  Trash2, FileText, CheckCircle2, XCircle, Users, Activity
+  Trash2, FileText, CheckCircle2, XCircle, Users, Activity, X, Upload, Star, Gift, Megaphone, Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,12 @@ export default function AnnouncementsPage() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Viewing responses state
+  const [viewingResponsesFor, setViewingResponsesFor] = useState<SystemAnnouncement | null>(null);
+  const [responses, setResponses] = useState<any[]>([]);
+  const [loadingResponses, setLoadingResponses] = useState(false);
 
   // Form states
   const [title, setTitle] = useState('');
@@ -27,6 +33,11 @@ export default function AnnouncementsPage() {
   const [priority, setPriority] = useState<AnnouncementPriority>('EASY');
   const [target, setTarget] = useState<AnnouncementTarget>('ALL');
   const [actionUrl, setActionUrl] = useState('');
+  
+  // Media states
+  const [iconType, setIconType] = useState('INFO');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   
   // Dynamic Form Builder statres
   const [useFormBuilder, setUseFormBuilder] = useState(false);
@@ -53,6 +64,14 @@ export default function AnnouncementsPage() {
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleCreate = async () => {
     if (!title || !content) {
       toast.error('Sila isi tajuk dan kandungan');
@@ -61,25 +80,67 @@ export default function AnnouncementsPage() {
 
     setCreating(true);
     try {
-      const payload: Partial<SystemAnnouncement> = {
-        title,
-        content_body: content,
-        priority,
-        target_audience: target,
-        action_url: actionUrl || null,
-        form_schema: useFormBuilder && priority === 'HIGH' && formFields.length > 0 ? formFields : null,
-        is_active: true
-      };
+      let finalImageUrl = imagePreview && !imageFile ? imagePreview : null;
 
-      const { error } = await supabase.from('system_announcements').insert(payload);
-      if (error) throw error;
+      if (!editingId && imageFile) {
+        toast.loading('Memuat naik imej...', { id: 'upload_image' });
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('announcements')
+          .upload(fileName, imageFile);
+          
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('announcements')
+          .getPublicUrl(fileName);
+          
+        finalImageUrl = publicUrl;
+        toast.dismiss('upload_image');
+      }
 
-      toast.success('Makluman berjaya dicipta!');
+      if (editingId) {
+        const { error: dbError } = await supabase
+          .from('system_announcements')
+          .update({
+            title,
+            content_body: content,
+            priority,
+            target_audience: target,
+            action_url: actionUrl,
+            form_schema: useFormBuilder ? formFields : null,
+            icon_type: iconType
+          })
+          .eq('id', editingId);
+
+        if (dbError) throw dbError;
+        toast.success('Hebahan dikemas kini!');
+      } else {
+        const { error: dbError } = await supabase
+          .from('system_announcements')
+          .insert({
+            title,
+            content_body: content,
+            priority,
+            target_audience: target,
+            action_url: actionUrl,
+            form_schema: useFormBuilder ? formFields : null,
+            image_url: finalImageUrl,
+            icon_type: iconType,
+            is_active: true
+          });
+
+        if (dbError) throw dbError;
+        toast.success('Hebahan berjaya dicipta!');
+      }
+
       setShowCreate(false);
       resetForm();
       fetchAnnouncements();
     } catch (err: any) {
-      toast.error(err.message || 'Gagal mencipta makluman');
+      toast.error(err.message || 'Gagal memproses makluman');
     } finally {
       setCreating(false);
     }
@@ -98,9 +159,15 @@ export default function AnnouncementsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, imageUrl: string | null) => {
     if (!window.confirm('Adakah anda pasti untuk memadam makluman ini? JAWAPAN PELAJAR AKAN TURUT TERPADAM.')) return;
     
+    if (imageUrl) {
+      const parts = imageUrl.split('/');
+      const fileName = parts[parts.length - 1];
+      await supabase.storage.from('announcements').remove([fileName]);
+    }
+
     const { error } = await supabase.from('system_announcements').delete().eq('id', id);
     if (error) toast.error('Gagal memadam');
     else {
@@ -109,12 +176,32 @@ export default function AnnouncementsPage() {
     }
   };
 
+  const handleEdit = (a: SystemAnnouncement) => {
+    setEditingId(a.id);
+    setTitle(a.title);
+    setContent(a.content_body);
+    setPriority(a.priority);
+    setTarget(a.target_audience);
+    setActionUrl(a.action_url || '');
+    setIconType(a.icon_type || 'INFO');
+    setUseFormBuilder(!!(a.form_schema && a.form_schema.length > 0));
+    setFormFields(a.form_schema || []);
+    setImageFile(null);
+    setImagePreview(a.image_url || null);
+    setShowCreate(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const resetForm = () => {
+    setEditingId(null);
     setTitle('');
     setContent('');
     setPriority('EASY');
     setTarget('ALL');
     setActionUrl('');
+    setIconType('INFO');
+    setImageFile(null);
+    setImagePreview(null);
     setUseFormBuilder(false);
     setFormFields([]);
   };
@@ -140,6 +227,30 @@ export default function AnnouncementsPage() {
     HIGH: 'text-rose-500 bg-rose-500/10 border-rose-500/20'
   };
 
+  const handleViewResponses = async (announcement: SystemAnnouncement) => {
+    setViewingResponsesFor(announcement);
+    setLoadingResponses(true);
+    try {
+      const { data, error } = await supabase
+        .from('user_announcement_responses')
+        .select(`
+          status,
+          form_data,
+          created_at,
+          profiles(full_name, matric_no)
+        `)
+        .eq('announcement_id', announcement.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setResponses(data || []);
+    } catch (err: any) {
+      toast.error('Gagal memuat turun respon');
+    } finally {
+      setLoadingResponses(false);
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500 pb-20">
       {/* HEADER */}
@@ -159,8 +270,8 @@ export default function AnnouncementsPage() {
       {showCreate ? (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-[2rem] border border-border/50 shadow-2xl overflow-hidden">
           <div className="p-8 border-b border-border/50 bg-muted/20">
-            <h2 className="text-2xl font-black tracking-tight">Enjin Pencipta Hebahan</h2>
-            <p className="text-sm text-muted-foreground">Parameter hebahan akan dibaca terus oleh sistem login pengguna.</p>
+            <h2 className="text-2xl font-black tracking-tight">{editingId ? 'Sunting Hebahan' : 'Enjin Pencipta Hebahan'}</h2>
+            <p className="text-sm text-muted-foreground">{editingId ? 'Kemaskini maklumat di bawah. Pertukaran imej dihadkan untuk elakkan isu storan.' : 'Parameter hebahan akan dibaca terus oleh sistem login pengguna.'}</p>
           </div>
           
           <div className="p-8 space-y-8">
@@ -189,6 +300,54 @@ export default function AnnouncementsPage() {
               <Textarea value={content} onChange={e => setContent(e.target.value)} rows={4} placeholder="Penerangan terperinci notis..." className="resize-none bg-muted/50 rounded-xl p-4" />
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+               <div className="space-y-4">
+                  <Label className="font-bold">Pilihan Ikon</Label>
+                  <Select value={iconType} onValueChange={(val: any) => setIconType(val)}>
+                     <SelectTrigger className="h-12 bg-muted/50 rounded-xl">
+                        <SelectValue placeholder="Pilih Ikon" />
+                     </SelectTrigger>
+                     <SelectContent>
+                        <SelectItem value="INFO"><div className="flex items-center"><Info size={16} className="mr-2"/> Info Umum</div></SelectItem>
+                        <SelectItem value="ALERT"><div className="flex items-center"><ShieldAlert size={16} className="mr-2"/> Amaran / Penting</div></SelectItem>
+                        <SelectItem value="GIFT"><div className="flex items-center"><Gift size={16} className="mr-2"/> Hadiah / Imbuhan</div></SelectItem>
+                        <SelectItem value="STAR"><div className="flex items-center"><Star size={16} className="mr-2"/> Sorotan utama</div></SelectItem>
+                        <SelectItem value="MEGAPHONE"><div className="flex items-center"><Megaphone size={16} className="mr-2"/> Sorakan / Promosi</div></SelectItem>
+                        <SelectItem value="CALENDAR"><div className="flex items-center"><Calendar size={16} className="mr-2"/> Tarikh Acara</div></SelectItem>
+                     </SelectContent>
+                  </Select>
+               </div>
+               
+               <div className="space-y-4">
+                  <Label className="font-bold">Poster / Imej {editingId ? '(Dikunci)' : '(Opsional)'}</Label>
+                  {!editingId ? (
+                     <>
+                        <label className="flex items-center justify-center gap-2 h-12 bg-muted/50 rounded-xl border border-dashed border-border/50 cursor-pointer hover:bg-muted/80 transition-colors">
+                           <Upload size={16} className="text-muted-foreground" />
+                           <span className="text-sm font-medium text-muted-foreground">Muat Naik Gambar (Max 10MB)</span>
+                           <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                        </label>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                           * Nisbah terbaik: <b>Lanskap (16:9)</b> atau <b>Segi Empat Sama (1:1)</b>.<br/>
+                           * <i>Format Memanjang (9:16) dibenarkan</i>; ruang tepi akan diisi dengan estetik kesan kabur (blur).
+                        </p>
+                     </>
+                  ) : (
+                     <p className="text-[10px] text-amber-500 font-bold bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
+                        * Pemuat naik gambar dimatikan semasa suntingan bagi mengimbangi integriti storan. Sila padam dan cipta hebahan baharu sekiranya gambar perlu ditukar.
+                     </p>
+                  )}
+                  {imagePreview && (
+                     <div className="relative mt-2 rounded-xl overflow-hidden border border-border/50 h-32 bg-muted/30">
+                        <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                        {!editingId && (
+                           <button onClick={() => {setImageFile(null); setImagePreview(null);}} className="absolute top-2 right-2 p-1 bg-background/50 hover:bg-background/80 rounded-full text-foreground"><X size={14}/></button>
+                        )}
+                     </div>
+                  )}
+               </div>
+            </div>
+
             <div className="space-y-4">
               <Label className="font-bold text-lg">Tahap Keutamaan (Priority)</Label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -212,15 +371,14 @@ export default function AnnouncementsPage() {
               </div>
             </div>
 
-            {priority === 'HIGH' && (
-              <div className="p-8 rounded-[2rem] border-2 border-rose-500/20 bg-rose-500/5 space-y-6">
-                <div className="flex gap-4 items-center">
-                  <div className="p-3 bg-rose-500/20 text-rose-600 rounded-xl"><Lock size={20} /></div>
-                  <div>
-                    <h3 className="font-black text-rose-600">Tetapan Sekatan HIGH Priority</h3>
-                    <p className="text-sm text-muted-foreground">Pelajar wajib melakukan tindakan sebelum dibenarkan melepasi skrin ini.</p>
-                  </div>
+            <div className="p-8 rounded-[2rem] border-2 border-primary/20 bg-primary/5 space-y-6">
+              <div className="flex gap-4 items-center">
+                <div className="p-3 bg-primary/20 text-primary rounded-xl"><Lock size={20} /></div>
+                <div>
+                  <h3 className="font-black text-primary">Tindakan Aksi & Borang (Opsional)</h3>
+                  <p className="text-sm text-muted-foreground">Kumpul pendaftaran (seperti Fun Run) atau lilit butang URL luaran.</p>
                 </div>
+              </div>
 
                 <div className="flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-background">
                    <Switch checked={useFormBuilder} onCheckedChange={setUseFormBuilder} />
@@ -272,8 +430,7 @@ export default function AnnouncementsPage() {
                      </div>
                   </div>
                 )}
-              </div>
-            )}
+               </div>
 
             <div className="flex justify-end gap-4 pt-8 border-t border-border/50">
               <Button variant="ghost" onClick={() => {setShowCreate(false); resetForm();}} className="h-12 px-8 rounded-xl font-bold">Batal</Button>
@@ -324,12 +481,66 @@ export default function AnnouncementsPage() {
                      <Label className="text-xs font-bold uppercase text-muted-foreground">Status Aktif</Label>
                      <Switch checked={a.is_active} onCheckedChange={() => toggleActive(a.id, a.is_active)} className="data-[state=checked]:bg-emerald-500" />
                    </div>
-                   <Button variant="outline" className="h-10 rounded-xl w-full border-border/50 text-xs font-bold text-muted-foreground"><Users size={14} className="mr-2"/> Lihat Respon Pelajar</Button>
-                   <Button variant="ghost" onClick={() => handleDelete(a.id)} className="h-10 rounded-xl w-full text-xs font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"><Trash2 size={14} className="mr-2"/> Padam Notis Mengarut</Button>
+                   <Button variant="outline" onClick={() => handleEdit(a)} className="h-10 rounded-xl w-full border-border/50 text-xs font-bold"><Plus size={14} className="mr-2"/> Sunting Notis</Button>
+                   <Button variant="outline" onClick={() => handleViewResponses(a)} className="h-10 rounded-xl w-full border-border/50 text-xs font-bold text-muted-foreground"><Users size={14} className="mr-2"/> Lihat Respon Pelajar</Button>
+                   <Button variant="ghost" onClick={() => handleDelete(a.id, a.image_url)} className="h-10 rounded-xl w-full text-xs font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"><Trash2 size={14} className="mr-2"/> Padam Notis</Button>
                  </div>
                </div>
              )
           })}
+        </div>
+      )}
+
+      {/* View Responses Modal */}
+      {viewingResponsesFor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-background/80 backdrop-blur-md" />
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative bg-card rounded-[2rem] border border-border/50 shadow-2xl p-6 sm:p-8 w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between mb-6 pb-6 border-b border-border/50">
+               <div>
+                  <h2 className="text-2xl font-black tracking-tight" style={{wordBreak: "break-word"}}>{viewingResponsesFor.title}</h2>
+                  <p className="text-muted-foreground text-sm">Respons Pelajar bagi makluman ini.</p>
+               </div>
+               <button onClick={() => setViewingResponsesFor(null)} className="p-2 bg-muted/50 rounded-full hover:bg-muted text-muted-foreground"><X size={20}/></button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto min-h-[50vh]">
+               {loadingResponses ? (
+                  <div className="h-full flex items-center justify-center"><Activity className="animate-spin text-muted-foreground" /></div>
+               ) : responses.length === 0 ? (
+                  <div className="text-center p-12 border-2 border-dashed border-border/50 rounded-[2rem] text-muted-foreground">Tiada respon diterima lagi.</div>
+               ) : (
+                  <div className="space-y-4">
+                     {responses.map((r, i) => (
+                        <div key={i} className="bg-muted/30 border border-border/50 p-4 rounded-xl flex flex-col gap-2">
+                           <div className="flex justify-between items-start">
+                              <div>
+                                 <p className="font-bold">{r.profiles?.full_name}</p>
+                                 <p className="text-xs text-muted-foreground">{r.profiles?.matric_no}</p>
+                              </div>
+                              <span className={`px-2 py-1 rounded text-[10px] font-black uppercase ${r.status === 'completed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'}`}>
+                                 {r.status}
+                              </span>
+                           </div>
+                           {r.form_data && (
+                              <div className="mt-2 bg-background p-3 rounded-lg text-xs space-y-1 font-mono text-muted-foreground">
+                                 {Object.entries(r.form_data).map(([key, value]) => {
+                                    // Find label from form_schema if possible
+                                    const field = viewingResponsesFor.form_schema?.find(f => f.id === key);
+                                    return (
+                                       <div key={key}>
+                                          <span className="font-black text-foreground">{field ? field.label : key}:</span> {String(value)}
+                                       </div>
+                                    )
+                                 })}
+                              </div>
+                           )}
+                        </div>
+                     ))}
+                  </div>
+               )}
+            </div>
+          </motion.div>
         </div>
       )}
     </div>
