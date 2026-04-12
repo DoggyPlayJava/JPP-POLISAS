@@ -343,37 +343,45 @@ export function JppSidebar() {
               const isExpanded = expandedUnits.has(code);
 
               // ── Sub-nav logic ─────────────────────────────────────────────
-              const isExcoUnit = code !== 'KPP' && code !== 'KEUSAHAWANAN';
-              const isOwnExco  = isOwn && isExcoUnit && !isYDP;
-              const isMTOfUnit = isMT && assignedUnits.includes(code) && isExcoUnit;
-              const canReview  = isExcoUnit && hasAccess && !isOwnExco && (isYDP || isMTOfUnit);
+              // SEMUA unit JPP adalah unit exco — semua dapat Aktiviti + Laporan
+              const isOwnExco  = isOwn && !isYDP;
+              const isMTOfUnit = isMT && assignedUnits.includes(code);
+              const canReview  = hasAccess && !isOwnExco && (isYDP || isMTOfUnit);
 
               // Build sub-nav list based on unit type + role
               const subItems: { icon: any; label: string; href: string }[] = [];
 
-              if (code === 'KPP') {
-                // KPP: semak laporan kelab (route lama e-KPP — /semakan-laporan)
-                if (isYDP || isOwn)
-                  subItems.push({ icon: ClipboardCheck, label: 'Semak Laporan Kelab', href: '/semakan-laporan' });
-              } else if (code === 'KEUSAHAWANAN') {
-                // Keusahawanan: link ke modul penuh mereka
-                subItems.push({ icon: Store,        label: 'Dashboard',  href: '/keusahawanan/dashboard' });
-                subItems.push({ icon: FileText,      label: 'Laporan',    href: '/keusahawanan/laporan' });
-                subItems.push({ icon: Zap,           label: 'Program',    href: '/keusahawanan/program' });
-              } else if (isOwnExco) {
+              if (isOwnExco) {
+                // Exco unit sendiri: Aktiviti + Laporan (universal)
                 subItems.push(
                   { icon: Zap,      label: 'Aktiviti', href: `/exco/${unitLower}/aktiviti` },
                   { icon: FileText, label: 'Laporan',  href: `/exco/${unitLower}/laporan` },
                 );
+                // KPP tambahan: semak laporan kelab
+                if (code === 'KPP')
+                  subItems.push({ icon: ClipboardCheck, label: 'Semak Laporan Kelab', href: '/semakan-laporan' });
+                // Keusahawanan tambahan: portal modul
+                if (code === 'KEUSAHAWANAN') {
+                  subItems.push({ icon: Store, label: 'Portal Dashboard', href: '/keusahawanan/dashboard' });
+                  subItems.push({ icon: Zap,   label: 'Portal Program',   href: '/keusahawanan/program' });
+                }
               } else if (canReview) {
+                // MT / YDP menyemak laporan unit ini
                 if (isYDP) {
+                  // YDP boleh tengok semua
                   subItems.push(
                     { icon: Zap,      label: 'Aktiviti', href: `/exco/${unitLower}/aktiviti` },
                     { icon: FileText, label: 'Laporan',  href: `/exco/${unitLower}/laporan` },
                   );
+                  if (code === 'KPP')
+                    subItems.push({ icon: ClipboardCheck, label: 'Semak Laporan Kelab', href: '/semakan-laporan' });
+                  if (code === 'KEUSAHAWANAN')
+                    subItems.push({ icon: Store, label: 'Portal Dashboard', href: '/keusahawanan/dashboard' });
                 }
+                // Semak laporan exco unit ini (universal)
                 subItems.push({ icon: ClipboardCheck, label: 'Semak Laporan', href: `/jpp/semak-laporan-exco/${unitLower}` });
               }
+
 
               const hasSubNav = hasAccess && subItems.length > 0;
 

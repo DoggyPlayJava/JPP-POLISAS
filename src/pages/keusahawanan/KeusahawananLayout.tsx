@@ -300,7 +300,7 @@ function KeusahawananSidebar({ color }: { color: string }) {
 // ── Layout ────────────────────────────────────────────────────────────────────
 
 export function KeusahawananLayout() {
-  const { isSuperAdmin, isLoading, profile } = useAuth();
+  const { isSuperAdmin, isLoading, profile, hasKeusahawananAccess } = useAuth();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [themeColor, setThemeColor] = useState(DEFAULT_COLOR);
@@ -339,6 +339,7 @@ export function KeusahawananLayout() {
         setIsSidebarOpen={setIsSidebarOpen}
         moduleEnabled={moduleEnabled}
         isSuperAdmin={isSuperAdmin}
+        hasKeusahawananAccess={hasKeusahawananAccess}
       />
     </BusinessSwitcherProvider>
   );
@@ -347,20 +348,22 @@ export function KeusahawananLayout() {
 // ── Inner layout (inside BusinessSwitcherProvider) ─────────────────────────────
 
 function LayoutInner({
-  themeColor, isSidebarOpen, setIsSidebarOpen, moduleEnabled, isSuperAdmin,
+  themeColor, isSidebarOpen, setIsSidebarOpen, moduleEnabled, isSuperAdmin, hasKeusahawananAccess,
 }: {
   themeColor: string;
   isSidebarOpen: boolean;
   setIsSidebarOpen: (v: boolean) => void;
   moduleEnabled: boolean | null;
   isSuperAdmin: boolean;
+  hasKeusahawananAccess: boolean;
 }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { isLoading: isSwitcherLoading, canSwitch, allBusinesses } = useBusinessSwitcher();
 
-  // Redirect to onboarding if: not an admin AND no business found
-  if (!isSuperAdmin && !canSwitch && !isSwitcherLoading && allBusinesses.length === 0) {
+  // Redirect to onboarding if: no admin access AND no business found
+  // (YDP/MT with hasKeusahawananAccess bypass this — they are reviewers, not owners)
+  if (!isSuperAdmin && !hasKeusahawananAccess && !canSwitch && !isSwitcherLoading && allBusinesses.length === 0) {
     return <Navigate to="/keusahawanan/onboarding" replace />;
   }
 

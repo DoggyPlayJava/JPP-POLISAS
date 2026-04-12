@@ -379,6 +379,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // KPP Exco mendapat isAdvisor=true GLOBAL supaya boleh switch ke mana-mana kelab
   const isKppExco           = profileRole === 'JPP' && profile?.jpp_unit === 'KPP';
   const isKeusahawananExco  = profileRole === 'JPP' && profile?.jpp_unit === 'KEUSAHAWANAN';
+  // YDP dan YANG_DIPERTUA — oversee semua unit, termasuk KPP dan Keusahawanan
+  const isYdp = (profileRole === 'JPP' || profileRole === 'SUPER_ADMIN_JPP') &&
+    (profile?.jpp_position === 'YDP' || profile?.jpp_position === 'YANG_DIPERTUA');
   const isAdvisor   = effectiveRole === 'CLUB_ADVISOR'   || effectiveRole === 'PENASIHAT'   || isSuperAdmin || isKppExco;
   const isPresident = effectiveRole === 'CLUB_PRESIDENT' || effectiveRole === 'PRESIDEN'    || isAdvisor;
   const isMT        = effectiveRole === 'CLUB_MT'        || effectiveRole === 'MT'          || isPresident;
@@ -403,8 +406,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isKppExco,
         isKeusahawananExco,
         isJppMember,
-        hasKppAccess: isSuperAdmin || isKppExco || isMTKpp,
-        hasKeusahawananAccess: isSuperAdmin || isKeusahawananExco || isMTKeusahawanan || isUnitKeusahawananAdmin,
+        hasKppAccess: isSuperAdmin || isKppExco || isMTKpp || isYdp,
+        hasKeusahawananAccess: isSuperAdmin || isKeusahawananExco || isMTKeusahawanan || isUnitKeusahawananAdmin || isYdp,
         userClubIds,
         userMemberships,
         primaryClubId,

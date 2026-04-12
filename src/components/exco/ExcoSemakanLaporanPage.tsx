@@ -56,14 +56,18 @@ export function ExcoSemakanLaporanPage() {
 
   // ── Access Guard ──────────────────────────────────────────────────────────
   const jppPos = profile?.jpp_position as string | undefined;
-  const isMT   = JPP_MT_POSITIONS.includes(jppPos as any);
-  const hasAccess = isMT || isSuperAdmin;
+  const jppUnit = profile?.jpp_unit as string | undefined;
+  const isJppMT  = JPP_MT_POSITIONS.includes(jppPos as any);
+  const isYDP    = jppPos === 'YDP' || jppPos === 'YANG_DIPERTUA';
+  const hasAccess = isJppMT || isSuperAdmin || isYDP;
 
   // ── State ─────────────────────────────────────────────────────────────────
   const [reports, setReports]               = useState<ExcoReport[]>([]);
   const [loading, setLoading]               = useState(true);
   const [filterTab, setFilterTab]           = useState<'Menunggu' | 'Diluluskan' | 'Ditolak'>('Menunggu');
   const [showArchived, setShowArchived]     = useState(false);
+  const [autoPdfEnabled, setAutoPdfEnabled] = useState(true);
+  const [settingsLoading, setSettingsLoading] = useState(false);
 
   // Action dialog
   const [actionDialog, setActionDialog] = useState<{
@@ -89,7 +93,37 @@ export function ExcoSemakanLaporanPage() {
     setLoading(false);
   }, [excoUnit]);
 
-  useEffect(() => { loadReports(); }, [loadReports]);
+  const loadSettings = useCallback(async () => {
+    if (!excoUnit) return;
+    const { data } = await supabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', `auto_pdf_${excoUnit}`)
+      .single();
+    if (data !== null) setAutoPdfEnabled(data.value === true || data.value === 'true');
+  }, [excoUnit]);
+
+  useEffect(() => { loadReports(); loadSettings(); }, [loadReports, loadSettings]);
+
+  // ── Toggle Auto PDF ───────────────────────────────────────────────────────
+  const toggleAutoPdf = async () => {
+    if (!excoUnit) return;
+    setSettingsLoading(true);
+    const newVal = !autoPdfEnabled;
+    try {
+      const { error } = await supabase
+        .from('system_settings')
+        .upsert({ key: `auto_pdf_${excoUnit}`, value: newVal }, { onConflict: 'key' });
+      
+      if (error) throw error;
+      setAutoPdfEnabled(newVal);
+      toast.success(`Janaan Auto-PDF ${newVal ? 'DIBUKA' : 'DITUTUP'} untuk ${excoLabel}`);
+    } catch (err: any) {
+      toast.error('Ralat mengemas kini tetapan: ' + err.message);
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
 
   // ── Action ────────────────────────────────────────────────────────────────
   const handleAction = async () => {
@@ -190,8 +224,32 @@ export function ExcoSemakanLaporanPage() {
               Semak Laporan
             </span>
           </div>
-          <h1 className="text-4xl font-black tracking-tight text-white">Semakan Laporan</h1>
-          <p className="text-sm text-white/40 mt-1 font-medium">{excoLabel}</p>
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div>
+              <h1 className="text-4xl font-black tracking-tight text-white">Semakan Laporan</h1>
+              <p className="text-sm text-white/40 mt-1 font-medium">{excoLabel}</p>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
+              <div className="flex-1 min-w-[120px]">
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-0.5">Janaan Auto-PDF</p>
+                <p className="text-[10px] text-white/30 font-medium leading-tight">Benarkan Exco jana PDF automatik</p>
+              </div>
+              <button
+                onClick={toggleAutoPdf}
+                disabled={settingsLoading}
+                className={cn(
+                  'px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all w-16 text-center',
+                  autoPdfEnabled
+                    ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'
+                    : 'bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20',
+                  settingsLoading && 'opacity-50 cursor-not-allowed'
+                )}
+              >
+                {autoPdfEnabled ? 'ON' : 'OFF'}
+              </button>
+            </div>
+          </div>
         </motion.div>
 
         {/* Summary cards */}
