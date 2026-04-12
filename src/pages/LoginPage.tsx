@@ -12,9 +12,10 @@ import { UserRole, JABATAN_LIST, JabatanValue, ALL_CLUBS, ROLE_LABELS, getAkadem
 import { cn } from '@/lib/utils';
 
 // Roles yang boleh self-register (Presiden dan MT perlu pilih kelab)
-const LEADER_ROLES: UserRole[] = ['CLUB_PRESIDENT', 'CLUB_MT', 'CLUB_ADVISOR'];
+const LEADER_ROLES: UserRole[] = ['CLUB_PRESIDENT', 'CLUB_MT'];
+const STAFF_ROLES: UserRole[] = ['STAFF', 'CLUB_ADVISOR'];
 
-type RegisterMode = 'student' | 'leader';
+type RegisterMode = 'student' | 'leader' | 'staff';
 type Step = 1 | 2;
 
 export function LoginPage() {
@@ -32,11 +33,15 @@ export function LoginPage() {
   const [registerMode, setRegisterMode] = useState<RegisterMode>('student');
   const [jabatan, setJabatan] = useState<JabatanValue | ''>('');
   const [leaderRole, setLeaderRole] = useState<UserRole>('CLUB_PRESIDENT');
+  const [staffRole, setStaffRole] = useState<UserRole>('STAFF');
   const [leaderClubId, setLeaderClubId] = useState('');
+  const [phone, setPhone] = useState('');
+  const [passcode, setPasscode] = useState('');
 
   const resetForm = () => {
     setStep(1); setRegisterMode('student'); setJabatan(''); setLeaderRole('CLUB_PRESIDENT');
-    setLeaderClubId(''); setFullName(''); setMatricNo(''); setEmail(''); setPassword('');
+    setStaffRole('STAFF'); setLeaderClubId(''); setFullName(''); setMatricNo(''); setEmail(''); setPassword('');
+    setPhone(''); setPasscode('');
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -70,29 +75,44 @@ export function LoginPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim() || !email || !password || !matricNo.trim()) {
-      toast.error('Sila lengkapkan semua maklumat termasuk Nombor Matrik.');
+    if (!fullName.trim() || !email || !password || !matricNo.trim() || !phone.trim()) {
+      toast.error('Sila lengkapkan semua maklumat asas.');
       return;
     }
 
-    if (email.trim().toLowerCase().endsWith('@student.polisas.edu.my')) {
+    if (registerMode !== 'staff' && email.trim().toLowerCase().endsWith('@student.polisas.edu.my')) {
       toast.error('Sila guna emel peribadi. Emel pelajar @student.polisas.edu.my tidak dapat menerima kotak pengesahan.');
       return;
     }
 
-    if (!jabatan) {
-      toast.error('Sila pilih jabatan anda.');
-      return;
-    }
-    if (registerMode === 'leader' && !leaderClubId) {
-      toast.error('Sila pilih kelab anda.');
-      return;
+    if (registerMode === 'staff') {
+      if (passcode !== 'STAF-POLISAS') {
+        toast.error('Kod pengesahan staf tidak sah.');
+        return;
+      }
+      if (staffRole === 'CLUB_ADVISOR' && !leaderClubId) {
+        toast.error('Sila pilih kelab yang dinasihati.');
+        return;
+      }
+    } else {
+      if (!jabatan) {
+        toast.error('Sila pilih jabatan anda.');
+        return;
+      }
+      if (registerMode === 'leader' && !leaderClubId) {
+        toast.error('Sila pilih kelab anda.');
+        return;
+      }
     }
 
     setIsLoading(true);
     try {
       const isLeader = registerMode === 'leader';
-      const academikClubId = getAkademikClubId(jabatan as JabatanValue);
+      const isStaff = registerMode === 'staff';
+      const isAdvisor = isStaff && staffRole === 'CLUB_ADVISOR';
+
+      const academikClubId = isStaff ? null : getAkademikClubId(jabatan as JabatanValue);
+      const roleToAssign = isStaff ? staffRole : (isLeader ? leaderRole : 'CLUB_MEMBER');
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -102,8 +122,9 @@ export function LoginPage() {
             full_name: fullName.trim(),
             matric_no: matricNo.trim(),
             club_id: academikClubId,
-            role: 'CLUB_MEMBER',
-            department: jabatan,
+            role: roleToAssign,
+            department: isStaff ? null : jabatan,
+            phone: phone.trim(),
           },
         },
       });
@@ -111,21 +132,22 @@ export function LoginPage() {
 
       if (data.user) {
         localStorage.setItem('is_new_register', 'true');
-        // FIX SECURITY LEAK: Create profile as regular member and assign to academic club by default
-        const initialStatus = isLeader ? 'PENDING' : 'APPROVED';
+
+        let initialStatus = 'APPROVED';
+        if (isLeader || isAdvisor) initialStatus = 'PENDING';
 
         await supabase.from('profiles').update({
           full_name: fullName.trim(),
           matric_no: matricNo.trim(),
           club_id: academikClubId,
-          role: isLeader ? leaderRole : 'CLUB_MEMBER', 
-          department: jabatan,
+          role: roleToAssign,
+          department: isStaff ? null : jabatan,
+          phone: phone.trim(),
           account_status: initialStatus,
         }).eq('id', data.user.id);
 
-        const isLeadingAcademicClub = isLeader && leaderClubId === academikClubId;
-
-        if (academikClubId) {
+        if (!isStaff && academikClubId) {
+          const isLeadingAcademicClub = isLeader && leaderClubId === academikClubId;
           await supabase.from('student_club_memberships').insert({
             user_id: data.user.id,
             club_id: academikClubId,
@@ -134,32 +156,32 @@ export function LoginPage() {
             is_primary: true,
           }).select();
         }
-        
-        if (isLeader && !isLeadingAcademicClub) {
-          // Send leader request purely as PENDING
+
+        const targetClubMembership = (isLeader && leaderClubId !== academikClubId) || isAdvisor;
+        if (targetClubMembership) {
           await supabase.from('student_club_memberships').insert({
             user_id: data.user.id,
             club_id: leaderClubId,
-            role: leaderRole,
+            role: roleToAssign,
             account_status: 'PENDING',
-            is_primary: false,
+            is_primary: !academikClubId, // Primary jika tiada kelab akademik (cthnya staf penasihat)
           }).select();
         }
 
-        // NOTIFY JPP ADMIN FOR LEADER APPLICATIONS (Applies to both academic and non-academic roles)
-        if (isLeader && (leaderRole === 'CLUB_PRESIDENT' || leaderRole === 'CLUB_ADVISOR')) {
-          const targetClubId = isLeadingAcademicClub ? academikClubId : leaderClubId;
-          const clubInfo = ALL_CLUBS.find(c => c.id === targetClubId);
+        // NOTIFY JPP ADMIN FOR LEADER APPLICATIONS
+        if ((isLeader && leaderRole === 'CLUB_PRESIDENT') || isAdvisor) {
+          const targetNotificationClubId = isAdvisor ? leaderClubId : (leaderClubId === academikClubId ? academikClubId : leaderClubId);
+          const clubInfo = ALL_CLUBS.find(c => c.id === targetNotificationClubId);
           const clubName = clubInfo?.name || 'tersebut';
 
           const { data: admins } = await supabase.from('profiles').select('id').in('role', ['SUPER_ADMIN_JPP', 'ADMIN', 'JPP']);
           if (admins && admins.length > 0) {
             const notifs = admins.map(a => ({
-               user_id: a.id,
-               title: 'Pendaftaran Pimpinan Baharu',
-               message: `Terdapat satu permohonan pendaftaran baru sebagai ${ROLE_LABELS[leaderRole] || leaderRole} untuk kelab ${clubName}. Sila semak permohonan dalam tab "Permohonan Baru" di halaman Pengurusan Ahli.`,
-               type: 'SYSTEM',
-               is_read: false
+              user_id: a.id,
+              title: 'Pendaftaran Pimpinan Baharu',
+              message: `Terdapat satu permohonan pendaftaran baru sebagai ${ROLE_LABELS[roleToAssign] || roleToAssign} untuk kelab ${clubName}. Sila semak permohonan dalam tab "Permohonan Baru" di halaman Pengurusan Ahli.`,
+              type: 'SYSTEM',
+              is_read: false
             }));
             const { error: notifErr } = await supabase.from('notifications').insert(notifs);
             if (notifErr) console.error("Gagal hantar notifikasi:", notifErr);
@@ -168,9 +190,11 @@ export function LoginPage() {
       }
 
       toast.success(
-        registerMode === 'student'
-          ? `Akaun berjaya didaftar! Sila semak peti masuk emel anda untuk pengesahan.`
-          : 'Akaun berjaya didaftar! Anda dimasukkan ke Kelab Akademik anda. Permohonan kepimpinan anda akan disemak oleh Penasihat.'
+        isStaff
+          ? (isAdvisor ? 'Akaun staf didaftarkan. Permohonan Penasihat kelab sedang disemak.' : 'Akaun Staf berjaya didaftar dan aktif!')
+          : (registerMode === 'student'
+            ? `Akaun berjaya didaftar! Sila semak peti masuk emel anda untuk pengesahan.`
+            : 'Akaun berjaya didaftar! Anda dimasukkan ke Kelab Akademik anda. Permohonan kepimpinan anda akan disemak oleh Penasihat.')
       );
 
       setIsSignUp(false);
@@ -224,16 +248,16 @@ export function LoginPage() {
               )}
               {isForgotPassword ? 'Tetapkan Semula Kata Laluan'
                 : isSignUp ? (step === 1 ? 'Daftar Akaun Baharu' : 'Maklumat Keahlian')
-                : 'Log Masuk'}
+                  : 'Log Masuk'}
             </CardTitle>
             <CardDescription className="text-sm text-muted-foreground">
               {isForgotPassword
                 ? 'Masukkan emel anda untuk menerima pautan tetapan semula.'
                 : isSignUp && step === 1
-                ? 'Lengkapkan maklumat asas anda.'
-                : isSignUp && step === 2
-                ? 'Pilih jabatan atau peranan anda dalam kelab.'
-                : 'Masukkan emel dan kata laluan anda untuk teruskan.'}
+                  ? 'Lengkapkan maklumat asas anda.'
+                  : isSignUp && step === 2
+                    ? 'Pilih jabatan atau peranan anda dalam kelab.'
+                    : 'Masukkan emel dan kata laluan anda untuk teruskan.'}
             </CardDescription>
             {isSignUp && (
               <div className="flex items-center gap-2 pt-2">
@@ -263,25 +287,41 @@ export function LoginPage() {
                 {step === 1 ? (
                   <motion.form key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }} className="space-y-4"
-                    onSubmit={(e) => { e.preventDefault(); if (!fullName.trim() || !email || !password) { toast.error('Sila lengkapkan semua maklumat.'); return; } setStep(2); }}>
+                    onSubmit={(e) => { e.preventDefault(); if (!fullName.trim() || !email || !password || !matricNo.trim() || !phone.trim()) { toast.error('Sila lengkapkan semua maklumat.'); return; } setStep(2); }}>
+
+                    {/* Toggle: Pelajar atau Staf */}
+                    <div className="grid grid-cols-2 gap-1.5 p-1.5 bg-muted/40 rounded-xl mb-2">
+                      <button type="button" onClick={() => setRegisterMode(registerMode === 'leader' ? 'leader' : 'student')}
+                        className={cn("flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                          (registerMode === 'student' || registerMode === 'leader') ? "bg-card shadow-md text-foreground" : "text-muted-foreground hover:text-foreground")}>
+                        <Sparkles className="w-3.5 h-3.5" /> Pelajar
+                      </button>
+                      <button type="button" onClick={() => setRegisterMode('staff')}
+                        className={cn("flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                          registerMode === 'staff' ? "bg-card shadow-md text-emerald-600" : "text-muted-foreground hover:text-emerald-600")}>
+                        <Building2 className="w-3.5 h-3.5" /> Staf
+                      </button>
+                    </div>
 
                     {/* Nama Penuh */}
                     <div className="space-y-1.5">
                       <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Nama Penuh</Label>
                       <div className="relative group">
                         <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
-                        <Input placeholder="NAMA PENUH SEPERTI DALAM KAD MATRIK" required value={fullName}
+                        <Input placeholder="NAMA PENUH SEPERTI DALAM IC" required value={fullName}
                           onChange={e => setFullName(e.target.value.toUpperCase())}
                           className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-medium uppercase" />
                       </div>
                     </div>
 
-                    {/* No. Matrik */}
+                    {/* No. Matrik / No Pekerja */}
                     <div className="space-y-1.5">
-                      <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">No. Matrik</Label>
+                      <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">
+                        {registerMode === 'staff' ? 'No. Pekerja (Staf ID)' : 'No. Matrik'}
+                      </Label>
                       <div className="relative group">
                         <Hash className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
-                        <Input placeholder="CTH: 23DKM1234" required value={matricNo} onChange={e => setMatricNo(e.target.value.toUpperCase())}
+                        <Input placeholder={registerMode === 'staff' ? "CTH: S123456" : "CTH: 23DKM1234"} required value={matricNo} onChange={e => setMatricNo(e.target.value.toUpperCase())}
                           className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-medium uppercase" />
                       </div>
                     </div>
@@ -291,9 +331,19 @@ export function LoginPage() {
                       <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Emel</Label>
                       <div className="relative group">
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
-                        <Input type="email" placeholder="emel@polisas.edu.my" required value={email}
+                        <Input type="email" placeholder="emel@gmail.com" required value={email}
                           onChange={e => setEmail(e.target.value)}
                           className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-medium" />
+                      </div>
+                    </div>
+
+                    {/* No Telefon */}
+                    <div className="space-y-1.5">
+                      <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">No Telefon Bimbit</Label>
+                      <div className="relative group">
+                        <Input placeholder="CTH: 0123456789" required value={phone} onChange={e => setPhone(e.target.value)}
+                          className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-medium" />
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-accent transition-colors">📱</span>
                       </div>
                     </div>
 
@@ -317,48 +367,52 @@ export function LoginPage() {
                   <motion.form key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }} className="space-y-5" onSubmit={handleRegister}>
 
-                    {/* Toggle: Pelajar atau Pemimpin */}
-                    <div className="grid grid-cols-2 gap-2 p-1 bg-muted/40 rounded-xl">
-                      <button type="button" onClick={() => setRegisterMode('student')}
-                        className={cn("flex items-center justify-center gap-2 py-2.5 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all",
-                          registerMode === 'student' ? "bg-card shadow-md text-foreground" : "text-muted-foreground hover:text-foreground")}>
-                        <Sparkles className="w-3.5 h-3.5" /> Pelajar
-                      </button>
-                      <button type="button" onClick={() => setRegisterMode('leader')}
-                        className={cn("flex items-center justify-center gap-2 py-2.5 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all",
-                          registerMode === 'leader' ? "bg-card shadow-md text-foreground" : "text-muted-foreground hover:text-foreground")}>
-                        <Crown className="w-3.5 h-3.5" /> Pemimpin
-                      </button>
-                    </div>
+                    {registerMode !== 'staff' && (
+                      <div className="space-y-3">
+                        {/* Toggle: Pelajar Biasa atau Pemimpin Kelab */}
+                        <div className="grid grid-cols-2 gap-1.5 p-1.5 bg-muted/40 rounded-xl mb-2">
+                          <button type="button" onClick={() => setRegisterMode('student')}
+                            className={cn("flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                              registerMode === 'student' ? "bg-card shadow-md text-foreground" : "text-muted-foreground hover:text-foreground")}>
+                            <Sparkles className="w-3.5 h-3.5" /> Pelajar Biasa
+                          </button>
+                          <button type="button" onClick={() => setRegisterMode('leader')}
+                            className={cn("flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                              registerMode === 'leader' ? "bg-card shadow-md text-foreground" : "text-muted-foreground hover:text-foreground")}>
+                            <Crown className="w-3.5 h-3.5" /> Pemimpin Kelab
+                          </button>
+                        </div>
 
-                    <div className="space-y-3">
-                      <div className="space-y-1.5">
-                        <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">
-                          <Building2 className="inline w-3.5 h-3.5 mr-1" />Jabatan Akademik Anda
-                        </Label>
-                        <Select value={jabatan} onValueChange={v => setJabatan(v as JabatanValue)} required>
-                          <SelectTrigger className="h-12 rounded-xl bg-muted/40 border-border/60 focus:ring-accent/40 font-medium">
-                            <SelectValue placeholder="Pilih jabatan akademik anda..." />
-                          </SelectTrigger>
-                          <SelectContent className="rounded-2xl border-border/60 shadow-2xl">
-                            {JABATAN_LIST.map(j => (
-                              <SelectItem key={j.value} value={j.value} className="rounded-lg font-medium py-3">
-                                {j.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div className="space-y-1.5">
+                          <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">
+                            <Building2 className="inline w-3.5 h-3.5 mr-1" />Jabatan Akademik Anda
+                          </Label>
+                          <Select value={jabatan} onValueChange={v => setJabatan(v as JabatanValue)} required>
+                            <SelectTrigger className="h-12 rounded-xl bg-muted/40 border-border/60 focus:ring-accent/40 font-medium">
+                              <SelectValue placeholder="Pilih jabatan akademik anda..." />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-2xl border-border/60 shadow-2xl">
+                              {JABATAN_LIST.map(j => (
+                                <SelectItem key={j.value} value={j.value} className="rounded-lg font-medium py-3">
+                                  {j.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     <AnimatePresence mode="wait">
-                      {registerMode === 'student' ? (
+                      {registerMode === 'student' && (
                         <motion.div key="student" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
                           <div className="p-3 rounded-xl bg-blue-500/8 border border-blue-500/20 text-[11px] text-blue-600 font-medium leading-relaxed">
                             💡 Anda akan <strong>auto-diasingkan</strong> ke Kelab Akademik secara rasmi. Selepas log masuk, layari <strong>"Sertai Kelab"</strong> untuk menyertai kelab sukan/beruniform yang lain.
                           </div>
                         </motion.div>
-                      ) : (
+                      )}
+
+                      {registerMode === 'leader' && (
                         <motion.div key="leader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
                           <div className="p-3 rounded-xl bg-amber-500/8 border border-amber-500/20 text-[11px] text-amber-700 font-medium leading-relaxed">
                             👑 Anda akan dimasukkan ke Kelab Akademik anda dahulu. Permohonan jawatan kepimpinan bagi kelab yang dipilih di bawah tertakluk pada kelulusan Penasihat kelab.
@@ -396,6 +450,57 @@ export function LoginPage() {
                           </div>
                         </motion.div>
                       )}
+
+                      {registerMode === 'staff' && (
+                        <motion.div key="staff" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
+                          <div className="p-3 rounded-xl bg-emerald-500/8 border border-emerald-500/20 text-[11px] text-emerald-700 font-medium leading-relaxed">
+                            🏢 Mod Pendaftaran Staf membolehkan anda untuk menggunakan perkhidmatan warga institusi.
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Tujuan Pendaftaran</Label>
+                            <Select value={staffRole} onValueChange={v => setStaffRole(v as UserRole)}>
+                              <SelectTrigger className="h-12 rounded-xl bg-emerald-500/5 border-emerald-500/30 focus:ring-emerald-500/40 font-bold text-emerald-700">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="rounded-2xl border-border/60 shadow-2xl">
+                                {STAFF_ROLES.map(r => (
+                                  <SelectItem key={r} value={r} className="rounded-lg font-medium py-3 text-sm">
+                                    {ROLE_LABELS[r]}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {staffRole === 'CLUB_ADVISOR' && (
+                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-1.5 mt-2">
+                              <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Kelab Yang Dinasihati</Label>
+                              <Select value={leaderClubId} onValueChange={setLeaderClubId} required>
+                                <SelectTrigger className="h-12 rounded-xl bg-indigo-500/5 border-indigo-500/30 font-medium focus:ring-indigo-500/40">
+                                  <SelectValue placeholder="Sila pilih kelab anda..." />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-2xl border-border/60 shadow-2xl max-h-60">
+                                  {ALL_CLUBS.map(c => (
+                                    <SelectItem key={c.id} value={c.id} className="rounded-lg font-medium py-3">
+                                      <span className="font-bold">{c.name}</span>
+                                      <span className="ml-2 text-xs text-muted-foreground">— {c.category}</span>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </motion.div>
+                          )}
+
+                          <div className="space-y-1.5 pt-2">
+                            <Label className="text-[11px] font-black uppercase tracking-widest text-rose-500">KOD PENGESAHAN STAF</Label>
+                            <div className="relative group">
+                              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-rose-500/40 group-focus-within:text-rose-500 transition-colors" />
+                              <Input type="password" placeholder="Dapatkan dari Admin" required value={passcode} onChange={e => setPasscode(e.target.value)}
+                                className="h-12 pl-11 rounded-xl bg-rose-500/5 border-rose-500/20 focus-visible:ring-rose-500/40 font-bold tracking-[0.2em] text-rose-700" />
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
                     </AnimatePresence>
 
                     <Button type="submit" disabled={isLoading}
@@ -413,7 +518,7 @@ export function LoginPage() {
                   <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Emel</Label>
                   <div className="relative group">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
-                    <Input type="email" placeholder="emel@polisas.edu.my" required value={email}
+                    <Input type="email" placeholder="emel@gmail.com" required value={email}
                       onChange={e => setEmail(e.target.value)}
                       className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-medium" />
                   </div>

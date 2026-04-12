@@ -439,6 +439,15 @@ export function PortalPage() {
 
           <div className="flex items-center gap-2">
             <div className="hidden sm:block border-r border-black/10 dark:border-white/10 h-6 mx-2" />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate('/tetapan')} 
+              className="rounded-xl h-10 w-10 text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:bg-white/10 transition-all border border-transparent hover:border-black/5 dark:border-white/10"
+              title="Tetapan"
+            >
+              <LucideIcons.Settings className="w-4 h-4" />
+            </Button>
             <ThemeToggle />
             <Button 
               variant="ghost" 

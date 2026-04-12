@@ -2,7 +2,7 @@
 // JPP POLISAS — Core Types (matches Supabase DB schema)
 // ============================================================
 
-export type UserRole = 'SUPER_ADMIN_JPP' | 'JPP' | 'CLUB_ADVISOR' | 'CLUB_PRESIDENT' | 'CLUB_MT' | 'CLUB_MEMBER';
+export type UserRole = 'SUPER_ADMIN_JPP' | 'JPP' | 'CLUB_ADVISOR' | 'CLUB_PRESIDENT' | 'CLUB_MT' | 'CLUB_MEMBER' | 'STAFF';
 // SUPER_ADMIN_JPP = Pentadbir Mutlak (akses penuh ke semua sistem)
 // JPP             = Ahli Jawatankuasa Perwakilan Pelajar (akses modul exco berkenaan)
 // CLUB_ADVISOR    = Penasihat Kelab
@@ -244,6 +244,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   CLUB_PRESIDENT:  'Presiden',
   CLUB_MT:         'MT Kelab',
   CLUB_MEMBER:     'Ahli',
+  STAFF:           'Staf Umum',
 };
 
 export const ROLE_COLORS: Record<UserRole, string> = {
@@ -253,6 +254,7 @@ export const ROLE_COLORS: Record<UserRole, string> = {
   CLUB_PRESIDENT:  'bg-amber-100 text-amber-700',
   CLUB_MT:         'bg-blue-100 text-blue-700',
   CLUB_MEMBER:     'bg-slate-100 text-slate-600',
+  STAFF:           'bg-emerald-100 text-emerald-700',
 };
 
 export const STATUS_LABELS: Record<ActivityStatus, string> = {
@@ -557,4 +559,39 @@ export interface BusinessCashCheckpoint {
   checkpoint_date: string;
   created_at:      string;
 }
-
+
+// ─── Global Announcements Types ──────────────────────────────────────────────
+
+export type AnnouncementPriority = 'EASY' | 'MEDIUM' | 'HIGH';
+export type AnnouncementTarget = 'STUDENT' | 'STAFF' | 'ALL';
+
+export interface AnnouncementFormField {
+  id: string;
+  type: 'text' | 'number' | 'email' | 'select' | 'tel';
+  label: string;
+  required: boolean;
+  options?: string[]; // for select
+  placeholder?: string;
+}
+
+export interface SystemAnnouncement {
+  id: string;
+  title: string;
+  content_body: string;
+  priority: AnnouncementPriority;
+  target_audience: AnnouncementTarget;
+  action_url: string | null;
+  form_schema: AnnouncementFormField[] | null;
+  is_active: boolean;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface UserAnnouncementResponse {
+  id: string;
+  user_id: string;
+  announcement_id: string;
+  status: 'dismissed_permanently' | 'completed';
+  form_data: Record<string, any> | null;
+  created_at: string;
+}

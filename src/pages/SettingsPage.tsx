@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
-  User, Bell, Shield, CreditCard, Mail, Lock, Camera, Check, Award, Globe, Loader2, FileText, Activity, HelpCircle, MessageSquare, Headphones, ExternalLink, Sparkles
+  User, Bell, Shield, CreditCard, Mail, Lock, Camera, Check, Award, Globe, Loader2, FileText, Activity, HelpCircle, MessageSquare, Headphones, ExternalLink, Sparkles, Phone, ArrowLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -31,12 +31,16 @@ export function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false); // State khas untuk avatar
   const [fullName, setFullName] = useState(profile?.full_name || '');
+  const [phone, setPhone] = useState(profile?.phone || '');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
   useEffect(() => {
     if (profile?.full_name) {
       setFullName(profile.full_name);
+    }
+    if (profile?.phone) {
+      setPhone(profile.phone);
     }
   }, [profile]);
 
@@ -100,7 +104,10 @@ export function SettingsPage() {
 
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ full_name: fullName.trim() })
+        .update({ 
+          full_name: fullName.trim(),
+          phone: phone.trim()
+        })
         .eq('id', user.id);
 
       if (profileError) throw profileError;
@@ -148,9 +155,27 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="page-container space-y-12">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white relative overflow-x-hidden selection:bg-primary/20 transition-colors duration-500">
+      
+      {/* ── GLOWS & BLURS Latar Belakang (Glassmorphism Estetik) ── */}
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-[10%] -left-[10%] w-[50vw] h-[50vw] rounded-full mix-blend-multiply dark:mix-blend-screen opacity-[0.15] dark:opacity-[0.15] bg-primary blur-[120px] animate-pulse" />
+        <div className="absolute top-[30%] -right-[15%] w-[60vw] h-[60vw] rounded-full mix-blend-multiply dark:mix-blend-screen opacity-[0.15] dark:opacity-[0.12] bg-blue-600 blur-[130px]" />
+        <div className="absolute -bottom-[20%] left-[20%] w-[50vw] h-[50vw] rounded-full mix-blend-multiply dark:mix-blend-screen opacity-[0.1] dark:opacity-[0.1] bg-teal-500 blur-[100px]" />
+      </div>
+
+      <div className="relative z-10 page-container space-y-8 min-h-screen pb-20 pt-8">
+        {/* KEMBALI KE PORTAL */}
+      <button 
+        onClick={() => navigate('/portal')}
+        className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300 w-fit font-bold text-[11px] uppercase tracking-widest"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Kembali ke Portal
+      </button>
+
       {/* HEADER */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }} className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }} className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-4">
         <div className="space-y-4">
           <Badge variant="secondary" className="px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] bg-accent/10 text-accent border-none glow-accent">Pusat Kawalan</Badge>
           <div className="space-y-1">
@@ -180,7 +205,7 @@ export function SettingsPage() {
           {/* --- TAB PROFIL (GENERAL) --- */}
           <TabsContent value="general" className="space-y-10 focus-visible:ring-0">
             <motion.div initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} exit={{ opacity: 0, y: -20, filter: 'blur(10px)' }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="space-y-10">
-              <Card className="premium-card bg-background/60 backdrop-blur-md border-border/30 overflow-hidden shadow-sm">
+              <Card className="premium-card bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl border-slate-200/50 dark:border-white/10 overflow-hidden shadow-2xl">
                 <CardHeader className="p-6 sm:p-10 pb-6 sm:pb-8 border-b border-border/30">
                   <CardTitle className="text-xl sm:text-2xl font-black tracking-tight uppercase tracking-[0.1em]">Profil Awam</CardTitle>
                   <CardDescription className="text-sm font-medium">Bagaimana profil anda dipaparkan di seluruh sistem.</CardDescription>
@@ -237,6 +262,14 @@ export function SettingsPage() {
                       <Label htmlFor="lastName" className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">Nama Penuh</Label>
                       <Input id="lastName" value={fullName} onChange={(e) => setFullName(e.target.value.toUpperCase())} className="h-14 rounded-2xl bg-muted/30 border-border/50 focus-visible:ring-primary/30 font-black px-6 text-lg tracking-tight uppercase" placeholder="CONTOH: MUHAMMAD ALI" />
                     </div>
+                    {/* NO TELEFON */}
+                    <div className="space-y-4">
+                      <Label htmlFor="phone" className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">No Telefon Bimbit</Label>
+                      <div className="relative group">
+                        <Phone className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/40 transition-colors group-focus-within:text-primary" />
+                        <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="h-14 pl-14 pr-6 rounded-2xl bg-muted/30 border-border/50 focus-visible:ring-primary/30 font-black text-lg tracking-wide" placeholder="CONTOH: 0123456789" type="tel" />
+                      </div>
+                    </div>
                     <div className="space-y-4">
                       <Label htmlFor="email" className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">Emel (Tidak Boleh Diubah)</Label>
                       <div className="relative group">
@@ -254,15 +287,15 @@ export function SettingsPage() {
                   </div>
                 </CardContent>
                 <div className="p-8 bg-muted/20 border-t border-border/30 flex justify-end gap-4">
-                  <Button variant="ghost" onClick={() => setFullName(profile?.full_name || '')} className="h-14 px-10 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] text-muted-foreground/60 hover:text-primary">Batal</Button>
-                  <Button onClick={handleUpdateProfile} disabled={loading || fullName === profile?.full_name} className="h-14 px-12 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:scale-105 transition-transform active:scale-95">
+                  <Button variant="ghost" onClick={() => { setFullName(profile?.full_name || ''); setPhone(profile?.phone || ''); }} className="h-14 px-10 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] text-muted-foreground/60 hover:text-primary">Batal</Button>
+                  <Button onClick={handleUpdateProfile} disabled={loading || (fullName === profile?.full_name && phone === profile?.phone)} className="h-14 px-12 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:scale-105 transition-transform active:scale-95">
                     {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
                   </Button>
                 </div>
               </Card>
 
               {/* TETAPAN PAPARAN (UI Only) */}
-              <Card className="premium-card bg-background/60 backdrop-blur-md border-border/30 overflow-hidden shadow-sm">
+              <Card className="premium-card bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl border-slate-200/50 dark:border-white/10 overflow-hidden shadow-2xl">
                 <CardHeader className="p-10 pb-8 border-b border-border/30">
                   <CardTitle className="text-2xl font-black tracking-tight uppercase tracking-[0.1em]">Tetapan Paparan</CardTitle>
                   <CardDescription className="text-sm font-medium">Urus pengalaman visual dalam antaramuka sistem.</CardDescription>
@@ -287,7 +320,7 @@ export function SettingsPage() {
           {/* --- TAB PEMBERITAHUAN --- */}
           <TabsContent value="notifications" className="space-y-10 focus-visible:ring-0">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-6">
-              <Card className="premium-card bg-background/60 backdrop-blur-md border-border/30 overflow-hidden shadow-sm">
+              <Card className="premium-card bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl border-slate-200/50 dark:border-white/10 overflow-hidden shadow-2xl">
                 <CardHeader className="p-10 pb-4">
                   <CardTitle className="text-xl font-black uppercase tracking-tight">Tetapan Notifikasi</CardTitle>
                   <CardDescription>Urus bagaimana anda menerima makluman aktiviti kelab.</CardDescription>
@@ -319,7 +352,7 @@ export function SettingsPage() {
           {/* --- TAB KESELAMATAN (SECURITY) --- */}
           <TabsContent value="security" className="space-y-10 focus-visible:ring-0">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-6">
-              <Card className="premium-card bg-background/60 backdrop-blur-md border-border/30 overflow-hidden shadow-sm">
+              <Card className="premium-card bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl border-slate-200/50 dark:border-white/10 overflow-hidden shadow-2xl">
                 <CardHeader className="p-6 sm:p-10 pb-6 sm:pb-8 border-b border-border/30">
                   <CardTitle className="text-xl sm:text-2xl font-black tracking-tight uppercase">Keselamatan Akaun</CardTitle>
                   <CardDescription>Kekalkan keselamatan akaun anda dengan kata laluan yang kuat.</CardDescription>
@@ -378,7 +411,7 @@ export function SettingsPage() {
               className="grid grid-cols-1 lg:grid-cols-2 gap-8"
             >
               {/* --- FREE TIER --- */}
-              <Card className="premium-card bg-card/40 backdrop-blur-md border-border/40 rounded-[3rem] p-6 sm:p-10 flex flex-col justify-between relative overflow-hidden group">
+              <Card className="premium-card bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl border-slate-200/50 dark:border-white/10 shadow-2xl rounded-[3rem] p-6 sm:p-10 flex flex-col justify-between relative overflow-hidden group">
                 <div className="space-y-8 relative z-10">
                   <div className="flex items-center justify-between">
                     <Badge variant="outline" className="rounded-full px-4 py-1.5 border-border/50 text-[10px] font-black uppercase tracking-widest bg-muted/20">Active Plan</Badge>
@@ -465,7 +498,7 @@ export function SettingsPage() {
           {/* --- TAB BANTUAN & ISU --- */}
           <TabsContent value="help" className="space-y-10 focus-visible:ring-0">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-6">
-              <Card className="premium-card bg-background/60 backdrop-blur-md border-border/30 overflow-hidden shadow-sm">
+              <Card className="premium-card bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl border-slate-200/50 dark:border-white/10 overflow-hidden shadow-2xl">
                 <CardHeader className="p-10 pb-8 border-b border-border/30">
                   <CardTitle className="text-2xl font-black tracking-tight uppercase">Bantuan & Isu Sistem</CardTitle>
                   <CardDescription>Pusat sokongan rasmi e-KPP bagi menyelesaikan masalah dan mengumpul cadangan pengguna.</CardDescription>
@@ -520,6 +553,7 @@ export function SettingsPage() {
 
         </AnimatePresence>
       </Tabs>
+      </div>
     </div>
   );
 }

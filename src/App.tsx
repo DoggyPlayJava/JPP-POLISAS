@@ -34,6 +34,7 @@ import { JppHomePage }        from './pages/jpp/JppHomePage';
 import { JppMembersPage }     from './pages/jpp/JppMembersPage';
 import { JppOverviewPage }    from './pages/jpp/JppOverviewPage';
 import { JppUnitDashboard }   from './pages/jpp/JppUnitDashboard';
+import AnnouncementsPage      from './pages/jpp/AnnouncementsPage';
 // ── e-Keusahawanan (prefix: /keusahawanan/) ──
 import { KeusahawananLayout } from './pages/keusahawanan/KeusahawananLayout';
 import { KeusahawananDashboard } from './pages/keusahawanan/KeusahawananDashboard';
@@ -46,6 +47,9 @@ import { PosOrderPage }   from './pages/keusahawanan/pos/PosOrderPage';
 import { PosProductPage } from './pages/keusahawanan/pos/PosProductPage';
 import { PosStatsPage }   from './pages/keusahawanan/pos/PosStatsPage';
 import { PosHistoryPage } from './pages/keusahawanan/pos/PosHistoryPage';
+
+import { ForcePhoneUpdateModal } from '@/components/ui/ForcePhoneUpdateModal';
+import { GlobalAnnouncementModal } from '@/components/GlobalAnnouncementModal';
 
 function RequireApproval({ children }: { children: React.ReactNode }) {
   const { profile, isLoading } = useAuth();
@@ -69,8 +73,14 @@ function RequireApproval({ children }: { children: React.ReactNode }) {
     return <PendingPage />;
   }
 
-  // C. Lepaskan log masuk jika sah
-  return <>{children}</>;
+  // C. Lepaskan log masuk jika sah, tetapi wajibkan no telefon jika kosong
+  return (
+    <>
+      <ForcePhoneUpdateModal />
+      <GlobalAnnouncementModal />
+      {children}
+    </>
+  );
 }
 
 function AppRoutes() {
@@ -91,6 +101,9 @@ function AppRoutes() {
 
         {/* 🌐 PORTAL HUB — standalone tanpa sidebar */}
         <Route path="/portal" element={<RequireApproval><PortalPage /></RequireApproval>} />
+        
+        {/* ⚙️ TETAPAN GLOBAL — standalone tanpa sidebar */}
+        <Route path="/tetapan" element={<RequireApproval><SettingsPage /></RequireApproval>} />
 
         {/* ✅ WRAP HALAMAN EXCO DALAM APPLAYOUT (ada sidebar) */}
         <Route element={<RequireApproval><AppLayout /></RequireApproval>}>
@@ -100,7 +113,6 @@ function AppRoutes() {
           <Route path="/sertai-kelab" element={<KelabPage />} />
           <Route path="/aktiviti" element={<AktivitiFull />} />
           <Route path="/ahli" element={<AhliPage />} />
-          <Route path="/tetapan" element={<SettingsPage />} />
           <Route path="/carian" element={<CarianPage />} />
           <Route path="/kelab/:id" element={<ClubDetailPage />} />
           <Route path="/laporan" element={<LaporanPage />} />
@@ -118,6 +130,7 @@ function AppRoutes() {
           <Route path="/jpp/members"          element={<JppMembersPage />} />
           <Route path="/jpp/overview"         element={<JppOverviewPage />} />
           <Route path="/jpp/unit/:unitCode"   element={<JppUnitDashboard />} />
+          <Route path="/jpp/announcements"    element={<AnnouncementsPage />} />
         </Route>
 
         {/* ── e-Keusahawanan Onboarding (No Sidebar) ── */}

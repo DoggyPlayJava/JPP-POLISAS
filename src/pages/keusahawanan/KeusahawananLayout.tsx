@@ -12,7 +12,7 @@ import {
   LayoutDashboard, CalendarDays, Lightbulb,
   Award, FileText, LogOut, ChevronLeft, LayoutGrid, Menu, X, Store,
   ShoppingCart, Package, BarChart3, History, Settings2,
-  ChevronDown, Building2, ShieldCheck, Crown, HelpCircle, MessageSquare, Send, ChevronRight
+  ChevronDown, Building2, ShieldCheck, Crown, HelpCircle, MessageSquare, Send, ChevronRight, Settings
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { NotificationBell } from '@/components/ui/NotificationBell';
@@ -50,6 +50,7 @@ const navItems = [
   { icon: Lightbulb,       label: 'Cadangan Idea',     href: '/keusahawanan/idea',            jppOnly: false, ownerOnly: false, posSection: false },
   { icon: Award,           label: 'Geran & Hadiah',    href: '/keusahawanan/geran',           jppOnly: false, ownerOnly: false, posSection: false },
   { icon: FileText,        label: 'Laporan',           href: '/keusahawanan/laporan',         jppOnly: false, ownerOnly: false, posSection: false },
+  { icon: Settings,        label: 'Tetapan',           href: '/tetapan',                      jppOnly: false, ownerOnly: false, posSection: false },
 ];
 
 

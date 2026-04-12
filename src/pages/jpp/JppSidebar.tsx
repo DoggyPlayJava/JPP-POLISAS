@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Users, BarChart3, Crown, LogOut,
-  Lock, ShieldCheck, Palette, Shield, ExternalLink,
+  Lock, ShieldCheck, Palette, Shield, ExternalLink, Settings, Megaphone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,6 +22,7 @@ const MAIN_NAV = [
   { icon: LayoutDashboard, label: 'Laman Utama',    href: '/jpp',          end: true  },
   { icon: Users,           label: 'Ahli JPP',        href: '/jpp/members',  end: false },
   { icon: BarChart3,       label: 'Gambaran Sistem', href: '/jpp/overview', end: false },
+  { icon: Settings,        label: 'Tetapan',         href: '/tetapan',      end: false },
 ];
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -365,6 +366,23 @@ export function JppSidebar() {
                 Admin Tools
               </span>
               <ExternalLink className="w-3 h-3 opacity-50 flex-shrink-0" />
+            </NavLink>
+
+            <NavLink
+              to="/jpp/announcements"
+              className={({ isActive }) => cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
+                isActive
+                  ? 'bg-white/10 text-white'
+                  : 'text-white/35 hover:text-white/80 hover:bg-white/5'
+              )}
+            >
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-indigo-500/20">
+                <Megaphone className="w-3.5 h-3.5 text-indigo-400" />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest flex-1 leading-tight">
+                Hebahan Global
+              </span>
             </NavLink>
           </>
         )}
