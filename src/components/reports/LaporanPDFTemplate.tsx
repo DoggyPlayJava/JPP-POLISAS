@@ -115,7 +115,18 @@ interface LaporanPDFProps {
   clubName: string;
   monthYear: string;
   activities: any[];
+  /** Nama orang yang disediakan laporan (penjana laporan) */
+  submitterName?: string;
+  /** Jawatan penjana laporan (contoh: KETUA EXCO) */
+  submitterRole?: string;
+  /** Unit/Kelab penjana (contoh: Exco KPP) */
+  submitterUnit?: string;
+  /** Nama orang yang menandatangani slot 'Disemak oleh' */
   presidenName?: string;
+  /** Jawatan untuk slot 'Disemak oleh' (default: PRESIDEN) */
+  reviewerRole?: string;
+  /** Label tambahan bawah nama 'Disemak' (default: clubName) */
+  reviewerUnit?: string;
   clubLogoUrl?: string;
 }
 
@@ -123,7 +134,12 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
   clubName,
   monthYear,
   activities,
+  submitterName,
+  submitterRole,
+  submitterUnit,
   presidenName = "NAMA PRESIDEN KELAB",
+  reviewerRole = "PRESIDEN",
+  reviewerUnit,
   clubLogoUrl
 }) => {
   const poliLogo = "https://ujklcxfbmmzxsqtidjtz.supabase.co/storage/v1/object/public/reports/LOGO%20POLISAS.jpeg";
@@ -216,16 +232,26 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
           <View style={styles.signBox}>
             <Text style={styles.signRoleTitle}>Disediakan oleh:</Text>
             <View style={styles.signLine} />
-            <Text style={styles.signText}>SETIAUSAHA</Text>
-            <Text style={styles.signRole}>{clubName.toUpperCase()}</Text>
+            {submitterName ? (
+              <>
+                <Text style={styles.signText}>{submitterName.toUpperCase()}</Text>
+                {submitterRole && <Text style={styles.signRole}>{submitterRole.toUpperCase()}</Text>}
+                {submitterUnit && <Text style={styles.signRole}>{submitterUnit.toUpperCase()}</Text>}
+              </>
+            ) : (
+              <>
+                <Text style={styles.signText}>SETIAUSAHA</Text>
+                <Text style={styles.signRole}>{clubName.toUpperCase()}</Text>
+              </>
+            )}
           </View>
 
           <View style={styles.signBox}>
             <Text style={styles.signRoleTitle}>Disemak oleh:</Text>
             <View style={styles.signLine} />
             <Text style={styles.signText}>{presidenName.toUpperCase()}</Text>
-            <Text style={styles.signText}>PRESIDEN</Text>
-            <Text style={styles.signRole}>{clubName.toUpperCase()}</Text>
+            <Text style={styles.signText}>{reviewerRole.toUpperCase()}</Text>
+            {reviewerUnit && <Text style={styles.signRole}>{reviewerUnit.toUpperCase()}</Text>}
           </View>
 
           <View style={styles.signBox}>
@@ -233,6 +259,7 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
             <View style={styles.signLine} />
             <Text style={styles.signText}>YANG DIPERTUA</Text>
             <Text style={styles.signText}>JAWATANKUASA PERWAKILAN PELAJAR</Text>
+            <Text style={styles.signText}>POLITEKNIK SULTAN HAJI AHMAD SHAH</Text>
           </View>
         </View>
       </Page>

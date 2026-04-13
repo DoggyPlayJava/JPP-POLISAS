@@ -86,9 +86,9 @@ BEGIN
   END IF;
 
   -- 4. Check Monthly Reset Logic
-  -- If the last reset was in a previous calendar month, reset the balance to max allowance
+  -- If the last reset was in a previous calendar month, add the allowance (carry forward) up to 2000 max
   IF date_trunc('month', v_last_reset AT TIME ZONE 'Asia/Kuala_Lumpur') < date_trunc('month', now() AT TIME ZONE 'Asia/Kuala_Lumpur') THEN
-    v_balance := v_monthly_allowance;
+    v_balance := LEAST(v_balance + v_monthly_allowance, 2000);
     v_last_reset := now();
   END IF;
 

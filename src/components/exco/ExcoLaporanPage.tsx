@@ -27,7 +27,7 @@ import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from '@/
 import { pdf } from '@react-pdf/renderer';
 import { LaporanPDFTemplate } from '@/components/reports/LaporanPDFTemplate';
 import { uploadPdfToDrive } from '@/lib/driveUpload';
-import { JPP_EXCO_POSITIONS, JPP_MT_POSITIONS } from '@/types';
+import { JPP_EXCO_POSITIONS, JPP_MT_POSITIONS, JPP_POSITION_LABELS } from '@/types';
 
 // ─── PROPS ───────────────────────────────────────────────────────────────────
 interface Props {
@@ -44,11 +44,10 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
   const jppPos  = profile?.jpp_position as string | undefined;
   const jppUnit = profile?.jpp_unit as string | undefined;
 
-  // Hanya Ketua Exco, Timbalan, MT oversee, atau SuperAdmin boleh submit
-  const isLeader      = ['KETUA_EXCO', 'TIMBALAN_EXCO'].includes(jppPos || '');
-  const isExcoMember  = jppUnit === excoUnit;
+  // Semua ahli exco dalam unit, MT yang oversee, atau SuperAdmin boleh submit
+  const isExcoMember  = jppUnit === excoUnit && JPP_EXCO_POSITIONS.includes(jppPos as any);
   const isMTOversee   = JPP_MT_POSITIONS.includes(jppPos as any);
-  const canSubmit     = (isExcoMember && isLeader) || isMTOversee || isSuperAdmin;
+  const canSubmit     = isExcoMember || isMTOversee || isSuperAdmin;
 
   // ── State ─────────────────────────────────────────────────────────────────
   const [allowAutoPdf, setAllowAutoPdf]     = useState(true);
@@ -60,6 +59,8 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
   const [filterTab, setFilterTab]           = useState<'aktif' | 'arkib'>('aktif');
   const [previewData, setPreviewData]       = useState<any[]>([]);
   const [isPreviewOpen, setIsPreviewOpen]   = useState(false);
+  const [jppLogoBase64, setJppLogoBase64]   = useState<string | undefined>(undefined);
+  const [mtReviewer, setMtReviewer]         = useState<{ name: string; role: string } | null>(null);
 
   // Manual upload
   const [file, setFile] = useState<File | null>(null);
@@ -78,6 +79,19 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
     setLoading(false);
   };
 
+  // ── Helper: URL → Base64 ─────────────────────────────────────────────────
+  const urlToBase64 = async (url: string): Promise<string | undefined> => {
+    try {
+      const res  = await fetch(url);
+      const blob = await res.blob();
+      return new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    } catch { return undefined; }
+  };
+
   useEffect(() => {
     // Check auto-PDF toggle
     const checkSetting = async () => {
@@ -88,7 +102,33 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
         .single();
       if (data !== null) setAllowAutoPdf(data.value === true || data.value === 'true');
     };
+
+    // Load JPP logo as base64 untuk PDF
+    const loadJppLogo = async () => {
+      const b64 = await urlToBase64('/Logo-JPP-Laporan.jpg');
+      setJppLogoBase64(b64);
+    };
+
+    // Fetch MT yang oversees unit exco ini
+    // MT disimpan dalam profiles dengan jpp_position MT + jpp_unit = unit berkenaan
+    const fetchMtReviewer = async () => {
+      const mtPositions = ['YDP','TIMBALAN_YDP','NAIB_YDP','SETIAUSAHA_KERJA','SETIAUSAHA_KEHORMAT','BENDAHARI'];
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, jpp_position')
+        .eq('jpp_unit', excoUnit)
+        .in('jpp_position', mtPositions)
+        .limit(1)
+        .maybeSingle();
+      if (data) {
+        const roleLabel = JPP_POSITION_LABELS[data.jpp_position as keyof typeof JPP_POSITION_LABELS] || data.jpp_position || 'Majlis Tertinggi';
+        setMtReviewer({ name: data.full_name || '—', role: roleLabel });
+      }
+    };
+
     checkSetting();
+    loadJppLogo();
+    fetchMtReviewer();
     loadReports();
   }, [excoUnit]);
 
@@ -146,12 +186,22 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
       const monthLabel = format(parseISO(`${targetMonth}-01`), 'MMMM yyyy', { locale: ms }).toUpperCase();
       setProgress(40);
 
+      const submitterRoleLabel = jppPos
+        ? (JPP_POSITION_LABELS[jppPos as keyof typeof JPP_POSITION_LABELS] || jppPos)
+        : 'Ahli Exco';
+
       const doc = (
         <LaporanPDFTemplate
           clubName={excoLabel}
           monthYear={monthLabel}
           activities={previewData}
-          presidenName={profile?.full_name || 'KETUA EXCO'}
+          submitterName={profile?.full_name || undefined}
+          submitterRole={submitterRoleLabel}
+          submitterUnit={excoLabel}
+          presidenName={mtReviewer?.name || '( Tiada MT Ditetapkan )'}
+          reviewerRole={mtReviewer?.role || 'MAJLIS TERTINGGI'}
+          reviewerUnit="JAWATANKUASA PERWAKILAN PELAJAR"
+          clubLogoUrl={jppLogoBase64}
         />
       );
 

@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useExcoTheme } from '@/contexts/ExcoThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { hexToRgba, getMalaysianNickname } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
 import {
   Users, CalendarDays, Lightbulb, Award,
@@ -13,29 +15,42 @@ import {
 
 // ─── Stat Card — pakai bg-card (light/dark mode aware) ───
 // ─── Data & Config ────────────────────────────────────────────────────────────
-
-const STATS_CONFIG = [
-  { icon: CalendarDays, label: 'Program Aktif',     value: '3',       sub: '2 akan datang', delay: 0.10 },
-  { icon: Users,         label: 'Peserta',           value: '127',     sub: '+18 minggu ini', delay: 0.17 },
-  { icon: Lightbulb,     label: 'Idea Diterima',     value: '24',      sub: '6 semakan',      delay: 0.24 },
-  { icon: Award,         label: 'Geran',             value: 'RM 4.2k', sub: '2 aktif',        delay: 0.31 },
-];
-
-const PREVIEW_PROGRAMS = [
-  { icon: '🚀', title: 'Bootcamp Usahawan Muda 2026',   date: '15 April 2026', status: 'upcoming' },
-  { icon: '💼', title: 'Pameran Produk Pelajar — PITA', date: '22 April 2026', status: 'active' },
-  { icon: '🧠', title: 'Workshop Pelan Perniagaan',      date: '5 Mac 2026',    status: 'completed' },
-  { icon: '🏆', title: 'Pertandingan Idea Inovasi',      date: '1 Mei 2026',    status: 'upcoming' },
-];
-
-const QUICK_ACTIONS = [
-  { icon: CalendarDays, label: 'Program Baharu' },
-  { icon: Lightbulb,    label: 'Semak Idea' },
-  { icon: Award,        label: 'Urus Geran' },
-  { icon: Briefcase,    label: 'Jana Laporan' },
-];
-
 // ─── Sub-Components ───────────────────────────────────────────────────────────
+
+function FeaturedActionCard({ icon: Icon, label, desc, onClick, primary = false, delay }: any) {
+  const { color } = useExcoTheme();
+  return (
+    <motion.button
+      onClick={onClick}
+      initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.4 }}
+      className={`relative w-full text-left rounded-[2rem] p-6 lg:p-8 flex flex-col justify-between overflow-hidden border transition-all duration-300 group hover:-translate-y-1 hover:shadow-xl
+        ${primary ? 'text-white' : 'bg-card border-border/50 hover:border-border'}`}
+      style={primary ? { background: color, borderColor: hexToRgba(color, 0.4) } : {}}
+      whileTap={{ scale: 0.98 }}
+    >
+      {primary && (
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 blur-[50px] rounded-full pointer-events-none" />
+      )}
+      <div className="flex items-center justify-between mb-8 sm:mb-12">
+        <div className={`w-12 h-12 lg:w-14 lg:h-14 rounded-2xl flex items-center justify-center shadow-sm 
+          ${primary ? 'bg-white/20 text-white' : 'bg-muted/50 text-foreground border border-border'}`}
+          style={!primary ? { color } : {}}
+        >
+          <Icon className="w-6 h-6 lg:w-7 lg:h-7" />
+        </div>
+        <ArrowUpRight className={`w-5 h-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1 
+          ${primary ? 'text-white/70' : 'text-muted-foreground/40'}`} />
+      </div>
+      <div>
+        <h3 className={`font-black text-xl lg:text-2xl tracking-tight mb-2
+          ${primary ? 'text-white' : 'text-foreground'}`}>{label}</h3>
+        <p className={`text-[11px] lg:text-xs font-medium max-w-[80%] leading-relaxed
+          ${primary ? 'text-white/80' : 'text-muted-foreground/60'}`}>{desc}</p>
+      </div>
+    </motion.button>
+  );
+}
 
 function StatCard({ icon: Icon, label, value, sub, delay }: any) {
   const { color } = useExcoTheme();
@@ -98,7 +113,62 @@ function ProgramRow({ p, i }: any) {
 export function KeusahawananDashboard() {
   const { color }    = useExcoTheme();
   const { profile, isSuperAdmin } = useAuth();
+  const navigate = useNavigate();
   const displayName = getMalaysianNickname(profile?.full_name);
+
+  const [stats, setStats] = useState([
+    { icon: CalendarDays, label: 'Program Aktif',     value: '-', sub: 'Memuat...', delay: 0.10 },
+    { icon: Users,        label: 'Bisnes Berdaftar',  value: '-', sub: 'Memuat...', delay: 0.17 },
+    { icon: Activity,     label: 'Sesi POS Aktif',    value: '-', sub: 'Memuat...', delay: 0.24 },
+    { icon: Award,        label: 'Jualan Terkini',    value: '-', sub: 'Memuat...', delay: 0.31 },
+  ]);
+  const [latestPrograms, setLatestPrograms] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [
+          { count: countActive },
+          { count: countUpcoming },
+          { count: countBusinesses },
+          { count: countPendingBus },
+          { count: countPosSessions },
+          { data: recentSessions },
+          { data: programs }
+        ] = await Promise.all([
+          supabase.from('keusahawanan_programs').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+          supabase.from('keusahawanan_programs').select('*', { count: 'exact', head: true }).eq('status', 'upcoming'),
+          supabase.from('keusahawanan_businesses').select('*', { count: 'exact', head: true }).eq('status', 'ACTIVE'),
+          supabase.from('keusahawanan_businesses').select('*', { count: 'exact', head: true }).eq('status', 'PENDING_INTERVIEW'),
+          supabase.from('business_sessions').select('*', { count: 'exact', head: true }).eq('status', 'OPEN'),
+          supabase.from('business_sessions').select('total_sales').eq('status', 'CLOSED').order('created_at', { ascending: false }).limit(50),
+          supabase.from('keusahawanan_programs').select('*').order('created_at', { ascending: false }).limit(4)
+        ]);
+
+        const totalSales = (recentSessions || []).reduce((acc, s) => acc + (Number(s.total_sales) || 0), 0);
+
+        setStats([
+          { icon: CalendarDays, label: 'Program Aktif',     value: String(countActive || 0), sub: `${countUpcoming || 0} akan datang`, delay: 0.10 },
+          { icon: Users,        label: 'Bisnes Berdaftar',  value: String(countBusinesses || 0), sub: `${countPendingBus || 0} pending`, delay: 0.17 },
+          { icon: Activity,     label: 'Sesi POS Aktif',    value: String(countPosSessions || 0), sub: 'Sedang berjalan', delay: 0.24 },
+          { icon: Award,        label: 'Jualan Terkini',    value: `RM ${totalSales.toFixed(2)}`, sub: 'Berdasarkan sesi lalu', delay: 0.31 },
+        ]);
+
+        if (programs) {
+          setLatestPrograms(programs.map(p => ({
+            id: p.id,
+            icon: p.icon || '📌',
+            title: p.title,
+            date: p.date_label || 'Tiada Tarikh',
+            status: p.status
+          })));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    fetchData();
+  }, []);
 
   return (
     <div className="min-h-full p-5 sm:p-8 md:p-12 space-y-8 md:space-y-12">
@@ -138,68 +208,56 @@ export function KeusahawananDashboard() {
         </div>
       </motion.div>
 
+      {/* Featured Actions Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-8 sm:mt-12">
+        <FeaturedActionCard 
+          icon={Briefcase} label="Sistem POS" desc="Buka terminal jualan runcit & QR." 
+          onClick={() => navigate('/keusahawanan/pos')} primary={true} delay={0.1} />
+        <FeaturedActionCard 
+          icon={Activity} label="Analitik Jualan" desc="Pantau prestasi jualan & kewangan." 
+          onClick={() => navigate('/keusahawanan/pos/stats')} delay={0.2} />
+        <FeaturedActionCard 
+          icon={Lightbulb} label="Bisnes & Profil" desc="Semak status permohonan vendor." 
+          onClick={() => navigate('/keusahawanan/urus-perniagaan')} delay={0.3} />
+        <FeaturedActionCard 
+          icon={CalendarDays} label="Urus Program" desc="Aktiviti dan geran keusahawanan." 
+          onClick={() => navigate('/keusahawanan/program')} delay={0.4} />
+      </div>
+
       {/* Dashboard Grid */}
-      <div className="space-y-6 sm:space-y-8">
+      <div className="space-y-6 sm:space-y-8 mt-12">
         {/* Row 1: Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-          {STATS_CONFIG.map((s, i) => <StatCard key={i} {...s} />)}
+          {stats.map((s, i) => <StatCard key={i} {...s} />)}
         </div>
 
-        {/* Row 2: Programs & Actions */}
-        <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
-          
-          {/* Programs Panel */}
-          <div className="lg:col-span-2 rounded-[2rem] p-6 sm:p-8 bg-card border border-border/50 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-1 h-4 rounded-full" style={{ background: color }} />
-                <h2 className="font-black text-xs uppercase tracking-widest text-foreground">Program Terkini</h2>
+        {/* Row 2: Programs */}
+        <div className="rounded-[2rem] p-6 sm:p-8 md:p-10 bg-card border border-border/50 shadow-sm mt-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-1.5 h-6 rounded-full" style={{ background: color }} />
+              <div>
+                <h2 className="font-black text-lg uppercase tracking-wider text-foreground leading-tight">Program Terkini</h2>
+                <p className="text-xs font-medium text-muted-foreground mt-1">Aktiviti & sesi e-keusahawanan terkini</p>
               </div>
-              <button className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all">
-                Semua →
-              </button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1">
-              {PREVIEW_PROGRAMS.map((p, i) => <ProgramRow key={i} p={p} i={i} />)}
-            </div>
+            <button onClick={() => navigate('/keusahawanan/program')} className="text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all flex items-center gap-2 group">
+              Lihat Semua
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
-
-          {/* Quick Actions Panel */}
-          <div className="space-y-6">
-            <div className="rounded-[2rem] p-6 sm:p-8 bg-card border border-border/50 shadow-sm lg:sticky lg:top-8">
-              <div className="flex items-center gap-3 mb-6">
-                <Activity className="w-4 h-4 opacity-40" style={{ color }} />
-                <h2 className="font-black text-xs uppercase tracking-widest text-foreground leading-none">Tindakan Pantas</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            {latestPrograms.length > 0 ? (
+              latestPrograms.map((p, i) => <ProgramRow key={i} p={p} i={i} />)
+            ) : (
+              <div className="col-span-full text-center py-16 bg-muted/20 border border-dashed rounded-2xl">
+                 <CalendarDays className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+                 <div className="text-muted-foreground/60 text-xs font-black uppercase tracking-widest">Tiada Program direkodkan</div>
               </div>
-              <div className="grid grid-cols-1 gap-1.5">
-                {QUICK_ACTIONS.map((a, i) => (
-                  <button key={i}
-                    className="flex items-center justify-between p-3.5 rounded-2xl transition-all hover:bg-muted/50 group active:scale-[0.97]"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-9 h-9 rounded-xl bg-muted/40 flex items-center justify-center group-hover:bg-background transition-colors">
-                        <a.icon className="w-4 h-4 text-muted-foreground/50 transition-colors group-hover:text-foreground" />
-                      </div>
-                      <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground/60 group-hover:text-foreground transition-colors">{a.label}</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground/20 group-hover:translate-x-0.5 transition-all" />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Quote Card */}
-            <div className="rounded-[2rem] p-6 text-center border bg-card/40 backdrop-blur-sm shadow-sm"
-              style={{ borderColor: hexToRgba(color, 0.1) }}
-            >
-              <Star className="w-5 h-5 mx-auto mb-3 opacity-30" style={{ color }} />
-              <p className="text-[11px] font-black text-foreground italic leading-relaxed">
-                "Usahawan berjaya bukan dilahirkan — mereka dibentuk."
-              </p>
-            </div>
+            )}
           </div>
-
         </div>
+
       </div>
     </div>
   );

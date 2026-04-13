@@ -48,7 +48,7 @@ BEGIN
         UPDATE profiles
         SET 
             subscription_tier = new_tier,
-            ai_token_balance = new_balance,
+            ai_token_balance = LEAST(COALESCE(ai_token_balance, 0) + new_balance, 2000),
             ai_token_last_reset = NOW(),
             ai_tier_expiration = NOW() + interval '30 days'
         WHERE id = target_user_id;
@@ -56,7 +56,7 @@ BEGIN
         UPDATE profiles
         SET 
             subscription_tier = new_tier,
-            ai_token_balance = new_balance,
+            ai_token_balance = LEAST(COALESCE(ai_token_balance, 0) + new_balance, 2000),
             ai_token_last_reset = NOW(),
             ai_tier_expiration = NULL
         WHERE id = target_user_id;

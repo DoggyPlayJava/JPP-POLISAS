@@ -234,6 +234,8 @@ export function LaporanPage() {
           monthYear={monthLabel}
           activities={previewData}
           presidenName={profile.full_name || "PRESIDEN KELAB"}
+          reviewerRole="PRESIDEN"
+          reviewerUnit={clubName}
           clubLogoUrl={logoData}
         />
       );

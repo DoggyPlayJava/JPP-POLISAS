@@ -597,7 +597,7 @@ export function KeusahawananProgram() {
 
                   <div className="flex gap-3 flex-wrap">
                     {/* Register interest (non-JPP or AWAM programs) */}
-                    {(!canManage || program.visibility === 'AWAM') && selectedProgram.status !== 'completed' && (
+                    {(!canManage || selectedProgram.visibility === 'AWAM') && selectedProgram.status !== 'completed' && (
                       <Button
                         onClick={() => handleRegister(selectedProgram)}
                         disabled={registering === selectedProgram.id || myRegistrations.includes(selectedProgram.id)}

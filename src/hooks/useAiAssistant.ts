@@ -325,21 +325,42 @@ Pulangkan JSON sahaja, tiada teks lain.`;
         });
       }
 
-      const response = await fetch(`${endpoint}?key=${apiKey}`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemInstruction }] },
-          contents: [{ parts: contentsParts }],
-          generationConfig: { temperature: 0.5, maxOutputTokens: outputLimit, topP: 0.9 },
-        }),
+      const requestBody = JSON.stringify({
+        system_instruction: { parts: [{ text: systemInstruction }] },
+        contents: [{ parts: contentsParts }],
+        generationConfig: { temperature: 0.5, maxOutputTokens: outputLimit, topP: 0.9 },
       });
 
+      let response = await fetch(`${endpoint}?key=${apiKey}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: requestBody,
+      });
+
+      let responseData;
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.error?.message || `Google API Error: ${response.status}`);
+        const errorMsg = errorData?.error?.message || `Google API Error: ${response.status}`;
+        
+        // Auto fallback if model is overloaded
+        if (errorMsg.toLowerCase().includes("high demand") || response.status === 503) {
+          console.warn(`Model ${modelEndpointString} is overloaded. Falling back to gemini-2.5-flash-lite...`);
+          const fallbackEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent`;
+          
+          response = await fetch(`${fallbackEndpoint}?key=${apiKey}`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: requestBody,
+          });
+          
+          if (!response.ok) {
+             const errorData2 = await response.json().catch(() => null);
+             throw new Error(errorData2?.error?.message || `Google API Error (Fallback): ${response.status}`);
+          }
+        } else {
+           throw new Error(errorMsg);
+        }
       }
 
-      const responseData = await response.json();
+      responseData = await response.json();
 
       // Safety Filter Checks
       const finishReason = responseData?.candidates?.[0]?.finishReason;
