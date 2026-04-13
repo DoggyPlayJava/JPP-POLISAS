@@ -226,30 +226,57 @@ export function JppUnitDashboard() {
               transition={{ duration: 0.5 }}
               className="space-y-3"
             >
-              <div className="flex items-center gap-4">
-                <div
-                  className="w-14 h-14 rounded-[1.5rem] flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background: hexToRgba(cfg.color, 0.15),
-                    border: `1px solid ${hexToRgba(cfg.color, 0.25)}`,
-                  }}
-                >
-                  <cfg.icon className="w-7 h-7" style={{ color: cfg.color }} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span
-                      className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
-                      style={{ background: hexToRgba(cfg.color, 0.15), color: cfg.color }}
-                    >
-                      Unit Exco
-                    </span>
-                    <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">
-                      Aktif
-                    </span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-white/[0.02] border border-white/[0.05] p-5 rounded-[2rem] shadow-xl">
+                <div className="flex items-center gap-5">
+                  <div
+                    className="w-16 h-16 rounded-[1.5rem] flex items-center justify-center flex-shrink-0 shadow-inner"
+                    style={{
+                      background: hexToRgba(cfg.color, 0.15),
+                      border: `1px solid ${hexToRgba(cfg.color, 0.3)}`,
+                    }}
+                  >
+                    <cfg.icon className="w-8 h-8 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" style={{ color: cfg.color }} />
                   </div>
-                  <h1 className="text-2xl font-black text-white leading-tight">{cfg.shortLabel}</h1>
-                  <p className="text-[11px] text-white/35 mt-0.5">{cfg.fullLabel}</p>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span
+                        className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border"
+                        style={{ 
+                          background: hexToRgba(cfg.color, 0.15), 
+                          color: cfg.color, 
+                          borderColor: hexToRgba(cfg.color, 0.3) 
+                        }}
+                      >
+                        Unit Exco
+                      </span>
+                      <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]" /> Aktif
+                      </span>
+                    </div>
+                    <h1 className="text-[28px] md:text-3xl font-black text-white leading-none tracking-tight">{cfg.shortLabel}</h1>
+                    <p className="text-xs text-white/40 mt-1.5 font-medium">{cfg.fullLabel}</p>
+                  </div>
+                </div>
+
+                <div className="flex-shrink-0 sm:ml-auto w-full sm:w-auto">
+                  <button
+                    onClick={() => navigate(cfg.moduleLink)}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-[1.25rem] transition-all group overflow-hidden relative shadow-lg hover:scale-105 active:scale-95"
+                    style={{ 
+                      background: hexToRgba(cfg.color, 0.15), 
+                      border: `1px solid ${hexToRgba(cfg.color, 0.3)}` 
+                    }}
+                  >
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" 
+                      style={{ background: `linear-gradient(to bottom right, ${hexToRgba(cfg.color, 0.4)}, transparent)` }} />
+                    <ExternalLink className="w-4 h-4 relative z-10" style={{ color: cfg.color }} />
+                    <span 
+                      className="text-[11px] font-black uppercase tracking-widest relative z-10"
+                      style={{ color: cfg.color }}
+                    >
+                      Buka Modul Utama
+                    </span>
+                  </button>
                 </div>
               </div>
             </motion.div>

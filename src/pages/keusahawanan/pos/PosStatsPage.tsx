@@ -2,22 +2,25 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useExcoTheme } from '@/contexts/ExcoThemeContext';
 import { useBusinessSwitcher } from '@/contexts/BusinessSwitcherContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { usePosData, StatsData } from '@/hooks/usePosData';
 import { hexToRgba } from '@/lib/utils';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
+import { PosSalesReportPDF } from '@/components/keusahawanan/PosSalesReportPDF';
+import { PosSalesReportModal } from '@/components/keusahawanan/PosSalesReportModal';
 import {
   DollarSign, Receipt, Package, TrendingUp, CalendarDays,
   AlertTriangle, Layers, ShoppingBag, BarChart3, ChevronRight,
-  Wallet, MinusCircle, Plus, Trash2, TrendingDown,
+  Wallet, MinusCircle, Plus, Trash2, TrendingDown, FileText, Loader2,
 } from 'lucide-react';
 import { type BusinessExpense, type ExpenseCategory } from '@/types';
 import toast from 'react-hot-toast';
 
 type Range = '1d' | '7d' | '1m';
-const RANGE_LABELS: Record<Range, string> = { '1d': '1 Hari', '7d': '7 Hari', '1m': '1 Bulan' };
+const RANGE_LABELS: Record<Range, string> = { '1d': '1 Hari', '7d': '7 Hari', '1m': 'Bulan Ini' };
 const PIE_COLORS = ['#7c3aed', '#2563eb', '#059669', '#d97706', '#dc2626'];
 const EXPENSE_CATEGORIES: ExpenseCategory[] = ['Sewa', 'Bekalan', 'Pengangkutan', 'Pemasaran', 'Lain-lain'];
 const EXPENSE_CAT_COLORS: Record<ExpenseCategory, string> = {
@@ -47,6 +50,8 @@ type Tab = 'jualan' | 'produk' | 'perbelanjaan';
 export function PosStatsPage() {
   const { color } = useExcoTheme();
   const { selectedBusiness, isLoading: isBusinessLoading } = useBusinessSwitcher();
+  const { profile } = useAuth();
+  
   const businessId = selectedBusiness?.id;
   const pos = usePosData(businessId, isBusinessLoading);
 
@@ -54,6 +59,7 @@ export function PosStatsPage() {
   const [range, setRange] = useState<Range>('7d');
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showPdfPreview, setShowPdfPreview] = useState(false);
 
   // Ciri 2: Expense state
   const [expenses, setExpenses] = useState<BusinessExpense[]>([]);
@@ -80,12 +86,22 @@ export function PosStatsPage() {
     const now = new Date();
     const from = new Date(now);
     if (range === '7d') from.setDate(now.getDate() - 6);
-    if (range === '1m') from.setDate(now.getDate() - 29);
+    if (range === '1m') from.setDate(1); // 1st day of current month
     const fromDate = from.toISOString().split('T')[0];
     const toDate   = now.toISOString().split('T')[0];
     const data = await pos.fetchExpenses(businessId, fromDate, toDate);
     setExpenses(data);
     setExpLoading(false);
+  };
+
+  const getExactDateRange = () => {
+    const now = new Date();
+    const from = new Date(now);
+    if (range === '7d') from.setDate(now.getDate() - 6);
+    if (range === '1m') from.setDate(1); // 1st day of current month
+    
+    const opt: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+    return `${from.toLocaleDateString('ms-MY', opt)} - ${now.toLocaleDateString('ms-MY', opt)}`;
   };
 
   const handleAddExpense = async () => {
@@ -177,15 +193,31 @@ export function PosStatsPage() {
           </div>
           {/* Range filter (jualan & perbelanjaan tabs) */}
           {(tab === 'jualan' || tab === 'perbelanjaan') && (
-            <div className="flex gap-2 bg-muted/30 p-1 rounded-2xl">
-              {(Object.entries(RANGE_LABELS) as [Range, string][]).map(([key, label]) => (
-                <button key={key} onClick={() => setRange(key)}
-                  className="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-                  style={range === key
-                    ? { background: color, color: '#fff' }
-                    : { color: 'hsl(var(--muted-foreground)/0.6)' }
-                  }>{label}</button>
-              ))}
+            <div className="flex items-center gap-2">
+              <div className="flex gap-2 bg-muted/30 p-1 rounded-2xl">
+                {(Object.entries(RANGE_LABELS) as [Range, string][]).map(([key, label]) => (
+                  <button key={key} onClick={() => setRange(key)}
+                    className="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                    style={range === key
+                      ? { background: color, color: '#fff' }
+                      : { color: 'hsl(var(--muted-foreground)/0.6)' }
+                    }>{label}</button>
+                ))}
+              </div>
+
+              {/* Laporan PDF Button */}
+              {stats && (
+                <button
+                  onClick={() => setShowPdfPreview(true)}
+                  className="h-10 px-4 rounded-xl text-white flex items-center justify-center gap-2 transition-colors shadow-sm hover:brightness-110"
+                  style={{ background: color }}
+                >
+                  <FileText className="w-4 h-4" />
+                  <span className="text-[10px] font-black uppercase tracking-widest leading-none mt-0.5">
+                    Preview PDF
+                  </span>
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -265,7 +297,7 @@ export function PosStatsPage() {
               {/* Pie chart */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
                 className="lg:col-span-2 rounded-[2rem] p-6 bg-card border border-border/50 min-w-0 overflow-hidden">
-                <p className="text-xs font-black uppercase tracking-widest text-foreground mb-6">Top Produk</p>
+                <p className="text-xs font-black uppercase tracking-widest text-foreground mb-6">Prestasi Produk</p>
                 {stats.topProducts.length === 0 ? (
                   <div className="h-48 flex items-center justify-center text-sm text-muted-foreground/40 font-black">Tiada data.</div>
                 ) : (
@@ -516,6 +548,20 @@ export function PosStatsPage() {
             </motion.div>
           </div>
         </div>
+      )}
+
+      {/* Preview PDF Modal */}
+      {stats && selectedBusiness && (
+        <PosSalesReportModal
+          isOpen={showPdfPreview}
+          onClose={() => setShowPdfPreview(false)}
+          stats={stats}
+          selectedBusiness={selectedBusiness}
+          rangeLabel={RANGE_LABELS[range]}
+          dateRangeString={getExactDateRange()}
+          themeColor={color}
+          generatedBy={profile?.full_name || 'Pengurus Perniagaan'}
+        />
       )}
     </div>
   );

@@ -436,11 +436,11 @@ export function JppSidebar() {
                       {hasSubNav && (
                         <button
                           onClick={() => toggleUnit(code)}
-                          className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-white/20 hover:text-white/60 hover:bg-white/5 transition-all mr-1"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-white/50 bg-white/5 hover:text-white hover:bg-white/20 transition-all mr-1 ml-1"
                           title={isExpanded ? 'Tutup' : 'Buka'}
                         >
                           <ChevronDown
-                            className="w-3.5 h-3.5 transition-transform duration-200"
+                            className="w-4 h-4 transition-transform duration-200"
                             style={{ transform: isExpanded ? 'rotate(-180deg)' : 'rotate(0deg)' }}
                           />
                         </button>

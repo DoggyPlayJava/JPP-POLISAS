@@ -662,6 +662,25 @@ export function usePosData(businessId?: string, parentLoading = false) {
     await fetchAssignments(bId);
   };
 
+  // ── Ownership ───────────────────────────────────────────────────────────
+
+  const transferOwnership = async (bId: string, newOwnerId: string, newOwnerName: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase.rpc('transfer_business_ownership', {
+        p_business_id: bId,
+        p_new_owner_id: newOwnerId
+      });
+      if (error) throw error;
+      
+      await writeLog(bId, 'OWNERSHIP_TRANSFERRED', `Pemilikan perniagaan telah dipindahkan sepenuhnya kepada ${newOwnerName}.`);
+      toast.success('Pemilikan perniagaan berjaya dipindahkan!');
+      return true;
+    } catch (err: any) {
+      toast.error('Gagal pindah milik: ' + (err.message || 'Ralat tidak diketahui'));
+      return false;
+    }
+  };
+
   // ── Init ──────────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -699,5 +718,7 @@ export function usePosData(businessId?: string, parentLoading = false) {
     fetchPromotions, validatePromoCode, addPromotion, togglePromotion, deletePromotion,
     // Ciri 1: Cash Checkpoint
     addCashCheckpoint, fetchCashCheckpoints, deleteCashCheckpoint,
+    // Ownership
+    transferOwnership,
   };
 }

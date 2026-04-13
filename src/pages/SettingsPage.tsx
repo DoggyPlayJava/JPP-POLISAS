@@ -165,13 +165,13 @@ export function SettingsPage() {
       </div>
 
       <div className="relative z-10 page-container space-y-8 min-h-screen pb-20 pt-8">
-        {/* KEMBALI KE PORTAL */}
+        {/* KEMBALI */}
       <button 
-        onClick={() => navigate('/portal')}
+        onClick={() => navigate(-1)}
         className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300 w-fit font-bold text-[11px] uppercase tracking-widest"
       >
         <ArrowLeft className="w-4 h-4" />
-        Kembali ke Portal
+        Kembali
       </button>
 
       {/* HEADER */}

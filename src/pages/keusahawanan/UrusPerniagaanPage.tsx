@@ -9,7 +9,7 @@ import { hexToRgba } from '@/lib/utils';
 import {
   Camera, Save, Users, ShieldCheck, Trash2, Check, X, Clock,
   Activity, Building2, ToggleLeft, ToggleRight, UserPlus, Logs,
-  Tag, Ticket, BadgePercent, Plus, Calendar
+  Tag, Ticket, BadgePercent, Plus, Calendar, ShieldAlert
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { type BusinessPromotion, type PosDiscountType } from '@/types';
@@ -72,6 +72,10 @@ export function UrusPerniagaanPage() {
   const [promoForm, setPromoForm] = useState({ ...EMPTY_PROMO });
   const [promoSaving, setPromoSaving] = useState(false);
 
+  // Ownership Transfer
+  const [transferToId, setTransferToId] = useState('');
+  const [isTransferring, setIsTransferring] = useState(false);
+
   const fetchData = useCallback(async () => {
     if (!businessId) return;
     const { data: biz } = await supabase
@@ -126,6 +130,28 @@ export function UrusPerniagaanPage() {
       toast.success(`${label} ${value ? ' diaktifkan.' : ' dinyahaktifkan.'}`);
     }
     setToggSaving(null);
+  };
+
+  const handleTransferOwnership = async () => {
+    if (!transferToId || !businessId) return;
+    
+    // Find member
+    const member = members.find(m => m.user_id === transferToId);
+    if (!member) return;
+
+    if (!window.confirm(`AMARAN: Adakah anda pasti mahu menyerahkan pemilikan '${businessData?.name}' kepada '${member.user?.full_name}'?\n\nTindakan ini TIDAK boleh diundurkan dan anda akan dilucutkan peranan Pemilik secara serta merta.`)) {
+      return;
+    }
+
+    setIsTransferring(true);
+    const success = await pos.transferOwnership(businessId, transferToId, member.user?.full_name || 'Ahli Baru');
+    
+    if (success) {
+      setTransferToId('');
+      await fetchData();
+      refreshBusinesses(); // Refresh globally to update the sidebar if owner lost ownership
+    }
+    setIsTransferring(false);
   };
 
   const handleAddPromo = async () => {
@@ -343,6 +369,46 @@ export function UrusPerniagaanPage() {
                   style={{ background: color }}>
                   <Save className="w-4 h-4" /> {saving ? 'Menyimpan...' : 'Simpan Maklumat'}
                 </button>
+              )}
+
+              {/* Transfer Ownership */}
+              {isOwner && (
+                <>
+                  <hr className="my-6 border-border" />
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-rose-500">
+                      <ShieldAlert className="w-4 h-4" />
+                      <p className="text-[10px] font-black uppercase tracking-widest leading-none mt-0.5">Zon Berbahaya</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Pindah Milik Perniagaan</p>
+                      <p className="text-xs text-muted-foreground mb-4">Pilih ahli untuk diserahkan tanggungjawab sebagai Pemilik baharu. Tindakan ini tidak boleh diundurkan dan selepas berjaya, anda akan berstatus Ahli biasa.</p>
+                      
+                      <div className="flex gap-2">
+                        <select 
+                          value={transferToId} 
+                          onChange={e => setTransferToId(e.target.value)}
+                          className="flex-1 h-11 px-4 rounded-2xl bg-muted/30 border border-border/50 text-sm font-medium focus:border-rose-500/50 outline-none transition-all"
+                        >
+                          <option value="">-- Pilih Ahli Aktif --</option>
+                          {active.filter(m => m.user_id !== user?.id).map((m) => (
+                            <option key={m.id} value={m.user_id}>{m.user?.full_name}</option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={handleTransferOwnership}
+                          disabled={!transferToId || isTransferring}
+                          className="h-11 px-6 rounded-2xl bg-rose-500 text-white text-xs font-black uppercase tracking-wider disabled:opacity-50 transition-all hover:bg-rose-600 active:scale-95 whitespace-nowrap"
+                        >
+                          {isTransferring ? 'Memindahkan...' : 'Pindah Milik'}
+                        </button>
+                      </div>
+                      {active.filter(m => m.user_id !== user?.id).length === 0 && (
+                        <p className="text-[10px] text-rose-500/80 mt-2">Perniagaan mesti mempunyai sekurang-kurangnya seorang Ahli Aktif lain sebelum pindah milik boleh dilakukan.</p>
+                      )}
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           </motion.div>
