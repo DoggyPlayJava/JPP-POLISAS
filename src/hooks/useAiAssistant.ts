@@ -42,6 +42,7 @@ interface AiRequestParams {
 export function useAiAssistant() {
   const [isLoading, setIsLoading] = useState(false);       // for callAi (quick actions, modals)
   const [isChatLoading, setIsChatLoading] = useState(false); // for sendChatMessage (FloatingAiChat)
+  const [retryCount, setRetryCount] = useState(0);
   const [result, setResult] = useState<string | null>(null);
   const cacheRef = useRef<Record<string, string>>({}); // Client-side caching
 
@@ -65,6 +66,8 @@ export function useAiAssistant() {
       let taskKey = params.task as string;
       if (params.task === 'jana_kertas_kerja') {
         taskKey = params.selectedModel === 'pro' ? 'pro_kertas_kerja' : 'flash_kertas_kerja';
+      } else if (params.task === 'jana_minit_mesyuarat') {
+        taskKey = params.data?.selectedModel === 'pro' ? 'pro_minit_mesyuarat' : 'flash_minit_mesyuarat';
       } else if (params.task === 'semak_tatabahasa_laporan') {
         taskKey = 'semak_ejaan';
       } else if (params.task === 'analyze_performance' || params.task === 'review_kertas_kerja') {
@@ -274,13 +277,92 @@ PERINGATAN MATEMATIK: Agihkan item belanjawan supaya jumlah semua (harga_seunit 
 Pulangkan JSON sahaja, tiada teks lain.`;
         outputLimit = 8192;
       } else if (params.task === 'jana_minit_mesyuarat') {
-        systemInstruction = "Anda adalah Setiausaha Kehormat persatuan yang teliti. Tugas anda ialah mengubah nota atau gambar draf kepada minit mesyuarat rasmi dengan susunan profesional: \n" +
-          "MINIT MESYUARAT [TAJUK/PROGRAM] BIL: ___\n" +
-          "TARIKH: \nMASA: \nPLATFORM/TEMPAT: \n" +
-          "KEHADIRAN: (Bina jadual bil/nama ringkas)\n\n" +
-          "AGENDA:\n1. UCAPAN ALUAN\n2. PERKARA BERBANGKIT\n3. PROGRAM UNTUK PERBINCANGAN (pecahkan mengikut unit contohnya: Protokol, Multimedia, Makanan dsb - nyatakan Permasalahan & Penambahbaikan berdasarkan nota/rajah)\n4. PENANGGUHAN MESYUARAT\n\nTandatangan (Disediakan Oleh & Disahkan Oleh).\nSusun sekemas mungkin mengikut format Markdown yang diberikan.";
-        userPrompt = `Tajuk/Perkara: ${params.data?.tajuk}\n\nNota Mentah / Kasar:\n${params.data?.nota || 'Rujuk gambar yang dilampirkan'}`;
-        outputLimit = 8192;
+        systemInstruction = `Anda adalah Setiausaha Kehormat Profesional berpengalaman 20 tahun yang pakar dalam penulisan minit mesyuarat rasmi Bahasa Melayu. Anda menghasilkan output dalam format JSON murni.
+
+MISI UTAMA (WAJIB DIPATUHI):
+Anda BUKAN sekadar menyalin input. Anda MESTI MENGUBAH dan MEMURNIKAN semua input kepada Bahasa Melayu Rasmi yang sempurna, seperti seorang Setiausaha profesional sebenar.
+
+PERATURAN BAHASA (MESTI DIPATUHI 100%):
+1. REPHRASE WAJIB: Semua nota/input MESTI ditulis semula dalam ayat Bahasa Melayu Rasmi yang lengkap dan sempurna. JANGAN SEKALI-KALI menyalin input mentah.
+2. TATABAHASA: Betulkan semua kesalahan ejaan, tatabahasa, dan ayat tidak lengkap secara automatik.
+3. FORMAL: Gunakan kata-kata formal: "perkara", "dibincangkan", "mengemukakan", "mempermaklumkan", "dimaklumkan", "dipersetujui", "sehubungan itu", "dalam hal ini", dsb.
+4. BUKAN BAHASA PASAR: Tukar bahasa tidak formal kepada bahasa rasmi yang sesuai secara automatik.
+5. AYAT PADAT: Ayat mesti PENDEK dan PADAT (10-20 patah perkataan), tetapi terdengar profesional. Elak ayat panjang berlarat.
+6. GUNAKAN IMBUHAN: Ber-, me-, di-, -kan, -an — gunakan dengan betul sesuai konteks.
+7. PASIF DOMINAN: Minit mesyuarat menggunakan ayat pasif — "dipersetujui", "dimaklumkan", "dikemukakan", "dinyatakan".
+
+PANDUAN TRANSFORMASI INPUT:
+Input kasar -> Output formal (contoh):
+- "ydp bising" -> "YDP menyatakan rasa tidak berpuas hati terhadap keadaan semasa."
+- "ajk lari dari program" -> "Ahli Jawatankuasa telah meninggalkan program tanpa kebenaran"
+- "student complaint kafe tutup" -> "Pelajar melaporkan isu penutupan kafeteria pada waktu pelajar memerlukan perkhidmatan tersebut."
+- "surau kunci waktu malam" -> "Surau didapati berkunci pada waktu malam, menyukarkan pelajar untuk bersolat."
+- "setiausaha pesan hantar kertas kerja kena ikut format" -> "Setiausaha mengingatkan AJK agar kertas kerja dikemukakan mengikut format yang ditetapkan."
+
+PERATURAN OUTPUT (WAJIB):
+1. Pulangkan JSON SAHAJA. TIADA backticks, tiada markdown, tiada teks tambahan.
+2. Output mesti bermula dengan { dan berakhir dengan }.
+3. Semua nama mesti dalam HURUF BESAR (UPPERCASE).
+
+SKEMA JSON YANG WAJIB DIIKUTI:
+{
+  "tajuk_mesyuarat": "TAJUK RASMI MESYUARAT",
+  "tarikh": "DD/MM/YYYY",
+  "masa": "HH.MM Pagi/Petang",
+  "platform": "Tempat/Platform",
+  "kehadiran": 0,
+  "ahli_hadir": [
+    { "bil": 1, "nama": "NAMA PENUH HURUF BESAR", "jawatan": "Jawatan (optional)" }
+  ],
+  "agenda": [
+    {
+      "bil": 1,
+      "tajuk": "UCAPAN ALUAN",
+      "sub_perkara": [
+        {
+          "bil_sub": "1.1",
+          "teks": "Setiausaha memulakan mesyuarat dengan bacaan Ummul Kitab Al-Fatihah.",
+          "bullet_points": []
+        }
+      ],
+      "tindakan": "Setiausaha"
+    }
+  ],
+  "tandatangan": {
+    "disediakan_oleh": {
+      "nama": "NAMA SETIAUSAHA",
+      "jawatan": "JAWATAN SETIAUSAHA\nJAWATANKUASA PERWAKILAN PELAJAR\nPOLISAS 2026"
+    },
+    "disahkan_oleh": {
+      "nama": "NAMA PENGERUSI/YDP",
+      "jawatan": "YANG DI-PERTUA\nJAWATANKUASA PERWAKILAN PELAJAR\nPOLISAS 2026"
+    }
+  }
+}
+
+ARAHAN KHUSUS AGENDA:
+- Sertakan sekurang-kurangnya: 1. UCAPAN ALUAN, 2. ALUAN PENGERUSI, 3. PERKARA YANG DIBINCANGKAN (pecah kepada sub 3.1, 3.2...), 4. PENANGGUHAN MESYUARAT
+- Setiap sub-perkara: Ayat PENDEK dan padat, formal. BUKAN nota mentah dan BUKAN ayat panjang.
+- bullet_points: ayat PENDEK dan padat (10-20 perkataan). Formal dan profesional. Boleh gunakan *teks* untuk penekanan.
+- tindakan: "Setiausaha", "Pengerusi", atau jawatan berkaitan
+
+ARAHAN KHUSUS AHLI HADIR:
+- Jika senarai nama diberikan, masukkan secara teratur
+- Jika hanya bilangan, jana placeholder: { "bil": N, "nama": "(NAMA)" }`;
+
+        userPrompt = `Jana minit mesyuarat LENGKAP dalam format JSON yang ditetapkan.
+
+Maklumat Mesyuarat:
+- Tajuk: ${params.data?.tajuk}
+- Tarikh: ${params.data?.tarikh || 'Tidak dinyatakan'}
+- Masa: ${params.data?.masa || 'Tidak dinyatakan'}
+- Platform/Tempat: ${params.data?.platform || 'Tidak dinyatakan'}
+- Nama Setiausaha: ${params.data?.namaSetiausaha || '(NAMA SETIAUSAHA)'}
+- Nama Pengerusi/YDP: ${params.data?.namaPengerusi || '(NAMA PENGERUSI)'}
+- Senarai Ahli Hadir:\n${params.data?.senaraIHadir || 'Bilangan: ' + (params.data?.kehadiran || 0) + ' orang'}
+
+Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks diberikan)'}\n${(params.data?.images?.length > 0) ? '\nPENTING: Gambar catatan/papan putih telah dilampirkan. BACA dan EKSTRAK semua maklumat daripada gambar tersebut dan masukkan sebagai sub-perkara atau bullet_points dalam agenda.' : ''}\n\nINGATAN: Pulangkan JSON sahaja mengikut skema yang ditetapkan.`;
+        outputLimit = 6000;
 
       } else if (params.task === 'custom_query') {
         systemInstruction = "Anda adalah Nexus AI, enjin kecerdasan buatan rasmi bagi platform e-KPP JPP POLISAS. Nama anda 'Nexus AI' melambangkan peranan anda sebagai pusat integrasi data dan bantuan pintar untuk warga POLISAS. Anda HANYA DIBENARKAN untuk menjawab hal-hal berkaitan kelab, persatuan, dokumentasi aktiviti, dan maklumat kampus POLISAS. Jika subjek di luar skop ini, tolak dengan sopan. PERATURAN TERMINOLOGI: JANGAN sebut 'Laporan Aktiviti', gunakan 'Laporan Bulanan' sahaja.\n\nARAHAN WAJIB (STRICT): Anda mesti merumuskan jawapan kepada yang SANGAT PENDEK, mesra, dan santai. JANGAN berikan jawapan panjang lebar melainkan jika betul betul mendesak";
@@ -299,7 +381,9 @@ Pulangkan JSON sahaja, tiada teks lain.`;
 
       // Penentuan model: Chat dan Semak Ejaan guna 1.5-flash untuk kestabilan, yang lain guna 2.5-flash
       let modelEndpointString = 'gemini-2.5-flash'; // Pintar & Berkuasa (Default untuk Kertas Kerja/Analisis)
-      if (params.selectedModel === 'pro') {
+      // selectedModel boleh datang dari params.selectedModel (kertas kerja) atau params.data.selectedModel (minit mesyuarat)
+      const effectiveModel = params.selectedModel || params.data?.selectedModel;
+      if (effectiveModel === 'pro') {
         modelEndpointString = 'gemini-1.5-pro';
       } else if (params.task === 'semak_tatabahasa_laporan' || params.task === 'custom_query') {
         modelEndpointString = 'gemini-2.5-flash-lite'; // Pantas & Jimat (Untuk Chat/Grammar)
@@ -325,42 +409,77 @@ Pulangkan JSON sahaja, tiada teks lain.`;
         });
       }
 
+      // Tasks that require strict JSON output — enforce responseMimeType
+      const isJsonTask = params.task === 'jana_minit_mesyuarat' || params.task === 'jana_kertas_kerja';
+
       const requestBody = JSON.stringify({
         system_instruction: { parts: [{ text: systemInstruction }] },
         contents: [{ parts: contentsParts }],
-        generationConfig: { temperature: 0.5, maxOutputTokens: outputLimit, topP: 0.9 },
-      });
-
-      let response = await fetch(`${endpoint}?key=${apiKey}`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: requestBody,
+        generationConfig: {
+          temperature: 0.4,
+          maxOutputTokens: outputLimit,
+          topP: 0.9,
+          ...(isJsonTask ? { responseMimeType: 'application/json' } : {}),
+        },
       });
 
       let responseData;
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        const errorMsg = errorData?.error?.message || `Google API Error: ${response.status}`;
-        
-        // Auto fallback if model is overloaded
-        if (errorMsg.toLowerCase().includes("high demand") || response.status === 503) {
-          console.warn(`Model ${modelEndpointString} is overloaded. Falling back to gemini-2.5-flash-lite...`);
-          const fallbackEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent`;
-          
-          response = await fetch(`${fallbackEndpoint}?key=${apiKey}`, {
+      let attempt = 0;
+      const maxRetries = 3;
+
+      while (attempt < maxRetries) {
+        try {
+          if (attempt > 0) {
+            setRetryCount(attempt);
+            await new Promise(res => setTimeout(res, attempt * 2000));
+          }
+
+          let response = await fetch(`${endpoint}?key=${apiKey}`, {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: requestBody,
           });
-          
+
           if (!response.ok) {
-             const errorData2 = await response.json().catch(() => null);
-             throw new Error(errorData2?.error?.message || `Google API Error (Fallback): ${response.status}`);
+            const errorData = await response.json().catch(() => null);
+            const errorMsg = errorData?.error?.message || `Google API Error: ${response.status}`;
+            
+            // Auto fallback if model is overloaded
+            if (errorMsg.toLowerCase().includes("high demand") || response.status === 503) {
+              console.warn(`Model ${modelEndpointString} is overloaded. Falling back to gemini-2.5-flash-lite...`);
+              const fallbackEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent`;
+              
+              response = await fetch(`${fallbackEndpoint}?key=${apiKey}`, {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: requestBody,
+              });
+              
+              if (!response.ok) {
+                 const errorData2 = await response.json().catch(() => null);
+                 throw new Error(errorData2?.error?.message || `Google API Error (Fallback): ${response.status}`);
+              }
+            } else {
+               throw new Error(errorMsg);
+            }
           }
-        } else {
-           throw new Error(errorMsg);
+
+          responseData = await response.json();
+          setRetryCount(0);
+          break; // success
+        } catch (apiError: any) {
+          const apiErrorMsg = apiError.message || String(apiError);
+          // Don't retry auth/policy/flagged errors
+          if (apiErrorMsg.includes('API key') || apiErrorMsg.includes('Sila konfigurasikan')) {
+            throw apiError;
+          }
+          
+          attempt++;
+          if (attempt >= maxRetries) {
+            setRetryCount(0);
+            throw apiError;
+          }
+          console.warn(`AI Retry ${attempt}/${maxRetries} failed:`, apiErrorMsg);
         }
       }
-
-      responseData = await response.json();
 
       // Safety Filter Checks
       const finishReason = responseData?.candidates?.[0]?.finishReason;
@@ -376,6 +495,8 @@ Pulangkan JSON sahaja, tiada teks lain.`;
       let spendKey = params.task as string;
       if (params.task === 'jana_kertas_kerja') {
         spendKey = params.selectedModel === 'pro' ? 'pro_kertas_kerja' : 'flash_kertas_kerja';
+      } else if (params.task === 'jana_minit_mesyuarat') {
+        spendKey = params.data?.selectedModel === 'pro' ? 'pro_minit_mesyuarat' : 'flash_minit_mesyuarat';
       } else if (params.task === 'semak_tatabahasa_laporan') {
         spendKey = 'semak_ejaan';
       } else if (params.task === 'analyze_performance' || params.task === 'review_kertas_kerja') {
@@ -536,22 +657,50 @@ Pulangkan JSON sahaja, tiada teks lain.`;
       ];
 
       const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
-      const response = await fetch(`${endpoint}?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemInstruction }] },
-          contents,
-          generationConfig: { temperature: 0.3, maxOutputTokens: 1500, topP: 0.85 }, // Tingkatkan dari 700 ke 1500 untuk elak jawapan tergantung
-        }),
-      });
+      let responseData;
+      let attempt = 0;
+      const maxRetries = 3;
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.error?.message || `Google API Error: ${response.status}`);
+      while (attempt < maxRetries) {
+        try {
+          if (attempt > 0) {
+            setRetryCount(attempt);
+            await new Promise(res => setTimeout(res, attempt * 2000));
+          }
+
+          const response = await fetch(`${endpoint}?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              system_instruction: { parts: [{ text: systemInstruction }] },
+              contents,
+              generationConfig: { temperature: 0.3, maxOutputTokens: 1500, topP: 0.85 }, // Tingkatkan dari 700 ke 1500 untuk elak jawapan tergantung
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            throw new Error(errorData?.error?.message || `Google API Error: ${response.status}`);
+          }
+
+          responseData = await response.json();
+          setRetryCount(0);
+          break; // success
+        } catch (apiError: any) {
+          const apiErrorMsg = apiError.message || String(apiError);
+          // Don't retry critical errors
+          if (apiErrorMsg.includes('API key')) {
+            throw apiError;
+          }
+          
+          attempt++;
+          if (attempt >= maxRetries) {
+            setRetryCount(0);
+            throw apiError;
+          }
+          console.warn(`Chat AI Retry ${attempt}/${maxRetries} failed:`, apiErrorMsg);
+        }
       }
-
-      const responseData = await response.json();
       const finishReason = responseData?.candidates?.[0]?.finishReason;
       if (finishReason === 'SAFETY') {
         throw new Error('Mesej anda telah disekat kerana mengandungi elemen yang tidak mematuhi Polisi Keselamatan JPP/Google.');
@@ -581,5 +730,5 @@ Pulangkan JSON sahaja, tiada teks lain.`;
     }
   };
 
-  return { callAi, sendChatMessage, isLoading, isChatLoading, result, setResult };
+  return { callAi, sendChatMessage, isLoading, isChatLoading, retryCount, result, setResult };
 }

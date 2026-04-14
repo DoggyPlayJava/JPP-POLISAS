@@ -1,5 +1,6 @@
 import { AlignmentType, BorderStyle, Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, UnderlineType, WidthType, ImageRun, VerticalAlign, HeightRule, PageBreak, TabStopType, TabStopPosition } from 'docx';
 import { KertasKerjaData } from '../components/ai/KertasKerjaRenderer';
+import { MinitMesyuaratData } from '../components/ai/MinitMesyuaratRenderer';
 import { Buffer } from 'buffer';
 
 const fRM = (v: number) => `RM ${v.toFixed(2)}`;
@@ -482,3 +483,201 @@ export const generateKertasKerjaDocx = async (data: KertasKerjaData, logoBase64:
 
   return await Packer.toBlob(doc);
 };
+
+// ─── MINIT MESYUARAT DOCX GENERATOR ─────────────────────────────────────────
+
+const MINIT_FONT = 'Times New Roman';
+const MINIT_SIZE = 21; // 10.5pt in half-points
+const MINIT_SPACING = { line: 276, lineRule: 'auto' as const, after: 0, before: 0 };
+
+/** Simple cell helper for minit mesyuarat tables */
+const minitCell = (
+  paragraphs: Paragraph | Paragraph[],
+  opts?: { width?: number; bold?: boolean; align?: (typeof AlignmentType)[keyof typeof AlignmentType]; colSpan?: number; vAlign?: (typeof VerticalAlign)[keyof typeof VerticalAlign]; bg?: string }
+) => {
+  const children = Array.isArray(paragraphs) ? paragraphs : [paragraphs];
+  return new TableCell({
+    children,
+    columnSpan: opts?.colSpan,
+    verticalAlign: opts?.vAlign || VerticalAlign.TOP,
+    shading: opts?.bg ? { fill: opts.bg } : undefined,
+    width: opts?.width ? { size: opts.width, type: WidthType.PERCENTAGE } : undefined,
+    margins: { top: 60, bottom: 60, left: 120, right: 120 },
+  });
+};
+
+const minitP = (text: string, bold = false, align?: (typeof AlignmentType)[keyof typeof AlignmentType], size?: number) =>
+  new Paragraph({
+    alignment: align || AlignmentType.LEFT,
+    spacing: MINIT_SPACING,
+    children: [new TextRun({ text, bold, font: MINIT_FONT, size: size || MINIT_SIZE })],
+  });
+
+/** Header paragraph for table column */
+const minitHeaderP = (text: string) => minitP(text, true, AlignmentType.CENTER);
+
+const minitEmpty = () => new Paragraph({ spacing: MINIT_SPACING, children: [new TextRun({ text: '', size: MINIT_SIZE })] });
+
+export const generateMinitMesyuaratDocx = async (data: MinitMesyuaratData): Promise<Blob> => {
+
+  // ── SECTION 1: METADATA ──────────────────────────────────────────────────
+
+  const headerElems: (Paragraph | Table)[] = [
+    minitP('MINIT MESYUARAT', true, AlignmentType.CENTER, 24),
+    minitP(data.tajuk_mesyuarat.toUpperCase(), true, AlignmentType.CENTER, 22),
+    minitEmpty(),
+    minitP('BIL:', true),
+    minitEmpty(),
+    new Paragraph({ spacing: MINIT_SPACING, children: [new TextRun({ text: 'TARIKH', bold: true, font: MINIT_FONT, size: MINIT_SIZE }), new TextRun({ text: `\t: ${data.tarikh}`, font: MINIT_FONT, size: MINIT_SIZE })] }),
+    new Paragraph({ spacing: MINIT_SPACING, children: [new TextRun({ text: 'MASA  ', bold: true, font: MINIT_FONT, size: MINIT_SIZE }), new TextRun({ text: `\t: ${data.masa}`, font: MINIT_FONT, size: MINIT_SIZE })] }),
+    new Paragraph({ spacing: MINIT_SPACING, children: [new TextRun({ text: 'PLATFORM', bold: true, font: MINIT_FONT, size: MINIT_SIZE }), new TextRun({ text: `\t: ${data.platform}`, font: MINIT_FONT, size: MINIT_SIZE })] }),
+    minitEmpty(),
+    new Paragraph({ spacing: MINIT_SPACING, children: [new TextRun({ text: 'KEHADIRAN : ', bold: true, font: MINIT_FONT, size: MINIT_SIZE }), new TextRun({ text: `${data.kehadiran} Orang`, font: MINIT_FONT, size: MINIT_SIZE })] }),
+    minitEmpty(),
+  ];
+
+  // ── ATTENDANCE TABLE ─────────────────────────────────────────────────────
+
+  const hadirRows: TableRow[] = [
+    new TableRow({
+      children: [
+        minitCell(minitHeaderP('BIL'), { width: 12 }),
+        minitCell(minitHeaderP('NAMA')),
+      ]
+    }),
+    ...data.ahli_hadir.map(a => new TableRow({
+      children: [
+        minitCell(minitP(`${a.bil}`, false, AlignmentType.CENTER), { width: 12 }),
+        minitCell(minitP(a.nama)),
+      ]
+    }))
+  ];
+
+  const hadirTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: hadirRows,
+  });
+
+  // ── AGENDA TABLE ─────────────────────────────────────────────────────────
+
+  const agendaRows: TableRow[] = [
+    new TableRow({
+      children: [
+        minitCell(minitHeaderP('BIL.'), { width: 8 }),
+        minitCell(minitHeaderP('AGENDA')),
+        minitCell(minitHeaderP('TINDAKAN'), { width: 16 }),
+      ]
+    }),
+    ...data.agenda.map(item => {
+      // Build agenda cell paragraphs
+      const agendaContent: Paragraph[] = [
+        minitP(item.tajuk, true),
+      ];
+
+      if (item.sub_perkara) {
+        item.sub_perkara.forEach(sub => {
+          agendaContent.push(
+            new Paragraph({
+              spacing: { ...MINIT_SPACING, before: 40 },
+              children: [
+                new TextRun({ text: `${sub.bil_sub}  `, font: MINIT_FONT, size: MINIT_SIZE }),
+                new TextRun({ text: sub.teks, font: MINIT_FONT, size: MINIT_SIZE }),
+              ],
+            })
+          );
+
+          if (sub.bullet_points && sub.bullet_points.length > 0) {
+            sub.bullet_points.forEach(bp => {
+              // strip any *bold* markdown markers for plain text
+              const plainBp = bp.replace(/\*(.*?)\*/g, '$1');
+              agendaContent.push(
+                new Paragraph({
+                  spacing: MINIT_SPACING,
+                  indent: { left: 360 },
+                  children: [new TextRun({ text: `- ${plainBp}`, font: MINIT_FONT, size: MINIT_SIZE })],
+                })
+              );
+            });
+          }
+        });
+      }
+
+      return new TableRow({
+        children: [
+          minitCell(minitP(`${item.bil}`, false, AlignmentType.CENTER)),
+          minitCell(agendaContent),
+          minitCell(minitP(item.tindakan || '', false, AlignmentType.CENTER)),
+        ]
+      });
+    })
+  ];
+
+  const agendaTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: agendaRows,
+  });
+
+  // ── SIGNATURE BLOCK ───────────────────────────────────────────────────────
+
+  const sigSpace = () => new Paragraph({ spacing: { line: 1200, lineRule: 'exact' as const }, children: [new TextRun({ text: '', size: MINIT_SIZE })] });
+  const sigLine = () => new Paragraph({ spacing: MINIT_SPACING, children: [new TextRun({ text: '_______________________________', font: MINIT_FONT, size: MINIT_SIZE })] });
+  const sigP = (text: string, bold = false) => new Paragraph({ spacing: MINIT_SPACING, children: [new TextRun({ text, bold, font: MINIT_FONT, size: MINIT_SIZE })] });
+
+  const buildSigCell = (label: string, pihak: { nama: string; jawatan: string }) => {
+    const jawatanLines = pihak.jawatan.split('\n');
+    return minitCell(
+      [
+        sigP(label),
+        sigSpace(),
+        sigLine(),
+        sigP(pihak.nama, true),
+        ...jawatanLines.map(l => sigP(l)),
+      ],
+      { vAlign: VerticalAlign.TOP }
+    );
+  };
+
+  const sigTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: [
+      new TableRow({
+        children: [
+          buildSigCell('Disediakan oleh:', data.tandatangan.disediakan_oleh),
+          buildSigCell('Disahkan oleh:', data.tandatangan.disahkan_oleh),
+        ]
+      })
+    ],
+    borders: {
+      top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+      bottom: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+      left: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+      right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+      insideH: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+      insideV: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+    }
+  });
+
+  // ── BUILD DOCUMENT ───────────────────────────────────────────────────────
+
+  const doc = new Document({
+    sections: [{
+      properties: {
+        page: {
+          margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 }, // 1 inch
+        }
+      },
+      children: [
+        ...headerElems,
+        hadirTable,
+        new Paragraph({ children: [new PageBreak()] }),
+        agendaTable,
+        new Paragraph({ children: [new PageBreak()] }),
+        minitEmpty(),
+        sigTable,
+      ]
+    }]
+  });
+
+  return await Packer.toBlob(doc);
+};
+

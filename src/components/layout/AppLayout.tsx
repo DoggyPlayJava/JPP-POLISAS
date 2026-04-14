@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { BottomNav } from './BottomNav';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { EXCO_MODULES } from '@/config/excoModules';
 
@@ -105,7 +104,7 @@ export function AppLayout() {
         {/* Header Asal (Carian, Profile dll) */}
         <Header onOpenSearch={() => setIsSearchOpen(true)} />
 
-        <main className="flex-1 overflow-y-auto bg-background scrollbar-hide pb-20 md:pb-0">
+        <main className="flex-1 overflow-y-auto bg-background scrollbar-hide">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -119,9 +118,6 @@ export function AppLayout() {
             </motion.div>
           </AnimatePresence>
         </main>
-
-        {/* Global Nav for Mobile */}
-        <BottomNav />
 
         {/* Global Command Palette */}
         <CommandPalette open={isSearchOpen} onOpenChange={setIsSearchOpen} />

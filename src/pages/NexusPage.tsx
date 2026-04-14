@@ -17,6 +17,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { KertasKerjaRenderer, type KertasKerjaData } from '@/components/ai/KertasKerjaRenderer';
+import { MinitMesyuaratRenderer, type MinitMesyuaratData } from '@/components/ai/MinitMesyuaratRenderer';
 import { supabase } from '@/lib/supabase';
 import { Buffer } from 'buffer';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -46,7 +47,7 @@ function useLocalState<T>(key: string, initialValue: T) {
 export function NexusPage() {
   const [searchParams] = useSearchParams();
   const { allowAiBudget } = useAiSettings();
-  const { callAi, isLoading } = useAiAssistant();
+  const { callAi, isLoading, retryCount } = useAiAssistant();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'kertas-kerja');
   const [loadingType, setLoadingType] = useState<'kertas-kerja' | 'minit-mesyuarat' | null>(null);
 
@@ -126,11 +127,36 @@ export function NexusPage() {
     fetchTokenBalance();
   }, [activeTab, hasilKertasKerja]);
 
-  // State Minit Mesyuarat
-  const [tajukMesyuarat, setTajukMesyuarat] = useState('');
-  const [notaMesyuarat, setNotaMesyuarat] = useState('');
+  // State Minit Mesyuarat — cached in localStorage
+  const [minitStep, setMinitStep] = useLocalState('nx_minitStep', 1);
+  const [tajukMesyuarat, setTajukMesyuarat] = useLocalState('nx_tajukMesyuarat', '');
+  const [tarikhMesyuarat, setTarikhMesyuarat] = useLocalState('nx_tarikhMesyuarat', '');
+  const [masaMesyuarat, setMasaMesyuarat] = useLocalState('nx_masaMesyuarat', '');
+  const [platformMesyuarat, setPlatformMesyuarat] = useLocalState('nx_platformMesyuarat', '');
+  const [namaPengerusiMinit, setNamaPengerusiMinit] = useLocalState('nx_namaPengerusiMinit', '');
+  const [namaSetiausahaMinit, setNamaSetiausahaMinit] = useLocalState('nx_namaSetiausahaMinit', '');
+  const [senaraIHadir, setSenaraIHadir] = useLocalState('nx_senaraIHadir', '');
+  const [notaMesyuarat, setNotaMesyuarat] = useLocalState('nx_notaMesyuarat', '');
   const [images, setImages] = useState<any[]>([]); // { file, base64, mimeType }
-  const [hasilMinit, setHasilMinit] = useState<string | null>(null);
+  const [selectedMinitModel, setSelectedMinitModel] = useLocalState<'flash' | 'pro'>('nx_selectedMinitModel', 'flash');
+  const [hasilMinit, setHasilMinit] = useLocalState<MinitMesyuaratData | null>('nx_hasilMinit', null);
+
+  const handleResetMinit = () => {
+    if (confirm('Adakah anda pasti mahu memadam semua maklumat draf minit ini dan mula dari awal?')) {
+      setMinitStep(1);
+      setTajukMesyuarat('');
+      setTarikhMesyuarat('');
+      setMasaMesyuarat('');
+      setPlatformMesyuarat('');
+      setNamaPengerusiMinit('');
+      setNamaSetiausahaMinit('');
+      setSenaraIHadir('');
+      setNotaMesyuarat('');
+      setImages([]);
+      setHasilMinit(null);
+      toast.success('Borang minit telah dikosongkan.');
+    }
+  };
 
   // Preload logo for DOCX embedding
   const logoBase64Ref = useRef<string>('');
@@ -439,30 +465,79 @@ export function NexusPage() {
   };
 
   const handleJanaMinit = async () => {
-    if (!tajukMesyuarat || (!notaMesyuarat && images.length === 0)) {
-      toast.error('Sila masukkan tajuk mesyuarat dan nota (teks atau muat naik gambar).');
+    if (!tajukMesyuarat) {
+      toast.error('Sila masukkan tajuk mesyuarat sekurang-kurangnya.');
+      return;
+    }
+    if (!notaMesyuarat && images.length === 0 && !senaraIHadir) {
+      toast.error('Sila masukkan nota mesyuarat atau senarai ahli hadir.');
       return;
     }
 
     setLoadingType('minit-mesyuarat');
     try {
-      const result = await callAi({
+      const rawResult = await callAi({
         task: 'jana_minit_mesyuarat' as any,
         data: {
           tajuk: tajukMesyuarat,
+          tarikh: tarikhMesyuarat,
+          masa: masaMesyuarat,
+          platform: platformMesyuarat,
+          namaPengerusi: namaPengerusiMinit,
+          namaSetiausaha: namaSetiausahaMinit,
+          senaraIHadir: senaraIHadir,
           nota: notaMesyuarat,
-          images: images
+          images: images,
+          selectedModel: selectedMinitModel
         }
       });
 
-      if (result) {
-        setHasilMinit(result);
-        toast.success('Nota berjaya ditukar menjadi minit rasmi!');
+      if (rawResult) {
+        try {
+          // With responseMimeType: 'application/json', output is already clean JSON.
+          // Fallback: strip markdown fences and extract first JSON object just in case.
+          let jsonStr = rawResult.trim();
+          // Remove markdown code fences if present
+          jsonStr = jsonStr.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+          // If still not starting with {, try to extract the first {...} block
+          if (!jsonStr.startsWith('{')) {
+            const match = jsonStr.match(/\{[\s\S]*\}/);
+            if (match) jsonStr = match[0];
+          }
+          const parsed: MinitMesyuaratData = JSON.parse(jsonStr);
+          setHasilMinit(parsed);
+          toast.success('Minit mesyuarat rasmi berjaya dijana!');
+        } catch {
+          toast.error('AI mengembalikan format yang tidak sah. Cuba semula atau tukar ke model Pro.');
+          console.error('Minit JSON parse failed. Raw output:', rawResult.slice(0, 500));
+        }
       }
+
     } catch (e: any) {
       //
     } finally {
       setLoadingType(null);
+    }
+  };
+
+  const handleDownloadMinitDocx = async (data: MinitMesyuaratData) => {
+    try {
+      const { generateMinitMesyuaratDocx } = await import('../utils/docxGenerator');
+      const blob = await generateMinitMesyuaratDocx(data);
+      if (!blob || blob.size === 0) throw new Error('Blob dijana kosong.');
+      const safeFilename = (data.tajuk_mesyuarat || 'Minit_Mesyuarat').replace(/[/\\?%*:|"<>]/g, '-').trim();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${safeFilename}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      toast.success('Fail .docx Minit Mesyuarat berjaya dimuat turun!');
+    } catch (error) {
+      console.error('Minit DOCX Error:', error);
+      toast.error(`Gagal jana DOCX: ${error instanceof Error ? error.message : 'Ralat tidak diketahui'}`);
     }
   };
 
@@ -899,7 +974,7 @@ export function NexusPage() {
                   <div className="relative p-4 sm:p-8 flex justify-center w-full">
                     <div className="w-full max-w-3xl bg-white dark:bg-[#121214] shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-slate-200/60 dark:border-border/40 rounded-[2rem] p-8 sm:p-12 pb-10 sm:pb-12 prose dark:prose-invert prose-indigo prose-sm sm:prose-base transition-all duration-500 scale-[0.99] hover:scale-100">
                       {loadingType === 'kertas-kerja' ? (
-                        <AiLoadingView type="kertas-kerja" />
+                        <AiLoadingView type="kertas-kerja" retryCount={retryCount} />
                       ) : hasilKertasKerja ? (
                         <>
                           <div className="mb-8 p-5 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-300 flex items-start gap-4 shadow-sm animate-in fade-in slide-in-from-top-2">
@@ -934,132 +1009,290 @@ export function NexusPage() {
         <TabsContent value="minit-mesyuarat" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
+            {/* ── LEFT: FORM ── */}
             <div className="lg:col-span-5 space-y-6">
               <Card className="border-slate-200/60 dark:border-border/50 shadow-xl overflow-hidden bg-white dark:bg-[#121214]">
                 <div className="h-1.5 bg-gradient-to-r from-emerald-500 to-teal-500" />
-                <CardHeader>
-                  <CardTitle className="text-lg">Nota Kasar Mesyuarat</CardTitle>
-                  <CardDescription>Ubah nota berterabur (contoh WhatsApp) kepada Minit Mesyuarat rasmi.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400">Perkara / Tajuk Mesyuarat</Label>
-                    <Input
-                      placeholder="Cth: Mesyuarat Agong Tahunan Kelab IT"
-                      value={tajukMesyuarat}
-                      onChange={(e) => setTajukMesyuarat(e.target.value)}
-                      className="bg-slate-50 dark:bg-[#0A0A0B]/50 border-slate-200 dark:border-border/60 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 shadow-sm transition-all focus:bg-white dark:focus:bg-[#0A0A0B]"
-                    />
-                  </div>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400">Nota Mentah (Pilihan)</Label>
-                      <Textarea
-                        placeholder="- mula jam 2 petang, ali tak dtg&#10;- bincang pasal yuran, setuju naik RM5&#10;- program sukan bulan depan, ajk sukan kena buat kertas kerja sblm jumaat"
-                        className="min-h-[150px] resize-none bg-slate-50 dark:bg-[#0A0A0B]/50 border-slate-200 dark:border-border/60 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 shadow-sm transition-all leading-relaxed focus:bg-white dark:focus:bg-[#0A0A0B]"
-                        value={notaMesyuarat}
-                        onChange={(e) => setNotaMesyuarat(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2 relative border-t border-border/40 pt-4">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400 flex items-center justify-between">
-                        Input Gambar (Papan Putih/Catatan)
-                        <span className="text-[10px] bg-secondary px-2 rounded-full font-medium">{images.length}/3 Dimuat Naik</span>
-                      </Label>
 
-                      <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-border/60 hover:border-emerald-500/50 hover:bg-emerald-500/5 bg-background/50 rounded-xl cursor-pointer transition-all">
-                        <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                          <ImagePlus className="w-5 h-5" />
-                          <span className="text-sm font-medium">Klik untuk muat naik (.jpg/.png)</span>
-                        </div>
-                        <input type="file" disabled={images.length >= 3} className="hidden" accept="image/jpeg, image/png, image/webp" multiple onChange={handleImageUpload} />
-                      </label>
-
-                      {/* Image Previews */}
-                      {images.length > 0 && (
-                        <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
-                          {images.map((img, idx) => (
-                            <div key={idx} className="relative w-16 h-16 rounded-md border overflow-hidden flex-shrink-0 group">
-                              <img src={img.base64} alt="preview" className="w-full h-full object-cover" />
-                              <button
-                                onClick={() => removeImage(idx)}
-                                className="absolute bg-background/80 backdrop-blur-sm inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <X className="w-4 h-4 text-rose-500" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="bg-secondary/30 pt-4">
-                  <Button
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-11 transition-all shadow-[0_0_15px_rgba(52,211,153,0.3)] hover:shadow-[0_0_25px_rgba(52,211,153,0.5)] group"
-                    onClick={handleJanaMinit}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <span className="flex items-center gap-2">
-                        <Wand2 className="w-4 h-4 animate-spin" /> Menjana Minit Rasmi...
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        <FileClock className="w-4 h-4 group-hover:-rotate-12 transition-transform" /> Susun Jadi Minit Rasmi
-                      </span>
-                    )}
+                {/* Header + Reset */}
+                <div className="px-6 pt-4 flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Isi Borang</span>
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] uppercase font-bold tracking-widest text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 px-2" onClick={handleResetMinit}>
+                    <Trash2 className="w-3.5 h-3.5 mr-1" /> Mula Semula
                   </Button>
+                </div>
+
+                {/* 2-step progress */}
+                <div className="px-6 pt-3 pb-2">
+                  <div className="flex items-center justify-between">
+                    {[1, 2].map((step) => (
+                      <div key={step} className="flex flex-col items-center flex-1 relative">
+                        <button
+                          type="button"
+                          onClick={() => setMinitStep(step)}
+                          className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold z-10 transition-all duration-300 hover:scale-110",
+                            minitStep >= step
+                              ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
+                              : "bg-slate-100 dark:bg-muted text-muted-foreground hover:bg-slate-200 dark:hover:bg-muted/80"
+                          )}
+                        >
+                          {step}
+                        </button>
+                        {step < 2 && (
+                          <div className={cn(
+                            "absolute top-4 left-[50%] right-[-50%] h-[2px] -z-0 transition-colors duration-300",
+                            minitStep > step ? "bg-emerald-600" : "bg-slate-200 dark:bg-muted"
+                          )} />
+                        )}
+                        <span className={cn(
+                          "uppercase tracking-widest text-[8px] font-bold mt-2 text-center",
+                          minitStep >= step ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
+                        )}>
+                          {step === 1 ? 'Maklumat Asas' : 'Nota & Hadir'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="px-6 py-2"><div className="h-[1px] w-full bg-border/40" /></div>
+
+                <CardContent className="space-y-4 pt-2">
+
+                  {/* STEP 1: Basic Info */}
+                  {minitStep === 1 && (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400">Tajuk Rasmi Mesyuarat</Label>
+                        <Input
+                          placeholder="Cth: MESYUARAT KHAS KALI KE-1 KELAB DAN PERSATUAN"
+                          value={tajukMesyuarat}
+                          onChange={(e) => setTajukMesyuarat(e.target.value)}
+                          className="bg-slate-50 dark:bg-[#0A0A0B]/50 border-slate-200 dark:border-border/60 focus:ring-2 focus:ring-emerald-500/20"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tarikh</Label>
+                          <Input
+                            placeholder="Cth: 08/04/2026"
+                            value={tarikhMesyuarat}
+                            onChange={(e) => setTarikhMesyuarat(e.target.value)}
+                            className="bg-muted/40 dark:bg-background/40 h-10 text-sm border-border/50 focus:ring-2 focus:ring-emerald-500/20"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Masa</Label>
+                          <Input
+                            placeholder="Cth: 05.15 Petang"
+                            value={masaMesyuarat}
+                            onChange={(e) => setMasaMesyuarat(e.target.value)}
+                            className="bg-muted/40 dark:bg-background/40 h-10 text-sm border-border/50 focus:ring-2 focus:ring-emerald-500/20"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Platform / Tempat</Label>
+                        <Input
+                          placeholder="Cth: Student Centre / Google Meet"
+                          value={platformMesyuarat}
+                          onChange={(e) => setPlatformMesyuarat(e.target.value)}
+                          className="bg-muted/40 dark:bg-background/40 h-10 text-sm border-border/50 focus:ring-2 focus:ring-emerald-500/20"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400">Nama Pengerusi / YDP</Label>
+                        <Input
+                          placeholder="Cth: MUHAMAD AMIRUL HAKIMI BIN MOHD ZAWAWI"
+                          value={namaPengerusiMinit}
+                          onChange={(e) => setNamaPengerusiMinit(e.target.value)}
+                          className="bg-muted/40 dark:bg-background/40 h-10 text-sm border-border/50 focus:ring-2 focus:ring-emerald-500/20"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400">Nama Setiausaha</Label>
+                        <Input
+                          placeholder="Cth: NUR SYUHADA BINTI SAIFULIZAM"
+                          value={namaSetiausahaMinit}
+                          onChange={(e) => setNamaSetiausahaMinit(e.target.value)}
+                          className="bg-muted/40 dark:bg-background/40 h-10 text-sm border-border/50 focus:ring-2 focus:ring-emerald-500/20"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* STEP 2: Notes + Attendance */}
+                  {minitStep === 2 && (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400">Senarai Ahli Hadir</Label>
+                        <Textarea
+                          placeholder={"Tampal atau taip nama ahli hadir, satu nama setiap baris:\n1. MUHAMMAD SAIFUL BAHARI BIN OSMAN\n2. ARISSA DAMIA BINTI HASBULLAH\n...\n\nAtau masukkan bilangan sahaja (cth: 30 orang) jika nama tidak tersedia."}
+                          className="min-h-[130px] resize-none bg-slate-50 dark:bg-[#0A0A0B]/50 border-slate-200 dark:border-border/60 focus:ring-2 focus:ring-emerald-500/20 text-sm"
+                          value={senaraIHadir}
+                          onChange={(e) => setSenaraIHadir(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400">Nota / Perkara Dibincangkan</Label>
+                        <Textarea
+                          placeholder="Tampal nota kasar mesyuarat dari WhatsApp/catatan:\n- bincang sistem digital e-KPP\n- YDP terang faedah sistem kepada kelab\n- persetujuan semua untuk lancar semester hadapan"
+                          className="min-h-[120px] resize-none bg-slate-50 dark:bg-[#0A0A0B]/50 border-slate-200 dark:border-border/60 focus:ring-2 focus:ring-emerald-500/20 text-sm"
+                          value={notaMesyuarat}
+                          onChange={(e) => setNotaMesyuarat(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2 border-t border-border/40 pt-3">
+                        <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400 flex items-center justify-between">
+                          Gambar Papan Putih / Catatan
+                          <span className="text-[10px] bg-secondary px-2 rounded-full font-medium">{images.length}/3</span>
+                        </Label>
+                        <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-dashed border-border/60 hover:border-emerald-500/50 hover:bg-emerald-500/5 bg-background/50 rounded-xl cursor-pointer transition-all">
+                          <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                            <ImagePlus className="w-4 h-4" />
+                            <span className="text-sm font-medium">Muat naik gambar (.jpg/.png)</span>
+                          </div>
+                          <input type="file" disabled={images.length >= 3} className="hidden" accept="image/jpeg, image/png, image/webp" multiple onChange={handleImageUpload} />
+                        </label>
+                        {images.length > 0 && (
+                          <div className="flex gap-2 mt-2 overflow-x-auto pb-1">
+                            {images.map((img, idx) => (
+                              <div key={idx} className="relative w-14 h-14 rounded-md border overflow-hidden flex-shrink-0 group">
+                                <img src={img.base64} alt="preview" className="w-full h-full object-cover" />
+                                <button onClick={() => removeImage(idx)} className="absolute bg-background/80 backdrop-blur-sm inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <X className="w-4 h-4 text-rose-500" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Model Selector */}
+                      <div className="pt-2 border-t border-slate-200 dark:border-border/60">
+                        <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400 mb-3 block">Pilihan Kecerdasan AI</Label>
+                        <div className="grid grid-cols-2 gap-3">
+                          {(['flash', 'pro'] as const).map((model) => {
+                            const costKey = model === 'flash' ? 'flash_minit_mesyuarat' : 'pro_minit_mesyuarat';
+                            const cost = tokenData?.all_costs?.[costKey] || (model === 'flash' ? 80 : 100);
+                            const canAfford = !tokenData || tokenData.current_balance >= cost;
+                            const isSelected = selectedMinitModel === model;
+                            return (
+                              <button
+                                key={model}
+                                onClick={() => {
+                                  if (!canAfford) { toast.error(`Baki token tidak mencukupi. Kos: ${cost} Token.`); return; }
+                                  setSelectedMinitModel(model);
+                                }}
+                                className={cn(
+                                  "text-left p-3 rounded-xl border-2 transition-all relative overflow-hidden",
+                                  isSelected
+                                    ? model === 'flash' ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-500/10 shadow-sm" : "border-amber-500 bg-amber-50/50 dark:bg-amber-500/10 shadow-sm"
+                                    : !canAfford ? "border-slate-200 dark:border-border/60 opacity-60 cursor-not-allowed" : "border-slate-200 dark:border-border/60 hover:border-emerald-300"
+                                )}
+                              >
+                                <div className={cn("text-[10px] font-black uppercase tracking-wider mb-0.5", isSelected ? (model === 'flash' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400') : 'text-muted-foreground')}>
+                                  {model === 'flash' ? '⚡ Nexus Flash' : '✨ Nexus Pro'}
+                                </div>
+                                <div className="text-[9px] text-muted-foreground">{model === 'flash' ? 'Pantas & Jimat' : 'Kualiti Tinggi'}</div>
+                                {tokenData && (
+                                  <div className={cn("text-[9px] font-bold mt-1", canAfford ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500')}>
+                                    Kos: {cost} Token
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+
+                <CardFooter className="bg-secondary/30 pt-4 flex gap-2">
+                  {minitStep === 1 ? (
+                    <Button
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-11 transition-all"
+                      onClick={() => {
+                        if (!tajukMesyuarat) { toast.error('Sila masukkan tajuk mesyuarat.'); return; }
+                        setMinitStep(2);
+                      }}
+                    >
+                      Seterusnya →
+                    </Button>
+                  ) : (
+                    <>
+                      <Button variant="outline" className="h-11" onClick={() => setMinitStep(1)}>← Kembali</Button>
+                      <Button
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-11 transition-all shadow-[0_0_15px_rgba(52,211,153,0.3)] hover:shadow-[0_0_25px_rgba(52,211,153,0.5)] group"
+                        onClick={handleJanaMinit}
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <span className="flex items-center gap-2"><Wand2 className="w-4 h-4 animate-spin" /> Menjana...</span>
+                        ) : (
+                          <span className="flex items-center gap-2"><FileClock className="w-4 h-4 group-hover:-rotate-12 transition-transform" /> Jana Minit Rasmi</span>
+                        )}
+                      </Button>
+                    </>
+                  )}
                 </CardFooter>
               </Card>
             </div>
 
+            {/* ── RIGHT: LIVE PREVIEW ── */}
             <div className="lg:col-span-7">
               <Card className="h-full min-h-[500px] flex flex-col border-border/40 shadow-2xl overflow-hidden bg-card/50 dark:bg-muted/5 backdrop-blur-md">
                 <div className="bg-white/80 dark:bg-muted/30 p-4 border-b border-slate-200/60 dark:border-border/50 flex items-center justify-between backdrop-blur-sm z-10">
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-emerald-400" />
-                    <span className="text-sm font-bold tracking-tight text-foreground/80">Minit Rasmi</span>
+                    <span className="text-sm font-bold tracking-tight text-foreground/80">Preview Minit Rasmi</span>
                   </div>
                   {hasilMinit && (
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-2 bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20" onClick={() => handleDownloadDocx(hasilMinit, tajukMesyuarat || 'Minit_Mesyuarat')}>
+                      <Button
+                        variant="outline" size="sm"
+                        className="h-8 text-xs font-bold gap-2 bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
+                        onClick={() => handleDownloadMinitDocx(hasilMinit)}
+                      >
                         <Download className="w-3.5 h-3.5" /> Muat Turun DOCX
                       </Button>
-                      <Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-2" onClick={() => {
-                        navigator.clipboard.writeText(hasilMinit);
-                        toast.success('Minit disalin!');
-                      }}>
-                        <Save className="w-3.5 h-3.5" /> Salin Teks
+                      <Button
+                        variant="outline" size="sm"
+                        className="h-8 text-xs font-bold gap-2 text-rose-500 border-rose-500/20 hover:bg-rose-500/10"
+                        onClick={() => { if (confirm('Padam hasil minit ini?')) setHasilMinit(null); }}
+                      >
+                        <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
                   )}
                 </div>
-                <div className="flex-1 overflow-y-auto max-h-[750px] relative bg-slate-100/30 dark:bg-transparent/20 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto max-h-[780px] relative bg-slate-100/30 dark:bg-transparent/20 custom-scrollbar">
                   <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-20 dark:opacity-10 bg-[length:24px_24px] pointer-events-none" />
                   <div className="relative p-4 sm:p-8 flex justify-center w-full">
-                    <div className="w-full max-w-3xl bg-white dark:bg-[#121214] shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-slate-200/60 dark:border-border/40 rounded-[2rem] p-8 sm:p-12 pb-10 sm:pb-12 prose dark:prose-invert prose-emerald prose-sm sm:prose-base transition-all duration-500 scale-[0.99] hover:scale-100">
+                    <div className="w-full max-w-3xl bg-card shadow-[0_20px_50px_rgba(0,0,0,0.12)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] border border-border/50 rounded-2xl p-8 sm:p-10 transition-all duration-500">
                       {loadingType === 'minit-mesyuarat' ? (
-                        <AiLoadingView type="minit-mesyuarat" />
+                        <AiLoadingView type="minit-mesyuarat" retryCount={retryCount} />
                       ) : hasilMinit ? (
                         <>
-                          <div className="mb-8 p-5 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-300 flex items-start gap-4 shadow-sm animate-in fade-in slide-in-from-top-2">
-                            <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                              <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                            </div>
-                            <div className="text-sm leading-relaxed">
-                              <p className="font-bold text-base mb-1">Perhatian: Minit Janaan AI Bertindak Sebagai Panduan</p>
-                              Ini hanyalah sekadar draf awal untuk menukar nota berterabur anda kepada format korporat. Pastikan tiada fakta mesyuarat ditiadakan atau diputarbelit oleh AI secara tidak sengaja.
+                          <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 flex items-start gap-3 shadow-sm animate-in fade-in slide-in-from-top-2">
+                            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                            <div className="text-xs leading-relaxed">
+                              <span className="font-bold">Draf AI — semak sebelum guna rasmi.</span> Pastikan semua fakta mesyuarat adalah tepat.
                             </div>
                           </div>
-                          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{hasilMinit}</ReactMarkdown>
+                          <MinitMesyuaratRenderer data={hasilMinit} />
                         </>
                       ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-muted-foreground/50 space-y-4 pt-10 pb-10">
-                          <div className="w-20 h-20 rounded-full bg-slate-100 dark:bg-secondary/30 flex items-center justify-center border border-slate-200/60 dark:border-border/20 shadow-inner">
+                        <div className="h-full flex flex-col items-center justify-center text-muted-foreground/50 space-y-4 py-16">
+                          <div className="w-20 h-20 rounded-full bg-slate-100 dark:bg-secondary/30 flex items-center justify-center border border-slate-200/60 shadow-inner">
                             <FileClock className="w-10 h-10 opacity-20 text-emerald-500" />
                           </div>
-                          <p className="text-sm font-medium">Nota belum diproses. Format rasmi akan dijana di sini.</p>
+                          <div className="text-center">
+                            <p className="text-sm font-medium">Preview minit rasmi akan muncul di sini</p>
+                            <p className="text-xs text-muted-foreground/60 mt-1">Isi borang dan klik 'Jana Minit Rasmi'</p>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1373,7 +1606,7 @@ const AI_LOADING_STEPS = [
   "Hampir siap, menyemak ralat teks akhir..."
 ];
 
-function AiLoadingView({ type }: { type: 'kertas-kerja' | 'minit-mesyuarat' }) {
+function AiLoadingView({ type, retryCount }: { type: 'kertas-kerja' | 'minit-mesyuarat', retryCount?: number }) {
   const [stepIndex, setStepIndex] = React.useState(0);
 
   React.useEffect(() => {
@@ -1392,10 +1625,20 @@ function AiLoadingView({ type }: { type: 'kertas-kerja' | 'minit-mesyuarat' }) {
         </div>
       </div>
       <div className="text-center space-y-3 px-4">
-        <p className="font-black text-indigo-600 dark:text-indigo-400 text-xl animate-pulse tracking-tight">{AI_LOADING_STEPS[stepIndex]}</p>
+        {retryCount && retryCount > 0 ? (
+          <p className="font-black text-amber-500 text-xl animate-pulse tracking-tight">Sambungan terganggu. Mencuba semula ({retryCount}/3)...</p>
+        ) : (
+          <p className="font-black text-indigo-600 dark:text-indigo-400 text-xl animate-pulse tracking-tight">{AI_LOADING_STEPS[stepIndex]}</p>
+        )}
         <p className="text-sm font-medium text-muted-foreground/80 max-w-sm mx-auto leading-relaxed">
-          Enjin Nexus AI sedang {type === 'kertas-kerja' ? 'menjana keseluruhan kertas kerja.' : 'mensintesis nota mesyuarat anda.'}<br />
-          Proses pemikiran kognitif mendalam ini mungkin mengambil sedikit masa.
+          {retryCount && retryCount > 0 ? (
+            <>Sistem mendapati capaian pelayan sibuk pada waktu ini.</>
+          ) : (
+            <>
+              Enjin Nexus AI sedang {type === 'kertas-kerja' ? 'menjana keseluruhan kertas kerja.' : 'mensintesis nota mesyuarat anda.'}<br />
+              Proses pemikiran kognitif mendalam ini mungkin mengambil sedikit masa.
+            </>
+          )}
         </p>
       </div>
 

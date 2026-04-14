@@ -77,7 +77,7 @@ export function FloatingAiChat() {
   const [chatContext, setChatContext] = useState<ChatContext | null>(null);
 
   const { profile, isSuperAdmin, isAdvisor, isPresident, isMT, selectedClubId } = useAuth();
-  const { callAi, sendChatMessage, isLoading: isActionLoading, isChatLoading } = useAiAssistant();
+  const { callAi, sendChatMessage, isLoading: isActionLoading, isChatLoading, retryCount } = useAiAssistant();
   const { allowAiChat } = useAiSettings();
   const location = useLocation();
   const navigate = useNavigate();
@@ -506,15 +506,19 @@ export function FloatingAiChat() {
                     <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 flex items-center justify-center shrink-0 mt-1">
                       <div className="w-3 h-3 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin" />
                     </div>
-                    <div className="bg-card border border-border/50 px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1.5">
-                      {[0, 1, 2].map((i) => (
-                        <motion.div
-                          key={i}
-                          className="w-1.5 h-1.5 bg-indigo-400 rounded-full"
-                          animate={{ y: [0, -5, 0] }}
-                          transition={{ duration: 0.55, delay: i * 0.13, repeat: Infinity }}
-                        />
-                      ))}
+                    <div className="bg-card border border-border/50 px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1.5 h-[38px]">
+                      {retryCount > 0 ? (
+                        <span className="text-[11px] font-bold animate-pulse text-amber-500">Percubaan {retryCount}/3...</span>
+                      ) : (
+                        [0, 1, 2].map((i) => (
+                          <motion.div
+                            key={i}
+                            className="w-1.5 h-1.5 bg-indigo-400 rounded-full"
+                            animate={{ y: [0, -5, 0] }}
+                            transition={{ duration: 0.55, delay: i * 0.13, repeat: Infinity }}
+                          />
+                        ))
+                      )}
                     </div>
                   </motion.div>
                 )}
