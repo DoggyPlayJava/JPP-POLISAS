@@ -46,15 +46,15 @@ const MODULES = [
     preview: (
       <div className="flex items-end gap-2 p-4 md:p-6 h-full justify-center w-full">
         <div className="flex items-end justify-between w-full h-full pb-4">
-            {[40, 70, 45, 90, 60, 80, 55].map((h, i) => (
+          {[40, 70, 45, 90, 60, 80, 55].map((h, i) => (
             <motion.div
-                key={i}
-                initial={{ height: 0 }}
-                animate={{ height: `${h}%` }}
-                transition={{ delay: 0.5 + (i * 0.1), duration: 1 }}
-                className="w-4 md:w-6 lg:w-8 bg-gradient-to-t from-emerald-500/20 to-emerald-500 rounded-t-md shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+              key={i}
+              initial={{ height: 0 }}
+              animate={{ height: `${h}%` }}
+              transition={{ delay: 0.5 + (i * 0.1), duration: 1 }}
+              className="w-4 md:w-6 lg:w-8 bg-gradient-to-t from-emerald-500/20 to-emerald-500 rounded-t-md shadow-[0_0_15px_rgba(16,185,129,0.2)]"
             />
-            ))}
+          ))}
         </div>
       </div>
     )
@@ -71,10 +71,10 @@ const MODULES = [
     preview: (
       <div className="flex items-center justify-center h-full relative">
         <div className="w-24 h-24 rounded-full border border-blue-500/30 flex items-center justify-center bg-blue-500/5 shadow-[0_0_30px_rgba(37,99,235,0.15)]">
-          <motion.div 
+          <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-            className="w-20 h-20 rounded-full border-4 border-blue-500 border-t-transparent border-l-transparent" 
+            className="w-20 h-20 rounded-full border-4 border-blue-500 border-t-transparent border-l-transparent"
           />
         </div>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -112,12 +112,12 @@ function SpotlightCard({ children, className, onClick }: any) {
 
   return (
     <div
-      className={cn("group relative overflow-hidden rounded-[2.5rem] bg-white/[0.02] border border-white/5 cursor-pointer shadow-lg", className)}
+      className={cn("group relative overflow-hidden rounded-[2.5rem] bg-white/[0.02] border border-white/5 cursor-pointer shadow-lg transform-gpu", className)}
       onMouseMove={handleMouseMove}
       onClick={onClick}
     >
       <motion.div
-        className="pointer-events-none absolute -inset-px rounded-[2.5rem] opacity-0 transition duration-500 group-hover:opacity-100"
+        className="pointer-events-none absolute -inset-px rounded-[2.5rem] opacity-0 transition duration-500 md:group-hover:opacity-100"
         style={{
           background: useMotionTemplate`
             radial-gradient(
@@ -167,7 +167,7 @@ const Navbar = () => {
             : "bg-black/20 backdrop-blur-md border-white/5"
         )}>
           {/* Logo Section */}
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             <div className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center p-1.5 rounded-xl bg-white/[0.05] border border-white/10 overflow-hidden relative">
               {/* Fallback styling just in case image doesn't load instantly */}
               <div className="absolute inset-0 bg-maroon/20 blur-md" />
@@ -182,9 +182,9 @@ const Navbar = () => {
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((item) => (
-              <button 
-                key={item.id} 
-                onClick={() => scrollTo(item.id)} 
+              <button
+                key={item.id}
+                onClick={() => scrollTo(item.id)}
                 className="text-[11px] font-black uppercase tracking-widest text-white/40 hover:text-white transition-colors"
               >
                 {item.label}
@@ -194,25 +194,25 @@ const Navbar = () => {
 
           {/* Action Buttons */}
           <div className="flex items-center gap-3">
-            <button 
-              onClick={() => navigate('/login')} 
+            <button
+              onClick={() => navigate('/login')}
               className="hidden md:flex px-6 py-2.5 rounded-full bg-white text-black text-[11px] font-black uppercase tracking-wider hover:bg-maroon hover:text-white transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(131,16,16,0.5)]"
             >
               Daftar Masuk
             </button>
-            
-            <button 
+
+            <button
               className="md:hidden w-10 h-10 flex items-center justify-center rounded-full bg-white/[0.05] border border-white/10 text-white"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               <AnimatePresence mode="wait">
                 {isMobileMenuOpen ? (
                   <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}>
-                     <X className="w-5 h-5" />
+                    <X className="w-5 h-5" />
                   </motion.div>
                 ) : (
                   <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.15 }}>
-                     <Menu className="w-5 h-5" />
+                    <Menu className="w-5 h-5" />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -232,18 +232,18 @@ const Navbar = () => {
             className="fixed inset-x-0 top-24 z-40 mx-4 rounded-[2rem] bg-[#0A0202]/95 backdrop-blur-3xl border border-white/10 p-6 flex flex-col gap-2 md:hidden shadow-[0_20px_60px_-15px_rgba(131,16,16,0.3)]"
           >
             {navLinks.map((item) => (
-              <button 
-                key={item.id} 
+              <button
+                key={item.id}
                 onClick={() => {
                   scrollTo(item.id);
                   setIsMobileMenuOpen(false);
-                }} 
+                }}
                 className="text-left text-sm font-black uppercase tracking-widest text-white/50 hover:text-white py-4 border-b border-white/5 transition-colors"
               >
                 {item.label}
               </button>
             ))}
-            <button 
+            <button
               onClick={() => {
                 navigate('/login');
                 setIsMobileMenuOpen(false);
@@ -264,7 +264,7 @@ const TickerTape = () => (
     <motion.div
       animate={{ x: ["0%", "-50%"] }}
       transition={{ ease: "linear", duration: 40, repeat: Infinity }}
-      className="flex whitespace-nowrap gap-8 md:gap-16 items-center"
+      className="flex whitespace-nowrap gap-8 md:gap-16 items-center transform-gpu will-change-transform"
     >
       {[...Array(4)].map((_, i) => (
         <React.Fragment key={i}>
@@ -308,19 +308,19 @@ const Hero = () => {
   return (
     <section className="relative min-h-[90vh] md:min-h-screen flex flex-col items-center justify-center pt-32 pb-20 overflow-hidden">
       {/* Deep Space Background Effects */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#0a0202]">
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#0a0202] transform-gpu">
         {/* Core Glowing Orb */}
-        <motion.div 
+        <motion.div
           animate={{ scale: [1, 1.1, 1], opacity: [0.15, 0.3, 0.15] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] md:w-[60vw] max-w-4xl aspect-square bg-maroon/30 blur-[100px] md:blur-[140px] rounded-full" 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] md:w-[60vw] max-w-4xl aspect-square bg-maroon/20 md:bg-maroon/30 blur-[60px] md:blur-[140px] rounded-full transform-gpu will-change-transform"
         />
         {/* Secondary Accents */}
-        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-red-900/10 blur-[100px] rounded-full" />
-        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-rose-900/10 blur-[120px] rounded-full" />
-        
+        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-red-900/10 blur-[60px] md:blur-[100px] rounded-full transform-gpu will-change-transform" />
+        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-rose-900/10 blur-[60px] md:blur-[120px] rounded-full transform-gpu will-change-transform" />
+
         {/* Subtle Grid Overlay */}
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
+        <div className="hidden md:block absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
         <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] md:opacity-[0.05] [mask-image:radial-gradient(ellipse_at_center,black,transparent_80%)]" />
       </div>
 
@@ -374,8 +374,8 @@ const Hero = () => {
             <span className="relative z-10">Mula Sesi Digital</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform relative z-10" />
           </button>
-          
-          <button 
+
+          <button
             onClick={() => scrollTo('nexus')}
             className="w-full sm:w-auto group px-8 md:px-10 py-4 rounded-2xl bg-white/[0.03] border border-white/10 text-white/70 font-black uppercase text-xs tracking-widest hover:bg-white/10 hover:text-white hover:border-white/20 transition-all duration-500 flex items-center justify-center gap-3 backdrop-blur-md"
           >
@@ -400,8 +400,8 @@ const SystemShowcase = () => {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-4xl h-48 md:h-64 bg-red-900/20 blur-[100px] rounded-full pointer-events-none" />
 
       <motion.div
-        style={{ scale, opacity, rotateX }}
-        className="relative w-full max-w-6xl rounded-t-[2rem] md:rounded-[2.5rem] border-x border-t border-white/10 bg-[#0A0202]/90 backdrop-blur-3xl shadow-[0_-20px_60px_-20px_rgba(131,16,16,0.3)] md:shadow-[0_-30px_100px_-20px_rgba(131,16,16,0.35)] overflow-hidden"
+        style={{ scale, opacity, rotateX, willChange: 'transform, opacity' }}
+        className="relative w-full max-w-6xl rounded-t-[2rem] md:rounded-[2.5rem] border-x border-t border-white/10 bg-[#0A0202]/90 backdrop-blur-md md:backdrop-blur-3xl shadow-[0_-20px_60px_-20px_rgba(131,16,16,0.3)] md:shadow-[0_-30px_100px_-20px_rgba(131,16,16,0.35)] overflow-hidden transform-gpu"
       >
         {/* Fake Browser Chrome */}
         <div className="h-10 md:h-12 border-b border-white/5 flex items-center px-4 md:px-6 gap-3 bg-white/[0.02]">
@@ -418,7 +418,7 @@ const SystemShowcase = () => {
 
         {/* Dashboard Content Mockup */}
         <div className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-4 gap-6 h-[400px] md:h-[600px] bg-gradient-to-b from-[#0A0202] to-black relative">
-          
+
           {/* Bottom Fade Mask */}
           <div className="absolute bottom-0 left-0 right-0 h-40 md:h-56 bg-gradient-to-t from-[#050101] to-transparent z-10 block pointer-events-none" />
 
@@ -426,12 +426,12 @@ const SystemShowcase = () => {
           <div className="hidden md:block col-span-1 space-y-6">
             <div className="flex items-center gap-3 mb-10">
               <div className="w-8 h-8 rounded-lg bg-maroon border border-red-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(131,16,16,0.4)]">
-                 <div className="w-4 h-4 bg-white/50 rounded-sm" />
+                <div className="w-4 h-4 bg-white/50 rounded-sm" />
               </div>
               <div className="h-3 w-20 bg-white/20 rounded-full" />
             </div>
             <div className="space-y-4">
-              {[1,2,3,4,5].map(i => (
+              {[1, 2, 3, 4, 5].map(i => (
                 <div key={i} className={`h-11 w-full rounded-xl flex items-center px-4 gap-4 ${i === 1 ? 'bg-maroon/10 border border-maroon/20' : 'bg-transparent border border-transparent hover:bg-white/[0.02]'}`}>
                   <div className={`w-4 h-4 rounded-md ${i === 1 ? 'bg-red-400' : 'bg-white/10'}`} />
                   <div className={`h-2.5 w-20 rounded-full ${i === 1 ? 'bg-white/60' : 'bg-white/10'}`} />
@@ -473,21 +473,21 @@ const SystemShowcase = () => {
             {/* Chart Area */}
             <div className="h-48 md:h-72 w-full bg-white/[0.02] border border-white/5 rounded-[2rem] p-5 md:p-8 flex flex-col">
               <div className="flex justify-between items-center mb-8">
-                 <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-maroon" />
-                    <div className="h-3 md:h-4 w-24 md:w-32 bg-white/10 rounded-full" />
-                 </div>
-                 <div className="flex gap-2">
-                    <div className="h-2 w-8 bg-white/5 rounded-full" />
-                    <div className="h-2 w-8 bg-white/10 rounded-full" />
-                 </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-maroon" />
+                  <div className="h-3 md:h-4 w-24 md:w-32 bg-white/10 rounded-full" />
+                </div>
+                <div className="flex gap-2">
+                  <div className="h-2 w-8 bg-white/5 rounded-full" />
+                  <div className="h-2 w-8 bg-white/10 rounded-full" />
+                </div>
               </div>
               <div className="flex-1 flex items-end justify-between gap-1.5 md:gap-3 px-1 md:px-4">
                 {[30, 50, 45, 80, 50, 95, 65, 40, 85, 55, 75].map((h, i) => (
                   <div key={i} className="group relative w-full h-full flex items-end justify-center">
-                    <div 
-                        style={{ height: `${h}%` }} 
-                        className="w-full max-w-[1.5rem] bg-gradient-to-t from-maroon/20 to-red-500/60 rounded-t-sm md:rounded-t-md transition-all duration-300 group-hover:from-maroon/40 group-hover:to-red-400" 
+                    <div
+                      style={{ height: `${h}%` }}
+                      className="w-full max-w-[1.5rem] bg-gradient-to-t from-maroon/20 to-red-500/60 rounded-t-sm md:rounded-t-md transition-all duration-300 group-hover:from-maroon/40 group-hover:to-red-400"
                     />
                   </div>
                 ))}
@@ -576,9 +576,9 @@ const NexusAISection = () => {
   return (
     <section id="nexus" className="py-24 md:py-40 relative overflow-hidden bg-gradient-to-b from-[#0A0202] via-[#140202] to-[#0A0202] border-y border-white/5">
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] mix-blend-screen" />
-      
+
       <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-center relative z-10">
-        
+
         {/* Core Visualization */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -590,23 +590,23 @@ const NexusAISection = () => {
           <div className="absolute inset-0 z-0 flex items-center justify-center">
             <div className="w-48 h-48 md:w-64 md:h-64 bg-red-600/20 blur-[80px] md:blur-[100px] rounded-full animate-pulse" />
           </div>
-          
+
           <div className="relative z-10 w-full h-full flex items-center justify-center">
-             {/* Dynamic Rings */}
-             <motion.div
+            {/* Dynamic Rings */}
+            <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-              className="absolute w-[90%] h-[90%] border border-dashed border-red-500/20 rounded-full"
+              className="absolute w-[90%] h-[90%] border border-dashed border-red-500/20 rounded-full transform-gpu will-change-transform"
             />
             <motion.div
               animate={{ rotate: -360 }}
               transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-              className="absolute w-[65%] h-[65%] border border-solid border-r-red-500/30 border-t-red-500/10 border-b-transparent border-l-transparent rounded-full"
+              className="absolute w-[65%] h-[65%] border border-solid border-r-red-500/30 border-t-red-500/10 border-b-transparent border-l-transparent rounded-full transform-gpu will-change-transform"
             />
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="absolute w-[45%] h-[45%] border border-dotted border-white/20 rounded-full"
+              className="absolute w-[45%] h-[45%] border border-dotted border-white/20 rounded-full transform-gpu will-change-transform"
             />
 
             {/* Core Element */}
@@ -615,20 +615,20 @@ const NexusAISection = () => {
                 <BrainCircuit className="w-8 h-8 md:w-12 md:h-12 text-white/90 drop-shadow-md" />
               </div>
             </div>
-            
+
             {/* Floating Nodes */}
-            <motion.div 
-               animate={{ y: [-10, 10, -10] }}
-               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-               className="absolute top-[15%] left-[15%] w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#050101] border border-white/10 flex items-center justify-center shadow-lg"
+            <motion.div
+              animate={{ y: [-10, 10, -10] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute top-[15%] left-[15%] w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#050101] border border-white/10 flex items-center justify-center shadow-lg"
             >
               <FileText className="w-4 h-4 md:w-5 md:h-5 text-white/50" />
             </motion.div>
 
-            <motion.div 
-               animate={{ y: [10, -10, 10] }}
-               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-               className="absolute bottom-[20%] right-[20%] w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#050101] border border-white/10 flex items-center justify-center shadow-lg"
+            <motion.div
+              animate={{ y: [10, -10, 10] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+              className="absolute bottom-[20%] right-[20%] w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#050101] border border-white/10 flex items-center justify-center shadow-lg"
             >
               <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-emerald-500/70" />
             </motion.div>
@@ -709,7 +709,7 @@ const StatsSection = () => {
 };
 
 const Footer = () => {
-  const scrollToTop = () => window.scrollTo({top: 0, behavior: 'smooth'});
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
   return (
     <footer id="manual" className="py-20 md:py-24 px-4 md:px-6 bg-[#0A0202] relative overflow-hidden">
@@ -717,7 +717,7 @@ const Footer = () => {
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-32 bg-red-900/10 blur-[100px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-16 relative z-10">
-        
+
         <div className="space-y-6 md:space-y-8 max-w-xs">
           <div className="flex items-center gap-3 cursor-pointer" onClick={scrollToTop}>
             <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center p-1.5 rounded-xl bg-white/[0.03] border border-white/5">
@@ -729,16 +729,16 @@ const Footer = () => {
             </div>
           </div>
           <p className="text-xs text-white/30 font-medium leading-relaxed">
-            Unit Teknologi & Inovasi Digital Mahasiswa.<br />
+            Exco Kelab, Persatuan dan Perpaduan JPP.<br />
             Menyediakan ekosistem data bersepadu bagi melancarkan proses tadbir urus Polisas.
           </p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-12 md:gap-24 w-full md:w-auto">
           {[
-            { title: 'Aplikasi', links: [{label:'Portal e-KPP', to:'/portal'}, {label:'POS e-Keusahawanan', to:'/keusahawanan'}, {label:'Scanner e-Akademik', to:'/akademik'}] },
-            { title: 'Rujukan', links: [{label:'Manual Standard', to:'#'}, {label:'Garis Panduan', to:'#'}, {label:'Dasar Integriti', to:'#'}] },
-            { title: 'Sokongan', links: [{label:'Pusat Bantuan', to:'#'}, {label:'Hubungi Kami', to:'#'}] }
+            { title: 'Aplikasi', links: [{ label: 'Portal e-KPP', to: '/portal' }, { label: 'POS e-Keusahawanan', to: '/keusahawanan' }, { label: 'Scanner e-Akademik', to: '/akademik' }] },
+            { title: 'Rujukan', links: [{ label: 'Manual Standard', to: '#' }, { label: 'Garis Panduan', to: '#' }, { label: 'Dasar Integriti', to: '#' }] },
+            { title: 'Sokongan', links: [{ label: 'Pusat Bantuan', to: '#' }, { label: 'Hubungi Kami', to: '#' }] }
           ].map((g, i) => (
             <div key={i} className="space-y-6 md:space-y-8">
               <h5 className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] text-white/80">{g.title}</h5>
@@ -784,7 +784,7 @@ export function LandingPage() {
         {/* Final CTA Section */}
         <section className="py-24 md:py-40 px-4 md:px-6 relative flex justify-center z-20">
           <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
-          
+
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -792,7 +792,7 @@ export function LandingPage() {
             className="w-full max-w-5xl rounded-[2.5rem] md:rounded-[4rem] bg-gradient-to-br from-red-600/10 via-[#0A0202] to-transparent border border-red-500/10 p-10 md:p-24 text-center space-y-8 md:space-y-12 relative overflow-hidden backdrop-blur-2xl"
           >
             {/* CTA Background Glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full md:w-[600px] md:h-[600px] bg-red-600/10 blur-[100px] md:blur-[150px] rounded-full pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full md:w-[600px] md:h-[600px] bg-red-600/10 blur-[60px] md:blur-[150px] rounded-full pointer-events-none transform-gpu will-change-transform" />
 
             <h3 className="text-4xl md:text-7xl lg:text-[6rem] font-black tracking-[-0.02em] text-white leading-[0.9] relative z-10">
               Gerakan <br />
