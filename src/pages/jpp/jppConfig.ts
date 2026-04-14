@@ -71,8 +71,8 @@ export const UNIT_CFG: Record<string, UnitConfig> = {
     fullLabel: 'Akademik & Pembangunan Mahasiswa',
     label: 'Exco Akademik',
     icon: BookOpen,
-    color: '#A78BFA',
-    moduleLink: '/exco/akademik/aktiviti',
+    color: '#818CF8',
+    moduleLink: '/akademik',
     isActive: true,
   },
   MULTIMEDIA: {

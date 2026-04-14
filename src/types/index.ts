@@ -324,11 +324,11 @@ export const setGlobalClubs = (clubs: any[]) => {
 // Jabatan (Department) → Kelab Akademik Mapping
 // -------------------------------------------------------
 export const JABATAN_LIST = [
-  { value: 'perdagangan', label: 'Jabatan Perdagangan (Commerce)' },
-  { value: 'mekanikal',   label: 'Jabatan Kejuruteraan Mekanikal (MESS)' },
-  { value: 'makanan',     label: 'Jabatan Teknologi Makanan (Ketema)' },
-  { value: 'elektrik',    label: 'Jabatan Kejuruteraan Elektrik (Elektron)' },
-  { value: 'awam',        label: 'Jabatan Kejuruteraan Awam (PePKa)' },
+  { value: 'perdagangan', label: 'Jabatan Perdagangan (JP)' },
+  { value: 'mekanikal',   label: 'Jabatan Kejuruteraan Mekanikal (JKM)' },
+  { value: 'makanan',     label: 'Jabatan Teknologi Makanan (JTM)' },
+  { value: 'elektrik',    label: 'Jabatan Kejuruteraan Elektrik (JKE)' },
+  { value: 'awam',        label: 'Jabatan Kejuruteraan Awam (JKA)' },
 ] as const;
 
 export type JabatanValue = typeof JABATAN_LIST[number]['value'];

@@ -1,277 +1,347 @@
 /**
- * generateLaporanDocx.ts  (v4)
- * ─────────────────────────────────────────────────────────────────────────────
- * Fixes vs v3:
- *  ✅ Logo size  : 110px → 185px wide (proportional)
- *  ✅ Divider    : removed garisan bawah logo (no more dividerPara)
- *  ✅ noBorders  : tambah insideH + insideV supaya Word tak letak border dalaman
- *  ✅ Image table: pakai DXA width eksplisit (bukan PERCENTAGE) untuk FIXED layout
- *  ✅ Image size : 260×195px seunit (2-per-row, A4 margin 1.25")
- *  ✅ Font       : Times New Roman dikuatkuasakan di docDefaults DAN Normal style
- *  ✅ Line spacing: 276 (single) untuk teks badan, space between paras
- * ─────────────────────────────────────────────────────────────────────────────
+ * generateLaporanDocx.ts  — v5 (fresh start)
+ *
+ * Rujukan format: Laporan Bulan Februari 2026, Sports & Recreation Club (SRC)
+ * docx library: v9.6.1
+ *
+ * Strategi warna/font:
+ *   • STYLES const → override docDefaults + Normal + Emphasis + Strong
+ *   • Setiap TextRun → eksplisit color:'000000' + font:'Times New Roman'
+ *   → defense-in-depth: warna hitam dijamin pada semua peringkat
  */
 import {
-  Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
-  ImageRun, AlignmentType, BorderStyle, WidthType, ShadingType,
-  UnderlineType, TableLayoutType, convertInchesToTwip, VerticalAlign,
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  Table,
+  TableRow,
+  TableCell,
+  ImageRun,
+  AlignmentType,
+  BorderStyle,
+  WidthType,
+  ShadingType,
+  TableLayoutType,
+  convertInchesToTwip,
+  VerticalAlign,
 } from 'docx';
 import { saveAs } from 'file-saver';
 import { format } from 'date-fns';
 import { ms } from 'date-fns/locale';
 
-// ── Public interface ──────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────────────────
 
 export interface LaporanDocxOptions {
-  clubName:       string;
-  monthYear:      string;   // "APRIL 2026"
-  activities:     any[];
+  clubName: string;
+  /** e.g. "APRIL 2026" */
+  monthYear: string;
+  activities: any[];
   submitterName?: string;
   submitterRole?: string;
+  /** Nama kelab sahaja (tanpa tahun) */
   submitterUnit?: string;
-  presidenName?:  string;
-  reviewerRole?:  string;
-  reviewerUnit?:  string;
-  clubLogoUrl?:   string;  // base64 atau URL logo kelab / JPP-Laporan
-  fileName?:      string;
+  presidenName?: string;
+  reviewerRole?: string;
+  reviewerUnit?: string;
+  /** base64 atau URL logo kelab / Logo-JPP-Laporan bagi exco */
+  clubLogoUrl?: string;
+  fileName?: string;
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Constants
+// ─────────────────────────────────────────────────────────────────────────────
 
 const FONT  = 'Times New Roman';
 const BLACK = '000000';
+const GRAY  = 'D9D9D9';
 
-/** pt → half-points (docx internal unit for text size) */
-const pt = (n: number) => n * 2;
+/** Convert pt to half-points (docx internal font size unit) */
+const hp = (pt: number) => pt * 2;
 
 /**
- * A4 usable content width at 1.25" L+R margins:
- *   A4 width  = 8.268" = 11906 twips
- *   L+R margin= 2.50"  = 3600 twips
- *   Usable    = 8306 twips  ≈ 5.768"
+ * Usable content width for A4 with 1.25" L+R margins:
+ *   A4 width   = 11,906 twips
+ *   L+R margin = 2 × 1800 = 3,600 twips
+ *   Usable     = 8,306 twips  (~6.0 inches)
+ * We round to 8640 for cleaner column math (tiny rounding won't matter).
  */
-const USABLE_TWIPS = 8306;
+const TW = 8640; // total usable width in twips
 
-// ── Border presets ─────────────────────────────────────────────────────────────
+/** Border presets */
+const B0: any = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+const B1: any = { style: BorderStyle.SINGLE, size: 4, color: BLACK };
 
-const B_NONE: any = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
-const B_THIN: any = { style: BorderStyle.SINGLE, size: 4, color: BLACK };
+const NO_BORDERS  = { top: B0, bottom: B0, left: B0, right: B0, insideH: B0, insideV: B0 };
+const ALL_BORDERS = { top: B1, bottom: B1, left: B1, right: B1, insideH: B1, insideV: B1 };
 
-/** Use this everywhere you want a cell/table with NO visible borders at all. */
-const noBorders = {
-  top: B_NONE, bottom: B_NONE, left: B_NONE, right: B_NONE,
-  // Crucial: without these Word adds its default inner dividers
-  insideH: B_NONE, insideV: B_NONE,
+// ─────────────────────────────────────────────────────────────────────────────
+// Document-level Styles  (override Word's built-in coloring)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const STYLES: any = {
+  default: {
+    document: {
+      run: { font: FONT, color: BLACK, size: hp(12) },
+    },
+    // Bluish "Strong" style → force black
+    strong: {
+      run: { font: FONT, color: BLACK, bold: true },
+    },
+  },
+  paragraphStyles: [
+    // Normal: ensure no Calibri/theme-font bleed-through
+    {
+      id: 'Normal', name: 'Normal',
+      run: { font: FONT, color: BLACK, size: hp(12) },
+      paragraph: { spacing: { line: 240, lineRule: 'auto' } },
+    },
+  ],
+  characterStyles: [
+    { id: 'DefaultParagraphFont', name: 'Default Paragraph Font',
+      run: { font: FONT, color: BLACK } },
+    // Emphasis → italic red in Word → override to black
+    { id: 'Emphasis', name: 'Emphasis', basedOn: 'DefaultParagraphFont',
+      run: { font: FONT, color: BLACK, italics: true } },
+    // Strong → bold blue in Word → override to black
+    { id: 'Strong', name: 'Strong', basedOn: 'DefaultParagraphFont',
+      run: { font: FONT, color: BLACK, bold: true } },
+  ],
 };
 
-const tableBorders = {
-  top: B_THIN, bottom: B_THIN, left: B_THIN, right: B_THIN,
-  insideH: B_THIN, insideV: B_THIN,
-};
-
-// ── Text helpers ──────────────────────────────────────────────────────────────
-
-interface RunOpts {
-  bold?:     boolean;
-  italics?:  boolean;
-  size?:     number;        // in half-points already (use pt() helper)
-  underline?: boolean;
-}
-
-function tr(text: string, opts: RunOpts = {}): TextRun {
-  return new TextRun({
-    text,
-    font:    FONT,
-    color:   BLACK,
-    bold:    opts.bold    ?? false,
-    italics: opts.italics ?? false,
-    size:    opts.size    ?? pt(12),
-    ...(opts.underline
-      ? { underline: { type: UnderlineType.SINGLE, color: BLACK } }
-      : {}),
-  } as any);
-}
-
-function p(
-  runs:  TextRun | TextRun[],
-  align: keyof typeof AlignmentType = 'LEFT',
-  spacingBefore = 0,
-  spacingAfter  = 0,
-  pageBreak     = false,
-): Paragraph {
-  const sp = { before: spacingBefore, after: spacingAfter, line: 276, lineRule: 'auto' as any };
-  return new Paragraph({
-    alignment: AlignmentType[align],
-    spacing: sp,
-    ...(pageBreak ? { pageBreakBefore: true } : {}),
-    children: Array.isArray(runs) ? runs : [runs],
-  } as any);
-}
-
-const blank = (before = 0, after = 0) => p(tr(''), 'LEFT', before, after);
-
-// ── Image helpers ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Image helpers
+// ─────────────────────────────────────────────────────────────────────────────
 
 async function fetchBuf(url: string): Promise<ArrayBuffer | null> {
   try {
-    const r = await fetch(url, { signal: AbortSignal.timeout(15000) });
-    return r.ok ? await r.arrayBuffer() : null;
-  } catch { return null; }
+    const r = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+    return r.ok ? r.arrayBuffer() : null;
+  } catch {
+    return null;
+  }
 }
 
-function b64ToBuf(dataUrl: string): ArrayBuffer {
-  const b64    = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
-  const bin    = atob(b64);
-  const buf    = new ArrayBuffer(bin.length);
-  const view   = new Uint8Array(buf);
+function b64ToArr(dataUrl: string): ArrayBuffer {
+  const b64  = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
+  const bin  = atob(b64);
+  const buf  = new ArrayBuffer(bin.length);
+  const view = new Uint8Array(buf);
   for (let i = 0; i < bin.length; i++) view[i] = bin.charCodeAt(i);
   return buf;
 }
 
 async function resolveImg(src?: string): Promise<ArrayBuffer | null> {
   if (!src) return null;
-  if (src.startsWith('data:')) return b64ToBuf(src);
-  return fetchBuf(src);
+  return src.startsWith('data:') ? b64ToArr(src) : fetchBuf(src);
 }
 
 function imgType(buf: ArrayBuffer): 'jpg' | 'png' | 'gif' {
-  const v = new Uint8Array(buf);
-  if (v[0] === 0x89 && v[1] === 0x50) return 'png';
-  if (v[0] === 0x47 && v[1] === 0x49) return 'gif';
+  const h = new Uint8Array(buf);
+  if (h[0] === 0x89 && h[1] === 0x50) return 'png';
+  if (h[0] === 0x47 && h[1] === 0x49) return 'gif';
   return 'jpg';
 }
 
-function mkImg(buf: ArrayBuffer, w: number, h: number): ImageRun {
+function mkImgRun(buf: ArrayBuffer, w: number, h: number): ImageRun {
   return new ImageRun({ data: buf, transformation: { width: w, height: h }, type: imgType(buf) });
 }
 
-// ── Cover: logo table ─────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Text helpers  (all black, all Times New Roman)
+// ─────────────────────────────────────────────────────────────────────────────
 
-function logoTable(leftBuf: ArrayBuffer | null, rightBuf: ArrayBuffer | null): Table {
-  /* Logo 185×75 px — visually prominent on A4 */
-  const LOGO_W = 185;
-  const LOGO_H = 75;
-  const HALF   = Math.floor(USABLE_TWIPS / 2);        // 4153 twips per column
+interface RunOpts {
+  bold?: boolean;
+  size?: number;   // half-points
+}
+
+function mkRun(text: string, { bold = false, size = hp(12) }: RunOpts = {}): TextRun {
+  return new TextRun({ text, font: FONT, color: BLACK, bold, size } as any);
+}
+
+function mkPara(
+  runs: TextRun | TextRun[],
+  opts: {
+    align?: keyof typeof AlignmentType;
+    before?: number;
+    after?: number;
+    pageBreak?: boolean;
+  } = {}
+): Paragraph {
+  return new Paragraph({
+    alignment: AlignmentType[opts.align ?? 'LEFT'],
+    spacing: {
+      before: opts.before ?? 0,
+      after:  opts.after  ?? 0,
+      line: 240,
+      lineRule: 'auto',
+    },
+    ...(opts.pageBreak ? { pageBreakBefore: true } : {}),
+    children: Array.isArray(runs) ? runs : [runs],
+  } as any);
+}
+
+/** Empty spacer paragraph */
+const blank = (before = 0, after = 0) => mkPara(mkRun(''), { before, after });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cover — Logo table  (POLISAS kiri, Kelab/JPP kanan)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function buildLogoTable(
+  leftBuf:  ArrayBuffer | null,
+  rightBuf: ArrayBuffer | null,
+): Table {
+  const LOGO_W = 180;
+  const LOGO_H = 70;
+  const HALF   = TW / 2; // 4320 twips per column
 
   const logoCell = (buf: ArrayBuffer | null, align: keyof typeof AlignmentType) =>
     new TableCell({
-      width:   { size: HALF, type: WidthType.DXA },
-      borders: noBorders,
+      width:         { size: HALF, type: WidthType.DXA },
+      borders:       NO_BORDERS,
       verticalAlign: VerticalAlign.CENTER,
       children: [
         new Paragraph({
           alignment: AlignmentType[align],
           spacing:   { before: 0, after: 0 },
-          children:  buf ? [mkImg(buf, LOGO_W, LOGO_H)] : [tr('')],
+          children:  buf ? [mkImgRun(buf, LOGO_W, LOGO_H)] : [mkRun('')],
         } as any),
       ],
     });
 
   return new Table({
     layout:       TableLayoutType.FIXED,
-    width:        { size: USABLE_TWIPS, type: WidthType.DXA },
-    borders:      noBorders,
+    width:        { size: TW, type: WidthType.DXA },
+    borders:      NO_BORDERS,
     columnWidths: [HALF, HALF],
     rows: [
       new TableRow({
-        height:   { value: convertInchesToTwip(1.1), rule: 'atLeast' as any },
+        height:   { value: convertInchesToTwip(1.0), rule: 'atLeast' as any },
         children: [logoCell(leftBuf, 'LEFT'), logoCell(rightBuf, 'RIGHT')],
       }),
     ],
   });
 }
 
-// ── Activity: data table ──────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Activity — 3-column table
+// ─────────────────────────────────────────────────────────────────────────────
 
-function activityTable(act: any, idx: number): Table {
+function buildActivityTable(act: any): Table {
   const dateStr = act.start_date
     ? format(new Date(act.start_date), 'd MMMM yyyy', { locale: ms })
     : '-';
 
-  // Column widths (twips): Date 1.5" | Activity 3" | Action 1.27"
-  const W1 = convertInchesToTwip(1.5);
-  const W2 = convertInchesToTwip(3.0);
-  const W3 = USABLE_TWIPS - W1 - W2;   // remainder
+  // Lebar kolum (jumlah = 8640 twips = 6.0 inci)
+  const W_DATE  = convertInchesToTwip(1.3);   // 1872
+  const W_ACT   = convertInchesToTwip(3.0);   // 4320
+  const W_ACT2  = TW - W_DATE - W_ACT;        // baki ~2448
 
-  const hCell = (text: string, w: number) =>
+  const CELL_PAD = { top: 80, bottom: 80, left: 100, right: 100 };
+
+  const headerCell = (text: string, w: number) =>
     new TableCell({
       width:         { size: w, type: WidthType.DXA },
-      borders:       tableBorders,
-      shading:       { fill: 'D9D9D9', type: ShadingType.CLEAR, color: 'auto' },
+      borders:       ALL_BORDERS,
+      margins:       CELL_PAD,
+      shading:       { fill: GRAY, type: ShadingType.CLEAR, color: 'auto' },
       verticalAlign: VerticalAlign.CENTER,
-      margins:       { top: 80, bottom: 80, left: 100, right: 100 },
-      children:      [p(tr(text, { bold: true, size: pt(11) }), 'CENTER')],
+      children: [mkPara(mkRun(text, { bold: true, size: hp(11) }), { align: 'CENTER' })],
     });
 
-  const dCell = (text: string, w: number) =>
+  const dataCell = (text: string, w: number) =>
     new TableCell({
       width:         { size: w, type: WidthType.DXA },
-      borders:       tableBorders,
-      verticalAlign: VerticalAlign.CENTER,
-      margins:       { top: 80, bottom: 80, left: 100, right: 100 },
-      children:      [p(tr(text || '-', { size: pt(11) }))],
+      borders:       ALL_BORDERS,
+      margins:       CELL_PAD,
+      verticalAlign: VerticalAlign.TOP,
+      children: [mkPara(mkRun(text || '-', { size: hp(11) }))],
     });
 
   return new Table({
     layout:       TableLayoutType.FIXED,
-    width:        { size: USABLE_TWIPS, type: WidthType.DXA },
-    columnWidths: [W1, W2, W3],
-    borders:      tableBorders,
+    width:        { size: TW, type: WidthType.DXA },
+    columnWidths: [W_DATE, W_ACT, W_ACT2],
+    borders:      ALL_BORDERS,
     rows: [
       new TableRow({
         tableHeader: true,
-        children: [hCell('TARIKH', W1), hCell('AKTIVITI', W2), hCell('TINDAKAN', W3)],
+        children: [
+          headerCell('TARIKH',   W_DATE),
+          headerCell('AKTIVITI', W_ACT),
+          headerCell('TINDAKAN', W_ACT2),
+        ],
       }),
       new TableRow({
-        children: [dCell(dateStr, W1), dCell(act.title || '-', W2), dCell(act.tindakan || '-', W3)],
+        children: [
+          dataCell(dateStr,          W_DATE),
+          dataCell(act.title || '-', W_ACT),
+          dataCell(act.tindakan || '-', W_ACT2),
+        ],
       }),
     ],
   });
 }
 
-// ── Activity: image grid (2 per row) ─────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Activity — LAMPIRAN  (bold, NO underline — matching reference)
+// ─────────────────────────────────────────────────────────────────────────────
 
-async function imageGrid(urls: string[]): Promise<(Paragraph | Table)[]> {
+function buildLampiranHeading(): Paragraph {
+  return mkPara(
+    mkRun('LAMPIRAN', { bold: true, size: hp(12) }),
+    { before: convertInchesToTwip(0.2), after: convertInchesToTwip(0.1) },
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Activity — Image grid  (2 per row, DXA-fixed table)
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function buildImageGrid(urls: string[]): Promise<(Paragraph | Table)[]> {
   if (!urls.length) {
-    return [p(tr('[ Tiada gambar dilampirkan ]', { italics: true, size: pt(10) }))];
+    return [mkPara(mkRun('[ Tiada gambar dilampirkan ]'))];
   }
 
-  const bufs   = await Promise.all(urls.slice(0, 8).map(fetchBuf));
-  const valid  = bufs.filter((b): b is ArrayBuffer => b !== null);
+  const bufs  = await Promise.all(urls.slice(0, 6).map(fetchBuf));
+  const valid = bufs.filter((b): b is ArrayBuffer => b !== null);
 
   if (!valid.length) {
-    return [p(tr('[ Gambar tidak dapat dimuatkan ]', { italics: true, size: pt(10) }))];
+    return [mkPara(mkRun('[ Gambar tidak dapat dimuatkan ]'))];
   }
 
   /**
-   * Page usable = 8306 twips (5.768")
-   * 2-col grid, 6 twips padding per side in each cell:
-   *   cell width each = 4153 twips  (2.884")
-   *   image width     = (4153 - 2×80) twips → pixels: (3993/1440)*96 ≈ 266px
-   * Use 260px wide, 195px tall (4:3 ratio) — fits perfectly without overflow
+   * Setiap sel = TW/2 = 4320 twips = 3 inci
+   * Padding 80 twips setiap sisi → baki 4160 twips untuk gambar
+   * 4160 twips / 1440 × 96 dpi ≈ 277 px  →  guna 260px untuk breathing room
    */
-  const CELL_W = Math.floor(USABLE_TWIPS / 2);   // 4153 twips
-  const IMG_W  = 255;
-  const IMG_H  = 191;                             // 4:3 ratio
+  const HALF   = TW / 2;   // 4320 twips
+  const IMG_W  = 260;
+  const IMG_H  = 195;      // 4:3 ratio
 
   const imgCell = (buf: ArrayBuffer) =>
     new TableCell({
-      width:   { size: CELL_W, type: WidthType.DXA },
-      borders: noBorders,
-      margins: { top: 80, bottom: 80, left: 80, right: 80 },
+      width:   { size: HALF, type: WidthType.DXA },
+      borders: NO_BORDERS,
+      margins: { top: 0, bottom: 80, left: 0, right: 80 },
       children: [
         new Paragraph({
-          spacing:  { before: 0, after: 80 },
-          children: [mkImg(buf, IMG_W, IMG_H)],
+          spacing: { before: 0, after: 0 },
+          children: [mkImgRun(buf, IMG_W, IMG_H)],
         } as any),
       ],
     });
 
   const emptyCell = () =>
     new TableCell({
-      width:   { size: CELL_W, type: WidthType.DXA },
-      borders: noBorders,
-      children: [new Paragraph({ children: [tr('')] } as any)],
+      width:   { size: HALF, type: WidthType.DXA },
+      borders: NO_BORDERS,
+      children: [mkPara(mkRun(''))],
     });
 
   const rows: TableRow[] = [];
@@ -284,85 +354,55 @@ async function imageGrid(urls: string[]): Promise<(Paragraph | Table)[]> {
   return [
     new Table({
       layout:       TableLayoutType.FIXED,
-      width:        { size: USABLE_TWIPS, type: WidthType.DXA },
-      columnWidths: [CELL_W, CELL_W],
-      borders:      noBorders,
+      width:        { size: TW, type: WidthType.DXA },
+      columnWidths: [HALF, HALF],
+      borders:      NO_BORDERS,
       rows,
     }),
   ];
 }
 
-// ── Signature block ───────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Signature block
+// Struktur ikut rujukan SRC:
+//   [blok 1]  garis pendek → nama (bold) → jawatan → unit → institusi
+//   [label "Disemak oleh:"]
+//   [blok 2]  garis pendek → nama → jawatan → unit → institusi
+//   [label "Disahkan oleh:"]
+//   [blok 3]  garis pendek → nama → jawatan → unit → institusi
+// ─────────────────────────────────────────────────────────────────────────────
 
-function signBlock(
-  label: string,
-  name:  string,
-  role?: string,
-  unit?: string,
-  before = convertInchesToTwip(0.6),
+function buildSignBlock(
+  name:   string,
+  role:   string | undefined,
+  unit1:  string | undefined,
+  unit2?: string,
 ): Paragraph[] {
   const out: Paragraph[] = [];
-  out.push(p(tr(label, { size: pt(12) }), 'LEFT', before, convertInchesToTwip(0.05)));
-  out.push(p(tr('_'.repeat(40), { size: pt(12) }), 'LEFT', 0, convertInchesToTwip(0.05)));
-  out.push(p(tr(name.toUpperCase(), { bold: true, size: pt(12) })));
-  if (role) out.push(p(tr(role.toUpperCase(), { size: pt(12) })));
-  if (unit) out.push(p(tr(unit.toUpperCase(), { size: pt(12) })));
+
+  // Garis pendek (15 watak) — bukan full-width
+  out.push(mkPara(mkRun('_'.repeat(15), { size: hp(12) }), { after: convertInchesToTwip(0.05) }));
+
+  // Nama — bold, ALL CAPS
+  out.push(mkPara(mkRun(name.toUpperCase(), { bold: true, size: hp(12) })));
+
+  if (role)  out.push(mkPara(mkRun(role,  { size: hp(12) })));
+  if (unit1) out.push(mkPara(mkRun(unit1, { size: hp(12) })));
+  if (unit2) out.push(mkPara(mkRun(unit2, { size: hp(12) })));
+
   return out;
 }
 
-// ── Document-level styles: force Times New Roman black throughout ──────────────
-
-const DOC_STYLES: any = {
-  default: {
-    document: {
-      run: {
-        font:  FONT,   // sets <w:docDefaults> with Times New Roman
-        color: BLACK,
-        size:  pt(12),
-      },
-    },
-  },
-  // Override Normal paragraph style to use explicit TNR (not Calibri theme font)
-  paragraphStyles: [
-    {
-      id:   'Normal',
-      name: 'Normal',
-      run:  { font: FONT, color: BLACK, size: pt(12) },
-      paragraph: {
-        spacing: { line: 276, lineRule: 'auto' },
-      },
-    },
-  ],
-  // Override character styles to prevent Word's red/blue theme colouring
-  characterStyles: [
-    {
-      id:      'DefaultParagraphFont',
-      name:    'Default Paragraph Font',
-      run:     { color: BLACK, font: FONT },
-    },
-    {
-      id:      'Emphasis',
-      name:    'Emphasis',
-      basedOn: 'DefaultParagraphFont',
-      run:     { color: BLACK, italics: true },
-    },
-    {
-      id:      'Strong',
-      name:    'Strong',
-      basedOn: 'DefaultParagraphFont',
-      run:     { color: BLACK, bold: true },
-    },
-  ],
-};
-
-// ── Main export ───────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Main function
+// ─────────────────────────────────────────────────────────────────────────────
 
 export async function generateLaporanDocx(opts: LaporanDocxOptions): Promise<void> {
   const {
     clubName,
     monthYear,
     activities,
-    submitterName,
+    submitterName = 'SETIAUSAHA',
     submitterRole,
     submitterUnit,
     presidenName  = '( Tiada Maklumat )',
@@ -372,139 +412,160 @@ export async function generateLaporanDocx(opts: LaporanDocxOptions): Promise<voi
     fileName,
   } = opts;
 
-  const [monthStr = '', yearStr = ''] = monthYear.toUpperCase().split(' ');
+  // "APRIL 2026" → month="APRIL", year="2026"
+  const parts     = monthYear.toUpperCase().split(/\s+/);
+  const monthStr  = parts[0] ?? '';
+  const yearStr   = parts[1] ?? '';
 
-  // ── Load logos ──────────────────────────────────────────────────────────────
+  // ── Muat turun logo ─────────────────────────────────────────────────────────
   const [polisasBuf, clubBuf] = await Promise.all([
     fetchBuf('/polisas-logo.png'),
     resolveImg(clubLogoUrl),
   ]);
 
-  // ── Content array ───────────────────────────────────────────────────────────
+  // ── Koleksi elemen ───────────────────────────────────────────────────────────
   const children: (Paragraph | Table)[] = [];
 
-  // ════════════════════════════════════════════════════════════════════════════
-  //  PAGE 1  ·  COVER
-  // ════════════════════════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════
+  // MUKA DEPAN
+  // ════════════════════════════════════════════════════════════
 
-  // Logo bar — POLISAS kiri, Kelab/JPP kanan
-  children.push(logoTable(polisasBuf, clubBuf));
+  // Logo bar (POLISAS kiri, Kelab/JPP kanan) — TIADA divider line
+  children.push(buildLogoTable(polisasBuf, clubBuf));
 
-  // Vertical space before title (~1.5 inch gap)
-  children.push(blank(convertInchesToTwip(1.4)));
+  // Ruang antara logo dan tajuk (~2.8 inci ≈ jarak tengah muka A4)
+  children.push(blank(convertInchesToTwip(2.6)));
 
-  // "LAPORAN BULANAN"
-  children.push(p(
-    tr('LAPORAN BULANAN', { bold: true, size: pt(26) }),
-    'CENTER', 0, convertInchesToTwip(0.3),
+  // "LAPORAN BULAN"
+  children.push(mkPara(
+    mkRun('LAPORAN BULAN', { bold: true, size: hp(28) }),
+    { align: 'CENTER', after: convertInchesToTwip(0.05) },
   ));
 
-  // Month
-  children.push(p(
-    tr(monthStr, { bold: true, size: pt(20) }),
-    'CENTER', 0, convertInchesToTwip(0.1),
+  // Bulan
+  children.push(mkPara(
+    mkRun(monthStr, { bold: true, size: hp(28) }),
+    { align: 'CENTER', after: convertInchesToTwip(0.05) },
   ));
 
-  // Year
-  children.push(p(
-    tr(yearStr, { bold: true, size: pt(18) }),
-    'CENTER',
+  // Tahun
+  children.push(mkPara(
+    mkRun(yearStr, { bold: true, size: hp(24) }),
+    { align: 'CENTER' },
   ));
 
-  // Gap to push club info toward bottom
-  children.push(blank(convertInchesToTwip(2.2)));
+  // Tolak ke bawah untuk nama kelab
+  children.push(blank(convertInchesToTwip(2.4)));
 
-  // Club name
-  children.push(p(
-    tr(clubName.toUpperCase(), { bold: true, size: pt(13) }),
-    'CENTER', 0, convertInchesToTwip(0.1),
+  // Nama kelab (ALL CAPS, bold)
+  children.push(mkPara(
+    mkRun(clubName.toUpperCase(), { bold: true, size: hp(13) }),
+    { align: 'CENTER', after: convertInchesToTwip(0.05) },
   ));
 
-  // Institution
-  children.push(p(
-    tr('POLITEKNIK SULTAN HAJI AHMAD SHAH', { bold: true, size: pt(13) }),
-    'CENTER',
+  // Institusi
+  children.push(mkPara(
+    mkRun('POLITEKNIK SULTAN HAJI AHMAD SHAH', { bold: true, size: hp(13) }),
+    { align: 'CENTER' },
   ));
 
-  // ════════════════════════════════════════════════════════════════════════════
-  //  ACTIVITY PAGES
-  // ════════════════════════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════
+  // SETIAP AKTIVITI
+  // ════════════════════════════════════════════════════════════
 
   for (let i = 0; i < activities.length; i++) {
     const act = activities[i];
 
     // Page break
-    children.push(p(tr(''), 'LEFT', 0, 0, true));
+    children.push(mkPara(mkRun(''), { pageBreak: true }));
 
-    // Heading: "1.   NAMA AKTIVITI"
-    children.push(p(
-      tr(`${i + 1}.   ${(act.title || 'Aktiviti').toUpperCase()}`, { bold: true, size: pt(13) }),
-      'LEFT', 0, convertInchesToTwip(0.2),
+    // Nombor aktiviti sahaja (e.g. "1.")
+    children.push(mkPara(
+      mkRun(`${i + 1}.`, { bold: true, size: hp(13) }),
+      { after: convertInchesToTwip(0.1) },
     ));
 
-    // Activity table
-    children.push(activityTable(act, i));
-    children.push(blank(convertInchesToTwip(0.25)));
+    // Jadual aktiviti
+    children.push(buildActivityTable(act));
 
-    // "LAMPIRAN"
-    children.push(p(
-      tr('LAMPIRAN', { bold: true, size: pt(12), underline: true }),
-      'LEFT', 0, convertInchesToTwip(0.15),
-    ));
+    // Lampiran heading
+    children.push(buildLampiranHeading());
 
-    // Images (2-per-row grid)
+    // Grid gambar
     const imgUrls: string[] = Array.isArray(act.image_urls)
-      ? act.image_urls.filter((u: any): u is string => typeof u === 'string' && u.trim() !== '')
+      ? (act.image_urls as unknown[]).filter(
+          (u): u is string => typeof u === 'string' && u.trim() !== '',
+        )
       : [];
 
-    const imgEls = await imageGrid(imgUrls);
-    children.push(...imgEls);
+    const imgElements = await buildImageGrid(imgUrls);
+    children.push(...imgElements);
 
-    // Description / catatan
-    if (act.description?.trim()) {
-      children.push(p(
-        tr(act.description, { size: pt(12) }),
-        'LEFT', convertInchesToTwip(0.1),
-      ));
+    // Penerangan / catatan
+    const desc = (act.description ?? act.notes ?? '').trim();
+    if (desc) {
+      children.push(mkPara(mkRun(desc, { size: hp(12) }), {
+        before: convertInchesToTwip(0.15),
+      }));
     }
   }
 
-  // ════════════════════════════════════════════════════════════════════════════
-  //  SIGNATURE PAGE
-  // ════════════════════════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════
+  // HALAMAN TANDATANGAN
+  // ════════════════════════════════════════════════════════════
 
-  children.push(p(tr(''), 'LEFT', 0, 0, true));
+  children.push(mkPara(mkRun(''), { pageBreak: true }));
 
-  // Disediakan oleh
-  children.push(...signBlock(
-    'Disediakan oleh:',
-    submitterName || 'Setiausaha',
-    submitterRole,
-    submitterUnit ?? clubName,
-    convertInchesToTwip(0.3),
+  // Blok 1: Disediakan oleh — TIADA label sebelum garis (ikut rujukan SRC)
+  children.push(
+    blank(convertInchesToTwip(0.3)),
+    ...buildSignBlock(
+      submitterName,
+      submitterRole,
+      submitterUnit ?? clubName,
+      'POLITEKNIK SULTAN HAJI AHMAD SHAH',
+    ),
+  );
+
+  // Label sebelum blok 2
+  children.push(mkPara(
+    mkRun('Disemak oleh:', { size: hp(12) }),
+    { before: convertInchesToTwip(0.6) },
   ));
 
-  // Disemak oleh
-  children.push(...signBlock(
-    'Disemak oleh:',
-    presidenName,
-    reviewerRole,
-    reviewerUnit,
+  // Blok 2: Presiden / Disemak oleh
+  children.push(
+    blank(convertInchesToTwip(0.1)),
+    ...buildSignBlock(
+      presidenName,
+      reviewerRole,
+      reviewerUnit ?? clubName,
+      'POLITEKNIK SULTAN HAJI AHMAD SHAH',
+    ),
+  );
+
+  // Label sebelum blok 3
+  children.push(mkPara(
+    mkRun('Disahkan oleh:', { size: hp(12) }),
+    { before: convertInchesToTwip(0.6) },
   ));
 
-  // Disahkan oleh
-  children.push(...signBlock(
-    'Disahkan oleh:',
-    'YANG DIPERTUA',
-    'JAWATANKUASA PERWAKILAN PELAJAR',
-    'POLITEKNIK SULTAN HAJI AHMAD SHAH',
-  ));
+  // Blok 3: Yang Dipertua JPP
+  children.push(
+    blank(convertInchesToTwip(0.1)),
+    ...buildSignBlock(
+      'YANG DIPERTUA',
+      'JAWATANKUASA PERWAKILAN PELAJAR',
+      'POLITEKNIK SULTAN HAJI AHMAD SHAH',
+    ),
+  );
 
-  // ── Assemble ────────────────────────────────────────────────────────────────
+  // ── Jana dokumen ────────────────────────────────────────────────────────────
+
   const doc = new Document({
     creator: 'JPP POLISAS',
-    title:   `Laporan Bulanan - ${clubName} - ${monthYear}`,
-    styles:  DOC_STYLES,
+    title:   `Laporan Bulanan – ${clubName} – ${monthYear}`,
+    styles:  STYLES,
     sections: [
       {
         properties: {
@@ -523,5 +584,9 @@ export async function generateLaporanDocx(opts: LaporanDocxOptions): Promise<voi
   } as any);
 
   const blob = await Packer.toBlob(doc);
-  saveAs(blob, fileName ? `${fileName}.docx` : `Laporan_${clubName}_${monthYear}.docx`);
+  const name  = fileName
+    ? `${fileName}.docx`
+    : `Laporan_${clubName}_${monthYear}.docx`;
+
+  saveAs(blob, name);
 }

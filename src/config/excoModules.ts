@@ -57,15 +57,15 @@ export const EXCO_MODULES: ExcoModule[] = [
     isActive: false,          // Akan Datang
   },
   {
-    id: 'sukan',
-    name: 'e-Sukan',
-    fullName: 'Exco Sukan & Rekreasi',
-    tagline: 'Sihat · Cergas · Bersemangat',
-    description: 'Pengurusan acara sukan, rekreasi & kesihatan pelajar.',
-    defaultColor: '#60A5FA',  // Biru terang bertenaga (Blue-400)
-    icon: 'Trophy',
-    basePath: '/sukan/dashboard',
-    isActive: false,          // Akan Datang
+    id: 'akademik',
+    name: 'e-Akademik',
+    fullName: 'Exco Akademik & Pembangunan Intelek',
+    tagline: 'Ilmu · Pencapaian · Kecemerlangan',
+    description: 'Portal akademik pelajar — rekod pencapaian, sijil, CGPA & merit secara digital.',
+    defaultColor: '#818CF8',  // Indigo terang premium (Indigo-400)
+    icon: 'GraduationCap',
+    basePath: '/akademik',
+    isActive: true,
   },
 ];
 

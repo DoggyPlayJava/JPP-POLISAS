@@ -10,12 +10,13 @@ import {
 import { cn, hexToRgba } from '@/lib/utils';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID, UNIT_CFG } from './jppConfig';
 import { JPP_MT_POSITIONS, JPP_UNIT_LABELS } from '@/types';
-import { KppUnitDashboard } from './units/KppUnitDashboard';
+import { KppUnitDashboard }         from './units/KppUnitDashboard';
 import { KeusahawananUnitDashboard } from './units/KeusahawananUnitDashboard';
-import { ExcoGenericDashboard } from './units/ExcoGenericDashboard';
+import { AkademikUnitDashboard }     from './units/AkademikUnitDashboard';
+import { ExcoGenericDashboard }      from './units/ExcoGenericDashboard';
 
 // ── Units that have a full dedicated dashboard component ─────────────────────
-const FULL_DASHBOARD_UNITS = new Set(['KPP', 'KEUSAHAWANAN']);
+const FULL_DASHBOARD_UNITS = new Set(['KPP', 'KEUSAHAWANAN', 'AKADEMIK']);
 
 
 
@@ -281,11 +282,12 @@ export function JppUnitDashboard() {
               </div>
             </motion.div>
 
-            {/* ── Full Unit Dashboard (KPP / Keusahawanan) ─── */}
+            {/* ── Full Unit Dashboard (KPP / Keusahawanan / Akademik) ─── */}
             {FULL_DASHBOARD_UNITS.has(upperCode) ? (
               <div className="bg-[#0f0f17]/80 backdrop-blur rounded-[2rem] border border-white/[0.05] p-6">
-                {upperCode === 'KPP'         && <KppUnitDashboard />}
+                {upperCode === 'KPP'          && <KppUnitDashboard />}
                 {upperCode === 'KEUSAHAWANAN' && <KeusahawananUnitDashboard />}
+                {upperCode === 'AKADEMIK'     && <AkademikUnitDashboard />}
               </div>
             ) : (
               /* ── Exco Generic Dashboard untuk semua unit aktif lain ─── */

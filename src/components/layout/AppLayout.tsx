@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { EXCO_MODULES } from '@/config/excoModules';
+import { ExcoIcon } from '@/components/ui/ExcoIcon';
 
 // Detect exco aktif dari pathname (sama logik dengan Sidebar.tsx)
 const EKPP_ROUTES = [
@@ -87,8 +88,8 @@ export function AppLayout() {
           </Button>
 
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center text-lg shadow-sm">
-              {activeExco.icon}
+            <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center text-lg shadow-sm overflow-hidden">
+              <ExcoIcon iconName={activeExco.icon} className="w-5 h-5" />
             </div>
             <div className="leading-tight">
               <span className="font-black text-[13px] uppercase tracking-tighter text-foreground block">

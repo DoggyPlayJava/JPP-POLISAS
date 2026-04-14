@@ -1,376 +1,487 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import {
-  Flag, Users, CalendarDays, Shield, ArrowRight,
-  CheckCircle2, Star, ChevronRight, TrendingUp,
-  Sparkles, Banknote, FileCheck, BarChart3,
-  CalendarRange, Cpu, Brain, MessageSquare
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { 
+  ArrowRight, Sparkles, Shield, Zap, 
+  BarChart3, GraduationCap, Users, 
+  BrainCircuit, Globe, ArrowUpRight,
+  Fingerprint, Cpu, Layers, LayoutDashboard,
+  Menu, X
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { supabase } from '@/lib/supabase';
-import { ALL_CLUBS as STATIC_CLUBS } from '@/types';
+import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
-const features = [
+// --- Types & Config ---
+const MAROON = '#831010';
+
+const MODULES = [
   {
-    icon: Sparkles,
-    title: 'Nexus AI Assistant',
-    desc: 'Pembantu pintar yang tersedia 24/7 untuk menjawab soalan dan membantu urusan kelab anda.',
-    badge: 'AI Powered',
-  },
-  {
-    icon: Banknote,
-    title: 'Smart Budgeting',
-    desc: 'Penjana bajet automatik menggunakan AI untuk pengurusan kewangan yang lebih telus.',
-    badge: 'Nexus Ecosystem',
-  },
-  {
-    icon: FileCheck,
-    title: 'AI Grammar Check',
-    desc: 'Pastikan laporan bulanan anda berkualiti tinggi dengan bantuan semakan tatabahasa AI.',
-    badge: 'Nexus Ecosystem',
-  },
-  {
-    icon: BarChart3,
-    title: 'Analisis Prestasi',
-    desc: 'Pantau pencapaian kelab dengan dashboard data yang dikuasakan oleh AI Nexus.',
-    badge: 'Nexus Ecosystem',
-  },
-  {
-    icon: CalendarRange,
-    title: 'Laporan Automatik',
-    desc: 'Kini laporan anda hanya dengan sekali klik!',
-  },
-  {
+    id: 'ekpp',
+    title: 'e-KPP',
+    subtitle: 'Nadi Organisasi',
+    desc: 'Sistem tadbir urus kelab dan persatuan yang telus. Automasi kertas kerja dan pelaporan bulanan secara digital.',
     icon: Shield,
-    title: 'Akses Berstruktur',
-    desc: 'Sistem RBAC dengan 4 peranan: Super Admin JPP, Presiden, MT dan Ahli Kelab.',
+    color: '#831010',
+    path: '/portal',
+    stats: ['120+ Kelab Aktif', '98% Kelulusan Digital'],
+    preview: (
+      <div className="flex flex-col gap-2 p-4 h-full justify-center">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex items-center gap-3 p-2 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <div className="h-1.5 w-24 bg-white/10 rounded-full" />
+            <div className="ml-auto h-1.5 w-8 bg-white/5 rounded-full" />
+          </div>
+        ))}
+      </div>
+    )
   },
+  {
+    id: 'keusahawanan',
+    title: 'e-Keusahawanan',
+    subtitle: 'Ekonomi Madani',
+    desc: 'Memperkasakan usahawan siswa dengan sistem POS digital terpadu dan analitik jualan masa nyata.',
+    icon: BarChart3,
+    color: '#059669',
+    path: '/keusahawanan',
+    stats: ['RM 45k+ Jualan', '85+ Vendor Aktif'],
+    preview: (
+      <div className="flex items-end gap-1.5 p-4 h-full justify-center">
+        {[40, 70, 45, 90, 60, 80, 55].map((h, i) => (
+          <motion.div 
+            key={i} 
+            initial={{ height: 0 }}
+            animate={{ height: `${h}%` }}
+            transition={{ delay: 0.5 + (i * 0.1), duration: 1 }}
+            className="w-2 bg-gradient-to-t from-emerald-500/20 to-emerald-500 rounded-t-sm" 
+          />
+        ))}
+      </div>
+    )
+  },
+  {
+    id: 'akademik',
+    title: 'e-Akademik',
+    subtitle: 'Kecemerlangan Holistik',
+    desc: 'Transformasi pengesahan sijil melalui AI dan pengurusan merit yang sistematik untuk graduan TVET.',
+    icon: GraduationCap,
+    color: '#2563eb',
+    path: '/akademik',
+    stats: ['Scanner HPNM AI', 'Sistem Merit QR'],
+    preview: (
+      <div className="flex items-center justify-center h-full relative">
+        <div className="w-16 h-16 rounded-full border-4 border-blue-500/20 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-[10px] font-black text-blue-400">4.00</span>
+        </div>
+      </div>
+    )
+  }
 ];
 
-export function LandingPage() {
-  const [clubs, setClubs] = useState<any[]>(STATIC_CLUBS.length > 0 ? STATIC_CLUBS : []);
+// --- Sub-Components ---
 
+const Navbar = () => {
+  const [isScrolled, setIsScrolled] = useState(false);
+  
   useEffect(() => {
-    async function fetchClubs() {
-      const { data, error } = await supabase
-        .from('clubs')
-        .select('*')
-        .order('name', { ascending: true });
-      
-      if (!error && data) {
-        setClubs(data.map(c => ({
-          id: c.id,
-          name: c.name,
-          shortName: c.short_name,
-          category: c.category,
-          color: c.theme_color,
-          logo_url: c.logo_url
-        })));
-      }
-    }
-    fetchClubs();
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const stats = [
-    { label: 'Kelab & Persatuan', value: `${clubs.length || 21}+` },
-    { label: 'Ciri Dikuasakan AI', value: 'Nexus' },
-    { label: 'Aktiviti Bulanan', value: 'Digital' },
-    { label: 'Politeknik Sultan Haji Ahmad Shah', value: 'POLISAS' },
-  ];
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
-      {/* ── Navbar ─────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center overflow-hidden shadow-lg">
-              <img src="/jpp-logo.png" alt="JPP" className="w-7 h-7 object-contain" />
-            </div>
-            <div className="leading-tight">
-              <span className="font-black text-sm text-primary tracking-tight">JPP DIGITAL</span>
-              <span className="text-[9px] font-black uppercase tracking-widest text-accent/80 block -mt-0.5">Polisas</span>
-            </div>
+    <motion.nav
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-500 flex justify-center py-4 px-6",
+        isScrolled ? "py-2" : "py-6"
+      )}
+    >
+      <div className={cn(
+        "flex items-center justify-between w-full max-w-6xl px-6 py-2.5 rounded-full border transition-all duration-500",
+        isScrolled 
+          ? "bg-black/60 backdrop-blur-2xl border-white/10 shadow-2xl" 
+          : "bg-transparent border-transparent"
+      )}>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-maroon flex items-center justify-center p-1.5 shadow-lg shadow-maroon/20">
+            <Layers className="text-white w-full h-full" />
           </div>
-          <div className="flex items-center gap-3">
-            <Link to="/login">
-              <Button variant="ghost" className="rounded-xl font-bold text-xs uppercase tracking-widest h-9 px-5">
-                Log Masuk
-              </Button>
-            </Link>
-            <Link to="/login">
-              <Button className="rounded-xl font-bold text-xs uppercase tracking-widest h-9 px-5 bg-primary text-primary-foreground shadow-lg shadow-primary/20 glow-accent">
-                Daftar
-              </Button>
-            </Link>
-          </div>
+          <span className="font-black tracking-tight text-white text-sm uppercase">JPP<span className="text-maroon">Digital</span></span>
         </div>
-      </nav>
+        
+        <div className="hidden md:flex items-center gap-8">
+          {['Ekosistem', 'Modul', 'Nexus AI'].map((item) => (
+            <a key={item} href={`#${item.toLowerCase()}`} className="text-[11px] font-black uppercase tracking-widest text-white/40 hover:text-white transition-colors">
+              {item}
+            </a>
+          ))}
+        </div>
 
-      {/* ── Hero ───────────────────────────────────── */}
-      <section className="relative overflow-hidden pt-24 pb-32 px-6 lg:px-12">
-        {/* Background blobs */}
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/6 rounded-full blur-[120px] -mr-80 -mt-40 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/8 rounded-full blur-[100px] -ml-40 pointer-events-none" />
-        {/* Dot grid */}
-        <div className="absolute inset-0 opacity-[0.025] pointer-events-none"
-          style={{ backgroundImage: 'radial-gradient(circle, hsl(0 67% 32%) 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+        <button className="px-5 py-2 rounded-full bg-white text-black text-[11px] font-black uppercase tracking-wider hover:bg-maroon hover:text-white transition-all duration-300 shadow-xl shadow-white/5">
+          Daftar Masuk
+        </button>
+      </div>
+    </motion.nav>
+  );
+};
 
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <Badge className="mb-8 px-4 py-2 text-[10px] font-black uppercase tracking-[0.3em] bg-accent/12 text-accent border border-accent/20">
-              Platform Digital JPP Polisas
-            </Badge>
-            <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-8">
-              <span className="text-primary">Portal</span>
-              <br />
-              <span className="text-foreground/80">Jawatankuasa Perwakilan</span>
-              <br />
-              <span className="text-accent">Pelajar</span>
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground font-medium max-w-2xl mx-auto leading-relaxed mb-10">
-              Sistem pengurusan digital untuk <strong className="text-primary font-black">Jawatankuasa Perwakilan Pelajar (JPP)</strong> Politeknik Sultan Haji Ahmad Shah.
-              Akses berpusat untuk semua perkhidmatan Exco JPP termasuk e-KPP, e-Kebajikan dan e-Keusahawanan.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/login">
-                <Button size="lg"
-                  className="h-14 px-10 rounded-2xl bg-primary text-primary-foreground font-black text-sm uppercase tracking-widest shadow-2xl shadow-primary/30 transition-all hover:scale-105 active:scale-95 gap-3">
-                  Eksplorasi Nexus
-                  <Sparkles className="w-5 h-5 fill-white/20" />
-                </Button>
-              </Link>
-              <div className="flex items-center gap-2 h-14 px-6 rounded-2xl border border-border/60 bg-muted/30">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Sistem Beroperasi</span>
+const Hero = ({ onEnter }: { onEnter: () => void }) => {
+  const { scrollY } = useScroll();
+  const y1 = useTransform(scrollY, [0, 500], [0, 200]);
+  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
+
+  return (
+    <section className="relative min-h-screen flex flex-col items-center justify-center pt-20 overflow-hidden">
+      {/* Dynamic Background */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-5xl aspect-square bg-maroon/20 blur-[150px] rounded-full opacity-30 animate-pulse" />
+        <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-blue-500/10 blur-[120px] rounded-full opacity-20" />
+        <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-maroon/10 blur-[120px] rounded-full opacity-20" />
+      </div>
+
+      <motion.div style={{ y: y1, opacity }} className="relative z-10 text-center px-6 max-w-4xl px-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.03] border border-white/10 backdrop-blur-md mb-8"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-maroon" />
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Sistem Tadbir Urus Bersepadu</span>
+        </motion.div>
+
+        <motion.h1 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="text-6xl sm:text-8xl font-black tracking-[-0.04em] text-white leading-[0.9] mb-8"
+        >
+          Masa Hadapan <br />
+          <span className="text-white/20">JPP Polisas.</span>
+        </motion.h1>
+
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="text-sm sm:text-lg text-white/40 max-w-2xl mx-auto font-medium leading-relaxed mb-12"
+        >
+          Kami membina infrastruktur digital yang menggabungkan automasi pintar, 
+          analitik data ekonomi, dan kecemerlangan akademik dalam satu ekosistem Nexus.
+        </motion.p>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="flex flex-col sm:flex-row items-center justify-center gap-4"
+        >
+          <button 
+            onClick={onEnter}
+            className="group px-8 py-4 rounded-2xl bg-white text-black font-black uppercase text-xs tracking-widest hover:bg-maroon hover:text-white transition-all duration-500 flex items-center gap-3 shadow-2xl shadow-white/10"
+          >
+            Mula Sesi Digital
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </button>
+          <button className="px-8 py-4 rounded-2xl bg-white/[0.05] border border-white/10 text-white/60 font-black uppercase text-xs tracking-widest hover:bg-white/10 hover:text-white transition-all duration-500">
+            Manual Pengguna
+          </button>
+        </motion.div>
+      </motion.div>
+
+      {/* Hero Footnote */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+        className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4"
+      >
+        <div className="w-px h-12 bg-gradient-to-b from-white/0 via-white/20 to-white/0" />
+        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20">Scroll Down</span>
+      </motion.div>
+    </section>
+  );
+};
+
+const BentoSection = () => {
+  const navigate = useNavigate();
+
+  return (
+    <section id="modul" className="py-24 px-6 max-w-7xl mx-auto">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="w-2 h-8 rounded-full bg-maroon" />
+            <h2 className="text-[10px] font-black uppercase tracking-[0.5em] text-white/30">Ekosistem Utama</h2>
+          </div>
+          <h3 className="text-4xl sm:text-6xl font-black tracking-tight text-white leading-none">
+            Satu Sistem. <br />
+            <span className="text-white/20 italic">Pelbagai Kemungkinan.</span>
+          </h3>
+        </div>
+        <p className="max-w-md text-sm text-white/40 font-medium">
+          Kami membahagikan urusan kompleks kepada modul-modul pintar yang saling berhubung untuk memastikan kelancaran operasi JPP.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {MODULES.map((m, i) => (
+          <motion.div
+            key={m.id}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.1 }}
+            onClick={() => navigate(m.path)}
+            className="group relative cursor-pointer overflow-hidden rounded-[2.5rem] bg-white/[0.02] border border-white/10 p-8 hover:bg-white/[0.04] hover:border-white/20 transition-all duration-700 hover:shadow-2xl hover:shadow-maroon/5 flex flex-col"
+          >
+            {/* Top Row: Icon & Action */}
+            <div className="flex items-start justify-between mb-8">
+              <div 
+                className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-500 group-hover:scale-110"
+                style={{ background: `${m.color}20`, color: m.color, border: `1px solid ${m.color}40` }}
+              >
+                <m.icon className="w-7 h-7" />
               </div>
+              <ArrowUpRight className="w-5 h-5 text-white/10 group-hover:text-white group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-500" />
             </div>
-          </motion.div>
-        </div>
-      </section>
 
-      {/* ── Stats ──────────────────────────────────── */}
-      <section className="py-16 px-6 lg:px-12 bg-primary relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary to-rose-900 opacity-50" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/15 rounded-full blur-[100px] -mr-40 -mt-40" />
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((s, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }} viewport={{ once: true }} className="text-center">
-                <p className="text-4xl md:text-5xl font-black text-white tracking-tighter">{s.value}</p>
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/50 mt-2">{s.label}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Features ───────────────────────────────── */}
-      <section className="py-24 px-6 lg:px-12">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <Badge className="mb-4 px-3 py-1 text-[10px] font-black uppercase tracking-widest bg-accent/12 text-accent border-none">
-              Ciri-ciri Utama
-            </Badge>
-            <h2 className="text-4xl md:text-5xl font-black tracking-tighter">
-              Semua yang anda perlukan
-            </h2>
-            <p className="text-muted-foreground mt-3 max-w-xl mx-auto font-medium">
-              Direka khas untuk keperluan pengurusan kelab dan persatuan JPP Polisas.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map((f, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }} viewport={{ once: true }} whileHover={{ y: -6 }}>
-                <Card className="bento-card border-none h-full group overflow-hidden relative">
-                  {f.badge && (
-                    <div className="absolute top-4 right-4 group-hover:scale-105 transition-transform">
-                      <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase tracking-widest px-2 py-0.5">
-                        {f.badge}
-                      </Badge>
-                    </div>
-                  )}
-                  <CardContent className="p-7">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/8 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:bg-primary/15 transition-all duration-300 shadow-sm">
-                      <f.icon className="w-6 h-6 text-primary" />
-                    </div>
-                    <h3 className="font-black text-lg tracking-tight mb-2 flex items-center gap-2">
-                      {f.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground/80 leading-relaxed font-medium">{f.desc}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Clubs Grid ─────────────────────────────── */}
-      <section className="py-24 px-6 lg:px-12 bg-muted/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-14">
-            <Badge className="mb-4 px-3 py-1 text-[10px] font-black uppercase tracking-widest bg-accent/12 text-accent border-none">
-              {clubs.length > 0 ? `${clubs.length} Kelab & Persatuan` : 'Memuat Senarai...'}
-            </Badge>
-            <h2 className="text-4xl md:text-5xl font-black tracking-tighter">
-              Kelab yang Berdaftar
-            </h2>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {clubs.map((club, i) => (
-              <motion.div key={club.id} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.03 }} viewport={{ once: true }} whileHover={{ y: -4, scale: 1.03 }}>
-                <Card className="bento-card border-none text-center group cursor-default overflow-hidden">
-                  <div className="h-1 w-full" style={{ backgroundColor: club.color }} />
-                  <CardContent className="p-4">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-black text-xs mx-auto mb-2 shadow-sm overflow-hidden bg-muted/20"
-                      style={{ backgroundColor: club.logo_url ? 'transparent' : club.color }}>
-                      {club.logo_url ? (
-                        <img src={club.logo_url} alt={club.name} className="w-full h-full object-contain p-1" />
-                      ) : (
-                        club.shortName?.slice(0, 2) || '?'
-                      )}
-                    </div>
-                    <p className="font-black text-xs tracking-tight leading-tight">{club.name}</p>
-                    <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest mt-0.5">{club.category}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Roles ──────────────────────────────────── */}
-      <section className="py-24 px-6 lg:px-12">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <Badge className="mb-4 px-3 py-1 text-[10px] font-black uppercase tracking-widest bg-accent/12 text-accent border-none">
-              Sistem Peranan
-            </Badge>
-            <h2 className="text-4xl md:text-5xl font-black tracking-tighter">
-              4 Peringkat Akses
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { role: 'SUPER_ADMIN_JPP', label: 'Super Admin JPP', desc: 'Akses penuh ke semua kelab dan data JPP Polisas.', color: 'bg-rose-500' },
-              { role: 'CLUB_PRESIDENT', label: 'Presiden Kelab', desc: 'Urus aktiviti, ahli dan maklumat kelab anda.', color: 'bg-amber-500' },
-              { role: 'CLUB_MT', label: 'MT Kelab', desc: 'Tambah dan kemaskini aktiviti kelab.', color: 'bg-blue-500' },
-              { role: 'CLUB_MEMBER', label: 'Ahli Kelab', desc: 'Lihat aktiviti dan maklumat kelab.', color: 'bg-slate-400' },
-            ].map((r, i) => (
-              <motion.div key={r.role} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }} viewport={{ once: true }}>
-                <Card className="bento-card border-none h-full overflow-hidden relative">
-                  <div className={`h-1.5 w-full absolute top-0 ${r.color}`} />
-                  <CardContent className="p-6 pt-8">
-                    <div className={`w-10 h-10 rounded-xl ${r.color} flex items-center justify-center mb-4 shadow-lg`}>
-                      <Shield className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className="font-black text-sm tracking-tight mb-1.5">{r.label}</h3>
-                    <p className="text-xs text-muted-foreground/70 leading-relaxed">{r.desc}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Nexus Ecosystem (New) ────────────────── */}
-      <section className="py-24 px-6 lg:px-12 relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="flex flex-col lg:flex-row items-center gap-16">
-            <div className="flex-1 space-y-8">
-              <Badge className="bg-primary text-primary-foreground border-none font-black text-[10px] tracking-[0.2em] uppercase px-4 py-1.5 shadow-lg shadow-primary/20">
-                Nexus Ecosystem
-              </Badge>
-              <h2 className="text-5xl md:text-6xl font-black tracking-tighter leading-[1.1]">
-                Enjin AI yang Menggerakkan <span className="text-primary">Masa Hadapan</span>
-              </h2>
-              <p className="text-lg text-muted-foreground font-medium leading-relaxed">
-                Platform digital JPP bukan sekadar sistem biasa. Dengan integrasi bot Nexus, setiap proses dan dokumentasi dipermudahkan melalui kecerdasan buatan.
+            {/* Content */}
+            <div className="flex-1 mb-12">
+              <p className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: m.color }}>{m.subtitle}</p>
+              <h4 className="text-3xl font-black text-white mb-4">{m.title}</h4>
+              <p className="text-xs text-white/40 font-medium leading-relaxed line-clamp-3 group-hover:text-white/60 transition-colors">
+                {m.desc}
               </p>
-              <div className="space-y-4">
-                {[
-                  { title: 'Generatif & Adaptif', desc: 'Sistem belajar dari corak aktiviti kelab anda.' },
-                  { title: 'Automasi Penuh', desc: 'Dari laporan bulanan hingga tugasan harian anda.' },
-                  { title: 'Telus & Selamat', desc: 'Memastikan integriti data setiap kelab terpelihara.' }
-                ].map((item, i) => (
-                  <div key={i} className="flex gap-4 p-4 rounded-2xl border border-border/40 bg-card/40 backdrop-blur-sm">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <CheckCircle2 className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-black text-sm">{item.title}</p>
-                      <p className="text-xs text-muted-foreground">{item.desc}</p>
-                    </div>
+            </div>
+
+            {/* Bottom Row: Previews/Stats */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-2xl bg-black/40 border border-white/5 aspect-[4/3] overflow-hidden">
+                {m.preview}
+              </div>
+              <div className="flex flex-col justify-center gap-3">
+                {m.stats.map((s, idx) => (
+                  <div key={idx} className="flex flex-col">
+                    <span className="text-[10px] font-black text-white">{s.split(' ')[0]}</span>
+                    <span className="text-[8px] font-bold text-white/30 uppercase tracking-tighter">{s.split(' ').slice(1).join(' ')}</span>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="flex-1 relative">
-              <div className="relative z-10 aspect-square rounded-[3rem] overflow-hidden border-8 border-background shadow-2xl bg-card flex items-center justify-center">
-                <div className="absolute inset-0 bg-primary/5 animate-pulse" />
-                <Cpu className="w-32 h-32 text-primary animate-bounce [animation-duration:3s]" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="absolute border border-primary/20 rounded-full animate-ping"
-                      style={{ width: `${(i + 1) * 100}px`, height: `${(i + 1) * 100}px`, animationDuration: `${2 + i}s` }} />
-                  ))}
+
+            {/* Subtle Gradient Glow */}
+            <div 
+              className="absolute -right-20 -bottom-20 w-40 h-40 blur-[80px] rounded-full transition-all duration-700 opacity-0 group-hover:opacity-20"
+              style={{ background: m.color }}
+            />
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+const NexusAISection = () => {
+  return (
+    <section id="nexus ai" className="py-24 relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      
+      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <motion.div 
+          initial={{ opacity: 0, x: -40 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          className="space-y-8"
+        >
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-maroon/[0.05] border border-maroon/20">
+            <BrainCircuit className="w-3 h-3 text-maroon" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-maroon">Nexus AI Core</span>
+          </div>
+          
+          <h3 className="text-5xl sm:text-7xl font-black tracking-tight text-white leading-[0.9]">
+            Kecerdasan <br />
+            <span className="text-maroon">Strategik.</span>
+          </h3>
+          
+          <p className="text-sm sm:text-lg text-white/40 font-medium leading-relaxed max-w-lg">
+            Nexus AI bukan sekadar automasi. Ia adalah ejen pintar yang menganalisis sentimen mahasiswa, 
+            mengoptimumkan belanjawan kelab, dan menjana dokumen perundangan organisasi dalam saat.
+          </p>
+
+          <div className="grid grid-cols-2 gap-6 pt-4">
+            {[
+              { label: 'Integriti Data', icon: Shield },
+              { label: 'Respons Pantas', icon: Zap },
+              { label: 'Multi-Modul', icon: Layers },
+              { label: 'Automasi Penuh', icon: Cpu }
+            ].map((f, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-white/[0.03] border border-white/10 flex items-center justify-center">
+                  <f.icon className="w-4 h-4 text-white/40" />
                 </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/60">{f.label}</span>
               </div>
-              {/* Floating blobs for Nexus look */}
-              <div className="absolute -top-12 -right-12 w-48 h-48 bg-accent/20 rounded-full blur-3xl" />
-              <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-primary/20 rounded-full blur-3xl" />
+            ))}
+          </div>
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="relative aspect-square rounded-[3rem] bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/10 flex items-center justify-center p-12 overflow-hidden shadow-2xl"
+        >
+          {/* Neural Network Abstract Visual */}
+          <div className="absolute inset-0 z-0">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-maroon/20 blur-[60px] rounded-full animate-pulse" />
+          </div>
+          <div className="relative z-10 w-full h-full border border-white/5 rounded-2xl flex items-center justify-center">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-0 border border-dashed border-white/5 rounded-full"
+            />
+             <motion.div
+              animate={{ rotate: -360 }}
+              transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-12 border border-dotted border-white/10 rounded-full"
+            />
+            <div className="text-center space-y-4">
+              <BrainCircuit className="w-20 h-20 text-maroon mx-auto drop-shadow-[0_0_30px_rgba(131,16,16,0.8)]" />
+              <p className="text-[10px] font-black uppercase tracking-[1em] text-white/20 pl-[1em]">Scanning</p>
             </div>
           </div>
-        </div>
-      </section>
+        </motion.div>
+      </div>
+    </section>
+  );
+};
 
-      {/* ── CTA ────────────────────────────────────── */}
-      <section className="py-32 px-6 lg:px-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/4 to-primary/8 pointer-events-none" />
-        <div className="max-w-3xl mx-auto text-center relative z-10 space-y-8">
-          <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-tight">
-            Sedia untuk bermula?
-          </h2>
-          <p className="text-lg text-muted-foreground font-medium">
-            Daftar sekarang dan mula mengurus kelab anda dengan lebih efisien.
-          </p>
-          <Link to="/login">
-            <Button size="lg"
-              className="h-16 px-14 rounded-2xl bg-primary text-primary-foreground font-black text-base uppercase tracking-widest shadow-2xl shadow-primary/30 glow-accent transition-all hover:scale-105 active:scale-95">
-              Daftar Sekarang
-            </Button>
-          </Link>
-        </div>
-      </section>
+const StatsSection = () => {
+  return (
+    <section className="py-24 bg-white/[0.01] border-y border-white/5">
+      <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12">
+         {[
+           { label: 'Kelab Berdaftar', val: '120+' },
+           { label: 'Laporan Selesai', val: '10k+' },
+           { label: 'Jualan POS', val: 'RM 50k+' },
+           { label: 'Merit Terkumpul', val: '250k+' }
+         ].map((s, i) => (
+           <motion.div 
+             key={i}
+             initial={{ opacity: 0, y: 10 }}
+             whileInView={{ opacity: 1, y: 0 }}
+             viewport={{ once: true }}
+             transition={{ delay: i * 0.1 }}
+             className="text-center space-y-2"
+           >
+             <p className="text-5xl font-black text-white tracking-tighter">{s.val}</p>
+             <p className="text-[10px] font-black uppercase tracking-widest text-white/30">{s.label}</p>
+           </motion.div>
+         ))}
+      </div>
+    </section>
+  );
+};
 
-      {/* ── Footer ─────────────────────────────────── */}
-      <footer className="py-16 px-6 lg:px-12 border-t border-border/30 bg-muted/10">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+const Footer = () => {
+  return (
+    <footer className="py-20 px-6 border-t border-white/5">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-12">
+        <div className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center overflow-hidden">
-              <img src="/jpp-logo.png" alt="JPP" className="w-6 h-6 object-contain" />
-            </div>
-            <div>
-              <p className="font-black text-sm text-primary tracking-tight">JPP DIGITAL POLISAS</p>
-              <p className="text-[10px] font-medium text-muted-foreground/50">Pemacu Kepimpinan Digital</p>
-            </div>
+             <Layers className="text-maroon w-6 h-6" />
+             <span className="font-black tracking-tight text-white text-lg uppercase">JPP<span className="text-maroon">Digital</span></span>
           </div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
-            © 2026 Jawatankuasa Perwakilan Pelajar Polisas. Hak cipta terpelihara.
+          <p className="max-w-xs text-xs text-white/30 font-medium leading-relaxed">
+            Unit Teknologi & Inovasi Digital Mahasiswa <br />
+            Politeknik Sultan Haji Ahmad Shah.
           </p>
         </div>
-      </footer>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-12">
+           {[
+             { title: 'Sistem', links: ['Portal KPP', 'E-Keusahawanan', 'E-Akademik'] },
+             { title: 'Polisi', links: ['Privasi', 'Terma Guna', 'Glosari'] },
+             { title: 'Bantuan', links: ['Meja Bantuan', 'Manual', 'Nexus AI'] }
+           ].map((g, i) => (
+             <div key={i} className="space-y-6">
+               <h5 className="text-[10px] font-black uppercase tracking-widest text-white/60">{g.title}</h5>
+               <ul className="space-y-4">
+                 {g.links.map((l, idx) => (
+                   <li key={idx}>
+                     <a href="#" className="text-xs text-white/30 hover:text-white transition-colors">{l}</a>
+                   </li>
+                 ))}
+               </ul>
+             </div>
+           ))}
+        </div>
+      </div>
+      
+      <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <p className="text-[10px] text-white/20 font-medium">© 2025 JPP POLISAS. ALL RIGHTS RESERVED.</p>
+        <div className="flex items-center gap-6">
+           {['X', 'LinkedIn', 'Github'].map(s => (
+             <a key={s} href="#" className="text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-white transition-colors">{s}</a>
+           ))}
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export function LandingPage() {
+  const navigate = useNavigate();
+  
+  const scrollToModul = () => {
+    document.getElementById('modul')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  return (
+    <div className="bg-[#050505] min-h-screen text-white font-sans selection:bg-maroon selection:text-white">
+      <Navbar />
+      
+      <main>
+        <Hero onEnter={() => navigate('/portal')} />
+        <BentoSection />
+        <NexusAISection />
+        <StatsSection />
+
+        {/* Final CTA Section */}
+        <section className="py-24 px-6">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="max-w-4xl mx-auto rounded-[3rem] bg-gradient-to-br from-maroon/20 to-transparent border border-maroon/20 p-12 text-center space-y-8 relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-64 h-64 bg-maroon/10 blur-[100px] rounded-full" />
+            
+            <h3 className="text-4xl sm:text-7xl font-black tracking-tight text-white leading-[0.9]">
+              Transformasi <br />
+              <span className="text-maroon">Bermula Di Sini.</span>
+            </h3>
+            <p className="text-sm text-white/40 font-medium max-w-lg mx-auto leading-relaxed">
+              Sertai beribu mahasiswa lain dalam memacu inovasi digital di Politeknik Sultan Haji Ahmad Shah.
+            </p>
+            
+            <button 
+              onClick={() => navigate('/portal')}
+              className="px-8 py-4 rounded-2xl bg-white text-black font-black uppercase text-xs tracking-widest hover:bg-maroon hover:text-white transition-all duration-500 flex items-center gap-3 mx-auto shadow-2xl shadow-white/10"
+            >
+              Mohon Akses JPP
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </motion.div>
+        </section>
+      </main>
+
+      <Footer />
     </div>
   );
 }

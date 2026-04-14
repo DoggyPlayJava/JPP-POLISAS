@@ -57,6 +57,13 @@ export interface Profile {
   account_status: 'PENDING' | 'APPROVED' | 'REJECTED';
   subscription_tier?: 'free' | 'pro' | 'admin';
   ai_token_balance?: number;
+  // Additional fields from DB
+  merit?: number;
+  phone?: string | null;
+  ai_daily_usage?: number;
+  ai_status?: string | null;
+  ai_last_reset?: string | null;
+  ai_tier_expiration?: string | null;
 }
 
 //LOGS SYSTEM

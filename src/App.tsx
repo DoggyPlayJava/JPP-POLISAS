@@ -41,7 +41,6 @@ import { ExcoSemakanLaporanPage } from './components/exco/ExcoSemakanLaporanPage
 import { KeusahawananLayout } from './pages/keusahawanan/KeusahawananLayout';
 import { KeusahawananDashboard } from './pages/keusahawanan/KeusahawananDashboard';
 import { KeusahawananProgram } from './pages/keusahawanan/KeusahawananProgram';
-
 import { KeusahawananIdea, KeusahawananGeran, KeusahawananLaporan } from './pages/keusahawanan/KeusahawananPlaceholders';
 import { KeusahawananOnboarding } from './pages/keusahawanan/KeusahawananOnboarding';
 import { UrusPerniagaanPage } from './pages/keusahawanan/UrusPerniagaanPage';
@@ -49,6 +48,16 @@ import { PosOrderPage }   from './pages/keusahawanan/pos/PosOrderPage';
 import { PosProductPage } from './pages/keusahawanan/pos/PosProductPage';
 import { PosStatsPage }   from './pages/keusahawanan/pos/PosStatsPage';
 import { PosHistoryPage } from './pages/keusahawanan/pos/PosHistoryPage';
+// ── e-Akademik (prefix: /akademik/) ──
+import { AkademikLayout }      from './pages/akademik/AkademikLayout';
+import { AkademikDashboard }   from './pages/akademik/AkademikDashboard';
+import { AkademikPencapaian }  from './pages/akademik/AkademikPencapaian';
+import { AkademikMeritPage }   from './pages/akademik/AkademikMeritPage';
+import { AkademikQrPage }      from './pages/akademik/AkademikQrPage';
+import { AkademikQrScan }      from './pages/akademik/AkademikQrScan';
+import { AkademikCgpa }        from './pages/akademik/AkademikCgpa';
+import { AkademikFolderPage }  from './pages/akademik/AkademikFolderPage';
+import { AkademikLeaderboard } from './pages/akademik/AkademikLeaderboard';
 
 import { JppUsersPage } from './pages/jpp/JppUsersPage';
 import { JppTakwimPage } from './pages/jpp/JppTakwimPage';
@@ -156,7 +165,6 @@ function AppRoutes() {
         <Route element={<RequireApproval><KeusahawananLayout /></RequireApproval>}>
           <Route path="/keusahawanan/dashboard"     element={<KeusahawananDashboard />} />
           <Route path="/keusahawanan/program"        element={<KeusahawananProgram />} />
-
           <Route path="/keusahawanan/idea"           element={<KeusahawananIdea />} />
           <Route path="/keusahawanan/geran"          element={<KeusahawananGeran />} />
           <Route path="/keusahawanan/laporan"        element={<KeusahawananLaporan />} />
@@ -166,6 +174,19 @@ function AppRoutes() {
           <Route path="/keusahawanan/pos/products"  element={<PosProductPage />} />
           <Route path="/keusahawanan/pos/stats"     element={<PosStatsPage />} />
           <Route path="/keusahawanan/pos/history"   element={<PosHistoryPage />} />
+        </Route>
+
+        {/* ── e-Akademik (prefix: /akademik/) ── */}
+        {/* Standalone claim page — papar tanpa layout sidebar, dicapai bila scan QR kod fizikal */}
+        <Route path="/akademik/qr/:token" element={<RequireApproval><AkademikQrScan /></RequireApproval>} />
+        <Route element={<RequireApproval><AkademikLayout /></RequireApproval>}>
+          <Route path="/akademik"              element={<AkademikDashboard />} />
+          <Route path="/akademik/pencapaian"   element={<AkademikPencapaian />} />
+          <Route path="/akademik/merit"        element={<AkademikMeritPage />} />
+          <Route path="/akademik/qr"           element={<AkademikQrPage />} />
+          <Route path="/akademik/cgpa"         element={<AkademikCgpa />} />
+          <Route path="/akademik/folder"       element={<AkademikFolderPage />} />
+          <Route path="/akademik/leaderboard"  element={<AkademikLeaderboard />} />
         </Route>
       </Route>
 

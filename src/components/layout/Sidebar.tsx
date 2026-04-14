@@ -24,6 +24,7 @@ import {
   HeartHandshake,
   HelpCircle,
 } from 'lucide-react';
+import { ExcoIcon } from '@/components/ui/ExcoIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -93,25 +94,6 @@ const EKPP_ADMIN_NAV: NavItem[] = [
   // /jpp-admin has been removed — accessible via JPP HQ Portal sidebar only
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SubKomponen: Render Icon Exco (Lucide atau Emoji)
-// ─────────────────────────────────────────────────────────────────────────────
-function RenderExcoIcon({ iconName, className }: { iconName: string; className?: string }) {
-  const icons: Record<string, React.ElementType> = {
-    Landmark,
-    Lightbulb,
-    HeartHandshake,
-    Trophy,
-  };
-
-  const IconComp = icons[iconName];
-  if (IconComp) {
-    return <IconComp className={className} />;
-  }
-
-  // Jika bukan nama Lucide, mungkin ia emoji
-  return <span className={className}>{iconName}</span>;
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SubKomponen: NavItem generik
@@ -308,7 +290,7 @@ function PlaceholderSidebarContent({ excoId }: { excoId: string }) {
     <nav className="flex-1 py-6 px-3 overflow-y-auto scrollbar-hide">
       <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
         <div className="w-16 h-16 rounded-3xl flex items-center justify-center text-4xl mb-2" style={{ background: mod ? `linear-gradient(135deg, ${mod.defaultColor}20, ${mod.defaultColor}10)` : 'rgba(255,255,255,0.05)', border: `1px dashed ${mod?.defaultColor}40` }}>
-          <RenderExcoIcon iconName={mod?.icon ?? '🔧'} className="w-8 h-8" />
+          <ExcoIcon iconName={mod?.icon ?? '🔧'} className="w-8 h-8" />
         </div>
         <p className="text-xs font-black text-white/30 uppercase tracking-widest">{mod?.name ?? excoId}</p>
         <p className="text-[10px] text-white/20 leading-relaxed px-4">Modul ini sedang dalam pembangunan.</p>
@@ -461,7 +443,7 @@ export function Sidebar() {
             }}
           >
             {excoModule ? (
-              <RenderExcoIcon iconName={excoModule.icon} className="w-5 h-5 text-white" />
+              <ExcoIcon iconName={excoModule.icon} className="w-5 h-5 text-white" />
             ) : (
               <img src="/jpp-logo.png" alt="JPP" className="w-8 h-8 object-contain" />
             )}

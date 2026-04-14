@@ -52,51 +52,57 @@
     /* Custom Tokens — Red/Gold */
     --primary-gradient: linear-gradient(135deg, hsl(0 67% 32%) 0%, hsl(0 55% 22%) 100%);
     --accent-gradient: linear-gradient(135deg, hsl(43 78% 46%) 0%, hsl(36 85% 55%) 100%);
-    --glass-background: rgba(255, 252, 247, 0.5);
-    --glass-border: rgba(212, 160, 23, 0.15);
-    --shadow-premium: 0 12px 40px -8px rgba(139, 26, 26, 0.08);
-    --shadow-glow: 0 0 24px -4px hsla(43, 78%, 46%, 0.35);
+    --glass-background: rgba(255, 252, 247, 0.45);
+    --glass-border: rgba(131, 16, 16, 0.05);
+    --glass-edge: rgba(255, 255, 255, 0.6);
+    
+    --nexus-maroon: 0 78% 29%;
+    --nexus-black: 0 0% 2%;
+    
+    --shadow-premium: 0 12px 40px -8px rgba(131, 16, 16, 0.12);
+    --shadow-glow: 0 0 24px -4px hsla(0, 78%, 29%, 0.35);
 
-    --font-sans: 'Geist', 'Inter', sans-serif;
+    --font-sans: 'Geist', 'Inter', system-ui, sans-serif;
     --font-heading: 'Manrope', 'Geist', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
   }
 
   .dark {
-    --background: 0 0% 5%;
+    --background: 0 0% 2%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 8%;
+    --card: 0 0% 4%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 8%;
+    --popover: 0 0% 4%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 0 75% 50%;
+    --primary: 0 78% 29%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 14%;
+    --secondary: 0 0% 8%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 0 0% 14%;
-    --muted-foreground: 0 0% 65%;
+    --muted: 0 0% 8%;
+    --muted-foreground: 0 0% 55%;
 
-    --accent: 43 78% 46%;
+    --accent: 0 78% 29%;
     --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 63% 40%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 0 75% 50%;
+    --border: 0 0% 12%;
+    --input: 0 0% 12%;
+    --ring: 0 78% 29%;
 
-    --sidebar-background: 0 0% 6%;
-    --sidebar-accent: 0 0% 12%;
-    --sidebar-border: 0 0% 14%;
+    --sidebar-background: 0 0% 3%;
+    --sidebar-accent: 0 0% 8%;
+    --sidebar-border: 0 0% 10%;
 
-    --glass-background: rgba(10, 10, 10, 0.6);
-    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-background: rgba(5, 5, 5, 0.45);
+    --glass-border: rgba(255, 255, 255, 0.04);
+    --glass-edge: rgba(255, 255, 255, 0.1);
   }
 }
 
