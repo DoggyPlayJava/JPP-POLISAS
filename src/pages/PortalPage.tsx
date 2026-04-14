@@ -10,6 +10,9 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'react-hot-toast';
 import { cn, hexToRgba, getContrastText, getMalaysianNickname } from '@/lib/utils';
+import { PortalSidebar } from '@/components/layout/PortalSidebar';
+import { Menu } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 
 
@@ -296,6 +299,7 @@ export function PortalPage() {
   const [isLoadingSettings, setIsLoadingSettings] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showJppPopout, setShowJppPopout] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const isJPPMode = profile?.role === 'JPP' || isSuperAdmin;
 
@@ -384,6 +388,13 @@ export function PortalPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-white font-sans selection:bg-emerald-500/20 overflow-x-hidden transition-colors duration-500 relative flex flex-col">
       
+      <PortalSidebar 
+        isOpen={isSidebarOpen} 
+        onOpen={() => setIsSidebarOpen(true)} 
+        onClose={() => setIsSidebarOpen(false)} 
+        settings={settings}
+      />
+      
       {/* Keusahawanan Onboarding Style Background */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full mix-blend-screen opacity-10 bg-amber-600 blur-3xl" />
@@ -394,69 +405,58 @@ export function PortalPage() {
       <nav className={cn(
         "fixed top-0 inset-x-0 z-[100] transition-all duration-700 px-4 md:px-8 py-4 flex items-center justify-between",
         isScrolled 
-          ? "bg-slate-50 dark:bg-slate-950/80 backdrop-blur-md border-b border-black-[0.03] dark:border-white/5 py-3 shadow-2xl" 
+          ? "bg-slate-50 dark:bg-slate-950/80 backdrop-blur-md border-b border-black/[0.03] dark:border-white/5 py-3 shadow-2xl" 
           : "bg-transparent"
       )}>
         <div className="flex items-center gap-4">
-          <motion.div 
-            whileHover={{ scale: 1.05, rotate: 2 }} 
-            className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-black/[0.03] dark:bg-white/5 flex items-center justify-center p-1.5 shadow-2xl border border-black/5 dark:border-white/10 backdrop-blur-xl"
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsSidebarOpen(true)}
+            className="rounded-xl hover:bg-black/5 dark:hover:bg-white/10"
           >
-            <img src="/jpp-logo.png" alt="JPP" className="w-full h-full object-contain" />
-          </motion.div>
-          <div className="flex flex-col">
-            <span className="text-sm md:text-base font-black tracking-tighter leading-none text-slate-800 dark:text-white">JPP PORTAL</span>
-            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] text-slate- dark:text-white/50">Politeknik Polisas</span>
+            <Menu className="w-5 h-5" />
+          </Button>
+
+          <div 
+            className="flex items-center gap-4 cursor-pointer group"
+            onClick={() => setIsSidebarOpen(true)}
+          >
+            <motion.div 
+              whileHover={{ scale: 1.05, rotate: 2 }} 
+              className="w-10 h-10 md:w-11 md:h-11 rounded-2xl bg-black/[0.03] dark:bg-white/5 flex items-center justify-center p-1.5 shadow-2xl border border-black/5 dark:border-white/10 backdrop-blur-xl group-hover:border-emerald-500/30 transition-all"
+            >
+              <img src="/jpp-logo.png" alt="JPP" className="w-full h-full object-contain" />
+            </motion.div>
+            <div className="flex flex-col">
+              <span className="text-sm md:text-base font-black tracking-tighter leading-none text-slate-800 dark:text-white">JPP PORTAL</span>
+              <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] text-slate- dark:text-white/50">Politeknik Polisas</span>
+            </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
-          {isJPPMode && (
-            <button 
-              onClick={() => navigate('/jpp')}
-              className="hidden lg:flex items-center gap-2 px-4 py-2 hover:bg-black/5 dark:bg-white/10 transition-colors rounded-full bg-amber-500/10 border border-amber-500/20 text-slate-800 dark:text-white shadow-xl group"
-            >
-              <LucideIcons.Crown className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">JPP HQ Portal</span>
-            </button>
-          )}
-          {isSuperAdmin && (
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400">
-              <LucideIcons.ShieldCheck className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Akses Admin</span>
-            </div>
-          )}
+          <ThemeToggle />
           
-          <div className="hidden sm:flex items-center gap-3 px-4 py-1 border-x border-black/5 dark:border-white/10">
-            <div className="text-right">
-              <p className="text-xs font-black leading-none text-slate-800 dark:text-white">{profile?.full_name?.split(' ').slice(0, 2).join(' ')}</p>
-              <p className="text-[9px] text-slate- dark:text-white/50 font-black uppercase tracking-widest mt-0.5">{profile?.matric_no}</p>
+          <div 
+            className="flex items-center gap-3 pl-4 border-l border-black/5 dark:border-white/10 cursor-pointer group"
+            onClick={() => setIsSidebarOpen(true)}
+          >
+            <div className="hidden sm:block text-right">
+              <p className="text-[10px] font-black text-slate-800 dark:text-white group-hover:text-emerald-500 transition-colors uppercase tracking-widest leading-none mb-0.5">{profile?.full_name?.split(' ')[0]}</p>
+              <div className="flex items-center justify-end gap-1.5 opacity-40">
+                <div className="w-1 h-1 rounded-full bg-emerald-500" />
+                <span className="text-[8px] font-black uppercase tracking-[0.2em]">{profile?.role || 'STUDENT'}</span>
+              </div>
             </div>
-            <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-black/[0.03] dark:bg-white/5 border border-black/5 dark:border-white/10 flex items-center justify-center text-slate- dark:text-white/50 overflow-hidden shadow-inner">
-              <LucideIcons.User className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-black/[0.03] dark:bg-white/5 border border-black/5 dark:border-white/10 flex items-center justify-center text-slate- dark:text-white/50 overflow-hidden shadow-inner group-hover:border-emerald-500/30 transition-all">
+              <Avatar className="w-full h-full rounded-none">
+                <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
+                <AvatarFallback className="bg-transparent text-slate-400 dark:text-white/50 text-xs font-black">
+                  {profile?.full_name?.[0]}
+                </AvatarFallback>
+              </Avatar>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:block border-r border-black/10 dark:border-white/10 h-6 mx-2" />
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => navigate('/tetapan')} 
-              className="rounded-xl h-10 w-10 text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:bg-white/10 transition-all border border-transparent hover:border-black/5 dark:border-white/10"
-              title="Tetapan"
-            >
-              <LucideIcons.Settings className="w-4 h-4" />
-            </Button>
-            <ThemeToggle />
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={signOut} 
-              className="rounded-xl h-10 w-10 text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:bg-white/10 transition-all border border-transparent hover:border-black/5 dark:border-white/10"
-            >
-              <LucideIcons.LogOut className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       </nav>

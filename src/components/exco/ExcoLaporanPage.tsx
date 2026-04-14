@@ -6,16 +6,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Upload, X, FileText, RefreshCw, Lock, Zap, Calendar,
+  Upload, FileText, RefreshCw, Lock, Zap,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
-} from '@/components/ui/dialog';
+import { LaporanPreviewModal } from '@/components/reports/LaporanPreviewModal';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -61,6 +57,12 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
   const [isPreviewOpen, setIsPreviewOpen]   = useState(false);
   const [jppLogoBase64, setJppLogoBase64]   = useState<string | undefined>(undefined);
   const [mtReviewer, setMtReviewer]         = useState<{ name: string; role: string } | null>(null);
+
+  // ── Derived values (digunakan dalam modal props & handleConfirmGenerate) ──
+  const monthLabel = format(parseISO(`${targetMonth}-01`), 'MMMM yyyy', { locale: ms }).toUpperCase();
+  const submitterRoleLabel = jppPos
+    ? (JPP_POSITION_LABELS[jppPos as keyof typeof JPP_POSITION_LABELS] || jppPos)
+    : 'Ahli Exco';
 
   // Manual upload
   const [file, setFile] = useState<File | null>(null);
@@ -175,20 +177,15 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
     }
   };
 
-  // ── Confirm & generate PDF ────────────────────────────────────────────────
+  // ── Confirm & generate PDF (dipanggil oleh LaporanPreviewModal.onSubmit) ──
   const handleConfirmGenerate = async () => {
     if (!user || previewData.length === 0) return;
     setSubmitting(true);
     setProgress(10);
-    setIsPreviewOpen(false);
+    // NOTA: Modal menutup sendiri (onClose) selepas fungsi ini selesai.
 
     try {
-      const monthLabel = format(parseISO(`${targetMonth}-01`), 'MMMM yyyy', { locale: ms }).toUpperCase();
       setProgress(40);
-
-      const submitterRoleLabel = jppPos
-        ? (JPP_POSITION_LABELS[jppPos as keyof typeof JPP_POSITION_LABELS] || jppPos)
-        : 'Ahli Exco';
 
       const doc = (
         <LaporanPDFTemplate
@@ -496,51 +493,24 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
           </div>
         </div>
 
-        {/* Preview Dialog */}
-        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-          <DialogContent className="max-w-2xl rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl bg-[#0f0f17]">
-            <DialogHeader className="p-8" style={{ background: themeColor }}>
-              <DialogTitle className="text-2xl font-black text-white">Pratonton Laporan</DialogTitle>
-              <DialogDescription className="text-white/80 font-medium">
-                Semak senarai aktiviti bagi {format(parseISO(`${targetMonth}-01`), 'MMMM yyyy', { locale: ms })} sebelum menjana PDF.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="p-6 max-h-[50vh] overflow-y-auto space-y-3">
-              {previewData.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="bg-white/[0.04] p-4 rounded-2xl border border-white/[0.07] flex justify-between items-center"
-                >
-                  <div className="space-y-1">
-                    <p className="font-black text-sm uppercase tracking-tight text-white">{item.title}</p>
-                    <span
-                      className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full"
-                      style={{ background: `${themeColor}20`, color: themeColor }}
-                    >
-                      {format(parseISO(item.start_date), 'dd MMM')}
-                    </span>
-                  </div>
-                  <div className="text-[10px] font-black text-white/25">RM {item.budget || 0}</div>
-                </div>
-              ))}
-            </div>
-            <DialogFooter className="p-6 border-t border-white/[0.06] flex flex-col sm:flex-row gap-3">
-              <Button
-                variant="ghost"
-                onClick={() => setIsPreviewOpen(false)}
-                className="rounded-xl font-black text-[10px] uppercase tracking-widest text-white/40"
-              >Batal</Button>
-              <Button
-                onClick={handleConfirmGenerate}
-                disabled={submitting}
-                className="flex-1 h-12 rounded-xl text-white font-black text-[10px] uppercase tracking-widest"
-                style={{ background: themeColor }}
-              >
-                {submitting ? 'Menjana PDF...' : 'Sahkan & Jana Laporan'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {/* ── Live PDF Preview Modal ───────────────────────────────── */}
+        {isPreviewOpen && (
+          <LaporanPreviewModal
+            clubName={excoLabel}
+            monthYear={monthLabel}
+            activities={previewData}
+            submitterName={profile?.full_name || undefined}
+            submitterRole={submitterRoleLabel}
+            submitterUnit={excoLabel}
+            presidenName={mtReviewer?.name || '( Tiada MT Ditetapkan )'}
+            reviewerRole={mtReviewer?.role || 'MAJLIS TERTINGGI'}
+            reviewerUnit="JAWATANKUASA PERWAKILAN PELAJAR"
+            clubLogoUrl={jppLogoBase64}
+            fileName={`Laporan_${excoUnit}_${targetMonth}`}
+            onClose={() => setIsPreviewOpen(false)}
+            onSubmit={handleConfirmGenerate}
+          />
+        )}
       </div>
     </div>
   );

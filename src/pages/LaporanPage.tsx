@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Upload, X, FileText, RefreshCw, Lock, BookOpen, Users, Calendar, Award, MessageSquare, Zap, CalendarDays
+  Upload, FileText, RefreshCw, Lock, BookOpen, Users, Calendar, Award, Zap, CalendarDays
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,9 +12,7 @@ import { Input } from '@/components/ui/input';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
-} from '@/components/ui/dialog';
+import { LaporanPreviewModal } from '@/components/reports/LaporanPreviewModal';
 import { StatusChip } from '@/components/ui/StatusChip';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -67,6 +65,10 @@ export function LaporanPage() {
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [logoData, setLogoData] = useState<string | undefined>(undefined);
+
+  // ── Derived values ────────────────────────────────────────────────
+  const monthLabel = format(parseISO(`${targetMonth}-01`), 'MMMM yyyy', { locale: ms }).toUpperCase();
+  const submitterRole = isPresident ? 'PRESIDEN' : isMT ? 'MAJLIS TERTINGGI JPP' : ((profile as any)?.club_role || 'SETIAUSAHA');
 
   const clubName = effectiveClubId
     ? ALL_CLUBS.find(c => c.id === effectiveClubId)?.name ?? effectiveClubId
@@ -222,10 +224,9 @@ export function LaporanPage() {
     if (!user || !effectiveClubId || previewData.length === 0) return;
     setSubmitting(true);
     setProgress(10);
-    setIsPreviewOpen(false);
+    // NOTA: Modal menutup sendiri (onClose) selepas fungsi ini selesai.
 
     try {
-      const monthLabel = format(parseISO(`${targetMonth}-01`), 'MMMM yyyy', { locale: ms }).toUpperCase();
       setProgress(40);
 
       const doc = (
@@ -408,38 +409,24 @@ export function LaporanPage() {
         </div>
       </div>
 
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-2xl rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl">
-          <DialogHeader className="p-8 bg-emerald-600 text-white">
-            <DialogTitle className="text-2xl font-black italic">Pratonton Laporan</DialogTitle>
-            <DialogDescription className="text-emerald-100 font-medium italic">
-              Sila semak senarai aktiviti bagi {format(parseISO(`${targetMonth}-01`), 'MMMM yyyy', { locale: ms })} sebelum menjana PDF.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="p-8 max-h-[50vh] overflow-y-auto space-y-4 bg-muted/30">
-            {previewData.map((item, idx) => (
-              <div key={idx} className="bg-card p-4 rounded-2xl border border-border/50 shadow-sm flex justify-between items-center group hover:border-emerald-500/50 transition-colors">
-                <div className="space-y-1">
-                  <p className="font-black text-sm uppercase tracking-tight">{item.title}</p>
-                  <div className="flex items-center gap-2">
-                    <Badge className="text-[9px] font-black uppercase px-2 py-0 border-none bg-emerald-500/10 text-emerald-600">
-                      {format(parseISO(item.start_date), 'dd MMM')}
-                    </Badge>
-                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{item._source === 'takwim' ? '🔴 Takwim Rasmi' : '🔵 Aktiviti Kelab'}</span>
-                  </div>
-                </div>
-                <div className="text-[10px] font-black text-muted-foreground/40 group-hover:text-emerald-500 transition-colors">RM {item.budget || 0}</div>
-              </div>
-            ))}
-          </div>
-          <DialogFooter className="p-8 bg-card border-t flex flex-col sm:flex-row gap-3">
-            <Button variant="ghost" onClick={() => setIsPreviewOpen(false)} className="rounded-xl font-black text-[10px] uppercase tracking-widest">Batal</Button>
-            <Button onClick={handleConfirmGenerate} disabled={submitting} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-12 px-8 font-black text-[10px] uppercase tracking-widest flex-1">
-              {submitting ? 'Menjana PDF...' : 'Sahkan & Jana Laporan'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* ── Live PDF Preview Modal ──────────────────────────── */}
+      {isPreviewOpen && (
+        <LaporanPreviewModal
+          clubName={clubName}
+          monthYear={monthLabel}
+          activities={previewData}
+          submitterName={profile?.full_name || undefined}
+          submitterRole={submitterRole}
+          submitterUnit={clubName}
+          presidenName={profile?.full_name || 'PRESIDEN KELAB'}
+          reviewerRole="PRESIDEN"
+          reviewerUnit={clubName}
+          clubLogoUrl={logoData}
+          fileName={`Laporan_${effectiveClubId}_${targetMonth}`}
+          onClose={() => setIsPreviewOpen(false)}
+          onSubmit={handleConfirmGenerate}
+        />
+      )}
     </div>
   );
 }
