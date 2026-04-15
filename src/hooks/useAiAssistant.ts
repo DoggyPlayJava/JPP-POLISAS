@@ -22,6 +22,7 @@ export interface ChatContext {
   userRole?: string;
   recentNotifications?: string[];
   allClubs?: string; // Teks yang dirumuskan mengenai semua kelab
+  jppOrganization?: string; // Senarai JPP (YDP, Exco, MT)
   upcomingPrograms?: string;
   committee?: string;
   pendingTasksCount?: number;
@@ -591,6 +592,7 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
         context?.currentPage ? `3. Anda sedar pengguna sedang berada di halaman: ${context.currentPage}` : '',
         context?.clubInfo ? `4. Maklumat Kelab: ${context.clubInfo.name} (${context.clubInfo.membersCount || '0'} ahli).` : '',
         context?.recentNotifications?.length ? `5. Notifikasi Terkini: ${context.recentNotifications.join('; ')}` : '',
+        context?.jppOrganization ? `6. Susunan Organisasi JPP (Majlis Tertinggi & Exco):\n${context.jppOrganization}` : '',
         '',
         '== TERMINOLOGI ==',
         '1. "Laporan Bulanan" merujuk kepada "Laporan Aktiviti" dalam pangkalan data. Jika pengguna bertanya tentang laporan bulanan, cari atau rumuskan data berkaitan laporan aktiviti.',

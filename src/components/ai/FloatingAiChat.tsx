@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAiAssistant, ChatMessage, ChatContext } from '@/hooks/useAiAssistant';
-import { ALL_CLUBS } from '@/types';
+import { ALL_CLUBS, JPP_POSITION_LABELS, JPP_UNIT_LABELS } from '@/types';
 import { useAiSettings } from '@/contexts/AiSettingsContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -211,20 +211,36 @@ export function FloatingAiChat() {
     if (isOpen && profile?.id) {
       const fetchContext = async () => {
         try {
-          // 1. Get Base Notifications (Global)
-          const { data: notos } = await supabase
-            .from('notifications')
-            .select('title')
-            .eq('user_id', profile.id)
-            .order('created_at', { ascending: false })
-            .limit(3);
+          // 1. Get Base Notifications & JPP Organization List (Global)
+          const [notosRes, jppRes] = await Promise.all([
+            supabase
+              .from('notifications')
+              .select('title')
+              .eq('user_id', profile.id)
+              .order('created_at', { ascending: false })
+              .limit(3),
+            supabase
+              .from('profiles')
+              .select('full_name, jpp_position, jpp_unit')
+              .eq('role', 'JPP')
+          ]);
+
+          let jppOrgText = undefined;
+          if (jppRes.data && jppRes.data.length > 0) {
+            jppOrgText = jppRes.data.map(m => {
+              const pos = m.jpp_position ? (JPP_POSITION_LABELS[m.jpp_position as string] || m.jpp_position) : 'Ahli JPP';
+              const unit = m.jpp_unit ? (JPP_UNIT_LABELS[m.jpp_unit as string] || m.jpp_unit) : '';
+              return `- ${m.full_name} (${pos}${unit ? ' - ' + unit : ''})`;
+            }).join('\n');
+          }
 
           let ctx: ChatContext = {
             currentPage: location.pathname,
             userRole: profile.role,
-            recentNotifications: notos?.map(n => n.title) || [],
+            recentNotifications: notosRes.data?.map(n => n.title) || [],
             tokenBalance: profile.ai_token_balance,
             subscriptionTier: profile.subscription_tier,
+            jppOrganization: jppOrgText,
             allClubs: ALL_CLUBS.length > 0 
               ? ALL_CLUBS.map(c => `- ${c.name} (${c.shortName || 'N/A'})`).join('\n')
               : undefined,
