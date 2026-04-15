@@ -6,7 +6,7 @@ import { hexToRgba } from '@/lib/utils';
 import {
   Trophy, Users, Star, CheckCircle, XCircle, Clock,
   Settings, LayoutDashboard, QrCode, AlertCircle, Loader2,
-  ChevronLeft, ChevronRight, Shield,
+  ChevronLeft, ChevronRight, Shield, Unlock, BarChart3,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { format, parseISO } from 'date-fns';
@@ -213,11 +213,11 @@ function PencapaianReviewPanel() {
       if (updateErr) throw new Error(`Kemaskini status gagal: ${updateErr.message}`);
 
       if (status === 'DISAHKAN') {
-        // Insert merit transaction — note: column is 'amount' (not 'points')
+        // Insert merit transaction with correct 'points' column
         const { error: txErr } = await supabase.from('merit_transactions').insert({
           user_id:      item.user_id,
           club_id:      null,
-          amount:       merit,          // ← betul: 'amount', bukan 'points'
+          points:       merit,
           reason:       `Pencapaian Akademik: ${item.nama_pencapaian}`,
           actor_name:   'Exco Akademik',
           source:       'AKADEMIK',
@@ -225,12 +225,13 @@ function PencapaianReviewPanel() {
         });
         if (txErr) throw new Error(`Insert merit_transactions gagal: ${txErr.message}`);
 
-        // Increment merit in profiles — note: param is 'target_user_id' (not 'uid')
-        const { error: rpcErr } = await supabase.rpc('increment_merit', {
-          target_user_id: item.user_id,  // ← betul: 'target_user_id', bukan 'uid'
-          delta:          merit,
+        // Increment merit_akademik split + total merit
+        const { error: rpcErr } = await supabase.rpc('increment_merit_by_source', {
+          p_uid:   item.user_id,
+          p_delta: merit,
+          p_src:   'AKADEMIK',
         });
-        if (rpcErr) throw new Error(`RPC increment_merit gagal: ${rpcErr.message}`);
+        if (rpcErr) throw new Error(`RPC increment_merit_by_source gagal: ${rpcErr.message}`);
       }
 
       toast.success(status === 'DISAHKAN' ? `✅ Disahkan! +${merit} merit diberikan.` : 'Pencapaian ditolak.');
@@ -340,19 +341,159 @@ function PencapaianReviewPanel() {
   );
 }
 
+// ─── Unlock Requests Review Panel ────────────────────────────
+function UnlockRequestsPanel() {
+  const [requests, setRequests] = useState<any[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [acting, setActing]     = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data: reqs } = await supabase
+        .from('akademik_unlock_requests')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (!reqs || reqs.length === 0) { setRequests([]); setLoading(false); return; }
+
+      // Enrich with pencapaian + user info
+      const pencIds  = [...new Set(reqs.map(r => r.pencapaian_id))];
+      const userIds  = [...new Set(reqs.map(r => r.user_id))];
+      const [pencRes, profRes] = await Promise.all([
+        supabase.from('akademik_pencapaian').select('id, nama_pencapaian, jenis, peringkat').in('id', pencIds),
+        supabase.from('profiles').select('id, full_name, department').in('id', userIds),
+      ]);
+      const pencMap = Object.fromEntries((pencRes.data || []).map(p => [p.id, p]));
+      const profMap = Object.fromEntries((profRes.data || []).map(p => [p.id, p]));
+      setRequests(reqs.map(r => ({ ...r, pencapaian: pencMap[r.pencapaian_id], profile: profMap[r.user_id] })));
+    } finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleDecision = async (req: any, decision: 'DILULUSKAN' | 'DITOLAK', note?: string) => {
+    setActing(req.id);
+    try {
+      const unlocked_until = decision === 'DILULUSKAN'
+        ? new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString()
+        : null;
+
+      const { error } = await supabase.from('akademik_unlock_requests').update({
+        status:        decision,
+        reviewed_by:   (await supabase.auth.getUser()).data.user?.id,
+        reviewed_at:   new Date().toISOString(),
+        reviewer_note: note || null,
+        unlocked_until,
+      }).eq('id', req.id);
+      if (error) throw error;
+
+      toast.success(decision === 'DILULUSKAN'
+        ? '✅ Diluluskan! Pelajar mempunyai 48 jam untuk edit/padam.'
+        : '❌ Permohonan ditolak.');
+      load();
+    } catch (e: any) {
+      toast.error(e.message || 'Ralat.');
+    } finally { setActing(null); }
+  };
+
+  const pending = requests.filter(r => r.status === 'MENUNGGU');
+  const done    = requests.filter(r => r.status !== 'MENUNGGU');
+
+  const RequestCard = ({ req }: { req: any }) => (
+    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-3">
+      <div className="flex items-start gap-3">
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${THEME}15`, color: THEME }}>
+          <Unlock className="w-4 h-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-black text-white line-clamp-1">{req.pencapaian?.nama_pencapaian ?? '—'}</p>
+          <p className="text-[10px] text-white/40 font-bold mt-0.5">
+            {req.profile?.full_name} · {req.profile?.department?.toUpperCase()}
+          </p>
+          <p className="text-[10px] text-amber-300/80 font-medium mt-1 bg-amber-500/10 rounded-lg px-2 py-1 border border-amber-500/15">
+            📝 Sebab: {req.reason}
+          </p>
+        </div>
+        <span className={`text-[8px] font-black px-2 py-1 rounded-full uppercase ${
+          req.status === 'MENUNGGU'   ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20' :
+          req.status === 'DILULUSKAN' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' :
+          'bg-rose-500/15 text-rose-400 border border-rose-500/20'
+        }`}>{req.status}</span>
+      </div>
+      {req.status === 'MENUNGGU' && (
+        <div className="flex gap-2 border-t border-white/[0.04] pt-3">
+          <button
+            onClick={() => handleDecision(req, 'DILULUSKAN')}
+            disabled={acting === req.id}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black uppercase bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/25 disabled:opacity-50 transition-all"
+          >
+            {acting === req.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+            Luluskan (48 jam)
+          </button>
+          <button
+            onClick={() => {
+              const note = prompt('Nota penolakan:');
+              if (note !== null) handleDecision(req, 'DITOLAK', note);
+            }}
+            disabled={acting === req.id}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black uppercase bg-rose-500/15 border border-rose-500/25 text-rose-400 hover:bg-rose-500/25 disabled:opacity-50 transition-all"
+          >
+            <XCircle className="w-3.5 h-3.5" /> Tolak
+          </button>
+        </div>
+      )}
+      {req.reviewer_note && (
+        <p className="text-[9px] text-white/30 italic border-t border-white/[0.04] pt-2">Nota: {req.reviewer_note}</p>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="space-y-5">
+      {loading ? (
+        <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-24 rounded-2xl bg-white/[0.03] animate-pulse" />)}</div>
+      ) : (
+        <>
+          {pending.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-[9px] font-black uppercase tracking-widest text-amber-400/60">Menunggu ({pending.length})</p>
+              {pending.map(r => <RequestCard key={r.id} req={r} />)}
+            </div>
+          )}
+          {pending.length === 0 && (
+            <div className="py-12 text-center">
+              <Unlock className="w-8 h-8 mx-auto text-white/10 mb-3" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/20">Tiada permohonan buka kunci menunggu</p>
+            </div>
+          )}
+          {done.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-[9px] font-black uppercase tracking-widest text-white/20">Selesai ({done.length})</p>
+              {done.map(r => <RequestCard key={r.id} req={r} />)}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 // ─── Tab definition ───────────────────────────────────────────
 const TABS = [
-  { id: 'overview',    label: 'Overview',     icon: LayoutDashboard },
-  { id: 'semak',       label: 'Semak',        icon: Trophy },
-  { id: 'qr',          label: 'QR Merit',     icon: QrCode },
-  { id: 'merit-config',label: 'Tetapan Merit',icon: Settings },
+  { id: 'overview',    label: 'Overview',       icon: LayoutDashboard },
+  { id: 'semak',       label: 'Semak',          icon: Trophy },
+  { id: 'buka-kunci',  label: 'Buka Kunci',     icon: Unlock },
+  { id: 'qr',          label: 'QR Merit',       icon: QrCode },
+  { id: 'merit-config',label: 'Tetapan Merit',  icon: Settings },
 ];
 
 // ─── Main Admin Dashboard ─────────────────────────────────────
 export function AkademikUnitDashboard() {
   const { profile, isSuperAdmin } = useAuth();
   const [tab, setTab]     = useState('overview');
-  const [stats, setStats] = useState({ menunggu: 0, disahkan: 0, ditolak: 0, totalMerit: 0 });
+  const [stats, setStats] = useState({ menunggu: 0, disahkan: 0, ditolak: 0, totalMerit: 0, pendingUnlock: 0 });
   const [loadingStats, setLoadingStats] = useState(true);
 
   const jppPos = profile?.jpp_position as string | undefined;
@@ -362,14 +503,16 @@ export function AkademikUnitDashboard() {
     Promise.all([
       supabase.from('akademik_pencapaian').select('status'),
       supabase.from('merit_transactions').select('points').eq('source', 'AKADEMIK'),
-    ]).then(([pencRes, meritRes]) => {
+      supabase.from('akademik_unlock_requests').select('id').eq('status', 'MENUNGGU'),
+    ]).then(([pencRes, meritRes, unlockRes]) => {
       const pencs = pencRes.data || [];
       const merits = meritRes.data || [];
       setStats({
-        menunggu:   pencs.filter(p => p.status === 'MENUNGGU').length,
-        disahkan:   pencs.filter(p => p.status === 'DISAHKAN').length,
-        ditolak:    pencs.filter(p => p.status === 'DITOLAK').length,
-        totalMerit: merits.reduce((s, m) => s + (m.points || 0), 0),
+        menunggu:     pencs.filter(p => p.status === 'MENUNGGU').length,
+        disahkan:     pencs.filter(p => p.status === 'DISAHKAN').length,
+        ditolak:      pencs.filter(p => p.status === 'DITOLAK').length,
+        totalMerit:   merits.reduce((s, m) => s + (m.points || 0), 0),
+        pendingUnlock:(unlockRes.data || []).length,
       });
       setLoadingStats(false);
     });
@@ -381,12 +524,12 @@ export function AkademikUnitDashboard() {
       <div className="flex gap-2 flex-wrap">
         {TABS.map(t => {
           const Icon = t.icon;
-          // Hide Tetapan Merit tab from MT users (read-only via the panel itself)
+          const badgeCount = t.id === 'buka-kunci' ? stats.pendingUnlock : t.id === 'semak' ? stats.menunggu : 0;
           return (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all relative"
               style={tab === t.id
                 ? { background: `${THEME}20`, borderColor: THEME, color: THEME }
                 : { background: 'transparent', borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' }
@@ -394,6 +537,11 @@ export function AkademikUnitDashboard() {
             >
               <Icon className="w-3.5 h-3.5" />
               {t.label}
+              {badgeCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[8px] font-black flex items-center justify-center">
+                  {badgeCount}
+                </span>
+              )}
             </button>
           );
         })}
@@ -445,9 +593,10 @@ export function AkademikUnitDashboard() {
               )}
             </div>
           )}
-          {tab === 'semak'        && <PencapaianReviewPanel />}
-          {tab === 'qr'           && <QrMeritManager themeColor={THEME} />}
-          {tab === 'merit-config' && <MeritConfigPanel />}
+              {tab.startsWith('semak')       && <PencapaianReviewPanel />}
+              {tab === 'buka-kunci'          && <UnlockRequestsPanel />}
+              {tab === 'qr'                  && <QrMeritManager themeColor={THEME} />}
+              {tab === 'merit-config'        && <MeritConfigPanel />}
         </motion.div>
       </AnimatePresence>
     </div>

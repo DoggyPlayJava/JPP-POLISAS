@@ -6,11 +6,14 @@ import { hexToRgba } from '@/lib/utils';
 import { uploadFileToDrive, uploadPdfToDrive } from '@/lib/driveUpload';
 import {
   Folder, FolderOpen, File, Download, Upload, Plus, Loader2,
-  FileText, Image, Archive, ChevronRight, Sparkles,
+  FileText, Image, Archive, ChevronRight, Sparkles, PackageOpen,
+  FolderArchive, AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { format, parseISO } from 'date-fns';
 import { ms } from 'date-fns/locale';
+// fflate for client-side ZIP (already in node_modules via dependencies)
+import { zipSync, strToU8 } from 'fflate';
 
 const THEME = '#818CF8';
 
@@ -25,6 +28,104 @@ const FOLDER_PRESETS = [
   { name: 'Maklumat Bursary / Biasiswa', description: 'Flyers dan borang permohonan tajaan' },
   { name: 'Lain-lain',               description: 'Dokumen Am' },
 ];
+
+// ─── Helpers ──────────────────────────────────────────────────
+function sanitizeFilename(name: string): string {
+  return name.replace(/[/\\?%*:|"<>]/g, '_');
+}
+
+function isSupabaseUrl(url: string): boolean {
+  return url.includes('supabase.co/storage') || url.includes('supabase.in/storage');
+}
+
+const SUPABASE_URL = 'https://ujklcxfbmmzxsqtidjtz.supabase.co';
+
+/** Fetch a file as Uint8Array — Supabase Storage (direct) or Google Drive (via no-auth proxy) */
+async function fetchAsBytes(
+  url: string,
+  fileName: string
+): Promise<Uint8Array | null> {
+  try {
+    let fetchUrl: string;
+
+    if (isSupabaseUrl(url)) {
+      fetchUrl = url;
+    } else {
+      // Google Drive — route through proxy Edge Function (no JWT needed)
+      const fileId = (() => {
+        const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+        if (match) return match[1];
+        try { return new URL(url).searchParams.get('id') || null; } catch { return null; }
+      })();
+      if (!fileId) return null;
+      fetchUrl = `${SUPABASE_URL}/functions/v1/proxy-drive-download?fileId=${fileId}&fileName=${encodeURIComponent(fileName)}`;
+    }
+
+    const res = await fetch(fetchUrl);
+    if (!res.ok) {
+      console.warn(`[zip] fetch failed ${res.status} for ${url}`);
+      return null;
+    }
+    const buf = await res.arrayBuffer();
+    return new Uint8Array(buf);
+  } catch (e) {
+    console.warn('[zip] fetchAsBytes error:', e);
+    return null;
+  }
+}
+
+/** Build and trigger download of a ZIP containing files from one or more folders */
+async function buildAndDownloadZip(
+  folderMap: Record<string, { folderName: string; files: any[] }>,
+  zipName: string,
+  onProgress?: (done: number, total: number) => void
+) {
+  const zipEntries: Record<string, Uint8Array> = {};
+  const failed: string[] = []; // files that couldn't be fetched
+
+  let done = 0;
+  const total = Object.values(folderMap).reduce((s, f) => s + f.files.length, 0);
+
+  for (const { folderName, files } of Object.values(folderMap)) {
+    const safeFolderName = sanitizeFilename(folderName);
+
+    for (const file of files) {
+      done++;
+      onProgress?.(done, total);
+
+      const url      = file.drive_view_url || file.drive_download_url || '';
+      const fileName = sanitizeFilename(file.file_name || file.name || `file_${done}`);
+      const entryPath = `${safeFolderName}/${fileName}`;
+
+      const bytes = await fetchAsBytes(url, fileName);
+      if (bytes) {
+        zipEntries[entryPath] = bytes;
+      } else {
+        failed.push(`${folderName}/${fileName}`);
+      }
+    }
+  }
+
+  if (Object.keys(zipEntries).length === 0) {
+    throw new Error('Gagal muat turun mana-mana fail. Sila cuba lagi.');
+  }
+
+  // Add a note for any files that failed (edge cases)
+  if (failed.length > 0) {
+    const note = ['FAIL YANG TIDAK BERJAYA DIMUAT TURUN:', '', ...failed].join('\n');
+    zipEntries['_gagal.txt'] = strToU8(note);
+  }
+
+  const zipped = zipSync(zipEntries, { level: 1 });
+  const blob   = new Blob([zipped as unknown as BlobPart], { type: 'application/zip' });
+  const link   = document.createElement('a');
+  link.href    = URL.createObjectURL(blob);
+  link.download = `${zipName}.zip`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 10000);
+
+  return failed.length;
+}
 
 // ─── File icon helper ─────────────────────────────────────────
 function FileIcon({ name }: { name: string }) {
@@ -42,6 +143,7 @@ function FileCard({ file, isAdmin, onDelete }: { file: any; isAdmin: boolean; on
   const rawSize = file.file_size_bytes || file.file_size || 0;
   const size  = rawSize ? `${(rawSize / 1024).toFixed(0)} KB` : '';
   const color = ext === 'pdf' ? '#EF4444' : ['jpg', 'png', 'webp'].includes(ext) ? '#10B981' : '#818CF8';
+  const isPdf = ext === 'pdf';
 
   return (
     <motion.div
@@ -56,6 +158,7 @@ function FileCard({ file, isAdmin, onDelete }: { file: any; isAdmin: boolean; on
       <div className="flex-1 min-w-0">
         <p className="text-xs font-black text-white line-clamp-1">{displayName}</p>
         <p className="text-[9px] text-white/30 font-bold mt-0.5">
+          {isPdf && <span className="text-amber-400/60 mr-2">PDF · Google Drive</span>}
           {size}{size && ' · '}{file.created_at && format(parseISO(file.created_at), 'd MMM yyyy', { locale: ms })}
         </p>
       </div>
@@ -66,6 +169,7 @@ function FileCard({ file, isAdmin, onDelete }: { file: any; isAdmin: boolean; on
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all opacity-0 group-hover:opacity-100"
           style={{ background: hexToRgba(THEME, 0.15), color: THEME, border: `1px solid ${hexToRgba(THEME, 0.25)}` }}
+          title="Muat turun fail ini"
         >
           <Download className="w-3 h-3" />
           Muat Turun
@@ -77,7 +181,7 @@ function FileCard({ file, isAdmin, onDelete }: { file: any; isAdmin: boolean; on
           </button>
         )}
       </div>
-      {/* Always-visible download for mobile */}
+      {/* Mobile always-visible download */}
       <a
         href={file.drive_download_url || file.drive_view_url}
         target="_blank"
@@ -129,12 +233,15 @@ export function AkademikFolderPage() {
   const [loadedFolders,  setLoadedFolders]  = useState<Set<string>>(new Set());
   const [openFolder,     setOpenFolder]     = useState<string | null>(null);
   const [loading,        setLoading]        = useState(true);
-  const [uploadingFor,   setUploadingFor]   = useState<string | null>(null); // which folder is uploading
+  const [uploadingFor,   setUploadingFor]   = useState<string | null>(null);
   const [showCreate,     setShowCreate]     = useState(false);
   const [newFolder,      setNewFolder]      = useState({ name: '', description: '' });
   const [showPresets,    setShowPresets]    = useState(false);
 
-  // Per-upload file input ref — controlled via hidden single input
+  // ZIP download state
+  const [zipping,        setZipping]        = useState<'folder' | 'all' | null>(null);
+  const [zipProgress,    setZipProgress]    = useState({ done: 0, total: 0 });
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadFolders = useCallback(async () => {
@@ -148,8 +255,8 @@ export function AkademikFolderPage() {
     setLoading(false);
   }, []);
 
-  const loadFilesForFolder = useCallback(async (folderId: string) => {
-    if (loadedFolders.has(folderId)) return; // already loaded
+  const loadFilesForFolder = useCallback(async (folderId: string, force = false) => {
+    if (!force && loadedFolders.has(folderId)) return;
     const { data, error } = await supabase
       .from('akademik_files')
       .select('*')
@@ -161,55 +268,39 @@ export function AkademikFolderPage() {
   }, [loadedFolders]);
 
   useEffect(() => { loadFolders(); }, [loadFolders]);
-
   useEffect(() => {
     if (openFolder) loadFilesForFolder(openFolder);
   }, [openFolder]);
 
-  // Single file input onChange — uses uploadingFor to know which folder
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !uploadingFor) return;
-    e.target.value = ''; // reset so same file can be re-selected
+    e.target.value = '';
 
     const folderId = uploadingFor;
     setUploadingFor(null);
 
     try {
       toast.loading('Memuat naik fail...', { id: 'file-upload' });
-
       let url: string;
       if (file.type === 'application/pdf') {
         url = await uploadPdfToDrive(file, `akademik/folders/${folderId}`, file.name.replace(/\.[^.]+$/, ''));
       } else {
         url = await uploadFileToDrive(file, `akademik/folders/${folderId}`, file.name.replace(/\.[^.]+$/, ''));
       }
-
-      // The url from uploadPdfToDrive/uploadFileToDrive is the view URL (Google Drive)
       const { error: insertError } = await supabase.from('akademik_files').insert({
-        folder_id:        folderId,
-        name:             file.name,
-        file_name:        file.name,
-        drive_view_url:   url,
+        folder_id:          folderId,
+        name:               file.name,
+        file_name:          file.name,
+        drive_view_url:     url,
         drive_download_url: url.includes('/view') ? url.replace('/view', '/download') : url,
-        file_size_bytes:  file.size,
-        file_type:        file.type || 'application/octet-stream',
-        uploaded_by:      profile?.id,
+        file_size_bytes:    file.size,
+        file_type:          file.type || 'application/octet-stream',
+        uploaded_by:        profile?.id,
       });
-
       if (insertError) throw insertError;
-
       toast.success('Fail berjaya dimuat naik!', { id: 'file-upload' });
-
-      // Reload files for this folder
-      const { data } = await supabase
-        .from('akademik_files')
-        .select('*')
-        .eq('folder_id', folderId)
-        .order('created_at', { ascending: false });
-      setFilesMap(p => ({ ...p, [folderId]: data || [] }));
-      // Mark as loaded again
-      setLoadedFolders(p => new Set([...p, folderId]));
+      await loadFilesForFolder(folderId, true);
     } catch (e: any) {
       toast.error(`Gagal muat naik: ${e.message}`, { id: 'file-upload' });
     }
@@ -217,10 +308,8 @@ export function AkademikFolderPage() {
 
   const triggerUpload = (folderId: string) => {
     setUploadingFor(folderId);
-    // Use setTimeout to ensure state is updated before click
     setTimeout(() => fileInputRef.current?.click(), 50);
   };
-
   const handleDeleteFile = async (fileId: string, folderId: string) => {
     if (!confirm('Padam fail ini?')) return;
     const { error } = await supabase.from('akademik_files').delete().eq('id', fileId);
@@ -243,9 +332,103 @@ export function AkademikFolderPage() {
     loadFolders();
   };
 
+  // ── ZIP: Download one folder ──────────────────────────────────
+  const handleDownloadFolder = async (folder: any) => {
+    const files = filesMap[folder.id] || [];
+    if (files.length === 0) { toast.error('Folder ini kosong.'); return; }
+
+    setZipping('folder');
+    setZipProgress({ done: 0, total: files.length });
+    const toastId = 'zip-folder';
+
+    try {
+      toast.loading(`Menyediakan ZIP "${folder.name}"...`, { id: toastId });
+      const failedCount = await buildAndDownloadZip(
+        { [folder.id]: { folderName: folder.name, files } },
+        sanitizeFilename(folder.name),
+        (done, total) => {
+          setZipProgress({ done, total });
+          toast.loading(`Menyediakan ZIP... (${done}/${total} fail)`, { id: toastId });
+        }
+      );
+      if (failedCount > 0) {
+        toast.success(
+          `ZIP berjaya! (${failedCount} fail gagal dimuat turun — semak _gagal.txt dalam ZIP)`,
+          { id: toastId, duration: 7000 }
+        );
+      } else {
+        toast.success(`ZIP "${folder.name}" berjaya! Semua fail termasuk. ✅`, { id: toastId });
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'Gagal buat ZIP.', { id: toastId });
+    } finally {
+      setZipping(null);
+    }
+  };
+
+  // ── ZIP: Download all folders ─────────────────────────────────
+  const handleDownloadAll = async () => {
+    if (folders.length === 0) { toast.error('Tiada folder untuk dimuat turun.'); return; }
+
+    setZipping('all');
+    const toastId = 'zip-all';
+
+    try {
+
+      // Load all unloaded folders first
+      toast.loading('Memuat data folder...', { id: toastId });
+      await Promise.all(folders.map(f => loadFilesForFolder(f.id, false)));
+
+      // Brief delay to allow state to settle
+      await new Promise(r => setTimeout(r, 300));
+
+      const allFiles = folders.reduce((s, f) => s + (filesMap[f.id] || []).length, 0);
+      setZipProgress({ done: 0, total: allFiles });
+
+      const folderMap: Record<string, { folderName: string; files: any[] }> = {};
+      for (const folder of folders) {
+        const files = filesMap[folder.id] || [];
+        if (files.length > 0) {
+          folderMap[folder.id] = { folderName: folder.name, files };
+        }
+      }
+
+      if (Object.keys(folderMap).length === 0) {
+        toast.error('Semua folder kosong.', { id: toastId });
+        setZipping(null);
+        return;
+      }
+
+      toast.loading(`Menyediakan ZIP keseluruhan...`, { id: toastId });
+      const failedCount = await buildAndDownloadZip(
+        folderMap,
+        'akademik_dokumen',
+        (done, total) => {
+          setZipProgress({ done, total });
+          toast.loading(`Menyediakan ZIP keseluruhan... (${done}/${total} fail)`, { id: toastId });
+        }
+      );
+
+      if (failedCount > 0) {
+        toast.success(
+          `ZIP keseluruhan berjaya! (${failedCount} fail gagal — semak _gagal.txt dalam ZIP)`,
+          { id: toastId, duration: 8000 }
+        );
+      } else {
+        toast.success('ZIP keseluruhan berjaya! Semua fail termasuk. ✅', { id: toastId });
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'Gagal buat ZIP.', { id: toastId });
+    } finally {
+      setZipping(null);
+    }
+  };
+
+  const isZipping = zipping !== null;
+
   return (
     <div className="space-y-6">
-      {/* Hidden single file input */}
+      {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"
@@ -254,22 +437,51 @@ export function AkademikFolderPage() {
         onChange={handleFileChange}
       />
 
+      {/* Header */}
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/25 mb-1">Akademik</p>
-          <h1 className="text-2xl font-black text-white">Dokumen & Sumber</h1>
+          <h1 className="text-2xl font-black text-white">Dokumen &amp; Sumber</h1>
           <p className="text-xs text-white/40 font-medium mt-1">Muat turun borang, nota, dan sumber akademik JPP</p>
         </div>
-        {isAdmin && (
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Download All ZIP */}
           <button
-            onClick={() => setShowCreate(p => !p)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
-            style={{ background: hexToRgba(THEME, 0.15), color: THEME, border: `1px solid ${hexToRgba(THEME, 0.25)}` }}
+            onClick={handleDownloadAll}
+            disabled={isZipping || folders.length === 0}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-40"
+            style={{ background: hexToRgba('#34D399', 0.12), color: '#34D399', border: `1px solid ${hexToRgba('#34D399', 0.2)}` }}
+            title="Muat turun semua dokumen sebagai ZIP"
           >
-            <Plus className="w-3.5 h-3.5" />
-            Folder Baru
+            {zipping === 'all'
+              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              : <FolderArchive className="w-3.5 h-3.5" />
+            }
+            {zipping === 'all'
+              ? `${zipProgress.done}/${zipProgress.total}`
+              : 'Muat Turun Semua'
+            }
           </button>
-        )}
+
+          {isAdmin && (
+            <button
+              onClick={() => setShowCreate(p => !p)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
+              style={{ background: hexToRgba(THEME, 0.15), color: THEME, border: `1px solid ${hexToRgba(THEME, 0.25)}` }}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Folder Baru
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* PDF notice */}
+      <div className="flex items-start gap-2 px-4 py-3 rounded-2xl border border-amber-500/15 bg-amber-500/[0.06]">
+        <AlertTriangle className="w-3.5 h-3.5 text-amber-400/70 shrink-0 mt-0.5" />
+        <p className="text-[10px] text-amber-300/60 font-medium leading-relaxed">
+          <span className="font-black text-amber-300/80">Nota:</span> Fail PDF disimpan di Google Drive (jimat storan) — muat turun terus via butang atau link. Gambar boleh disertakan dalam ZIP.
+        </p>
       </div>
 
       {/* Create folder form */}
@@ -284,7 +496,6 @@ export function AkademikFolderPage() {
             <div className="p-5 rounded-2xl border border-white/[0.08] bg-white/[0.02] space-y-4">
               <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Folder Baru</p>
 
-              {/* Presets */}
               <div>
                 <button
                   onClick={() => setShowPresets(p => !p)}
@@ -389,21 +600,43 @@ export function AkademikFolderPage() {
                       className="overflow-hidden"
                     >
                       <div className="ml-4 mt-2 space-y-2 pl-4 border-l border-white/[0.06]">
-                        {/* Upload button — admin only */}
-                        {isAdmin && (
-                          <button
-                            onClick={() => triggerUpload(folder.id)}
-                            disabled={!!uploadingFor}
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-40"
-                            style={{ background: hexToRgba(THEME, 0.1), color: THEME, border: `1px solid ${hexToRgba(THEME, 0.2)}` }}
-                          >
-                            {isCurrentlyUploading
-                              ? <Loader2 className="w-3 h-3 animate-spin" />
-                              : <Upload className="w-3 h-3" />
-                            }
-                            {isCurrentlyUploading ? 'Memuat Naik...' : 'Muat Naik Fail'}
-                          </button>
-                        )}
+                        {/* Folder action bar */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {isAdmin && (
+                            <button
+                              onClick={() => triggerUpload(folder.id)}
+                              disabled={!!uploadingFor}
+                              className="flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-40"
+                              style={{ background: hexToRgba(THEME, 0.1), color: THEME, border: `1px solid ${hexToRgba(THEME, 0.2)}` }}
+                            >
+                              {isCurrentlyUploading
+                                ? <Loader2 className="w-3 h-3 animate-spin" />
+                                : <Upload className="w-3 h-3" />
+                              }
+                              {isCurrentlyUploading ? 'Memuat Naik...' : 'Muat Naik Fail'}
+                            </button>
+                          )}
+
+                          {/* Download folder as ZIP */}
+                          {files.length > 0 && (
+                            <button
+                              onClick={() => handleDownloadFolder(folder)}
+                              disabled={isZipping}
+                              className="flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-40"
+                              style={{ background: hexToRgba('#34D399', 0.08), color: '#34D399', border: `1px solid ${hexToRgba('#34D399', 0.15)}` }}
+                              title="Muat turun semua fail dalam folder ini sebagai ZIP"
+                            >
+                              {zipping === 'folder'
+                                ? <Loader2 className="w-3 h-3 animate-spin" />
+                                : <PackageOpen className="w-3 h-3" />
+                              }
+                              {zipping === 'folder'
+                                ? `${zipProgress.done}/${zipProgress.total}`
+                                : `Muat Turun Folder (${files.length} fail)`
+                              }
+                            </button>
+                          )}
+                        </div>
 
                         {files.length === 0 ? (
                           <div className="py-6 text-center">

@@ -271,7 +271,7 @@ export function AkademikPencapaian() {
   const load = useCallback(async () => {
     if (!profile?.id) return;
     setLoading(true);
-    const [pencRes, catRes, configRes] = await Promise.all([
+    const [pencRes, catRes, configRes, unlockRes] = await Promise.all([
       supabase
         .from('akademik_pencapaian')
         .select('*, akademik_sijil_categories(name, icon, color)')
@@ -279,8 +279,18 @@ export function AkademikPencapaian() {
         .order('created_at', { ascending: false }),
       supabase.from('akademik_sijil_categories').select('*').eq('is_active', true).order('sort_order'),
       supabase.from('akademik_merit_config').select('*'),
+      supabase
+        .from('akademik_unlock_requests')
+        .select('pencapaian_id, status, unlocked_until, reviewer_note')
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending: false }),
     ]);
-    setPencapaian(pencRes.data || []);
+    // Map unlock requests by pencapaian_id (most recent per pencapaian)
+    const unlockMap: Record<string, any> = {};
+    for (const req of (unlockRes.data || [])) {
+      if (!unlockMap[req.pencapaian_id]) unlockMap[req.pencapaian_id] = req;
+    }
+    setPencapaian((pencRes.data || []).map(p => ({ ...p, _unlock: unlockMap[p.id] ?? null })));
     setCategories(catRes.data || []);
     setMeritConfig(configRes.data || []);
     setLoading(false);
@@ -290,11 +300,25 @@ export function AkademikPencapaian() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Padam pencapaian ini? Tindakan ini tidak boleh dibatalkan.')) return;
-    const { error } = await supabase.from('akademik_pencapaian').delete().eq('id', id);
-    if (error) { toast.error('Gagal padam: ' + error.message); return; }
-    toast.success('Pencapaian dipadam.');
+    const { error, count } = await supabase
+      .from('akademik_pencapaian')
+      .delete({ count: 'exact' })
+      .eq('id', id);
+    if (error) {
+      toast.error('Gagal padam: ' + error.message);
+      return;
+    }
+    if (count === 0) {
+      // RLS blocked the delete silently — possible causes:
+      // 1. DISAHKAN but unlock window expired
+      // 2. Not owner
+      toast.error('Tidak dapat dipadam. Jika pencapaian ini telah disahkan, sila mohon buka kunci dahulu atau semak tempoh buka kunci sudah tamat.');
+      return;
+    }
+    toast.success('Pencapaian berjaya dipadam.');
     load();
   };
+
 
   const handleUnlockRequest = async () => {
     if (!unlockReason.trim()) { toast.error('Sila nyatakan sebab permohonan.'); return; }
@@ -518,15 +542,66 @@ export function AkademikPencapaian() {
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   )}
-                  {p.status === 'DISAHKAN' && (
-                    <button
-                      onClick={() => { setUnlockTarget(p); setUnlockReason(''); }}
-                      className="flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest text-white/20 hover:text-amber-400 hover:bg-amber-500/10 transition-all border border-white/[0.06] hover:border-amber-500/20"
-                      title="Minta buka kunci"
-                    >
-                      <UnlockKeyhole className="w-2.5 h-2.5" /> Buka Kunci
-                    </button>
-                  )}
+                  {p.status === 'DISAHKAN' && (() => {
+                    const unlock = p._unlock;
+                    const isApproved = unlock?.status === 'DILULUSKAN';
+                    const withinWindow = isApproved && unlock?.unlocked_until && new Date(unlock.unlocked_until) > new Date();
+                    const isPending    = unlock?.status === 'MENUNGGU';
+                    const isRejected   = unlock?.status === 'DITOLAK';
+
+                    if (withinWindow) {
+                      // Calculate remaining hours
+                      const hoursLeft = Math.max(0, Math.ceil((new Date(unlock.unlocked_until).getTime() - Date.now()) / 3600000));
+                      return (
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-[8px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                            🔓 Diluluskan ({hoursLeft}j lagi)
+                          </span>
+                          <button
+                            onClick={() => handleDelete(p.id)}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-black uppercase text-rose-400/70 hover:text-rose-400 hover:bg-rose-500/10 transition-all border border-rose-500/20"
+                          >
+                            <Trash2 className="w-2.5 h-2.5" /> Padam
+                          </button>
+                        </div>
+                      );
+                    }
+                    if (isPending) {
+                      return (
+                        <span className="text-[8px] font-black text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                          ⏳ Menunggu Kelulusan
+                        </span>
+                      );
+                    }
+                    if (isRejected) {
+                      return (
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-[8px] font-black text-rose-400/80 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/15">
+                            ✕ Ditolak
+                          </span>
+                          {unlock?.reviewer_note && (
+                            <p className="text-[8px] text-white/25 max-w-[120px] text-right">{unlock.reviewer_note}</p>
+                          )}
+                          <button
+                            onClick={() => { setUnlockTarget(p); setUnlockReason(''); }}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-black uppercase text-amber-400/60 hover:text-amber-400 hover:bg-amber-500/10 transition-all border border-white/[0.06]"
+                          >
+                            <UnlockKeyhole className="w-2.5 h-2.5" /> Cuba Lagi
+                          </button>
+                        </div>
+                      );
+                    }
+                    // No request yet
+                    return (
+                      <button
+                        onClick={() => { setUnlockTarget(p); setUnlockReason(''); }}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest text-white/20 hover:text-amber-400 hover:bg-amber-500/10 transition-all border border-white/[0.06] hover:border-amber-500/20"
+                        title="Minta buka kunci"
+                      >
+                        <UnlockKeyhole className="w-2.5 h-2.5" /> Buka Kunci
+                      </button>
+                    );
+                  })()}
                 </div>
               </motion.div>
             );

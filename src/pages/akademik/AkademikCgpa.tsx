@@ -72,32 +72,71 @@ async function extractCgpaFromPdf(file: File) {
 
   const text = fullText.replace(/\s+/g, ' ').toUpperCase();
 
-  // Enhanced HPNM patterns for POLISAS transcript formats
+
+  // ── Strategy 1: Semester dalam perkataan Melayu (POLISAS SULTAN HAJI AHMAD SHAH) ──
+  const semWordMap: Record<string, number> = {
+    'SATU': 1, 'DUA': 2, 'TIGA': 3, 'EMPAT': 4,
+    'LIMA': 5, 'ENAM': 6, 'TUJUH': 7, 'LAPAN': 8, 'SEMBILAN': 9,
+    'ONE': 1, 'TWO': 2, 'THREE': 3, 'FOUR': 4, 'FIVE': 5, 'SIX': 6,
+  };
+
+  // ── HPNM patterns ─────────────────────────────────────────────
   const hpnmPatterns = [
     /HPNM\s*[:\-=]?\s*(\d\.\d{2})/,
-    /HPNM\s*[:\-=]?\s*(\d+\.\d{1,4})/,
     /H\.P\.N\.M\.?\s*[:\-=]?\s*(\d\.\d{2})/,
     /PURATA\s+NILAI\s+MATA\s+KUMULATIF\s*[:\-]?\s*(\d\.\d{2})/,
     /CGPA\s*[:\-=]?\s*(\d\.\d{2,4})/,
-    /CUM[ULATIVE]*\s*GPA\s*[:\-=]?\s*(\d\.\d{2})/,
+    /CUMULATIVE\s*GPA\s*[:\-=]?\s*(\d\.\d{2})/,
     /KEPUTUSAN\s+KUMULATIF[^\d]*(\d\.\d{2})/,
-    // Detect standalone decimal like "3.85" appearing after HPNM label anywhere
     /(?:HPNM|CGPA|KUMULATIF)[^\d]{0,30}(\d\.[0-9]{2,4})/,
+    // POLISAS format: HPNM value appears after NULL or end of grade table as standalone "X.XX"
+    // Look for pattern: "NILA I X.XX" or "NILAM X.XX" at end of doc
+    /NILA I?\s+([0-2]\.\d{2}|[34]\.\d{2})\s+(\d\.\d{2})/,
   ];
+
+  // ── PNM patterns ──────────────────────────────────────────────
   const pnmPatterns = [
     /PNM\s*[:\-=]?\s*(\d\.\d{2})/,
     /P\.N\.M\.?\s*[:\-=]?\s*(\d\.\d{2})/,
     /PURATA\s+NILAI\s+MATA\s*[:\-]?\s*(\d\.\d{2})/,
     /GPA\s+SEMESTER\s*[:\-=]?\s*(\d\.\d{2})/,
+    /(?:^|[^A-Z])GPA\s*[:\-=]?\s*(\d\.\d{2})/,
     /(?:PNM|GPA\s+SEM)[^\d]{0,20}(\d\.[0-9]{2,4})/,
   ];
-  const semPatterns = [
+
+  // ── Semester patterns (digit first, then Malay words, then SESI) ──
+  let semester: number | null = null;
+
+  // Try digit pattern
+  const semDigitPatterns = [
     /SEMESTER\s*[:\-]?\s*([1-9])/,
     /SEM(?:ESTER)?\s*[:\-]?\s*([1-9])/,
     /SEM\.?\s*([1-9])\b/,
   ];
+  for (const p of semDigitPatterns) {
+    const m = text.match(p);
+    if (m) { semester = parseInt(m[1]); break; }
+  }
+
+  // Try Malay word pattern: "SEMESTER : SATU"
+  if (!semester) {
+    const semWordMatch = text.match(/SEMESTER\s*[:\-]?\s*(SATU|DUA|TIGA|EMPAT|LIMA|ENAM|TUJUH|LAPAN|SEMBILAN|ONE|TWO|THREE|FOUR|FIVE|SIX)/);
+    if (semWordMatch) semester = semWordMap[semWordMatch[1]] ?? null;
+  }
+
+  // Try SESI pattern: "SESI I :" = sem 1, "SESI II :" = sem 2
+  if (!semester) {
+    const sesiMatch = text.match(/SESI\s+(I{1,3}|IV|V?I{0,3})\s*[:\s]/);
+    if (sesiMatch) {
+      const roman: Record<string, number> = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6 };
+      semester = roman[sesiMatch[1].trim()] ?? null;
+    }
+  }
+
+  // ── Tahun/Akademik session ────────────────────────────────────
   const tahunPatterns = [
-    /SESI\s+(\d{4}\s*\/\s*\d{4})/,
+    /SESI\s+[IVX]+\s*[:\-]?\s*(\d{4}\s*\/\s*\d{4})/,    // SESI I : 2025/2026
+    /SESI\s*(\d{4}\s*\/\s*\d{4})/,
     /(\d{4}\s*\/\s*\d{4})/,
     /(\d{4}-\d{4})/,
     /TAHUN\s+(\d{4})/,
@@ -107,8 +146,25 @@ async function extractCgpaFromPdf(file: File) {
   for (const p of hpnmPatterns) {
     const m = text.match(p);
     if (m) {
-      const val = parseFloat(m[1]);
+      // "NILA I X.XX Y.YY" — second capture = hpnm if two values
+      const raw = p.source.includes('NILA I') ? m[2] ?? m[1] : m[1];
+      const val = parseFloat(raw);
       if (val >= 0 && val <= 4.0) { hpnm = val; break; }
+    }
+  }
+
+  // POLISAS last-resort: scan ALL decimal numbers 0.00-4.00 near end of doc
+  // The last valid GPA-range decimal that appears twice (PNM + HPNM) is typical
+  if (!hpnm) {
+    const tail = text.slice(-800); // last 800 chars of doc
+    const allDecimals = [...tail.matchAll(/\b([0-4]\.\d{2})\b/g)]
+      .map(m => parseFloat(m[1]))
+      .filter(v => v >= 0 && v <= 4.0);
+    if (allDecimals.length >= 2) {
+      // Last two valid decimals: first = PNM (current sem), last = HPNM (cumulative)
+      hpnm = allDecimals[allDecimals.length - 1];
+    } else if (allDecimals.length === 1) {
+      hpnm = allDecimals[0];
     }
   }
 
@@ -121,8 +177,14 @@ async function extractCgpaFromPdf(file: File) {
     }
   }
 
-  let semester: number | null = null;
-  for (const p of semPatterns) { const m = text.match(p); if (m) { semester = parseInt(m[1]); break; } }
+  // PNM last-resort: second-to-last decimal in tail
+  if (!pnm && hpnm) {
+    const tail = text.slice(-800);
+    const allDecimals = [...tail.matchAll(/\b([0-4]\.\d{2})\b/g)]
+      .map(m => parseFloat(m[1]))
+      .filter(v => v >= 0 && v <= 4.0 && v !== hpnm);
+    if (allDecimals.length > 0) pnm = allDecimals[allDecimals.length - 1];
+  }
 
   let tahun: string | null = null;
   for (const p of tahunPatterns) {
@@ -130,7 +192,7 @@ async function extractCgpaFromPdf(file: File) {
     if (m) { tahun = m[1].replace(/\s/g, ''); break; }
   }
 
-  return { hpnm, pnm, semester, tahun, rawText: text.substring(0, 500) };
+  return { hpnm, pnm, semester, tahun, rawText: text.substring(0, 600) };
 }
 
 // ─── Main CGPA Page ───────────────────────────────────────────

@@ -120,8 +120,8 @@ export function AkademikQrScan() {
         reference_id: tokenData.id,
       });
 
-      // Update profiles.merit
-      await supabase.rpc('increment_merit', { uid: profile.id, delta: tokenData.merit_value });
+      // Update profiles.merit + merit_asrama (split column)
+      await supabase.rpc('increment_merit_by_source', { p_uid: profile.id, p_delta: tokenData.merit_value, p_src: 'QR_SCAN' });
 
       setMeritAwarded(tokenData.merit_value);
       setStatus('success');
