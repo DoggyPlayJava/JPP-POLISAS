@@ -15,12 +15,15 @@ import jsQR from 'jsqr';
 
 const THEME = '#34D399';
 
+// Detect iOS device
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+
 // ─── Camera QR Scanner ───────────────────────────────────────
 function CameraScanner({ onClose, onDetect }: { onClose: () => void; onDetect: (url: string) => void }) {
   const videoRef   = useRef<HTMLVideoElement>(null);
   const canvasRef  = useRef<HTMLCanvasElement>(null);
   const streamRef  = useRef<MediaStream | null>(null);
-  const rafRef     = useRef<number>(0);
+  const timerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [scanning, setScanning] = useState(true);
 
@@ -29,21 +32,26 @@ function CameraScanner({ onClose, onDetect }: { onClose: () => void; onDetect: (
 
     const start = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' }, width: { ideal: 640 }, height: { ideal: 480 } },
-        });
+        const constraints: MediaStreamConstraints = {
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+        };
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
         if (!active) { stream.getTracks().forEach(t => t.stop()); return; }
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          videoRef.current.play();
+          await videoRef.current.play();
         }
-        scanFrame();
+        scheduleScan();
       } catch (e: any) {
         if (!active) return;
         setError(e.name === 'NotAllowedError'
           ? 'Akses kamera ditolak. Sila benarkan akses kamera dalam tetapan pelayar.'
-          : 'Kamera tidak dapat dibuka. Cuba semula.'
+          : 'Kamera tidak dapat dibuka. Cuba semula atau guna kamera native.'
         );
       }
     };
@@ -52,28 +60,39 @@ function CameraScanner({ onClose, onDetect }: { onClose: () => void; onDetect: (
       if (!active) return;
       const video  = videoRef.current;
       const canvas = canvasRef.current;
-      if (!video || !canvas || video.readyState !== video.HAVE_ENOUGH_DATA) {
-        rafRef.current = requestAnimationFrame(scanFrame);
+      if (!video || !canvas || video.readyState < video.HAVE_ENOUGH_DATA) {
+        timerRef.current = setTimeout(scanFrame, 100);
         return;
       }
       canvas.width  = video.videoWidth;
       canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d')!;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+      // Try both orientations for better iOS detection
+      const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
       if (code?.data) {
         setScanning(false);
         onDetect(code.data);
         return;
       }
-      rafRef.current = requestAnimationFrame(scanFrame);
+      timerRef.current = setTimeout(scanFrame, 100); // ~10fps — more reliable than rAF on iOS
     };
+
+    const scheduleScan = () => {
+      // Small delay to let video stabilize especially on iOS
+      timerRef.current = setTimeout(scanFrame, 500);
+    };
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError('Pelayar ini tidak menyokong akses kamera. Cuba guna Safari terkini atau Chrome.');
+      return;
+    }
 
     start();
     return () => {
       active = false;
-      cancelAnimationFrame(rafRef.current);
+      if (timerRef.current) clearTimeout(timerRef.current);
       streamRef.current?.getTracks().forEach(t => t.stop());
     };
   }, []);
@@ -106,11 +125,16 @@ function CameraScanner({ onClose, onDetect }: { onClose: () => void; onDetect: (
           </div>
           <p className="text-sm font-black text-white">{error}</p>
           <p className="text-[11px] text-white/40">
-            Alternatif: Buka kamera telefon anda dan scan terus QR di papan notis.
+            {isIOS()
+              ? 'iOS tip: Buka app Kamera iPhone anda dan arahkan ke QR kod di skrin atau papan notis.'
+              : 'Alternatif: Buka kamera telefon anda dan scan terus QR di papan notis.'
+            }
           </p>
-          <button onClick={onClose} className="px-5 py-2.5 rounded-2xl bg-white/10 text-white text-xs font-black uppercase tracking-widest hover:bg-white/20 transition-all">
-            Tutup
-          </button>
+          <div className="flex gap-2">
+            <button onClick={onClose} className="px-5 py-2.5 rounded-2xl bg-white/10 text-white text-xs font-black uppercase tracking-widest hover:bg-white/20 transition-all">
+              Tutup
+            </button>
+          </div>
         </div>
       ) : (
         <>
@@ -252,14 +276,21 @@ export function AkademikQrPage() {
             </div>
 
             {/* Scan Button */}
-            <button
-              onClick={() => setShowCamera(true)}
-              className="flex items-center gap-3 px-8 py-4 rounded-2xl mx-auto font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
-              style={{ background: THEME, color: '#064E3B', boxShadow: `0 12px 32px ${hexToRgba(THEME, 0.35)}` }}
-            >
-              <Camera className="w-4 h-4" />
-              Buka Kamera & Scan
-            </button>
+            <div className="flex flex-col items-center gap-2">
+              <button
+                onClick={() => setShowCamera(true)}
+                className="flex items-center gap-3 px-8 py-4 rounded-2xl mx-auto font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
+                style={{ background: THEME, color: '#064E3B', boxShadow: `0 12px 32px ${hexToRgba(THEME, 0.35)}` }}
+              >
+                <Camera className="w-4 h-4" />
+                Buka Kamera & Scan
+              </button>
+              {isIOS() && (
+                <p className="text-[10px] text-amber-400/70 font-bold mt-1">
+                  📱 iOS: Jika kamera tidak mengesan QR, guna app Kamera iPhone terus
+                </p>
+              )}
+            </div>
 
             <p className="text-[10px] text-white/25 font-medium">
               atau buka kamera telefon anda dan scan QR terus dari papan notis

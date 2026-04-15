@@ -6,7 +6,7 @@ import { hexToRgba } from '@/lib/utils';
 import { uploadPdfToDrive } from '@/lib/driveUpload';
 import {
   Plus, Trophy, Clock, CheckCircle, XCircle, Upload,
-  ChevronDown, X, FileText, AlertCircle, Loader2,
+  ChevronDown, X, FileText, AlertCircle, Loader2, Trash2, UnlockKeyhole,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -264,6 +264,9 @@ export function AkademikPencapaian() {
   const [loading, setLoading]   = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter]     = useState<'SEMUA' | 'MENUNGGU' | 'DISAHKAN' | 'DITOLAK'>('SEMUA');
+  const [unlockTarget, setUnlockTarget]   = useState<any>(null);
+  const [unlockReason, setUnlockReason]   = useState('');
+  const [unlockSaving, setUnlockSaving]   = useState(false);
 
   const load = useCallback(async () => {
     if (!profile?.id) return;
@@ -285,6 +288,35 @@ export function AkademikPencapaian() {
 
   useEffect(() => { load(); }, [load]);
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Padam pencapaian ini? Tindakan ini tidak boleh dibatalkan.')) return;
+    const { error } = await supabase.from('akademik_pencapaian').delete().eq('id', id);
+    if (error) { toast.error('Gagal padam: ' + error.message); return; }
+    toast.success('Pencapaian dipadam.');
+    load();
+  };
+
+  const handleUnlockRequest = async () => {
+    if (!unlockReason.trim()) { toast.error('Sila nyatakan sebab permohonan.'); return; }
+    if (!unlockTarget || !profile?.id) return;
+    setUnlockSaving(true);
+    try {
+      const { error } = await supabase.from('akademik_unlock_requests').insert({
+        pencapaian_id: unlockTarget.id,
+        user_id: profile.id,
+        reason: unlockReason.trim(),
+      });
+      if (error) throw error;
+      toast.success('Permohonan buka kunci dihantar! Menunggu kelulusan exco.');
+      setUnlockTarget(null);
+      setUnlockReason('');
+    } catch (e: any) {
+      toast.error('Gagal: ' + e.message);
+    } finally {
+      setUnlockSaving(false);
+    }
+  };
+
   const filtered = filter === 'SEMUA' ? pencapaian : pencapaian.filter(p => p.status === filter);
   const counts   = {
     SEMUA:    pencapaian.length,
@@ -303,6 +335,47 @@ export function AkademikPencapaian() {
             onClose={() => setShowForm(false)}
             onSuccess={load}
           />
+        )}
+        {/* Unlock Request Modal */}
+        {unlockTarget && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          >
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setUnlockTarget(null)} />
+            <div className="relative w-full max-w-md bg-slate-900 rounded-[2rem] border border-white/[0.08] p-6 space-y-4">
+              <div className="flex items-center gap-3 mb-1">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: `${THEME}20`, color: THEME }}>
+                  <UnlockKeyhole className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-white/30">Permohonan</p>
+                  <h3 className="text-sm font-black text-white">Buka Kunci Pencapaian</h3>
+                </div>
+                <button onClick={() => setUnlockTarget(null)} className="ml-auto p-2 rounded-xl text-white/30 hover:text-white hover:bg-white/[0.06] transition-all"><X className="w-4 h-4" /></button>
+              </div>
+              <p className="text-xs text-white/40">Pencapaian <strong className="text-white/70">{unlockTarget.nama_pencapaian}</strong> telah disahkan. Nyatakan sebab permohonan buka kunci untuk edit/padam.</p>
+              <textarea
+                value={unlockReason}
+                onChange={e => setUnlockReason(e.target.value)}
+                placeholder="Nyatakan sebab permohonan..."
+                rows={3}
+                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 outline-none focus:border-white/20 resize-none"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleUnlockRequest}
+                  disabled={unlockSaving}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest disabled:opacity-50"
+                  style={{ background: THEME, color: '#fff' }}
+                >
+                  {unlockSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UnlockKeyhole className="w-3.5 h-3.5" />}
+                  {unlockSaving ? 'Menghantar...' : 'Hantar Permohonan'}
+                </button>
+                <button onClick={() => setUnlockTarget(null)} className="px-4 py-3 rounded-xl text-xs font-black uppercase text-white/30 bg-white/[0.04]">Batal</button>
+              </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -434,6 +507,25 @@ export function AkademikPencapaian() {
                     >
                       <FileText className="w-2.5 h-2.5" /> Sijil
                     </a>
+                  )}
+                  {/* Action buttons */}
+                  {(p.status === 'MENUNGGU' || p.status === 'DITOLAK') && (
+                    <button
+                      onClick={() => handleDelete(p.id)}
+                      className="p-1.5 rounded-lg text-white/20 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+                      title="Padam pencapaian"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  {p.status === 'DISAHKAN' && (
+                    <button
+                      onClick={() => { setUnlockTarget(p); setUnlockReason(''); }}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest text-white/20 hover:text-amber-400 hover:bg-amber-500/10 transition-all border border-white/[0.06] hover:border-amber-500/20"
+                      title="Minta buka kunci"
+                    >
+                      <UnlockKeyhole className="w-2.5 h-2.5" /> Buka Kunci
+                    </button>
                   )}
                 </div>
               </motion.div>

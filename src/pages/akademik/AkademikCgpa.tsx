@@ -20,7 +20,8 @@ const PNM_COLOR  = '#34D399';
 
 // ─── Grade helper ─────────────────────────────────────────────
 function gradeInfo(val: number) {
-  if (val >= 3.7) return { label: 'Cemerlang',  color: '#10B981', bg: 'rgba(16,185,129,0.12)' };
+  // POLISAS grading: Cemerlang >= 3.5 (not 3.7)
+  if (val >= 3.5) return { label: 'Cemerlang',  color: '#10B981', bg: 'rgba(16,185,129,0.12)' };
   if (val >= 3.0) return { label: 'Kepujian',   color: THEME,     bg: 'rgba(129,140,248,0.12)' };
   if (val >= 2.0) return { label: 'Lulus',      color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' };
   return           { label: 'Gagal',            color: '#EF4444', bg: 'rgba(239,68,68,0.12)' };
@@ -71,43 +72,65 @@ async function extractCgpaFromPdf(file: File) {
 
   const text = fullText.replace(/\s+/g, ' ').toUpperCase();
 
+  // Enhanced HPNM patterns for POLISAS transcript formats
   const hpnmPatterns = [
-    /HPNM\s*[:\-=]?\s*(\d+\.\d{2})/,
-    /CGPA\s*[:\-=]?\s*(\d+\.\d{2})/,
-    /PURATA\s+NILAI\s+MATA\s+KUMULATIF\s*[:\-]?\s*(\d+\.\d{2})/,
-    /CUM[A-Z]*\s+GPA\s*[:\-=]?\s*(\d+\.\d{2})/,
+    /HPNM\s*[:\-=]?\s*(\d\.\d{2})/,
+    /HPNM\s*[:\-=]?\s*(\d+\.\d{1,4})/,
+    /H\.P\.N\.M\.?\s*[:\-=]?\s*(\d\.\d{2})/,
+    /PURATA\s+NILAI\s+MATA\s+KUMULATIF\s*[:\-]?\s*(\d\.\d{2})/,
+    /CGPA\s*[:\-=]?\s*(\d\.\d{2,4})/,
+    /CUM[ULATIVE]*\s*GPA\s*[:\-=]?\s*(\d\.\d{2})/,
+    /KEPUTUSAN\s+KUMULATIF[^\d]*(\d\.\d{2})/,
+    // Detect standalone decimal like "3.85" appearing after HPNM label anywhere
+    /(?:HPNM|CGPA|KUMULATIF)[^\d]{0,30}(\d\.[0-9]{2,4})/,
   ];
   const pnmPatterns = [
-    /PNM\s*[:\-=]?\s*(\d+\.\d{2})/,
-    /PURATA\s+NILAI\s+MATA\s*[:\-]?\s*(\d+\.\d{2})/,
-    /GPA\s+SEMESTER\s*[:\-=]?\s*(\d+\.\d{2})/,
+    /PNM\s*[:\-=]?\s*(\d\.\d{2})/,
+    /P\.N\.M\.?\s*[:\-=]?\s*(\d\.\d{2})/,
+    /PURATA\s+NILAI\s+MATA\s*[:\-]?\s*(\d\.\d{2})/,
+    /GPA\s+SEMESTER\s*[:\-=]?\s*(\d\.\d{2})/,
+    /(?:PNM|GPA\s+SEM)[^\d]{0,20}(\d\.[0-9]{2,4})/,
   ];
   const semPatterns = [
-    /SEMESTER\s+(\d)/,
-    /SEM(?:ESTER)?\s*[:\-]?\s*(\d)/,
+    /SEMESTER\s*[:\-]?\s*([1-9])/,
+    /SEM(?:ESTER)?\s*[:\-]?\s*([1-9])/,
+    /SEM\.?\s*([1-9])\b/,
   ];
   const tahunPatterns = [
-    /SESI\s+(\d{4}\/\d{4})/,
-    /(\d{4}\/\d{4})/,
+    /SESI\s+(\d{4}\s*\/\s*\d{4})/,
+    /(\d{4}\s*\/\s*\d{4})/,
     /(\d{4}-\d{4})/,
+    /TAHUN\s+(\d{4})/,
   ];
 
   let hpnm: number | null = null;
-  for (const p of hpnmPatterns) { const m = text.match(p); if (m) { hpnm = parseFloat(m[1]); break; } }
+  for (const p of hpnmPatterns) {
+    const m = text.match(p);
+    if (m) {
+      const val = parseFloat(m[1]);
+      if (val >= 0 && val <= 4.0) { hpnm = val; break; }
+    }
+  }
 
   let pnm: number | null = null;
   for (const p of pnmPatterns) {
     const m = text.match(p);
-    if (m && parseFloat(m[1]) !== hpnm) { pnm = parseFloat(m[1]); break; }
+    if (m) {
+      const val = parseFloat(m[1]);
+      if (val >= 0 && val <= 4.0 && val !== hpnm) { pnm = val; break; }
+    }
   }
 
   let semester: number | null = null;
   for (const p of semPatterns) { const m = text.match(p); if (m) { semester = parseInt(m[1]); break; } }
 
   let tahun: string | null = null;
-  for (const p of tahunPatterns) { const m = text.match(p); if (m) { tahun = m[1]; break; } }
+  for (const p of tahunPatterns) {
+    const m = text.match(p);
+    if (m) { tahun = m[1].replace(/\s/g, ''); break; }
+  }
 
-  return { hpnm, pnm, semester, tahun };
+  return { hpnm, pnm, semester, tahun, rawText: text.substring(0, 500) };
 }
 
 // ─── Main CGPA Page ───────────────────────────────────────────
@@ -155,8 +178,14 @@ export function AkademikCgpa() {
       setFTahun(result.tahun || '');
       setScanOk(!!result.hpnm);
       setDraftMode('SCAN');
-      if (result.hpnm) toast.success(`HPNM ${result.hpnm.toFixed(2)} berjaya dikesan!`);
-      else toast('HPNM tidak dikesan — isi manual di bawah.', { icon: 'ℹ️' });
+      if (result.hpnm) {
+        toast.success(`HPNM ${result.hpnm.toFixed(2)} berjaya dikesan!`);
+      } else {
+        // Show what text was detected to help user
+        const preview = result.rawText?.substring(0, 120).trim();
+        console.log('[cgpa-scan] Raw text preview:', result.rawText);
+        toast('HPNM tidak dikesan automatik — sila isi manual.\nTeks PDF berjaya dibaca (semak console).', { icon: 'ℹ️', duration: 4000 });
+      }
     } catch (e: any) {
       toast.error(`Gagal baca PDF: ${e.message}`);
       setScanOk(false);
@@ -172,8 +201,8 @@ export function AkademikCgpa() {
       toast.error('HPNM mestilah antara 0.00 – 4.00'); return;
     }
     const semInt = parseInt(fSem);
-    if (fSem && (isNaN(semInt) || semInt < 1 || semInt > 8)) {
-      toast.error('Semester mestilah 1–8'); return;
+    if (fSem && (isNaN(semInt) || semInt < 1 || semInt > 9)) {
+      toast.error('Semester mestilah 1–9'); return;
     }
 
     setSaving(true);
@@ -358,7 +387,7 @@ export function AkademikCgpa() {
                 tickCount={5}
               />
               {/* Reference lines for grade boundaries */}
-              <ReferenceLine y={3.7} stroke="#10B981" strokeDasharray="4 4" strokeOpacity={0.3} />
+              <ReferenceLine y={3.5} stroke="#10B981" strokeDasharray="4 4" strokeOpacity={0.3} />
               <ReferenceLine y={3.0} stroke={THEME}    strokeDasharray="4 4" strokeOpacity={0.25} />
               <ReferenceLine y={2.0} stroke="#F59E0B"  strokeDasharray="4 4" strokeOpacity={0.25} />
               <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.06)', strokeWidth: 1 }} />
@@ -387,7 +416,7 @@ export function AkademikCgpa() {
           {/* Grade bands legend */}
           <div className="flex items-center gap-4 mt-3 justify-end">
             {[
-              { label: '≥3.70 Cemerlang', color: '#10B981' },
+              { label: '≥3.50 Cemerlang', color: '#10B981' },
               { label: '≥3.00 Kepujian',  color: THEME },
               { label: '≥2.00 Lulus',     color: '#F59E0B' },
             ].map(b => (
@@ -484,9 +513,9 @@ export function AkademikCgpa() {
                 />
               </div>
               <div>
-                <label className="block text-[9px] font-black uppercase tracking-widest text-white/30 mb-1.5">Semester (1–8)</label>
+                <label className="block text-[9px] font-black uppercase tracking-widest text-white/30 mb-1.5">Semester (1–9)</label>
                 <input
-                  type="number" min="1" max="8" step="1"
+                  type="number" min="1" max="9" step="1"
                   value={fSem}
                   onChange={e => setFSem(e.target.value)}
                   placeholder="cth: 2"
@@ -540,8 +569,8 @@ export function AkademikCgpa() {
         <p className="text-[9px] font-black uppercase tracking-widest text-white/20 mb-3">Skala HPNM</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {[
-            { range: '3.70 – 4.00', label: 'Cemerlang', color: '#10B981' },
-            { range: '3.00 – 3.69', label: 'Kepujian',  color: THEME },
+            { range: '3.50 – 4.00', label: 'Cemerlang', color: '#10B981' },
+            { range: '3.00 – 3.49', label: 'Kepujian',  color: THEME },
             { range: '2.00 – 2.99', label: 'Lulus',     color: '#F59E0B' },
             { range: '< 2.00',      label: 'Gagal',     color: '#EF4444' },
           ].map(item => (

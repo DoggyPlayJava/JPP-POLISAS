@@ -20,10 +20,11 @@ export function AkademikQrScan() {
   const { profile } = useAuth();
 
   const [tokenData, setTokenData] = useState<any>(null);
-  const [status, setStatus]       = useState<'loading' | 'ready' | 'scanning' | 'success' | 'error' | 'cooldown' | 'expired' | 'invalid'>('loading');
+  const [status, setStatus]       = useState<'loading' | 'ready' | 'scanning' | 'success' | 'error' | 'cooldown' | 'expired' | 'invalid' | 'outside_window'>('loading');
   const [meritAwarded, setMeritAwarded] = useState(0);
   const [cooldownLeft, setCooldownLeft] = useState('');
   const [errorMsg, setErrorMsg]         = useState('');
+  const [windowMsg, setWindowMsg]       = useState('');
 
   useEffect(() => {
     if (!token) { setStatus('invalid'); return; }
@@ -47,7 +48,31 @@ export function AkademikQrScan() {
     setStatus('scanning');
 
     try {
-      // Semak cooldown — cari scan terbaru oleh user ini
+      // ─── Time Window Check ───────────────────────────────────────
+      if (tokenData.available_from && tokenData.available_until) {
+        // Get current time in Malaysia (UTC+8)
+        const nowMY = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kuala_Lumpur' }));
+        const hh = nowMY.getHours();
+        const mm = nowMY.getMinutes();
+        const nowMins = hh * 60 + mm;
+        const parseTimeMins = (t: string) => {
+          const [h, mStr] = t.split(':');
+          return parseInt(h) * 60 + parseInt(mStr || '0');
+        };
+        const fromMins  = parseTimeMins(tokenData.available_from);
+        const untilMins = parseTimeMins(tokenData.available_until);
+        if (nowMins < fromMins || nowMins > untilMins) {
+          const fmt = (t: string) => {
+            const [h, mStr] = t.split(':');
+            const hr = parseInt(h); const m = mStr || '00';
+            return `${hr > 12 ? hr - 12 : hr === 0 ? 12 : hr}:${m} ${hr >= 12 ? 'pm' : 'am'}`;
+          };
+          setWindowMsg(`QR ini hanya aktif dari ${fmt(tokenData.available_from)} hingga ${fmt(tokenData.available_until)}`);
+          setStatus('outside_window');
+          return;
+        }
+      }
+
       const cooldownMs = (tokenData.cooldown_hours || 8) * 60 * 60 * 1000;
       const since = new Date(Date.now() - cooldownMs).toISOString();
 
@@ -136,6 +161,24 @@ export function AkademikQrScan() {
             </div>
             <h2 className="text-xl font-black text-white">QR Tamat Tempoh</h2>
             <p className="text-xs text-white/40">Kod QR ini sudah tamat tempoh atau telah mencapai had scan.</p>
+          </div>
+        );
+
+      case 'outside_window':
+        return (
+          <div className="flex flex-col items-center gap-4 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center">
+              <Clock className="w-8 h-8 text-violet-400" />
+            </div>
+            <h2 className="text-xl font-black text-white">Di Luar Waktu Aktif</h2>
+            <p className="text-sm font-bold text-violet-300">{windowMsg}</p>
+            <p className="text-xs text-white/40">Sila scan dalam tempoh yang ditetapkan.</p>
+            <button
+              onClick={() => setStatus('ready')}
+              className="mt-1 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest bg-white/[0.06] border border-white/[0.1] text-white/50 hover:text-white transition-all"
+            >
+              Cuba Semula
+            </button>
           </div>
         );
 
@@ -265,6 +308,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
   const [form, setForm]         = useState({
     title: '', description: '', merit_value: 2, cooldown_hours: 8,
     expires_at: '', max_scans_total: '', category: 'KEHADIRAN',
+    available_from: '', available_until: '',
   });
   const [creating, setCreating] = useState(false);
   const [qrUrls, setQrUrls]     = useState<Record<string, string>>({});
@@ -312,6 +356,8 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
         expires_at:      form.expires_at || null,
         max_scans_total: form.max_scans_total ? parseInt(form.max_scans_total) : null,
         category:        form.category,
+        available_from:   form.available_from || null,
+        available_until:  form.available_until || null,
         source_unit:     profile?.jpp_unit || 'KK',
         created_by:      profile?.id,
         is_active:       true,
@@ -319,7 +365,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
       if (error) throw error;
       toast.success('QR Token berjaya dicipta!');
       setShowCreate(false);
-      setForm({ title: '', description: '', merit_value: 2, cooldown_hours: 8, expires_at: '', max_scans_total: '', category: 'KEHADIRAN' });
+      setForm({ title: '', description: '', merit_value: 2, cooldown_hours: 8, expires_at: '', max_scans_total: '', category: 'KEHADIRAN', available_from: '', available_until: '' });
       load();
     } catch (e: any) {
       toast.error(e.message || 'Gagal cipta token.');
@@ -421,6 +467,55 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
                     className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 outline-none focus:border-white/20" />
                 </div>
               </div>
+               {/* Time Window Section */}
+              <div className="col-span-full">
+                <label className="block text-[9px] font-black uppercase tracking-widest text-white/30 mb-2">Waktu Aktif (Opsional — kosong = sepanjang masa)</label>
+                {/* Prayer time presets */}
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {[
+                    { label: 'Subuh',   from: '05:30', until: '07:00' },
+                    { label: 'Zohor',   from: '13:00', until: '14:30' },
+                    { label: 'Asar',    from: '16:30', until: '18:00' },
+                    { label: 'Maghrib', from: '19:30', until: '20:30' },
+                    { label: 'Isyak',   from: '21:00', until: '22:30' },
+                  ].map(p => (
+                    <button
+                      key={p.label}
+                      onClick={() => { field('available_from', p.from); field('available_until', p.until); }}
+                      type="button"
+                      className="px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all"
+                      style={
+                        form.available_from === p.from && form.available_until === p.until
+                          ? { background: `${themeColor}25`, borderColor: themeColor, color: themeColor }
+                          : { background: 'transparent', borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' }
+                      }
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                  {(form.available_from || form.available_until) && (
+                    <button
+                      onClick={() => { field('available_from', ''); field('available_until', ''); }}
+                      type="button"
+                      className="px-3 py-1 rounded-lg text-[9px] font-black text-white/25 hover:text-rose-400 border border-white/[0.06] transition-all"
+                    >
+                      × Tanpa Had
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[9px] text-white/25 mb-1 font-bold">Dari (HH:MM)</label>
+                    <input type="time" value={form.available_from} onChange={e => field('available_from', e.target.value)}
+                      className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-white/20 [color-scheme:dark]" />
+                  </div>
+                  <div>
+                    <label className="block text-[9px] text-white/25 mb-1 font-bold">Hingga (HH:MM)</label>
+                    <input type="time" value={form.available_until} onChange={e => field('available_until', e.target.value)}
+                      className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-white/20 [color-scheme:dark]" />
+                  </div>
+                </div>
+              </div>
               <div className="flex gap-2 pt-1">
                 <button onClick={handleCreate} disabled={creating}
                   className="flex items-center gap-2 px-5 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest disabled:opacity-50 transition-all"
@@ -468,6 +563,13 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-sm font-black text-white">{t.title}</p>
+                      {/* Time window badge */}
+                      {t.available_from && t.available_until && (
+                        <span className="text-[8px] font-black px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-400 border border-violet-500/20 flex items-center gap-1">
+                          <Clock className="w-2 h-2" />
+                          {t.available_from.substring(0,5)} – {t.available_until.substring(0,5)}
+                        </span>
+                      )}
                       <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${
                         !t.is_active || isExpired || isFull
                           ? 'bg-white/5 text-white/25'

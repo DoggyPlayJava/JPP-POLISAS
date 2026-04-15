@@ -37,8 +37,10 @@ function FileIcon({ name }: { name: string }) {
 
 // ─── File card ────────────────────────────────────────────────
 function FileCard({ file, isAdmin, onDelete }: { file: any; isAdmin: boolean; onDelete: () => void }) {
-  const ext   = file.file_name?.split('.').pop()?.toLowerCase() || '';
-  const size  = file.file_size ? `${(file.file_size / 1024).toFixed(0)} KB` : '';
+  const displayName = file.file_name || file.name || '';
+  const ext   = displayName.split('.').pop()?.toLowerCase() || '';
+  const rawSize = file.file_size_bytes || file.file_size || 0;
+  const size  = rawSize ? `${(rawSize / 1024).toFixed(0)} KB` : '';
   const color = ext === 'pdf' ? '#EF4444' : ['jpg', 'png', 'webp'].includes(ext) ? '#10B981' : '#818CF8';
 
   return (
@@ -49,17 +51,17 @@ function FileCard({ file, isAdmin, onDelete }: { file: any; isAdmin: boolean; on
     >
       <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
         style={{ background: hexToRgba(color, 0.15), color }}>
-        <FileIcon name={file.file_name || ''} />
+        <FileIcon name={displayName} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-black text-white line-clamp-1">{file.file_name}</p>
+        <p className="text-xs font-black text-white line-clamp-1">{displayName}</p>
         <p className="text-[9px] text-white/30 font-bold mt-0.5">
           {size}{size && ' · '}{file.created_at && format(parseISO(file.created_at), 'd MMM yyyy', { locale: ms })}
         </p>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
         <a
-          href={file.drive_url}
+          href={file.drive_download_url || file.drive_view_url}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all opacity-0 group-hover:opacity-100"
@@ -77,7 +79,7 @@ function FileCard({ file, isAdmin, onDelete }: { file: any; isAdmin: boolean; on
       </div>
       {/* Always-visible download for mobile */}
       <a
-        href={file.drive_url}
+        href={file.drive_download_url || file.drive_view_url}
         target="_blank"
         rel="noopener noreferrer"
         className="shrink-0 text-white/30 hover:text-white/60 transition-colors md:hidden"
@@ -183,12 +185,16 @@ export function AkademikFolderPage() {
         url = await uploadFileToDrive(file, `akademik/folders/${folderId}`, file.name.replace(/\.[^.]+$/, ''));
       }
 
+      // The url from uploadPdfToDrive/uploadFileToDrive is the view URL (Google Drive)
       const { error: insertError } = await supabase.from('akademik_files').insert({
-        folder_id:    folderId,
-        file_name:    file.name,
-        drive_url:    url,
-        file_size:    file.size,
-        uploaded_by:  profile?.id,
+        folder_id:        folderId,
+        name:             file.name,
+        file_name:        file.name,
+        drive_view_url:   url,
+        drive_download_url: url.includes('/view') ? url.replace('/view', '/download') : url,
+        file_size_bytes:  file.size,
+        file_type:        file.type || 'application/octet-stream',
+        uploaded_by:      profile?.id,
       });
 
       if (insertError) throw insertError;
