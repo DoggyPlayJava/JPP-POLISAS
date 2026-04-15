@@ -10,6 +10,7 @@ import {
   Star, BookOpen, Building2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 const NAV_ITEMS = [
   { path: '/akademik',            label: 'Dashboard',    icon: LayoutDashboard },
@@ -124,6 +125,9 @@ export function AkademikLayout() {
         <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-6xl mx-auto w-full">
           <Outlet />
         </main>
+        
+        {/* Global Floating AI Chat for Akademik */}
+        <FloatingAiChat />
       </div>
     </div>
   );

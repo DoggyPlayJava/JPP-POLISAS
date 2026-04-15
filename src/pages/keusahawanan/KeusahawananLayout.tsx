@@ -17,6 +17,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import {
   BusinessSwitcherProvider,
   useBusinessSwitcher,
@@ -481,6 +482,9 @@ function LayoutInner({
               </motion.div>
             </AnimatePresence>
           </main>
+
+          {/* Global Floating AI Chat for Keusahawanan */}
+          <FloatingAiChat />
         </div>
       </div>
     </ExcoThemeProvider>

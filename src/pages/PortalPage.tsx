@@ -13,6 +13,7 @@ import { cn, hexToRgba, getContrastText, getMalaysianNickname } from '@/lib/util
 import { PortalSidebar } from '@/components/layout/PortalSidebar';
 import { Menu } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 
 
@@ -631,6 +632,9 @@ export function PortalPage() {
           </p>
         </div>
       </footer>
+
+      {/* Global Floating AI Chat for Portal */}
+      <FloatingAiChat />
     </div>
   );
 }

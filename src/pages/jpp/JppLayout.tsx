@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { JppSidebar } from './JppSidebar';
 import { Menu, X } from 'lucide-react';
 import { NotificationBell } from '@/components/ui/NotificationBell';
+import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 export function JppLayout() {
   const { isJppMember, isSuperAdmin, isLoading } = useAuth();
@@ -101,6 +102,9 @@ export function JppLayout() {
             </motion.div>
           </AnimatePresence>
         </main>
+
+        {/* Global Floating AI Chat for JPP HQ */}
+        <FloatingAiChat />
       </div>
     </div>
   );

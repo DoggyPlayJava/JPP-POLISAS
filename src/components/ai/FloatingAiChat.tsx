@@ -75,6 +75,10 @@ export function FloatingAiChat() {
   const [inputValue, setInputValue] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [chatContext, setChatContext] = useState<ChatContext | null>(null);
+  
+  // Hint bubble state
+  const [hintIndex, setHintIndex] = useState(0);
+  const [showHint, setShowHint] = useState(false);
 
   const { profile, isSuperAdmin, isAdvisor, isPresident, isMT, selectedClubId } = useAuth();
   const { callAi, sendChatMessage, isLoading: isActionLoading, isChatLoading, retryCount } = useAiAssistant();
@@ -165,6 +169,42 @@ export function FloatingAiChat() {
       document.removeEventListener('mousedown', handleOutsideClick);
     };
   }, [isOpen]);
+
+  // ── Rotating Hints Logic ────────────────────────────────────────────────
+  const getHints = useCallback(() => {
+    const p = location.pathname;
+    if (p.startsWith('/akademik')) return ["Berapa jumlah merit saya?", "Kira purata skor (CGPA) saya.", "Bagaimana nak mohon folder khas?"];
+    if (p.startsWith('/keusahawanan')) return ["Adakah saya bertugas lusa?", "Bantu saya rancang jualan POS.", "Siapa pengurus perniagaan ni?"];
+    if (p.startsWith('/jpp')) return ["Semak bilangan laporan kelab tertunggak.", "Ada permohonan merit baru tak?", "Siapa MT bertugas minggu depan?"];
+    return ["Bila aktiviti kelab terdekat?", "Siapakah Jawatankuasa pimpinan?", "Bantu drafkan kertas kerja laporan."];
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (isOpen || !allowAiChat) {
+      setShowHint(false);
+      return;
+    }
+    
+    // reset index
+    setHintIndex(0);
+
+    const initialDelay = setTimeout(() => {
+      setShowHint(true);
+    }, 3000);
+
+    const rotation = setInterval(() => {
+      setShowHint(false);
+      setTimeout(() => {
+        setHintIndex(prev => (prev + 1) % getHints().length);
+        setShowHint(true);
+      }, 500);
+    }, 7000);
+
+    return () => {
+      clearTimeout(initialDelay);
+      clearInterval(rotation);
+    };
+  }, [isOpen, allowAiChat, location.pathname, getHints]);
 
   // ── Fetch dynamic context when opened ───────────────────────────────────
   useEffect(() => {
@@ -375,6 +415,49 @@ export function FloatingAiChat() {
           )}
         </AnimatePresence>
       </motion.button>
+
+      {/* ── Context-Aware Hover Hint ── */}
+      <AnimatePresence>
+        {!isOpen && showHint && (
+          <motion.div
+            initial={{ opacity: 0, x: 20, scale: 0.9 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 10, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 200 }}
+            className="absolute right-[110%] top-1/2 -translate-y-1/2 pointer-events-none hidden sm:block md:w-max max-w-[200px]"
+          >
+            {/* Desktop Version */}
+            <div className="relative">
+              <div className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[11px] font-medium py-2 px-3.5 rounded-2xl rounded-tr-sm shadow-xl shadow-indigo-600/20 backdrop-blur-md border border-white/10 flex items-center gap-2">
+                <Sparkles size={12} className="text-indigo-200 shrink-0" />
+                <span className="leading-tight line-clamp-2">"{getHints()[hintIndex]}"</span>
+              </div>
+              <div className="absolute top-1/2 -right-1.5 -translate-y-1/2 w-3 h-3 bg-violet-600 rotate-45 rounded-sm z-[-1]" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {!isOpen && showHint && (
+          <motion.div
+            initial={{ opacity: 0, y: 15, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 200 }}
+            className="absolute -top-[120%] right-0 pointer-events-none sm:hidden w-max max-w-[170px]"
+          >
+            {/* Mobile Version (Compact & Top) */}
+            <div className="relative">
+              <div className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[10px] sm:text-[11px] font-medium py-1.5 px-3 rounded-xl rounded-br-sm shadow-lg shadow-indigo-600/20 backdrop-blur-md border border-white/10 flex items-center gap-1.5">
+                <Sparkles size={10} className="text-indigo-200 shrink-0" />
+                <span className="leading-tight line-clamp-1 truncate w-full">"{getHints()[hintIndex]}"</span>
+              </div>
+              <div className="absolute -bottom-1 right-3 w-2.5 h-2.5 bg-violet-600 rotate-45 rounded-sm z-[-1]" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Chat panel — controlled div (not Popover) to prevent auto-dismiss ── */}
       <AnimatePresence>
