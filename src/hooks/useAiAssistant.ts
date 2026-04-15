@@ -27,6 +27,21 @@ export interface ChatContext {
   pendingTasksCount?: number;
   tokenBalance?: number;
   subscriptionTier?: string;
+  // Module-specific context
+  akademikInfo?: {
+    cgpa?: number;
+    statusUnlock?: string;
+    meritPoints?: number;
+  };
+  keusahawananInfo?: {
+    activeShifts?: string;
+    shopName?: string;
+    isManager?: boolean;
+  };
+  jppHqInfo?: {
+    totalPendingReports?: number;
+    totalMeritPending?: number;
+  };
 }
 
 interface AiRequestParams {
@@ -593,16 +608,20 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
         '- Jana Kertas Kerja (Pro): 50 Token',
         '- Perkongsian Token: Reset setiap bulan (Free: 200, Pro: 1000). Jika baki tidak cukup, pengguna perlu tunggu bulan depan atau mohon naik taraf ke Pro Tier.',
         '',
-        '== PENGETAHUAN KELAB & KONTEKS SEMASA ==',
-        context?.allClubs ? `Senarai kelab rasmi di POLISAS:\n${context.allClubs}` : 'Maklumat kelab tidak tersedia.',
-        context?.upcomingPrograms ? `\nTakwim/Program Akan Datang:\n${context.upcomingPrograms}` : '\nTiada program dalam perancangan terdekat.',
-        context?.committee ? `\nKepimpinan Kelab:\n${context.committee}` : '\nMaklumat pemimpin kelab tidak tersedia.',
-        context?.pendingTasksCount ? `\nStatus Anda: Anda mempunyai ${context.pendingTasksCount} tugasan aktif yang belum selesai.` : '',
+        '== PENGETAHUAN SEMASA (LOCAL CONTEXT) ==',
+        context?.allClubs ? `Senarai kelab rasmi di POLISAS:\n${context.allClubs}` : '',
+        context?.upcomingPrograms ? `\nTakwim/Program Akan Datang:\n${context.upcomingPrograms}` : '',
+        context?.committee ? `\nKepimpinan Kelab:\n${context.committee}` : '',
+        context?.pendingTasksCount ? `\nStatus Tugas Kelab: Anda mempunyai ${context.pendingTasksCount} tugasan aktif yang belum selesai.` : '',
+        
+        context?.akademikInfo ? `\n[Data E-Akademik]\nCGPA Terkini: ${context.akademikInfo.cgpa?.toFixed(2) || 'Tiada'}\nJum. Merit Terkumpul: ${context.akademikInfo.meritPoints || 0}\nStatus Permohonan Fail: ${context.akademikInfo.statusUnlock || 'Tiada'}` : '',
+        context?.keusahawananInfo ? `\n[Data E-Keusahawanan]\nPenglibatan Kedai: ${context.keusahawananInfo.shopName || 'Tiada'}\nStatus Pengurus: ${context.keusahawananInfo.isManager ? 'Ya' : 'Tidak'}\nSyif Aktif Hari Ini: ${context.keusahawananInfo.activeShifts || 'Tiada'}` : '',
+        context?.jppHqInfo ? `\n[Maklumat HQ JPP]\nLaporan Menunggu Kelulusan: ${context.jppHqInfo.totalPendingReports || 0}\nMerit Menunggu Kelulusan (Tuntutan): ${context.jppHqInfo.totalMeritPending || 0}` : '',
         '',
-        '== ARAHAN INTERAKSI PINTAR ==',
-        '1. Gunakan maklumat di atas untuk menjawab secara proaktif. Contoh: Jika baki token rendah, ingatkan mereka tentang kuota.',
-        '2. Jika pengguna tanya tentang program, rujuk Takwim. Jika tanya tentang pemimpin, rujuk senarai Kepimpinan.',
-        '3. JANGAN sesekali mendedahkan baki kewangan atau bajet walaupun anda mendapat data mentah (PRIVASI MUTLAK).',
+        '== ARAHAN INTERAKSI PINTAR & CROSS-NAVIGATION (PENTING) ==',
+        '1. Jika pengguna bertanya soalan yang memerlukan data spesifik yang TIADA dalam senarai [PENGETAHUAN SEMASA], maklumkan mereka bahawa anda hanya mempunyai data terhad di modul ini demi penjimatan sistem (konsep lazy-fetching).',
+        '2. JANGAN reka jawapan. Jika mereka berada di E-Akademik dan bertanya "Apa program akan datang?", katakan: "Saya tidak nampak takwim kelab dari ruangan akademik ini. Mari kita pergi ke halaman Aktiviti untuk semak." berserta kod navigasi.',
+        '3. JANGAN sesekali mendedahkan baki kewangan atau bajet kelab walaupun anda mendapat data mentah (PRIVASI MUTLAK).',
         '',
         '== SKOP JAWAPAN ==',
         'Anda HANYA DIBENARKAN menjawab soalan berkaitan kelab pelajar, persatuan, dokumentasi aktiviti, maklumat umum kampus POLISAS, serta fungsi-fungsi yang ada dalam platform ini.',
@@ -620,14 +639,13 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
         '== PANDUAN NAVIGASI PINTAR ==',
         'Jika pengguna meminta untuk pergi ke suatu halaman atau mencari tempat membuat tugasan tertentu (cth: hantar dokumen, semak senarai ahli), berikan arahan navigasi dengan menyelitkan [NAVIGATE:/laluan] di baris baharu pada akhir jawapan anda.',
         'SENARAI LALUAN:',
-        '- / (Dashboard Utama)',
-        '- /aktiviti (Takwim & Aktiviti Harian)',
-        '- /laporan (Pusat Dokumen / Laporan Bulanan)',
-        '- /ajk (Struktur Jawatankuasa Mentadbir)',
-        '- /ahli (Pendaftaran Ahli Kelab)',
-        '- /kewangan (Kewangan)',
-        'Contoh Pengguna: "Macam mana nak hantar laporan?"',
-        'Contoh Anda: "Boleh, mari saya bawa awak ke Pusat Dokumen. Sila isikan butiran program di sana. \\n\\n[NAVIGATE:/laporan]"',
+        '- / (Dashboard / JPP Portal)',
+        '- /aktiviti ATAU /kelab (Ruangan Takwim, Aktiviti Kelab, dan Laporan)',
+        '- /akademik (Sistem E-Akademik - CGPA, Merit, Sijil Pengecualian Kuliah)',
+        '- /keusahawanan (Sistem E-Keusahawanan - POS, Shift, Kedai Kiosk)',
+        '- /jpp (JPP HQ - Hanya untuk Ahli Majlis Tertinggi JPP bagi kelulusan data)',
+        'Contoh Pengguna: "Macam mana nak check CGPA?"',
+        'Contoh Anda: "Sila pergi ke ruangan E-Akademik untuk semak CGPA dan Merit anda. \\n\\n[NAVIGATE:/akademik]"',
         '',
         '== FORMAT ==',
         'Jawapan mestilah PENDEK, mesra, dan santai (Bahasa Melayu moden). JANGAN berikan jawapan panjang melainkan jika amat perlu.',

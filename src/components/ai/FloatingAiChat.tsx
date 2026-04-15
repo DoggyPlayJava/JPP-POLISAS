@@ -171,94 +171,93 @@ export function FloatingAiChat() {
     if (isOpen && profile?.id) {
       const fetchContext = async () => {
         try {
-          // 1. Get notifications
+          // 1. Get Base Notifications (Global)
           const { data: notos } = await supabase
             .from('notifications')
-            .select('title, content')
+            .select('title')
             .eq('user_id', profile.id)
             .order('created_at', { ascending: false })
             .limit(3);
 
-          // 2. Get club metadata & Deep Context
-          let clubMeta = undefined;
-          let upcomingProgs: string | undefined = undefined;
-          let committeeStr: string | undefined = undefined;
-          let pendingTasks: number = 0;
-          
-          const targetClubId = selectedClubId || profile.club_id;
-          
-          if (targetClubId) {
-            // A. Basic Club Info
-            const { data: club } = await supabase
-              .from('clubs')
-              .select('name, members_count')
-              .eq('id', targetClubId)
-              .single();
-            
-            if (club) {
-              const { count: pr } = await supabase
-                .from('activity_reports')
-                .select('*', { count: 'exact', head: true })
-                .eq('club_id', targetClubId)
-                .eq('status', 'draft');
-
-              clubMeta = {
-                name: club.name,
-                membersCount: club.members_count,
-                pendingReports: pr || 0
-              };
-
-              // B. Takwim (Next 3 Programs)
-              const { data: progs } = await supabase
-                .from('programs')
-                .select('nama_program, tarikh_mula, location')
-                .eq('club_id', targetClubId)
-                .not('status', 'eq', 'COMPLETED')
-                .order('tarikh_mula', { ascending: true })
-                .limit(3);
-              
-              if (progs && progs.length > 0) {
-                upcomingProgs = progs.map(p => `- ${p.nama_program} (${p.tarikh_mula || 'TBA'}) @ ${p.location || 'TBA'}`).join('\n');
-              }
-
-              // C. Committee (Leaders) from profiles table (Primary)
-              const { data: leaders } = await supabase
-                .from('profiles')
-                .select('full_name, role')
-                .eq('club_id', targetClubId)
-                .in('role', ['CLUB_PRESIDENT', 'CLUB_ADVISOR', 'PRESIDEN', 'PENASIHAT'])
-                .limit(5);
-              
-              if (leaders && leaders.length > 0) {
-                committeeStr = leaders.map(l => `- ${l.full_name} (${l.role})`).join('\n');
-              }
-            }
-
-            // D. Pending Tasks for current user
-            const { count: tasksCount } = await supabase
-              .from('club_tasks')
-              .select('*', { count: 'exact', head: true })
-              .eq('assigned_to', profile.id)
-              .eq('club_id', targetClubId)
-              .eq('status', 'ACTIVE');
-            
-            pendingTasks = tasksCount || 0;
-          }
-
-          setChatContext({
+          let ctx: ChatContext = {
             currentPage: location.pathname,
             userRole: profile.role,
             recentNotifications: notos?.map(n => n.title) || [],
-            clubInfo: clubMeta,
-            allClubs: ALL_CLUBS.length > 0 
-              ? ALL_CLUBS.map(c => `- ${c.name} (${c.shortName || 'N/A'}) [${c.category}]`).join('\n')
-              : undefined,
-            upcomingPrograms: upcomingProgs,
-            committee: committeeStr,
-            pendingTasksCount: pendingTasks,
             tokenBalance: profile.ai_token_balance,
-            subscriptionTier: profile.subscription_tier
-          });
+            subscriptionTier: profile.subscription_tier,
+            allClubs: ALL_CLUBS.length > 0 
+              ? ALL_CLUBS.map(c => `- ${c.name} (${c.shortName || 'N/A'})`).join('\n')
+              : undefined,
+          };
+
+          const p = location.pathname;
+
+          // ─ 2A. DATA KELAB (End-User) ──────────────────────────
+          if (p.startsWith('/kelab') || p.startsWith('/aktiviti') || p === '/') {
+            const targetClubId = selectedClubId || profile.club_id;
+            if (targetClubId) {
+              const { data: club } = await supabase.from('clubs').select('name, members_count').eq('id', targetClubId).single();
+              if (club) {
+                const { count: pr } = await supabase.from('activity_reports').select('id', { count: 'exact', head: true }).eq('club_id', targetClubId).eq('status', 'draft');
+                ctx.clubInfo = { name: club.name, membersCount: club.members_count, pendingReports: pr || 0 };
+
+                const { data: progs } = await supabase.from('programs').select('nama_program, tarikh_mula, location')
+                  .eq('club_id', targetClubId).not('status', 'eq', 'COMPLETED').order('tarikh_mula', { ascending: true }).limit(3);
+                if (progs?.length) ctx.upcomingPrograms = progs.map(pr => `- ${pr.nama_program} (${pr.tarikh_mula || 'TBA'})`).join('\n');
+
+                const { data: ldrs } = await supabase.from('profiles').select('full_name, role')
+                  .eq('club_id', targetClubId).in('role', ['CLUB_PRESIDENT', 'CLUB_ADVISOR', 'PRESIDEN', 'PENASIHAT']).limit(5);
+                if (ldrs?.length) ctx.committee = ldrs.map(l => `- ${l.full_name} (${l.role})`).join('\n');
+                
+                const { count: tsks } = await supabase.from('club_tasks').select('id', { count: 'exact', head: true })
+                  .eq('assigned_to', profile.id).eq('club_id', targetClubId).eq('status', 'ACTIVE');
+                ctx.pendingTasksCount = tsks || 0;
+              }
+            }
+          } 
+          // ─ 2B. DATA E-AKADEMIK ────────────────────────────────
+          else if (p.startsWith('/akademik')) {
+            const [cgpaRes, meritRes, unlockRes] = await Promise.all([
+              supabase.from('akademik_cgpa_records').select('cgpa').eq('user_id', profile.id).order('semester', { ascending: false }).limit(1).maybeSingle(),
+              supabase.from('akademik_pencapaian').select('merit_override').eq('user_id', profile.id).eq('status', 'APPROVED'),
+              supabase.from('akademik_unlock_requests').select('status').eq('user_id', profile.id).order('created_at', { ascending: false }).limit(1).maybeSingle()
+            ]);
+            const totalMerits = meritRes.data?.reduce((acc: number, curr: any) => acc + (curr.merit_override || 0), 0) || 0;
+            ctx.akademikInfo = {
+              cgpa: cgpaRes.data?.cgpa,
+              meritPoints: totalMerits,
+              statusUnlock: unlockRes.data?.status || 'Tiada Request'
+            };
+          }
+          // ─ 2C. DATA E-KEUSAHAWANAN ────────────────────────────
+          else if (p.startsWith('/keusahawanan')) {
+             const { data: memberships } = await supabase.from('student_business_memberships')
+               .select('role, status, business_shops(name)')
+               .eq('user_id', profile.id)
+               .eq('status', 'ACTIVE')
+               .limit(1).maybeSingle();
+             
+             if (memberships?.business_shops) {
+               ctx.keusahawananInfo = {
+                 shopName: (memberships.business_shops as any).name,
+                 isManager: memberships.role === 'MANAGER' || memberships.role === 'OWNER',
+                 activeShifts: 'Disembunyikan (Lazy Loaded)' // to prevent heavy query
+               };
+             } else {
+               ctx.keusahawananInfo = { shopName: 'Bukan Ahli', isManager: false };
+             }
+          }
+          // ─ 2D. DATA JPP HQ ────────────────────────────────────
+          else if (p.startsWith('/jpp')) {
+             const { count: pdgReports } = await supabase.from('activity_reports').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+             const { count: pdgMerits }  = await supabase.from('akademik_pencapaian').select('id', { count: 'exact', head: true }).eq('status', 'PENDING');
+             ctx.jppHqInfo = {
+               totalPendingReports: pdgReports || 0,
+               totalMeritPending: pdgMerits || 0
+             };
+          }
+
+          setChatContext(ctx);
         } catch (err) {
           console.error('Failed to fetch chat context:', err);
         }
