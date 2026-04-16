@@ -73,6 +73,20 @@ export function LoginPage() {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/portal`,
+        },
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      toast.error(error.message || 'Gagal menyambung ke Google.');
+    }
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !email || !password || !matricNo.trim() || !phone.trim()) {
@@ -494,6 +508,25 @@ export function LoginPage() {
                   <span className="relative z-10">{isLoading ? 'Memproses...' : isForgotPassword ? 'Hantar Pautan' : 'Log Masuk'}</span>
                   {!isLoading && <ArrowRight className="ml-2 h-4 w-4 relative z-10 transition-transform group-hover:translate-x-1" />}
                 </Button>
+                
+                {!isForgotPassword && (
+                  <div className="pt-2 space-y-4">
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-border/60"></div>
+                      </div>
+                      <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest">
+                        <span className="bg-card/80 backdrop-blur-2xl px-2 text-muted-foreground/60">ATAU</span>
+                      </div>
+                    </div>
+                    
+                    <Button type="button" onClick={handleGoogleLogin} 
+                      className="w-full h-12 rounded-xl border border-border/60 bg-card hover:bg-muted/50 text-foreground font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 transition-colors shadow-sm">
+                      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5 bg-white rounded-full p-0.5" />
+                      Teruskan dengan Google
+                    </Button>
+                  </div>
+                )}
               </form>
             )}
           </CardContent>

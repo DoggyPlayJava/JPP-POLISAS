@@ -65,7 +65,7 @@ import { JppLogsPage } from './pages/jpp/JppLogsPage';
 import { JppSettingsPage } from './pages/jpp/JppSettingsPage';
 import { JppNexusPage } from './pages/jpp/JppNexusPage';
 
-import { ForcePhoneUpdateModal } from '@/components/ui/ForcePhoneUpdateModal';
+import { CompleteProfileModal } from '@/components/ui/CompleteProfileModal';
 import { GlobalAnnouncementModal } from '@/components/GlobalAnnouncementModal';
 
 function RequireApproval({ children }: { children: React.ReactNode }) {
@@ -90,10 +90,10 @@ function RequireApproval({ children }: { children: React.ReactNode }) {
     return <PendingPage />;
   }
 
-  // C. Lepaskan log masuk jika sah, tetapi wajibkan no telefon jika kosong
+  // C. Lepaskan log masuk jika sah, tetapi wajibkan maklumat profil jika kosong
   return (
     <>
-      <ForcePhoneUpdateModal />
+      <CompleteProfileModal />
       <GlobalAnnouncementModal />
       {children}
     </>

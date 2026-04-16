@@ -356,7 +356,7 @@ const Hero = () => {
           transition={{ delay: 0.3 }}
           className="text-sm md:text-lg text-white/50 max-w-2xl mx-auto font-medium leading-relaxed mb-10 md:mb-12 px-2"
         >
-          Hadiri ke tahap seterusnya. Platform eksklusif Jawatankuasa Perwakilan Pelajar mengurus organisasi, penjanaan aset, dan analitik data dengan ekosistem pintar berpusat.
+          Jadi sebahagian dari Transformasi Digital yang dibawakan khas oleh Jawatankuasa Perwakilan Pelajar POLISAS.
         </motion.p>
 
         {/* Action Buttons */}
