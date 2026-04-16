@@ -2,6 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Fallback Redirect: Force redirect if user is still trapped in Vercel's Service Worker Cache
+      if (window.location.hostname.includes('vercel.app')) {
+        window.location.replace('https://jpp.cipher-node.org' + window.location.pathname + window.location.search);
+      }
+    </script>
     <link rel="icon" href="/favicon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
