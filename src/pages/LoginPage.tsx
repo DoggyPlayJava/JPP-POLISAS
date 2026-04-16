@@ -126,6 +126,9 @@ export function LoginPage() {
             role: roleToAssign,
             department: isStaff ? null : jabatan,
             phone: phone.trim(),
+            is_leader: isLeader,
+            is_advisor: isAdvisor,
+            leader_club_id: leaderClubId,
           },
         },
       });
@@ -133,61 +136,6 @@ export function LoginPage() {
 
       if (data.user) {
         localStorage.setItem('is_new_register', 'true');
-
-        let initialStatus = 'APPROVED';
-        if (isLeader || isAdvisor) initialStatus = 'PENDING';
-
-        await supabase.from('profiles').update({
-          full_name: fullName.trim(),
-          matric_no: matricNo.trim(),
-          club_id: academikClubId,
-          role: roleToAssign,
-          department: isStaff ? null : jabatan,
-          phone: phone.trim(),
-          account_status: initialStatus,
-        }).eq('id', data.user.id);
-
-        if (!isStaff && academikClubId) {
-          const isLeadingAcademicClub = isLeader && leaderClubId === academikClubId;
-          await supabase.from('student_club_memberships').insert({
-            user_id: data.user.id,
-            club_id: academikClubId,
-            role: isLeadingAcademicClub ? leaderRole : 'CLUB_MEMBER',
-            account_status: isLeadingAcademicClub ? 'PENDING' : initialStatus,
-            is_primary: true,
-          }).select();
-        }
-
-        const targetClubMembership = (isLeader && leaderClubId !== academikClubId) || isAdvisor;
-        if (targetClubMembership) {
-          await supabase.from('student_club_memberships').insert({
-            user_id: data.user.id,
-            club_id: leaderClubId,
-            role: roleToAssign,
-            account_status: 'PENDING',
-            is_primary: !academikClubId, // Primary jika tiada kelab akademik (cthnya staf penasihat)
-          }).select();
-        }
-
-        // NOTIFY JPP ADMIN FOR LEADER APPLICATIONS
-        if ((isLeader && leaderRole === 'CLUB_PRESIDENT') || isAdvisor) {
-          const targetNotificationClubId = isAdvisor ? leaderClubId : (leaderClubId === academikClubId ? academikClubId : leaderClubId);
-          const clubInfo = ALL_CLUBS.find(c => c.id === targetNotificationClubId);
-          const clubName = clubInfo?.name || 'tersebut';
-
-          const { data: admins } = await supabase.from('profiles').select('id').in('role', ['SUPER_ADMIN_JPP', 'ADMIN', 'JPP']);
-          if (admins && admins.length > 0) {
-            const notifs = admins.map(a => ({
-              user_id: a.id,
-              title: 'Pendaftaran Pimpinan Baharu',
-              message: `Terdapat satu permohonan pendaftaran baru sebagai ${ROLE_LABELS[roleToAssign] || roleToAssign} untuk kelab ${clubName}. Sila semak permohonan dalam tab "Permohonan Baru" di halaman Pengurusan Ahli.`,
-              type: 'SYSTEM',
-              is_read: false
-            }));
-            const { error: notifErr } = await supabase.from('notifications').insert(notifs);
-            if (notifErr) console.error("Gagal hantar notifikasi:", notifErr);
-          }
-        }
       }
 
       toast.success(
