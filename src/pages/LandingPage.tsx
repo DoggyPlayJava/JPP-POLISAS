@@ -729,7 +729,7 @@ const Footer = () => {
             </div>
           </div>
           <p className="text-xs text-white/30 font-medium leading-relaxed">
-            Test 123.<br />
+            Exco Kelab, Persatuan dan Perpaduan POLISAS.<br />
             Menyediakan ekosistem data bersepadu bagi melancarkan proses tadbir urus Polisas.
           </p>
         </div>
