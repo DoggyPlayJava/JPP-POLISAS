@@ -25,6 +25,10 @@ export default defineConfig({
           { src: 'jpp-logo.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
+      devOptions: {
+        enabled: true,
+        type: 'module',
+      },
     }),
   ],
   resolve: {

@@ -51,8 +51,9 @@ export function InstallAppPrompt() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // Bagi iOS, tiada event `beforeinstallprompt`, jadi kita panggil secara manual
-    if (isIOSDevice) {
+    // Bagi iOS (atau Development Mode untuk tujuan pengujian), kita panggil secara manual
+    // Memandangkan PWA sangat ketat di Localhost, ini membenarkan anda tes UI nya!
+    if (isIOSDevice || import.meta.env.DEV) {
       setTimeout(() => setIsOpen(true), 4000);
     }
 
