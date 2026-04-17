@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
   Users, Crown, Search, Pencil, Shield,
-  Loader2, UserCheck,
+  Loader2, UserCheck, CheckSquare, Square,
 } from 'lucide-react';
 import { cn, hexToRgba, getContrastText } from '@/lib/utils';
 import { JPP_POSITION_LABELS, JPP_MT_POSITIONS, JPP_UNIT_LABELS, JPP_UNITS } from '@/types';
@@ -13,7 +13,7 @@ import type { JppPosition, JppUnit } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
-import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID, UNIT_CFG } from './jppConfig';
+import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID, UNIT_CFG, UNIT_ORDER } from './jppConfig';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface JppMember {
@@ -37,26 +37,79 @@ function MemberCard({
   themeColor: string;
   onUpdate: (id: string, patch: Partial<JppMember>) => void;
 }) {
-  const [editing, setEditing]       = useState(false);
-  const [position, setPosition]     = useState<string>(member.jpp_position ?? '');
-  const [unit, setUnit]             = useState<string>(member.jpp_unit ?? '');
-  const [saving, setSaving]         = useState(false);
+  const [editing, setEditing]           = useState(false);
+  const [position, setPosition]         = useState<string>(member.jpp_position ?? '');
+  const [unit, setUnit]                 = useState<string>(member.jpp_unit ?? '');
+  const [overseeUnits, setOverseeUnits] = useState<string[]>([]);
+  const [loadingOversee, setLoadingOversee] = useState(false);
+  const [saving, setSaving]             = useState(false);
 
   const initials = (member.full_name ?? member.email ?? '?')
     .split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
-  const isMT = JPP_MT_POSITIONS.includes(member.jpp_position as any);
+  const isMTPosition = JPP_MT_POSITIONS.includes(member.jpp_position as any);
+  // After editing, derive from new position state
+  const willBeMT     = JPP_MT_POSITIONS.includes(position as any);
   const unitCfg = member.jpp_unit ? UNIT_CFG[member.jpp_unit] : null;
+
+  // Load existing MT assignments when edit opens
+  const handleOpenEdit = async () => {
+    setEditing(true);
+    if (JPP_MT_POSITIONS.includes(member.jpp_position as any)) {
+      setLoadingOversee(true);
+      const { data } = await supabase
+        .from('jpp_mt_assignments')
+        .select('unit')
+        .eq('mt_user_id', member.id);
+      if (data) setOverseeUnits(data.map((d: any) => d.unit as string));
+      setLoadingOversee(false);
+    } else {
+      setOverseeUnits([]);
+    }
+  };
+
+  const toggleOverseeUnit = (code: string) => {
+    setOverseeUnits(prev =>
+      prev.includes(code) ? prev.filter(u => u !== code) : [...prev, code]
+    );
+  };
 
   const handleSave = async () => {
     setSaving(true);
-    const patch: Record<string, any> = { jpp_position: position || null, jpp_unit: unit || null };
-    const { error } = await supabase.from('profiles').update(patch).eq('id', member.id);
-    setSaving(false);
-    if (error) { toast.error('Gagal simpan perubahan.'); return; }
-    onUpdate(member.id, patch);
-    setEditing(false);
-    toast.success('Maklumat ahli dikemaskini.');
+    try {
+      // 1. Update profiles (jawatan + unit exco sendiri)
+      const patch: Record<string, any> = { jpp_position: position || null, jpp_unit: unit || null };
+      const { error } = await supabase.from('profiles').update(patch).eq('id', member.id);
+      if (error) throw error;
+
+      // 2. Jika jawatan MT — sync jpp_mt_assignments (multi-unit oversee)
+      const newIsMT = JPP_MT_POSITIONS.includes(position as any);
+      if (newIsMT) {
+        // Padam semua assignment lama dulu
+        await supabase.from('jpp_mt_assignments').delete().eq('mt_user_id', member.id);
+        // Insert yang baharu (multi-unit)
+        if (overseeUnits.length > 0) {
+          await supabase.from('jpp_mt_assignments').insert(
+            overseeUnits.map(u => ({
+              mt_user_id: member.id,
+              unit: u,
+              assigned_by: null,
+            }))
+          );
+        }
+      } else {
+        // Bukan MT — kosongkan semua assignment
+        await supabase.from('jpp_mt_assignments').delete().eq('mt_user_id', member.id);
+      }
+
+      onUpdate(member.id, patch);
+      setEditing(false);
+      toast.success('Maklumat ahli dikemaskini.');
+    } catch (err: any) {
+      toast.error('Gagal simpan: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -67,7 +120,7 @@ function MemberCard({
       {/* Background Glow based on unit/MT */}
       <div 
         className="absolute -top-10 -right-10 w-24 h-24 rounded-full blur-[40px] opacity-20 pointer-events-none transition-all group-hover:opacity-30" 
-        style={{ background: unitCfg?.color || (isMT ? themeColor : 'rgba(255,255,255,0.1)') }} 
+        style={{ background: unitCfg?.color || (isMTPosition ? themeColor : 'rgba(255,255,255,0.1)') }} 
       />
 
       <div className="flex items-start justify-between mb-3 z-10 relative">
@@ -83,7 +136,7 @@ function MemberCard({
 
         {(!editing && canEdit) && (
           <button
-            onClick={() => setEditing(true)}
+            onClick={handleOpenEdit}
             className="opacity-0 group-hover:opacity-100 p-2 rounded-xl text-white/30 hover:text-white/80 hover:bg-white/10 transition-all focus:opacity-100"
           >
             <Pencil className="w-4 h-4" />
@@ -100,11 +153,11 @@ function MemberCard({
 
       <div className="mt-auto pt-3 border-t border-white/[0.05] flex flex-col gap-2 z-10 relative">
         {!editing ? (
-          <div className="flex flex-wrap items-center gap-1.5 h-12 content-start">
+          <div className="flex flex-wrap items-center gap-1.5 min-h-[48px] content-start">
             {member.jpp_position ? (
               <span
                 className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg"
-                style={{ background: hexToRgba(themeColor, isMT ? 0.2 : 0.1), color: isMT ? themeColor : 'rgba(255,255,255,0.6)' }}
+                style={{ background: hexToRgba(themeColor, isMTPosition ? 0.2 : 0.1), color: isMTPosition ? themeColor : 'rgba(255,255,255,0.6)' }}
               >
                 {JPP_POSITION_LABELS[member.jpp_position] ?? member.jpp_position}
               </span>
@@ -125,9 +178,14 @@ function MemberCard({
           </div>
         ) : (
           <div className="flex flex-col gap-2">
+            {/* Jawatan */}
             <select
               value={position}
-              onChange={e => setPosition(e.target.value)}
+              onChange={e => {
+                setPosition(e.target.value);
+                // Reset oversee list bila tukar jawatan
+                if (!JPP_MT_POSITIONS.includes(e.target.value as any)) setOverseeUnits([]);
+              }}
               className="text-xs font-semibold bg-black/40 border border-white/10 text-white rounded-xl px-2 py-1.5 outline-none custom-scrollbar"
             >
               <option value="">— Pilih Jawatan —</option>
@@ -135,16 +193,59 @@ function MemberCard({
                 <option key={k} value={k}>{v}</option>
               ))}
             </select>
-            <select
-              value={unit}
-              onChange={e => setUnit(e.target.value)}
-              className="text-xs font-semibold bg-black/40 border border-white/10 text-white rounded-xl px-2 py-1.5 outline-none custom-scrollbar"
-            >
-              <option value="">— Pilih Unit —</option>
-              {JPP_UNITS.map(u => (
-                <option key={u} value={u}>{JPP_UNIT_LABELS[u] ?? u}</option>
-              ))}
-            </select>
+
+            {/* Unit Exco Sendiri (untuk Exco biasa — bukan MT) */}
+            {!willBeMT && (
+              <select
+                value={unit}
+                onChange={e => setUnit(e.target.value)}
+                className="text-xs font-semibold bg-black/40 border border-white/10 text-white rounded-xl px-2 py-1.5 outline-none custom-scrollbar"
+              >
+                <option value="">— Pilih Unit Exco —</option>
+                {JPP_UNITS.map(u => (
+                  <option key={u} value={u}>{JPP_UNIT_LABELS[u] ?? u}</option>
+                ))}
+              </select>
+            )}
+
+            {/* MT Oversees — Multi-Checkbox (hanya untuk jawatan MT) */}
+            {willBeMT && (
+              <div className="rounded-xl border border-white/10 bg-black/30 p-2.5 space-y-1.5">
+                <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-2">
+                  🎯 Unit Diawasi (boleh pilih banyak)
+                </p>
+                {loadingOversee ? (
+                  <div className="flex items-center gap-2 text-white/30 text-[10px]">
+                    <Loader2 className="w-3 h-3 animate-spin" /> Memuatkan...
+                  </div>
+                ) : (
+                  UNIT_ORDER.map(code => {
+                    const cfg = UNIT_CFG[code];
+                    if (!cfg) return null;
+                    const checked = overseeUnits.includes(code);
+                    return (
+                      <button
+                        key={code}
+                        type="button"
+                        onClick={() => toggleOverseeUnit(code)}
+                        className={cn(
+                          'w-full flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all text-left',
+                          checked ? 'bg-white/10 text-white' : 'text-white/40 hover:bg-white/5 hover:text-white/70'
+                        )}
+                      >
+                        {checked
+                          ? <CheckSquare className="w-3.5 h-3.5 flex-shrink-0" style={{ color: cfg.color }} />
+                          : <Square className="w-3.5 h-3.5 flex-shrink-0 text-white/20" />
+                        }
+                        <span className="text-[10px] font-bold truncate">{cfg.shortLabel}</span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            )}
+
+            {/* Butang simpan/batal */}
             <div className="flex items-center gap-2 mt-1">
               <button
                 onClick={handleSave}

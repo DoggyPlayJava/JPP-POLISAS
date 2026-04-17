@@ -64,6 +64,11 @@ export interface Profile {
   ai_status?: string | null;
   ai_last_reset?: string | null;
   ai_tier_expiration?: string | null;
+  // Sistem Kohort POLISAS
+  programme_code?:    string | null;
+  intake_year?:       number | null;
+  intake_period?:     1 | 2 | null;
+  semester_override?: number | null;
 }
 
 //LOGS SYSTEM

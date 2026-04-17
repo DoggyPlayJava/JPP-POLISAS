@@ -5,7 +5,7 @@ import {
   Lock, ShieldCheck, Palette, Settings, Megaphone,
   Briefcase, CalendarDays, FileWarning, Sparkles,
   Zap, FileText, ClipboardCheck, ChevronDown, ExternalLink, Store,
-  ChevronLeft, LayoutGrid,
+  ChevronLeft, LayoutGrid, Building2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,7 +22,7 @@ import {
 
 // ── Component ────────────────────────────────────────────────────────────────
 export function JppSidebar() {
-  const { user, profile, signOut, isSuperAdmin } = useAuth();
+  const { user, profile, signOut, isSuperAdmin, hasKediamanAccess } = useAuth();
 
   const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
   const [hexInput, setHexInput]     = useState(JPP_THEME_DEFAULT_COLOR);
@@ -71,10 +71,14 @@ export function JppSidebar() {
       });
   }, [user?.id, isMT]);
 
+  // Unit Asrama staff — bukan JPP Exco, tapi ada hasKediamanAccess
+  const isUnitAsramaOnly = hasKediamanAccess && !isYDP && !isMT && !jppUnit;
+
   // ── Determine visible units based on RBAC ─────────────────────────────
   const visibleUnits = UNIT_ORDER.filter(code => {
     if (isYDP) return true;
     if (isMT)  return assignedUnits.includes(code);
+    if (isUnitAsramaOnly) return false; // Mereka ada section sendiri
     return code === jppUnit;
   });
 
@@ -333,6 +337,45 @@ export function JppSidebar() {
           </>
         )}
 
+        {/* ── Unit Pengurusan Asrama (bukan JPP Exco) ─── */}
+        {isUnitAsramaOnly && (
+          <>
+            <div className="pt-4 pb-1.5">
+              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-white/25">
+                Pengurusan Asrama
+              </p>
+            </div>
+            <NavLink
+              to="/jpp/asrama"
+              className={({ isActive }) => cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
+                isActive ? 'text-white' : 'text-white/40 hover:text-white/80 hover:bg-white/5'
+              )}
+              style={({ isActive }) => ({
+                background: isActive ? hexToRgba('#E879F9', 0.18) : undefined,
+              })}
+            >
+              {({ isActive }) => (
+                <>
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all"
+                    style={{ background: isActive ? hexToRgba('#E879F9', 0.3) : hexToRgba('#E879F9', 0.1) }}
+                  >
+                    <Building2 className="w-3.5 h-3.5" style={{ color: '#E879F9' }} />
+                  </div>
+                  <span className="text-xs font-bold tracking-tight flex-1">Rujukan Asrama</span>
+                  {isActive && (
+                    <div
+                      className="w-1 h-4 rounded-full flex-shrink-0"
+                      style={{ background: '#E879F9', boxShadow: '0 0 8px 2px rgba(232,121,249,0.5)' }}
+                    />
+                  )}
+                </>
+              )}
+            </NavLink>
+          </>
+        )}
+
         {/* ── Unit Exco Shortcuts ─── */}
         {visibleUnits.length > 0 && (
           <>
@@ -376,6 +419,9 @@ export function JppSidebar() {
                   subItems.push({ icon: Store, label: 'Portal Dashboard', href: '/keusahawanan/dashboard' });
                   subItems.push({ icon: Zap,   label: 'Portal Program',   href: '/keusahawanan/program' });
                 }
+                // KK tambahan: rujukan asrama
+                if (code === 'KK')
+                  subItems.push({ icon: Building2, label: 'Rujukan Asrama', href: '/jpp/asrama' });
               } else if (canReview) {
                 // MT / YDP menyemak laporan unit ini
                 if (isYDP) {
@@ -388,6 +434,9 @@ export function JppSidebar() {
                     subItems.push({ icon: ClipboardCheck, label: 'Semak Laporan Kelab', href: '/semakan-laporan' });
                   if (code === 'KEUSAHAWANAN')
                     subItems.push({ icon: Store, label: 'Portal Dashboard', href: '/keusahawanan/dashboard' });
+                  // YDP boleh tengok Rujukan Asrama melalui KK
+                  if (code === 'KK')
+                    subItems.push({ icon: Building2, label: 'Rujukan Asrama', href: '/jpp/asrama' });
                 }
                 // Semak laporan exco unit ini (universal)
                 subItems.push({ icon: ClipboardCheck, label: 'Semak Laporan', href: `/jpp/semak-laporan-exco/${unitLower}` });

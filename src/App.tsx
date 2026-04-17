@@ -64,6 +64,7 @@ import { JppTakwimPage } from './pages/jpp/JppTakwimPage';
 import { JppLogsPage } from './pages/jpp/JppLogsPage';
 import { JppSettingsPage } from './pages/jpp/JppSettingsPage';
 import { JppNexusPage } from './pages/jpp/JppNexusPage';
+import { JppAsramaPage } from './pages/jpp/JppAsramaPage';
 
 import { CompleteProfileModal } from '@/components/ui/CompleteProfileModal';
 import { GlobalAnnouncementModal } from '@/components/GlobalAnnouncementModal';
@@ -156,6 +157,8 @@ function AppRoutes() {
           <Route path="/exco/:unitCode/aktiviti"          element={<ExcoAktivitiWrapper />} />
           <Route path="/exco/:unitCode/laporan"           element={<ExcoLaporanWrapper />} />
           <Route path="/jpp/semak-laporan-exco/:unitCode" element={<ExcoSemakanLaporanPage />} />
+          {/* ── e-Asrama Rujukan ── */}
+          <Route path="/jpp/asrama"                      element={<JppAsramaPage />} />
         </Route>
 
         {/* ── e-Keusahawanan Onboarding (No Sidebar) ── */}

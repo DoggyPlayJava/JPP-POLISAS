@@ -288,9 +288,8 @@ export function KeusahawananAdminPanel() {
       .select('id, full_name, avatar_url, matric_no')
       .ilike('full_name', `%${q}%`)
       .limit(6);
-    // Only exclude existing admins if there are any - avoids invalid SQL with empty list
     if (unitAdmins.length > 0) {
-      query = query.not('id', 'in', `(${unitAdmins.map(a => `'${a.user_id}'`).join(',')})`);
+      query = query.not('id', 'in', `(${unitAdmins.map(a => a.user_id).join(',')})`);
     }
     const { data } = await query;
     setSearchResults(data || []);

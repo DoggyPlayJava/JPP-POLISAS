@@ -502,23 +502,8 @@ export function Sidebar() {
       {activeExco === 'sukan' && <PlaceholderSidebarContent excoId="sukan" />}
       {activeExco === null && <EkppSidebarContent />}
 
-      {/* ── JPP HQ Portal Link (Pinned) ── */}
-      {(isSuperAdmin || profile?.role === 'JPP') && (
-        <div className="px-3 py-2 mt-auto pb-4">
-            <NavLink
-                to="/jpp"
-                className={({ isActive }) => cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border border-amber-500/20',
-                    isActive ? 'shadow-inner ring-1 ring-amber-500/50' : ''
-                )}
-            >
-                <div className="w-7 h-7 rounded-lg bg-amber-500/30 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                    <Crown className="w-3.5 h-3.5 text-amber-400" />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest leading-tight text-amber-400">JPP HQ<br/>Portal</span>
-            </NavLink>
-        </div>
-      )}
+
+
 
       {/* ── User Footer ── */}
       <div className="p-4 border-t border-white/10 space-y-3">

@@ -26,16 +26,18 @@ export type JppPosition =
   | 'TIMBALAN_EXCO'        // Timbalan Ketua Exco
   | 'EXCO_BIASA';          // Ahli Exco biasa
 
-/** Unit exco dalam JPP — boleh tambah unit baharu tanpa ubah type */
+/** Unit exco dalam JPP — nilai mestilah sama dengan jpp_exco_units.code dalam DB */
 export type JppUnit =
-  | 'KEUSAHAWANAN'
-  | 'KPP'          // Kelab, Persatuan & Perpaduan
-  | 'KEBAJIKAN'
-  | 'SUKAN'
-  | 'KEDIAMAN'     // Kediaman Luar Kampus
-  | 'AKADEMIK'
-  | 'DISIPLIN'
-  | string;        // Untuk unit tambahan masa hadapan
+  | 'KEUSAHAWANAN'  // Exco Keusahawanan
+  | 'KPP'           // Exco Kelab, Persatuan & Perpaduan
+  | 'KK'            // Exco Kediaman dan Kerohanian ← GUNAKAN INI, bukan 'KEDIAMAN'
+  | 'KLS'           // Exco Kediaman Luar Kampus
+  | 'AKADEMIK'      // Exco Akademik dan Pembangunan Mahasiswa
+  | 'KEBAJIKAN'     // Exco Kebajikan dan Pengaduan Awam
+  | 'MULTIMEDIA'    // Exco Multimedia, Informasi dan Perhubungan Awam
+  | 'KOLAB'         // Exco Kolaborasi dan Kesukarelawanan
+  | 'SRK'           // Exco Sukan, Rekreasi dan Kebudayaan
+  | string;         // Untuk unit tambahan masa hadapan
 
 /** Label display untuk JppPosition */
 export const JPP_POSITION_LABELS: Record<JppPosition, string> = {
@@ -329,6 +331,7 @@ export const JABATAN_LIST = [
   { value: 'makanan',     label: 'Jabatan Teknologi Makanan (JTM)' },
   { value: 'elektrik',    label: 'Jabatan Kejuruteraan Elektrik (JKE)' },
   { value: 'awam',        label: 'Jabatan Kejuruteraan Awam (JKA)' },
+  { value: 'ftv',         label: 'Asasi Teknologi Kejuruteraan (FTV)' },
 ] as const;
 
 export type JabatanValue = typeof JABATAN_LIST[number]['value'];
@@ -341,6 +344,7 @@ export const JABATAN_SEARCH_TERMS: Record<JabatanValue, string> = {
   makanan:     'Ketema',
   elektrik:    'Elektron',
   awam:        'PePKa',
+  ftv:         '', // FTV tiada kelab akademik automatik
 };
 
 // Fungsi pembantu untuk mencari ID kelab yang sah pada masa nyata (runtime)
@@ -353,6 +357,74 @@ export const getAkademikClubId = (jabatan: JabatanValue): string | null => {
     c.name.toLowerCase().includes(keyword.toLowerCase())
   );
   return club?.id || null;
+};
+
+// ─── Sistem Kohort Pelajar POLISAS ───────────────────────────────────────────
+
+/** Pemetaan Jabatan → Senarai Program Pengajian */
+export const JABATAN_PROGRAMMES: Record<JabatanValue, { code: string; label: string }[]> = {
+  elektrik: [
+    { code: 'DEE', label: 'Diploma Elektrik dan Elektronik — DEE' },
+    { code: 'DTK', label: 'Diploma Elektronik (Komputer) — DTK' },
+    { code: 'DEP', label: 'Diploma Elektronik (Komunikasi) — DEP' },
+  ],
+  mekanikal: [
+    { code: 'DAD', label: 'Diploma Kejuruteraan Mekanikal (Automotif) — DAD' },
+    { code: 'DKM', label: 'Diploma Kejuruteraan Mekanikal — DKM' },
+  ],
+  awam: [
+    { code: 'DSB', label: 'Diploma Senibina — DSB' },
+    { code: 'DKA', label: 'Diploma Kejuruteraan Awam — DKA' },
+    { code: 'DGU', label: 'Diploma Geomatik — DGU' },
+  ],
+  makanan: [
+    { code: 'DTM', label: 'Diploma Teknologi Makanan — DTM' },
+    { code: 'DMH', label: 'Diploma Makanan Halal — DMH' },
+  ],
+  perdagangan: [
+    { code: 'DAT', label: 'Diploma Akauntansi — DAT' },
+    { code: 'DSK', label: 'Diploma Sains Kesetiausahaan — DSK' },
+    { code: 'DLS', label: 'Diploma Pengurusan Logistik & Rangkaian Bekalan — DLS' },
+    { code: 'DBS', label: 'Diploma Sistem Maklumat Perniagaan — DBS' },
+  ],
+  ftv: [], // FTV tiada sub-program — programme_code auto-set ke 'FTV'
+};
+
+/**
+ * Mengira semester semasa berdasarkan tahun & sesi pengambilan.
+ * @param intakeYear    — Tahun pengambilan (e.g. 2024)
+ * @param intakePeriod  — 1 = Intake Pertama (Pertengahan Tahun) | 2 = Intake Kedua (Awal Tahun)
+ * @param isFtv         — true jika pelajar Asasi FTV (maks 2 semester)
+ * @param startMonth1   — Bulan mula Intake 1 (dari system_settings, lalai 7)
+ * @param startMonth2   — Bulan mula Intake 2 (dari system_settings, lalai 1)
+ * @param override      — semester_override dari profiles (manual correction)
+ */
+export const getSemesterInfo = (
+  intakeYear: number,
+  intakePeriod: 1 | 2,
+  isFtv: boolean,
+  startMonth1 = 7,
+  startMonth2 = 1,
+  override?: number | null
+): { semester: number; level: 'Junior' | 'Senior' | 'Asasi' } => {
+  if (override) {
+    const level: 'Junior' | 'Senior' | 'Asasi' = isFtv ? 'Asasi' : override <= 3 ? 'Junior' : 'Senior';
+    return { semester: override, level };
+  }
+  const now = new Date();
+  const startMonth = intakePeriod === 1 ? startMonth1 : startMonth2;
+  const totalMonths =
+    (now.getFullYear() - intakeYear) * 12 + (now.getMonth() + 1 - startMonth);
+  const maxSem = isFtv ? 2 : 6;
+  const semester = Math.min(Math.max(1, Math.floor(totalMonths / 6) + 1), maxSem);
+  const level: 'Junior' | 'Senior' | 'Asasi' = isFtv ? 'Asasi' : semester <= 3 ? 'Junior' : 'Senior';
+  return { semester, level };
+};
+
+/** Senarai tahun pengambilan yang boleh dipilih (6 tahun ke belakang + tahun semasa) */
+export const INTAKE_YEARS = (): number[] => {
+  const y = new Date().getFullYear();
+  return Array.from({ length: 6 }, (_, i) => y - i);
 };
 
 // Kategori kelab yang BOLEH diapply oleh pelajar dari KelabPage

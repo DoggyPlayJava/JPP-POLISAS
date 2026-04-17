@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { Users, Search, Sparkles, ShieldCheck, FileText, ChevronDown, CheckCircle2, XCircle } from 'lucide-react';
+import { Users, Search, Sparkles, ShieldCheck, FileText, ChevronDown, CheckCircle2, XCircle, GraduationCap } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { hexToRgba, cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { getSemesterInfo } from '@/types';
 
 export function JppUsersPage() {
     const { isSuperAdmin, profile } = useAuth();
@@ -16,7 +17,11 @@ export function JppUsersPage() {
     const [allUsers, setAllUsers] = useState<any[]>([]);
     const [tierRequests, setTierRequests] = useState<any[]>([]);
     const [userSearch, setUserSearch] = useState('');
+    const [filterLevel, setFilterLevel] = useState<string>('all');  // all | Junior | Senior | Asasi
+    const [filterProg, setFilterProg]   = useState<string>('all');  // all | programme code
     const [loading, setLoading] = useState(true);
+    const [sm1, setSm1] = useState(7);
+    const [sm2, setSm2] = useState(1);
 
     const isMTUser = ['YANG_DIPERTUA', 'NAIB_YANG_DIPERTUA', 'SETIAUSAHA_KEHORMAT', 'BENAHARI_KEHORMAT'].includes(profile?.jpp_position || '');
 
@@ -32,6 +37,13 @@ export function JppUsersPage() {
         
         const { data: requestsData } = await supabase.from('ai_tier_requests').select('*, profiles(full_name)').order('created_at', { ascending: false });
         setTierRequests(requestsData || []);
+
+        // Load intake config
+        const { data: sysData } = await supabase.from('system_settings').select('key,value').in('key', ['intake_1_month', 'intake_2_month']);
+        sysData?.forEach(r => {
+            if (r.key === 'intake_1_month') setSm1(Number(r.value) || 7);
+            if (r.key === 'intake_2_month') setSm2(Number(r.value) || 1);
+        });
         
         setLoading(false);
     };
@@ -78,10 +90,31 @@ export function JppUsersPage() {
         window.open(url, '_blank');
     };
 
-    const filteredUsers = allUsers.filter(u => 
-        (u.full_name?.toLowerCase() || '').includes(userSearch.toLowerCase()) || 
-        (u.email?.toLowerCase() || '').includes(userSearch.toLowerCase())
-    );
+    const uniqueProgs = [...new Set(allUsers.map(u => u.programme_code).filter(Boolean))].sort();
+
+    const getUserCohort = (u: any) => {
+        const isStaff = ['STAFF', 'SUPER_ADMIN_JPP', 'ADMIN'].includes(u.role);
+        if (isStaff || !u.intake_year || !u.intake_period) return null;
+        return getSemesterInfo(
+            u.intake_year, u.intake_period as 1|2,
+            u.programme_code === 'FTV',
+            sm1, sm2, u.semester_override
+        );
+    };
+
+    const filteredUsers = allUsers.filter(u => {
+        const matchSearch = (u.full_name?.toLowerCase() || '').includes(userSearch.toLowerCase()) || 
+            (u.email?.toLowerCase() || '').includes(userSearch.toLowerCase());
+        if (!matchSearch) return false;
+
+        if (filterProg !== 'all' && u.programme_code !== filterProg) return false;
+
+        if (filterLevel !== 'all') {
+            const cohort = getUserCohort(u);
+            if (!cohort || cohort.level !== filterLevel) return false;
+        }
+        return true;
+    });
 
     return (
         <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -180,20 +213,43 @@ export function JppUsersPage() {
                 {/* User Table */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
                     <div className="rounded-[1.75rem] border border-white/[0.06] bg-white/[0.02] p-6 lg:p-8">
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
                             <div>
                                 <h3 className="font-bold text-lg text-white">Direktori Pengguna</h3>
-                                <p className="text-[11px] text-white/40 uppercase tracking-widest mt-1">Sistem berdaftar keseluruhan</p>
+                                <p className="text-[11px] text-white/40 uppercase tracking-widest mt-1">Sistem berdaftar keseluruhan — {filteredUsers.length} rekod</p>
                             </div>
-                            <div className="relative w-full sm:max-w-xs">
-                                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
-                                <input
-                                    type="text"
-                                    placeholder="Cari emel atau nama..."
-                                    value={userSearch}
-                                    onChange={e => setUserSearch(e.target.value)}
-                                    className="w-full pl-10 pr-4 h-11 bg-white/5 border border-white/10 rounded-2xl text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 transition-all font-medium"
-                                />
+                            <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
+                                {/* Search */}
+                                <div className="relative">
+                                    <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
+                                    <input
+                                        type="text" placeholder="Cari emel atau nama..."
+                                        value={userSearch} onChange={e => setUserSearch(e.target.value)}
+                                        className="pl-10 pr-4 h-11 bg-white/5 border border-white/10 rounded-2xl text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 transition-all font-medium w-48"
+                                    />
+                                </div>
+                                {/* Tahap filter */}
+                                <select
+                                    value={filterLevel}
+                                    onChange={e => setFilterLevel(e.target.value)}
+                                    className="h-11 bg-white/5 border border-white/10 rounded-2xl text-xs text-white/70 font-bold px-3 focus:outline-none focus:border-white/30 transition-all"
+                                >
+                                    <option value="all">Semua Tahap</option>
+                                    <option value="Junior">Junior</option>
+                                    <option value="Senior">Senior</option>
+                                    <option value="Asasi">Asasi</option>
+                                </select>
+                                {/* Program filter */}
+                                <select
+                                    value={filterProg}
+                                    onChange={e => setFilterProg(e.target.value)}
+                                    className="h-11 bg-white/5 border border-white/10 rounded-2xl text-xs text-white/70 font-bold px-3 focus:outline-none focus:border-white/30 transition-all"
+                                >
+                                    <option value="all">Semua Program</option>
+                                    {uniqueProgs.map(p => (
+                                        <option key={p} value={p}>{p}</option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
 
@@ -202,6 +258,7 @@ export function JppUsersPage() {
                                 <thead>
                                     <tr className="border-b border-white/[0.05]">
                                         <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Pengguna</th>
+                                        <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Kohort</th>
                                         <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Tier AI</th>
                                         <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Baki Token</th>
                                         {(isMTUser || isSuperAdmin) && <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Tindakan</th>}
@@ -209,19 +266,38 @@ export function JppUsersPage() {
                                 </thead>
                                 <tbody>
                                     {loading ? (
-                                        <tr>
-                                            <td colSpan={4} className="px-5 py-8 text-center text-white/30 text-xs">Memuatkan data...</td>
-                                        </tr>
+                                        <tr><td colSpan={5} className="px-5 py-8 text-center text-white/30 text-xs">Memuatkan data...</td></tr>
                                     ) : filteredUsers.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={4} className="px-5 py-8 text-center text-white/30 text-xs">Tiada pengguna dijumpai.</td>
-                                        </tr>
+                                        <tr><td colSpan={5} className="px-5 py-8 text-center text-white/30 text-xs">Tiada pengguna dijumpai.</td></tr>
                                     ) : (
-                                        filteredUsers.slice(0, 50).map((u) => (
+                                        filteredUsers.slice(0, 100).map((u) => {
+                                            const cohort = getUserCohort(u);
+                                            return (
                                             <tr key={u.id} className="border-b border-white/[0.02] last:border-0 hover:bg-white/[0.02] transition-colors">
                                                 <td className="px-5 py-3.5">
                                                     <div className="font-bold text-sm text-white/90">{u.full_name || 'Pelajar'}</div>
                                                     <div className="text-[11px] text-white/40">{u.email}</div>
+                                                    <div className="text-[10px] text-white/25 mt-0.5">{u.matric_no || ''}</div>
+                                                </td>
+                                                {/* Kohort column */}
+                                                <td className="px-5 py-3.5">
+                                                    {cohort ? (
+                                                        <div className="space-y-1">
+                                                            <div className={cn(
+                                                                'px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border inline-block',
+                                                                cohort.level === 'Senior'  ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' :
+                                                                cohort.level === 'Junior'  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
+                                                                                            'bg-violet-500/10 text-violet-400 border-violet-500/30'
+                                                            )}>
+                                                                {cohort.level} • Sem {cohort.semester}
+                                                            </div>
+                                                            {u.programme_code && (
+                                                                <div className="text-[9px] text-white/30 font-bold">{u.programme_code}</div>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-[9px] text-white/20">—</span>
+                                                    )}
                                                 </td>
                                                 <td className="px-5 py-3.5">
                                                     <div className="flex flex-col gap-1 items-start">
@@ -299,13 +375,14 @@ export function JppUsersPage() {
                                                     </td>
                                                 )}
                                             </tr>
-                                        ))
+                                            );
+                                        })
                                     )}
                                 </tbody>
                             </table>
                         </div>
-                        {filteredUsers.length > 50 && userSearch === '' && (
-                            <p className="text-center text-[10px] uppercase tracking-widest text-white/30 mt-4">Memaparkan 50 rekod terakhir</p>
+                        {filteredUsers.length > 100 && userSearch === '' && (
+                            <p className="text-center text-[10px] uppercase tracking-widest text-white/30 mt-4">Memaparkan 100 rekod teratas</p>
                         )}
                     </div>
                 </motion.div>

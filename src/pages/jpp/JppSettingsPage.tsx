@@ -2,16 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { Settings as SettingsIcon, ShieldCheck, KeyRound } from 'lucide-react';
+import { Settings as SettingsIcon, ShieldCheck, KeyRound, Calendar } from 'lucide-react';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { hexToRgba, cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
+
+const MONTH_NAMES = ['', 'Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
 
 export function JppSettingsPage() {
     const { isSuperAdmin, profile } = useAuth();
     const isYDP = profile?.jpp_position === 'YANG_DIPERTUA' || isSuperAdmin;
     const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
     const [loading, setLoading] = useState(true);
+    const [intake1Month, setIntake1Month] = useState(7);
+    const [intake2Month, setIntake2Month] = useState(1);
+    const [savingIntake, setSavingIntake] = useState(false);
 
     const [settings, setSettings] = useState<Record<string, any>>({
         staff_registration_code: ''
@@ -22,6 +27,42 @@ export function JppSettingsPage() {
             .then(({ data }) => { if (data?.color) setThemeColor(data.color); });
         fetchData();
     }, []);
+
+    // ── Semak dan hantar notifikasi 1 bulan sebelum intake ──────────────────────
+    const checkAndSendIntakeAlert = async (m1: number, m2: number) => {
+        if (!isSuperAdmin && !isYDP) return;
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1; // 1-indexed
+        const currentYear  = now.getFullYear();
+
+        const alertMonth1 = m1 === 1 ? 12 : m1 - 1;
+        const alertMonth2 = m2 === 1 ? 12 : m2 - 1;
+
+        let intakeNum: number | null = null;
+        if (currentMonth === alertMonth1) intakeNum = 1;
+        else if (currentMonth === alertMonth2) intakeNum = 2;
+        if (!intakeNum) return;
+
+        const alertKey = `intake_${intakeNum}_alert_sent_${currentYear}`;
+        const { data: existing } = await supabase
+            .from('system_settings').select('value').eq('key', alertKey).maybeSingle();
+        if (existing?.value === true) return; // Sudah hantar tahun ini
+
+        const { data: admins } = await supabase
+            .from('profiles').select('id').in('role', ['SUPER_ADMIN_JPP', 'ADMIN']);
+        if (admins && admins.length > 0) {
+            await supabase.from('notifications').insert(
+                admins.map(a => ({
+                    user_id: a.id,
+                    title:   `⚠️ Semak Konfigurasi Intake ${intakeNum} — 1 Bulan Lagi`,
+                    message: `Pengambilan Pelajar Intake ${intakeNum} dijangka bermula dalam ±1 bulan. Sila semak dan kemaskini bulan mula pengambilan di Tetapan Utama JPP jika perlu.`,
+                    type:    'SYSTEM',
+                    is_read: false,
+                }))
+            );
+        }
+        await supabase.from('system_settings').upsert({ key: alertKey, value: true });
+    };
 
     const fetchData = async () => {
         setLoading(true);
@@ -34,8 +75,14 @@ export function JppSettingsPage() {
                 if (val === 'false') val = false;
                 if (typeof val === 'string' && val.startsWith('"') && val.endsWith('"')) { val = val.slice(1, -1); }
                 s[item.key] = val;
+                if (item.key === 'intake_1_month') setIntake1Month(Number(val) || 7);
+                if (item.key === 'intake_2_month') setIntake2Month(Number(val) || 1);
             });
             setSettings(s);
+            // Cek alert selepas data dimuatkan
+            const m1 = Number(settingsData.find(i => i.key === 'intake_1_month')?.value) || 7;
+            const m2 = Number(settingsData.find(i => i.key === 'intake_2_month')?.value) || 1;
+            checkAndSendIntakeAlert(m1, m2);
         }
         setLoading(false);
     };
@@ -133,6 +180,94 @@ export function JppSettingsPage() {
                         )}
                     </div>
                 </motion.div>
+
+                {/* Konfigurasi Takwim Pengambilan — SUPER_ADMIN sahaja */}
+                {isSuperAdmin && (
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="space-y-6">
+                        <div className="flex items-center gap-3 px-2">
+                            <Calendar className="w-5 h-5 text-amber-500" />
+                            <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-white/40">Konfigurasi Takwim Pengambilan</h3>
+                        </div>
+                        <div className="p-6 rounded-[2rem] bg-gradient-to-br from-amber-900/10 to-amber-900/5 border border-amber-500/20 space-y-6 md:col-span-2 group hover:from-amber-900/20 transition-all">
+                            <div className="flex items-start gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30 shrink-0">
+                                    <Calendar className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <p className="text-base font-black text-white">Bulan Permulaan Intake</p>
+                                    <p className="text-xs text-amber-400/70 font-medium mt-1">Tetapkan bulan mula setiap sesi pengambilan pelajar. Notifikasi semak sahaja akan dihantar kepada pentadbir sebulan sebelum tarikh ini.</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Intake 1 */}
+                                <div className="space-y-2">
+                                    <p className="text-[11px] font-black uppercase tracking-widest text-white/50">Intake Pertama (Pertengahan Tahun)</p>
+                                    <div className="flex items-center gap-3">
+                                        <select
+                                            value={intake1Month}
+                                            onChange={e => setIntake1Month(Number(e.target.value))}
+                                            className="flex-1 h-11 bg-black/40 border border-amber-500/20 rounded-xl text-sm text-white/80 font-bold px-3 focus:outline-none focus:border-amber-500/50"
+                                        >
+                                            {MONTH_NAMES.slice(1).map((m, i) => (
+                                                <option key={i + 1} value={i + 1}>{m} ({i + 1})</option>
+                                            ))}
+                                        </select>
+                                        <button
+                                            onClick={async () => {
+                                                setSavingIntake(true);
+                                                try {
+                                                    await supabase.from('system_settings').update({ value: intake1Month }).eq('key', 'intake_1_month');
+                                                    toast.success(`Intake 1 dikemaskini: ${MONTH_NAMES[intake1Month]}`);
+                                                } catch { toast.error('Gagal simpan.'); }
+                                                finally { setSavingIntake(false); }
+                                            }}
+                                            disabled={savingIntake}
+                                            className="px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest bg-amber-600 hover:bg-amber-700 text-white shadow transition-all whitespace-nowrap"
+                                        >
+                                            Simpan
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Intake 2 */}
+                                <div className="space-y-2">
+                                    <p className="text-[11px] font-black uppercase tracking-widest text-white/50">Intake Kedua (Awal Tahun)</p>
+                                    <div className="flex items-center gap-3">
+                                        <select
+                                            value={intake2Month}
+                                            onChange={e => setIntake2Month(Number(e.target.value))}
+                                            className="flex-1 h-11 bg-black/40 border border-amber-500/20 rounded-xl text-sm text-white/80 font-bold px-3 focus:outline-none focus:border-amber-500/50"
+                                        >
+                                            {MONTH_NAMES.slice(1).map((m, i) => (
+                                                <option key={i + 1} value={i + 1}>{m} ({i + 1})</option>
+                                            ))}
+                                        </select>
+                                        <button
+                                            onClick={async () => {
+                                                setSavingIntake(true);
+                                                try {
+                                                    await supabase.from('system_settings').update({ value: intake2Month }).eq('key', 'intake_2_month');
+                                                    toast.success(`Intake 2 dikemaskini: ${MONTH_NAMES[intake2Month]}`);
+                                                } catch { toast.error('Gagal simpan.'); }
+                                                finally { setSavingIntake(false); }
+                                            }}
+                                            disabled={savingIntake}
+                                            className="px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest bg-amber-600 hover:bg-amber-700 text-white shadow transition-all whitespace-nowrap"
+                                        >
+                                            Simpan
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p className="text-[10px] text-amber-500/60 font-medium border-t border-amber-500/10 pt-4">
+                                ⚠ Ubah nilai ini SEBELUM pengambilan baharu bermula. Sistem akan menghantar notifikasi kepada pentadbir secara automatik sebulan sebelum tarikh yang ditetapkan.
+                            </p>
+                        </div>
+                    </motion.div>
+                )}
+
             </div>
         </div>
     );

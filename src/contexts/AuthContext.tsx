@@ -35,6 +35,8 @@ interface AuthContextType {
   isKppExco: boolean;
   hasKeusahawananAccess: boolean;  // SuperAdmin || Keusahawanan Exco || MT assigned to KEUSAHAWANAN || Unit Keusahawanan Admin
   isKeusahawananExco: boolean;
+  hasKediamanAccess: boolean;      // SuperAdmin || Kediaman Exco (jpp_unit='KK') || MT assigned to KK || YDP || Unit Pengurusan Asrama admin
+  isKediamanExco: boolean;
   isJppMember: boolean;
   refetchProfile: () => Promise<void>;
   refreshClubs: () => Promise<void>;
@@ -63,7 +65,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const [isMTKpp, setIsMTKpp] = useState(false);
   const [isMTKeusahawanan, setIsMTKeusahawanan] = useState(false);
+  const [isMTKediaman, setIsMTKediaman] = useState(false);
   const [isUnitKeusahawananAdmin, setIsUnitKeusahawananAdmin] = useState(false);
+  const [isUnitAsramaAdmin, setIsUnitAsramaAdmin] = useState(false);
   const navigate = useNavigate();
   const currentUserId = useRef<string | null>(null);
 
@@ -168,29 +172,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('selectedClubId');
       }
 
-      // Check if MT is assigned to KPP or KEUSAHAWANAN
+      // Check if MT is assigned to KPP, KEUSAHAWANAN, or KK (Kediaman)
       if (profileData?.role === 'JPP' || profileData?.role === 'SUPER_ADMIN_JPP') {
-        const [kppAssign, keusahawananAssign] = await Promise.all([
+        const [kppAssign, keusahawananAssign, kediamanAssign] = await Promise.all([
           supabase.from('jpp_mt_assignments').select('unit').eq('mt_user_id', userId).eq('unit', 'KPP').maybeSingle(),
           supabase.from('jpp_mt_assignments').select('unit').eq('mt_user_id', userId).eq('unit', 'KEUSAHAWANAN').maybeSingle(),
+          supabase.from('jpp_mt_assignments').select('unit').eq('mt_user_id', userId).eq('unit', 'KK').maybeSingle(),
         ]);
         setIsMTKpp(!!kppAssign.data);
         setIsMTKeusahawanan(!!keusahawananAssign.data);
+        setIsMTKediaman(!!kediamanAssign.data);
       } else {
         setIsMTKpp(false);
         setIsMTKeusahawanan(false);
+        setIsMTKediaman(false);
       }
 
-      // Check if user is a Unit Keusahawanan admin
+      // Check if user is a Unit Keusahawanan admin OR Unit Pengurusan Asrama admin
       if (profileData?.role === 'JPP' || profileData?.role === 'SUPER_ADMIN_JPP') {
-        const { data: unitAdmin } = await supabase
-          .from('keusahawanan_unit_admins')
-          .select('id')
-          .eq('user_id', userId)
-          .maybeSingle();
-        setIsUnitKeusahawananAdmin(!!unitAdmin);
+        const [keusahawananAdmin, asramaAdmin] = await Promise.all([
+          supabase.from('keusahawanan_unit_admins').select('id').eq('user_id', userId).maybeSingle(),
+          supabase.from('asrama_unit_admins').select('id').eq('user_id', userId).maybeSingle(),
+        ]);
+        setIsUnitKeusahawananAdmin(!!keusahawananAdmin.data);
+        setIsUnitAsramaAdmin(!!asramaAdmin.data);
       } else {
         setIsUnitKeusahawananAdmin(false);
+        setIsUnitAsramaAdmin(false);
       }
     } catch (err) {
       // Jika junction table belum wujud (sebelum migration), jangan crash
@@ -345,7 +353,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // PENTING: JPP (ahli biasa JPP) BUKAN super admin — mereka ada peranan tersendiri!
   const profileRole = (profile?.role ?? '') as string;
   const isSuperAdmin = profileRole === 'SUPER_ADMIN_JPP' || profileRole === 'ADMIN';
-  const isJppMember  = profileRole === 'JPP'; // Ahli JPP biasa (bukan HEP/developer)
+  const isJppMember  = profileRole === 'JPP' || profileRole === 'SUPER_ADMIN_JPP'; // Semua ahli JPP (termasuk SuperAdmin)
 
   // Primary club = dari profiles.club_id (kekal sebagai fallback)
   const primaryClubId = profile?.club_id ?? null;
@@ -379,6 +387,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // KPP Exco mendapat isAdvisor=true GLOBAL supaya boleh switch ke mana-mana kelab
   const isKppExco           = profileRole === 'JPP' && profile?.jpp_unit === 'KPP';
   const isKeusahawananExco  = profileRole === 'JPP' && profile?.jpp_unit === 'KEUSAHAWANAN';
+  const isKediamanExco      = profileRole === 'JPP' && profile?.jpp_unit === 'KK'; // Exco Kediaman & Kerohanian
   // YDP dan YANG_DIPERTUA — oversee semua unit, termasuk KPP dan Keusahawanan
   const isYdp = (profileRole === 'JPP' || profileRole === 'SUPER_ADMIN_JPP') &&
     (profile?.jpp_position === 'YDP' || profile?.jpp_position === 'YANG_DIPERTUA');
@@ -405,9 +414,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         effectiveRole,
         isKppExco,
         isKeusahawananExco,
+        isKediamanExco,
         isJppMember,
         hasKppAccess: isSuperAdmin || isKppExco || isMTKpp || isYdp,
         hasKeusahawananAccess: isSuperAdmin || isKeusahawananExco || isMTKeusahawanan || isUnitKeusahawananAdmin || isYdp,
+        hasKediamanAccess: isSuperAdmin || isKediamanExco || isMTKediaman || isUnitAsramaAdmin || isYdp,
         userClubIds,
         userMemberships,
         primaryClubId,

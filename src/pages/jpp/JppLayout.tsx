@@ -8,7 +8,7 @@ import { NotificationBell } from '@/components/ui/NotificationBell';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 export function JppLayout() {
-  const { isJppMember, isSuperAdmin, isLoading } = useAuth();
+  const { isJppMember, isSuperAdmin, isLoading, hasKediamanAccess } = useAuth();
   const location = useLocation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
@@ -28,8 +28,8 @@ export function JppLayout() {
     );
   }
 
-  // Access guard: only JPP members and super admins
-  if (!isJppMember && !isSuperAdmin) {
+  // Access guard: JPP + SuperAdmin + Unit Pengurusan Asrama staff
+  if (!isJppMember && !isSuperAdmin && !hasKediamanAccess) {
     return <Navigate to="/portal" replace />;
   }
 

@@ -474,3 +474,121 @@ unit       TEXT   -- kod unit, cth: 'KEBAJIKAN'
 ---
 
 *Dikemas kini: April 2026 — Setiap perubahan besar pada sistem perlu dikemas kini dokumen ini.*
+
+---
+
+## 14. Sistem Kohort Pelajar POLISAS ⭐
+
+> Ditambah: April 2026
+
+Sistem kohort membolehkan pegawai JPP mengenal pasti tahap pengajian dan program pelajar (Junior/Senior/Asasi) dan menapis ahli mengikut program atau semester dengan mudah.
+
+### 14.1 Medan Database (`profiles`)
+
+| Kolum | Jenis | Penerangan |
+|---|---|---|
+| `programme_code` | `TEXT` | Kod program: `DEE`, `DTK`, `DEP`, `DAD`, `DKM`, `DSB`, `DKA`, `DGU`, `DTM`, `DMH`, `DAT`, `DSK`, `DLS`, `DBS`, `FTV` |
+| `intake_year` | `SMALLINT` | Tahun pengambilan: 2020–2026 |
+| `intake_period` | `SMALLINT` | `1` = Intake Pertama (Pertengahan Tahun, ~Julai) \| `2` = Intake Kedua (Awal Tahun, ~Januari) |
+| `semester_override` | `SMALLINT` | Pembetulan manual semester. `NULL` = guna kiraan auto |
+
+> **Nota:** Semua kolum adalah `NULLABLE`. Staf (`STAFF`, `SUPER_ADMIN_JPP`, `ADMIN`) dikecualikan daripada pengisian data kohort.
+
+### 14.2 Konfigurasi Sistem (`system_settings`)
+
+| Key | Jenis | Nilai Lalai | Maksud |
+|---|---|---|---|
+| `intake_1_month` | `INT` | `7` (Julai) | Bulan mula Intake Pertama |
+| `intake_2_month` | `INT` | `1` (Januari) | Bulan mula Intake Kedua |
+| `intake_1_alert_sent_{YEAR}` | `BOOL` | — | Flag: notifikasi intake 1 sudah dihantar tahun ini |
+| `intake_2_alert_sent_{YEAR}` | `BOOL` | — | Flag: notifikasi intake 2 sudah dihantar tahun ini |
+
+Admin boleh ubah `intake_1_month` dan `intake_2_month` di `/jpp/settings` → "Konfigurasi Takwim Pengambilan".
+
+### 14.3 Senarai Program POLISAS (Muktamad)
+
+| Jabatan (DB value) | Kod Program | Nama Program |
+|---|---|---|
+| `elektrik` | `DEE` | Diploma Elektrik dan Elektronik |
+| `elektrik` | `DTK` | Diploma Elektronik (Komputer) |
+| `elektrik` | `DEP` | Diploma Elektronik (Komunikasi) |
+| `mekanikal` | `DAD` | Diploma Kejuruteraan Mekanikal (Automotif) |
+| `mekanikal` | `DKM` | Diploma Kejuruteraan Mekanikal |
+| `awam` | `DSB` | Diploma Senibina |
+| `awam` | `DKA` | Diploma Kejuruteraan Awam |
+| `awam` | `DGU` | Diploma Geomatik |
+| `makanan` | `DTM` | Diploma Teknologi Makanan |
+| `makanan` | `DMH` | Diploma Makanan Halal |
+| `perdagangan` | `DAT` | Diploma Akauntansi |
+| `perdagangan` | `DSK` | Diploma Sains Kesetiausahaan |
+| `perdagangan` | `DLS` | Diploma Pengurusan Logistik & Rangkaian Bekalan |
+| `perdagangan` | `DBS` | Diploma Sistem Maklumat Perniagaan |
+| `ftv` | `FTV` | Asasi Teknologi Kejuruteraan *(tiada sub-program, tiada kelab auto-assign)* |
+
+### 14.4 Formula Pengiraan Semester
+
+```
+startMonth  = intake_period === 1 ? intake_1_month : intake_2_month
+totalMonths = (currentYear - intake_year) × 12 + (currentMonth - startMonth)
+semester    = clamp(floor(totalMonths / 6) + 1, 1, isFtv ? 2 : 6)
+
+level:
+  - FTV          → "Asasi" (bukan Junior/Senior)
+  - semester ≤ 3 → "Junior"
+  - semester ≥ 4 → "Senior"
+```
+
+Jika `semester_override` tidak NULL → guna nilai tersebut tanpa pengiraan.
+
+### 14.5 Cara Guna dalam Komponen
+
+```typescript
+import { getSemesterInfo, JABATAN_PROGRAMMES, INTAKE_YEARS } from '@/types';
+
+// 1. Dapatkan bulan intake dari system_settings terlebih dahulu
+const { data } = await supabase.from('system_settings')
+  .select('key,value').in('key', ['intake_1_month', 'intake_2_month']);
+const sm1 = Number(data?.find(r => r.key === 'intake_1_month')?.value) || 7;
+const sm2 = Number(data?.find(r => r.key === 'intake_2_month')?.value) || 1;
+
+// 2. Kira semester
+const { semester, level } = getSemesterInfo(
+  profile.intake_year,    // 2024
+  profile.intake_period,  // 1 atau 2
+  profile.programme_code === 'FTV',
+  sm1, sm2,
+  profile.semester_override   // null jika tiada override
+);
+// level === 'Junior' | 'Senior' | 'Asasi'
+// semester === 1 | 2 | 3 | 4 | 5 | 6
+
+// 3. Ambil senarai program untuk dropdown
+const programmes = JABATAN_PROGRAMMES['elektrik'];
+// [{ code: 'DEE', label: '...' }, { code: 'DTK', label: '...' }, ...]
+```
+
+### 14.6 Menambah Program Baharu (Panduan Successor)
+
+1. Tambah entry dalam `JABATAN_PROGRAMMES[jabatan]` di `src/types/index.ts`
+2. **Tiada** migration database diperlukan — `programme_code` adalah `TEXT` bebas
+3. Kemaskini jadual senarai program di §14.3 dokumen ini
+
+### 14.7 Aliran `CompleteProfileModal` (4 Senario)
+
+| Senario | Syarat | Medan yang Ditunjukkan |
+|---|---|---|
+| Profil lengkap | Semua ada | Modal tidak muncul |
+| `isOnlyMissingPhone` | Ada semua kecuali phone | Phone sahaja |
+| `isOnlyMissingCohort` | Ada matric+dept+phone, tiada programme/intake | Jabatan + Program + Tahun + Intake (+ override) |
+| `isMissingPhoneAndCohort` | Ada matric+dept, tiada phone dan kohort | Phone + Jabatan + Program + Tahun + Intake |
+| Full Registration | Tiada matric | Nama IC + Matrik + Phone + Jabatan + Program + Intake |
+
+> **Pelajar sedia ada (85 orang pada April 2026)** terkena senario `isOnlyMissingCohort` apabila log masuk pertama kali selepas kemaskini ini.
+
+### 14.8 Notifikasi Automatik Intake
+
+Apabila mana-mana `SUPER_ADMIN_JPP` atau `ADMIN` log masuk ke `/jpp/settings`, sistem menyemak secara automatik sama ada bulan semasa adalah 1 bulan sebelum `intake_1_month` atau `intake_2_month`. Jika ya, notifikasi dihantar kepada semua admin mengingatkan mereka untuk semak konfigurasi intake. Notifikasi ini hanya dihantar **sekali setahun** per sesi intake (disimpan dalam `system_settings` dengan key `intake_N_alert_sent_{YEAR}`).
+
+---
+
+*Dikemas kini: April 2026 — Setiap perubahan besar pada sistem perlu dikemas kini dokumen ini.*
