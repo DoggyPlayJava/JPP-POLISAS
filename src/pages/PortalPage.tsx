@@ -299,29 +299,9 @@ export function PortalPage() {
   const [settings, setSettings] = useState<ExcoColorSetting[]>([]);
   const [isLoadingSettings, setIsLoadingSettings] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [showJppPopout, setShowJppPopout] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
+  
   const isJPPMode = profile?.role === 'JPP' || isSuperAdmin;
-
-  // ── JPP HQ Popout: show once per session for JPP members ──
-  useEffect(() => {
-    if (!isJPPMode) return;
-    const dismissed = sessionStorage.getItem('jpp_hq_popout_dismissed');
-    if (dismissed) return;
-    const timer = setTimeout(() => setShowJppPopout(true), 1200);
-    return () => clearTimeout(timer);
-  }, [isJPPMode]);
-
-  const handleJppPopoutAccept = () => {
-    sessionStorage.setItem('jpp_hq_popout_dismissed', '1');
-    setShowJppPopout(false);
-    navigate('/jpp');
-  };
-  const handleJppPopoutDismiss = () => {
-    sessionStorage.setItem('jpp_hq_popout_dismissed', '1');
-    setShowJppPopout(false);
-  };
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -462,64 +442,6 @@ export function PortalPage() {
         </div>
       </nav>
 
-      {/* ── JPP HQ Popout (once per session, JPP members only) ── */}
-      <AnimatePresence>
-        {showJppPopout && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 30 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.92, y: 20 }}
-            transition={{ type: 'spring', duration: 0.5 }}
-            className="fixed bottom-8 right-6 z-[200] w-80 rounded-[2rem] overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.5)] border border-amber-500/20 bg-slate-950/95 backdrop-blur-xl"
-          >
-            {/* Glow */}
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-900/20 via-transparent to-rose-900/10 pointer-events-none" />
-
-            <div className="relative p-6 space-y-5">
-              {/* Header */}
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center">
-                    <LucideIcons.Crown className="w-5 h-5 text-amber-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-black text-white leading-tight">JPP HQ Portal</p>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-400/70">Kawasan Eksklusif JPP</p>
-                  </div>
-                </div>
-                <button
-                  onClick={handleJppPopoutDismiss}
-                  className="p-1.5 rounded-xl text-white/20 hover:text-white/50 hover:bg-white/10 transition-all"
-                >
-                  <LucideIcons.X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <p className="text-xs text-white/50 leading-relaxed">
-                Anda mempunyai akses ke <span className="text-white/80 font-black">JPP HQ Portal</span> — pusat kawalan eksklusif untuk semua ahli JPP.
-              </p>
-
-              {/* Actions */}
-              <div className="flex gap-2">
-                <button
-                  onClick={handleJppPopoutAccept}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-300 hover:bg-amber-500/30 transition-all font-black text-[11px] uppercase tracking-widest group"
-                >
-                  <LucideIcons.ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                  Pergi ke HQ
-                </button>
-                <button
-                  onClick={handleJppPopoutDismiss}
-                  className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/30 hover:text-white/50 hover:bg-white/10 transition-all font-black text-[11px] uppercase tracking-widest"
-                >
-                  Tidak
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <main className="relative z-10 pt-32 md:pt-40 pb-20 px-4 md:px-8 max-w-7xl mx-auto">
         {/* Title Section */}
         <div className="flex flex-col items-center text-center mb-16 md:mb-24 space-y-6 md:space-y-8">
@@ -550,6 +472,37 @@ export function PortalPage() {
               Platform bersepadu untuk pengurusan kelab, perniagaan, dan aktiviti JPP Polisas. <br className="hidden md:block" />
               Bawa kepimpinan anda ke tahap seterusnya.
             </p>
+
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="pt-6 sm:pt-8"
+            >
+              <button
+                onClick={() => navigate('/akademik/qr')}
+                className="group relative flex flex-wrap sm:flex-nowrap items-center justify-center gap-4 px-6 sm:px-8 py-4 sm:py-5 rounded-[2rem] sm:rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black tracking-wide sm:tracking-widest transition-all hover:scale-105 active:scale-[0.98] shadow-[0_20px_50px_-12px_rgba(16,185,129,0.3)] dark:shadow-[0_20px_50px_-12px_rgba(16,185,129,0.15)] overflow-hidden mx-auto border border-black/10 dark:border-white/10"
+              >
+                {/* Sweep effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/0 via-emerald-400/20 to-emerald-400/0 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out" />
+                
+                {/* Icon wrapper */}
+                <div className="w-12 h-12 sm:w-10 sm:h-10 rounded-2xl sm:rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 dark:text-emerald-600 shrink-0 shadow-inner">
+                  <LucideIcons.QrCode className="w-6 h-6 sm:w-5 sm:h-5" />
+                </div>
+                
+                {/* Text section */}
+                <div className="flex flex-col items-start gap-0.5 text-left pr-4">
+                  <span className="text-[13px] sm:text-sm uppercase tracking-widest leading-none mt-0.5">Scan QR Merit</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 normal-case font-medium tracking-normal mt-1">Imbas pantas kumpul merit</span>
+                </div>
+
+                {/* Right button/icon */}
+                <div className="hidden sm:flex w-10 h-10 rounded-full bg-slate-800 dark:bg-black/10 items-center justify-center">
+                  <LucideIcons.Camera className="w-4 h-4 text-emerald-400 dark:text-emerald-600 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300" />
+                </div>
+              </button>
+            </motion.div>
           </motion.div>
         </div>
 

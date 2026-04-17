@@ -320,16 +320,33 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
 
   const load = useCallback(async () => {
     setLoading(true);
+    
+    // Auto-garbage collect tokens expired more than 1 day ago
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    await supabase.from('akademik_qr_tokens').delete().lt('expires_at', yesterday);
+
     const { data, error } = await supabase
       .from('akademik_qr_tokens')
       .select('*')
       .order('created_at', { ascending: false });
+      
     if (error) console.error('[qr] load error:', error.message);
     setTokens(data || []);
     setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  const deleteToken = async (id: string) => {
+    if (!window.confirm('Padam token QR ini secara kekal?')) return;
+    const { error } = await supabase.from('akademik_qr_tokens').delete().eq('id', id);
+    if (!error) {
+      toast.success('Token berjaya dipadam.');
+      setTokens(prev => prev.filter(t => t.id !== id));
+    } else {
+      toast.error('Gagal memadam token.');
+    }
+  };
 
   // Generate QR images for each token
   useEffect(() => {
@@ -597,6 +614,10 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
                           : 'text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/10'
                       }`}>
                       {t.is_active ? 'Nyahaktif' : 'Aktifkan'}
+                    </button>
+                    <button onClick={() => deleteToken(t.id)}
+                      className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-xl border border-rose-500/10 text-rose-400 hover:bg-rose-500/10 transition-all">
+                      Padam
                     </button>
                     {qrUrls[t.id] && (
                       <button onClick={() => downloadQr(t.id, t.title)}

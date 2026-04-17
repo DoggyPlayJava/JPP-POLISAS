@@ -5,17 +5,18 @@
 // Tab 2: Unit Pengurusan Asrama — assign/remove staff
 // ============================================================
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2, ChevronRight, LayoutGrid, ShieldCheck,
-  UserPlus, Trash2, RefreshCw,
+  UserPlus, Trash2, RefreshCw, QrCode,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import { hexToRgba } from '@/lib/utils';
 import { ExcoGenericDashboard } from './ExcoGenericDashboard';
+import { QrMeritManager } from '@/pages/akademik/AkademikQrScan';
 
 const KK_COLOR = '#E879F9';
 
@@ -302,8 +303,23 @@ function UnitAsramaTab() {
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function KkUnitDashboard() {
   const { hasKediamanAccess, isKediamanExco, isSuperAdmin } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'unit'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'unit' | 'qr'>(() => {
+    return (searchParams.get('tab') as 'dashboard' | 'unit' | 'qr') || 'dashboard';
+  });
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'qr' || tab === 'unit' || tab === 'dashboard') {
+      setActiveTab(tab as any);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tab: 'dashboard' | 'unit' | 'qr') => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
 
   // Tab "Unit Pengurusan Asrama" hanya kelihatan untuk Exco KK & SuperAdmin (boleh manage)
   const showUnitTab = isSuperAdmin || isKediamanExco;
@@ -314,7 +330,7 @@ export function KkUnitDashboard() {
       {showUnitTab && (
         <div className="flex gap-1 bg-white/[0.03] border border-white/[0.05] p-1 rounded-2xl overflow-x-auto">
           <button
-            onClick={() => setActiveTab('dashboard')}
+            onClick={() => handleTabChange('dashboard')}
             className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all"
             style={
               activeTab === 'dashboard'
@@ -325,7 +341,7 @@ export function KkUnitDashboard() {
             <LayoutGrid className="w-3.5 h-3.5" /> Dashboard
           </button>
           <button
-            onClick={() => setActiveTab('unit')}
+            onClick={() => handleTabChange('unit')}
             className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all"
             style={
               activeTab === 'unit'
@@ -334,6 +350,17 @@ export function KkUnitDashboard() {
             }
           >
             <ShieldCheck className="w-3.5 h-3.5" /> Unit Pengurusan Asrama
+          </button>
+          <button
+            onClick={() => handleTabChange('qr')}
+            className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all"
+            style={
+              activeTab === 'qr'
+                ? { background: KK_COLOR, color: '#fff' }
+                : { color: 'rgba(255,255,255,0.4)' }
+            }
+          >
+            <QrCode className="w-3.5 h-3.5" /> QR Merit
           </button>
         </div>
       )}
@@ -367,6 +394,19 @@ export function KkUnitDashboard() {
             exit={{ opacity: 0, y: -4 }}
           >
             <UnitAsramaTab />
+          </motion.div>
+        )}
+
+        {activeTab === 'qr' && showUnitTab && (
+          <motion.div
+            key="qr"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+          >
+            <div className="rounded-[2rem] border p-6 bg-[rgba(255,255,255,0.01)] border-[rgba(255,255,255,0.07)]">
+              <QrMeritManager themeColor={KK_COLOR} />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

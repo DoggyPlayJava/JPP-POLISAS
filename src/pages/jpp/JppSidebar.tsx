@@ -5,7 +5,7 @@ import {
   Lock, ShieldCheck, Palette, Settings, Megaphone,
   Briefcase, CalendarDays, FileWarning, Sparkles,
   Zap, FileText, ClipboardCheck, ChevronDown, ExternalLink, Store,
-  ChevronLeft, LayoutGrid, Building2,
+  ChevronLeft, LayoutGrid, Building2, QrCode,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -419,9 +419,11 @@ export function JppSidebar() {
                   subItems.push({ icon: Store, label: 'Portal Dashboard', href: '/keusahawanan/dashboard' });
                   subItems.push({ icon: Zap,   label: 'Portal Program',   href: '/keusahawanan/program' });
                 }
-                // KK tambahan: rujukan asrama
-                if (code === 'KK')
+                // KK tambahan: rujukan asrama & qr merit
+                if (code === 'KK') {
                   subItems.push({ icon: Building2, label: 'Rujukan Asrama', href: '/jpp/asrama' });
+                  subItems.push({ icon: QrCode,    label: 'Jana QR Merit',  href: '/jpp/unit/kk?tab=qr' });
+                }
               } else if (canReview) {
                 // MT / YDP menyemak laporan unit ini
                 if (isYDP) {
@@ -434,9 +436,11 @@ export function JppSidebar() {
                     subItems.push({ icon: ClipboardCheck, label: 'Semak Laporan Kelab', href: '/semakan-laporan' });
                   if (code === 'KEUSAHAWANAN')
                     subItems.push({ icon: Store, label: 'Portal Dashboard', href: '/keusahawanan/dashboard' });
-                  // YDP boleh tengok Rujukan Asrama melalui KK
-                  if (code === 'KK')
+                  // YDP boleh tengok Rujukan Asrama dan QR Merit melalui KK
+                  if (code === 'KK') {
                     subItems.push({ icon: Building2, label: 'Rujukan Asrama', href: '/jpp/asrama' });
+                    subItems.push({ icon: QrCode,    label: 'QR Merit',       href: '/jpp/unit/kk?tab=qr' });
+                  }
                 }
                 // Semak laporan exco unit ini (universal)
                 subItems.push({ icon: ClipboardCheck, label: 'Semak Laporan', href: `/jpp/semak-laporan-exco/${unitLower}` });

@@ -257,6 +257,30 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
     return acc;
   }, {});
 
+  const groupActivitiesByMonth = (acts: any[]) => {
+    const grouped: Record<string, any[]> = {};
+    const keys: string[] = [];
+
+    acts.forEach(a => {
+      let m = 'Tiada Tarikh';
+      if (a.start_date) {
+        try {
+          const d = parseISO(a.start_date);
+          if (isValid(d)) m = format(d, 'MMMM yyyy', { locale: ms });
+        } catch {}
+      }
+      if (!grouped[m]) {
+        grouped[m] = [];
+        keys.push(m);
+      }
+      grouped[m].push(a);
+    });
+
+    return { grouped, keys };
+  };
+
+  const { grouped, keys: groupKeys } = groupActivitiesByMonth(filtered);
+
   return (
     <div className="space-y-6">
       {/* STAT BAR + TAMBAH BUTTON */}
@@ -323,26 +347,36 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
           )}
         </Empty>
       ) : (
-        <AnimatePresence mode="popLayout">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filtered.map((act) => (
-              <motion.div
-                key={act.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-              >
-                <ActivityKelabCard
-                  act={act}
-                  effectiveRole={effectiveRole}
-                  currentUserId={user?.id}
-                  onEdit={() => openEdit(act)}
-                  onDelete={() => handleDelete(act.id)}
-                />
+        <div className="space-y-10">
+          <AnimatePresence mode="popLayout">
+            {groupKeys.map(month => (
+              <motion.div key={month} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground/60 shrink-0">{month}</h3>
+                  <div className="h-px bg-border/50 flex-1" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {grouped[month].map(act => (
+                    <motion.div
+                      key={act.id}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                    >
+                      <ActivityKelabCard
+                        act={act}
+                        effectiveRole={effectiveRole}
+                        currentUserId={user?.id}
+                        onEdit={() => openEdit(act)}
+                        onDelete={() => handleDelete(act.id)}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
               </motion.div>
             ))}
-          </div>
-        </AnimatePresence>
+          </AnimatePresence>
+        </div>
       )}
 
       {/* DIALOG FORM */}

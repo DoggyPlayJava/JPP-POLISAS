@@ -25,7 +25,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from '@/components/ui/empty';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -194,6 +194,30 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
     return acc;
   }, {});
 
+  const groupActivitiesByMonth = (acts: any[]) => {
+    const grouped: Record<string, any[]> = {};
+    const keys: string[] = [];
+
+    acts.forEach(a => {
+      let m = 'Tiada Tarikh';
+      if (a.start_date) {
+        try {
+          const d = parseISO(a.start_date);
+          if (isValid(d)) m = format(d, 'MMMM yyyy', { locale: ms });
+        } catch {}
+      }
+      if (!grouped[m]) {
+        grouped[m] = [];
+        keys.push(m);
+      }
+      grouped[m].push(a);
+    });
+
+    return { grouped, keys };
+  };
+
+  const { grouped, keys: groupKeys } = groupActivitiesByMonth(filtered);
+
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -283,27 +307,37 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
             )}
           </div>
         ) : (
-          <AnimatePresence mode="popLayout">
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {filtered.map((act) => (
-                <motion.div
-                  key={act.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                >
-                  <ExcoActivityCard
-                    act={act}
-                    canManage={canManage}
-                    currentUserId={user?.id}
-                    themeColor={themeColor}
-                    onEdit={() => openEdit(act)}
-                    onDelete={() => handleDelete(act.id)}
-                  />
+          <div className="space-y-10">
+            <AnimatePresence mode="popLayout">
+              {groupKeys.map(month => (
+                <motion.div key={month} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-white/40 shrink-0">{month}</h3>
+                    <div className="h-px bg-white/[0.06] flex-1" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {grouped[month].map(act => (
+                      <motion.div
+                        key={act.id}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                      >
+                        <ExcoActivityCard
+                          act={act}
+                          canManage={canManage}
+                          currentUserId={user?.id}
+                          themeColor={themeColor}
+                          onEdit={() => openEdit(act)}
+                          onDelete={() => handleDelete(act.id)}
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
                 </motion.div>
               ))}
-            </div>
-          </AnimatePresence>
+            </AnimatePresence>
+          </div>
         )}
 
         {/* Dialog Form */}
