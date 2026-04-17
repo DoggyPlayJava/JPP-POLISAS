@@ -1,6 +1,13 @@
 import { Buffer } from 'buffer';
 window.Buffer = window.Buffer || Buffer;
 console.log('Buffer polyfilled');
+
+// Mencegah aplikasi menjadi "blank white screen" jika pengguna klik pada menu
+// yang mengandungi kod "chunk" JS lama yang telah dipadam dari Coolify server selepas kemas kini.
+window.addEventListener('vite:preloadError', () => {
+  window.location.reload();
+});
+
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Toaster } from 'react-hot-toast'
