@@ -8,18 +8,6 @@ export function PwaUpdater() {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegistered(r) {
-      if (r) {
-        // Set up an event listener to check for updates when the app becomes visible again
-        document.addEventListener('visibilitychange', () => {
-          if (document.visibilityState === 'visible') {
-            r.update().catch((err) => {
-              console.error('SW Update Error:', err);
-            });
-          }
-        });
-      }
-    },
     onRegisterError(error) {
       console.error('SW Registration Error:', error);
     },

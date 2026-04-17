@@ -202,6 +202,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AiSettingsProvider } from '@/contexts/AiSettingsContext';
 import { KarnivalProvider } from '@/contexts/KarnivalContext';
 import { PwaUpdater } from '@/components/PwaUpdater';
+import { InstallAppPrompt } from '@/components/pwa/InstallAppPrompt';
 
 function App() {
   return (
@@ -213,6 +214,7 @@ function App() {
               <KarnivalProvider>
                 <AppRoutes />
                 <PwaUpdater />
+                <InstallAppPrompt />
                 <Toaster
                   position="top-right"
                   toastOptions={{
