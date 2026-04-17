@@ -94,6 +94,11 @@ export function LoginPage() {
       return;
     }
 
+    if (registerMode !== 'staff' && !matricNo.trim().startsWith('02')) {
+      toast.error('No. Matrik pelajar mestilah bermula dengan "02".');
+      return;
+    }
+
     if (registerMode !== 'staff' && email.trim().toLowerCase().endsWith('@student.polisas.edu.my')) {
       toast.error('Sila guna emel peribadi. Emel pelajar @student.polisas.edu.my tidak dapat menerima kotak pengesahan.');
       return;
@@ -284,7 +289,7 @@ export function LoginPage() {
                       </Label>
                       <div className="relative group">
                         <Hash className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
-                        <Input placeholder={registerMode === 'staff' ? "CTH: S123456" : "CTH: 23DKM1234"} required value={matricNo} onChange={e => setMatricNo(e.target.value.toUpperCase())}
+                        <Input placeholder={registerMode === 'staff' ? "CTH: S123456" : "CTH: 02DKM1234"} required value={matricNo} onChange={e => setMatricNo(e.target.value.toUpperCase())}
                           className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-medium uppercase" />
                       </div>
                     </div>
