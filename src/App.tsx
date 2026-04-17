@@ -201,6 +201,7 @@ function AppRoutes() {
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AiSettingsProvider } from '@/contexts/AiSettingsContext';
 import { KarnivalProvider } from '@/contexts/KarnivalContext';
+import { PwaUpdater } from '@/components/PwaUpdater';
 
 function App() {
   return (
@@ -211,6 +212,7 @@ function App() {
             <AiSettingsProvider>
               <KarnivalProvider>
                 <AppRoutes />
+                <PwaUpdater />
                 <Toaster
                   position="top-right"
                   toastOptions={{
@@ -234,4 +236,4 @@ function App() {
   );
 }
 
-export default App;
+export default App;
