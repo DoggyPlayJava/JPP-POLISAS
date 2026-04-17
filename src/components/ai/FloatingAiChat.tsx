@@ -185,24 +185,23 @@ export function FloatingAiChat() {
       return;
     }
     
-    // reset index
-    setHintIndex(0);
+    // Pick a random hint so it varies per visit
+    const hints = getHints();
+    setHintIndex(Math.floor(Math.random() * hints.length));
 
-    const initialDelay = setTimeout(() => {
+    // Muncul selepas 5 saat pengguna melihat skrin
+    const showDelay = setTimeout(() => {
       setShowHint(true);
-    }, 3000);
+    }, 5000);
 
-    const rotation = setInterval(() => {
+    // Hilang secara automatik 7 saat selepas ia muncul (t=12s) supaya tak ganggu fokus
+    const hideDelay = setTimeout(() => {
       setShowHint(false);
-      setTimeout(() => {
-        setHintIndex(prev => (prev + 1) % getHints().length);
-        setShowHint(true);
-      }, 500);
-    }, 7000);
+    }, 12000); 
 
     return () => {
-      clearTimeout(initialDelay);
-      clearInterval(rotation);
+      clearTimeout(showDelay);
+      clearTimeout(hideDelay);
     };
   }, [isOpen, allowAiChat, location.pathname, getHints]);
 
@@ -409,7 +408,7 @@ export function FloatingAiChat() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[120]">
+    <div className="fixed bottom-6 right-4 md:right-6 z-[120]">
       {/* ── FAB trigger ── */}
       <motion.button
         id="nexus-chat-fab"
@@ -461,7 +460,7 @@ export function FloatingAiChat() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ type: 'spring', damping: 20, stiffness: 200 }}
-            className="absolute -top-[120%] right-0 pointer-events-none sm:hidden w-max max-w-[170px]"
+            className="absolute bottom-[calc(100%+12px)] right-0 pointer-events-none sm:hidden w-max max-w-[170px]"
           >
             {/* Mobile Version (Compact & Top) */}
             <div className="relative">

@@ -17,18 +17,24 @@ export function InstallAppPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
+    console.log('[PWA Prompt] Checking conditions...');
+    
     // Semak sama ada pengguna sudah menggunakan sebagai PWA (Standalone)
     const isStandalone = 
       window.matchMedia('(display-mode: standalone)').matches || 
       (window.navigator as any).standalone;
       
-    if (isStandalone) return;
+    if (isStandalone) {
+      console.log('[PWA Prompt] Abort: App is running in standalone mode.');
+      return;
+    }
 
     // Semak sama ada pengguna telah menekan "Nanti" dalam masa 7 hari lepas
     const dismissedAt = localStorage.getItem('pwa_prompt_dismissed_at');
-    if (dismissedAt) {
+    if (dismissedAt && !import.meta.env.DEV) { // Abaikan snooze semasa Development Mode
       const daysSinceDismissed = (Date.now() - parseInt(dismissedAt, 10)) / (1000 * 60 * 60 * 24);
       if (daysSinceDismissed < 7) {
+        console.log('[PWA Prompt] Abort: Snoozed for 7 days. Dismissed at:', new Date(parseInt(dismissedAt, 10)).toLocaleString());
         return; // Sembunyikan selama 7 hari
       }
     }
@@ -40,10 +46,12 @@ export function InstallAppPrompt() {
       (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
 
     setIsIOS(isIOSDevice);
+    console.log('[PWA Prompt] isIOSDevice:', isIOSDevice, 'DEV mode:', import.meta.env.DEV);
 
     // Event bagi peranti Android (Chrome / Edge)
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault(); // Halang banner lalai
+      console.log('[PWA Prompt] beforeinstallprompt event fired!');
       setDeferredPrompt(e);
       // Tangguh kemunculan Drawer selama 4 saat supaya tidak mengganggu pengguna lantas masuk
       setTimeout(() => setIsOpen(true), 4000);
@@ -54,6 +62,7 @@ export function InstallAppPrompt() {
     // Bagi iOS (atau Development Mode untuk tujuan pengujian), kita panggil secara manual
     // Memandangkan PWA sangat ketat di Localhost, ini membenarkan anda tes UI nya!
     if (isIOSDevice || import.meta.env.DEV) {
+      console.log('[PWA Prompt] Bypass trigger starting countdown (4s)...');
       setTimeout(() => setIsOpen(true), 4000);
     }
 

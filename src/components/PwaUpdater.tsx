@@ -8,6 +8,23 @@ export function PwaUpdater() {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
+    onRegistered(r) {
+      // Hanya lakukan semakan manual di persekitaran Production 
+      // untuk elakkan masalah notifikasi berulang di persekitaran Dev.
+      if (r && import.meta.env.PROD) {
+        // 1. Semak setiap 1 jam jika app dibiarkan terbuka lama
+        setInterval(() => {
+          r.update().catch((err) => console.error('SW Update Error:', err));
+        }, 60 * 60 * 1000);
+
+        // 2. Semak segera apabila pengguna buka semula app dari latar belakang
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            r.update().catch((err) => console.error('SW Update Error:', err));
+          }
+        });
+      }
+    },
     onRegisterError(error) {
       console.error('SW Registration Error:', error);
     },
