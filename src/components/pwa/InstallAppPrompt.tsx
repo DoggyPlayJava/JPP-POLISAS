@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Share, PlusSquare } from 'lucide-react';
+import { Download, Share, PlusSquare, MoreHorizontal } from 'lucide-react';
 import {
   Drawer,
   DrawerContent,
@@ -18,12 +18,12 @@ export function InstallAppPrompt() {
 
   useEffect(() => {
     console.log('[PWA Prompt] Checking conditions...');
-    
+
     // Semak sama ada pengguna sudah menggunakan sebagai PWA (Standalone)
-    const isStandalone = 
-      window.matchMedia('(display-mode: standalone)').matches || 
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as any).standalone;
-      
+
     if (isStandalone) {
       console.log('[PWA Prompt] Abort: App is running in standalone mode.');
       return;
@@ -41,8 +41,8 @@ export function InstallAppPrompt() {
 
     // Pengecaman OS: Kenal pasti iOS (iPhone, iPad, iPod)
     const ua = window.navigator.userAgent.toLowerCase();
-    const isIOSDevice = 
-      /ipad|iphone|ipod/.test(ua) || 
+    const isIOSDevice =
+      /ipad|iphone|ipod/.test(ua) ||
       (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
 
     setIsIOS(isIOSDevice);
@@ -78,10 +78,10 @@ export function InstallAppPrompt() {
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
-    
+
     // Tunjukkan prom asal sistem Android
     deferredPrompt.prompt();
-    
+
     // Tunggu tindakan pengguna
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
@@ -94,15 +94,15 @@ export function InstallAppPrompt() {
   if (!isOpen) return null;
 
   return (
-    <Drawer 
-      open={isOpen} 
+    <Drawer
+      open={isOpen}
       onOpenChange={(open) => {
         if (!open) handleDismiss();
       }}
     >
       <DrawerContent className="glass dark:bg-slate-900/90 rounded-t-[2rem] border-t border-white/20 shadow-2xl">
         <div className="mx-auto mt-4 h-1.5 w-12 rounded-full bg-slate-300 dark:bg-slate-700" />
-        
+
         <DrawerHeader className="text-left pt-6 pb-2 px-6">
           <div className="flex items-center gap-4">
             <div className="bg-blue-600/10 dark:bg-blue-500/20 p-3.5 rounded-2xl ring-1 ring-blue-600/20 dark:ring-blue-500/30">
@@ -110,10 +110,10 @@ export function InstallAppPrompt() {
             </div>
             <div>
               <DrawerTitle className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                Pasang Aplikasi JPP
+                Install Aplikasi JPP
               </DrawerTitle>
               <DrawerDescription className="text-sm mt-1 font-medium text-slate-600 dark:text-slate-400">
-                Akses portal dengan lebih pantas dan lancar terus dari <i>Home Screen</i> anda.
+                Rasai kuasa penuh portal JPP dengan lebih pantas dan lancar terus dari <i>Home Screen</i> anda.
               </DrawerDescription>
             </div>
           </div>
@@ -127,7 +127,7 @@ export function InstallAppPrompt() {
               </p>
               <div className="flex items-center gap-4 text-sm font-medium text-slate-700 dark:text-slate-300">
                 <span className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-white dark:bg-slate-700 shadow-sm font-bold text-xs text-blue-600 dark:text-blue-400">1</span>
-                <span>Tekan butang <Share className="w-5 h-5 inline-block mx-1 text-slate-800 dark:text-slate-200" /> <b>Share</b> di menu bawah.</span>
+                <span>Tekan butang <MoreHorizontal className="w-5 h-5 inline-block mx-0.5 text-slate-800 dark:text-slate-200" /> (Menu) di bawah, kemudian tekan <Share className="w-4 h-4 inline-block ml-1 mr-0.5 text-slate-800 dark:text-slate-200" /> <b>Share</b>.</span>
               </div>
               <div className="flex items-center gap-4 text-sm font-medium text-slate-700 dark:text-slate-300">
                 <span className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-white dark:bg-slate-700 shadow-sm font-bold text-xs text-blue-600 dark:text-blue-400">2</span>
@@ -137,7 +137,7 @@ export function InstallAppPrompt() {
           ) : (
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4 border border-blue-100 dark:border-blue-800/50">
               <p className="text-sm font-medium text-blue-800 dark:text-blue-300 text-center">
-                Aplikasi PWA ini sangat ringan, menjimatkan data mudah alih dan tidak akan memakan ruang storan peranti anda.
+                Rasai kuasa penuh portal JPP dengan lebih pantas dan lancar terus dari <i>Home Screen</i> anda.
               </p>
             </div>
           )}
@@ -145,17 +145,17 @@ export function InstallAppPrompt() {
 
         <DrawerFooter className="px-6 pt-2 pb-8">
           {!isIOS && (
-            <Button 
-              onClick={handleInstallClick} 
+            <Button
+              onClick={handleInstallClick}
               className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold tracking-wide h-12 text-sm shadow-xl shadow-blue-600/20 transition-all hover:scale-[1.02]"
             >
               Pasang Sekarang
             </Button>
           )}
           <DrawerClose asChild>
-            <Button 
-              variant="ghost" 
-              className="w-full rounded-xl mt-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold h-12" 
+            <Button
+              variant="ghost"
+              className="w-full rounded-xl mt-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold h-12"
               onClick={handleDismiss}
             >
               Nanti
