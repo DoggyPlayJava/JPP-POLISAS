@@ -45,23 +45,29 @@ export function useNotifications() {
 // Provider
 // ─────────────────────────────────────────────────────────────────────────────
 
+const POLL_INTERVAL_MS = 20_000; // poll every 20 seconds as realtime fallback
+
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated } = useAuth();
   const [notifs, setNotifs] = useState<AppNotification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastKnownCountRef = useRef<number>(0);
 
+  // ── Fetch all notifications ───────────────────────────────────────────────
   const fetchNotifs = useCallback(async () => {
     if (!user?.id) return;
-    setIsLoading(true);
     const { data } = await supabase
       .from('notifications')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(30);
-    setNotifs((data as AppNotification[]) || []);
-    setIsLoading(false);
+    if (data) {
+      setNotifs(data as AppNotification[]);
+      lastKnownCountRef.current = data.length;
+    }
   }, [user?.id]);
 
   // Fetch on mount & auth change
@@ -70,90 +76,105 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       setNotifs([]);
       return;
     }
-    fetchNotifs();
+    setIsLoading(true);
+    fetchNotifs().finally(() => setIsLoading(false));
   }, [isAuthenticated, user?.id, fetchNotifs]);
 
-  // ── Realtime: subscribe and auto-reconnect on visibility change ───────────
+  // ── Subscribe to Supabase Realtime ────────────────────────────────────────
   const subscribeRealtime = useCallback(() => {
     if (!user?.id) return;
 
-    // Remove existing channel first
+    // Cleanup old channel
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
     }
 
     const channel = supabase
-      .channel(`unified_notifs_${user.id}_${Date.now()}`)
+      .channel(`notifs_${user.id}_${Date.now()}`)
       .on(
         'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
-        },
+        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
         (payload) => {
+          console.log('[Realtime] New notification received ✅', payload.new);
           setNotifs(prev => [payload.new as AppNotification, ...prev].slice(0, 30));
+          lastKnownCountRef.current += 1;
         }
       )
       .on(
         'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
-        },
+        { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
         (payload) => {
           setNotifs(prev =>
             prev.map(n => n.id === payload.new.id ? { ...n, ...payload.new as AppNotification } : n)
           );
         }
       )
-      .subscribe((status) => {
+      .subscribe((status, err) => {
         if (status === 'SUBSCRIBED') {
-          console.log('[NotificationContext] Realtime subscribed ✅');
+          console.log('[Realtime] ✅ Subscribed to notifications channel');
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.warn('[NotificationContext] Realtime channel error, akan reconnect...');
-          // Refetch to ensure no missed notifications
-          fetchNotifs();
+          console.warn('[Realtime] ⚠️ Channel error/timeout — polling will cover this', err);
         }
       });
 
     channelRef.current = channel;
-  }, [user?.id, fetchNotifs]);
+  }, [user?.id]);
 
+  // ── Polling fallback (covers iOS WebSocket drops) ─────────────────────────
+  const startPolling = useCallback(() => {
+    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    pollTimerRef.current = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchNotifs();
+      }
+    }, POLL_INTERVAL_MS);
+  }, [fetchNotifs]);
+
+  // ── Main effect: setup realtime + polling ─────────────────────────────────
   useEffect(() => {
     if (!isAuthenticated || !user?.id) return;
 
     subscribeRealtime();
+    startPolling();
 
-    // ── Reconnect when tab becomes visible again ──────────────────────────────
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        console.log('[NotificationContext] Tab active — refetch & reconnect realtime');
-        fetchNotifs();       // fetch missed notifications
-        subscribeRealtime(); // reset channel connection
-      }
+    // Reconnect on all visibility events (iOS uses pageshow, desktop uses visibilitychange)
+    const handleVisible = () => {
+      console.log('[Notif] App resumed — refetching...');
+      fetchNotifs();
+      subscribeRealtime(); // reset WebSocket channel
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // visibilitychange covers desktop/Android PWA
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') handleVisible();
+    });
+
+    // pageshow covers iOS PWA (fires when returning from background)
+    window.addEventListener('pageshow', handleVisible);
+
+    // focus covers returning to tab
+    window.addEventListener('focus', handleVisible);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('visibilitychange', handleVisible);
+      window.removeEventListener('pageshow', handleVisible);
+      window.removeEventListener('focus', handleVisible);
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
     };
-  }, [isAuthenticated, user?.id, subscribeRealtime, fetchNotifs]);
+  }, [isAuthenticated, user?.id, subscribeRealtime, startPolling, fetchNotifs]);
 
-  const markRead = useCallback(async (id: string, link?: string | null) => {
-    // Optimistic update
+  // ── Mark read / mark all ──────────────────────────────────────────────────
+  const markRead = useCallback(async (id: string) => {
     setNotifs(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
     await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-    // Navigate if link provided — caller handles navigation
   }, []);
 
   const markAllRead = useCallback(async () => {
