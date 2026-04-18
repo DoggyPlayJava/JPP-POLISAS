@@ -347,7 +347,7 @@ export function PortalPage() {
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => { localStorage.setItem('push_prompt_dismissed', '1'); toast.dismiss(t.id); }}
-                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition"
+                className="appearance-none px-3 py-1.5 text-xs font-semibold rounded-lg !bg-slate-100 dark:!bg-slate-800 !text-slate-700 dark:!text-slate-300 hover:opacity-80 transition"
               >Nanti</button>
               <button
                 onClick={async () => {
@@ -356,7 +356,7 @@ export function PortalPage() {
                   if (result === 'granted') toast.success('Notifikasi diaktifkan! ✅');
                   else { localStorage.setItem('push_prompt_dismissed', '1'); }
                 }}
-                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+                className="appearance-none px-3 py-1.5 text-xs font-semibold rounded-lg !bg-blue-600 !text-white hover:opacity-80 transition shadow-sm border-0"
               >
                 {permission === 'granted' ? 'Baiki Sekarang' : 'Benarkan'}
               </button>

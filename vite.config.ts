@@ -13,6 +13,7 @@ export default defineConfig({
       workbox: {
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024, // 6MB to handle the 4.52MB JS chunk
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
+        importScripts: ['/push-sw.js'],
       },
       manifest: {
         name: 'JPP POLISAS',
