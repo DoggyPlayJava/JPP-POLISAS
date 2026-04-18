@@ -15,9 +15,7 @@ import { Menu } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { NotificationBell } from '@/components/ui/NotificationBell';
-
-
-
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 // ─── Color Picker Popover ───
 interface ColorPickerProps {
@@ -315,6 +313,61 @@ export function PortalPage() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Mesej popup notifikasi push universal
+  const { isSupported, permission, isSubscribed, requestPermission } = usePushNotifications();
+
+  useEffect(() => {
+    // We want to prompt if permission is 'default' OR if permission is 'granted' but they have NO subscription synced.
+    if (!isSupported) return;
+    if (permission === 'denied') return;
+    if (permission === 'granted' && isSubscribed === true) return; // All good
+    if (isSubscribed === null) return; // Still loading
+
+    const dismissed = localStorage.getItem('push_prompt_dismissed');
+    if (dismissed && permission !== 'granted') return; // Only respect dismiss if they haven't explicitly granted OS permission.
+
+    const timer = setTimeout(() => {
+      toast.custom(
+        (t) => (
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <div className="text-2xl">🔔</div>
+              <div>
+                <p className="font-black text-sm">
+                  {permission === 'granted' ? 'Baiki Notifikasi Push' : 'Hidupkan Notifikasi Push'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {permission === 'granted' 
+                    ? 'Sambungan notifikasi peranti ini telah terputus. Sila klik baiki.'
+                    : 'Supaya anda sentiasa tahu bila ada kemas kini penting dari JPP.'}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => { localStorage.setItem('push_prompt_dismissed', '1'); toast.dismiss(t.id); }}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition"
+              >Nanti</button>
+              <button
+                onClick={async () => {
+                  toast.dismiss(t.id);
+                  const result = await requestPermission();
+                  if (result === 'granted') toast.success('Notifikasi diaktifkan! ✅');
+                  else { localStorage.setItem('push_prompt_dismissed', '1'); }
+                }}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+              >
+                {permission === 'granted' ? 'Baiki Sekarang' : 'Benarkan'}
+              </button>
+            </div>
+          </div>
+        ),
+        { duration: Infinity, id: 'push-permission-prompt', className: 'min-w-[300px] !p-4' }
+      );
+    }, 4000); // Popup dalam 4 saat di Portal Utama
+    return () => clearTimeout(timer);
+  }, [isSupported, permission, isSubscribed, requestPermission]);
 
   const fetchSettings = useCallback(async () => {
     const controller = new AbortController();
