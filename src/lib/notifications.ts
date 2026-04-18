@@ -31,23 +31,16 @@ async function firePush(user_id: string, payload: NotificationPayload): Promise<
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.access_token) return;
 
-    const supabaseUrl = (supabase as any).supabaseUrl as string;
-
     await Promise.allSettled(
       subs.map(sub =>
-        fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
-          method: 'POST',
-          headers: {
-            'Content-Type':  'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
+        supabase.functions.invoke('send-push-notification', {
+          body: {
             subscription: { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
             title: payload.title,
             body:  payload.message,
             data:  { link: payload.link, module: payload.module, type: payload.type },
-          }),
-        }).catch(() => {})
+          }
+        }).catch(err => console.error("Error pushing:", err))
       )
     );
   } catch (err) {
