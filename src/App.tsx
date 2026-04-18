@@ -48,6 +48,13 @@ import { PosOrderPage }   from './pages/keusahawanan/pos/PosOrderPage';
 import { PosProductPage } from './pages/keusahawanan/pos/PosProductPage';
 import { PosStatsPage }   from './pages/keusahawanan/pos/PosStatsPage';
 import { PosHistoryPage } from './pages/keusahawanan/pos/PosHistoryPage';
+// ── PolyMart Marketplace (prefix: /polymart/) ──
+import { PolyMartLayout }          from './pages/polymart/PolyMartLayout';
+import { PolyMartHome }            from './pages/polymart/PolyMartHome';
+import { PolyMartProductDetail }   from './pages/polymart/PolyMartProductDetail';
+import { PolyMartMyOrders }        from './pages/polymart/PolyMartMyOrders';
+import { PolyMartVendorDashboard } from './pages/polymart/PolyMartVendorDashboard';
+import { PolyMartAdminPanel }      from './pages/polymart/PolyMartAdminPanel';
 // ── e-Akademik (prefix: /akademik/) ──
 import { AkademikLayout }      from './pages/akademik/AkademikLayout';
 import { AkademikDashboard }   from './pages/akademik/AkademikDashboard';
@@ -194,7 +201,14 @@ function AppRoutes() {
           <Route path="/keusahawanan/pos/history"   element={<PosHistoryPage />} />
         </Route>
 
-        {/* ── e-Akademik (prefix: /akademik/) ── */}
+        {/* ── PolyMart Marketplace (prefix: /polymart/) ── */}
+        <Route element={<RequireApproval><PolyMartLayout /></RequireApproval>}>
+          <Route path="/polymart"               element={<PolyMartHome />} />
+          <Route path="/polymart/produk/:id"    element={<PolyMartProductDetail />} />
+          <Route path="/polymart/pesanan-saya"  element={<PolyMartMyOrders />} />
+          <Route path="/polymart/vendor"        element={<PolyMartVendorDashboard />} />
+          <Route path="/polymart/admin"         element={<PolyMartAdminPanel />} />
+        </Route>
         {/* Standalone claim page — papar tanpa layout sidebar, dicapai bila scan QR kod fizikal */}
         <Route path="/akademik/qr/:token" element={<RequireApproval><AkademikQrScan /></RequireApproval>} />
         <Route element={<RequireApproval><AkademikLayout /></RequireApproval>}>

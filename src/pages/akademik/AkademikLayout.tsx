@@ -4,10 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   GraduationCap, LayoutDashboard, Trophy, FileText,
   BarChart3, QrCode, ArrowLeft, Menu, X, ChevronRight,
-  Star, BookOpen, Building2,
+  Star, BookOpen, Building2, LogOut, Crown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
@@ -137,49 +138,42 @@ export function AkademikLayout() {
 
 // ─── Sidebar Component ────────────────────────────────────────
 function Sidebar({ onClose, isActive, navigate, profile }: any) {
-  return (
-    <div className="flex flex-col h-full bg-slate-900/95 backdrop-blur-xl border-r border-white/[0.06]">
-      {/* Header */}
-      <div className="flex items-center justify-between p-5 border-b border-white/[0.06]">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg"
-            style={{ background: `${THEME}20`, color: THEME, boxShadow: `0 0 20px ${THEME}20` }}
-          >
-            <GraduationCap className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-sm font-black text-white">e-Akademik</p>
-            <p className="text-[9px] font-black uppercase tracking-widest text-white/30">Exco Akademik</p>
-          </div>
-        </div>
-        <button
-          onClick={onClose}
-          className="md:hidden p-1.5 rounded-xl text-white/30 hover:text-white hover:bg-white/[0.06] transition-all"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
+  const { signOut, isSuperAdmin } = useAuth();
+  const isJpp = isSuperAdmin || profile?.role === 'JPP';
+  const displayName = profile?.full_name || profile?.email?.split('@')[0] || '?';
+  const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
 
-      {/* User chip */}
-      <div className="px-4 py-3 mx-3 mt-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl overflow-hidden border border-white/[0.08] shrink-0">
-          <Avatar className="w-full h-full rounded-none">
-            <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
-            <AvatarFallback className="bg-white/5 text-white/50 text-[10px] font-black">
-              {profile?.full_name?.[0]}
-            </AvatarFallback>
-          </Avatar>
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-black text-white truncate">{profile?.full_name?.split(' ')[0]}</p>
-          <p className="text-[9px] text-white/30 font-bold truncate">{profile?.department?.toUpperCase() || profile?.role}</p>
-        </div>
-        <div
-          className="text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest"
-          style={{ background: `${THEME}20`, color: THEME }}
+  return (
+    <div className="w-full flex flex-col h-full bg-slate-900/95 backdrop-blur-xl border-r border-white/[0.06] overflow-hidden">
+      {/* Header */}
+      {/* Header */}
+      <div className="flex flex-col border-b border-white/[0.06]">
+        <button
+          onClick={() => navigate('/portal')}
+          className="flex items-center gap-2 px-5 pt-4 pb-2 transition-all duration-200 group text-white/40 hover:text-white/75 w-max"
         >
-          {profile?.merit || 0} Merit
+          <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+          <span className="text-[10px] font-black uppercase tracking-[0.25em]">Portal JPP</span>
+        </button>
+        <div className="flex items-center justify-between px-5 pb-4 pt-1">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg"
+              style={{ background: `${THEME}20`, color: THEME, boxShadow: `0 0 20px ${THEME}20` }}
+            >
+              <GraduationCap className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-sm font-black text-white">e-Akademik</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-white/30">Exco Akademik</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="md:hidden p-1.5 rounded-xl text-white/30 hover:text-white hover:bg-white/[0.06] transition-all"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
@@ -216,26 +210,49 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
         })}
       </nav>
 
-      {/* JPP Link */}
-      <div className="px-3 pb-2">
-        <button
-          onClick={() => navigate('/jpp')}
-          className="w-full flex items-center gap-2 px-3 py-2.5 rounded-2xl text-white/25 hover:text-white/50 hover:bg-white/[0.04] transition-all text-[10px] font-black uppercase tracking-widest"
-        >
-          <Building2 className="w-3.5 h-3.5" />
-          JPP HQ Portal
-        </button>
-      </div>
+      {/* ── Global JPP Dashboard Link ── */}
+      {isJpp && (
+        <div className="px-3 py-2 mt-auto pb-4">
+          <button
+            onClick={() => { navigate('/jpp'); onClose(); }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border border-amber-500/20"
+          >
+            <div className="w-7 h-7 rounded-lg bg-amber-500/30 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+              <Crown className="w-3.5 h-3.5 text-amber-400" />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-widest leading-tight text-amber-400 text-left">Global JPP<br />Dashboard</span>
+          </button>
+        </div>
+      )}
 
       {/* Footer */}
-      <div className="p-4 border-t border-white/[0.06]">
-        <button
-          onClick={() => navigate('/portal')}
-          className="w-full flex items-center gap-2 px-3 py-2.5 rounded-2xl text-white/30 hover:text-white/60 hover:bg-white/[0.04] transition-all text-[10px] font-black uppercase tracking-widest"
+      <div className="p-4 border-t border-white/[0.06] space-y-3 shrink-0">
+        <div className="flex items-center gap-3 px-2 py-2">
+          <Avatar className="h-8 w-8 rounded-xl ring-2 ring-white/10 shadow-md">
+            <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
+            <AvatarFallback className="font-black text-xs" style={{ background: THEME, color: '#0f172a' }}>
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <p className="text-xs font-black truncate leading-tight text-white/85">{displayName}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest truncate text-white/40">{profile?.department?.toUpperCase() || profile?.role || 'AHLI'}</p>
+          </div>
+          <div
+            className="text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-widest ml-auto shrink-0"
+            style={{ background: `${THEME}20`, color: THEME }}
+          >
+            {profile?.merit || 0} Merit
+          </div>
+        </div>
+        <Button
+          variant="ghost"
+          onClick={signOut}
+          className="w-full justify-start gap-3 h-9 px-3 font-black text-[10px] uppercase tracking-widest rounded-xl text-white/30 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          Kembali ke Portal
-        </button>
+          <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
+          Log Keluar
+        </Button>
       </div>
     </div>
   );

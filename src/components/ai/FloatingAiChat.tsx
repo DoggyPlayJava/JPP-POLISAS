@@ -176,6 +176,8 @@ export function FloatingAiChat() {
     if (p.startsWith('/akademik')) return ["Berapa jumlah merit saya?", "Kira purata skor (CGPA) saya.", "Bagaimana nak mohon folder khas?"];
     if (p.startsWith('/keusahawanan')) return ["Adakah saya bertugas lusa?", "Bantu saya rancang jualan POS.", "Siapa pengurus perniagaan ni?"];
     if (p.startsWith('/jpp')) return ["Semak bilangan laporan kelab tertunggak.", "Ada permohonan merit baru tak?", "Siapa MT bertugas minggu depan?"];
+    if (p.startsWith('/kebajikan')) return ["Apa status aduan saya?", "Bagaimana nak lapor kerosakan fasiliti?", "Berapa aduan belum diselesaikan?"];
+    if (p.startsWith('/polymart')) return ["Di mana pesanan makanan saya?", "Macam mana nak bayar pesanan?", "Ada diskaun tak hari ini?"];
     return ["Bila aktiviti kelab terdekat?", "Siapakah Jawatankuasa pimpinan?", "Bantu drafkan kertas kerja laporan."];
   }, [location.pathname]);
 
@@ -309,6 +311,50 @@ export function FloatingAiChat() {
              ctx.jppHqInfo = {
                totalPendingReports: pdgReports || 0,
                totalMeritPending: pdgMerits || 0
+             };
+          }
+          // ─ 2E. DATA E-KEBAJIKAN ────────────────────────────────
+          else if (p.startsWith('/kebajikan') || p.startsWith('/jpp/unit/kebajikan')) {
+            if (profile.role === 'SUPER_ADMIN_JPP' || (profile.role === 'JPP' && profile.jpp_unit === 'KEBAJIKAN')) {
+              const { count: urgent } = await supabase.from('kebajikan_tickets').select('id', { count: 'exact', head: true }).in('status', ['NEW', 'ESCALATED']);
+              const { count: myTasks } = await supabase.from('kebajikan_tickets').select('id', { count: 'exact', head: true }).eq('assigned_to', profile.id).not('status', 'in', '("RESOLVED", "CLOSED", "CANCELLED")');
+              
+              ctx.kebajikanInfo = {
+                role: 'EXCO/ADMIN',
+                urgentTicketsUnresolved: urgent || 0,
+                assignedToMe: myTasks || 0
+              };
+            } else {
+              const { data: myTkts } = await supabase.from('kebajikan_tickets').select('ticket_no, status, title').eq('submitter_id', profile.id).order('created_at', { ascending: false }).limit(3);
+              const { count: activeCount } = await supabase.from('kebajikan_tickets').select('id', { count: 'exact', head: true }).eq('submitter_id', profile.id).not('status', 'in', '("RESOLVED", "CLOSED", "CANCELLED")');
+
+              ctx.kebajikanInfo = {
+                role: 'PELAJAR',
+                activeTicketsCount: activeCount || 0,
+                recentTickets: myTkts?.map(t => `- [${t.ticket_no}] ${t.title} (${t.status})`).join('\n') || 'Tiada tiket difailkan'
+              };
+            }
+          }
+          // ─ 2F. DATA POLYMART ────────────────────────────────
+          else if (p.startsWith('/polymart')) {
+             const { count: buyerCount } = await supabase.from('polymart_orders').select('id', { count: 'exact', head: true }).eq('buyer_id', profile.id).not('status', 'in', '("COMPLETED", "CANCELLED", "REJECTED")');
+             const { data: myOrders } = await supabase.from('polymart_orders').select('status, total_amount, keusahawanan_businesses(name)').eq('buyer_id', profile.id).not('status', 'in', '("COMPLETED", "CANCELLED", "REJECTED")').limit(2);
+             
+             // Check if vendor
+             const { data: myShops } = await supabase.from('keusahawanan_businesses').select('id, name').eq('owner_id', profile.id).eq('status', 'ACTIVE');
+             let pendingVendorOrders = 0;
+             if (myShops && myShops.length > 0) {
+               const shopIds = myShops.map((s: any) => s.id);
+               const { count: vendorCount } = await supabase.from('polymart_orders').select('id', { count: 'exact', head: true }).in('business_id', shopIds).eq('status', 'PENDING');
+               pendingVendorOrders = vendorCount || 0;
+             }
+
+             ctx.polymartInfo = {
+               userType: myShops && myShops.length > 0 ? `Vendor (${myShops.map((s: any) => s.name).join(', ')})` : 'Pelanggan Biasa',
+               activePurchases: buyerCount || 0,
+               recentPurchases: myOrders?.map((o: any) => `- RM${o.total_amount} di ${(o.keusahawanan_businesses as any)?.name} (${o.status})`).join('\n') || 'Tiada pesanan aktif',
+               pendingIncomingOrders: pendingVendorOrders,
+               systemNote: 'PolyMart ialah platform Request-to-Order PERCUMA. Pelanggan memohon beli produk kawan kampus, vendor mengesahkannya. Pembayaran TIDAK DIBUAT secara online dalam sistem (hanya COD manual atau Cash/QR semasa berjumpa).'
              };
           }
 

@@ -90,6 +90,10 @@ const EMPTY_FORM = {
   quick_cost: '',           // single total cost input
   cost_items: [] as CostItem[],
   cost_notes: '',
+  // PolyMart fields
+  publish_to_polymart:  false,
+  polymart_location:    '',
+  polymart_pickup_info: '',
 };
 
 // ── Margin Logic ──────────────────────────────────────────────────────────────
@@ -552,6 +556,40 @@ function MarginPreview({ price, cost, accent }: { price: number; cost: number; a
   );
 }
 
+// ── PolyMart Ads Banner ───────────────────────────────────────────────────────
+function PolymartAdsPromoBanner({ color }: { color: string }) {
+  const [adsPhone, setAdsPhone] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.from('system_settings').select('value').eq('key', 'polymart_ads_phone').single().then(({ data }) => {
+      if (data) setAdsPhone(data.value?.replace(/["']/g, '') || '');
+    });
+  }, []);
+
+  if (!adsPhone) return null;
+
+  return (
+    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border border-amber-500/20 bg-amber-500/10 mb-4 cursor-pointer hover:bg-amber-500/15 transition-colors"
+      onClick={() => window.open(`https://wa.me/${adsPhone}?text=Hai Exco Keusahawanan, saya berminat untuk menempah slot Iklan/Penaja di PolyMart untuk tingkatkan jualan kedai saya!`, '_blank')}
+    >
+      <div className="flex items-start sm:items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0 border border-amber-500/30">
+          <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+        </div>
+        <div>
+          <h3 className="text-sm font-black text-amber-700 dark:text-amber-400 leading-tight">Tingkatkan Jualan Anda di PolyMart! 🚀</h3>
+          <p className="text-[11px] text-amber-600/80 dark:text-amber-400/80 font-medium mt-0.5">Berminat letak produk anda di <b className="text-amber-600 dark:text-amber-400">Banner Hadapan</b>? Mesej Exco Keusahawanan sekarang.</p>
+        </div>
+      </div>
+      <button className="h-9 px-4 rounded-xl text-xs font-bold text-white shrink-0 whitespace-nowrap shadow-md hover:scale-105 active:scale-95 transition-transform truncate"
+        style={{ background: `linear-gradient(135deg, ${color}, #f59e0b)` }}>
+        Hubungi Exco
+      </button>
+    </motion.div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export function PosProductPage() {
@@ -603,7 +641,6 @@ export function PosProductPage() {
   const openEdit = (p: BusinessProduct) => {
     setEditId(p.id);
     const rawItems = Array.isArray(p.cost_items) ? p.cost_items : [];
-    // Backward compat: detect old format (had qty/unit_cost, not purchase_qty)
     const isOldFormat = rawItems.length > 0 && 'qty' in rawItems[0] && !('purchase_qty' in rawItems[0]);
     const hasValidItems = rawItems.length > 0 && !isOldFormat;
     setForm({
@@ -619,6 +656,10 @@ export function PosProductPage() {
       quick_cost: hasValidItems ? '' : (p.total_cost > 0 ? String(p.total_cost) : ''),
       cost_items: hasValidItems ? (rawItems as unknown as CostItem[]) : [],
       cost_notes: p.cost_notes || '',
+      // PolyMart fields
+      publish_to_polymart:  (p as any).publish_to_polymart ?? false,
+      polymart_location:    (p as any).polymart_location ?? '',
+      polymart_pickup_info: (p as any).polymart_pickup_info ?? '',
     });
     setShowCost(true);
     setShowForm(true);
@@ -656,6 +697,11 @@ export function PosProductPage() {
       cost_items:  form.cost_mode === 'advanced' ? form.cost_items.filter(i => i.name.trim()) : [],
       total_cost:  derivedTotalCost,
       cost_notes:  form.cost_notes.trim() || null,
+      // PolyMart fields
+      publish_to_polymart:  form.publish_to_polymart,
+      polymart_location:    form.polymart_location.trim() || null,
+      polymart_pickup_info: form.polymart_pickup_info.trim() || null,
+      ...(form.publish_to_polymart && !editId ? { polymart_published_at: new Date().toISOString() } : {}),
     };
 
     if (editId) {
@@ -698,6 +744,9 @@ export function PosProductPage() {
           </button>
         )}
       </motion.div>
+
+      {/* Ads Promo Banner */}
+      <PolymartAdsPromoBanner color={color} />
 
       {/* Search + Sort */}
       <div className="flex gap-3">
@@ -952,6 +1001,43 @@ export function PosProductPage() {
                       {form.is_available ? 'Produk Aktif — Boleh Dijual' : 'Produk Tidak Aktif'}
                     </span>
                   </button>
+
+                  {/* ── PolyMart Section ── */}
+                  <div className="space-y-3 rounded-2xl border p-3.5"
+                    style={{ borderColor: form.publish_to_polymart ? 'rgba(245,158,11,0.35)' : 'hsl(var(--border)/0.5)', background: form.publish_to_polymart ? 'rgba(245,158,11,0.05)' : 'transparent' }}>
+                    <button onClick={() => setForm(f => ({ ...f, publish_to_polymart: !f.publish_to_polymart }))}
+                      className="flex items-center gap-3 w-full">
+                      <div className="w-10 h-5.5 rounded-full transition-colors relative"
+                        style={{ background: form.publish_to_polymart ? '#f59e0b' : 'hsl(var(--muted))' }}>
+                        <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.publish_to_polymart ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-xs font-black text-foreground">🛍️ Siarkan ke PolyMart</p>
+                        <p className="text-[9px] text-muted-foreground/50 font-medium">Paparan dalam marketplace pelajar</p>
+                      </div>
+                    </button>
+                    {form.publish_to_polymart && (
+                      <AnimatePresence>
+                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }} className="space-y-2.5 overflow-hidden pt-1">
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Lokasi / Booth</p>
+                            <input value={form.polymart_location}
+                              onChange={e => setForm(f => ({ ...f, polymart_location: e.target.value }))}
+                              placeholder="cth: Kafeteria A, Kiosk B2..."
+                              className="w-full h-9 px-3 rounded-xl text-xs outline-none bg-background border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-amber-500/50 transition-all" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Waktu Operasi / Cara Ambil</p>
+                            <input value={form.polymart_pickup_info}
+                              onChange={e => setForm(f => ({ ...f, polymart_pickup_info: e.target.value }))}
+                              placeholder="cth: Isnin-Jumaat 8am-4pm..."
+                              className="w-full h-9 px-3 rounded-xl text-xs outline-none bg-background border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-amber-500/50 transition-all" />
+                          </div>
+                        </motion.div>
+                      </AnimatePresence>
+                    )}
+                  </div>
 
                   {/* Save */}
                   <button onClick={handleSave} disabled={saving}

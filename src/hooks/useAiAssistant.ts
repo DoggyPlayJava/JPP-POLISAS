@@ -43,6 +43,20 @@ export interface ChatContext {
     totalPendingReports?: number;
     totalMeritPending?: number;
   };
+  kebajikanInfo?: {
+    role: string;
+    activeTicketsCount?: number;
+    urgentTicketsUnresolved?: number;
+    assignedToMe?: number;
+    recentTickets?: string;
+  };
+  polymartInfo?: {
+    userType: string;
+    activePurchases?: number;
+    recentPurchases?: string;
+    pendingIncomingOrders?: number;
+    systemNote?: string;
+  };
 }
 
 interface AiRequestParams {
@@ -621,6 +635,8 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
         context?.akademikInfo ? `\n[Data E-Akademik]\nCGPA Terkini: ${context.akademikInfo.cgpa?.toFixed(2) || 'Tiada'}\nJum. Merit Terkumpul: ${context.akademikInfo.meritPoints || 0}\nStatus Permohonan Fail: ${context.akademikInfo.statusUnlock || 'Tiada'}` : '',
         context?.keusahawananInfo ? `\n[Data E-Keusahawanan]\nPenglibatan Kedai: ${context.keusahawananInfo.shopName || 'Tiada'}\nStatus Pengurus: ${context.keusahawananInfo.isManager ? 'Ya' : 'Tidak'}\nSyif Aktif Hari Ini: ${context.keusahawananInfo.activeShifts || 'Tiada'}` : '',
         context?.jppHqInfo ? `\n[Maklumat HQ JPP]\nLaporan Menunggu Kelulusan: ${context.jppHqInfo.totalPendingReports || 0}\nMerit Menunggu Kelulusan (Tuntutan): ${context.jppHqInfo.totalMeritPending || 0}` : '',
+        context?.kebajikanInfo ? `\n[Data E-Kebajikan]\nPeranan: ${context.kebajikanInfo.role}\n${context.kebajikanInfo.role === 'PELAJAR' ? `Tiket Aktif Saya: ${context.kebajikanInfo.activeTicketsCount || 0}\nTiket Terkini:\n${context.kebajikanInfo.recentTickets || 'Tiada'}` : `Tiket Urgent/Baharu: ${context.kebajikanInfo.urgentTicketsUnresolved || 0}\nTiket Ditugaskan Kepada Saya: ${context.kebajikanInfo.assignedToMe || 0}`}` : '',
+        context?.polymartInfo ? `\n[Data PolyMart]\nPeranan: ${context.polymartInfo.userType}\nPembelian Aktif: ${context.polymartInfo.activePurchases || 0}\nPesanan Terdekat:\n${context.polymartInfo.recentPurchases}\nPesanan Kedai (Masuk): ${context.polymartInfo.pendingIncomingOrders || 0}\nNota Platform: ${context.polymartInfo.systemNote}` : '',
         '',
         '== ARAHAN INTERAKSI PINTAR & CROSS-NAVIGATION (PENTING) ==',
         '1. Jika pengguna bertanya soalan yang memerlukan data spesifik yang TIADA dalam senarai [PENGETAHUAN SEMASA], maklumkan mereka bahawa anda hanya mempunyai data terhad di modul ini demi penjimatan sistem (konsep lazy-fetching).',

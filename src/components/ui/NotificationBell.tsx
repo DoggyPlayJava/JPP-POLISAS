@@ -18,6 +18,7 @@ const MODULE_FALLBACK: Record<NotificationModule, string> = {
   KEUSAHAWANAN: '/keusahawanan',
   JPP:          '/portal',
   SYSTEM:       '/dashboard',
+  POLYMART:     '/polymart',
 };
 
 function getNotifLink(notif: AppNotification): string | null {
@@ -33,6 +34,7 @@ const MODULE_CONFIG: Record<NotificationModule, { label: string; color: string; 
   KEUSAHAWANAN: { label: 'Keusahawanan',   color: '#f97316', bg: 'rgba(249,115,22,0.12)', dot: '#f97316' },
   JPP:          { label: 'JPP HQ',         color: '#8b1a1a', bg: 'rgba(139,26,26,0.12)',  dot: '#ef4444' },
   SYSTEM:       { label: 'Sistem',         color: '#94a3b8', bg: 'rgba(148,163,184,0.10)', dot: '#94a3b8' },
+  POLYMART:     { label: 'PolyMart',       color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', dot: '#f59e0b' },
 };
 
 function ModuleBadge({ module }: { module: NotificationModule }) {
@@ -178,20 +180,20 @@ export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'li
           ) : (
             <AnimatePresence initial={false}>
               {todayNotifs.length > 0 && (
-                <>
+                <React.Fragment key="today">
                   <p className="px-4 pt-3 pb-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Hari Ini</p>
-                  {todayNotifs.map(n => (
-                    <NotifItem key={n.id} notif={n} onRead={() => handleNotifClick(n)} />
+                  {todayNotifs.map((n, i) => (
+                    <NotifItem key={n.id || `today-${i}`} notif={n} onRead={() => handleNotifClick(n)} />
                   ))}
-                </>
+                </React.Fragment>
               )}
               {olderNotifs.length > 0 && (
-                <>
+                <React.Fragment key="older">
                   <p className="px-4 pt-3 pb-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Sebelumnya</p>
-                  {olderNotifs.map(n => (
-                    <NotifItem key={n.id} notif={n} onRead={() => handleNotifClick(n)} />
+                  {olderNotifs.map((n, i) => (
+                    <NotifItem key={n.id || `older-${i}`} notif={n} onRead={() => handleNotifClick(n)} />
                   ))}
-                </>
+                </React.Fragment>
               )}
             </AnimatePresence>
           )}

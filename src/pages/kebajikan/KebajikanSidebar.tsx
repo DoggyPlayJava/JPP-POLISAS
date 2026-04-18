@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   HeartHandshake, LayoutDashboard, Inbox, FileBarChart2,
   Users, Settings, LogOut, ChevronLeft, LayoutGrid,
-  Plus, ClipboardList, ShieldCheck, Bell,
+  Plus, ClipboardList, ShieldCheck, Bell, Crown,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,6 +24,7 @@ export function KebajikanSidebar() {
   const initials    = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   const posLabel    = isKebajikanExco ? 'Exco Kebajikan' : isUnitKebajikanStaff ? 'Unit Kebajikan' : isSuperAdmin ? 'Super Admin' : 'Ahli JPP';
   const isStaffOrAbove = isKebajikanExco || isUnitKebajikanStaff || isSuperAdmin;
+  const isJpp = isSuperAdmin || profile?.role === 'JPP';
 
   const bg = {
     top:    `rgba(2, 6, 23, 0.7)`, // slate-950
@@ -92,28 +93,7 @@ export function KebajikanSidebar() {
         </div>
       </div>
 
-      {/* User identity */}
-      <div className="flex-shrink-0 px-5 py-4 border-b border-white/5 bg-black/5 relative z-10">
-        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/[0.02] border border-white/[0.05] shadow-inner">
-          <Avatar className="h-10 w-10 rounded-xl ring-1 ring-white/10 flex-shrink-0 shadow-md">
-            <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
-            <AvatarFallback className="font-black text-xs rounded-xl" style={{ background: TEAL, color: '#0f172a' }}>
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-black text-white truncate leading-tight">{displayName}</p>
-            <p className="text-[10px] font-black uppercase tracking-widest truncate mt-0.5" style={{ color: hexToRgba(TEAL, 0.7) }}>
-              {posLabel}
-            </p>
-          </div>
-          {isSuperAdmin && (
-            <div className="flex-shrink-0 w-5 h-5 rounded-md flex items-center justify-center bg-amber-500/20">
-              <ShieldCheck className="w-2.5 h-2.5 text-amber-400" />
-            </div>
-          )}
-        </div>
-      </div>
+      {/* User identity removed from here and moved to Footer */}
 
       {/* Navigation */}
       <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto scrollbar-hide relative z-10">
@@ -143,8 +123,42 @@ export function KebajikanSidebar() {
         {navItem('/kebajikan/statistik', Bell, 'Statistik Awam')}
       </nav>
 
+      {/* ── Global JPP Dashboard Link ── */}
+      {isJpp && (
+        <div className="px-4 py-2 mt-auto pb-4 relative z-10 flex-shrink-0">
+          <button
+            onClick={() => { navigate('/jpp'); }}
+            className={cn(
+              'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border border-amber-500/20'
+            )}
+          >
+            <div className="w-7 h-7 rounded-lg bg-amber-500/30 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform flex-shrink-0">
+              <Crown className="w-3.5 h-3.5 text-amber-400" />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-widest leading-tight text-amber-400 text-left">Global JPP<br />Dashboard</span>
+          </button>
+        </div>
+      )}
+
       {/* Footer */}
-      <div className="flex-shrink-0 p-4" style={{ borderTop: `1px solid ${hexToRgba(TEAL, 0.1)}` }}>
+      <div className="flex-shrink-0 p-4 space-y-3 relative z-10" style={{ borderTop: `1px solid ${hexToRgba(TEAL, 0.1)}` }}>
+        <div className="flex items-center gap-3 px-2 py-2">
+          <Avatar className="h-8 w-8 rounded-xl ring-2 ring-white/10 shadow-md">
+            <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
+            <AvatarFallback className="font-black text-xs" style={{ background: TEAL, color: '#0f172a' }}>
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-black truncate leading-tight text-slate-50">{displayName}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest truncate" style={{ color: hexToRgba(TEAL, 0.7) }}>{posLabel}</p>
+          </div>
+          {isSuperAdmin && (
+            <div className="flex-shrink-0 w-5 h-5 rounded-md flex items-center justify-center bg-amber-500/20">
+              <ShieldCheck className="w-2.5 h-2.5 text-amber-400" />
+            </div>
+          )}
+        </div>
         <Button
           variant="ghost"
           onClick={signOut}

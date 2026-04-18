@@ -3,7 +3,7 @@
 // ============================================================
 import {
   Landmark, Lightbulb, HeartHandshake, Trophy,
-  BookOpen, Radio, MapPin, Handshake, Star,
+  BookOpen, Radio, MapPin, Handshake, Moon,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -110,7 +110,7 @@ export const UNIT_CFG: Record<string, UnitConfig> = {
     shortLabel: 'Kediaman & Ker.',
     fullLabel: 'Kediaman & Kerohanian',
     label: 'Exco Kediaman & Kerohanian',
-    icon: Star,
+    icon: Moon,
     color: '#E879F9',
     moduleLink: '/exco/kk/aktiviti',
     isActive: true,

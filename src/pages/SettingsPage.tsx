@@ -32,8 +32,20 @@ export function SettingsPage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false); // State khas untuk avatar
   const [fullName, setFullName] = useState(profile?.full_name || '');
   const [phone, setPhone] = useState(profile?.phone || '');
+  const [email, setEmail] = useState(user?.email || '');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  // States untuk OTP
+  const [showOTPModal, setShowOTPModal] = useState(false);
+  const [otpInput, setOtpInput] = useState('');
+  const [generatedOTP, setGeneratedOTP] = useState('');
+
+  useEffect(() => {
+    if (user?.email) {
+      setEmail(user.email);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (profile?.full_name) {
@@ -94,37 +106,110 @@ export function SettingsPage() {
     }
   };
 
-  const handleUpdateProfile = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const commitUpdates = async () => {
     if (!user || !fullName.trim()) return;
-
+    
     setLoading(true);
     try {
-      const oldName = profile?.full_name;
+      const isProfileChanged = fullName !== profile?.full_name || phone !== profile?.phone;
+      const isEmailChanged = email !== user?.email;
 
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ 
-          full_name: fullName.trim(),
-          phone: phone.trim()
-        })
-        .eq('id', user.id);
+      if (isProfileChanged) {
+        const oldName = profile?.full_name;
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            full_name: fullName.trim(),
+            phone: phone.trim()
+          })
+          .eq('id', user.id);
 
-      if (profileError) throw profileError;
+        if (profileError) throw profileError;
 
-      if (oldName && oldName !== fullName.trim()) {
-        await supabase
-          .from('club_committee')
-          .update({ full_name: fullName.trim() })
-          .eq('full_name', oldName);
+        if (oldName && oldName !== fullName.trim()) {
+          await supabase
+            .from('club_committee')
+            .update({ full_name: fullName.trim() })
+            .eq('full_name', oldName);
+        }
+        await refetchProfile();
       }
 
-      await refetchProfile();
-      toast.success('Profil berjaya disegerakkan dengan sistem!');
+      if (isEmailChanged) {
+        const { error: emailError } = await supabase.auth.updateUser({ email: email.trim() });
+        if (emailError) throw emailError;
+        toast.success('Sila semak emel baru anda (dan emel lama) untuk pautan pengesahan.');
+      } else if (isProfileChanged) {
+        toast.success('Profil berjaya disegerakkan dengan sistem!');
+      }
+
     } catch (error: any) {
       toast.error(error.message || 'Gagal mengemaskini profil.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateProfile = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    
+    const isPhoneChanged = phone !== profile?.phone;
+    
+    // Jika telefon bimbit berubah, kita perlukan verifikasi OTP
+    if (isPhoneChanged && phone.trim() !== '') {
+      handleInitiateOTP();
+      return;
+    }
+
+    // Jika tiada pertukaran nombor telefon, simpan terus
+    await commitUpdates();
+  };
+
+  const handleInitiateOTP = async () => {
+    if (!user?.email) return;
+    
+    setLoading(true);
+    try {
+      const newOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      setGeneratedOTP(newOTP);
+      
+      const { error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: user.email,
+          subject: "Kod Pengesahan e-KPP",
+          html: `<div style="font-family: sans-serif; padding: 20px; color: #1e293b; max-width: 500px; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <h2 style="color: #0f172a; margin-top: 0;">Pengesahan Penukaran Nombor Telefon</h2>
+            <p>Sistem merekodkan percubaan untuk menukar nombor telefon di akaun anda.</p>
+            <p>Gunakan kod 6-digit di bawah untuk melengkapkan pengesahan ini:</p>
+            <div style="background-color: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+              <h1 style="letter-spacing: 8px; margin: 0; color: #4338ca; font-size: 32px;">${newOTP}</h1>
+            </div>
+            <p style="font-size: 12px; color: #64748b;">Sekiranya anda tidak meminta pertukaran ini, sila abaikan emel ini dan periksa keselamatan akaun anda.</p>
+          </div>`
+        }
+      });
+      
+      if (error) throw error;
+      
+      setShowOTPModal(true);
+      setOtpInput('');
+      toast.success('Peringatan: Kod pengesahan telah dihantar ke emel semasa anda.');
+    } catch (err: any) {
+      toast.error(err.message || "Gagal menghantar kod pengesahan.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otpInput === generatedOTP) {
+      setShowOTPModal(false);
+      setOtpInput('');
+      setGeneratedOTP('');
+      await commitUpdates();
+    } else {
+      toast.error('Kod pengesahan (OTP) tidak sepadan atau tidak sah.');
     }
   };
 
@@ -271,10 +356,17 @@ export function SettingsPage() {
                       </div>
                     </div>
                     <div className="space-y-4">
-                      <Label htmlFor="email" className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">Emel (Tidak Boleh Diubah)</Label>
+                      <Label htmlFor="email" className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">Emel (Memerlukan Pengesahan)</Label>
                       <div className="relative group">
                         <Mail className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/40 transition-colors group-focus-within:text-primary" />
-                        <Input id="email" className="h-14 pl-14 pr-6 rounded-2xl bg-muted/20 border-border/30 font-black text-lg tracking-tight opacity-60 cursor-not-allowed" defaultValue={user?.email || ''} readOnly />
+                        <Input 
+                          id="email" 
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="h-14 pl-14 pr-6 rounded-2xl bg-muted/30 border-border/50 focus-visible:ring-primary/30 font-black text-lg tracking-tight transition-colors" 
+                          placeholder="CONTOH: ali@gmail.com" 
+                          type="email" 
+                        />
                       </div>
                     </div>
                     <div className="space-y-4">
@@ -287,8 +379,8 @@ export function SettingsPage() {
                   </div>
                 </CardContent>
                 <div className="p-8 bg-muted/20 border-t border-border/30 flex justify-end gap-4">
-                  <Button variant="ghost" onClick={() => { setFullName(profile?.full_name || ''); setPhone(profile?.phone || ''); }} className="h-14 px-10 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] text-muted-foreground/60 hover:text-primary">Batal</Button>
-                  <Button onClick={handleUpdateProfile} disabled={loading || (fullName === profile?.full_name && phone === profile?.phone)} className="h-14 px-12 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:scale-105 transition-transform active:scale-95">
+                  <Button variant="ghost" onClick={() => { setFullName(profile?.full_name || ''); setPhone(profile?.phone || ''); setEmail(user?.email || ''); }} className="h-14 px-10 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] text-muted-foreground/60 hover:text-primary">Batal</Button>
+                  <Button onClick={handleUpdateProfile} disabled={loading || (fullName === profile?.full_name && phone === profile?.phone && email === user?.email)} className="h-14 px-12 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:scale-105 transition-transform active:scale-95">
                     {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
                   </Button>
                 </div>
@@ -554,6 +646,78 @@ export function SettingsPage() {
         </AnimatePresence>
       </Tabs>
       </div>
+
+      {/* --- MODAL PENGESAHAN OTP --- */}
+      <AnimatePresence>
+        {showOTPModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-0">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => !loading && setShowOTPModal(false)}
+            />
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-background border border-border shadow-2xl rounded-3xl p-8 overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-blue-600" />
+              <div className="space-y-6 text-center">
+                <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4 ring-8 ring-primary/5">
+                  <Shield size={32} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black tracking-tight mb-2">Pengesahan OTP</h3>
+                  <p className="text-muted-foreground font-medium text-sm">
+                    Satu kod 6-digit telah dihantar ke emel <span className="font-bold text-foreground">{user?.email}</span>. Sila masukkan kod tersebut untuk meneruskan pertukaran nombor telefon.
+                  </p>
+                </div>
+
+                <form onSubmit={handleVerifyOTP} className="space-y-6 mt-6">
+                  <Input 
+                    type="text" 
+                    value={otpInput}
+                    onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    className="h-16 text-center text-3xl font-black tracking-[0.5em] bg-muted/30 border-2 focus-visible:border-primary/50" 
+                    placeholder="••••••" 
+                    maxLength={6}
+                    autoFocus
+                  />
+
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setShowOTPModal(false)} 
+                      disabled={loading}
+                      className="flex-1 h-12 rounded-xl font-bold uppercase tracking-widest text-[11px]"
+                    >
+                      Batal
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      disabled={otpInput.length !== 6 || loading}
+                      className="flex-1 h-12 rounded-xl font-bold uppercase tracking-widest text-[11px] bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                    >
+                      {loading ? 'Disahkan...' : 'Sahkan'}
+                    </Button>
+                  </div>
+                </form>
+
+                <p className="text-[11px] text-muted-foreground font-medium pt-4 border-t border-border/50">
+                  Tidak menerima emel? <button type="button" onClick={handleInitiateOTP} className="text-primary hover:underline font-bold" disabled={loading}>Hantar Semula</button>
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

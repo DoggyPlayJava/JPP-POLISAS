@@ -5,7 +5,7 @@
 
 import { supabase } from './supabase';
 
-export type NotificationModule = 'EKPP' | 'KEBAJIKAN' | 'AKADEMIK' | 'KEUSAHAWANAN' | 'JPP' | 'SYSTEM';
+export type NotificationModule = 'EKPP' | 'KEBAJIKAN' | 'AKADEMIK' | 'KEUSAHAWANAN' | 'JPP' | 'SYSTEM' | 'POLYMART';
 
 export interface NotificationPayload {
   title: string;
@@ -152,5 +152,64 @@ export async function sendNotificationToKebajikanStaff(
     staffUsers.forEach(s => firePush(s.staff_user_id, payload).catch(() => {}));
   } catch (err) {
     console.error('[sendNotificationToKebajikanStaff] Unexpected error:', err);
+  }
+}
+
+// ─── Broadcast notifikasi PolyMart ke Exco/MT Keusahawanan (laporan produk dll) ─
+export async function sendNotificationToKeusahawananExco(
+  payload: NotificationPayload
+): Promise<void> {
+  try {
+    const [excoByUnit, mtAssigned, superAdmins] = await Promise.all([
+      supabase.from('profiles').select('id').eq('role', 'JPP').eq('jpp_unit', 'KEUSAHAWANAN'),
+      supabase.from('jpp_mt_assignments').select('mt_user_id').eq('unit', 'KEUSAHAWANAN'),
+      supabase.from('profiles').select('id').eq('role', 'SUPER_ADMIN_JPP'),
+    ]);
+
+    const userIds = new Set<string>();
+    excoByUnit.data?.forEach(p => userIds.add(p.id));
+    mtAssigned.data?.forEach(m => userIds.add(m.mt_user_id));
+    superAdmins.data?.forEach(a => userIds.add(a.id));
+
+    if (userIds.size === 0) return;
+
+    const rows = Array.from(userIds).map(user_id => ({
+      user_id,
+      ...payload,
+      is_read: false,
+    }));
+
+    const { error } = await supabase.from('notifications').insert(rows);
+    if (error) { console.error('[sendNotificationToKeusahawananExco] Error:', error.message); return; }
+    Array.from(userIds).forEach(uid => firePush(uid, payload).catch(() => {}));
+  } catch (err) {
+    console.error('[sendNotificationToKeusahawananExco] Unexpected error:', err);
+  }
+}
+
+// ─── Hantar notifikasi PolyMart kepada vendor perniagaan ─────────────────────
+export async function sendNotificationToBusinessVendor(
+  business_id: string,
+  payload: NotificationPayload
+): Promise<void> {
+  try {
+    // Owner perniagaan + semua member aktif perniagaan
+    const [ownerRes, membersRes] = await Promise.all([
+      supabase.from('keusahawanan_businesses').select('owner_id').eq('id', business_id).single(),
+      supabase.from('student_business_memberships').select('user_id').eq('business_id', business_id).eq('status', 'ACTIVE'),
+    ]);
+
+    const userIds = new Set<string>();
+    if (ownerRes.data?.owner_id) userIds.add(ownerRes.data.owner_id);
+    membersRes.data?.forEach(m => userIds.add(m.user_id));
+
+    if (userIds.size === 0) return;
+
+    const rows = Array.from(userIds).map(user_id => ({ user_id, ...payload, is_read: false }));
+    const { error } = await supabase.from('notifications').insert(rows);
+    if (error) { console.error('[sendNotificationToBusinessVendor] Error:', error.message); return; }
+    Array.from(userIds).forEach(uid => firePush(uid, payload).catch(() => {}));
+  } catch (err) {
+    console.error('[sendNotificationToBusinessVendor] Unexpected error:', err);
   }
 }

@@ -5,6 +5,7 @@ import { KebajikanSidebar } from './KebajikanSidebar';
 import { Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/ui/NotificationBell';
+import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 export function KebajikanLayout() {
   const { isLoading, hasKebajikanAccess } = useAuth();
@@ -75,6 +76,7 @@ export function KebajikanLayout() {
         <div className="flex-1 overflow-y-auto">
           <Outlet />
         </div>
+        <FloatingAiChat />
       </main>
     </div>
   );

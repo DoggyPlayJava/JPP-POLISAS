@@ -307,6 +307,9 @@ export function PortalPage() {
 
   const isJPPMode = profile?.role === 'JPP' || isSuperAdmin;
 
+  // PolyMart live stats
+  const [polyMartStats, setPolyMartStats] = useState<{ listings: number; businesses: number } | null>(null);
+
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
@@ -351,6 +354,18 @@ export function PortalPage() {
       setKbStats({ open: openRes.count ?? 0, resolved: resolvedRes.count ?? 0, rating: avg });
     };
     load();
+  }, []);
+
+  // Fetch PolyMart live stats
+  useEffect(() => {
+    const loadPolyMart = async () => {
+      const [listingsRes, bizRes] = await Promise.all([
+        supabase.from('business_products').select('id', { count: 'exact', head: true }).eq('publish_to_polymart', true).eq('is_available', true),
+        supabase.from('keusahawanan_businesses').select('id', { count: 'exact', head: true }).eq('polymart_is_active', true).eq('status', 'ACTIVE'),
+      ]);
+      setPolyMartStats({ listings: listingsRes.count ?? 0, businesses: bizRes.count ?? 0 });
+    };
+    loadPolyMart();
   }, []);
 
   const isModuleEnabled = (moduleId: string): boolean => {
@@ -540,7 +555,52 @@ export function PortalPage() {
                 </div>
               </button>
 
-              {/* ── Butang Buat Aduan (Bagi pelajar/staff BUKAN Kebajikan) ── */}
+              {/* ── Widget PolyMart ── */}
+              {isModuleEnabled('keusahawanan') || isSuperAdmin ? (
+                <button
+                  onClick={() => {
+                    if (!isModuleEnabled('keusahawanan') && !isSuperAdmin) {
+                      toast('PolyMart tidak aktif ketika ini!', { icon: '🚧' });
+                      return;
+                    }
+                    navigate('/polymart');
+                  }}
+                  className={cn(
+                    "group relative flex flex-nowrap items-center justify-center gap-4 px-6 sm:px-8 py-4 sm:py-5 rounded-[2rem] sm:rounded-full font-black tracking-wide sm:tracking-widest transition-all overflow-hidden border w-full sm:w-auto min-w-[280px]",
+                    "bg-gradient-to-br from-amber-500/10 to-orange-500/10 dark:from-amber-500/15 dark:to-orange-500/10 text-slate-900 dark:text-white border-amber-500/20 dark:border-amber-500/25",
+                    (!isModuleEnabled('keusahawanan') && !isSuperAdmin)
+                      ? "opacity-60 grayscale-[0.8] cursor-not-allowed"
+                      : "hover:scale-105 active:scale-[0.98] shadow-[0_20px_50px_-12px_rgba(245,158,11,0.25)] dark:shadow-[0_20px_50px_-12px_rgba(245,158,11,0.15)] hover:border-amber-500/35"
+                  )}
+                >
+                  {/* Sweep shimmer */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-amber-400/0 via-amber-400/15 to-amber-400/0 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out" />
+
+                  {/* Icon */}
+                  <div className="w-12 h-12 sm:w-10 sm:h-10 rounded-2xl sm:rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0 shadow-inner relative overflow-hidden">
+                    <LucideIcons.ShoppingBag className="w-6 h-6 sm:w-5 sm:h-5 text-amber-600 dark:text-amber-400" />
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-amber-400 rounded-full opacity-60 group-hover:scale-150 transition-transform duration-500" />
+                  </div>
+
+                  {/* Text */}
+                  <div className="flex flex-col items-start gap-0.5 text-left pr-2 flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[13px] sm:text-sm uppercase tracking-widest leading-none mt-0.5">PolyMart</span>
+                      <span className="text-[8px] font-black bg-amber-500/20 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-full uppercase tracking-widest">
+                        BETA
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 normal-case font-medium tracking-normal mt-1">
+                      {polyMartStats ? `${polyMartStats.listings} produk • ${polyMartStats.businesses} peniaga` : 'Marketplace Pelajar'}
+                    </span>
+                  </div>
+
+                  {/* Right arrow */}
+                  <div className="hidden sm:flex w-10 h-10 rounded-full bg-amber-500/10 dark:bg-amber-500/15 items-center justify-center flex-shrink-0">
+                    <LucideIcons.ArrowRight className="w-4 h-4 text-amber-600 dark:text-amber-400 group-hover:scale-110 group-hover:translate-x-1 transition-transform duration-300" />
+                  </div>
+                </button>
+              ) : null}
               {!hasKebajikanAccess && (
                 <button
                   onClick={() => {

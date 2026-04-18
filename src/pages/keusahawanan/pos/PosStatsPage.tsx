@@ -5,6 +5,7 @@ import { useBusinessSwitcher } from '@/contexts/BusinessSwitcherContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePosData, StatsData } from '@/hooks/usePosData';
 import { hexToRgba } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -14,7 +15,7 @@ import { PosSalesReportModal } from '@/components/keusahawanan/PosSalesReportMod
 import {
   DollarSign, Receipt, Package, TrendingUp, CalendarDays,
   AlertTriangle, Layers, ShoppingBag, BarChart3, ChevronRight,
-  Wallet, MinusCircle, Plus, Trash2, TrendingDown, FileText, Loader2,
+  Wallet, MinusCircle, Plus, Trash2, TrendingDown, FileText, Loader2, Rocket
 } from 'lucide-react';
 import { type BusinessExpense, type ExpenseCategory } from '@/types';
 import toast from 'react-hot-toast';
@@ -41,6 +42,50 @@ function KPICard({ icon: Icon, label, value, sub, color, delay }: any) {
       <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">{label}</p>
       <p className="text-2xl font-black text-foreground leading-none">{value}</p>
       {sub && <p className="text-[10px] text-muted-foreground/50 mt-2">{sub}</p>}
+    </motion.div>
+  );
+}
+
+// ── Ads Marketing Upsell Widget ───────────────────────────────────────────────
+function AdsMarketingWidget({ stats }: { stats: StatsData }) {
+  const [adsPhone, setAdsPhone] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.from('system_settings').select('value').eq('key', 'polymart_ads_phone').single().then(({ data }) => {
+      if (data) setAdsPhone(data.value?.replace(/["']/g, '') || '');
+    });
+  }, []);
+
+  if (!adsPhone) return null;
+
+  return (
+    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
+      className="relative overflow-hidden rounded-3xl p-5 border border-amber-500/30 bg-amber-500/10 shadow-lg mt-2 mb-4 group cursor-pointer"
+      onClick={() => window.open(`https://wa.me/${adsPhone}?text=Hai Exco Keusahawanan, saya dari tab analisis jualan POS dan berminat untuk langgan slot iklan PolyMart!`, '_blank')}
+    >
+      <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-[80px] group-hover:bg-amber-500/20 transition-colors pointer-events-none" />
+      
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0 shadow-inner">
+            <Rocket className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-0.5">Peluang Pemasaran Cerdas</p>
+            <h3 className="text-base sm:text-lg font-black text-amber-700 dark:text-amber-300 leading-tight">
+              Gandakan Pendedahan Produk ke Ribuan Pelajar
+            </h3>
+            <p className="text-xs text-amber-700/70 dark:text-amber-400/80 mt-1 max-w-lg font-medium leading-relaxed">
+              Letakkan produk kedai anda di **Banner Hadapan** PolyMart untuk melonjakkan jumlah pesanan. Slot adalah terhad!
+            </p>
+          </div>
+        </div>
+        
+        <button className="whitespace-nowrap h-11 px-6 rounded-2xl text-xs font-black text-white shadow-md hover:scale-105 active:scale-95 transition-all shrink-0"
+          style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
+          Letak Iklan Sekarang
+        </button>
+      </div>
     </motion.div>
   );
 }
@@ -248,6 +293,8 @@ export function PosStatsPage() {
                 delay={0.25}
               />
             </div>
+
+            <AdsMarketingWidget stats={stats} />
 
             {/* Discount alert — tunjuk jika ada diskaun diberi */}
             {stats.totalDiscounts > 0 && (
