@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from './AuthContext';
 import type { NotificationModule } from '@/lib/notifications';
@@ -49,6 +49,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const { user, isAuthenticated } = useAuth();
   const [notifs, setNotifs] = useState<AppNotification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const fetchNotifs = useCallback(async () => {
     if (!user?.id) return;
@@ -72,12 +73,18 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     fetchNotifs();
   }, [isAuthenticated, user?.id, fetchNotifs]);
 
-  // Realtime listener — listen for new notifications specifically for this user
-  useEffect(() => {
+  // ── Realtime: subscribe and auto-reconnect on visibility change ───────────
+  const subscribeRealtime = useCallback(() => {
     if (!user?.id) return;
 
+    // Remove existing channel first
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
     const channel = supabase
-      .channel(`unified_notifs_${user.id}`)
+      .channel(`unified_notifs_${user.id}_${Date.now()}`)
       .on(
         'postgres_changes',
         {
@@ -104,10 +111,43 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           );
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('[NotificationContext] Realtime subscribed ✅');
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn('[NotificationContext] Realtime channel error, akan reconnect...');
+          // Refetch to ensure no missed notifications
+          fetchNotifs();
+        }
+      });
 
-    return () => { supabase.removeChannel(channel); };
-  }, [user?.id]);
+    channelRef.current = channel;
+  }, [user?.id, fetchNotifs]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) return;
+
+    subscribeRealtime();
+
+    // ── Reconnect when tab becomes visible again ──────────────────────────────
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[NotificationContext] Tab active — refetch & reconnect realtime');
+        fetchNotifs();       // fetch missed notifications
+        subscribeRealtime(); // reset channel connection
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
+  }, [isAuthenticated, user?.id, subscribeRealtime, fetchNotifs]);
 
   const markRead = useCallback(async (id: string, link?: string | null) => {
     // Optimistic update
