@@ -334,7 +334,10 @@ export function KeusahawananAdminPanel() {
       await supabase.from('notifications').insert({
         user_id: b.owner_id,
         title: '🎉 Perniagaan Anda Diluluskan!',
-        content: `Tahniah! Perniagaan "${b.name}" telah diluluskan oleh JPP. Anda kini boleh mengakses sistem POS dan mula beroperasi.`,
+        message: `Tahniah! Perniagaan "${b.name}" telah diluluskan oleh JPP. Anda kini boleh mengakses sistem POS dan mula beroperasi.`,
+        type: 'STATUS_UPDATE',
+        module: 'KEUSAHAWANAN',
+        link: '/keusahawanan',
         is_read: false,
       });
 
@@ -366,7 +369,10 @@ export function KeusahawananAdminPanel() {
       await supabase.from('notifications').insert({
         user_id: b.owner_id,
         title: '❌ Permohonan Perniagaan Ditolak',
-        content: `Perniagaan "${b.name}" telah ditolak${reason ? `. Sebab: ${reason}` : '. Sila hubungi JPP untuk maklumat lanjut.'}`,
+        message: `Perniagaan "${b.name}" telah ditolak${reason ? `. Sebab: ${reason}` : '. Sila hubungi JPP untuk maklumat lanjut.'}`,
+        type: 'STATUS_UPDATE',
+        module: 'KEUSAHAWANAN',
+        link: '/keusahawanan',
         is_read: false,
       });
 

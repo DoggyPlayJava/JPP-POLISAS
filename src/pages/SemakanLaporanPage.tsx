@@ -247,10 +247,12 @@ export function SemakanLaporanPage() {
     // 2. Suntik Notifikasi ke Database (Hanya jika ada content)
     if (notificationTitle) {
       await supabase.from('notifications').insert([{
-        user_id: actionDialog.data.user_id, // ID Presiden/MT yang daftar program
+        user_id: actionDialog.data.user_id,
         title: notificationTitle,
         message: notificationContent,
         type: actionDialog.type === 'UNLOCK' ? 'UNLOCK_APPROVED' : 'STATUS_UPDATE',
+        module: 'EKPP',
+        link: '/laporan',
         is_read: false
       }]);
     }
@@ -300,6 +302,8 @@ export function SemakanLaporanPage() {
           title: '⚠️ PERINGATAN JPP: AMARAN TERTUNGGAK',
           message: `Sila selesaikan dokumen bagi program "${prog.nama_program}" dengan SEGERA. Sebab: ${reason}.`,
           type: 'SYSTEM_ALERT',
+          module: 'EKPP',
+          link: '/laporan',
           is_read: false
         });
       }
@@ -352,6 +356,8 @@ export function SemakanLaporanPage() {
            title: notificationTitle,
            message: notificationContent,
            type: 'STATUS_UPDATE',
+           module: 'EKPP',
+           link: '/laporan',
            is_read: false
         }]);
       }

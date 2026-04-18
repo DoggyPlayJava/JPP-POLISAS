@@ -52,7 +52,7 @@ export const UNIT_CFG: Record<string, UnitConfig> = {
     label: 'Exco Kebajikan',
     icon: HeartHandshake,
     color: '#2DD4BF',
-    moduleLink: '/exco/kebajikan/aktiviti',
+    moduleLink: '/kebajikan',
     isActive: true,
   },
   SRK: {

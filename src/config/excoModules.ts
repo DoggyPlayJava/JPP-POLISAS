@@ -42,8 +42,8 @@ export const EXCO_MODULES: ExcoModule[] = [
     description: 'Pengurusan bantuan pelajar, program kebajikan & khidmat masyarakat.',
     defaultColor: '#2DD4BF',  // Teal cerah (Teal-400)
     icon: 'HeartHandshake',
-    basePath: '/kebajikan/dashboard',
-    isActive: false,          // Akan Datang
+    basePath: '/kebajikan/buat-aduan', // Redirect pelajar ke form aduan; Exco pergi ke /kebajikan
+    isActive: true,                    // Sistem sekarang aktif!
   },
   {
     id: 'keusahawanan',

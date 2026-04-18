@@ -26,6 +26,7 @@ import { useAiSettings } from '@/contexts/AiSettingsContext';
 import { Bot, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -133,6 +134,7 @@ export function DashboardPage() {
   const { user, profile, isAdvisor, isPresident, isMT, isMember, effectiveRole, selectedClubId, userClubIds } = useAuth();
   const { allowAiBudget } = useAiSettings();
   const navigate = useNavigate();
+  const { isSupported, permission, requestPermission } = usePushNotifications();
 
   // ── OPTIMISED: Guna hook yang consolidate 8 queries → 1 RPC + cache ──
   const { data: dashData, isLoading, fetchData: fetchDashboard, refresh } = useDashboardData();
@@ -176,6 +178,45 @@ export function DashboardPage() {
       navigate('/sertai-kelab');
     }
   }, [profile, userClubIds, navigate]);
+
+  // ── Push Notification Permission Prompt (sekali sahaja) ──
+  useEffect(() => {
+    if (!isSupported || permission === 'granted' || permission === 'denied') return;
+    if (localStorage.getItem('push_prompt_dismissed')) return;
+    // Delay 3s so dashboard loads first
+    const timer = setTimeout(() => {
+      toast(
+        (t) => (
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <div className="text-2xl">🔔</div>
+              <div>
+                <p className="font-black text-sm">Hidupkan Notifikasi Push</p>
+                <p className="text-xs text-muted-foreground">Supaya anda sentiasa tahu bila ada kemas kini penting dari JPP.</p>
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => { localStorage.setItem('push_prompt_dismissed', '1'); toast.dismiss(t.id); }}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 transition"
+              >Nanti</button>
+              <button
+                onClick={async () => {
+                  toast.dismiss(t.id);
+                  const result = await requestPermission();
+                  if (result === 'granted') toast.success('Notifikasi diaktifkan! ✅');
+                  else { localStorage.setItem('push_prompt_dismissed', '1'); }
+                }}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+              >Benarkan</button>
+            </div>
+          </div>
+        ),
+        { duration: Infinity, id: 'push-permission-prompt', className: 'min-w-[300px] !p-4' }
+      );
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [isSupported, permission, requestPermission]);
 
 
 

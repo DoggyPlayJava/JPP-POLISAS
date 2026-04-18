@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
+import { NotificationBell } from '@/components/ui/NotificationBell';
 
 const NAV_ITEMS = [
   { path: '/akademik',            label: 'Dashboard',    icon: LayoutDashboard },
@@ -103,6 +104,7 @@ export function AkademikLayout() {
 
           <div className="flex items-center gap-3">
             <ThemeToggle />
+            <NotificationBell />
             <button
               onClick={() => navigate('/portal')}
               className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/[0.08] text-white/40 hover:text-white/70 hover:bg-white/[0.04] transition-all text-[10px] font-black uppercase tracking-widest"

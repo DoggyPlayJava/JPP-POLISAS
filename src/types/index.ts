@@ -668,4 +668,215 @@ export interface UserAnnouncementResponse {
   status: 'dismissed_permanently' | 'completed';
   form_data: Record<string, any> | null;
   created_at: string;
-}
+}
+
+// ─── E-Kebajikan Ticketing System ────────────────────────────────────────────
+
+export type KebajikanTicketStatus =
+  | 'NEW'           // Diterima — pelajar boleh batal
+  | 'IN_PROGRESS'   // Dalam Tindakan
+  | 'WAITING_INFO'  // Menunggu Maklumat Tambahan
+  | 'DELEGATED'     // Didelegasikan ke Pegawai
+  | 'ESCALATED'     // Diescalate (auto 72j atau manual)
+  | 'RESOLVED'      // Selesai
+  | 'CLOSED'        // Ditutup (auto selepas rating / 7 hari)
+  | 'CANCELLED'     // Dibatal oleh pelajar (jika NEW)
+  | 'REOPENED';     // Pelajar minta dibuka semula (pending Exco approve)
+
+export type KebajikanTicketCategory =
+  | 'FASILITI_JABATAN'
+  | 'FASILITI_SUKAN'
+  | 'KAFETERIA'
+  | 'WIFI_KAMSIS'
+  | 'LAIN_LAIN';
+
+export type KebajikanTicketPriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+
+export type KebajikanNotifType =
+  | 'NEW_TICKET'
+  | 'WARNING'
+  | 'ESCALATION'
+  | 'STATUS_UPDATE'
+  | 'COMMENT'
+  | 'DELEGATION'
+  | 'REOPEN_REQUEST';
+
+export type KebajikanAuthorRole = 'PELAJAR' | 'EXCO' | 'PEGAWAI' | 'SISTEM';
+export type KebajikanStaffRole  = 'STAFF' | 'SENIOR_STAFF';
+
+export interface KebajikanTicket {
+  id: string;
+  ticket_no: string;
+  submitter_id: string | null;
+  full_name: string;
+  gender: string | null;
+  matric_no: string | null;
+  phone: string | null;
+  class: string | null;
+  category: KebajikanTicketCategory;
+  title: string;
+  description: string;
+  form_data: Record<string, any>;
+  image_urls: string[];
+  status: KebajikanTicketStatus;
+  assigned_to: string | null;
+  delegated_to: string | null;
+  delegation_note: string | null;
+  priority: KebajikanTicketPriority;
+  tags: string[];
+  warning_sent_at: string | null;
+  escalated_at: string | null;
+  sla_deadline: string | null;
+  reopen_count: number;
+  reopen_reason: string | null;
+  reopen_requested_at: string | null;
+  reopen_approved_by: string | null;
+  cancelled_at: string | null;
+  cancel_reason: string | null;
+  resolved_at: string | null;
+  resolved_by: string | null;
+  resolution_note: string;
+  rating: number | null;
+  rating_comment: string | null;
+  rating_at: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  assignee?:   { id: string; full_name: string; avatar_url?: string };
+  delegate?:   { id: string; full_name: string; avatar_url?: string };
+  resolver?:   { id: string; full_name: string };
+  submitter?:  { id: string; full_name: string; matric_no?: string };
+  comments_count?: number;
+}
+
+export interface KebajikanTicketComment {
+  id: string;
+  ticket_id: string;
+  author_id: string | null;
+  author_name: string;
+  author_role: KebajikanAuthorRole;
+  is_internal: boolean;
+  is_delegation_note: boolean;
+  content: string;
+  attachments: string[];
+  created_at: string;
+}
+
+export interface KebajikanNotification {
+  id: string;
+  ticket_id: string;
+  target_user_id: string | null;
+  target_role: string | null;
+  title: string;
+  body: string;
+  type: KebajikanNotifType;
+  is_read: boolean;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface KebajikanStaffAssignment {
+  id: string;
+  staff_user_id: string;
+  assigned_by: string | null;
+  role: KebajikanStaffRole;
+  is_active: boolean;
+  note: string | null;
+  assigned_at: string;
+  // Joined
+  staff?:    { id: string; full_name: string; email: string; avatar_url?: string; matric_no?: string };
+  assigner?: { id: string; full_name: string };
+}
+
+export interface KebajikanTag {
+  id: string;
+  name: string;
+  color: string;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface KebajikanPublicStats {
+  total_tickets: number;
+  total_resolved: number;
+  total_active: number;
+  resolution_rate: number;
+  avg_resolution_hours: number;
+  avg_rating: number;
+  this_month_received: number;
+  this_month_resolved: number;
+}
+
+export interface KebajikanMonthlyStats {
+  month_label: string;
+  month_date: string;
+  received: number;
+  resolved: number;
+  avg_hours: number;
+}
+
+export interface KebajikanCategoryStats {
+  category: KebajikanTicketCategory;
+  total: number;
+  resolved: number;
+  percentage: number;
+}
+
+// ── Labels & Colors ──────────────────────────────────────────────────────────
+
+export const KEBAJIKAN_STATUS_LABELS: Record<KebajikanTicketStatus, string> = {
+  NEW:          'Diterima',
+  IN_PROGRESS:  'Dalam Tindakan',
+  WAITING_INFO: 'Menunggu Maklumat',
+  DELEGATED:    'Didelegasikan',
+  ESCALATED:    'Diescalate',
+  RESOLVED:     'Selesai',
+  CLOSED:       'Ditutup',
+  CANCELLED:    'Dibatal',
+  REOPENED:     'Dibuka Semula',
+};
+
+export const KEBAJIKAN_STATUS_COLORS: Record<KebajikanTicketStatus, string> = {
+  NEW:          'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  IN_PROGRESS:  'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+  WAITING_INFO: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  DELEGATED:    'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+  ESCALATED:    'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  RESOLVED:     'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+  CLOSED:       'bg-slate-100 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400',
+  CANCELLED:    'bg-slate-100 text-slate-400 dark:bg-slate-800/30 dark:text-slate-500',
+  REOPENED:     'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300',
+};
+
+export const KEBAJIKAN_CATEGORY_LABELS: Record<KebajikanTicketCategory, string> = {
+  FASILITI_JABATAN: 'Fasiliti Jabatan',
+  FASILITI_SUKAN:   'Fasiliti Sukan',
+  KAFETERIA:        'Kafeteria',
+  WIFI_KAMSIS:      'WiFi Kamsis',
+  LAIN_LAIN:        'Aduan Lain-Lain',
+};
+
+export const KEBAJIKAN_CATEGORY_DESCRIPTIONS: Record<KebajikanTicketCategory, string> = {
+  FASILITI_JABATAN: 'Masalah kemudahan di dalam jabatan akademik',
+  FASILITI_SUKAN:   'Kerosakan atau isu kemudahan sukan di kampus',
+  KAFETERIA:        'Aduan berkaitan kafeteria Al-Biruni, Al-Ghazali atau Ibn Sina',
+  WIFI_KAMSIS:      'Masalah kelajuan atau gangguan WiFi di blok asrama',
+  LAIN_LAIN:        'Aduan lain yang tidak termasuk dalam kategori di atas',
+};
+
+export const KEBAJIKAN_PRIORITY_LABELS: Record<KebajikanTicketPriority, string> = {
+  LOW:    'Rendah',
+  NORMAL: 'Biasa',
+  HIGH:   'Tinggi',
+  URGENT: 'Kritikal',
+};
+
+export const KEBAJIKAN_PRIORITY_COLORS: Record<KebajikanTicketPriority, string> = {
+  LOW:    'bg-slate-100 text-slate-600',
+  NORMAL: 'bg-blue-100 text-blue-700',
+  HIGH:   'bg-orange-100 text-orange-700',
+  URGENT: 'bg-red-100 text-red-700',
+};
+
+// Warna tema E-Kebajikan (teal)
+export const KEBAJIKAN_THEME_COLOR = '#2DD4BF';

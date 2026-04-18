@@ -53,6 +53,18 @@ import { AkademikLayout }      from './pages/akademik/AkademikLayout';
 import { AkademikDashboard }   from './pages/akademik/AkademikDashboard';
 import { AkademikPencapaian }  from './pages/akademik/AkademikPencapaian';
 import { AkademikMeritPage }   from './pages/akademik/AkademikMeritPage';
+// ── E-Kebajikan Ticketing System ──
+import { KebajikanLayout }      from './pages/kebajikan/KebajikanLayout';
+import { KebajikanStatsPage }   from './pages/kebajikan/KebajikanPublicStats';
+import { KebajikanSubmitPage }  from './pages/kebajikan/KebajikanSubmitPage';
+import { KebajikanMyTickets }   from './pages/kebajikan/KebajikanMyTickets';
+import { KebajikanDashboard }   from './pages/kebajikan/KebajikanDashboard';
+import { KebajikanTicketsPage } from './pages/kebajikan/KebajikanTicketsPage';
+import { KebajikanTicketDetail }from './pages/kebajikan/KebajikanTicketDetail';
+import { KebajikanStudentChat } from './pages/kebajikan/KebajikanStudentChat';
+import { KebajikanReportPage }   from './pages/kebajikan/KebajikanReportPage';
+import { KebajikanStaffPage }    from './pages/kebajikan/KebajikanStaffPage';
+import { KebajikanSettingsPage } from './pages/kebajikan/KebajikanSettingsPage';
 import { AkademikQrPage }      from './pages/akademik/AkademikQrPage';
 import { AkademikQrScan }      from './pages/akademik/AkademikQrScan';
 import { AkademikCgpa }        from './pages/akademik/AkademikCgpa';
@@ -112,6 +124,9 @@ function AppRoutes() {
 
       {/* 🔑 RESET PASSWORD ROUTE (Standalone to handle Supabase recovery event without kicks) */}
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+      {/* 🌍 TRULY PUBLIC — no auth required */}
+      <Route path="/kebajikan/statistik" element={<KebajikanStatsPage />} />
 
       {/* 🔐 PROTECTED ROUTES */}
       <Route element={<ProtectedRoute />}>
@@ -191,6 +206,26 @@ function AppRoutes() {
           <Route path="/akademik/folder"       element={<AkademikFolderPage />} />
           <Route path="/akademik/leaderboard"  element={<AkademikLeaderboard />} />
         </Route>
+
+      </Route>
+
+      {/* ── E-Kebajikan — Layout Bersama Sidebar ── */}
+      <Route element={<ProtectedRoute />}>
+        <Route element={<KebajikanLayout />}>
+          {/* Public routes (Pelajar / Semua) */}
+          <Route path="/kebajikan/buat-aduan" element={<KebajikanSubmitPage />} />
+          <Route path="/kebajikan/aduan-saya" element={<KebajikanMyTickets />} />
+          <Route path="/kebajikan/aduan/:id"  element={<KebajikanStudentChat />} />
+          <Route path="/kebajikan/statistik"  element={<KebajikanStatsPage />} />
+
+          {/* Exco + Staff dashboard */}
+          <Route path="/kebajikan"             element={<KebajikanDashboard />} />
+          <Route path="/kebajikan/tiket"       element={<KebajikanTicketsPage />} />
+          <Route path="/kebajikan/tiket/:id"   element={<KebajikanTicketDetail />} />
+          <Route path="/kebajikan/laporan"     element={<KebajikanReportPage />} />
+          <Route path="/kebajikan/staff"       element={<KebajikanStaffPage />} />
+          <Route path="/kebajikan/tetapan"     element={<KebajikanSettingsPage />} />
+        </Route>
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
@@ -201,6 +236,7 @@ function AppRoutes() {
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AiSettingsProvider } from '@/contexts/AiSettingsContext';
 import { KarnivalProvider } from '@/contexts/KarnivalContext';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 import { PwaUpdater } from '@/components/PwaUpdater';
 import { InstallAppPrompt } from '@/components/pwa/InstallAppPrompt';
 
@@ -210,9 +246,10 @@ function App() {
       <ThemeProvider>
         <BrowserRouter>
           <AuthProvider>
-            <AiSettingsProvider>
-              <KarnivalProvider>
-                <AppRoutes />
+            <NotificationProvider>
+              <AiSettingsProvider>
+                <KarnivalProvider>
+                  <AppRoutes />
                 <PwaUpdater />
                 <InstallAppPrompt />
                 <Toaster
@@ -228,9 +265,10 @@ function App() {
                     },
                   }}
                 />
-                <SpeedInsights />
-              </KarnivalProvider>
-            </AiSettingsProvider>
+                  <SpeedInsights />
+                </KarnivalProvider>
+              </AiSettingsProvider>
+            </NotificationProvider>
           </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>

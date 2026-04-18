@@ -424,6 +424,12 @@ export function JppSidebar() {
                   subItems.push({ icon: Building2, label: 'Rujukan Asrama', href: '/jpp/asrama' });
                   subItems.push({ icon: QrCode,    label: 'Jana QR Merit',  href: '/jpp/unit/kk?tab=qr' });
                 }
+                // KEBAJIKAN tambahan: dashboard tiket + laporan
+                if (code === 'KEBAJIKAN') {
+                  subItems.push({ icon: LayoutDashboard, label: 'Dashboard Tiket',  href: '/kebajikan' });
+                  subItems.push({ icon: ClipboardCheck,  label: 'Senarai Tiket',    href: '/kebajikan/tiket' });
+                  subItems.push({ icon: FileText,         label: 'Laporan Bulanan',  href: '/kebajikan/laporan' });
+                }
               } else if (canReview) {
                 // MT / YDP menyemak laporan unit ini
                 if (isYDP) {

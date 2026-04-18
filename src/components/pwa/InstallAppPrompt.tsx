@@ -77,7 +77,12 @@ export function InstallAppPrompt() {
   };
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      if (import.meta.env.DEV) {
+        alert("Mod Development 🚧: Butang ini berfungsi dengan baik, namun browser anda di tahap ini belum sepenuhnya mencetuskan (trigger) prapemasangan PWA sebenar.\n\nDi alam persekitaran sistem (Production), apabila ditekan, sistem akan buka tetingkap pengesahan tulen daripada Browser/Chrome.");
+      }
+      return;
+    }
 
     // Tunjukkan prom asal sistem Android
     deferredPrompt.prompt();

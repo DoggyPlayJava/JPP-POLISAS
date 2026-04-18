@@ -14,6 +14,7 @@ import { PortalSidebar } from '@/components/layout/PortalSidebar';
 import { Menu } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
+import { NotificationBell } from '@/components/ui/NotificationBell';
 
 
 
@@ -294,13 +295,16 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
 // PortalPage Utama
 // ─────────────────────────────────────────────
 export function PortalPage() {
-  const { profile, signOut, isSuperAdmin } = useAuth();
+  const { profile, signOut, isSuperAdmin, isKebajikanExco, hasKebajikanAccess } = useAuth();
   const navigate = useNavigate();
   const [settings, setSettings] = useState<ExcoColorSetting[]>([]);
   const [isLoadingSettings, setIsLoadingSettings] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
+
+  // Kebajikan live stats
+  const [kbStats, setKbStats] = useState<{ open: number; resolved: number; rating: number | null } | null>(null);
+
   const isJPPMode = profile?.role === 'JPP' || isSuperAdmin;
 
   useEffect(() => {
@@ -333,6 +337,21 @@ export function PortalPage() {
   }, []);
 
   useEffect(() => { fetchSettings(); }, [fetchSettings]);
+
+  // Fetch live kebajikan stats
+  useEffect(() => {
+    const load = async () => {
+      const [openRes, resolvedRes, ratingRes] = await Promise.all([
+        supabase.from('kebajikan_tickets').select('id', { count: 'exact', head: true }).not('status', 'in', '(RESOLVED,CLOSED,CANCELLED)'),
+        supabase.from('kebajikan_tickets').select('id', { count: 'exact', head: true }).in('status', ['RESOLVED', 'CLOSED']),
+        supabase.from('kebajikan_tickets').select('rating').not('rating', 'is', null),
+      ]);
+      const ratings = (ratingRes.data || []).map((r: any) => r.rating as number);
+      const avg = ratings.length ? ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length : null;
+      setKbStats({ open: openRes.count ?? 0, resolved: resolvedRes.count ?? 0, rating: avg });
+    };
+    load();
+  }, []);
 
   const isModuleEnabled = (moduleId: string): boolean => {
     const s = settings.find(s => s.exco_module === moduleId);
@@ -418,6 +437,7 @@ export function PortalPage() {
 
         <div className="flex items-center gap-2 md:gap-4">
           <ThemeToggle />
+          <NotificationBell />
           
           <div 
             className="flex items-center gap-3 pl-4 border-l border-black/5 dark:border-white/10 cursor-pointer group"
@@ -477,11 +497,28 @@ export function PortalPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="pt-6 sm:pt-8"
+              className="pt-6 sm:pt-8 flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6"
             >
               <button
-                onClick={() => navigate('/akademik/qr')}
-                className="group relative flex flex-nowrap items-center justify-center gap-4 px-6 sm:px-8 py-4 sm:py-5 rounded-[2rem] sm:rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black tracking-wide sm:tracking-widest transition-all hover:scale-105 active:scale-[0.98] shadow-[0_20px_50px_-12px_rgba(16,185,129,0.3)] dark:shadow-[0_20px_50px_-12px_rgba(16,185,129,0.15)] overflow-hidden mx-auto border border-black/10 dark:border-white/10 w-full sm:w-auto min-w-[280px]"
+                onClick={() => {
+                  if (!isModuleEnabled('akademik') && !isSuperAdmin) {
+                    toast('Modul E-Akademik sedang dikemas kini!', { icon: '🚧' });
+                    return;
+                  }
+                  if (!isModuleEnabled('akademik') && isSuperAdmin) {
+                    toast.success('Admin Preview Mode Active', {
+                      icon: '👁️',
+                      style: { borderRadius: '12px', fontSize: '12px', fontWeight: 600, background: '#1e293b', color: '#fff' },
+                    });
+                  }
+                  navigate('/akademik/qr');
+                }}
+                className={cn(
+                  "group relative flex flex-nowrap items-center justify-center gap-4 px-6 sm:px-8 py-4 sm:py-5 rounded-[2rem] sm:rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black tracking-wide sm:tracking-widest transition-all overflow-hidden border border-black/10 dark:border-white/10 w-full sm:w-auto min-w-[280px]",
+                  (!isModuleEnabled('akademik') && !isSuperAdmin) 
+                    ? "opacity-60 grayscale-[0.8] cursor-not-allowed" 
+                    : "hover:scale-105 active:scale-[0.98] shadow-[0_20px_50px_-12px_rgba(16,185,129,0.3)] dark:shadow-[0_20px_50px_-12px_rgba(16,185,129,0.15)]"
+                )}
               >
                 {/* Sweep effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/0 via-emerald-400/20 to-emerald-400/0 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out" />
@@ -502,6 +539,112 @@ export function PortalPage() {
                   <LucideIcons.Camera className="w-4 h-4 text-emerald-400 dark:text-emerald-600 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300" />
                 </div>
               </button>
+
+              {/* ── Butang Buat Aduan (Bagi pelajar/staff BUKAN Kebajikan) ── */}
+              {!hasKebajikanAccess && (
+                <button
+                  onClick={() => {
+                    if (!isModuleEnabled('kebajikan') && !isSuperAdmin) {
+                      toast('Modul E-Kebajikan sedang dikemas kini!', { icon: '🚧' });
+                      return;
+                    }
+                    if (!isModuleEnabled('kebajikan') && isSuperAdmin) {
+                      toast.success('Admin Preview Mode Active', {
+                        icon: '👁️',
+                        style: { borderRadius: '12px', fontSize: '12px', fontWeight: 600, background: '#1e293b', color: '#fff' },
+                      });
+                    }
+                    navigate('/kebajikan/buat-aduan');
+                  }}
+                  className={cn(
+                    "group relative flex flex-nowrap items-center justify-center gap-4 px-6 sm:px-8 py-4 sm:py-5 rounded-[2rem] sm:rounded-full bg-white dark:bg-slate-900/50 text-slate-900 dark:text-white font-black tracking-wide sm:tracking-widest transition-all overflow-hidden border border-black/5 dark:border-teal-500/20 w-full sm:w-auto min-w-[280px] backdrop-blur-md",
+                    (!isModuleEnabled('kebajikan') && !isSuperAdmin)
+                      ? "opacity-60 grayscale-[0.8] cursor-not-allowed"
+                      : "hover:scale-105 active:scale-[0.98] shadow-[0_20px_50px_-12px_rgba(45,212,191,0.2)] dark:shadow-[0_20px_50px_-12px_rgba(45,212,191,0.1)] hover:bg-slate-50 dark:hover:bg-slate-900/80"
+                  )}
+                >
+                  {/* Sweep effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-teal-400/0 via-teal-400/10 to-teal-400/0 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out" />
+                  
+                  {/* Icon wrapper */}
+                  <div className="w-12 h-12 sm:w-10 sm:h-10 rounded-2xl sm:rounded-xl bg-teal-500/10 dark:bg-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0 shadow-inner">
+                    <LucideIcons.MessageSquarePlus className="w-6 h-6 sm:w-5 sm:h-5" />
+                  </div>
+                  
+                  {/* Text section */}
+                  <div className="flex flex-col items-start gap-0.5 text-left pr-4">
+                    <span className="text-[13px] sm:text-sm uppercase tracking-widest leading-none mt-0.5">Buat Aduan</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 normal-case font-medium tracking-normal mt-1">Salurkan aduan terus ke JPP</span>
+                  </div>
+
+                  {/* Right button/icon */}
+                  <div className="hidden sm:flex w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 items-center justify-center">
+                    <LucideIcons.ArrowRight className="w-4 h-4 text-teal-600 dark:text-teal-400 group-hover:scale-110 group-hover:translate-x-1 transition-transform duration-300" />
+                  </div>
+                </button>
+              )}
+
+              {/* ── E-Kebajikan Live Stats Widget (EXCO ONLY) ── */}
+              {hasKebajikanAccess && (
+                <div
+                  className={cn(
+                    "rounded-[2rem] border overflow-hidden shadow-2xl w-full sm:w-auto min-w-[280px] transition-transform duration-300 bg-black/[0.02] dark:bg-white/[0.02]",
+                    (!isModuleEnabled('kebajikan') && !isSuperAdmin) 
+                      ? "opacity-60 grayscale-[0.8]" 
+                      : "hover:scale-[1.02]"
+                  )}
+                  style={{ borderColor: 'rgba(45,212,191,0.15)' }}
+                >
+                  <div
+                    className={cn(
+                      "flex items-center justify-between gap-3 px-5 py-3.5 group transition-all",
+                      (!isModuleEnabled('kebajikan') && !isSuperAdmin) 
+                        ? "cursor-not-allowed" 
+                        : "cursor-pointer hover:bg-teal-500/5"
+                    )}
+                    onClick={() => {
+                      if (!isModuleEnabled('kebajikan') && !isSuperAdmin) {
+                        toast('Modul E-Kebajikan sedang dikemas kini!', { icon: '🚧' });
+                        return;
+                      }
+                      if (!isModuleEnabled('kebajikan') && isSuperAdmin) {
+                        toast.success('Admin Preview Mode Active', {
+                          icon: '👁️',
+                          style: { borderRadius: '12px', fontSize: '12px', fontWeight: 600, background: '#1e293b', color: '#fff' },
+                        });
+                      }
+                      navigate('/kebajikan');
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform" style={{ background: 'rgba(45,212,191,0.15)', border: '1px solid rgba(45,212,191,0.3)' }}>
+                        <LucideIcons.HeartHandshake className="w-5 h-5" style={{ color: '#2DD4BF' }} />
+                      </div>
+                      <div className="flex flex-col text-left">
+                        <span className="text-[11px] sm:text-xs font-black uppercase tracking-widest" style={{ color: '#2DD4BF' }}>Dashboard Aduan</span>
+                        <span className="text-[9px] text-slate-500 dark:text-slate-400 mt-0.5 tracking-wider">Pusat Urusan E-Kebajikan</span>
+                      </div>
+                    </div>
+                    <LucideIcons.ArrowRight className="w-4 h-4 flex-shrink-0 text-white/20 group-hover:translate-x-1 transition-all" style={{ color: 'rgba(45,212,191,0.5)' }} />
+                  </div>
+
+                  {/* Live stats row */}
+                  <div className="grid grid-cols-3" style={{ borderTop: '1px solid rgba(45,212,191,0.08)' }}>
+                    <div className="flex flex-col items-center py-2.5 px-2">
+                       <p className="text-base sm:text-lg font-black text-slate-800 dark:text-white leading-none">{kbStats ? kbStats.open : '—'}</p>
+                       <p className="text-[8px] sm:text-[9px] font-bold text-slate-500 mt-1 uppercase tracking-widest">Aktif</p>
+                    </div>
+                    <div className="flex flex-col items-center py-2.5 px-2" style={{ borderLeft: '1px solid rgba(45,212,191,0.08)' }}>
+                       <p className="text-base sm:text-lg font-black text-emerald-500 dark:text-emerald-400 leading-none">{kbStats ? kbStats.resolved : '—'}</p>
+                       <p className="text-[8px] sm:text-[9px] font-bold text-slate-500 mt-1 uppercase tracking-widest">Selesai</p>
+                    </div>
+                    <div className="flex flex-col items-center py-2.5 px-2" style={{ borderLeft: '1px solid rgba(45,212,191,0.08)' }}>
+                       <p className="text-base sm:text-lg font-black text-amber-500 dark:text-amber-400 leading-none">{kbStats?.rating != null ? kbStats.rating.toFixed(1) : '—'}</p>
+                       <p className="text-[8px] sm:text-[9px] font-bold text-slate-500 mt-1 uppercase tracking-widest">Rating</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </motion.div>
           </motion.div>
         </div>
@@ -553,6 +696,7 @@ export function PortalPage() {
             </div>
           )}
         </div>
+
 
         {/* Global Admin Status Line */}
         {isSuperAdmin && (

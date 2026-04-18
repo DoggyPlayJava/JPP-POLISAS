@@ -1,95 +1,202 @@
-import React, { useEffect, useState } from 'react';
-import { Bell } from 'lucide-react';
+import React from 'react';
+import { Bell, ChevronRight } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
+import { useNotifications, type AppNotification } from '@/contexts/NotificationContext';
 import { formatDistanceToNow } from 'date-fns';
 import { ms } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
+import type { NotificationModule } from '@/lib/notifications';
 
-export function NotificationBell() {
-    const { user } = useAuth();
-    const [notifs, setNotifs] = useState<any[]>([]);
-    const unreadCount = notifs.filter(n => !n.is_read).length;
+// ─── Smart fallback link berdasarkan modul ────────────────────────────────────
+const MODULE_FALLBACK: Record<NotificationModule, string> = {
+  KEBAJIKAN:    '/kebajikan',
+  EKPP:         '/laporan',
+  AKADEMIK:     '/akademik',
+  KEUSAHAWANAN: '/keusahawanan',
+  JPP:          '/portal',
+  SYSTEM:       '/dashboard',
+};
 
-    useEffect(() => {
-        if (!user) return;
-        fetchNotifs();
+function getNotifLink(notif: AppNotification): string | null {
+  if (notif.link) return notif.link;
+  return MODULE_FALLBACK[notif.module] ?? null;
+}
 
-        // Polling as fallback/guarantee
-        const interval = setInterval(() => {
-            fetchNotifs();
-        }, 10000);
+// ─── Module badge config ───────────────────────────────────────────────────────
+const MODULE_CONFIG: Record<NotificationModule, { label: string; color: string; bg: string; dot: string }> = {
+  KEBAJIKAN:    { label: 'E-Kebajikan',    color: '#2DD4BF', bg: 'rgba(45,212,191,0.12)', dot: '#2DD4BF' },
+  EKPP:         { label: 'E-KPP',          color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', dot: '#f59e0b' },
+  AKADEMIK:     { label: 'E-Akademik',     color: '#6366f1', bg: 'rgba(99,102,241,0.12)', dot: '#6366f1' },
+  KEUSAHAWANAN: { label: 'Keusahawanan',   color: '#f97316', bg: 'rgba(249,115,22,0.12)', dot: '#f97316' },
+  JPP:          { label: 'JPP HQ',         color: '#8b1a1a', bg: 'rgba(139,26,26,0.12)',  dot: '#ef4444' },
+  SYSTEM:       { label: 'Sistem',         color: '#94a3b8', bg: 'rgba(148,163,184,0.10)', dot: '#94a3b8' },
+};
 
-        // ✅ REAL-TIME LISTENER
-        const channel = supabase
-            .channel(`notifications-${user.id}-${Math.random().toString(36).substring(7)}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'notifications',
-                    filter: `user_id=eq.${user.id}`
-                },
-                (payload) => {
-                    console.log('Real-time notification:', payload);
-                    setNotifs(prev => [payload.new as any, ...prev].slice(0, 5));
-                }
-            )
-            .subscribe();
+function ModuleBadge({ module }: { module: NotificationModule }) {
+  const cfg = MODULE_CONFIG[module] ?? MODULE_CONFIG.SYSTEM;
+  return (
+    <span
+      className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
+      style={{ background: cfg.bg, color: cfg.color }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: cfg.dot }} />
+      {cfg.label}
+    </span>
+  );
+}
 
-        return () => {
-            clearInterval(interval);
-            supabase.removeChannel(channel);
-        };
-    }, [user]);
+function NotifItem({ notif, onRead }: { notif: AppNotification; onRead: () => void }) {
+  const isUnread = !notif.is_read;
+  const hasLink = !!getNotifLink(notif);
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, height: 0 }}
+      onClick={onRead}
+      className={cn(
+        'relative px-4 py-3.5 cursor-pointer transition-colors group',
+        'hover:bg-white/5 border-b border-white/[0.05] last:border-0',
+        isUnread && 'bg-white/[0.025]'
+      )}
+    >
+      {/* Unread dot */}
+      {isUnread && (
+        <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-rose-400" />
+      )}
+      <div className="flex items-start gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="mb-1.5">
+            <ModuleBadge module={notif.module} />
+          </div>
+          <p className={cn(
+            'text-xs leading-snug mb-0.5',
+            isUnread ? 'font-bold text-slate-100' : 'font-medium text-slate-300'
+          )}>
+            {notif.title}
+          </p>
+          <p className="text-[11px] text-slate-400 leading-relaxed line-clamp-2">
+            {notif.message}
+          </p>
+          <p className="text-[9px] text-slate-500 font-medium mt-1.5 uppercase tracking-wider">
+            {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: ms })}
+          </p>
+        </div>
+        {hasLink && (
+          <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-300 transition-colors flex-shrink-0 mt-1" />
+        )}
+      </div>
+    </motion.div>
+  );
+}
 
-    const fetchNotifs = async () => {
-        const { data } = await supabase
-            .from('notifications')
-            .select('*')
-            .eq('user_id', user?.id)
-            .order('created_at', { ascending: false })
-            .limit(5);
-        setNotifs(data || []);
-    };
+export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'light' }) {
+  const { notifs, unreadCount, markRead, markAllRead } = useNotifications();
+  const navigate = useNavigate();
 
-    const markAsRead = async () => {
-        if (unreadCount > 0) {
-            await supabase.from('notifications').update({ is_read: true }).eq('user_id', user?.id).eq('is_read', false);
-            fetchNotifs();
-        }
-    };
+  const handleNotifClick = async (notif: AppNotification) => {
+    await markRead(notif.id);
+    const link = getNotifLink(notif);
+    if (link) navigate(link);
+  };
 
-    return (
-        <Popover onOpenChange={(open) => open && markAsRead()}>
-            <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative rounded-full bg-white/50 border">
-                    <Bell size={18} />
-                    {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-600 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-bounce">
-                            {unreadCount}
-                        </span>
-                    )}
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 p-0 rounded-2xl shadow-2xl border-none overflow-hidden">
-                <div className="p-4 bg-primary text-white font-black text-xs uppercase tracking-widest">Notifikasi</div>
-                <div className="max-h-[300px] overflow-y-auto">
-                    {notifs.length === 0 ? (
-                        <p className="p-8 text-center text-xs text-muted-foreground font-medium">Tiada notifikasi baharu.</p>
-                    ) : (
-                        notifs.map(n => (
-                            <div key={n.id} className={`p-4 border-b border-muted/20 last:border-0 ${!n.is_read ? 'bg-primary/5' : ''}`}>
-                                <p className="text-xs font-black text-primary">{n.title}</p>
-                                <p className="text-[11px] font-medium leading-relaxed">{n.content || n.message}</p>
-                                <p className="text-[10px] mt-1 opacity-40">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: ms })}</p>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </PopoverContent>
-        </Popover>
-    );
+  // Group by today vs older
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayNotifs = notifs.filter(n => new Date(n.created_at) >= today);
+  const olderNotifs = notifs.filter(n => new Date(n.created_at) < today);
+
+  const isDark = variant === 'dark';
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            'relative rounded-xl h-9 w-9 transition-all',
+            isDark
+              ? 'hover:bg-white/5 text-slate-400 hover:text-white'
+              : 'hover:bg-muted/60 text-muted-foreground/70'
+          )}
+        >
+          <Bell className="h-[18px] w-[18px]" />
+          <AnimatePresence>
+            {unreadCount > 0 && (
+              <motion.span
+                key="badge"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                className="absolute -top-1 -right-1 w-[18px] h-[18px] bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-lg"
+              >
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </Button>
+      </PopoverTrigger>
+
+      <PopoverContent
+        align="end"
+        className="w-80 p-0 rounded-2xl shadow-2xl border-0 overflow-hidden bg-slate-900"
+        style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-slate-950/80" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+          <div className="flex items-center gap-2">
+            <Bell className="w-3.5 h-3.5 text-slate-400" />
+            <p className="text-[11px] font-black uppercase tracking-widest text-slate-200">Notifikasi</p>
+            {unreadCount > 0 && (
+              <span className="text-[9px] font-black bg-rose-500/20 text-rose-400 px-1.5 py-0.5 rounded-full">
+                {unreadCount} baharu
+              </span>
+            )}
+          </div>
+          {unreadCount > 0 && (
+            <button
+              onClick={markAllRead}
+              className="text-[9px] font-bold text-slate-500 hover:text-slate-300 transition-colors uppercase tracking-wider"
+            >
+              Baca semua
+            </button>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="max-h-[380px] overflow-y-auto scrollbar-hide">
+          {notifs.length === 0 ? (
+            <div className="py-10 text-center">
+              <Bell className="w-8 h-8 text-slate-700 mx-auto mb-2 opacity-40" />
+              <p className="text-xs text-slate-500 font-medium">Tiada notifikasi baharu</p>
+            </div>
+          ) : (
+            <AnimatePresence initial={false}>
+              {todayNotifs.length > 0 && (
+                <>
+                  <p className="px-4 pt-3 pb-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Hari Ini</p>
+                  {todayNotifs.map(n => (
+                    <NotifItem key={n.id} notif={n} onRead={() => handleNotifClick(n)} />
+                  ))}
+                </>
+              )}
+              {olderNotifs.length > 0 && (
+                <>
+                  <p className="px-4 pt-3 pb-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Sebelumnya</p>
+                  {olderNotifs.map(n => (
+                    <NotifItem key={n.id} notif={n} onRead={() => handleNotifClick(n)} />
+                  ))}
+                </>
+              )}
+            </AnimatePresence>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 }
