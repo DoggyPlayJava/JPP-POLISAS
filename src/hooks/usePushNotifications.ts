@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -17,14 +17,23 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 
 export function usePushNotifications() {
   const { user, isAuthenticated } = useAuth();
+  const [isSubscribed, setIsSubscribed] = useState<boolean | null>(null);
 
   // Auto-subscribe once authenticated, if permission already granted
   useEffect(() => {
     if (!isAuthenticated || !user?.id) return;
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-    if (Notification.permission === 'granted') {
-      subscribeIfNeeded().catch(console.error);
-    }
+    
+    // Always check actual subscription status regardless of permission
+    navigator.serviceWorker.ready.then(reg => {
+      reg.pushManager.getSubscription().then(sub => {
+        setIsSubscribed(!!sub);
+        // If granted but no sub (or sub exists but not synced), try syncing/subscribing
+        if (Notification.permission === 'granted') {
+          subscribeIfNeeded().catch(console.error);
+        }
+      });
+    });
   }, [isAuthenticated, user?.id]);
 
   // Subscribe to push and save subscription to Supabase
@@ -55,9 +64,11 @@ export function usePushNotifications() {
         { onConflict: 'user_id,endpoint' }
       );
 
+      setIsSubscribed(true);
       return true;
     } catch (err) {
       console.error('[usePushNotifications] subscribe error:', err);
+      setIsSubscribed(false);
       return false;
     }
   }, [user?.id]);
@@ -81,6 +92,7 @@ export function usePushNotifications() {
         await supabase.from('push_subscriptions').delete()
           .eq('user_id', user!.id).eq('endpoint', sub.endpoint);
         await sub.unsubscribe();
+        setIsSubscribed(false);
       }
     } catch (err) {
       console.error('[usePushNotifications] unsubscribe error:', err);
@@ -90,6 +102,7 @@ export function usePushNotifications() {
   return {
     isSupported:  'serviceWorker' in navigator && 'PushManager' in window,
     permission:   typeof Notification !== 'undefined' ? Notification.permission : 'denied',
+    isSubscribed,
     requestPermission,
     unsubscribe,
   };

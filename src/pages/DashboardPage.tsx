@@ -179,26 +179,39 @@ export function DashboardPage() {
     }
   }, [profile, userClubIds, navigate]);
 
-  // ── Push Notification Permission Prompt (sekali sahaja) ──
+  // Trigger prompt automatik jika belum benarkan dan disokong
+  // Pindah ke useEffect berasingan supaya tidak block UI
   useEffect(() => {
-    if (!isSupported || permission === 'granted' || permission === 'denied') return;
-    if (localStorage.getItem('push_prompt_dismissed')) return;
-    // Delay 3s so dashboard loads first
+    // We want to prompt if permission is 'default' OR if permission is 'granted' but they have NO subscription synced.
+    if (!isSupported) return;
+    if (permission === 'denied') return;
+    if (permission === 'granted' && isSubscribed === true) return; // All good
+    if (isSubscribed === null) return; // Still loading
+
+    const dismissed = localStorage.getItem('push_prompt_dismissed');
+    if (dismissed && permission !== 'granted') return; // Only respect dismiss if they haven't explicitly granted OS permission.
+
     const timer = setTimeout(() => {
-      toast(
+      toast.custom(
         (t) => (
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
               <div className="text-2xl">🔔</div>
               <div>
-                <p className="font-black text-sm">Hidupkan Notifikasi Push</p>
-                <p className="text-xs text-muted-foreground">Supaya anda sentiasa tahu bila ada kemas kini penting dari JPP.</p>
+                <p className="font-black text-sm">
+                  {permission === 'granted' ? 'Baiki Notifikasi Push' : 'Hidupkan Notifikasi Push'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {permission === 'granted' 
+                    ? 'Sambungan notifikasi peranti ini telah terputus. Sila klik baiki.'
+                    : 'Supaya anda sentiasa tahu bila ada kemas kini penting dari JPP.'}
+                </p>
               </div>
             </div>
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => { localStorage.setItem('push_prompt_dismissed', '1'); toast.dismiss(t.id); }}
-                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 transition"
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition"
               >Nanti</button>
               <button
                 onClick={async () => {
@@ -208,7 +221,9 @@ export function DashboardPage() {
                   else { localStorage.setItem('push_prompt_dismissed', '1'); }
                 }}
                 className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
-              >Benarkan</button>
+              >
+                {permission === 'granted' ? 'Baiki Sekarang' : 'Benarkan'}
+              </button>
             </div>
           </div>
         ),
@@ -216,7 +231,7 @@ export function DashboardPage() {
       );
     }, 3000);
     return () => clearTimeout(timer);
-  }, [isSupported, permission, requestPermission]);
+  }, [isSupported, permission, isSubscribed, requestPermission]);
 
 
 
