@@ -12,94 +12,71 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
 }
 
+// ─── Hook: usePushNotifications ──────────────────────────────────────────────
+// Usage: call requestPermission() once after user logs in (e.g. on Dashboard mount)
+
 export function usePushNotifications() {
   const { user, isAuthenticated } = useAuth();
   const [isSubscribed, setIsSubscribed] = useState<boolean | null>(null);
 
+  // Auto-subscribe once authenticated, if permission already granted
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) return;
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    
+    // Always check actual subscription status regardless of permission
+    navigator.serviceWorker.ready.then(reg => {
+      reg.pushManager.getSubscription().then(sub => {
+        setIsSubscribed(!!sub);
+        // If granted but no sub (or sub exists but not synced), try syncing/subscribing
+        if (Notification.permission === 'granted') {
+          subscribeIfNeeded().catch(console.error);
+        }
+      });
+    });
+  }, [isAuthenticated, user?.id]);
+
   // Subscribe to push and save subscription to Supabase
   const subscribeIfNeeded = useCallback(async (): Promise<boolean> => {
-    console.log('[Push] subscribeIfNeeded called, user:', user?.id);
-    console.log('[Push] VAPID_PUBLIC_KEY present:', !!VAPID_PUBLIC_KEY, VAPID_PUBLIC_KEY?.substring(0, 20));
-
-    if (!VAPID_PUBLIC_KEY) {
-      console.error('[Push] VAPID_PUBLIC_KEY is missing! Check environment variables.');
-      return false;
-    }
-
     try {
       const reg = await navigator.serviceWorker.ready;
-      console.log('[Push] SW ready, scope:', reg.scope);
-
-      // Always unsubscribe and resubscribe to ensure fresh subscription with current VAPID key
       let sub = await reg.pushManager.getSubscription();
-      console.log('[Push] Existing subscription:', !!sub);
 
       if (!sub) {
-        console.log('[Push] Creating new subscription with VAPID key...');
         sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
         });
-        console.log('[Push] New subscription created:', sub.endpoint.substring(0, 60));
       }
 
       // Save to Supabase
       const subJson = sub.toJSON();
-      console.log('[Push] Saving subscription to Supabase for user:', user?.id);
-
-      const { error } = await supabase.from('push_subscriptions').upsert(
+      await supabase.from('push_subscriptions').upsert(
         {
           user_id:  user!.id,
           endpoint: subJson.endpoint!,
           p256dh:   subJson.keys!.p256dh,
           auth:     subJson.keys!.auth,
           device_hint: navigator.userAgent.includes('Android') ? 'android'
-                     : navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') ? 'ios'
+                     : navigator.userAgent.includes('iPhone') ? 'ios'
                      : 'desktop',
         },
         { onConflict: 'user_id,endpoint' }
       );
 
-      if (error) {
-        console.error('[Push] Supabase upsert error:', error);
-        setIsSubscribed(false);
-        return false;
-      }
-
-      console.log('[Push] ✅ Subscription saved to Supabase successfully!');
       setIsSubscribed(true);
       return true;
     } catch (err) {
-      console.error('[Push] subscribe error:', err);
+      console.error('[usePushNotifications] subscribe error:', err);
       setIsSubscribed(false);
       return false;
     }
   }, [user?.id]);
 
-  // Auto-check subscription status on mount
-  useEffect(() => {
-    if (!isAuthenticated || !user?.id) return;
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      console.warn('[Push] Push not supported on this device');
-      return;
-    }
-
-    navigator.serviceWorker.ready.then(reg => {
-      reg.pushManager.getSubscription().then(sub => {
-        setIsSubscribed(!!sub);
-        if (Notification.permission === 'granted') {
-          // Re-sync subscription to DB in case it was lost
-          subscribeIfNeeded().catch(console.error);
-        }
-      });
-    });
-  }, [isAuthenticated, user?.id, subscribeIfNeeded]);
-
   // Request permission and subscribe
   const requestPermission = useCallback(async (): Promise<'granted' | 'denied' | 'default'> => {
     if (!('Notification' in window)) return 'denied';
     const permission = await Notification.requestPermission();
-    console.log('[Push] Permission result:', permission);
     if (permission === 'granted') {
       await subscribeIfNeeded();
     }
@@ -118,7 +95,7 @@ export function usePushNotifications() {
         setIsSubscribed(false);
       }
     } catch (err) {
-      console.error('[Push] unsubscribe error:', err);
+      console.error('[usePushNotifications] unsubscribe error:', err);
     }
   }, [user?.id]);
 

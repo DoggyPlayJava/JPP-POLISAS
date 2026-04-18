@@ -9,14 +9,15 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       injectRegister: 'auto',
-      // Use injectManifest so our sw.ts handles push events
+      // ── Use injectManifest so our custom sw.ts handles push events ──────────
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.ts',
       injectManifest: {
-        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024, // 6MB
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
       },
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'jpp-logo.png'],
       manifest: {
         name: 'JPP POLISAS',
         short_name: 'JPP',
@@ -31,7 +32,6 @@ export default defineConfig({
           { src: 'jpp-logo.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'jpp-logo.png'],
       devOptions: {
         enabled: true,
         type: 'module',
