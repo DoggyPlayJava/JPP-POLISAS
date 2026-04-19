@@ -15,7 +15,6 @@ import { Menu } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { NotificationBell } from '@/components/ui/NotificationBell';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 // ─── Color Picker Popover ───
 interface ColorPickerProps {
@@ -314,101 +313,6 @@ export function PortalPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Mesej popup notifikasi push universal
-  const { isSupported, permission, isSubscribed, requestPermission } = usePushNotifications();
-  const pushPromptShownRef = useRef(false); // Hanya tunjuk sekali per session
-
-  useEffect(() => {
-    if (!isSupported) return;
-    if (permission === 'denied') return;
-    if (permission === 'granted' && isSubscribed === true) return; // Semua OK, tak perlu prompt
-    if (isSubscribed === null) return; // Masih loading
-    if (pushPromptShownRef.current) return; // Dah tunjuk dalam session ini
-
-    // Semak cooldown 7 hari (selepas user tekan Nanti atau Baiki)
-    const dismissedAt = localStorage.getItem('push_prompt_dismissed_at');
-    if (dismissedAt) {
-      const daysSince = (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60 * 24);
-      if (daysSince < 7) return; // Jangan tunjuk dalam 7 hari
-    }
-
-    const timer = setTimeout(() => {
-      if (pushPromptShownRef.current) return; // Double-check
-      pushPromptShownRef.current = true;
-
-      const dismiss = (toastId: string) => {
-        localStorage.setItem('push_prompt_dismissed_at', Date.now().toString());
-        toast.dismiss(toastId);
-      };
-
-      toast.custom(
-        (t) => (
-          <div
-            style={{
-              background: 'var(--background, #1e293b)',
-              color: 'var(--foreground, #f1f5f9)',
-              border: '1px solid var(--border, rgba(255,255,255,0.12))',
-              borderRadius: '12px',
-              padding: '14px 16px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
-              minWidth: '300px',
-              maxWidth: '360px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-              opacity: t.visible ? 1 : 0,
-              transition: 'opacity 0.3s ease',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-              <div style={{ fontSize: '22px', lineHeight: 1, flexShrink: 0, marginTop: '2px' }}>🔔</div>
-              <div>
-                <p style={{ fontWeight: 800, fontSize: '14px', margin: 0, lineHeight: 1.3 }}>
-                  {permission === 'granted' ? 'Baiki Notifikasi Push' : 'Hidupkan Notifikasi Push'}
-                </p>
-                <p style={{ fontSize: '12px', margin: '4px 0 0', opacity: 0.65, lineHeight: 1.4 }}>
-                  {permission === 'granted'
-                    ? 'Sambungan notifikasi peranti ini terputus. Klik baiki untuk aktifkan semula.'
-                    : 'Supaya anda sentiasa tahu bila ada kemas kini penting dari JPP.'}
-                </p>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => dismiss(t.id)}
-                style={{
-                  appearance: 'none', border: '1px solid rgba(148,163,184,0.3)',
-                  background: 'rgba(148,163,184,0.15)', color: 'inherit',
-                  padding: '6px 12px', borderRadius: '8px', fontSize: '12px',
-                  fontWeight: 600, cursor: 'pointer',
-                }}
-              >Nanti</button>
-              <button
-                onClick={async () => {
-                  dismiss(t.id);
-                  const result = await requestPermission();
-                  if (result === 'granted') {
-                    localStorage.removeItem('push_prompt_dismissed_at');
-                    toast.success('Notifikasi diaktifkan! ✅');
-                  }
-                }}
-                style={{
-                  appearance: 'none', border: 'none',
-                  background: '#2563eb', color: '#ffffff',
-                  padding: '6px 14px', borderRadius: '8px', fontSize: '12px',
-                  fontWeight: 700, cursor: 'pointer',
-                }}
-              >
-                {permission === 'granted' ? 'Baiki Sekarang' : 'Benarkan'}
-              </button>
-            </div>
-          </div>
-        ),
-        { duration: Infinity, id: 'push-permission-prompt', style: { background: 'transparent', padding: 0, boxShadow: 'none' } }
-      );
-    }, 4000);
-    return () => clearTimeout(timer);
-  }, [isSupported, permission, isSubscribed, requestPermission]);
 
   const fetchSettings = useCallback(async () => {
     const controller = new AbortController();
