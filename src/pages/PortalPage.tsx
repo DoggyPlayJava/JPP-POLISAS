@@ -343,43 +343,68 @@ export function PortalPage() {
 
       toast.custom(
         (t) => (
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-3">
-              <div className="text-2xl">🔔</div>
+          <div
+            style={{
+              background: 'var(--background, #1e293b)',
+              color: 'var(--foreground, #f1f5f9)',
+              border: '1px solid var(--border, rgba(255,255,255,0.12))',
+              borderRadius: '12px',
+              padding: '14px 16px',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
+              minWidth: '300px',
+              maxWidth: '360px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              opacity: t.visible ? 1 : 0,
+              transition: 'opacity 0.3s ease',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+              <div style={{ fontSize: '22px', lineHeight: 1, flexShrink: 0, marginTop: '2px' }}>🔔</div>
               <div>
-                <p className="font-black text-sm">
+                <p style={{ fontWeight: 800, fontSize: '14px', margin: 0, lineHeight: 1.3 }}>
                   {permission === 'granted' ? 'Baiki Notifikasi Push' : 'Hidupkan Notifikasi Push'}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p style={{ fontSize: '12px', margin: '4px 0 0', opacity: 0.65, lineHeight: 1.4 }}>
                   {permission === 'granted'
                     ? 'Sambungan notifikasi peranti ini terputus. Klik baiki untuk aktifkan semula.'
                     : 'Supaya anda sentiasa tahu bila ada kemas kini penting dari JPP.'}
                 </p>
               </div>
             </div>
-            <div className="flex gap-2 justify-end">
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => dismiss(t.id)}
-                className="appearance-none px-3 py-1.5 text-xs font-semibold rounded-lg !bg-slate-100 dark:!bg-slate-800 !text-slate-700 dark:!text-slate-300 hover:opacity-80 transition"
+                style={{
+                  appearance: 'none', border: '1px solid rgba(148,163,184,0.3)',
+                  background: 'rgba(148,163,184,0.15)', color: 'inherit',
+                  padding: '6px 12px', borderRadius: '8px', fontSize: '12px',
+                  fontWeight: 600, cursor: 'pointer',
+                }}
               >Nanti</button>
               <button
                 onClick={async () => {
                   dismiss(t.id);
                   const result = await requestPermission();
                   if (result === 'granted') {
-                    // Reset cooldown supaya tak muncul lagi (subscription berjaya)
                     localStorage.removeItem('push_prompt_dismissed_at');
                     toast.success('Notifikasi diaktifkan! ✅');
                   }
                 }}
-                className="appearance-none px-3 py-1.5 text-xs font-semibold rounded-lg !bg-blue-600 !text-white hover:opacity-80 transition shadow-sm border-0"
+                style={{
+                  appearance: 'none', border: 'none',
+                  background: '#2563eb', color: '#ffffff',
+                  padding: '6px 14px', borderRadius: '8px', fontSize: '12px',
+                  fontWeight: 700, cursor: 'pointer',
+                }}
               >
                 {permission === 'granted' ? 'Baiki Sekarang' : 'Benarkan'}
               </button>
             </div>
           </div>
         ),
-        { duration: Infinity, id: 'push-permission-prompt', className: 'min-w-[300px] !p-4' }
+        { duration: Infinity, id: 'push-permission-prompt', style: { background: 'transparent', padding: 0, boxShadow: 'none' } }
       );
     }, 4000);
     return () => clearTimeout(timer);
