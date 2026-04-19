@@ -316,18 +316,31 @@ export function PortalPage() {
 
   // Mesej popup notifikasi push universal
   const { isSupported, permission, isSubscribed, requestPermission } = usePushNotifications();
+  const pushPromptShownRef = useRef(false); // Hanya tunjuk sekali per session
 
   useEffect(() => {
-    // We want to prompt if permission is 'default' OR if permission is 'granted' but they have NO subscription synced.
     if (!isSupported) return;
     if (permission === 'denied') return;
-    if (permission === 'granted' && isSubscribed === true) return; // All good
-    if (isSubscribed === null) return; // Still loading
+    if (permission === 'granted' && isSubscribed === true) return; // Semua OK, tak perlu prompt
+    if (isSubscribed === null) return; // Masih loading
+    if (pushPromptShownRef.current) return; // Dah tunjuk dalam session ini
 
-    const dismissed = localStorage.getItem('push_prompt_dismissed');
-    if (dismissed && permission !== 'granted') return; // Only respect dismiss if they haven't explicitly granted OS permission.
+    // Semak cooldown 7 hari (selepas user tekan Nanti atau Baiki)
+    const dismissedAt = localStorage.getItem('push_prompt_dismissed_at');
+    if (dismissedAt) {
+      const daysSince = (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60 * 24);
+      if (daysSince < 7) return; // Jangan tunjuk dalam 7 hari
+    }
 
     const timer = setTimeout(() => {
+      if (pushPromptShownRef.current) return; // Double-check
+      pushPromptShownRef.current = true;
+
+      const dismiss = (toastId: string) => {
+        localStorage.setItem('push_prompt_dismissed_at', Date.now().toString());
+        toast.dismiss(toastId);
+      };
+
       toast.custom(
         (t) => (
           <div className="flex flex-col gap-3">
@@ -338,23 +351,26 @@ export function PortalPage() {
                   {permission === 'granted' ? 'Baiki Notifikasi Push' : 'Hidupkan Notifikasi Push'}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {permission === 'granted' 
-                    ? 'Sambungan notifikasi peranti ini telah terputus. Sila klik baiki.'
+                  {permission === 'granted'
+                    ? 'Sambungan notifikasi peranti ini terputus. Klik baiki untuk aktifkan semula.'
                     : 'Supaya anda sentiasa tahu bila ada kemas kini penting dari JPP.'}
                 </p>
               </div>
             </div>
             <div className="flex gap-2 justify-end">
               <button
-                onClick={() => { localStorage.setItem('push_prompt_dismissed', '1'); toast.dismiss(t.id); }}
+                onClick={() => dismiss(t.id)}
                 className="appearance-none px-3 py-1.5 text-xs font-semibold rounded-lg !bg-slate-100 dark:!bg-slate-800 !text-slate-700 dark:!text-slate-300 hover:opacity-80 transition"
               >Nanti</button>
               <button
                 onClick={async () => {
-                  toast.dismiss(t.id);
+                  dismiss(t.id);
                   const result = await requestPermission();
-                  if (result === 'granted') toast.success('Notifikasi diaktifkan! ✅');
-                  else { localStorage.setItem('push_prompt_dismissed', '1'); }
+                  if (result === 'granted') {
+                    // Reset cooldown supaya tak muncul lagi (subscription berjaya)
+                    localStorage.removeItem('push_prompt_dismissed_at');
+                    toast.success('Notifikasi diaktifkan! ✅');
+                  }
                 }}
                 className="appearance-none px-3 py-1.5 text-xs font-semibold rounded-lg !bg-blue-600 !text-white hover:opacity-80 transition shadow-sm border-0"
               >
@@ -365,7 +381,7 @@ export function PortalPage() {
         ),
         { duration: Infinity, id: 'push-permission-prompt', className: 'min-w-[300px] !p-4' }
       );
-    }, 4000); // Popup dalam 4 saat di Portal Utama
+    }, 4000);
     return () => clearTimeout(timer);
   }, [isSupported, permission, isSubscribed, requestPermission]);
 
