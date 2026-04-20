@@ -114,7 +114,8 @@ const styles = StyleSheet.create({
   signLine: { borderBottomWidth: 1, borderBottomColor: '#000', marginBottom: 5 },
   signText: { fontSize: 11, fontWeight: 'bold' },
   signRole: { fontSize: 10 },
-  signRoleBold: { fontSize: 10, fontWeight: 'bold' }
+  // signRoleBold sudah tidak bold — jawatan (MT/YDP/Exco) papar dalam saiz 10pt biasa
+  signRoleBold: { fontSize: 10 }
 });
 
 interface LaporanPDFProps {
@@ -142,9 +143,9 @@ interface LaporanPDFProps {
   polytechnicName?: string;
 }
 
-// ─── Helper: lebar GARISAN (ikut nama sahaja — 11pt Bold Helvetica ≈ 7.8pt/char) ─
+// ─── Helper: lebar GARISAN (ikut nama sahaja — 11pt Bold Helvetica ≈ 9.2pt/char) ─
 const calcLineWidth = (name: string): number =>
-  Math.min(380, Math.max(180, Math.round(name.length * 7.8 + 15)));
+  Math.min(400, Math.max(200, Math.round(name.length * 9.2 + 10)));
 
 // ─── Helper: lebar KOTAK (ikut teks TERPANJANG — pastikan semua baris muat) ────
 // Role/unit texts adalah 10pt Regular ≈ 7pt/char; nama 11pt Bold ≈ 7.8pt/char
