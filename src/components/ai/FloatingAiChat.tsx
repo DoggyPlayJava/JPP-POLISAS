@@ -452,9 +452,19 @@ export function FloatingAiChat() {
   // Derived loading states for UI
   const isBusy = isChatLoading || isActionLoading;
 
+  // ── Derived Route-Aware Positioning ──────────────────────────────────────
+  const isPolymart = location.pathname.startsWith('/polymart');
+  const isKebajikanChat = location.pathname.match(/^\/kebajikan\/(tiket|aduan)\/[^/]+/);
+  
+  const bottomMarginClass = isKebajikanChat 
+    ? 'mb-24'        // Avoid overlapping the sticky input bar on all devices (96px extra lift)
+    : isPolymart 
+    ? 'max-md:mb-16' // Avoid overlapping PolyMart's mobile-only bottom nav (64px lift)
+    : '';
+
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="fixed bottom-6 right-4 md:right-6 z-[120]">
+    <div className={`fixed bottom-6 right-4 md:right-6 z-[120] transition-all duration-300 ease-in-out ${bottomMarginClass}`}>
       {/* ── FAB trigger ── */}
       <motion.button
         id="nexus-chat-fab"

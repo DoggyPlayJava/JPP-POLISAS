@@ -221,9 +221,6 @@ export function KebajikanSubmitPage() {
           <HeartHandshake className="w-4 h-4" style={{ color: TEAL }} />
           <span className="font-black text-xs uppercase tracking-widest text-white/80">E-Kebajikan</span>
         </div>
-        <Link to="/kebajikan/aduan-saya" className="text-xs font-black text-white/40 hover:text-white/80 transition-colors uppercase tracking-widest flex items-center gap-1">
-          Aduan Saya <ArrowUpRight className="w-3 h-3" />
-        </Link>
       </div>
 
       <AnimatePresence mode="wait">
@@ -280,7 +277,16 @@ export function KebajikanSubmitPage() {
             >
               Buat Aduan Baru <ChevronRight className="w-5 h-5 ml-1.5" />
             </Button>
-            <p className="text-center text-[10px] text-white/20 mt-3">Log masuk diperlukan untuk kemukakan aduan</p>
+            
+            <Link to="/kebajikan/aduan-saya" className="block w-full mt-3">
+              <button
+                className="relative w-full h-14 text-sm font-black uppercase tracking-widest rounded-2xl border border-white/20 text-white hover:bg-white/5 transition-all flex items-center justify-center outline-none"
+              >
+                Semak Status Aduan Saya <ArrowUpRight className="w-4 h-4 ml-1.5" />
+              </button>
+            </Link>
+
+            <p className="text-center text-[10px] text-white/20 mt-4">Log masuk diperlukan untuk kemukakan aduan</p>
           </motion.div>
         )}
 

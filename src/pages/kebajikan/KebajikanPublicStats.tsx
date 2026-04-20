@@ -106,7 +106,7 @@ export function KebajikanStatsPage() {
           </motion.div>
           <motion.h1
             initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}
-            className="text-4xl md:text-6xl font-black text-slate-50 mb-6 leading-tight tracking-tight"
+            className="text-3xl sm:text-4xl md:text-6xl font-black text-slate-50 mb-6 leading-tight tracking-tight"
           >
             Kami Sentiasa{' '}
             <span style={{ color: TEAL, textShadow: `0 0 40px rgba(45,212,191,0.4)` }}>Membantu Anda</span>
@@ -156,7 +156,7 @@ export function KebajikanStatsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {statCards.map((card, i) => (
             <motion.div
               key={card.label}
@@ -208,21 +208,23 @@ export function KebajikanStatsPage() {
             <h2 className="font-black text-lg text-slate-100 mb-1">Pecahan Kategori</h2>
             <p className="text-xs text-slate-500 mb-8 font-medium">Peratus setiap kategori aduan keseluruhan</p>
             {categories.length > 0 ? (
-              <div className="flex items-center gap-4">
-                <ResponsiveContainer width="55%" height={160}>
-                  <PieChart>
-                    <Pie data={categories} dataKey="total" innerRadius={45} outerRadius={70} paddingAngle={3} startAngle={90} endAngle={-270}>
-                      {categories.map((cat) => (
-                        <Cell key={cat.category} fill={CATEGORY_COLORS[cat.category] ?? '#666'} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 11 }}
-                      formatter={(v: any, n: any, props: any) => [v, KEBAJIKAN_CATEGORY_LABELS[props.payload.category as keyof typeof KEBAJIKAN_CATEGORY_LABELS] ?? props.payload.category]}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="flex-1 space-y-3">
+              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full">
+                <div className="w-full sm:w-[55%] h-[160px] flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={categories} dataKey="total" cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} startAngle={90} endAngle={-270}>
+                        {categories.map((cat) => (
+                          <Cell key={cat.category} fill={CATEGORY_COLORS[cat.category] ?? '#666'} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, fontSize: 11 }}
+                        formatter={(v: any, n: any, props: any) => [v, KEBAJIKAN_CATEGORY_LABELS[props.payload.category as keyof typeof KEBAJIKAN_CATEGORY_LABELS] ?? props.payload.category]}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex-1 space-y-3 w-full sm:w-auto">
                   {categories.slice(0, 5).map((cat) => (
                     <div key={cat.category} className="flex items-center gap-3">
                       <div className="w-3 h-3 rounded-full flex-shrink-0 shadow-inner" style={{ background: CATEGORY_COLORS[cat.category] ?? '#666' }} />

@@ -18,7 +18,7 @@ export function OnboardingPage() {
         <div className="w-20 h-20 rounded-[2rem] bg-primary flex items-center justify-center shadow-2xl overflow-hidden mx-auto">
           <img src="/jpp-logo.png" alt="JPP" className="w-14 h-14 object-contain" />
         </div>
-        <h1 className="text-3xl font-black tracking-tighter text-primary">Selamat Datang ke e-KPP</h1>
+        <h1 className="text-3xl font-black tracking-tighter text-primary">Selamat Datang ke Portal JPP POLISAS</h1>
         <p className="text-muted-foreground font-medium">
           Profil anda sedang dikemaskini. Sila tunggu sebentar atau hubungi pentadbir JPP.
         </p>

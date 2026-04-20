@@ -33,11 +33,7 @@ registerRoute(
   })
 );
 
-// API/Supabase — StaleWhileRevalidate
-registerRoute(
-  ({ url }) => url.hostname.includes('supabase.co'),
-  new StaleWhileRevalidate({ cacheName: 'supabase-cache' })
-);
+// API/Supabase requests should NEVER be cached to avoid auth & stale data hangs.
 
 // ── Push Notification handler ─────────────────────────────────────────────────
 self.addEventListener('push', (event: PushEvent) => {

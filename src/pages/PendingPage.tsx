@@ -24,7 +24,7 @@ export function PendingPage() {
             <div className="space-y-2">
               <h1 className="text-2xl font-black tracking-tight">Menunggu Kelulusan</h1>
               <p className="text-muted-foreground font-medium text-sm leading-relaxed">
-                Akaun anda telah berjaya didaftarkan, tetapi ia <strong>memerlukan pengesahan</strong> daripada pihak pentadbir sebelum anda boleh mengakses sistem e-KPP.
+                Akaun anda telah berjaya didaftarkan, tetapi ia <strong>memerlukan pengesahan</strong> daripada pihak pentadbir sebelum anda boleh mengakses portal JPP POLISAS.
               </p>
             </div>
 
