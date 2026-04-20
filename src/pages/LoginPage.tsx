@@ -353,7 +353,7 @@ export function LoginPage() {
                           <button type="button" onClick={() => setRegisterMode('leader')}
                             className={cn("flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
                               registerMode === 'leader' ? "bg-card shadow-md text-foreground" : "text-muted-foreground hover:text-foreground")}>
-                            <Crown className="w-3.5 h-3.5" /> Pemimpin Kelab
+                            <Crown className="w-3.5 h-3.5" /> AJK / Presiden
                           </button>
                         </div>
 
@@ -389,7 +389,7 @@ export function LoginPage() {
                       {registerMode === 'leader' && (
                         <motion.div key="leader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
                           <div className="p-3 rounded-xl bg-amber-500/8 border border-amber-500/20 text-[11px] text-amber-700 font-medium leading-relaxed">
-                            👑 Anda akan dimasukkan ke Kelab Akademik anda dahulu. Permohonan jawatan kepimpinan bagi kelab yang dipilih di bawah tertakluk pada kelulusan Penasihat kelab.
+                            👑 Anda akan dimasukkan ke Kelab Akademik anda dahulu. Permohonan jawatan AJK/Presiden bagi kelab yang dipilih di bawah tertakluk pada kelulusan Penasihat kelab.
                           </div>
                           <div className="space-y-1.5">
                             <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Peranan</Label>

@@ -247,7 +247,7 @@ export function AkademikDashboard() {
         meritAkademik,
         meritQr,
         meritKelab,
-        latestHpnm: cgpaRes.data?.[0]?.hpnm ?? null,
+        latestHpnm: cgpaRes.data?.[0]?.hpnm != null ? parseFloat(cgpaRes.data[0].hpnm) : null,
       });
       setRecentPencapaian(pencs.slice(0, 4));
     } finally {

@@ -327,7 +327,19 @@ export function AkademikPencapaian() {
 
     // ── Reverse merit if the pencapaian was DISAHKAN ───────────────────────
     if (pencRow && pencRow.status === 'DISAHKAN') {
-      const meritToReverse = pencRow.merit_override ?? pencRow.merit_auto ?? 0;
+      // Get the actual points awarded from merit_transactions (source of truth)
+      const { data: txRow } = await supabase
+        .from('merit_transactions')
+        .select('points')
+        .eq('reference_id', id)
+        .eq('source', 'AKADEMIK')
+        .gt('points', 0)   // only the original credit, not prior reversals
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      const meritToReverse = txRow?.points ?? pencRow.merit_override ?? pencRow.merit_auto ?? 0;
+
       if (meritToReverse > 0) {
         // Insert a negative reversal transaction
         await supabase.from('merit_transactions').insert({

@@ -72,8 +72,10 @@ export function AkademikLeaderboard() {
         // De-dup — take highest hpnm per user
         const seen = new Map<string, any>();
         for (const r of (data || [])) {
-          if (!seen.has(r.user_id) || seen.get(r.user_id).hpnm < r.hpnm) {
-            seen.set(r.user_id, { ...r.profiles as any, hpnm: r.hpnm });
+          const hpnmVal = r.hpnm !== null && r.hpnm !== undefined ? parseFloat(r.hpnm) : null;
+          const prev = seen.get(r.user_id);
+          if (!prev || (hpnmVal !== null && (prev.hpnm === null || hpnmVal > prev.hpnm))) {
+            seen.set(r.user_id, { ...r.profiles as any, hpnm: hpnmVal });
           }
         }
         const sorted = [...seen.values()].sort((a, b) => (b.hpnm || 0) - (a.hpnm || 0));

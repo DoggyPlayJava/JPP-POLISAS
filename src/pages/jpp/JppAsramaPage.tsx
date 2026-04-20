@@ -111,7 +111,7 @@ export function JppAsramaPage() {
   async function fetchAll() {
     setLoading(true);
     try {
-      const [settingsRes, profilesRes, cgpaRes, pencapaianRes, qrRes, recsRes] =
+      const [settingsRes, profilesRes, cgpaRes, recsRes] =
         await Promise.all([
           supabase.from('system_settings')
             .select('key, value')
@@ -139,10 +139,13 @@ export function JppAsramaPage() {
       const cfg = getIntakeMonths(settingsMap);
       setIntakeConfig(cfg);
 
-      // Build HPNM map: user_id → latest hpnm
+      // Build HPNM map: user_id → latest hpnm (parseFloat because Supabase returns numeric as string)
       const hpnmMap: Record<string, number | null> = {};
       for (const rec of (cgpaRes.data ?? []) as any[]) {
-        if (!(rec.user_id in hpnmMap)) hpnmMap[rec.user_id] = rec.hpnm;
+        if (!(rec.user_id in hpnmMap)) {
+          const val = rec.hpnm !== null && rec.hpnm !== undefined ? parseFloat(rec.hpnm) : null;
+          hpnmMap[rec.user_id] = (val !== null && !isNaN(val)) ? val : null;
+        }
       }
 
       // Build recommendations map

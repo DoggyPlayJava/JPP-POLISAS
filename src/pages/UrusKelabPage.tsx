@@ -284,7 +284,7 @@ export function UrusKelabPage() {
                     <div className="p-4 bg-primary/10 border border-primary/20 rounded-2xl flex items-start gap-4">
                         <ShieldCheck className="w-6 h-6 text-primary shrink-0" />
                         <p className="text-[11px] font-medium text-primary/80 leading-relaxed uppercase tracking-widest mt-0.5">
-                            Senarai jawatankuasa di bawah <strong>disusun secara automatik</strong> berdasarkan peranan "MT Kelab" atau "Presiden" yang dilantik melalui modul <span className="font-black text-primary border border-primary/20 rounded px-1.5 py-0.5 bg-primary/10 cursor-pointer" onClick={() => window.location.href='/ahli'}>Pengurusan Ahli</span>. Anda hanya perlu namakan jawatan mereka dan simpan.
+                            Senarai jawatankuasa di bawah <strong>disusun secara automatik</strong> berdasarkan peranan "MT / Exco (Ada Akses)" atau "Presiden" yang dilantik melalui modul <span className="font-black text-primary border border-primary/20 rounded px-1.5 py-0.5 bg-primary/10 cursor-pointer" onClick={() => window.location.href='/ahli'}>Pengurusan Ahli</span>. Anda hanya perlu kategorikan mereka dan namakan jawatan.
                         </p>
                     </div>
 

@@ -244,7 +244,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   JPP:             'Ahli JPP',
   CLUB_ADVISOR:    'Penasihat Kelab',
   CLUB_PRESIDENT:  'Presiden',
-  CLUB_MT:         'MT Kelab',
+  CLUB_MT:         'MT / Exco (Ada Akses)',
   CLUB_MEMBER:     'Ahli',
   STAFF:           'Staf Umum',
 };
