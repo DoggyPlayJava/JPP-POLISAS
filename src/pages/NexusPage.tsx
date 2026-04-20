@@ -1137,7 +1137,7 @@ export function NexusPage() {
                       <div className="space-y-2">
                         <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400">Nota / Perkara Dibincangkan</Label>
                         <Textarea
-                          placeholder="Tampal nota kasar mesyuarat dari WhatsApp/catatan:\n- bincang sistem digital e-KPP\n- YDP terang faedah sistem kepada kelab\n- persetujuan semua untuk lancar semester hadapan"
+                          placeholder="Tampal nota kasar mesyuarat dari WhatsApp/catatan:\n- bincang sistem digital Portal JPP\n- YDP terang faedah sistem kepada kelab\n- persetujuan semua untuk lancar semester hadapan"
                           className="min-h-[120px] resize-none bg-slate-50 dark:bg-[#0A0A0B]/50 border-slate-200 dark:border-border/60 focus:ring-2 focus:ring-emerald-500/20 text-sm"
                           value={notaMesyuarat}
                           onChange={(e) => setNotaMesyuarat(e.target.value)}

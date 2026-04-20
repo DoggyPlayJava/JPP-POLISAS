@@ -176,7 +176,7 @@ export function SettingsPage() {
       const { error } = await supabase.functions.invoke('send-email', {
         body: {
           to: user.email,
-          subject: "Kod Pengesahan e-KPP",
+          subject: "Kod Pengesahan Portal JPP",
           html: `<div style="font-family: sans-serif; padding: 20px; color: #1e293b; max-width: 500px; border: 1px solid #e2e8f0; border-radius: 8px;">
             <h2 style="color: #0f172a; margin-top: 0;">Pengesahan Penukaran Nombor Telefon</h2>
             <p>Sistem merekodkan percubaan untuk menukar nombor telefon di akaun anda.</p>
@@ -487,7 +487,7 @@ export function SettingsPage() {
               <div className="p-6 rounded-[2.5rem] bg-rose-500/10 border border-rose-500/20 flex items-center justify-between">
                 <div className="space-y-1">
                   <p className="text-xs font-black text-rose-500 uppercase tracking-widest">Zon Bahaya</p>
-                  <p className="text-[10px] text-muted-foreground font-medium">Alih keluar akaun anda secara kekal daripada sistem e-KPP.</p>
+                  <p className="text-[10px] text-muted-foreground font-medium">Alih keluar akaun anda secara kekal daripada sistem Portal JPP.</p>
                 </div>
                 <Button variant="ghost" className="h-11 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 transition-all">Deaktif Akaun</Button>
               </div>
@@ -593,7 +593,7 @@ export function SettingsPage() {
               <Card className="premium-card bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl border-slate-200/50 dark:border-white/10 overflow-hidden shadow-2xl">
                 <CardHeader className="p-10 pb-8 border-b border-border/30">
                   <CardTitle className="text-2xl font-black tracking-tight uppercase">Bantuan & Isu Sistem</CardTitle>
-                  <CardDescription>Pusat sokongan rasmi e-KPP bagi menyelesaikan masalah dan mengumpul cadangan pengguna.</CardDescription>
+                  <CardDescription>Pusat sokongan rasmi Portal JPP bagi menyelesaikan masalah dan mengumpul cadangan pengguna.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-10 space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -616,7 +616,7 @@ export function SettingsPage() {
                         <h4 className="text-lg font-black text-primary">Lapor Isu & Cadangan</h4>
                         <p className="text-sm font-medium text-muted-foreground">Emelkan isu teknikal, ralat, atau idea penambahbaikan anda.</p>
                       </div>
-                      <Button onClick={() => window.location.href = 'mailto:support.jpp@polisas.edu.my?subject=Maklum%20Balas%20e-KPP'} className="h-12 px-8 rounded-xl font-black text-[11px] uppercase tracking-widest text-primary bg-primary/20 hover:bg-primary/30 w-full md:w-auto relative z-10 shadow-none transition-all hover:scale-105 active:scale-95">
+                      <Button onClick={() => window.location.href = 'mailto:support.jpp@polisas.edu.my?subject=Maklum%20Balas%20Portal%20JPP'} className="h-12 px-8 rounded-xl font-black text-[11px] uppercase tracking-widest text-primary bg-primary/20 hover:bg-primary/30 w-full md:w-auto relative z-10 shadow-none transition-all hover:scale-105 active:scale-95">
                         Hantar Emel
                       </Button>
                     </div>

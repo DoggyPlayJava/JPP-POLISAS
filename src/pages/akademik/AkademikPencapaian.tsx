@@ -300,10 +300,19 @@ export function AkademikPencapaian() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Padam pencapaian ini? Tindakan ini tidak boleh dibatalkan.')) return;
+
+    // Fetch the pencapaian first so we can reverse merit if it was DISAHKAN
+    const { data: pencRow } = await supabase
+      .from('akademik_pencapaian')
+      .select('id, status, merit_override, merit_auto, nama_pencapaian, user_id')
+      .eq('id', id)
+      .single();
+
     const { error, count } = await supabase
       .from('akademik_pencapaian')
       .delete({ count: 'exact' })
       .eq('id', id);
+
     if (error) {
       toast.error('Gagal padam: ' + error.message);
       return;
@@ -315,6 +324,30 @@ export function AkademikPencapaian() {
       toast.error('Tidak dapat dipadam. Jika pencapaian ini telah disahkan, sila mohon buka kunci dahulu atau semak tempoh buka kunci sudah tamat.');
       return;
     }
+
+    // ── Reverse merit if the pencapaian was DISAHKAN ───────────────────────
+    if (pencRow && pencRow.status === 'DISAHKAN') {
+      const meritToReverse = pencRow.merit_override ?? pencRow.merit_auto ?? 0;
+      if (meritToReverse > 0) {
+        // Insert a negative reversal transaction
+        await supabase.from('merit_transactions').insert({
+          user_id:      pencRow.user_id,
+          club_id:      null,
+          points:       -meritToReverse,
+          reason:       `Pemadaman Pencapaian: ${pencRow.nama_pencapaian}`,
+          actor_name:   'Sistem',
+          source:       'AKADEMIK',
+          reference_id: id,
+        });
+        // Decrement profile merit counters
+        await supabase.rpc('increment_merit_by_source', {
+          p_uid:   pencRow.user_id,
+          p_delta: -meritToReverse,
+          p_src:   'AKADEMIK',
+        });
+      }
+    }
+
     toast.success('Pencapaian berjaya dipadam.');
     load();
   };

@@ -25,13 +25,13 @@ export type ExcoModule = {
 export const EXCO_MODULES: ExcoModule[] = [
   {
     id: 'ekpp',
-    name: 'e-KPP',
+    name: 'Sistem Kelab',
     fullName: 'Exco Kelab, Persatuan & Perpaduan',
     tagline: 'Kelab · Persatuan · Perpaduan',
     description: 'Pengurusan kelab, aktiviti, laporan bulanan & kertas kerja secara digital.',
     defaultColor: '#F87171',  // Merah terang untuk kontras dalam dark-mode (Red-400)
     icon: 'Landmark',
-    basePath: '/dashboard',   // Route e-KPP KEKAL tanpa prefix (konvensyen sedia ada)
+    basePath: '/dashboard',   // Route Sistem Kelab KEKAL tanpa prefix (konvensyen sedia ada)
     isActive: true,
   },
   {

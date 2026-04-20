@@ -29,7 +29,7 @@ function getNotifLink(notif: AppNotification): string | null {
 // ─── Module badge config ───────────────────────────────────────────────────────
 const MODULE_CONFIG: Record<NotificationModule, { label: string; color: string; bg: string; dot: string }> = {
   KEBAJIKAN:    { label: 'E-Kebajikan',    color: '#2DD4BF', bg: 'rgba(45,212,191,0.12)', dot: '#2DD4BF' },
-  EKPP:         { label: 'E-KPP',          color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', dot: '#f59e0b' },
+  EKPP:         { label: 'Portal Kelab',          color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', dot: '#f59e0b' },
   AKADEMIK:     { label: 'E-Akademik',     color: '#6366f1', bg: 'rgba(99,102,241,0.12)', dot: '#6366f1' },
   KEUSAHAWANAN: { label: 'Keusahawanan',   color: '#f97316', bg: 'rgba(249,115,22,0.12)', dot: '#f97316' },
   JPP:          { label: 'JPP HQ',         color: '#8b1a1a', bg: 'rgba(139,26,26,0.12)',  dot: '#ef4444' },

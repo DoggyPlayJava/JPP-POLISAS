@@ -15,7 +15,7 @@ const MAROON = '#831010';
 const MODULES = [
   {
     id: 'ekpp',
-    title: 'e-KPP',
+    title: 'e-Aktiviti',
     subtitle: 'Nadi Organisasi',
     desc: 'Sistem tadbir urus kelab dan persatuan yang telus. Automasi kertas kerja dan pelaporan bulanan secara digital.',
     icon: Shield,
@@ -291,7 +291,7 @@ const TickerTape = () => (
           </div>
           <div className="flex items-center gap-2 md:gap-3">
             <Shield className="w-3 h-3 md:w-4 md:h-4 text-maroon fill-maroon/20" />
-            <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white/50">e-KPP: Kertas Kerja DSK Lulus</span>
+            <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white/50">PORTAL JPP: Kertas Kerja DSK Lulus</span>
           </div>
           <div className="flex items-center gap-3">
             <span className="w-1 h-1 rounded-full bg-white/20" />
@@ -736,7 +736,7 @@ const Footer = () => {
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-12 md:gap-24 w-full md:w-auto">
           {[
-            { title: 'Aplikasi', links: [{ label: 'Portal e-KPP', to: '/portal' }, { label: 'POS e-Keusahawanan', to: '/keusahawanan' }, { label: 'Scanner e-Akademik', to: '/akademik' }] },
+            { title: 'Aplikasi', links: [{ label: 'Portal Kelab', to: '/portal' }, { label: 'POS e-Keusahawanan', to: '/keusahawanan' }, { label: 'Scanner e-Akademik', to: '/akademik' }] },
             { title: 'Rujukan', links: [{ label: 'Manual Standard', to: '#' }, { label: 'Garis Panduan', to: '#' }, { label: 'Dasar Integriti', to: '#' }] },
             { title: 'Sokongan', links: [{ label: 'Pusat Bantuan', to: '#' }, { label: 'Hubungi Kami', to: '#' }] }
           ].map((g, i) => (

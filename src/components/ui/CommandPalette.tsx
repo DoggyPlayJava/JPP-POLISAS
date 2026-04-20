@@ -144,7 +144,7 @@ export function CommandPalette({ open: propOpen, onOpenChange }: CommandPaletteP
               
               <div className="flex items-center gap-2 text-primary">
                 <CommandIcon className="h-3 w-3" />
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-60">e-KPP Search</span>
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Portal Search</span>
               </div>
             </div>
           </motion.div>

@@ -536,7 +536,7 @@ export function KppUnitDashboard() {
           >
             <div className="flex items-center gap-3">
               <BookOpen className="w-4 h-4 text-muted-foreground/40" />
-              <span className="text-xs font-black text-muted-foreground/60 group-hover:text-foreground transition-colors">Buka Modul e-KPP Penuh</span>
+              <span className="text-xs font-black text-muted-foreground/60 group-hover:text-foreground transition-colors">Buka Modul Pengurusan Kelab</span>
             </div>
             <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-muted-foreground transition-colors" />
           </button>
@@ -778,8 +778,8 @@ export function KppUnitDashboard() {
                   <SettingsIcon className="w-6 h-6" />
               </div>
               <div>
-                  <h1 className="text-xl font-black text-white leading-tight">Tetapan KPP & e-KPP</h1>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mt-1">Konfigurasi fungsi e-KPP & rekod kelab</p>
+                  <h1 className="text-xl font-black text-white leading-tight">Tetapan KPP & Kelab</h1>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mt-1">Konfigurasi Pengurusan Kelab & rekod</p>
               </div>
           </div>
 

@@ -118,7 +118,7 @@ export function JppAsramaPage() {
             .in('key', ['intake_1_month', 'intake_2_month']),
 
           supabase.from('profiles')
-            .select('id, full_name, matric_no, phone, programme_code, intake_year, intake_period, semester_override')
+            .select('id, full_name, matric_no, phone, programme_code, intake_year, intake_period, semester_override, merit_akademik, merit_asrama')
             .eq('account_status', 'APPROVED')
             .not('role', 'in', '("STAFF","SUPER_ADMIN_JPP","ADMIN")')
             .not('matric_no', 'is', null)
@@ -127,13 +127,6 @@ export function JppAsramaPage() {
           supabase.from('akademik_cgpa_records')
             .select('user_id, hpnm, created_at')
             .order('created_at', { ascending: false }),
-
-          supabase.from('akademik_pencapaian')
-            .select('user_id, merit_auto, merit_override')
-            .eq('status', 'APPROVED'),
-
-          supabase.from('akademik_qr_scans')
-            .select('user_id, merit_awarded'),
 
           supabase.from('asrama_recommendations')
             .select('user_id, notes, marked_by, profiles!asrama_recommendations_marked_by_fkey(full_name)')
@@ -150,19 +143,6 @@ export function JppAsramaPage() {
       const hpnmMap: Record<string, number | null> = {};
       for (const rec of (cgpaRes.data ?? []) as any[]) {
         if (!(rec.user_id in hpnmMap)) hpnmMap[rec.user_id] = rec.hpnm;
-      }
-
-      // Build merit_pencapaian map
-      const pencapaianMap: Record<string, number> = {};
-      for (const rec of (pencapaianRes.data ?? []) as any[]) {
-        const val = rec.merit_override ?? rec.merit_auto ?? 0;
-        pencapaianMap[rec.user_id] = (pencapaianMap[rec.user_id] ?? 0) + val;
-      }
-
-      // Build merit_aktiviti (QR scan) map
-      const qrMap: Record<string, number> = {};
-      for (const rec of (qrRes.data ?? []) as any[]) {
-        qrMap[rec.user_id] = (qrMap[rec.user_id] ?? 0) + (rec.merit_awarded ?? 0);
       }
 
       // Build recommendations map
@@ -185,8 +165,8 @@ export function JppAsramaPage() {
         intake_period: p.intake_period,
         semester_override: p.semester_override,
         latest_hpnm: hpnmMap[p.id] ?? null,
-        merit_pencapaian: pencapaianMap[p.id] ?? 0,
-        merit_aktiviti: qrMap[p.id] ?? 0,
+        merit_pencapaian: p.merit_akademik ?? 0,
+        merit_aktiviti: p.merit_asrama ?? 0,
         isRecommended: p.id in recsMap,
         recommendationNote: recsMap[p.id]?.note ?? null,
         recommendedBy: recsMap[p.id]?.markedBy ?? null,

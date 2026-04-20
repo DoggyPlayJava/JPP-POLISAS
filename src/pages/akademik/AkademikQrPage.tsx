@@ -182,21 +182,26 @@ export function AkademikQrPage() {
   const load = useCallback(async () => {
     if (!profile?.id) return;
     setLoading(true);
-    const [scansRes, meritRes] = await Promise.all([
-      supabase
-        .from('akademik_qr_scans')
-        .select('*, akademik_qr_tokens(title, category, source_unit)')
-        .eq('user_id', profile.id)
-        .order('scanned_at', { ascending: false })
-        .limit(30),
-      supabase
-        .from('merit_transactions')
-        .select('points')
-        .eq('user_id', profile.id)
-        .eq('source', 'QR_SCAN'),
-    ]);
-    setScans(scansRes.data || []);
-    setTotalQrMerit((meritRes.data || []).reduce((s, m) => s + (m.points || 0), 0));
+    // Fetch QR scan history from merit_transactions — this persists even if QR tokens are deleted
+    const { data } = await supabase
+      .from('merit_transactions')
+      .select('id, points, reason, created_at')
+      .eq('user_id', profile.id)
+      .eq('source', 'QR_SCAN')
+      .order('created_at', { ascending: false })
+      .limit(30);
+
+    const txList = data || [];
+    // Map to the same shape used by the UI
+    const mapped = txList.map((tx: any) => ({
+      id: tx.id,
+      merit_awarded: tx.points,
+      scanned_at: tx.created_at,
+      // Extract activity name from reason string e.g. "QR Merit: Nama Aktiviti"
+      _title: tx.reason?.replace(/^QR Merit:\s*/i, '') || 'Aktiviti QR',
+    }));
+    setScans(mapped);
+    setTotalQrMerit(txList.reduce((s: number, m: any) => s + (m.points || 0), 0));
     setLoading(false);
   }, [profile?.id]);
 
@@ -348,7 +353,6 @@ export function AkademikQrPage() {
           ) : (
             <div className="space-y-2.5">
               {scans.map((scan, i) => {
-                const token = scan.akademik_qr_tokens;
                 const date  = scan.scanned_at
                   ? format(parseISO(scan.scanned_at), 'd MMM yyyy, h:mm a', { locale: ms })
                   : '';
@@ -368,7 +372,7 @@ export function AkademikQrPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-black text-white line-clamp-1">
-                        {token?.title || 'Aktiviti QR'}
+                        {scan._title || 'Aktiviti QR'}
                       </p>
                       <p className="text-[9px] text-white/30 font-bold mt-0.5">{date}</p>
                     </div>

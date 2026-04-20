@@ -20,7 +20,7 @@ export function ClubDetailPage() {
 
   const [loading, setLoading] = useState(true);
   const [club, setClub] = useState<any>(null);
-  const [committee, setCommittee] = useState<any[]>([]);
+  const [committee, setCommittee] = useState<any[]>([]); // Unified members
   const [activities, setActivities] = useState<any[]>([]);
   const [documents, setDocuments] = useState<any[]>([]);
 
@@ -33,48 +33,61 @@ export function ClubDetailPage() {
           supabase.from('clubs').select('*').eq('id', id).single(),
           supabase.from('club_committee').select('*').eq('club_id', id).order('order_index', { ascending: true }),
           supabase.from('club_activities').select('id, title, status, created_at').eq('club_id', id).order('created_at', { ascending: false }).limit(5),
-          supabase.from('club_reports').select('id').eq('club_id', id).limit(100),
+          supabase.from('club_reports').select('id').eq('club_id', id).limit(10),
           supabase.from('profiles').select('full_name, avatar_url, role').eq('club_id', id),
-          // ✅ FIX: Ambil dari student_club_memberships untuk role yang tepat & terkini
+          // Ambil KESEMUA ahli yang dah APPROVED (bermaksud ahli kelab yang sah)
           supabase.from('student_club_memberships')
             .select('user_id, role, profiles!inner(full_name, avatar_url)')
             .eq('club_id', id)
             .eq('account_status', 'APPROVED')
-            .eq('role', 'CLUB_PRESIDENT')
-            .maybeSingle()
         ]);
 
         if (clubRes.error) throw clubRes.error;
 
-        // 🔥 LOGIK GABUNGAN AVATAR
-        const registeredProfiles = profilesRes.data || [];
-        let mergedCommittee = (commRes.data || []).map(member => {
-          const match = registeredProfiles.find(p => p.full_name === member.full_name);
-          return { ...member, avatar_url: match?.avatar_url || null };
+        // 🔥 LOGIK GABUNGAN MEMBERSHIP SEBENAR + OVERRIDES (MT/EXCO titles)
+        const allMemberships = membershipRes.data || [];
+        const overrides = commRes.data || [];
+        
+        const unifiedMembers: any[] = [];
+
+        allMemberships.forEach((m: any) => {
+            const profileInfo = m.profiles as any;
+            const fullName = profileInfo?.full_name;
+            const avatarUrl = profileInfo?.avatar_url;
+            const override = overrides.find(o => o.full_name === fullName);
+            
+            let category = 'AHLI';
+            let position_title = 'Ahli Biasa';
+
+            // Jika dia MT/Presiden, kita cek club_committee table untuk specific tajuk, kalau takde guna default
+            if (m.role === 'CLUB_PRESIDENT' || m.role === 'CLUB_MT') {
+                category = override?.category || (m.role === 'CLUB_PRESIDENT' ? 'MT' : 'EXCO');
+                position_title = override?.position_title || (m.role === 'CLUB_PRESIDENT' ? 'Presiden Kelab' : 'Ahli Jawatankuasa');
+            }
+
+            unifiedMembers.push({
+                user_id: m.user_id,
+                full_name: fullName,
+                avatar_url: avatarUrl,
+                role: m.role,
+                category,
+                position_title
+            });
         });
 
-        // ✅ FIX: AUTO-INJECT PRESIDEN menggunakan student_club_memberships (bukan profiles.role yang stale)
-        const presidentMembership = membershipRes.data as any;
-        if (presidentMembership?.profiles) {
-           const presName = presidentMembership.profiles.full_name;
-           const presAvatar = presidentMembership.profiles.avatar_url;
-           const alreadyInCommittee = mergedCommittee.some(m => m.full_name === presName);
-           if (!alreadyInCommittee) {
-              const pseudoPresident = {
-                id: 'auto-pres-' + presName,
-                full_name: presName,
-                position_title: 'Presiden Kelab',
-                category: 'MT',
-                avatar_url: presAvatar,
-                club_id: id,
-                order_index: -1 // Supaya sentiasa di atas
-              };
-              mergedCommittee = [pseudoPresident, ...mergedCommittee];
-           }
-        }
+        // Susun: Presiden -> MT -> EXCO -> AHLI
+        unifiedMembers.sort((a, b) => {
+            if (a.role === 'CLUB_PRESIDENT' && b.role !== 'CLUB_PRESIDENT') return -1;
+            if (a.role !== 'CLUB_PRESIDENT' && b.role === 'CLUB_PRESIDENT') return 1;
+            if (a.category === 'MT' && b.category !== 'MT') return -1;
+            if (a.category !== 'MT' && b.category === 'MT') return 1;
+            if (a.category === 'EXCO' && b.category === 'AHLI') return -1;
+            if (a.category === 'AHLI' && b.category === 'EXCO') return 1;
+            return 0;
+        });
 
         setClub(clubRes.data);
-        setCommittee(mergedCommittee);
+        setCommittee(unifiedMembers);
         setActivities(actsRes.data || []);
         setDocuments(docsRes.data || []);
       } catch (error) { console.error("Ralat data:", error); } finally { setLoading(false); }
@@ -88,8 +101,10 @@ export function ClubDetailPage() {
   const isOwnClub = userClubIds?.includes(club?.id);
   const isPrimary = primaryClubId === club?.id;
   const canSeePrivateData = isSuperAdmin || isOwnClub;
+  
   const mtMembers = committee.filter(m => m.category === 'MT');
   const excoMembers = committee.filter(m => m.category === 'EXCO');
+  const ahliBiasa = committee.filter(m => m.category === 'AHLI');
 
   const handleLeaveClub = async () => {
     if (!user) return;
@@ -161,9 +176,9 @@ export function ClubDetailPage() {
 
       {/* ── QUICK STATS ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 px-4">
-        <StatItem label="Kakitangan & Ahli" val={committee.length + "+"} icon={Users} color="text-primary" />
+        <StatItem label="Jumlah Ahli Aktif" val={committee.length} icon={Users} color="text-primary" />
         <StatItem label="Aktiviti Berdaftar" val={activities.length} icon={Activity} color="text-emerald-500" />
-        <StatItem label="Laporan Rasmi" val={documents.length} icon={FileText} color="text-blue-500" />
+        <StatItem label="Barisan MT/Exco" val={mtMembers.length + excoMembers.length} icon={ShieldCheck} color="text-blue-500" />
         <StatItem label="Ranking Kelab" val="#4" icon={Award} color="text-amber-500" />
       </div>
 
@@ -172,40 +187,75 @@ export function ClubDetailPage() {
         <div className="xl:col-span-2 space-y-10">
           <section className="space-y-6">
             <h3 className="text-xs font-black uppercase tracking-[0.4em] text-muted-foreground/50 flex items-center gap-4"><Award className="w-4 h-4" /> Majlis Tertinggi</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {mtMembers.map(member => (
-                <Card key={member.id} className="bento-card border-none bg-card shadow-sm hover:translate-x-1 transition-all">
-                  <CardContent className="p-6 flex items-center gap-5">
-                    <Avatar className="w-14 h-14 rounded-2xl border-none shadow-md">
-                      <AvatarImage src={member.avatar_url} className="object-cover" />
-                      <AvatarFallback className="bg-muted text-muted-foreground font-black text-sm">{member.full_name?.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">{member.position_title}</p>
-                      <h4 className="font-black text-foreground text-base truncate">{member.full_name}</h4>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {mtMembers.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {mtMembers.map(member => (
+                    <Card key={member.user_id} className="bento-card border-none bg-card shadow-sm hover:translate-x-1 transition-all">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <Avatar className="w-14 h-14 rounded-2xl border-none shadow-md">
+                        <AvatarImage src={member.avatar_url} className="object-cover" />
+                        <AvatarFallback className="bg-muted text-muted-foreground font-black text-sm">{member.full_name?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">{member.position_title}</p>
+                        <h4 className="font-black text-foreground text-sm truncate">{member.full_name}</h4>
+                        </div>
+                    </CardContent>
+                    </Card>
+                ))}
+                </div>
+            ) : (
+                <div className="p-10 text-center border-2 border-dashed rounded-[2rem] opacity-30">
+                    <p className="text-[10px] font-black uppercase tracking-widest">Tiada rekod Majlis Tertinggi</p>
+                </div>
+            )}
           </section>
 
           <section className="space-y-6">
             <h3 className="text-xs font-black uppercase tracking-[0.4em] text-muted-foreground/50 flex items-center gap-4"><Users className="w-4 h-4" /> Barisan Exco</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
-              {excoMembers.map(member => (
-                <div key={member.id} className="p-6 rounded-[2.5rem] bg-card border border-border text-center hover:shadow-2xl transition-all flex flex-col items-center gap-4">
-                  <Avatar className="w-12 h-12 rounded-xl border-none shadow-inner">
-                    <AvatarImage src={member.avatar_url} className="object-cover" />
-                    <AvatarFallback className="bg-muted text-muted-foreground/40 font-black text-[10px]">{member.full_name?.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">{member.position_title}</p>
-                    <h4 className="font-black text-[11px] leading-tight line-clamp-2">{member.full_name}</h4>
-                  </div>
+            {excoMembers.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+                {excoMembers.map(member => (
+                    <div key={member.user_id} className="p-6 rounded-[2.5rem] bg-card border border-border text-center hover:shadow-xl transition-all flex flex-col items-center gap-4 group">
+                    <Avatar className="w-12 h-12 rounded-xl border-none shadow-inner group-hover:scale-110 transition-transform">
+                        <AvatarImage src={member.avatar_url} className="object-cover" />
+                        <AvatarFallback className="bg-muted text-muted-foreground/40 font-black text-[10px]">{member.full_name?.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">{member.position_title}</p>
+                        <h4 className="font-black text-[11px] leading-tight line-clamp-2">{member.full_name}</h4>
+                    </div>
+                    </div>
+                ))}
                 </div>
-              ))}
-            </div>
+            ) : (
+                <div className="p-10 text-center border-2 border-dashed rounded-[2rem] opacity-30">
+                    <p className="text-[10px] font-black uppercase tracking-widest">Tiada rekod Exco dikesan</p>
+                </div>
+            )}
+          </section>
+
+          <section className="space-y-6 pt-10">
+            <h3 className="text-xs font-black uppercase tracking-[0.4em] text-muted-foreground/50 flex items-center gap-4"><Users className="w-4 h-4" /> Senarai Ahli Biasa</h3>
+            {ahliBiasa.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+                {ahliBiasa.map(member => (
+                    <div key={member.user_id} className="p-4 rounded-3xl bg-muted/20 border border-border text-center hover:opacity-100 opacity-70 hover:shadow-md hover:bg-card transition-all flex flex-col items-center gap-3">
+                    <Avatar className="w-10 h-10 rounded-[1rem] border-none shadow-sm">
+                        <AvatarImage src={member.avatar_url} className="object-cover" />
+                        <AvatarFallback className="bg-muted text-muted-foreground/40 font-black text-[10px]">{member.full_name?.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="w-full">
+                        <h4 className="font-black text-[10px] leading-none line-clamp-2 uppercase tracking-tighter">{member.full_name}</h4>
+                    </div>
+                    </div>
+                ))}
+                </div>
+            ) : (
+                <div className="p-10 text-center border-2 border-dashed rounded-[2rem] opacity-30">
+                    <p className="text-[10px] font-black uppercase tracking-widest">Tiada Ahli Biasa</p>
+                </div>
+            )}
           </section>
         </div>
 
@@ -226,19 +276,19 @@ export function ClubDetailPage() {
                 <CardContent className="p-8">
                   <div className="space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-muted-foreground/10">
                     {activities.length === 0 ? (
-                      <p className="text-center py-10 text-xs font-bold text-muted-foreground uppercase tracking-widest">Tiada rekod aktiviti setakat ini.</p>
+                      <p className="text-center py-10 text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-50">Tiada rekod aktiviti setakat ini.</p>
                     ) : activities.map((act, i) => (
                       <div key={act.id} className="relative pl-10 group">
                         <div className={cn(
                           "absolute left-0 top-1 w-6 h-6 rounded-full border-4 border-background shadow-sm z-10 transition-transform group-hover:scale-125",
                           act.status === 'selesai' ? "bg-emerald-500" : act.status === 'aktif' ? "bg-primary animate-pulse" : "bg-muted-foreground/30"
                         )} />
-                        <div className="p-5 rounded-[2rem] bg-muted/20 border border-border/50 hover:bg-muted/40 transition-all">
+                        <div className="p-5 rounded-[1.5rem] bg-muted/20 border border-border/50 hover:bg-card hover:shadow-md transition-all">
                           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                             <div className="space-y-1">
-                              <h4 className="font-black text-sm tracking-tight group-hover:text-primary transition-colors">{act.title}</h4>
-                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-black uppercase tracking-widest">
-                                <Calendar size={12} className="opacity-40" />
+                              <h4 className="font-black text-xs tracking-tight group-hover:text-primary transition-colors">{act.title}</h4>
+                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-black uppercase tracking-widest opacity-60">
+                                <Calendar size={12} />
                                 {act.created_at ? format(parseISO(act.created_at), 'dd MMM yyyy') : '-'}
                               </div>
                             </div>

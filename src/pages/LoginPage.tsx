@@ -200,7 +200,7 @@ export function LoginPage() {
           <div className="text-center">
             <h1 className="text-3xl font-black tracking-tighter text-foreground">JPP Digital Portal</h1>
             <p className="text-[11px] font-black uppercase tracking-[0.35em] text-accent mt-0.5">JPP Polisas</p>
-            <p className="text-[10px] text-muted-foreground/60 mt-1 font-medium">e-KPP · e-Kebajikan · e-Keusahawanan</p>
+            <p className="text-[10px] text-muted-foreground/60 mt-1 font-medium">Portal JPP · e-Kebajikan · e-Keusahawanan</p>
           </div>
         </div>
 
