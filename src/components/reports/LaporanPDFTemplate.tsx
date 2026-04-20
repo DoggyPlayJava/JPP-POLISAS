@@ -143,20 +143,55 @@ interface LaporanPDFProps {
   polytechnicName?: string;
 }
 
-// ─── Helper: lebar GARISAN (ikut nama sahaja — 11pt Bold Helvetica ≈ 9.2pt/char) ─
-const calcLineWidth = (name: string): number =>
-  Math.min(400, Math.max(200, Math.round(name.length * 9.2 + 10)));
+// ─── Exact Helvetica-Bold glyph widths (units per 1000em) ─────────────────────
+// Sumber: Adobe/PDF spec Helvetica-Bold character widths
+// Ini SAMA dengan yang PDFKit gunakan dalam react-pdf — so lebar yang dikira = lebar yang dirender
+const HB: Record<string, number> = {
+  ' ':278, '!':333, '"':474, '#':556, '$':556, '%':889, '&':722, "'":238,
+  '(':333, ')':333, '*':389, '+':584, ',':278, '-':333, '.':278, '/':278,
+  '0':556, '1':556, '2':556, '3':556, '4':556, '5':556, '6':556, '7':556,
+  '8':556, '9':556, ':':333, ';':333, '<':584, '=':584, '>':584, '?':611,
+  'A':722, 'B':722, 'C':667, 'D':778, 'E':667, 'F':611, 'G':778, 'H':778,
+  'I':278, 'J':556, 'K':722, 'L':611, 'M':833, 'N':778, 'O':778, 'P':667,
+  'Q':778, 'R':722, 'S':667, 'T':667, 'U':778, 'V':722, 'W':1000,'X':722,
+  'Y':722, 'Z':667,
+};
+// Helvetica Regular glyph widths (untuk role/unit 10pt)
+const HR: Record<string, number> = {
+  ' ':278, '!':278, '"':355, '#':556, '$':556, '%':889, '&':667, "'":222,
+  '(':333, ')':333, '*':389, '+':584, ',':278, '-':333, '.':278, '/':278,
+  '0':556, '1':556, '2':556, '3':556, '4':556, '5':556, '6':556, '7':556,
+  '8':556, '9':556, ':':278, ';':278, '<':584, '=':584, '>':584, '?':556,
+  'A':667, 'B':667, 'C':722, 'D':722, 'E':667, 'F':611, 'G':778, 'H':722,
+  'I':278, 'J':500, 'K':667, 'L':556, 'M':833, 'N':722, 'O':778, 'P':667,
+  'Q':778, 'R':722, 'S':667, 'T':611, 'U':722, 'V':667, 'W':944, 'X':667,
+  'Y':667, 'Z':611,
+};
 
-// ─── Helper: lebar KOTAK (ikut teks TERPANJANG — pastikan semua baris muat) ────
-// Role/unit texts adalah 10pt Regular ≈ 7pt/char; nama 11pt Bold ≈ 7.8pt/char
-// Ambil yang terbesar supaya tiada teks yang terpaksa wrap
+/** Kira lebar teks yang TEPAT berdasarkan glyph metrics Helvetica */
+const textWidth = (text: string, fontSize: number, bold: boolean): number => {
+  const table = bold ? HB : HR;
+  const upper = text.toUpperCase(); // PDF renders uppercase
+  let units = 0;
+  for (const ch of upper) {
+    units += table[ch] ?? 556; // fallback to average if char not in table
+  }
+  return (units / 1000) * fontSize;
+};
+
+// ─── Helper: lebar GARISAN — tepat sama dengan lebar nama dirender (11pt Bold) ──
+const calcLineWidth = (name: string): number =>
+  Math.ceil(textWidth(name, 11, true));
+
+// ─── Helper: lebar KOTAK — pastikan semua baris (role/unit 10pt) muat tanpa wrap ──
 const calcBoxWidth = (lineWidth: number, ...otherTexts: (string | undefined | null)[]): number => {
   const maxRoleWidth = otherTexts
     .filter(Boolean)
-    .map(t => Math.round((t as string).length * 7.0 + 10))
+    .map(t => Math.ceil(textWidth(t as string, 10, false)))
     .reduce((a, b) => Math.max(a, b), 0);
-  return Math.min(480, Math.max(lineWidth, maxRoleWidth));
+  return Math.min(500, Math.max(lineWidth, maxRoleWidth));
 };
+
 
 // ─── HARDCODED YDP (JPP POLISAS 2026) ────────────────────────────────────────
 
