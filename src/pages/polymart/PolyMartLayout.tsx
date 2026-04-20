@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
   ArrowLeft, ShoppingBag, Search, Package, LayoutGrid,
-  Shield, Home, SlidersHorizontal, X,
+  Shield, Home, SlidersHorizontal, X, LogIn,
 } from 'lucide-react';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
@@ -118,7 +118,7 @@ export function PolyMartLayout() {
 
               {/* Back */}
               <button
-                onClick={() => isHome ? navigate('/portal') : navigate(-1)}
+                onClick={() => isHome ? navigate(user ? '/portal' : '/') : navigate(-1)}
                 className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/70 transition-colors shrink-0 group">
                 <ArrowLeft className="w-[18px] h-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />
               </button>
@@ -169,33 +169,46 @@ export function PolyMartLayout() {
               {/* Right icons */}
               {!showSearch && (
                 <div className="flex items-center gap-0.5 shrink-0">
-                  <button onClick={() => navigate('/polymart/pesanan-saya')}
-                    className="relative w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/60 transition-colors">
-                    <Package className="w-[18px] h-[18px] text-muted-foreground" />
-                    {myActiveOrdersCount > 0 && (
-                      <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full text-white text-[7px] font-black flex items-center justify-center"
-                        style={{ background: PM_ACCENT }}>
-                        {myActiveOrdersCount > 9 ? '9+' : myActiveOrdersCount}
-                      </span>
-                    )}
-                  </button>
+                  {user ? (
+                    <>
+                      <button onClick={() => navigate('/polymart/pesanan-saya')}
+                        className="relative w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/60 transition-colors">
+                        <Package className="w-[18px] h-[18px] text-muted-foreground" />
+                        {myActiveOrdersCount > 0 && (
+                          <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full text-white text-[7px] font-black flex items-center justify-center"
+                            style={{ background: PM_ACCENT }}>
+                            {myActiveOrdersCount > 9 ? '9+' : myActiveOrdersCount}
+                          </span>
+                        )}
+                      </button>
 
-                  {isVendor && (
-                    <button onClick={() => navigate('/polymart/vendor')}
-                      className="relative w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/60 transition-colors">
-                      <LayoutGrid className="w-[18px] h-[18px] text-muted-foreground" />
-                      {pendingVendorCount > 0 && (
-                        <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full bg-rose-500 text-white text-[7px] font-black flex items-center justify-center">
-                          {pendingVendorCount > 9 ? '9+' : pendingVendorCount}
-                        </span>
+                      {isVendor && (
+                        <button onClick={() => navigate('/polymart/vendor')}
+                          className="relative w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/60 transition-colors">
+                          <LayoutGrid className="w-[18px] h-[18px] text-muted-foreground" />
+                          {pendingVendorCount > 0 && (
+                            <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full bg-rose-500 text-white text-[7px] font-black flex items-center justify-center">
+                              {pendingVendorCount > 9 ? '9+' : pendingVendorCount}
+                            </span>
+                          )}
+                        </button>
                       )}
-                    </button>
-                  )}
 
-                  {(hasKeusahawananAccess || isSuperAdmin) && (
-                    <button onClick={() => navigate('/polymart/admin')}
-                      className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-amber-500/10 transition-colors">
-                      <Shield className="w-[17px] h-[17px]" style={{ color: PM_ACCENT }} />
+                      {(hasKeusahawananAccess || isSuperAdmin) && (
+                        <button onClick={() => navigate('/polymart/admin')}
+                          className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-amber-500/10 transition-colors">
+                          <Shield className="w-[17px] h-[17px]" style={{ color: PM_ACCENT }} />
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    /* Pelawat — tunjuk butang Log Masuk */
+                    <button
+                      onClick={() => navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`)}
+                      className="flex items-center gap-1.5 h-8 px-3 rounded-xl text-[11px] font-black text-white transition-all hover:brightness-110"
+                      style={{ background: PM_GRADIENT }}>
+                      <LogIn className="w-3.5 h-3.5" />
+                      <span>Log Masuk</span>
                     </button>
                   )}
                 </div>
@@ -234,9 +247,10 @@ export function PolyMartLayout() {
         <nav className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-background/92 backdrop-blur-xl border-t border-border/50 safe-area-pb">
           <div className="grid grid-cols-4 h-16">
             {[
-              { icon: Home,        label: 'Utama',   path: '/polymart',           active: isHome,    badge: 0 },
-              { icon: Search,      label: 'Cari',    path: '',                    active: false,     badge: 0, action: () => setShowSearch(true) },
-              { icon: Package,     label: 'Pesanan', path: '/polymart/pesanan-saya', active: isOrders, badge: myActiveOrdersCount },
+              { icon: Home,        label: 'Utama',   path: '/polymart',              active: isHome,    badge: 0 },
+              { icon: Search,      label: 'Cari',    path: '',                       active: false,     badge: 0, action: () => setShowSearch(true) },
+              { icon: Package,     label: 'Pesanan', path: '/polymart/pesanan-saya', active: isOrders,  badge: myActiveOrdersCount,
+                action: !user ? () => navigate(`/login?redirect=${encodeURIComponent('/polymart/pesanan-saya')}`) : undefined },
               { icon: isVendor ? LayoutGrid : SlidersHorizontal,
                                    label: isVendor ? 'Kedai' : 'Filter',
                                    path: isVendor ? '/polymart/vendor' : '',

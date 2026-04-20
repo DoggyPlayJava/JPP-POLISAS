@@ -201,14 +201,25 @@ function AppRoutes() {
           <Route path="/keusahawanan/pos/history"   element={<PosHistoryPage />} />
         </Route>
 
-        {/* ── PolyMart Marketplace (prefix: /polymart/) ── */}
+      </Route>
+
+      {/* ── PolyMart Marketplace — PUBLIC (browse tanpa log masuk) ── */}
+      <Route element={<PolyMartLayout />}>
+        <Route path="/polymart"            element={<PolyMartHome />} />
+        <Route path="/polymart/produk/:id" element={<PolyMartProductDetail />} />
+      </Route>
+
+      {/* ── PolyMart Marketplace — PROTECTED (perlu log masuk & approval) ── */}
+      <Route element={<ProtectedRoute />}>
         <Route element={<RequireApproval><PolyMartLayout /></RequireApproval>}>
-          <Route path="/polymart"               element={<PolyMartHome />} />
-          <Route path="/polymart/produk/:id"    element={<PolyMartProductDetail />} />
           <Route path="/polymart/pesanan-saya"  element={<PolyMartMyOrders />} />
           <Route path="/polymart/vendor"        element={<PolyMartVendorDashboard />} />
           <Route path="/polymart/admin"         element={<PolyMartAdminPanel />} />
         </Route>
+      </Route>
+
+      {/* ── e-Akademik (prefix: /akademik/) ── */}
+      <Route element={<ProtectedRoute />}>
         {/* Standalone claim page — papar tanpa layout sidebar, dicapai bila scan QR kod fizikal */}
         <Route path="/akademik/qr/:token" element={<RequireApproval><AkademikQrScan /></RequireApproval>} />
         <Route element={<RequireApproval><AkademikLayout /></RequireApproval>}>
@@ -220,7 +231,6 @@ function AppRoutes() {
           <Route path="/akademik/folder"       element={<AkademikFolderPage />} />
           <Route path="/akademik/leaderboard"  element={<AkademikLeaderboard />} />
         </Route>
-
       </Route>
 
       {/* ── E-Kebajikan — Layout Bersama Sidebar ── */}

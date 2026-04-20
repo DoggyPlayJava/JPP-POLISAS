@@ -30,6 +30,12 @@ export function PublicRoute() {
   const { isAuthenticated, isLoading, profile } = useAuth();
   if (isLoading) return <LoadingScreen />;
   if (isAuthenticated) {
+    // Semak redirect yang disimpan (dari PolyMart atau mana-mana halaman protected)
+    const savedRedirect = sessionStorage.getItem('post_login_redirect');
+    if (savedRedirect) {
+      sessionStorage.removeItem('post_login_redirect');
+      return <Navigate to={savedRedirect} replace />;
+    }
     // SUPER_ADMIN_JPP & JPP (Ahli JPP) → terus ke JPP HQ portal
     if (profile?.role === 'SUPER_ADMIN_JPP' || profile?.role === 'JPP') {
       return <Navigate to="/jpp" replace />;

@@ -4,7 +4,8 @@ import {
   ArrowRight, Shield, Zap, Users,
   BarChart3, GraduationCap,
   BrainCircuit, ArrowUpRight,
-  Menu, X, BookOpen, Activity, PlayCircle, FileText, CheckCircle
+  Menu, X, BookOpen, Activity, PlayCircle, FileText, CheckCircle,
+  ShoppingCart, HeartHandshake
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -81,6 +82,109 @@ const MODULES = [
           <span className="text-xl font-black text-white dropshadow-md">4.00</span>
           <span className="text-[8px] font-bold text-blue-400 uppercase tracking-widest">HPNM</span>
         </div>
+      </div>
+    )
+  },
+  {
+    id: 'polymart',
+    title: 'PolyMart',
+    subtitle: 'Ekosistem Niaga',
+    desc: 'Platform e-dagang berpusat khas buat siswa POLISAS. Jom support perniagaan pelajar kita!',
+    icon: ShoppingCart,
+    color: '#f59e0b',
+    path: '/polymart',
+    stats: ['Produk Tempatan', 'JPP Pay Secure'],
+    colSpan: 'lg:col-span-2',
+    preview: (
+      <div className="flex w-full h-full p-4 items-center justify-between overflow-hidden relative">
+        {/* Left Side: Main Icon */}
+        <div className="w-1/3 flex flex-col items-center justify-center relative z-10 pl-2 md:pl-6">
+          <motion.div 
+             animate={{ y: [0, -8, 0] }}
+             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+             className="w-16 h-16 md:w-20 md:h-20 rounded-2xl md:rounded-3xl bg-[#f59e0b]/20 border border-[#f59e0b]/50 flex items-center justify-center shadow-[0_0_40px_rgba(245,158,11,0.3)] mb-4"
+          >
+            <ShoppingCart className="w-8 h-8 md:w-10 md:h-10 text-[#f59e0b]" />
+          </motion.div>
+          <div className="h-2 w-16 bg-[#f59e0b]/40 rounded-full" />
+        </div>
+        
+        {/* Right Side: Animated Transactions */}
+        <div className="w-2/3 flex flex-col gap-3 relative pr-2 md:pr-8">
+           <div className="absolute left-0 top-[-20px] bottom-[-20px] w-px bg-gradient-to-b from-transparent via-[#f59e0b]/30 to-transparent" />
+           {[1, 2, 3].map((item, i) => (
+             <motion.div
+               key={i}
+               initial={{ opacity: 0, x: 20 }}
+               animate={{ opacity: 1, x: 0 }}
+               transition={{ delay: 0.2 + (i * 0.3), duration: 0.5 }}
+               className="flex items-center gap-4 p-3 rounded-xl bg-gradient-to-r from-[#f59e0b]/10 to-transparent border border-[#f59e0b]/20 ml-6"
+             >
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-[#f59e0b]/20 flex-shrink-0" />
+                <div className="flex-1 flex flex-col gap-2">
+                   <div className="h-2 w-[80%] bg-[#f59e0b]/40 rounded-full" />
+                   <div className="h-2 w-[50%] bg-[#f59e0b]/20 rounded-full" />
+                </div>
+                <div className="flex flex-col gap-1.5 items-end flex-shrink-0 hidden sm:flex">
+                   <div className="w-12 h-2 bg-[#f59e0b]/50 rounded-full" />
+                   <div className="w-8 h-1.5 bg-[#f59e0b]/30 rounded-full" />
+                </div>
+             </motion.div>
+           ))}
+        </div>
+      </div>
+    )
+  },
+  {
+    id: 'kebajikan',
+    title: 'e-Kebajikan',
+    subtitle: 'Semak & Prihatin',
+    desc: 'Sistem pelaporan dan penjejakan aduan telus. Salurkan isu-isu kebajikan mahasiswa secara terus kepada pentadbiran JPP.',
+    icon: HeartHandshake,
+    color: '#14b8a6',
+    path: '/kebajikan',
+    stats: ['Tindakan Pantas', 'Jejak Aduan'],
+    preview: (
+      <div className="flex items-center justify-center h-full relative w-full overflow-hidden">
+        {/* Pulse rings */}
+        <div className="absolute inset-0 flex items-center justify-center">
+            <motion.div
+              animate={{ scale: [1, 2.5, 1], opacity: [0.5, 0, 0.5] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute w-24 h-24 md:w-32 md:h-32 border-2 border-[#14b8a6]/40 rounded-full"
+            />
+            <motion.div
+              animate={{ scale: [1, 3.5, 1], opacity: [0.2, 0, 0.2] }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
+              className="absolute w-24 h-24 md:w-32 md:h-32 border border-[#14b8a6]/20 rounded-full"
+            />
+        </div>
+
+        <div className="relative z-10 w-20 h-20 md:w-28 md:h-28 rounded-full bg-[#14b8a6]/10 border border-[#14b8a6]/40 flex items-center justify-center shadow-[0_0_50px_rgba(20,184,166,0.3)] backdrop-blur-sm">
+          <HeartHandshake className="w-10 h-10 md:w-14 md:h-14 text-[#14b8a6]" />
+        </div>
+        
+        {/* Floating Status Nodes */}
+        <motion.div 
+           animate={{ y: [-15, 15, -15] }}
+           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+           className="absolute top-[10%] right-[5%] md:right-[15%] w-16 h-12 md:w-20 md:h-16 rounded-xl bg-[#14b8a6]/10 border border-[#14b8a6]/30 flex flex-col items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(20,184,166,0.2)] backdrop-blur-md"
+        >
+            <div className="w-6 md:w-10 h-1.5 md:h-2 rounded-full bg-[#14b8a6]/80" />
+            <div className="w-10 md:w-14 h-1 md:h-1.5 rounded-full bg-[#14b8a6]/40" />
+        </motion.div>
+
+        <motion.div 
+           animate={{ y: [15, -15, 15] }}
+           transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+           className="absolute bottom-[10%] left-[5%] w-20 h-12 md:w-24 md:h-14 rounded-xl bg-[#14b8a6]/10 border border-[#14b8a6]/30 flex items-center justify-center gap-2 px-3 shadow-[0_0_15px_rgba(20,184,166,0.2)] backdrop-blur-md"
+        >
+            <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)] flex-shrink-0" />
+            <div className="flex flex-col gap-1.5 w-full relative top-0.5">
+               <div className="w-full h-1.5 md:h-2 rounded-full bg-white/60" />
+               <div className="w-3/4 h-1 md:h-1.5 rounded-full bg-white/30" />
+            </div>
+        </motion.div>
       </div>
     )
   }
@@ -292,6 +396,20 @@ const TickerTape = () => (
           <div className="flex items-center gap-2 md:gap-3">
             <Shield className="w-3 h-3 md:w-4 md:h-4 text-maroon fill-maroon/20" />
             <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white/50">PORTAL JPP: Kertas Kerja DSK Lulus</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="w-1 h-1 rounded-full bg-white/20" />
+          </div>
+          <div className="flex items-center gap-2 md:gap-3">
+            <ShoppingCart className="w-3 h-3 md:w-4 md:h-4 text-[#f59e0b]" />
+            <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white/50">PolyMart: 120 Pesanan Baharu Hari Ini</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="w-1 h-1 rounded-full bg-white/20" />
+          </div>
+          <div className="flex items-center gap-2 md:gap-3">
+            <HeartHandshake className="w-3 h-3 md:w-4 md:h-4 text-[#14b8a6]" />
+            <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white/50">e-Kebajikan: 98% Aduan Selesai Pantas</span>
           </div>
           <div className="flex items-center gap-3">
             <span className="w-1 h-1 rounded-full bg-white/20" />
@@ -522,11 +640,11 @@ const BentoSection = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-        {MODULES.map((m, i) => (
+        {MODULES.map((m: any, i) => (
           <SpotlightCard
             key={m.id}
             onClick={() => navigate(m.path)}
-            className="p-8 md:p-10 flex flex-col h-full bg-[#0A0202] border border-white/10 hover:border-white/20 transition-colors"
+            className={cn("p-8 md:p-10 flex flex-col h-full bg-[#0A0202] border border-white/10 hover:border-white/20 transition-colors", m.colSpan)}
           >
             {/* Top Row: Icon & Action */}
             <div className="flex items-start justify-between mb-10">

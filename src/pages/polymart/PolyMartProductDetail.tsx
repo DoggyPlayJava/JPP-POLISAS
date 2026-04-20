@@ -430,13 +430,27 @@ export function PolyMartProductDetail() {
             </button>
           </motion.div>
         ) : (
-          <button
-            onClick={() => { if (!user) { toast.error('Sila log masuk'); return; } setShowOrder(true); }}
-            disabled={isOut}
-            className="w-full h-14 rounded-2xl text-white font-black text-base transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-            style={{ background: isOut ? 'hsl(var(--muted))' : PM_GRADIENT, boxShadow: isOut ? 'none' : `0 8px 24px ${PM_GLOW}` }}>
-            {isOut ? '😔 Stok Habis' : '🛍️ Tempah Sekarang'}
-          </button>
+          <>
+            <button
+              onClick={() => {
+                if (!user) {
+                  navigate(`/login?redirect=${encodeURIComponent(`/polymart/produk/${id}`)}`);
+                  return;
+                }
+                setShowOrder(true);
+              }}
+              disabled={isOut}
+              className="w-full h-14 rounded-2xl text-white font-black text-base transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+              style={{ background: isOut ? 'hsl(var(--muted))' : PM_GRADIENT, boxShadow: isOut ? 'none' : `0 8px 24px ${PM_GLOW}` }}>
+              {isOut ? '😔 Stok Habis' : '🛍️ Tempah Sekarang'}
+            </button>
+            {/* Guest nudge */}
+            {!user && !isOut && (
+              <p className="text-center text-[10px] text-muted-foreground/50 -mt-1">
+                Perlu <span className="font-bold" style={{ color: PM_ACCENT }}>log masuk</span> untuk membuat tempahan
+              </p>
+            )}
+          </>
         )}
 
         {/* Report */}

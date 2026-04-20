@@ -58,6 +58,9 @@ export function LoginPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        // Simpan redirect URL jika datang dari halaman protected (cth: PolyMart)
+        const redirectTo = new URLSearchParams(window.location.search).get('redirect');
+        if (redirectTo) sessionStorage.setItem('post_login_redirect', redirectTo);
         toast.success('Log masuk berjaya. Selamat kembali.');
       }
     } catch (error: any) {

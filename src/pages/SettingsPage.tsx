@@ -240,39 +240,29 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white relative overflow-x-hidden selection:bg-primary/20 transition-colors duration-500">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="page-container space-y-10 pb-20 pt-8">
       
-      {/* ── GLOWS & BLURS Latar Belakang (Glassmorphism Estetik) ── */}
-      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -left-[10%] w-[50vw] h-[50vw] rounded-full mix-blend-multiply dark:mix-blend-screen opacity-[0.15] dark:opacity-[0.15] bg-primary blur-[120px] animate-pulse" />
-        <div className="absolute top-[30%] -right-[15%] w-[60vw] h-[60vw] rounded-full mix-blend-multiply dark:mix-blend-screen opacity-[0.15] dark:opacity-[0.12] bg-blue-600 blur-[130px]" />
-        <div className="absolute -bottom-[20%] left-[20%] w-[50vw] h-[50vw] rounded-full mix-blend-multiply dark:mix-blend-screen opacity-[0.1] dark:opacity-[0.1] bg-teal-500 blur-[100px]" />
-      </div>
-
-      <div className="relative z-10 page-container space-y-8 min-h-screen pb-20 pt-8">
-        {/* KEMBALI */}
-      <button 
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300 w-fit font-bold text-[11px] uppercase tracking-widest"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Kembali
-      </button>
-
-      {/* HEADER */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }} className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-4">
+      {/* ── HEADER ── */}
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-card/40 p-5 sm:p-8 rounded-[2.5rem] border border-border/60 backdrop-blur-sm">
         <div className="space-y-4">
-          <Badge variant="secondary" className="px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] bg-accent/10 text-accent border-none glow-accent">Pusat Kawalan</Badge>
-          <div className="space-y-1">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter gradient-text leading-none">Tetapan</h1>
-            <p className="text-muted-foreground text-base sm:text-lg md:text-xl max-w-2xl font-medium leading-relaxed">Urus parameter <span className="text-primary font-bold text-base uppercase tracking-widest">Tetapan Peribadi</span> dan operasi keselamatan sistem anda.</p>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300 w-fit font-bold text-[10px] uppercase tracking-widest"
+            >
+              <ArrowLeft className="w-3 h-3" />
+              Kembali
+            </button>
+            <Badge className="bg-primary/10 text-primary border-none px-3 uppercase text-[10px] font-black">Pusat Kawalan</Badge>
           </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none">Tetapan</h1>
+          <p className="text-muted-foreground text-sm font-medium">Urus parameter peribadi dan operasi sistem anda.</p>
         </div>
-      </motion.div>
+      </header>
 
       {/* TABS PENGEMUDIAN */}
-      <Tabs value={currentTab} onValueChange={(value) => setSearchParams({ tab: value })} className="w-full">
-        <TabsList className="bg-muted/30 h-auto p-1.5 rounded-[1.5rem] gap-2 border border-border/50 shadow-inner mb-12 flex-col sm:flex-row overflow-x-auto">
+      <Tabs value={currentTab} onValueChange={(value) => setSearchParams({ tab: value }, { replace: true })} className="w-full">
+        <TabsList className="bg-muted/30 h-auto p-1 rounded-2xl gap-1 border border-border/50 mb-8 flex-wrap">
           {[
             { value: 'general', icon: User, label: 'Profil' },
             { value: 'notifications', icon: Bell, label: 'Pemberitahuan' },
@@ -280,7 +270,11 @@ export function SettingsPage() {
             { value: 'billing', icon: CreditCard, label: 'Langganan' },
             { value: 'help', icon: HelpCircle, label: 'Bantuan & Isu' },
           ].map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value} className="flex-1 sm:flex-none justify-start sm:justify-center data-[state=active]:bg-background data-[state=active]:shadow-xl data-[state=active]:text-primary rounded-xl px-6 sm:px-10 py-3 font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground transition-all duration-300 flex items-center gap-3 border border-transparent data-[state=active]:border-border/50">
+            <TabsTrigger 
+              key={tab.value} 
+              value={tab.value} 
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary rounded-xl px-4 py-2.5 font-bold text-xs transition-all duration-300 flex items-center gap-2"
+            >
               <tab.icon className="w-4 h-4" /> {tab.label}
             </TabsTrigger>
           ))}
@@ -288,22 +282,23 @@ export function SettingsPage() {
 
         <AnimatePresence mode="wait">
           {/* --- TAB PROFIL (GENERAL) --- */}
-          <TabsContent value="general" className="space-y-10 focus-visible:ring-0">
-            <motion.div initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} exit={{ opacity: 0, y: -20, filter: 'blur(10px)' }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="space-y-10">
-              <Card className="premium-card bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl border-slate-200/50 dark:border-white/10 overflow-hidden shadow-2xl">
-                <CardHeader className="p-6 sm:p-10 pb-6 sm:pb-8 border-b border-border/30">
-                  <CardTitle className="text-xl sm:text-2xl font-black tracking-tight uppercase tracking-[0.1em]">Profil Awam</CardTitle>
-                  <CardDescription className="text-sm font-medium">Bagaimana profil anda dipaparkan di seluruh sistem.</CardDescription>
-                </CardHeader>
-                <CardContent className="p-6 sm:p-10 space-y-10 sm:space-y-12">
-                  <div className="flex flex-col md:flex-row items-start md:items-center gap-10">
+          <TabsContent value="general" className="space-y-8 focus-visible:ring-0 mt-0">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="space-y-8">
+              <Card className="border-none shadow-xl rounded-[2.5rem] bg-card p-6 sm:p-8 border border-border/40">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                  <div>
+                    <h3 className="text-xl font-black tracking-tight flex items-center gap-2">Profil Awam</h3>
+                    <p className="text-xs text-muted-foreground font-medium mt-1">Bagaimana profil anda dipaparkan di seluruh sistem.</p>
+                  </div>
+                </div>
 
+                <div className="space-y-10">
+                  <div className="flex flex-col md:flex-row items-start md:items-center gap-8">
                     {/* 🔥 RUANGAN AVATAR DENGAN FUNGSI MUAT NAIK 🔥 */}
-                    <div className="relative group">
-                      <Avatar className="h-32 w-32 rounded-[2.5rem] border-4 border-background shadow-2xl ring-4 ring-border/30 transition-all duration-500 group-hover:scale-105 group-hover:rotate-3">
-                        {/* Papar gambar user jika ada, kalau takde guna Dicebear */}
+                    <div className="relative group shrink-0">
+                      <Avatar className="h-24 w-24 rounded-[2rem] border-4 border-background shadow-lg ring-2 ring-border/30 transition-transform duration-300 group-hover:scale-105">
                         <AvatarImage src={profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${initials}&backgroundColor=8B1A1A&textColor=FFF8F0`} className="object-cover" />
-                        <AvatarFallback className="bg-primary text-white font-black text-4xl">{initials}</AvatarFallback>
+                        <AvatarFallback className="bg-primary text-white font-black text-2xl">{initials}</AvatarFallback>
                       </Avatar>
 
                       {/* Input file yang disembunyikan */}
@@ -319,268 +314,264 @@ export function SettingsPage() {
                       {/* Label yang bertindak sebagai butang */}
                       <label
                         htmlFor="avatar-upload"
-                        className={`h-10 w-10 rounded-2xl absolute -bottom-2 -right-2 flex items-center justify-center text-white shadow-2xl border-4 border-background transition-all glow-accent cursor-pointer
-                          ${uploadingAvatar ? 'bg-slate-400 pointer-events-none' : 'bg-primary hover:scale-110 active:scale-95'}`}
+                        className={`h-8 w-8 rounded-xl absolute -bottom-2 -right-2 flex items-center justify-center text-white shadow-lg border-2 border-background transition-all cursor-pointer
+                          ${uploadingAvatar ? 'bg-slate-400 pointer-events-none' : 'bg-primary hover:bg-primary/90 hover:scale-105 active:scale-95'}`}
                       >
-                        {uploadingAvatar ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
+                        {uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
                       </label>
                     </div>
 
-                    <div className="space-y-3">
-                      <h3 className="font-black text-xl tracking-tight leading-none">Gambar Profil</h3>
-                      <p className="text-sm text-muted-foreground/80 font-medium max-w-sm leading-relaxed">
+                    <div className="space-y-2">
+                      <h3 className="font-bold text-base">Gambar Profil</h3>
+                      <p className="text-xs text-muted-foreground font-medium max-w-sm">
                         Pilih gambar beresolusi tinggi (Nisbah 1:1). <br />
                         <span className="text-primary font-bold">Maksimum saiz: 2MB.</span>
                       </p>
                     </div>
                   </div>
 
-                  <Separator className="bg-border/30" />
+                  <Separator className="bg-border/40" />
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    {/* ... (Ruangan Input Profil Kekal Sama) ... */}
-                    <div className="space-y-4">
-                      <Label htmlFor="firstName" className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">Pangkat / Peranan</Label>
-                      <Input id="firstName" className="h-14 rounded-2xl bg-muted/30 border-border/50 font-black px-6 text-lg tracking-tight opacity-60 cursor-not-allowed" defaultValue={effectiveRole ? effectiveRole.replace('CLUB_', '').replace('_', ' ') : 'AHLI'} readOnly />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName" className="text-xs font-bold text-muted-foreground ml-1">Pangkat / Peranan</Label>
+                      <Input id="firstName" className="h-11 rounded-xl bg-muted/40 font-semibold px-4 text-sm opacity-60 cursor-not-allowed" defaultValue={effectiveRole ? effectiveRole.replace('CLUB_', '').replace('_', ' ') : 'AHLI'} readOnly />
                     </div>
-                    <div className="space-y-4">
-                      <Label htmlFor="lastName" className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">Nama Penuh</Label>
-                      <Input id="lastName" value={fullName} onChange={(e) => setFullName(e.target.value.toUpperCase())} className="h-14 rounded-2xl bg-muted/30 border-border/50 focus-visible:ring-primary/30 font-black px-6 text-lg tracking-tight uppercase" placeholder="CONTOH: MUHAMMAD ALI" />
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName" className="text-xs font-bold text-muted-foreground ml-1">Nama Penuh</Label>
+                      <Input id="lastName" value={fullName} onChange={(e) => setFullName(e.target.value.toUpperCase())} className="h-11 rounded-xl bg-background font-semibold px-4 text-sm uppercase" placeholder="CONTOH: MUHAMMAD ALI" />
                     </div>
                     {/* NO TELEFON */}
-                    <div className="space-y-4">
-                      <Label htmlFor="phone" className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">No Telefon Bimbit</Label>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone" className="text-xs font-bold text-muted-foreground ml-1">No Telefon Bimbit</Label>
                       <div className="relative group">
-                        <Phone className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/40 transition-colors group-focus-within:text-primary" />
-                        <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="h-14 pl-14 pr-6 rounded-2xl bg-muted/30 border-border/50 focus-visible:ring-primary/30 font-black text-lg tracking-wide" placeholder="CONTOH: 0123456789" type="tel" />
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                        <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="h-11 pl-10 pr-4 rounded-xl bg-background font-semibold text-sm" placeholder="CONTOH: 0123456789" type="tel" />
                       </div>
                     </div>
-                    <div className="space-y-4">
-                      <Label htmlFor="email" className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">Emel (Memerlukan Pengesahan)</Label>
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-xs font-bold text-muted-foreground ml-1">Emel (Memerlukan Pengesahan)</Label>
                       <div className="relative group">
-                        <Mail className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/40 transition-colors group-focus-within:text-primary" />
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
                         <Input 
                           id="email" 
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="h-14 pl-14 pr-6 rounded-2xl bg-muted/30 border-border/50 focus-visible:ring-primary/30 font-black text-lg tracking-tight transition-colors" 
+                          className="h-11 pl-10 pr-4 rounded-xl bg-background font-semibold text-sm" 
                           placeholder="CONTOH: ali@gmail.com" 
                           type="email" 
                         />
                       </div>
                     </div>
-                    <div className="space-y-4">
-                      <Label htmlFor="timezone" className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">Zon Masa</Label>
+                    <div className="space-y-2">
+                      <Label htmlFor="timezone" className="text-xs font-bold text-muted-foreground ml-1">Zon Masa</Label>
                       <div className="relative group">
-                        <Globe className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/40 transition-colors group-focus-within:text-primary" />
-                        <Input id="timezone" className="h-14 pl-14 pr-6 rounded-2xl bg-muted/30 border-border/50 font-black text-lg tracking-tight opacity-60 cursor-not-allowed" defaultValue="Waktu Piawai Malaysia (MYT)" readOnly />
+                        <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                        <Input id="timezone" className="h-11 pl-10 pr-4 rounded-xl bg-muted/40 font-semibold text-sm opacity-60 cursor-not-allowed" defaultValue="Waktu Piawai Malaysia (MYT)" readOnly />
                       </div>
                     </div>
                   </div>
-                </CardContent>
-                <div className="p-8 bg-muted/20 border-t border-border/30 flex justify-end gap-4">
-                  <Button variant="ghost" onClick={() => { setFullName(profile?.full_name || ''); setPhone(profile?.phone || ''); setEmail(user?.email || ''); }} className="h-14 px-10 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] text-muted-foreground/60 hover:text-primary">Batal</Button>
-                  <Button onClick={handleUpdateProfile} disabled={loading || (fullName === profile?.full_name && phone === profile?.phone && email === user?.email)} className="h-14 px-12 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:scale-105 transition-transform active:scale-95">
-                    {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
-                  </Button>
+                  
+                  <div className="flex justify-end gap-3 pt-4 border-t border-border/40">
+                    <Button variant="ghost" onClick={() => { setFullName(profile?.full_name || ''); setPhone(profile?.phone || ''); setEmail(user?.email || ''); }} className="h-11 px-6 rounded-xl font-bold text-xs text-muted-foreground hover:text-primary">Batal</Button>
+                    <Button onClick={handleUpdateProfile} disabled={loading || (fullName === profile?.full_name && phone === profile?.phone && email === user?.email)} className="h-11 px-8 rounded-xl font-bold text-xs bg-primary text-primary-foreground shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all">
+                      {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
+                    </Button>
+                  </div>
                 </div>
               </Card>
 
               {/* TETAPAN PAPARAN (UI Only) */}
-              <Card className="premium-card bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl border-slate-200/50 dark:border-white/10 overflow-hidden shadow-2xl">
-                <CardHeader className="p-10 pb-8 border-b border-border/30">
-                  <CardTitle className="text-2xl font-black tracking-tight uppercase tracking-[0.1em]">Tetapan Paparan</CardTitle>
-                  <CardDescription className="text-sm font-medium">Urus pengalaman visual dalam antaramuka sistem.</CardDescription>
-                </CardHeader>
-                <CardContent className="p-10 space-y-10">
-                  <div className="flex items-center justify-between group hover:translate-x-1 transition-transform duration-300">
-                    <div className="space-y-2">
-                      <Label className="text-xl font-black tracking-tight">Mod Gelap</Label>
-                      <p className="text-sm text-muted-foreground/80 font-medium max-w-md">Aktifkan mod gelap untuk mengurangkan ketegangan mata.</p>
-                    </div>
-                    <Switch 
-                      checked={theme === 'dark'} 
-                      onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
-                      className="data-[state=checked]:bg-primary scale-125 transition-all" 
-                    />
+              <Card className="border-none shadow-xl rounded-[2.5rem] bg-card p-6 sm:p-8 border border-border/40">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                  <div>
+                    <h3 className="text-xl font-black tracking-tight">Tetapan Paparan</h3>
+                    <p className="text-xs text-muted-foreground font-medium mt-1">Urus pengalaman visual dalam antaramuka sistem.</p>
                   </div>
-                </CardContent>
+                </div>
+                <div className="flex items-center justify-between border border-border/40 p-5 rounded-2xl bg-background/50 hover:bg-muted/20 transition-colors">
+                  <div className="space-y-1">
+                    <Label className="text-sm font-bold">Mod Gelap</Label>
+                    <p className="text-xs text-muted-foreground font-medium">Aktifkan mod gelap mengikut keselesaan mata anda.</p>
+                  </div>
+                  <Switch 
+                    checked={theme === 'dark'} 
+                    onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                    className="data-[state=checked]:bg-primary" 
+                  />
+                </div>
               </Card>
             </motion.div>
           </TabsContent>
 
           {/* --- TAB PEMBERITAHUAN --- */}
-          <TabsContent value="notifications" className="space-y-10 focus-visible:ring-0">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-6">
-              <Card className="premium-card bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl border-slate-200/50 dark:border-white/10 overflow-hidden shadow-2xl">
-                <CardHeader className="p-10 pb-4">
-                  <CardTitle className="text-xl font-black uppercase tracking-tight">Tetapan Notifikasi</CardTitle>
-                  <CardDescription>Urus bagaimana anda menerima makluman aktiviti kelab.</CardDescription>
-                </CardHeader>
-                <CardContent className="p-10 pt-0 space-y-8">
+          <TabsContent value="notifications" className="space-y-8 focus-visible:ring-0 mt-0">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
+              <Card className="border-none shadow-xl rounded-[2.5rem] bg-card p-6 sm:p-8 border border-border/40">
+                <div className="mb-8">
+                  <h3 className="text-xl font-black tracking-tight">Tetapan Notifikasi</h3>
+                  <p className="text-xs text-muted-foreground font-medium mt-1">Urus penerimaan makluman kelab.</p>
+                </div>
+                <div className="space-y-4">
                   {[
-                    { title: 'Notifikasi Laporan', desc: 'Terima makluman apabila laporan anda diluluskan atau ditolak oleh JPP.', icon: FileText },
-                    { title: 'Amnesti & Kunci', desc: 'Dapatkan pemberitahuan sekiranya program anda perlu dibuka kunci.', icon: Lock },
-                    { title: 'Aktiviti Baru', desc: 'Makluman mengenai aktiviti terbaru dari kelab-kelab lain.', icon: Activity }
+                    { title: 'Notifikasi Laporan', desc: 'Terima makluman apabila laporan diluluskan/ditolak.', icon: FileText },
+                    { title: 'Amnesti & Kunci', desc: 'Pemberitahuan sekiranya program dibuka kunci.', icon: Lock },
+                    { title: 'Aktiviti Baru', desc: 'Makluman aktiviti dari kelab atau persatuan lain.', icon: Activity }
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center justify-between group">
-                      <div className="flex gap-4">
-                        <div className="p-2.5 rounded-xl bg-muted/40 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                    <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-border/40 bg-background/50 hover:bg-muted/20 transition-colors">
+                      <div className="flex gap-4 items-center">
+                        <div className="p-2.5 rounded-xl bg-muted text-muted-foreground shrink-0">
                           <item.icon size={18} />
                         </div>
-                        <div className="space-y-0.5">
-                          <p className="font-black text-sm">{item.title}</p>
-                          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">{item.desc}</p>
+                        <div>
+                          <p className="font-bold text-sm text-foreground">{item.title}</p>
+                          <p className="text-xs text-muted-foreground font-medium mt-0.5">{item.desc}</p>
                         </div>
                       </div>
                       <Switch defaultChecked className="data-[state=checked]:bg-primary" />
                     </div>
                   ))}
-                </CardContent>
+                </div>
               </Card>
             </motion.div>
           </TabsContent>
 
           {/* --- TAB KESELAMATAN (SECURITY) --- */}
-          <TabsContent value="security" className="space-y-10 focus-visible:ring-0">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-6">
-              <Card className="premium-card bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl border-slate-200/50 dark:border-white/10 overflow-hidden shadow-2xl">
-                <CardHeader className="p-6 sm:p-10 pb-6 sm:pb-8 border-b border-border/30">
-                  <CardTitle className="text-xl sm:text-2xl font-black tracking-tight uppercase">Keselamatan Akaun</CardTitle>
-                  <CardDescription>Kekalkan keselamatan akaun anda dengan kata laluan yang kuat.</CardDescription>
-                </CardHeader>
-                <CardContent className="p-6 sm:p-10 space-y-8">
-                  <div className="space-y-6">
-                    <div className="space-y-4">
-                      <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">Kata Laluan Baru</Label>
-                      <Input 
-                        type="password" 
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        className="h-14 rounded-2xl bg-muted/30 border-border/50 font-black px-6 text-lg tracking-[0.3em]" 
-                        placeholder="••••••••" 
-                      />
-                    </div>
-                    <div className="space-y-4">
-                      <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">Sahkan Kata Laluan</Label>
-                      <Input 
-                        type="password" 
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="h-14 rounded-2xl bg-muted/30 border-border/50 font-black px-6 text-lg tracking-[0.3em]" 
-                        placeholder="••••••••" 
-                      />
-                    </div>
+          <TabsContent value="security" className="space-y-8 focus-visible:ring-0 mt-0">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
+              <Card className="border-none shadow-xl rounded-[2.5rem] bg-card p-6 sm:p-8 border border-border/40">
+                <div className="mb-8">
+                  <h3 className="text-xl font-black tracking-tight">Keselamatan Akaun</h3>
+                  <p className="text-xs text-muted-foreground font-medium mt-1">Kekalkan keselamatan dengan kata laluan rawak.</p>
+                </div>
+                <div className="space-y-6 max-w-lg">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-muted-foreground ml-1">Kata Laluan Baru</Label>
+                    <Input 
+                      type="password" 
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="h-11 rounded-xl bg-background font-mono px-4 text-sm tracking-widest" 
+                      placeholder="••••••••" 
+                    />
                   </div>
-                </CardContent>
-                <div className="p-6 sm:p-8 bg-muted/20 border-t border-border/30 flex justify-end">
-                  <button 
-                    onClick={handleUpdatePassword} 
-                    disabled={loading || !newPassword}
-                    className="w-full sm:w-auto h-14 px-12 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] bg-primary text-primary-foreground shadow-2xl shadow-primary/20 hover:scale-105 transition-transform"
-                  >
-                    {loading ? 'Mengemaskini...' : 'Kemaskini Kata Laluan'}
-                  </button>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-muted-foreground ml-1">Sahkan Kata Laluan</Label>
+                    <Input 
+                      type="password" 
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="h-11 rounded-xl bg-background font-mono px-4 text-sm tracking-widest" 
+                      placeholder="••••••••" 
+                    />
+                  </div>
+                  
+                  <div className="pt-2">
+                    <Button 
+                      onClick={handleUpdatePassword} 
+                      disabled={loading || !newPassword}
+                      className="h-11 px-8 rounded-xl font-bold text-xs bg-primary text-primary-foreground shadow-sm hover:scale-[1.02] transition-all"
+                    >
+                      {loading ? 'Mengemaskini...' : 'Simpan Kata Laluan'}
+                    </Button>
+                  </div>
                 </div>
               </Card>
               
-              <div className="p-6 rounded-[2.5rem] bg-rose-500/10 border border-rose-500/20 flex items-center justify-between">
+              <div className="p-6 rounded-[2.5rem] bg-rose-500/10 border border-rose-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="space-y-1">
-                  <p className="text-xs font-black text-rose-500 uppercase tracking-widest">Zon Bahaya</p>
-                  <p className="text-[10px] text-muted-foreground font-medium">Alih keluar akaun anda secara kekal daripada sistem Portal JPP.</p>
+                  <p className="text-sm font-black text-rose-600">Zon Bahaya</p>
+                  <p className="text-xs text-rose-600/70 font-medium">Alih keluar akaun secara kekal daripada sistem Portal JPP.</p>
                 </div>
-                <Button variant="ghost" className="h-11 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 transition-all">Deaktif Akaun</Button>
+                <Button variant="ghost" className="h-10 px-6 rounded-xl font-bold text-xs text-rose-600 hover:bg-rose-500/10 hover:text-rose-700 transition-all shrink-0">Deaktif Akaun</Button>
               </div>
             </motion.div>
           </TabsContent>
 
           {/* --- TAB LANGGANAN (BILLING) --- */}
-          <TabsContent value="billing" className="space-y-10 focus-visible:ring-0">
+          <TabsContent value="billing" className="space-y-8 focus-visible:ring-0 mt-0">
             <motion.div 
-              initial={{ opacity: 0, y: 20 }} 
+              initial={{ opacity: 0, y: 10 }} 
               animate={{ opacity: 1, y: 0 }} 
-              transition={{ duration: 0.4 }} 
-              className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+              transition={{ duration: 0.3 }} 
+              className="grid grid-cols-1 lg:grid-cols-2 gap-6"
             >
               {/* --- FREE TIER --- */}
-              <Card className="premium-card bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl border-slate-200/50 dark:border-white/10 shadow-2xl rounded-[3rem] p-6 sm:p-10 flex flex-col justify-between relative overflow-hidden group">
+              <Card className="border-none shadow-xl rounded-[2.5rem] bg-card p-6 sm:p-8 flex flex-col justify-between border border-border/40 relative overflow-hidden group">
                 <div className="space-y-8 relative z-10">
                   <div className="flex items-center justify-between">
-                    <Badge variant="outline" className="rounded-full px-4 py-1.5 border-border/50 text-[10px] font-black uppercase tracking-widest bg-muted/20">Active Plan</Badge>
+                    <Badge variant="outline" className="rounded-full px-3 py-1 border-border/50 text-[10px] font-bold uppercase tracking-wider bg-muted/30">Active Plan</Badge>
                   </div>
                   
-                  <div className="space-y-2">
-                    <h3 className="text-4xl font-black tracking-tighter">Free Tier</h3>
-                    <p className="text-muted-foreground font-medium text-sm">Pelan asas institusi untuk pengurusan harian kelab.</p>
+                  <div className="space-y-1.5">
+                    <h3 className="text-3xl font-black tracking-tight">Free Tier</h3>
+                    <p className="text-muted-foreground font-medium text-sm">Pelan asas untuk pengurusan kelab harian.</p>
                   </div>
 
-                  <div className="space-y-4 pt-4">
+                  <div className="space-y-3 pt-2">
                     {[
-                      'Basic activity logging tanpa Nexus AI',
+                      'Basic activity logging',
                       'Manual document generation',
                       'Static Takwim view',
                       'Standard club analytics'
                     ].map((feature, i) => (
                       <div key={i} className="flex items-start gap-3">
-                        <div className="mt-1 p-0.5 rounded-full bg-emerald-500/10 text-emerald-500"><Check size={12} strokeWidth={3} /></div>
-                        <span className="text-xs font-bold text-muted-foreground/80">{feature}</span>
+                        <div className="mt-0.5 p-1 rounded-full bg-emerald-500/10 text-emerald-600"><Check size={10} strokeWidth={3} /></div>
+                        <span className="text-sm font-semibold text-muted-foreground/90">{feature}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="mt-10 pt-8 border-t border-border/40">
-                  <div className="flex items-end gap-1 mb-6">
-                    <span className="text-4xl font-black tracking-tighter">RM0</span>
-                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest pb-1.5">/ Forever</span>
+                <div className="mt-8 pt-6 border-t border-border/40">
+                  <div className="flex items-end gap-1 mb-5">
+                    <span className="text-3xl font-black tracking-tight">RM0</span>
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest pb-1">/ Forever</span>
                   </div>
-                  <Button disabled className="w-full h-14 rounded-2xl font-black text-[11px] uppercase tracking-widest bg-muted text-muted-foreground cursor-not-allowed">Pelan Semasa</Button>
+                  <Button disabled className="w-full h-11 rounded-xl font-bold text-xs uppercase tracking-widest bg-muted text-muted-foreground cursor-not-allowed">Pelan Semasa</Button>
                 </div>
               </Card>
 
               {/* --- PRO TIER (NEXUS AI) --- */}
-              <Card className="premium-card bg-gradient-to-br from-indigo-950 via-indigo-900 to-indigo-950 dark:from-slate-950 dark:via-indigo-950 dark:to-slate-950 text-indigo-50 border-none shadow-2xl shadow-indigo-500/10 rounded-[3rem] p-6 sm:p-10 flex flex-col justify-between relative overflow-hidden group">
-                {/* Glow & Backdrop Decor */}
-                <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-125 transition-transform duration-1000 group-hover:rotate-12"><Sparkles size={280} className="text-indigo-400" /></div>
-                <div className="absolute -inset-2 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 blur-lg pointer-events-none" />
+              <Card className="border-none shadow-xl rounded-[2.5rem] bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-900 dark:from-slate-900 dark:via-indigo-950 dark:to-slate-900 text-indigo-50 p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700"><Sparkles size={200} className="text-indigo-400" /></div>
                 
                 <div className="space-y-8 relative z-10">
                   <div className="flex items-center justify-between">
-                    <Badge className="bg-indigo-500/20 text-indigo-300 border-none px-4 py-1.5 font-black text-[10px] uppercase tracking-widest backdrop-blur-md">Recommended</Badge>
-                    <div className="p-3 bg-indigo-500/20 rounded-2xl text-indigo-300 backdrop-blur-md shadow-xl"><Sparkles size={24} /></div>
+                    <Badge className="bg-indigo-500/30 text-indigo-200 border-none px-3 py-1 font-bold text-[10px] uppercase tracking-wider backdrop-blur-sm">Recommended</Badge>
+                    <div className="p-2.5 bg-indigo-500/30 rounded-xl text-indigo-200 backdrop-blur-sm"><Sparkles size={18} /></div>
                   </div>
                   
-                  <div className="space-y-2">
-                    <h3 className="text-4xl font-black tracking-tighter">Nexus AI Pro</h3>
-                    <p className="text-indigo-200/60 font-medium text-sm">Tingkatkan produktiviti kelab dengan enjin kecerdasan buatan.</p>
+                  <div className="space-y-1.5">
+                    <h3 className="text-3xl font-black tracking-tight">Nexus AI Pro</h3>
+                    <p className="text-indigo-200/80 font-medium text-sm">Tingkat produktiviti kelab dengan AI enjin.</p>
                   </div>
 
-                  <div className="space-y-4 pt-4">
+                  <div className="space-y-3 pt-2">
                     {[
-                      'Smart AI Budgeting generator',
+                      'Smart AI Budgeting',
                       'Automated Task Delegation',
                       'AI-Powered Monthly Reports',
                       'Priority Support & Cloud Storage'
                     ].map((feature, i) => (
                       <div key={i} className="flex items-start gap-3">
-                        <div className="mt-1 p-0.5 rounded-full bg-indigo-400/20 text-indigo-400"><Check size={12} strokeWidth={3} /></div>
-                        <span className="text-xs font-bold text-indigo-100/80">{feature}</span>
+                        <div className="mt-0.5 p-1 rounded-full bg-indigo-400/30 text-indigo-200"><Check size={10} strokeWidth={3} /></div>
+                        <span className="text-sm font-semibold text-indigo-100/90">{feature}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="mt-10 pt-8 border-t border-indigo-500/20">
-                  <div className="flex items-end gap-1 mb-6">
-                    <span className="text-4xl font-black tracking-tighter">RM10</span>
-                    <span className="text-xs font-bold text-indigo-300/60 uppercase tracking-widest pb-1.5">/ Month</span>
+                <div className="mt-8 pt-6 border-t border-indigo-500/30">
+                  <div className="flex items-end gap-1 mb-5">
+                    <span className="text-3xl font-black tracking-tight">RM10</span>
+                    <span className="text-xs font-bold text-indigo-300/70 uppercase tracking-widest pb-1">/ Month</span>
                   </div>
                   <Button 
                     onClick={() => navigate('/nexus?tab=langganan')}
-                    className="w-full h-14 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] bg-indigo-500 hover:bg-indigo-400 text-white shadow-[0_20px_40px_-5px_rgba(99,102,241,0.4)] transition-all hover:scale-105 active:scale-95 group/btn overflow-hidden relative"
+                    className="w-full h-11 rounded-xl font-bold text-xs uppercase tracking-widest bg-indigo-500 hover:bg-indigo-400 text-white shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
                   >
-                    <span className="relative z-10">Upgrade ke PRO Tier</span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000" />
+                    Upgrade ke PRO Tier
                   </Button>
                 </div>
               </Card>
@@ -588,70 +579,61 @@ export function SettingsPage() {
           </TabsContent>
 
           {/* --- TAB BANTUAN & ISU --- */}
-          <TabsContent value="help" className="space-y-10 focus-visible:ring-0">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-6">
-              <Card className="premium-card bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl border-slate-200/50 dark:border-white/10 overflow-hidden shadow-2xl">
-                <CardHeader className="p-10 pb-8 border-b border-border/30">
-                  <CardTitle className="text-2xl font-black tracking-tight uppercase">Bantuan & Isu Sistem</CardTitle>
-                  <CardDescription>Pusat sokongan rasmi Portal JPP bagi menyelesaikan masalah dan mengumpul cadangan pengguna.</CardDescription>
-                </CardHeader>
-                <CardContent className="p-10 space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Bantuan Secara WhatsApp */}
-                    <div className="p-8 rounded-[2rem] bg-emerald-500/10 border border-emerald-500/20 space-y-6 relative overflow-hidden group">
-                      <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500"><MessageSquare size={120} /></div>
-                      <div className="space-y-2 relative z-10">
-                        <h4 className="text-lg font-black text-emerald-600 dark:text-emerald-400">Sokongan WhatsApp Live</h4>
-                        <p className="text-sm font-medium text-muted-foreground">Berhubung terus dengan JPP Support Team untuk soalan segera.</p>
-                      </div>
-                      <Button onClick={() => window.open('https://wa.me/601139413699', '_blank')} className="h-12 px-8 rounded-xl font-black text-[11px] uppercase tracking-widest bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 w-full md:w-auto relative z-10 transition-all hover:scale-105 active:scale-95">
-                        Chat Sekarang
-                      </Button>
+          <TabsContent value="help" className="space-y-8 focus-visible:ring-0 mt-0">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
+              <Card className="border-none shadow-xl rounded-[2.5rem] bg-card p-6 sm:p-8 border border-border/40">
+                <div className="mb-8">
+                  <h3 className="text-xl font-black tracking-tight">Bantuan & Isu Sistem</h3>
+                  <p className="text-xs text-muted-foreground font-medium mt-1">Pusat sokongan rasmi Portal JPP.</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  <div className="p-6 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 space-y-4 relative overflow-hidden group">
+                    <div className="space-y-1.5 relative z-10">
+                      <h4 className="text-base font-bold text-emerald-600 dark:text-emerald-500">Sokongan WhatsApp Live</h4>
+                      <p className="text-xs font-medium text-muted-foreground">Berhubung terus dengan agen bantuan JPP untuk hal teknikal terdesak.</p>
                     </div>
-
-                    {/* Lapor Ralat / Cadangan Emel */}
-                    <div className="p-8 rounded-[2rem] bg-primary/10 border border-primary/20 space-y-6 relative overflow-hidden group">
-                      <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500"><Headphones size={120} /></div>
-                      <div className="space-y-2 relative z-10">
-                        <h4 className="text-lg font-black text-primary">Lapor Isu & Cadangan</h4>
-                        <p className="text-sm font-medium text-muted-foreground">Emelkan isu teknikal, ralat, atau idea penambahbaikan anda.</p>
-                      </div>
-                      <Button onClick={() => window.location.href = 'mailto:support.jpp@polisas.edu.my?subject=Maklum%20Balas%20Portal%20JPP'} className="h-12 px-8 rounded-xl font-black text-[11px] uppercase tracking-widest text-primary bg-primary/20 hover:bg-primary/30 w-full md:w-auto relative z-10 shadow-none transition-all hover:scale-105 active:scale-95">
-                        Hantar Emel
-                      </Button>
-                    </div>
+                    <Button onClick={() => window.open('https://wa.me/601139413699', '_blank')} className="h-10 px-6 rounded-xl font-bold text-xs bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm w-full md:w-auto hover:scale-[1.02] active:scale-[0.98] transition-all">
+                      Chat Sekarang
+                    </Button>
                   </div>
 
-                  <Separator className="bg-border/30" />
+                  <div className="p-6 rounded-3xl bg-primary/10 border border-primary/20 space-y-4 relative overflow-hidden group">
+                    <div className="space-y-1.5 relative z-10">
+                      <h4 className="text-base font-bold text-primary">Lapor Isu & Emel</h4>
+                      <p className="text-xs font-medium text-muted-foreground">Sumbang idea penambahbaikan atau laporkan masalah sistem.</p>
+                    </div>
+                    <Button onClick={() => window.location.href = 'mailto:support.jpp@polisas.edu.my?subject=Maklum%20Balas%20Portal%20JPP'} variant="outline" className="h-10 px-6 rounded-xl font-bold text-xs text-primary border-primary/30 bg-primary/5 hover:bg-primary/20 w-full md:w-auto hover:scale-[1.02] active:scale-[0.98] transition-all">
+                      Hantar Emel
+                    </Button>
+                  </div>
+                </div>
 
-                  <div className="space-y-6">
-                    <h3 className="text-xl font-black tracking-tight">Dokumentasi Penting</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {['Garis Panduan Pengguna', 'Tutorial Tambah Laporan', 'Soalan Lazim (FAQ)'].map((doc, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-5 rounded-[1.5rem] bg-muted/30 border border-border/50 hover:bg-muted/50 cursor-pointer transition-all group hover:scale-[1.02] hover:shadow-md">
-                          <div className="flex items-center gap-4">
-                            <div className="p-3 rounded-xl bg-background shadow-sm text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors"><FileText size={18} /></div>
-                            <span className="font-black text-sm tracking-tight">{doc}</span>
-                          </div>
-                          <ExternalLink size={16} className="text-muted-foreground/50 group-hover:text-primary transition-colors" />
+                <div className="space-y-4 pt-6 border-t border-border/40">
+                  <h3 className="text-sm font-bold ml-1">Dokumentasi Penting</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {['Garis Panduan', 'Tutorial Tambah Laporan', 'Soalan Lazim (FAQ)'].map((doc, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-muted/40 border border-border/50 hover:bg-muted/70 cursor-pointer transition-colors group">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2.5 rounded-lg bg-background text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors shadow-sm"><FileText size={16} /></div>
+                          <span className="font-semibold text-sm">{doc}</span>
                         </div>
-                      ))}
-                    </div>
+                        <ExternalLink size={14} className="text-muted-foreground/60 group-hover:text-primary transition-colors" />
+                      </div>
+                    ))}
                   </div>
-                </CardContent>
+                </div>
               </Card>
             </motion.div>
           </TabsContent>
 
         </AnimatePresence>
       </Tabs>
-      </div>
 
       {/* --- MODAL PENGESAHAN OTP --- */}
       <AnimatePresence>
         {showOTPModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-0">
-            {/* Backdrop */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -659,58 +641,56 @@ export function SettingsPage() {
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={() => !loading && setShowOTPModal(false)}
             />
-            {/* Modal */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md bg-background border border-border shadow-2xl rounded-3xl p-8 overflow-hidden"
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-sm bg-card border border-border shadow-2xl rounded-[2rem] p-6 sm:p-8"
             >
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-blue-600" />
-              <div className="space-y-6 text-center">
-                <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4 ring-8 ring-primary/5">
-                  <Shield size={32} />
+              <div className="space-y-5 text-center">
+                <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary ring-4 ring-primary/5">
+                  <Shield size={24} />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black tracking-tight mb-2">Pengesahan OTP</h3>
-                  <p className="text-muted-foreground font-medium text-sm">
-                    Satu kod 6-digit telah dihantar ke emel <span className="font-bold text-foreground">{user?.email}</span>. Sila masukkan kod tersebut untuk meneruskan pertukaran nombor telefon.
+                  <h3 className="text-xl font-black tracking-tight mb-1">Pengesahan OTP</h3>
+                  <p className="text-muted-foreground font-medium text-xs">
+                    Kod 6-digit dihantar ke <span className="font-bold text-foreground">{user?.email}</span>.
                   </p>
                 </div>
 
-                <form onSubmit={handleVerifyOTP} className="space-y-6 mt-6">
+                <form onSubmit={handleVerifyOTP} className="space-y-5 mt-4">
                   <Input 
                     type="text" 
                     value={otpInput}
                     onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    className="h-16 text-center text-3xl font-black tracking-[0.5em] bg-muted/30 border-2 focus-visible:border-primary/50" 
+                    className="h-14 text-center text-2xl font-mono tracking-[0.4em] bg-muted/40 border-border/50 focus-visible:border-primary/50 rounded-xl" 
                     placeholder="••••••" 
                     maxLength={6}
                     autoFocus
                   />
 
-                  <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                  <div className="flex gap-3">
                     <Button 
                       type="button" 
                       variant="outline" 
                       onClick={() => setShowOTPModal(false)} 
                       disabled={loading}
-                      className="flex-1 h-12 rounded-xl font-bold uppercase tracking-widest text-[11px]"
+                      className="flex-1 h-11 rounded-xl font-bold uppercase text-[10px] tracking-wider"
                     >
                       Batal
                     </Button>
                     <Button 
                       type="submit" 
                       disabled={otpInput.length !== 6 || loading}
-                      className="flex-1 h-12 rounded-xl font-bold uppercase tracking-widest text-[11px] bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                      className="flex-1 h-11 rounded-xl font-bold uppercase text-[10px] tracking-wider bg-primary text-primary-foreground shadow-sm"
                     >
                       {loading ? 'Disahkan...' : 'Sahkan'}
                     </Button>
                   </div>
                 </form>
 
-                <p className="text-[11px] text-muted-foreground font-medium pt-4 border-t border-border/50">
-                  Tidak menerima emel? <button type="button" onClick={handleInitiateOTP} className="text-primary hover:underline font-bold" disabled={loading}>Hantar Semula</button>
+                <p className="text-[10px] text-muted-foreground font-medium pt-3 mt-3 border-t border-border/40">
+                  Tidak terima emel? <button type="button" onClick={handleInitiateOTP} className="text-primary hover:underline font-bold" disabled={loading}>Hantar Semula</button>
                 </p>
               </div>
             </motion.div>
@@ -718,6 +698,6 @@ export function SettingsPage() {
         )}
       </AnimatePresence>
 
-    </div>
+    </motion.div>
   );
 }
