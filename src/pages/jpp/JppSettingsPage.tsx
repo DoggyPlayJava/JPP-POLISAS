@@ -6,12 +6,13 @@ import { Settings as SettingsIcon, ShieldCheck, KeyRound, Calendar } from 'lucid
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { hexToRgba, cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
+import { JppStructureSettings } from './JppStructureSettings';
 
 const MONTH_NAMES = ['', 'Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
 
 export function JppSettingsPage() {
     const { isSuperAdmin, profile } = useAuth();
-    const isYDP = profile?.jpp_position === 'YANG_DIPERTUA' || isSuperAdmin;
+    const isYDP = profile?.jpp_position === 'YANG_DIPERTUA' || profile?.jpp_position === 'YDP' || isSuperAdmin;
     const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
     const [loading, setLoading] = useState(true);
     const [intake1Month, setIntake1Month] = useState(7);
@@ -266,6 +267,11 @@ export function JppSettingsPage() {
                             </p>
                         </div>
                     </motion.div>
+                )}
+
+                {/* Struktur JPP & Majlis Tertinggi (Boleh diakses oleh Super Admin / YDP) */}
+                {isYDP && (
+                    <JppStructureSettings />
                 )}
 
             </div>

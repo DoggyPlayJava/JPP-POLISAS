@@ -251,6 +251,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AiSettingsProvider } from '@/contexts/AiSettingsContext';
 import { KarnivalProvider } from '@/contexts/KarnivalContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
+import { JppConfigProvider } from '@/contexts/JppConfigContext';
 import { PwaUpdater } from '@/components/PwaUpdater';
 import { InstallAppPrompt } from '@/components/pwa/InstallAppPrompt';
 
@@ -262,25 +263,27 @@ function App() {
           <AuthProvider>
             <NotificationProvider>
               <AiSettingsProvider>
-                <KarnivalProvider>
-                  <AppRoutes />
-                <PwaUpdater />
-                <InstallAppPrompt />
-                <Toaster
-                  position="top-right"
-                  toastOptions={{
-                    className: 'glass !bg-white/90 dark:!bg-slate-900/90 !backdrop-blur-xl !border-white/20 !shadow-2xl rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest !text-slate-900 dark:!text-white py-4 px-6',
-                    duration: 4000,
-                    success: {
-                      iconTheme: { primary: '#10b981', secondary: '#fff' },
-                    },
-                    error: {
-                      iconTheme: { primary: '#ef4444', secondary: '#fff' },
-                    },
-                  }}
-                />
-                  <SpeedInsights />
-                </KarnivalProvider>
+                <JppConfigProvider>
+                  <KarnivalProvider>
+                    <AppRoutes />
+                  <PwaUpdater />
+                  <InstallAppPrompt />
+                  <Toaster
+                    position="top-right"
+                    toastOptions={{
+                      className: 'glass !bg-white/90 dark:!bg-slate-900/90 !backdrop-blur-xl !border-white/20 !shadow-2xl rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest !text-slate-900 dark:!text-white py-4 px-6',
+                      duration: 4000,
+                      success: {
+                        iconTheme: { primary: '#10b981', secondary: '#fff' },
+                      },
+                      error: {
+                        iconTheme: { primary: '#ef4444', secondary: '#fff' },
+                      },
+                    }}
+                  />
+                    <SpeedInsights />
+                  </KarnivalProvider>
+                </JppConfigProvider>
               </AiSettingsProvider>
             </NotificationProvider>
           </AuthProvider>

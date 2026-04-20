@@ -23,7 +23,8 @@ import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from '@/
 import { pdf } from '@react-pdf/renderer';
 import { LaporanPDFTemplate } from '@/components/reports/LaporanPDFTemplate';
 import { uploadPdfToDrive } from '@/lib/driveUpload';
-import { JPP_EXCO_POSITIONS, JPP_MT_POSITIONS, JPP_POSITION_LABELS } from '@/types';
+import { JPP_EXCO_POSITIONS, JPP_MT_POSITIONS } from '@/types';
+import { useJppConfig } from '@/contexts/JppConfigContext';
 
 // ─── PROPS ───────────────────────────────────────────────────────────────────
 interface Props {
@@ -35,6 +36,7 @@ interface Props {
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
   const { user, profile, isSuperAdmin } = useAuth();
+  const { positionLabels } = useJppConfig();
 
   // ── Access ─────────────────────────────────────────────────────────────────
   const jppPos  = profile?.jpp_position as string | undefined;
@@ -58,11 +60,15 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
   const [jppLogoBase64, setJppLogoBase64]   = useState<string | undefined>(undefined);
   const [mtReviewer, setMtReviewer]         = useState<{ name: string; role: string } | null>(null);
 
-  // ── Derived values (digunakan dalam modal props & handleConfirmGenerate) ──
+  // ── Derived values ─────────────────────────────────────────────────────────
   const monthLabel = format(parseISO(`${targetMonth}-01`), 'MMMM yyyy', { locale: ms }).toUpperCase();
-  const submitterRoleLabel = jppPos
-    ? (JPP_POSITION_LABELS[jppPos as keyof typeof JPP_POSITION_LABELS] || jppPos)
-    : 'Ahli Exco';
+
+  // Jawatan penuh: "KETUA EXCO KELAB, PERSATUAN & PERPADUAN"
+  const positionLabel = jppPos
+    ? (positionLabels[jppPos] || jppPos).toUpperCase()
+    : 'AHLI EXCO';
+  // Gabung jawatan + nama unit exco supaya jadi "KETUA EXCO KELAB, PERSATUAN DAN PERPADUAN"
+  const submitterRoleLabel = `${positionLabel} ${excoLabel.toUpperCase()}`;
 
   // Manual upload
   const [file, setFile] = useState<File | null>(null);
@@ -111,9 +117,34 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
       setJppLogoBase64(b64);
     };
 
-    // Fetch MT yang oversees unit exco ini
-    // MT disimpan dalam profiles dengan jpp_position MT + jpp_unit = unit berkenaan
+    // Fetch MT yang oversees unit exco ini via jpp_mt_assignments table
+    // (MT members mungkin tidak ada jpp_unit diset ke unit spesifik dalam profiles)
     const fetchMtReviewer = async () => {
+      // Pendekatan 1: cari via jpp_mt_assignments (cara betul)
+      const { data: assignData } = await supabase
+        .from('jpp_mt_assignments')
+        .select('mt_user_id')
+        .eq('unit', excoUnit)
+        .limit(1)
+        .maybeSingle();
+
+      if (assignData?.mt_user_id) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('full_name, jpp_position')
+          .eq('id', assignData.mt_user_id)
+          .maybeSingle();
+
+        if (profileData) {
+          const roleLabel = positionLabels[profileData.jpp_position as string]
+            || profileData.jpp_position
+            || 'Majlis Tertinggi';
+          setMtReviewer({ name: profileData.full_name || '—', role: roleLabel });
+          return;
+        }
+      }
+
+      // Fallback: cari dalam profiles (cara lama — jika ada jpp_unit diset)
       const mtPositions = ['YDP','TIMBALAN_YDP','NAIB_YDP','SETIAUSAHA_KERJA','SETIAUSAHA_KEHORMAT','BENDAHARI'];
       const { data } = await supabase
         .from('profiles')
@@ -123,7 +154,9 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
         .limit(1)
         .maybeSingle();
       if (data) {
-        const roleLabel = JPP_POSITION_LABELS[data.jpp_position as keyof typeof JPP_POSITION_LABELS] || data.jpp_position || 'Majlis Tertinggi';
+        const roleLabel = positionLabels[data.jpp_position as string]
+          || data.jpp_position
+          || 'Majlis Tertinggi';
         setMtReviewer({ name: data.full_name || '—', role: roleLabel });
       }
     };
@@ -199,6 +232,7 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
           reviewerRole={mtReviewer?.role || 'MAJLIS TERTINGGI'}
           reviewerUnit="JAWATANKUASA PERWAKILAN PELAJAR"
           clubLogoUrl={jppLogoBase64}
+          isExco={true}
         />
       );
 
@@ -506,6 +540,7 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
             reviewerRole={mtReviewer?.role || 'MAJLIS TERTINGGI'}
             reviewerUnit="JAWATANKUASA PERWAKILAN PELAJAR"
             clubLogoUrl={jppLogoBase64}
+            isExco={true}
             fileName={`Laporan_${excoUnit}_${targetMonth}`}
             onClose={() => setIsPreviewOpen(false)}
             onSubmit={handleConfirmGenerate}

@@ -11,7 +11,7 @@ import { getSemesterInfo } from '@/types';
 
 export function JppUsersPage() {
     const { isSuperAdmin, profile } = useAuth();
-    const isYDP = profile?.jpp_position === 'YANG_DIPERTUA' || isSuperAdmin;
+    const isYDP = profile?.jpp_position === 'YANG_DIPERTUA' || profile?.jpp_position === 'YDP' || isSuperAdmin;
 
     const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
     const [allUsers, setAllUsers] = useState<any[]>([]);
@@ -331,7 +331,8 @@ export function JppUsersPage() {
                                                                 <button 
                                                                     onClick={async () => {
                                                                         if(confirm(u.role === 'JPP' ? `Turunkan pengguna dari JPP ke AHLI biasa?` : `Lantik secara terus sebagai JPP?`)) {
-                                                                            await supabase.from('profiles').update({ role: u.role === 'JPP' ? 'AHLI' : 'JPP' }).eq('id', u.id);
+                                                                            const { error } = await supabase.rpc('toggle_jpp_role', { p_target_id: u.id });
+                                                                            if (error) { toast.error(error.message); return; }
                                                                             toast.success(`Peranan dikemaskini.`);
                                                                             fetchAdminData();
                                                                         }

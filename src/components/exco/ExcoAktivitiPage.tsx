@@ -113,14 +113,22 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
     setDialogOpen(true);
   };
 
+  const [uploading, setUploading] = useState(false);
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+    const rawFiles = e.target.files;
+    if (!rawFiles || rawFiles.length === 0) return;
+    // Convert ke array DAHULU sebelum reset — supaya reference tidak hilang
+    const allFiles = Array.from(rawFiles);
+    // Reset input supaya fail yang sama boleh dipilih semula
+    e.target.value = '';
     const remaining = 3 - (form.imageUrls?.length || 0);
     if (remaining <= 0) { toast.error('Maksimum 3 gambar dibenarkan.'); return; }
-    const filesToUpload = Array.from(files).filter(f => f.type.startsWith('image/')).slice(0, remaining);
+    const filesToUpload = allFiles.filter(f => f.type.startsWith('image/')).slice(0, remaining);
+    if (filesToUpload.length === 0) { toast.error('Tiada fail imej yang sah.'); return; }
     const toastId = toast.loading(`Memuat naik ${filesToUpload.length} gambar...`);
     const urls: string[] = [];
+    setUploading(true);
     try {
       for (const file of filesToUpload) {
         const url = await uploadFileToDrive(file, `exco_${excoUnit.toLowerCase()}`);
@@ -130,6 +138,8 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
       toast.success(`${urls.length} gambar dimuat naik! ☁️`, { id: toastId });
     } catch (err: any) {
       toast.error(err.message || 'Gagal upload gambar.', { id: toastId });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -501,11 +511,11 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
               </Button>
               <Button
                 onClick={handleSave}
-                disabled={saving}
+                disabled={saving || uploading}
                 className="flex-[2] h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white shadow-xl hover:scale-105 transition-all"
                 style={{ background: themeColor }}
               >
-                {saving ? 'Menyimpan...' : editTarget ? 'Kemaskini' : 'Simpan Aktiviti'}
+                {uploading ? 'Memuat naik gambar...' : saving ? 'Menyimpan...' : editTarget ? 'Kemaskini' : 'Simpan Aktiviti'}
               </Button>
             </DialogFooter>
           </DialogContent>

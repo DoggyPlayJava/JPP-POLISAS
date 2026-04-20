@@ -5,15 +5,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
   Users, Crown, Search, Pencil, Shield,
-  Loader2, UserCheck, CheckSquare, Square,
+  Loader2, UserCheck, CheckSquare, Square, Plus, X
 } from 'lucide-react';
 import { cn, hexToRgba, getContrastText } from '@/lib/utils';
-import { JPP_POSITION_LABELS, JPP_MT_POSITIONS, JPP_UNIT_LABELS, JPP_UNITS } from '@/types';
+import { JPP_MT_POSITIONS } from '@/types';
 import type { JppPosition, JppUnit } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
-import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID, UNIT_CFG, UNIT_ORDER } from './jppConfig';
+import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
+import { useJppConfig } from '@/contexts/JppConfigContext';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface JppMember {
@@ -37,6 +38,7 @@ function MemberCard({
   themeColor: string;
   onUpdate: (id: string, patch: Partial<JppMember>) => void;
 }) {
+  const { positionLabels, unitLabels, unitConfig, unitOrder } = useJppConfig();
   const [editing, setEditing]           = useState(false);
   const [position, setPosition]         = useState<string>(member.jpp_position ?? '');
   const [unit, setUnit]                 = useState<string>(member.jpp_unit ?? '');
@@ -50,7 +52,7 @@ function MemberCard({
   const isMTPosition = JPP_MT_POSITIONS.includes(member.jpp_position as any);
   // After editing, derive from new position state
   const willBeMT     = JPP_MT_POSITIONS.includes(position as any);
-  const unitCfg = member.jpp_unit ? UNIT_CFG[member.jpp_unit] : null;
+  const unitCfg = member.jpp_unit ? unitConfig[member.jpp_unit] : null;
 
   // Load existing MT assignments when edit opens
   const handleOpenEdit = async () => {
@@ -77,9 +79,13 @@ function MemberCard({
   const handleSave = async () => {
     setSaving(true);
     try {
-      // 1. Update profiles (jawatan + unit exco sendiri)
+      // 1. Update profiles via RPC (enforces server-side auth: hanya YDP/SuperAdmin)
       const patch: Record<string, any> = { jpp_position: position || null, jpp_unit: unit || null };
-      const { error } = await supabase.from('profiles').update(patch).eq('id', member.id);
+      const { error } = await supabase.rpc('update_jpp_member_profile', {
+        p_target_id:    member.id,
+        p_jpp_position: position || '',
+        p_jpp_unit:     unit || '',
+      });
       if (error) throw error;
 
       // 2. Jika jawatan MT — sync jpp_mt_assignments (multi-unit oversee)
@@ -137,7 +143,7 @@ function MemberCard({
         {(!editing && canEdit) && (
           <button
             onClick={handleOpenEdit}
-            className="opacity-0 group-hover:opacity-100 p-2 rounded-xl text-white/30 hover:text-white/80 hover:bg-white/10 transition-all focus:opacity-100"
+            className="opacity-50 md:opacity-0 md:group-hover:opacity-100 p-2 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-all focus:opacity-100 bg-white/[0.05] md:bg-transparent"
           >
             <Pencil className="w-4 h-4" />
           </button>
@@ -159,7 +165,7 @@ function MemberCard({
                 className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg"
                 style={{ background: hexToRgba(themeColor, isMTPosition ? 0.2 : 0.1), color: isMTPosition ? themeColor : 'rgba(255,255,255,0.6)' }}
               >
-                {JPP_POSITION_LABELS[member.jpp_position] ?? member.jpp_position}
+                {positionLabels[member.jpp_position as string] ?? member.jpp_position}
               </span>
             ) : (
               <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg bg-white/5 text-white/30">
@@ -188,9 +194,9 @@ function MemberCard({
               }}
               className="text-xs font-semibold bg-black/40 border border-white/10 text-white rounded-xl px-2 py-1.5 outline-none custom-scrollbar"
             >
-              <option value="">— Pilih Jawatan —</option>
-              {Object.entries(JPP_POSITION_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
+              <option value="" className="bg-[#0f0f13] text-white">— Pilih Jawatan —</option>
+              {Object.entries(positionLabels).map(([k, v]) => (
+                <option key={k} value={k} className="bg-[#0f0f13] text-white">{v}</option>
               ))}
             </select>
 
@@ -201,9 +207,9 @@ function MemberCard({
                 onChange={e => setUnit(e.target.value)}
                 className="text-xs font-semibold bg-black/40 border border-white/10 text-white rounded-xl px-2 py-1.5 outline-none custom-scrollbar"
               >
-                <option value="">— Pilih Unit Exco —</option>
-                {JPP_UNITS.map(u => (
-                  <option key={u} value={u}>{JPP_UNIT_LABELS[u] ?? u}</option>
+                <option value="" className="bg-[#0f0f13] text-white">— Pilih Unit Exco —</option>
+                {Object.keys(unitLabels).map(u => (
+                  <option key={u} value={u} className="bg-[#0f0f13] text-white">{unitLabels[u] ?? u}</option>
                 ))}
               </select>
             )}
@@ -219,8 +225,8 @@ function MemberCard({
                     <Loader2 className="w-3 h-3 animate-spin" /> Memuatkan...
                   </div>
                 ) : (
-                  UNIT_ORDER.map(code => {
-                    const cfg = UNIT_CFG[code];
+                  unitOrder.map(code => {
+                    const cfg = unitConfig[code];
                     if (!cfg) return null;
                     const checked = overseeUnits.includes(code);
                     return (
@@ -303,14 +309,284 @@ function GroupSection({
   );
 }
 
+// ── Add Member Modal ──────────────────────────────────────────────────────────
+function AddMemberModal({
+  themeColor,
+  isOpen,
+  onClose,
+  onSuccess
+}: {
+  themeColor: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: (newMember: JppMember) => void;
+}) {
+  const { positionLabels, unitLabels, unitConfig, unitOrder } = useJppConfig();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  
+  const [position, setPosition] = useState<string>('');
+  const [unit, setUnit] = useState<string>('');
+  const [overseeUnits, setOverseeUnits] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  
+  const willBeMT = JPP_MT_POSITIONS.includes(position as any);
+
+  // Auto search when query changes
+  useEffect(() => {
+    if (!searchQuery.trim() || searchQuery.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setSearching(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, avatar_url, role')
+        .ilike('full_name', `%${searchQuery}%`)
+        .limit(10);
+      if (!error && data) setSearchResults(data);
+      setSearching(false);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleSave = async () => {
+    if (!selectedUser) return;
+    setSaving(true);
+    try {
+      // Gunakan RPC untuk enforce server-side authorization (K-1 security fix)
+      const { error } = await supabase.rpc('assign_jpp_member', {
+        p_target_id:    selectedUser.id,
+        p_jpp_position: position || '',
+        p_jpp_unit:     unit || '',
+      });
+      if (error) throw error;
+
+      const patch: Record<string, any> = {
+        role: 'JPP',
+        jpp_position: position || null,
+        jpp_unit: unit || null
+      };
+
+      if (willBeMT && overseeUnits.length > 0) {
+        // Padam jika ada overlap, tambah baharu
+        await supabase.from('jpp_mt_assignments').delete().eq('mt_user_id', selectedUser.id);
+        await supabase.from('jpp_mt_assignments').insert(
+          overseeUnits.map(u => ({
+            mt_user_id: selectedUser.id,
+            unit: u,
+            assigned_by: null,
+          }))
+        );
+      }
+
+      toast.success('Ahli berjaya ditambah ke JPP.');
+      onSuccess({
+        id: selectedUser.id,
+        full_name: selectedUser.full_name,
+        email: selectedUser.email,
+        avatar_url: selectedUser.avatar_url,
+        jpp_position: position as any || null,
+        jpp_unit: unit as any || null
+      });
+      onClose();
+      // Reset state for next use
+      setSelectedUser(null);
+      setSearchQuery('');
+      setPosition('');
+      setUnit('');
+      setOverseeUnits([]);
+    } catch (err: any) {
+      toast.error('Gagal tambah ahli: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-md bg-[#0a0a0f] border border-white/[0.08] shadow-2xl rounded-[2rem] p-6 relative flex flex-col max-h-[85vh] overflow-y-auto custom-scrollbar"
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/50 transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        <div className="flex items-center gap-3 mb-1">
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-500/10">
+            <Plus className="w-4 h-4 text-emerald-400" />
+          </div>
+          <h3 className="text-lg font-black text-white">Tambah Ahli JPP</h3>
+        </div>
+        <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold mb-6 ml-11">
+          Cari pelajar dan tetapkan jawatan
+        </p>
+
+        {!selectedUser ? (
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Cari nama penuh pelajar..."
+                className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-sm text-white placeholder-white/30 focus:outline-none focus:border-emerald-500/30 focus:bg-white/[0.05] hover:border-white/[0.1] transition-all font-medium"
+              />
+            </div>
+            
+            <div className="space-y-2 min-h-[150px]">
+              {searching ? (
+                <div className="flex justify-center py-6 text-white/30 text-xs gap-2 font-medium bg-white/[0.02] rounded-xl border border-white/[0.03]"><Loader2 className="w-4 h-4 animate-spin text-emerald-400"/>Mencari rekod...</div>
+              ) : searchQuery.length > 0 && searchQuery.length < 3 ? (
+                <div className="text-center py-6 text-white/30 text-[10px] uppercase tracking-widest font-bold bg-white/[0.02] rounded-xl border border-white/[0.03]">Taip 3 aksara untuk carian</div>
+              ) : searchResults.length === 0 && searchQuery.length >= 3 ? (
+                <div className="text-center py-6 text-white/30 text-[10px] uppercase tracking-widest font-bold bg-white/[0.02] rounded-xl border border-white/[0.03]">Tiada pelajar dijumpai</div>
+              ) : (
+                searchResults.map(u => (
+                  <button
+                    key={u.id}
+                    onClick={() => setSelectedUser(u)}
+                    className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 text-left border border-white/[0.03] hover:border-white/10 transition-all group bg-white/[0.01]"
+                  >
+                    <Avatar className="w-10 h-10 rounded-xl shadow-lg border border-white/[0.05]">
+                      <AvatarFallback className="bg-white/10 text-xs text-white/80 font-black">{u.full_name?.substring(0,2).toUpperCase()}</AvatarFallback>
+                      <AvatarImage src={u.avatar_url || ''} className="object-cover" />
+                    </Avatar>
+                    <div className="flex-1 overflow-hidden">
+                      <p className="text-sm font-bold text-white/90 truncate group-hover:text-white transition-colors">{u.full_name}</p>
+                      <p className="text-[10px] text-white/30 truncate mt-0.5">{u.email}</p>
+                    </div>
+                    {u.role === 'JPP' && <Crown className="w-4 h-4 text-amber-500/50" />}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-5">
+            {/* User Info header */}
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 shadow-inner">
+              <Avatar className="w-10 h-10 rounded-xl shadow-lg border border-emerald-500/20">
+                <AvatarImage src={selectedUser.avatar_url || ''} className="object-cover" />
+                <AvatarFallback className="bg-white/10 text-xs font-black">{selectedUser.full_name?.substring(0,2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 overflow-hidden">
+                <p className="text-sm font-black text-white truncate">{selectedUser.full_name}</p>
+                <p className="text-[10px] text-white/40 truncate mt-0.5">{selectedUser.email}</p>
+              </div>
+              <button 
+                onClick={() => setSelectedUser(null)}
+                className="text-[9px] uppercase tracking-widest font-black text-rose-400 hover:text-rose-300 hover:bg-rose-400/10 px-2 py-1.5 rounded-lg transition-colors"
+              >
+                Tukar
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-widest text-white/50 block mb-2">Jawatan JPP</label>
+                <select
+                  value={position}
+                  onChange={e => {
+                    setPosition(e.target.value);
+                    if (!JPP_MT_POSITIONS.includes(e.target.value as any)) setOverseeUnits([]);
+                  }}
+                  className="w-full text-xs font-semibold bg-black/40 border border-white/[0.08] text-white rounded-xl px-3 py-3 outline-none custom-scrollbar focus:border-emerald-500/30 focus:bg-white/[0.02] transition-colors"
+                >
+                  <option value="" className="bg-[#0f0f13] text-white">— Pilih Jawatan —</option>
+                  {Object.entries(positionLabels).map(([k, v]) => (
+                    <option key={k} value={k} className="bg-[#0f0f13] text-white">{v}</option>
+                  ))}
+                </select>
+              </div>
+
+              {!willBeMT && (
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-white/50 block mb-2">Unit Exco (Pilihan)</label>
+                  <select
+                    value={unit}
+                    onChange={e => setUnit(e.target.value)}
+                    className="w-full text-xs font-semibold bg-black/40 border border-white/[0.08] text-white rounded-xl px-3 py-3 outline-none custom-scrollbar focus:border-emerald-500/30 focus:bg-white/[0.02] transition-colors"
+                  >
+                    <option value="" className="bg-[#0f0f13] text-white">— Pilih Unit Exco —</option>
+                    {Object.keys(unitLabels).map(u => (
+                      <option key={u} value={u} className="bg-[#0f0f13] text-white">{unitLabels[u] ?? u}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {willBeMT && (
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-white/50 block mb-2 flex items-center gap-2">Penyeliaan Unit (MT) <span className="bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-md text-[8px]">PILIHAN RAWAK</span></label>
+                  <div className="rounded-xl border border-white/[0.08] bg-black/30 p-2 max-h-48 overflow-y-auto custom-scrollbar space-y-1">
+                    {unitOrder.map(code => {
+                      const cfg = unitConfig[code];
+                      if (!cfg) return null;
+                      const checked = overseeUnits.includes(code);
+                      return (
+                        <button
+                          key={code}
+                          type="button"
+                          onClick={() => setOverseeUnits(prev =>
+                            prev.includes(code) ? prev.filter(u => u !== code) : [...prev, code]
+                          )}
+                          className={cn(
+                            'w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-left bg-white/[0.01] hover:bg-white/[0.03]',
+                            checked ? 'bg-white/[0.06] border border-white/10 text-white' : 'text-white/40 border border-transparent'
+                          )}
+                        >
+                          {checked
+                            ? <CheckSquare className="w-4 h-4 flex-shrink-0" style={{ color: cfg.color }} />
+                            : <Square className="w-4 h-4 flex-shrink-0 text-white/20" />
+                          }
+                          <span className="text-[11px] font-bold truncate">{cfg.shortLabel}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={handleSave}
+                disabled={saving || !position}
+                className={cn(
+                  "w-full py-3.5 rounded-[1rem] text-[11px] font-black uppercase tracking-widest transition-all shadow-xl",
+                  saving || !position ? "bg-white/5 text-white/20 border border-white/5 cursor-not-allowed" : "bg-emerald-500 text-white hover:bg-emerald-400 shadow-emerald-500/20 hover:scale-[1.02]"
+                )}
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Simpan Ahli JPP'}
+              </button>
+            </div>
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 export function JppMembersPage() {
   const { user, profile, isSuperAdmin } = useAuth();
+  const { unitLabels, unitOrder } = useJppConfig();
 
   const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
   const [members, setMembers]       = useState<JppMember[]>([]);
   const [loading, setLoading]       = useState(true);
   const [search, setSearch]         = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const jppPosition = profile?.jpp_position as string | undefined;
   const isYDP = jppPosition === 'YDP' || jppPosition === 'YANG_DIPERTUA' || isSuperAdmin;
@@ -349,7 +625,7 @@ export function JppMembersPage() {
   // Group members
   const mtMembers  = filtered.filter(m => JPP_MT_POSITIONS.includes(m.jpp_position as any));
   const unitGroups = Object.fromEntries(
-    JPP_UNITS.map(u => [u, filtered.filter(m => m.jpp_unit === u && !JPP_MT_POSITIONS.includes(m.jpp_position as any))])
+    Object.keys(unitLabels).map(u => [u, filtered.filter(m => m.jpp_unit === u && !JPP_MT_POSITIONS.includes(m.jpp_position as any))])
   );
   const unassigned = filtered.filter(m =>
     !JPP_MT_POSITIONS.includes(m.jpp_position as any) &&
@@ -395,12 +671,29 @@ export function JppMembersPage() {
                   Mod Edit Aktif — Anda boleh ubah jawatan & unit ahli
                 </span>
               </div>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="flex flex-shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all w-fit group"
+              >
+                <Plus className="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-transform" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                  Tambah Ahli
+                </span>
+              </button>
               <Link 
                 to="/jpp/users"
                 className="flex flex-shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all w-fit group"
               >
                 <span className="text-[10px] font-black uppercase tracking-widest text-white/50 group-hover:text-white/80 transition-colors">
                   Pangkalan Data Pelajar
+                </span>
+              </Link>
+              <Link 
+                to="/jpp/settings"
+                className="flex flex-shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all w-fit group"
+              >
+                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400 group-hover:text-indigo-300 transition-colors">
+                  Urus Struktur JPP
                 </span>
               </Link>
             </div>
@@ -460,13 +753,13 @@ export function JppMembersPage() {
             />
 
             {/* Loop through all unit groups combined but separated by title */}
-            {JPP_UNITS.map(u => {
+            {unitOrder.map(u => {
               const grpMembers = unitGroups[u] ?? [];
               if (grpMembers.length === 0) return null;
               return (
                 <GroupSection
                   key={u}
-                  title={`Unit ${JPP_UNIT_LABELS[u] ?? u}`}
+                  title={`Unit ${unitLabels[u] ?? u}`}
                   members={grpMembers}
                   canEdit={canEdit}
                   themeColor={themeColor}
@@ -485,6 +778,21 @@ export function JppMembersPage() {
           </div>
         )}
       </div>
+
+      <AddMemberModal 
+        themeColor={themeColor}
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={(newMember) => {
+          // Hanya tambah jika belum wujud
+          setMembers(prev => {
+            if (prev.some(m => m.id === newMember.id)) {
+              return prev.map(m => m.id === newMember.id ? newMember : m);
+            }
+            return [...prev, newMember].sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
+          });
+        }}
+      />
     </div>
   );
 }

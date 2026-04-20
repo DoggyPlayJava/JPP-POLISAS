@@ -38,21 +38,25 @@ const styles = StyleSheet.create({
 
   headerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  // Politeknik logo: kiri, flex mengambil space yang ada
+  logoLeftWrapper: {
+    flex: 1,
+    justifyContent: 'flex-start',
   },
   logoLeft: {
     width: 200,
     height: 110,
     objectFit: 'contain',
-    marginLeft: 30,
   },
+  // JPP logo: SQUARE (imej sumber 1280x1280 — 1:1 ratio, buat box square supaya tiada whitespace)
   logoRight: {
-    width: 200,
-    height: 110,
+    width: 150,
+    height: 150,
     objectFit: 'contain',
-    marginRight: 30,
   },
 
   coverCenter: {
@@ -104,11 +108,13 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     gap: 40,
   },
-  signBox: { width: 300 },
+  // signBox: lebar dikira secara dinamik oleh calcSignWidth()
+  signBox: { },
   signRoleTitle: { fontSize: 11, marginBottom: 35 },
   signLine: { borderBottomWidth: 1, borderBottomColor: '#000', marginBottom: 5 },
   signText: { fontSize: 11, fontWeight: 'bold' },
-  signRole: { fontSize: 10 }
+  signRole: { fontSize: 10 },
+  signRoleBold: { fontSize: 10, fontWeight: 'bold' }
 });
 
 interface LaporanPDFProps {
@@ -117,7 +123,7 @@ interface LaporanPDFProps {
   activities: any[];
   /** Nama orang yang disediakan laporan (penjana laporan) */
   submitterName?: string;
-  /** Jawatan penjana laporan (contoh: KETUA EXCO) */
+  /** Jawatan penjana laporan (contoh: KETUA EXCO KELAB, PERSATUAN DAN PERPADUAN) */
   submitterRole?: string;
   /** Unit/Kelab penjana (contoh: Exco KPP) */
   submitterUnit?: string;
@@ -128,7 +134,35 @@ interface LaporanPDFProps {
   /** Label tambahan bawah nama 'Disemak' (default: clubName) */
   reviewerUnit?: string;
   clubLogoUrl?: string;
+  /** Aktifkan layout khusus Exco JPP (logo sizing, signature penuh JPP+Politeknik) */
+  isExco?: boolean;
+  /** Nama organisasi JPP (default: JAWATANKUASA PERWAKILAN PELAJAR) */
+  jppOrgName?: string;
+  /** Nama politeknik (default: POLITEKNIK SULTAN HAJI AHMAD SHAH) */
+  polytechnicName?: string;
 }
+
+// ─── Helper: lebar GARISAN (ikut nama sahaja — 11pt Bold Helvetica ≈ 7.8pt/char) ─
+const calcLineWidth = (name: string): number =>
+  Math.min(380, Math.max(180, Math.round(name.length * 7.8 + 15)));
+
+// ─── Helper: lebar KOTAK (ikut teks TERPANJANG — pastikan semua baris muat) ────
+// Role/unit texts adalah 10pt Regular ≈ 7pt/char; nama 11pt Bold ≈ 7.8pt/char
+// Ambil yang terbesar supaya tiada teks yang terpaksa wrap
+const calcBoxWidth = (lineWidth: number, ...otherTexts: (string | undefined | null)[]): number => {
+  const maxRoleWidth = otherTexts
+    .filter(Boolean)
+    .map(t => Math.round((t as string).length * 7.0 + 10))
+    .reduce((a, b) => Math.max(a, b), 0);
+  return Math.min(480, Math.max(lineWidth, maxRoleWidth));
+};
+
+// ─── HARDCODED YDP (JPP POLISAS 2026) ────────────────────────────────────────
+
+const YDP_NAME      = 'MUHAMMAD AMIRUL HAKIMI BIN MOHD ZAWAWI';
+const YDP_TITLE     = 'YANG DI-PERTUA';
+const DEFAULT_JPP   = 'JAWATANKUASA PERWAKILAN PELAJAR';
+const DEFAULT_POLI  = 'POLITEKNIK SULTAN HAJI AHMAD SHAH';
 
 export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
   clubName,
@@ -140,16 +174,26 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
   presidenName = "NAMA PRESIDEN KELAB",
   reviewerRole = "PRESIDEN",
   reviewerUnit,
-  clubLogoUrl
+  clubLogoUrl,
+  isExco = false,
+  jppOrgName = DEFAULT_JPP,
+  polytechnicName = DEFAULT_POLI,
 }) => {
   const poliLogo = "https://ujklcxfbmmzxsqtidjtz.supabase.co/storage/v1/object/public/reports/LOGO%20POLISAS.jpeg";
+
+  // Tahun semasa untuk label JPP
+  const currentYear = new Date().getFullYear();
+  const jppLabel    = `${jppOrgName} ${currentYear}`;
 
   return (
     <Document>
       {/* ── MUKA DEPAN ── */}
       <Page size="A4" style={styles.page}>
         <View style={styles.headerRow}>
-          <Image src={poliLogo} style={styles.logoLeft} />
+          {/* Politeknik: ambil semua space kiri supaya JPP berada di hujung kanan */}
+          <View style={styles.logoLeftWrapper}>
+            <Image src={poliLogo} style={styles.logoLeft} />
+          </View>
           {clubLogoUrl && <Image src={clubLogoUrl} style={styles.logoRight} />}
         </View>
 
@@ -161,8 +205,18 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
         </View>
 
         <View style={styles.coverBottom}>
-          <Text style={styles.coverClubName}>{clubName.toUpperCase()}</Text>
-          <Text style={styles.coverInstitution}>POLITEKNIK SULTAN HAJI AHMAD SHAH</Text>
+          {isExco ? (
+            <>
+              {/* Exco: "EXCO [NAMA UNIT]" + "JAWATANKUASA PERWAKILAN PELAJAR 2026" */}
+              <Text style={styles.coverClubName}>EXCO {clubName.toUpperCase()}</Text>
+              <Text style={styles.coverInstitution}>{jppLabel.toUpperCase()}</Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.coverClubName}>{clubName.toUpperCase()}</Text>
+              <Text style={styles.coverInstitution}>{polytechnicName.toUpperCase()}</Text>
+            </>
+          )}
         </View>
       </Page>
 
@@ -229,38 +283,95 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
         </View>
 
         <View style={styles.signatureSection}>
-          <View style={styles.signBox}>
-            <Text style={styles.signRoleTitle}>Disediakan oleh:</Text>
-            <View style={styles.signLine} />
-            {submitterName ? (
-              <>
-                <Text style={styles.signText}>{submitterName.toUpperCase()}</Text>
-                {submitterRole && <Text style={styles.signRole}>{submitterRole.toUpperCase()}</Text>}
-                {submitterUnit && <Text style={styles.signRole}>{submitterUnit.toUpperCase()}</Text>}
-              </>
-            ) : (
-              <>
-                <Text style={styles.signText}>SETIAUSAHA</Text>
-                <Text style={styles.signRole}>{clubName.toUpperCase()}</Text>
-              </>
-            )}
-          </View>
 
-          <View style={styles.signBox}>
-            <Text style={styles.signRoleTitle}>Disemak oleh:</Text>
-            <View style={styles.signLine} />
-            <Text style={styles.signText}>{presidenName.toUpperCase()}</Text>
-            <Text style={styles.signText}>{reviewerRole.toUpperCase()}</Text>
-            {reviewerUnit && <Text style={styles.signRole}>{reviewerUnit.toUpperCase()}</Text>}
-          </View>
+          {/* ── Disediakan oleh ─── */}
+          {(() => {
+            // line ikut nama; box ikut teks terpanjang (supaya role/unit tak wrap)
+            const primaryName = submitterName || 'SETIAUSAHA';
+            const lineW = calcLineWidth(primaryName);
+            const roleTexts = submitterName
+              ? [submitterRole, isExco ? jppLabel : submitterUnit, isExco ? polytechnicName : undefined]
+              : [clubName];
+            const boxW = calcBoxWidth(lineW, ...roleTexts);
+            return (
+              <View style={[styles.signBox, { width: boxW }]}>
+                <Text style={styles.signRoleTitle}>Disediakan oleh:</Text>
+                <View style={[styles.signLine, { width: lineW }]} />
+                {submitterName ? (
+                  <>
+                    <Text style={styles.signText}>{submitterName.toUpperCase()}</Text>
+                    {submitterRole && <Text style={styles.signRole}>{submitterRole.toUpperCase()}</Text>}
+                    {isExco && <Text style={styles.signRole}>{jppLabel.toUpperCase()}</Text>}
+                    {isExco && <Text style={styles.signRole}>{polytechnicName.toUpperCase()}</Text>}
+                    {!isExco && submitterUnit && <Text style={styles.signRole}>{submitterUnit.toUpperCase()}</Text>}
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.signText}>SETIAUSAHA</Text>
+                    <Text style={styles.signRole}>{clubName.toUpperCase()}</Text>
+                  </>
+                )}
+              </View>
+            );
+          })()}
 
-          <View style={styles.signBox}>
-            <Text style={styles.signRoleTitle}>Disahkan oleh:</Text>
-            <View style={styles.signLine} />
-            <Text style={styles.signText}>YANG DIPERTUA</Text>
-            <Text style={styles.signText}>JAWATANKUASA PERWAKILAN PELAJAR</Text>
-            <Text style={styles.signText}>POLITEKNIK SULTAN HAJI AHMAD SHAH</Text>
-          </View>
+          {/* ── Disemak oleh ─── */}
+          {(() => {
+            const lineW = calcLineWidth(presidenName);
+            const roleTexts = isExco
+              ? [reviewerRole, jppLabel, polytechnicName]
+              : [reviewerRole, reviewerUnit];
+            const boxW = calcBoxWidth(lineW, ...roleTexts);
+            return (
+              <View style={[styles.signBox, { width: boxW }]}>
+                <Text style={styles.signRoleTitle}>Disemak oleh:</Text>
+                <View style={[styles.signLine, { width: lineW }]} />
+                <Text style={styles.signText}>{presidenName.toUpperCase()}</Text>
+                <Text style={isExco ? styles.signRoleBold : styles.signText}>{reviewerRole.toUpperCase()}</Text>
+                {isExco ? (
+                  <>
+                    <Text style={styles.signRole}>{jppLabel.toUpperCase()}</Text>
+                    <Text style={styles.signRole}>{polytechnicName.toUpperCase()}</Text>
+                  </>
+                ) : (
+                  reviewerUnit && <Text style={styles.signRole}>{reviewerUnit.toUpperCase()}</Text>
+                )}
+              </View>
+            );
+          })()}
+
+          {/* ── Disahkan oleh ─── */}
+          {(() => {
+            const ydpDisplayName = isExco ? YDP_NAME : 'YANG DIPERTUA';
+            const lineW = calcLineWidth(ydpDisplayName);
+            const roleTexts = isExco
+              ? [YDP_TITLE, jppLabel, polytechnicName]
+              : ['JAWATANKUASA PERWAKILAN PELAJAR', 'POLITEKNIK SULTAN HAJI AHMAD SHAH'];
+            const boxW = calcBoxWidth(lineW, ...roleTexts);
+            return (
+              <View style={[styles.signBox, { width: boxW }]}>
+                <Text style={styles.signRoleTitle}>Disahkan oleh:</Text>
+                <View style={[styles.signLine, { width: lineW }]} />
+                {isExco ? (
+                  <>
+                    <Text style={styles.signText}>{YDP_NAME}</Text>
+                    <Text style={styles.signRoleBold}>{YDP_TITLE}</Text>
+                    <Text style={styles.signRole}>{jppLabel.toUpperCase()}</Text>
+                    <Text style={styles.signRole}>{polytechnicName.toUpperCase()}</Text>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.signText}>YANG DIPERTUA</Text>
+                    <Text style={styles.signText}>JAWATANKUASA PERWAKILAN PELAJAR</Text>
+                    <Text style={styles.signText}>POLITEKNIK SULTAN HAJI AHMAD SHAH</Text>
+                  </>
+                )}
+              </View>
+            );
+          })()}
+
+
+
         </View>
       </Page>
     </Document>

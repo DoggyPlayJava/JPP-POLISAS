@@ -168,7 +168,7 @@ export function KebajikanUnitDashboard() {
 
   const jppPos = profile?.jpp_position as string | undefined;
   const isMT = JPP_MT_POSITIONS.includes(jppPos as any);
-  const isYDP = jppPos === 'YDP' || isSuperAdmin;
+  const isYDP = jppPos === 'YDP' || jppPos === 'YANG_DIPERTUA' || isSuperAdmin;
 
   const [tab, setTab] = useState<KbjTab>('overview');
 

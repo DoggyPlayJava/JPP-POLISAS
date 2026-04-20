@@ -8,12 +8,11 @@ import {
   ChevronRight, ShieldCheck, Sparkles, Clock, Flag, BarChart3, ArrowUpRight,
 } from 'lucide-react';
 import { cn, hexToRgba, getMalaysianNickname } from '@/lib/utils';
-import { JPP_POSITION_LABELS, JPP_MT_POSITIONS } from '@/types';
+import { JPP_MT_POSITIONS } from '@/types';
 import { format, isPast, isWithinInterval, addDays } from 'date-fns';
 import { ms } from 'date-fns/locale';
-import {
-  UNIT_ORDER, UNIT_CFG, JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID,
-} from './jppConfig';
+import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
+import { useJppConfig } from '@/contexts/JppConfigContext';
 
 // ─── Stat card ───────────────────────────────────────────────────────────────
 function StatCard({
@@ -46,7 +45,8 @@ function UnitCard({
 }: {
   code: string; isLocked: boolean; delay: number; onNavigate: (link: string) => void;
 }) {
-  const cfg = UNIT_CFG[code];
+  const { unitConfig } = useJppConfig();
+  const cfg = unitConfig[code];
   if (!cfg) return null;
   const canOpen = cfg.isActive && !isLocked;
 
@@ -165,6 +165,7 @@ function TakwimCard({ event, delay }: { event: any; delay: number }) {
 export function JppHomePage() {
   const { user, profile, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
+  const { positionLabels, unitConfig, unitOrder } = useJppConfig();
 
   const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
   const [assignedUnits, setAssignedUnits] = useState<string[]>([]);
@@ -178,7 +179,7 @@ export function JppHomePage() {
 
   const displayName = useMemo(() => getMalaysianNickname(profile?.full_name) || 'Sahabat', [profile]);
   const posLabel    = jppPosition
-    ? (JPP_POSITION_LABELS[jppPosition as keyof typeof JPP_POSITION_LABELS] ?? jppPosition)
+    ? (positionLabels[jppPosition] ?? jppPosition)
     : isSuperAdmin ? 'Super Admin' : 'Ahli JPP';
 
   // Fetch JPP portal color
@@ -218,7 +219,7 @@ export function JppHomePage() {
   }, []);
 
   // Determine visible units
-  const visibleUnits = UNIT_ORDER.filter(code => {
+  const visibleUnits = unitOrder.filter(code => {
     if (isYDP)  return true;
     if (isMT)   return assignedUnits.includes(code);
     return code === jppUnit;
@@ -306,7 +307,7 @@ export function JppHomePage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {visibleUnits.map((code, i) => {
-                const cfg = UNIT_CFG[code];
+                const cfg = unitConfig[code];
                 const isOwn = code === jppUnit;
                 const hasDirectAccess = cfg?.isActive && (isYDP || isOwn || assignedUnits.includes(code));
                 return (

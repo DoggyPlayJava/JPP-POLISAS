@@ -6,8 +6,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAiAssistant, ChatMessage, ChatContext } from '@/hooks/useAiAssistant';
-import { ALL_CLUBS, JPP_POSITION_LABELS, JPP_UNIT_LABELS } from '@/types';
+import { ALL_CLUBS } from '@/types';
 import { useAiSettings } from '@/contexts/AiSettingsContext';
+import { useJppConfig } from '@/contexts/JppConfigContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import ReactMarkdown from 'react-markdown';
@@ -83,6 +84,7 @@ export function FloatingAiChat() {
   const { profile, isSuperAdmin, isAdvisor, isPresident, isMT, selectedClubId } = useAuth();
   const { callAi, sendChatMessage, isLoading: isActionLoading, isChatLoading, retryCount } = useAiAssistant();
   const { allowAiChat } = useAiSettings();
+  const { positionLabels, unitLabels } = useJppConfig();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -229,8 +231,8 @@ export function FloatingAiChat() {
           let jppOrgText = undefined;
           if (jppRes.data && jppRes.data.length > 0) {
             jppOrgText = jppRes.data.map(m => {
-              const pos = m.jpp_position ? (JPP_POSITION_LABELS[m.jpp_position as string] || m.jpp_position) : 'Ahli JPP';
-              const unit = m.jpp_unit ? (JPP_UNIT_LABELS[m.jpp_unit as string] || m.jpp_unit) : '';
+              const pos = m.jpp_position ? (positionLabels[m.jpp_position as string] || m.jpp_position) : 'Ahli JPP';
+              const unit = m.jpp_unit ? (unitLabels[m.jpp_unit as string] || m.jpp_unit) : '';
               return `- ${m.full_name} (${pos}${unit ? ' - ' + unit : ''})`;
             }).join('\n');
           }
@@ -365,7 +367,7 @@ export function FloatingAiChat() {
       };
       fetchContext();
     }
-  }, [isOpen, profile?.id, location.pathname, selectedClubId]);
+  }, [isOpen, profile?.id, location.pathname, selectedClubId, positionLabels, unitLabels]);
 
   // ── Clear history ────────────────────────────────────────────────────────
   const clearHistory = () => {

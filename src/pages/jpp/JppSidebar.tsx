@@ -13,16 +13,15 @@ import { supabase } from '@/lib/supabase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn, hexToRgba, getContrastText } from '@/lib/utils';
-import { JPP_POSITION_LABELS, JPP_MT_POSITIONS } from '@/types';
+import { JPP_MT_POSITIONS } from '@/types';
 import { toast } from 'react-hot-toast';
-import {
-  UNIT_ORDER, UNIT_CFG, JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID,
-  getJppSidebarBg, JPP_COLOR_PRESETS,
-} from './jppConfig';
+import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID, getJppSidebarBg, JPP_COLOR_PRESETS } from './jppConfig';
+import { useJppConfig } from '@/contexts/JppConfigContext';
 
 // ── Component ────────────────────────────────────────────────────────────────
 export function JppSidebar() {
   const { user, profile, signOut, isSuperAdmin, hasKediamanAccess } = useAuth();
+  const { positionLabels, unitConfig, unitOrder } = useJppConfig();
 
   const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
   const [hexInput, setHexInput]     = useState(JPP_THEME_DEFAULT_COLOR);
@@ -75,7 +74,7 @@ export function JppSidebar() {
   const isUnitAsramaOnly = hasKediamanAccess && !isYDP && !isMT && !jppUnit;
 
   // ── Determine visible units based on RBAC ─────────────────────────────
-  const visibleUnits = UNIT_ORDER.filter(code => {
+  const visibleUnits = unitOrder.filter(code => {
     if (isYDP) return true;
     if (isMT)  return assignedUnits.includes(code);
     if (isUnitAsramaOnly) return false; // Mereka ada section sendiri
@@ -101,7 +100,7 @@ export function JppSidebar() {
   const displayName = profile?.full_name || user?.email?.split('@')[0] || '?';
   const initials    = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   const posLabel    = jppPosition
-    ? (JPP_POSITION_LABELS[jppPosition as keyof typeof JPP_POSITION_LABELS] ?? jppPosition)
+    ? (positionLabels[jppPosition] ?? jppPosition)
     : isSuperAdmin ? 'Super Admin' : 'Ahli JPP';
 
   return (
@@ -388,7 +387,7 @@ export function JppSidebar() {
 
 
             {visibleUnits.map(code => {
-              const cfg = UNIT_CFG[code];
+              const cfg = unitConfig[code];
               if (!cfg) return null;
               const isOwn      = code === jppUnit;
               const hasAccess  = isYDP || isOwn || assignedUnits.includes(code);

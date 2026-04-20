@@ -10,7 +10,7 @@ import { Progress } from '@/components/ui/progress';
 
 export function JppNexusPage() {
     const { isSuperAdmin, profile } = useAuth();
-    const isYDP = profile?.jpp_position === 'YANG_DIPERTUA' || isSuperAdmin;
+    const isYDP = profile?.jpp_position === 'YANG_DIPERTUA' || profile?.jpp_position === 'YDP' || isSuperAdmin;
     const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
     const [loading, setLoading] = useState(true);
 
@@ -32,6 +32,11 @@ export function JppNexusPage() {
 
     const fetchData = async () => {
         setLoading(true);
+        // K-2 Guard: hanya YDP/SuperAdmin boleh muat data sistem sensitif ini
+        if (!isYDP && !isSuperAdmin) {
+            setLoading(false);
+            return;
+        }
         const { data: settingsData } = await supabase.from('system_settings').select('*');
         if (settingsData) {
             const s = { ...settings };

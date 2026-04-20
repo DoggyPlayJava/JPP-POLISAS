@@ -34,6 +34,8 @@ export interface LaporanPreviewModalProps {
   reviewerRole?: string;
   reviewerUnit?: string;
   clubLogoUrl?: string;
+  /** Aktifkan layout khusus Exco JPP dalam PDF */
+  isExco?: boolean;
   /** Nama fail DOCX yang akan dimuat turun (tanpa extension) */
   fileName?: string;
   // Callbacks
@@ -57,6 +59,7 @@ export function LaporanPreviewModal({
   reviewerRole,
   reviewerUnit,
   clubLogoUrl,
+  isExco,
   fileName,
   onClose,
   onSubmit,
@@ -227,6 +230,7 @@ export function LaporanPreviewModal({
                 reviewerRole={reviewerRole}
                 reviewerUnit={reviewerUnit}
                 clubLogoUrl={clubLogoUrl}
+                isExco={isExco}
               />
             </PDFViewer>
           </div>
