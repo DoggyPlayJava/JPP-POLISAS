@@ -363,7 +363,7 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
                 <Text style={styles.signRoleTitle}>Disemak oleh:</Text>
                 <View style={[styles.signLine, { width: lineW }]} />
                 <Text style={styles.signText}>{presidenName.toUpperCase()}</Text>
-                <Text style={isExco ? styles.signRoleBold : styles.signText}>{reviewerRole.toUpperCase()}</Text>
+                <Text style={styles.signRole}>{reviewerRole.toUpperCase()}</Text>
                 {isExco ? (
                   <>
                     <Text style={styles.signRole}>{jppLabel.toUpperCase()}</Text>
@@ -398,8 +398,8 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
                 ) : (
                   <>
                     <Text style={styles.signText}>YANG DIPERTUA</Text>
-                    <Text style={styles.signText}>JAWATANKUASA PERWAKILAN PELAJAR</Text>
-                    <Text style={styles.signText}>POLITEKNIK SULTAN HAJI AHMAD SHAH</Text>
+                    <Text style={styles.signRole}>JAWATANKUASA PERWAKILAN PELAJAR</Text>
+                    <Text style={styles.signRole}>POLITEKNIK SULTAN HAJI AHMAD SHAH</Text>
                   </>
                 )}
               </View>

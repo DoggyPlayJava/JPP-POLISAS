@@ -63,12 +63,13 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
   // ── Derived values ─────────────────────────────────────────────────────────
   const monthLabel = format(parseISO(`${targetMonth}-01`), 'MMMM yyyy', { locale: ms }).toUpperCase();
 
-  // Jawatan penuh: "KETUA EXCO KELAB, PERSATUAN & PERPADUAN"
+  // Jawatan penuh: "KETUA EXCO" atau "EXCO" (buang prefix "AHLI" jika ada)
   const positionLabel = jppPos
-    ? (positionLabels[jppPos] || jppPos).toUpperCase()
-    : 'AHLI EXCO';
-  // Gabung jawatan + nama unit exco supaya jadi "KETUA EXCO KELAB, PERSATUAN DAN PERPADUAN"
+    ? (positionLabels[jppPos] || jppPos).toUpperCase().replace(/^AHLI\s+/i, '')
+    : 'EXCO';
+  // Gabung jawatan + nama unit exco supaya jadi "EXCO KELAB, PERSATUAN DAN PERPADUAN"
   const submitterRoleLabel = `${positionLabel} ${excoLabel.toUpperCase()}`;
+
 
   // Manual upload
   const [file, setFile] = useState<File | null>(null);

@@ -176,43 +176,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('selectedClubId');
       }
 
-      // Check if MT is assigned to KPP, KEUSAHAWANAN, or KK (Kediaman)
-      if (profileData?.role === 'JPP' || profileData?.role === 'SUPER_ADMIN_JPP') {
-        const [kppAssign, keusahawananAssign, kediamanAssign] = await Promise.all([
-          supabase.from('jpp_mt_assignments').select('unit').eq('mt_user_id', userId).eq('unit', 'KPP').maybeSingle(),
-          supabase.from('jpp_mt_assignments').select('unit').eq('mt_user_id', userId).eq('unit', 'KEUSAHAWANAN').maybeSingle(),
-          supabase.from('jpp_mt_assignments').select('unit').eq('mt_user_id', userId).eq('unit', 'KK').maybeSingle(),
-        ]);
-        setIsMTKpp(!!kppAssign.data);
-        setIsMTKeusahawanan(!!keusahawananAssign.data);
-        setIsMTKediaman(!!kediamanAssign.data);
-      } else {
-        setIsMTKpp(false);
-        setIsMTKeusahawanan(false);
-        setIsMTKediaman(false);
-      }
+      // ── Run all role/permission checks in PARALLEL for speed ──────────────
+      const isJppRole = profileData?.role === 'JPP' || profileData?.role === 'SUPER_ADMIN_JPP';
 
-      // Check if user is a Unit Keusahawanan admin OR Unit Pengurusan Asrama admin
-      if (profileData?.role === 'JPP' || profileData?.role === 'SUPER_ADMIN_JPP') {
-        const [keusahawananAdmin, asramaAdmin] = await Promise.all([
-          supabase.from('keusahawanan_unit_admins').select('id').eq('user_id', userId).maybeSingle(),
-          supabase.from('asrama_unit_admins').select('id').eq('user_id', userId).maybeSingle(),
-        ]);
-        setIsUnitKeusahawananAdmin(!!keusahawananAdmin.data);
-        setIsUnitAsramaAdmin(!!asramaAdmin.data);
-      } else {
-        setIsUnitKeusahawananAdmin(false);
-        setIsUnitAsramaAdmin(false);
-      }
+      const [kppAssign, keusahawananAssign, kediamanAssign,
+             keusahawananAdmin, asramaAdmin, kebajikanStaff] = await Promise.all([
+        // MT assignments — only meaningful for JPP roles
+        isJppRole
+          ? supabase.from('jpp_mt_assignments').select('unit').eq('mt_user_id', userId).eq('unit', 'KPP').maybeSingle()
+          : Promise.resolve({ data: null }),
+        isJppRole
+          ? supabase.from('jpp_mt_assignments').select('unit').eq('mt_user_id', userId).eq('unit', 'KEUSAHAWANAN').maybeSingle()
+          : Promise.resolve({ data: null }),
+        isJppRole
+          ? supabase.from('jpp_mt_assignments').select('unit').eq('mt_user_id', userId).eq('unit', 'KK').maybeSingle()
+          : Promise.resolve({ data: null }),
+        // Unit admin checks — only meaningful for JPP roles
+        isJppRole
+          ? supabase.from('keusahawanan_unit_admins').select('id').eq('user_id', userId).maybeSingle()
+          : Promise.resolve({ data: null }),
+        isJppRole
+          ? supabase.from('asrama_unit_admins').select('id').eq('user_id', userId).maybeSingle()
+          : Promise.resolve({ data: null }),
+        // Kebajikan staff — check for ALL users
+        supabase.from('kebajikan_staff_assignments').select('id').eq('staff_user_id', userId).eq('is_active', true).maybeSingle(),
+      ]);
 
-      // Check if user is a Unit Kebajikan staff (accessible by all authenticated users, not just JPP)
-      const { data: kebajikanStaff } = await supabase
-        .from('kebajikan_staff_assignments')
-        .select('id')
-        .eq('staff_user_id', userId)
-        .eq('is_active', true)
-        .maybeSingle();
-      setIsUnitKebajikanStaff(!!kebajikanStaff);
+      setIsMTKpp(!!kppAssign.data);
+      setIsMTKeusahawanan(!!keusahawananAssign.data);
+      setIsMTKediaman(!!kediamanAssign.data);
+      setIsUnitKeusahawananAdmin(!!keusahawananAdmin.data);
+      setIsUnitAsramaAdmin(!!asramaAdmin.data);
+      setIsUnitKebajikanStaff(!!kebajikanStaff.data);
     } catch (err) {
       // Jika junction table belum wujud (sebelum migration), jangan crash
       console.warn('[AuthContext] fetchMemberships: fetch or auto-repair failed', err);
@@ -246,11 +241,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const urlType = hashParams.get('type');
     const isRecoveryUrl = urlType === 'recovery';
 
+    // ⏱️ SAFETY TIMEOUT: Paksa loading screen hilang selepas 6 saat
+    // Ini mengelak pengguna stuck di loading screen selama-lamanya jika
+    // Supabase lambat atau ada network hiccup.
+    const safetyTimer = setTimeout(() => {
+      if (isMounted) {
+        console.warn('[AuthContext] Safety timeout triggered — forcing isLoading=false');
+        setIsLoading(false);
+      }
+    }, 6000);
+
     const initialize = async () => {
       try {
-        // A. Tarik senarai kelab dulu
-        await refreshClubs();
-
         // B. Jika URL adalah recovery link, tunggu onAuthStateChange handle —
         //    JANGAN panggil getSession() dulu kerana ia akan set user sebagai
         //    "authenticated biasa" sebelum PASSWORD_RECOVERY event fire.
@@ -260,8 +262,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // C. Semak sesi sedia ada (flow log masuk biasa)
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        // A+C: Jalankan refreshClubs dan getSession SECARA SELARI untuk jimat masa
+        const [, { data: { session: initialSession } }] = await Promise.all([
+          refreshClubs(),
+          supabase.auth.getSession(),
+        ]);
 
         if (isMounted) {
           setSession(initialSession);
@@ -275,6 +280,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (err) {
         console.error("[AuthContext] Init error:", err);
       } finally {
+        clearTimeout(safetyTimer);
         if (isMounted) setIsLoading(false);
       }
     };
