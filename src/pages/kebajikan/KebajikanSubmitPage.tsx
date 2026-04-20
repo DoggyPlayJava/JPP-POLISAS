@@ -9,7 +9,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { sendNotificationToKebajikanExco } from '@/lib/notifications';
+import { sendNotificationToKebajikanExco, sendNotificationToUser } from '@/lib/notifications';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -182,6 +182,32 @@ export function KebajikanSubmitPage() {
       }).select('id, ticket_no').single();
 
       if (error) throw error;
+
+      // Fetch auto-reply settings
+      const { data: settings } = await supabase.from('kebajikan_settings').select('auto_reply_message').limit(1).single();
+      const rawAutoReply = settings?.auto_reply_message || 'Terima kasih atas aduan anda. No. Tiket anda ialah {ticket_no}. Exco Kebajikan akan menghubungi anda dalam masa yang singkat. Terima kasih.';
+      const personalizedAutoReply = rawAutoReply.replace('{ticket_no}', data.ticket_no);
+
+      // Insert auto-reply as the first comment
+      await supabase.from('kebajikan_ticket_comments').insert({
+        ticket_id: data.id,
+        author_id: user.id, // Using submitter's ID to satisfy FK constraint, but role is SISTEM
+        author_name: 'Sistem E-Kebajikan',
+        author_role: 'SISTEM',
+        is_internal: false,
+        content: personalizedAutoReply
+      });
+
+      // Notify the user about the auto-reply
+      await sendNotificationToUser(user.id, {
+        title: `Aduan Diterima: ${data.ticket_no}`,
+        message: personalizedAutoReply.slice(0, 80) + (personalizedAutoReply.length > 80 ? '...' : ''),
+        type: 'AUTO_REPLY',
+        module: 'KEBAJIKAN',
+        link: `/kebajikan/aduan/${data.id}`,
+        reference_id: data.ticket_no,
+        actor_name: 'Sistem E-Kebajikan',
+      });
 
       // Notify all Kebajikan Exco about the new ticket
       const ticketTitle = buildTitle();
