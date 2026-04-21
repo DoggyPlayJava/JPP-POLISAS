@@ -81,6 +81,7 @@ interface SupsasContextValue {
   fixtures: SupsasFixture[];
   isLoading: boolean;
   isLive: boolean;
+  isUpcoming: boolean;
   refetch: () => void;
 }
 
@@ -92,6 +93,7 @@ const SupsasContext = createContext<SupsasContextValue>({
   fixtures: [],
   isLoading: true,
   isLive: false,
+  isUpcoming: false,
   refetch: () => {},
 });
 
@@ -105,23 +107,32 @@ export function SupsasProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchAll = useCallback(async () => {
-    // 1. Get active edition
+    // 1. Get the most recent edition (active OR inactive — admin needs to see it)
+    //    Public scoreboard uses isLive flag, not is_active alone.
     const { data: editionData } = await supabase
       .from('supsas_editions')
       .select('*')
-      .eq('is_active', true)
+      .order('edition_year', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (!editionData) {
+      setEdition(null);
+      setKontingen([]);
+      setSports([]);
+      setMedalTally([]);
+      setFixtures([]);
       setIsLoading(false);
       return;
     }
     setEdition(editionData);
 
     // 2. Get all data in parallel
+    // Note: Admin pages see ALL sports (including inactive) for management.
+    // Public pages filter is_active themselves from context.
     const [kontingenRes, sportsRes, tallyRes, fixturesRes] = await Promise.all([
-      supabase.from('supsas_kontingen').select('*').eq('edition_id', editionData.id).eq('is_active', true).order('name'),
-      supabase.from('supsas_sports').select('*').eq('edition_id', editionData.id).eq('is_active', true).order('sort_order'),
+      supabase.from('supsas_kontingen').select('*').eq('edition_id', editionData.id).order('name'),
+      supabase.from('supsas_sports').select('*').eq('edition_id', editionData.id).order('sort_order'),
       supabase.from('supsas_medal_tally').select('*').eq('edition_id', editionData.id),
       supabase.from('supsas_fixtures').select('*').eq('edition_id', editionData.id).order('match_date').order('match_time'),
     ]);
@@ -136,18 +147,14 @@ export function SupsasProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     fetchAll();
 
-    // Realtime subscription — listen to results & fixture changes for live scoreboard
+    // Realtime subscription — listen to changes for live scoreboard
     const resultsChannel = supabase
       .channel('supsas_realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_results' }, () => {
-        fetchAll();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_fixtures' }, () => {
-        fetchAll();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_kontingen' }, () => {
-        fetchAll();
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_results' }, () => fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_fixtures' }, () => fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_kontingen' }, () => fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_sports' }, () => fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_editions' }, () => fetchAll())
       .subscribe();
 
     // Poll every 30 seconds as fallback (e.g. iOS PWA WebSocket sleep)
@@ -159,12 +166,16 @@ export function SupsasProvider({ children }: { children: React.ReactNode }) {
     };
   }, [fetchAll]);
 
+  // isLive = edisi is_active=true DAN masa sekarang dalam range tarikh
   const now = new Date();
-  const isLive = !!edition?.start_date && !!edition?.end_date &&
+  const isLive = !!edition?.is_active && !!edition?.start_date && !!edition?.end_date &&
     new Date(edition.start_date) <= now && new Date(edition.end_date) >= now;
 
+  // isUpcoming = edisi wujud tapi belum bermula
+  const isUpcoming = !!edition && !!edition.start_date && new Date(edition.start_date) > now;
+
   return (
-    <SupsasContext.Provider value={{ edition, kontingen, sports, medalTally, fixtures, isLoading, isLive, refetch: fetchAll }}>
+    <SupsasContext.Provider value={{ edition, kontingen, sports, medalTally, fixtures, isLoading, isLive, isUpcoming, refetch: fetchAll }}>
       {children}
     </SupsasContext.Provider>
   );

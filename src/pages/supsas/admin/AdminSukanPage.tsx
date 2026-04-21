@@ -64,7 +64,8 @@ export function AdminSukanPage() {
   const openEdit = (s: SupsasSport) => { setForm({ name: s.name, category: s.category, gender: s.gender, format: s.format, icon: s.icon, venue: s.venue ?? '', max_per_team: s.max_per_team, sort_order: s.sort_order }); setEditTarget(s); setShowForm(true); };
 
   const handleSave = async () => {
-    if (!edition || !form.name.trim()) { toast.error('Sila isi nama sukan'); return; }
+    if (!edition) { toast.error('Tiada edisi ditemui. Cipta edisi dahulu dalam Tetapan.'); return; }
+    if (!form.name.trim()) { toast.error('Sila isi nama sukan'); return; }
     setSaving(true);
     const payload = { ...form, edition_id: edition.id };
     const { error } = editTarget
@@ -76,6 +77,7 @@ export function AdminSukanPage() {
     setShowForm(false);
     refetch();
   };
+
 
   const handleToggle = async (sport: SupsasSport) => {
     const { error } = await supabase.from('supsas_sports').update({ is_active: !sport.is_active }).eq('id', sport.id);
@@ -109,12 +111,23 @@ export function AdminSukanPage() {
         </button>
       </div>
 
-      {/* No edition warning */}
+      {/* Edition status warnings */}
       {!edition && (
-        <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-center text-amber-400/60 text-sm">
-          Tiada edisi aktif. Setup edisi dahulu.
+        <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/20 text-center text-red-400/70 text-sm space-y-2">
+          <p className="font-black">Tiada edisi ditemui</p>
+          <p className="text-xs text-red-400/50">Pergi ke <strong>Tetapan Edisi</strong> untuk mencipta edisi SUPSAS baharu.</p>
         </div>
       )}
+      {edition && !edition.is_active && (
+        <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 flex items-center gap-3">
+          <span className="text-amber-400 text-lg">⚠️</span>
+          <div className="flex-1">
+            <p className="text-amber-400 text-xs font-black">Edisi <strong>{edition.name}</strong> belum diaktifkan</p>
+            <p className="text-amber-400/50 text-[10px] mt-0.5">Sukan boleh ditambah sekarang. Aktifkan edisi dalam <strong>Tetapan</strong> supaya scoreboard public hidup.</p>
+          </div>
+        </div>
+      )}
+
 
       {/* Sports list */}
       <div className="space-y-3">
