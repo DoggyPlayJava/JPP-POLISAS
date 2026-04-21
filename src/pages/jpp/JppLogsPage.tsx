@@ -14,6 +14,7 @@ export function JppLogsPage() {
 
     const [logs, setLogs] = useState<any[]>([]);
     const [logSearch, setLogSearch] = useState('');
+    const [activeTab, setActiveTab] = useState('Semua');
 
     useEffect(() => {
         supabase.from('portal_settings').select('color').eq('exco_module', JPP_MODULE_ID).maybeSingle()
@@ -31,20 +32,30 @@ export function JppLogsPage() {
                 entity_id,
                 details,
                 created_at,
-                profiles ( full_name, role )
+                full_name,
+                role
             `)
             .order('created_at', { ascending: false })
             .limit(100);
-        setLogs(data || []);
+            
+        const formattedData = (data || []).map(log => ({
+            ...log,
+            profiles: { full_name: log.full_name, role: log.role }
+        }));
+        setLogs(formattedData);
         setLoading(false);
     };
 
-    const filteredLogs = logs.filter(log =>
-        log.details?.toLowerCase().includes(logSearch.toLowerCase()) ||
-        log.profiles?.full_name?.toLowerCase().includes(logSearch.toLowerCase()) ||
-        log.action_type?.toLowerCase().includes(logSearch.toLowerCase()) ||
-        log.entity_type?.toLowerCase().includes(logSearch.toLowerCase())
-    );
+    const filteredLogs = logs.filter(log => {
+        const matchesTab = activeTab === 'Semua' || log.entity_type === activeTab;
+        const matchesSearch = 
+            log.details?.toLowerCase().includes(logSearch.toLowerCase()) ||
+            log.profiles?.full_name?.toLowerCase().includes(logSearch.toLowerCase()) ||
+            log.action_type?.toLowerCase().includes(logSearch.toLowerCase()) ||
+            log.entity_type?.toLowerCase().includes(logSearch.toLowerCase());
+            
+        return matchesTab && matchesSearch;
+    });
 
     if (loading) {
         return <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center text-white/30 text-xs uppercase tracking-widest">Memuatkan Audit Trail...</div>;
@@ -81,6 +92,25 @@ export function JppLogsPage() {
                             />
                         </div>
                     </div>
+                </motion.div>
+
+                {/* Tabs */}
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.05 }} className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                    {['Semua', 'Kelab & Karnival', 'Keusahawanan', 'Kebajikan', 'POS System'].map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={cn(
+                                "px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border",
+                                activeTab === tab
+                                    ? "bg-white/10 text-white border-white/20"
+                                    : "text-white/40 border-transparent hover:text-white/60 hover:bg-white/5"
+                            )}
+                            style={activeTab === tab ? { backgroundColor: hexToRgba(themeColor, 0.2), color: themeColor, borderColor: hexToRgba(themeColor, 0.5) } : {}}
+                        >
+                            {tab}
+                        </button>
+                    ))}
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="border border-white/5 bg-white/[0.01] rounded-[2rem] overflow-hidden">

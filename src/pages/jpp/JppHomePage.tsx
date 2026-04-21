@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import {
   Users, Crown, ExternalLink, Lock, CalendarDays,
   ChevronRight, ShieldCheck, Sparkles, Clock, Flag, BarChart3, ArrowUpRight,
+  Store, Heart, Trophy
 } from 'lucide-react';
 import { cn, hexToRgba, getMalaysianNickname } from '@/lib/utils';
 import { JPP_MT_POSITIONS } from '@/types';
@@ -169,7 +170,7 @@ export function JppHomePage() {
 
   const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
   const [assignedUnits, setAssignedUnits] = useState<string[]>([]);
-  const [stats, setStats] = useState({ jppMembers: 0, totalClubs: 0, totalActivities: 0 });
+  const [stats, setStats] = useState({ jppMembers: 0, totalClubs: 0, totalActivities: 0, totalBusinesses: 0, totalTickets: 0 });
   const [takwim, setTakwim] = useState<any[]>([]);
 
   const jppPosition = profile?.jpp_position as string | undefined;
@@ -198,10 +199,12 @@ export function JppHomePage() {
   // Fetch page data
   useEffect(() => {
     const fetchData = async () => {
-      const [jppRes, clubRes, actRes, takwimRes] = await Promise.all([
+      const [jppRes, clubRes, actRes, bizRes, tickRes, takwimRes] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'JPP'),
         supabase.from('clubs').select('id', { count: 'exact', head: true }).eq('is_active', true),
         supabase.from('club_activities').select('id', { count: 'exact', head: true }).eq('is_archived', false),
+        supabase.from('keusahawanan_businesses').select('id', { count: 'exact', head: true }),
+        supabase.from('kebajikan_tickets').select('id', { count: 'exact', head: true }),
         supabase.from('club_activities')
           .select('id, title, start_date, end_date')
           .gte('end_date', new Date().toISOString())
@@ -212,6 +215,8 @@ export function JppHomePage() {
         jppMembers: jppRes.count ?? 0,
         totalClubs: clubRes.count ?? 0,
         totalActivities: actRes.count ?? 0,
+        totalBusinesses: bizRes.count ?? 0,
+        totalTickets: tickRes.count ?? 0,
       });
       setTakwim(takwimRes.data ?? []);
     };
@@ -280,10 +285,11 @@ export function JppHomePage() {
         </motion.div>
 
         {/* ── Quick Stats ──────────────────────────────────────────────── */}
-        <div className="flex gap-4">
-          <StatCard label="Ahli JPP"     value={stats.jppMembers}     icon={Crown}         color={themeColor}  delay={0.1} />
-          <StatCard label="Kelab Aktif"  value={stats.totalClubs}     icon={Flag}          color="#60A5FA"     delay={0.15} />
-          <StatCard label="Aktiviti"     value={stats.totalActivities} icon={CalendarDays} color="#4ADE80"     delay={0.2} />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard label="Ahli JPP"     value={stats.jppMembers}      icon={Crown}         color={themeColor}  delay={0.1} />
+          <StatCard label="Kelab Aktif"  value={stats.totalClubs}      icon={Flag}          color="#60A5FA"     delay={0.15} />
+          <StatCard label="Perniagaan"   value={stats.totalBusinesses} icon={Store}         color="#F59E0B"     delay={0.2} />
+          <StatCard label="Aduan E-Bantu" value={stats.totalTickets}   icon={Heart}         color="#EF4444"     delay={0.25} />
         </div>
 
         {/* ── Unit Exco Grid ───────────────────────────────────────────── */}

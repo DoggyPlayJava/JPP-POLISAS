@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import {
   Users, Flag, BarChart3, Activity, Database,
   TrendingUp, Shield, Clock, FileText, Loader2,
+  Store, ShoppingBag, Heart, Trophy
 } from 'lucide-react';
 import { hexToRgba } from '@/lib/utils';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID, UNIT_CFG, UNIT_ORDER } from './jppConfig';
@@ -115,7 +116,10 @@ export function JppOverviewPage() {
   useEffect(() => {
     const fetchStats = async () => {
       setLoading(true);
-      const [jppRes, studRes, allClubRes, actClubRes, actRes, repRes, unitRes] = await Promise.all([
+      const [
+        jppRes, studRes, allClubRes, actClubRes, actRes, repRes, unitRes,
+        bizRes, prodRes, tickRes, sportRes
+      ] = await Promise.all([
         // Total JPP members
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'JPP'),
         // Total registered students
@@ -130,6 +134,11 @@ export function JppOverviewPage() {
         supabase.from('club_reports').select('id', { count: 'exact', head: true }),
         // JPP members by unit
         supabase.from('profiles').select('jpp_unit').eq('role', 'JPP').not('jpp_unit', 'is', null),
+        // Additional modules
+        supabase.from('keusahawanan_businesses').select('id', { count: 'exact', head: true }),
+        supabase.from('business_products').select('id', { count: 'exact', head: true }),
+        supabase.from('kebajikan_tickets').select('id', { count: 'exact', head: true }),
+        supabase.from('supsas_sports').select('id', { count: 'exact', head: true }),
       ]);
 
       setStats({
@@ -139,6 +148,10 @@ export function JppOverviewPage() {
         activeClubs:     actClubRes.count ?? 0,
         totalActivities: actRes.count ?? 0,
         totalReports:    repRes.count ?? 0,
+        totalBusinesses: bizRes.count ?? 0,
+        totalProducts:   prodRes.count ?? 0,
+        totalTickets:    tickRes.count ?? 0,
+        totalSports:     sportRes.count ?? 0,
       });
 
       // Tally by unit
@@ -195,14 +208,15 @@ export function JppOverviewPage() {
         ) : (
           <>
             {/* ── Main Stats Grid ─── */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <BigStatCard label="Ahli JPP"         value={stats?.totalJpp ?? 0}        icon={Shield}    color={themeColor} delay={0.05} />
               <BigStatCard label="Pelajar Berdaftar" value={stats?.totalStudents ?? 0}   icon={Users}     color="#60A5FA"    delay={0.10} />
-              <BigStatCard label="Jumlah Kelab"      value={stats?.totalClubs ?? 0}      icon={Flag}      color="#4ADE80"
-                sub={`${stats?.activeClubs ?? 0} aktif`} delay={0.15} />
-              <BigStatCard label="Aktiviti"          value={stats?.totalActivities ?? 0} icon={Activity}  color="#F59E0B"    delay={0.20} />
-              <BigStatCard label="Laporan"           value={stats?.totalReports ?? 0}    icon={FileText}  color="#A78BFA"    delay={0.25} />
-              <BigStatCard label="Kelab Aktif"       value={stats?.activeClubs ?? 0}     icon={TrendingUp} color="#2DD4BF"   delay={0.30} />
+              <BigStatCard label="Jumlah Kelab"      value={stats?.totalClubs ?? 0}      icon={Flag}      color="#4ADE80" delay={0.15} />
+              <BigStatCard label="Bisnes"            value={stats?.totalBusinesses ?? 0} icon={Store}     color="#F59E0B"    delay={0.20} />
+              <BigStatCard label="Produk PolyMart"   value={stats?.totalProducts ?? 0}   icon={ShoppingBag} color="#EC4899" delay={0.25} />
+              <BigStatCard label="Aduan Kebajikan"   value={stats?.totalTickets ?? 0}    icon={Heart}     color="#EF4444"    delay={0.30} />
+              <BigStatCard label="Acara Sukan"       value={stats?.totalSports ?? 0}     icon={Trophy}    color="#EAB308"    delay={0.35} />
+              <BigStatCard label="Laporan"           value={stats?.totalReports ?? 0}    icon={FileText}  color="#A78BFA"    delay={0.40} />
             </div>
 
             {/* ── Unit Breakdown ─── */}
