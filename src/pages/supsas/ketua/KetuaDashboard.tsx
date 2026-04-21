@@ -62,6 +62,24 @@ export function KetuaDashboard() {
       return;
     }
 
+    // P-5: Check cross-kontingen — pelajar ini tidak boleh dalam kontingen lain untuk sukan yang sama
+    const { data: existing } = await supabase
+      .from('supsas_participants')
+      .select('id, kontingen_id')
+      .eq('edition_id', edition.id)
+      .eq('sport_id', selectedSport)
+      .eq('profile_id', person.id)
+      .maybeSingle();
+
+    if (existing) {
+      if (existing.kontingen_id !== myKontingen.id) {
+        toast.error(`${person.full_name} sudah didaftarkan dalam kontingen lain untuk sukan ini.`);
+      } else {
+        toast.error('Pelajar ini sudah didaftarkan dalam sukan ini.');
+      }
+      return;
+    }
+
     setAdding(person.id);
     const { error } = await supabase.from('supsas_participants').insert({
       edition_id: edition.id,
@@ -79,6 +97,7 @@ export function KetuaDashboard() {
     setSearchTerm('');
     setSearchResults([]);
   };
+
 
   const handleRemove = async (part: Participant) => {
     if (!confirm('Padam peserta ini?')) return;

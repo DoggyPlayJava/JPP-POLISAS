@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, BarChart3, Calendar, Users, Settings, Menu, X, ArrowLeft, Shield } from 'lucide-react';
+import { Trophy, BarChart3, Calendar, Users, Settings, Menu, X, ArrowLeft, Shield, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSupsas } from '@/contexts/SupsasContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { label: 'Kedudukan',    path: '/supsas/scoreboard',  icon: BarChart3 },
   { label: 'Jadual',       path: '/supsas/jadual',      icon: Calendar },
   { label: 'Sukan',        path: '/supsas/sukan',       icon: Users },
+  { label: 'Sejarah',      path: '/supsas/sejarah',     icon: Clock },
 ];
 
 export function SupsasLayout() {

@@ -2,21 +2,96 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Trophy, Users, Layers, Calendar, Medal, Activity,
-  TrendingUp, Plus, ArrowRight, Zap
+  TrendingUp, Plus, ArrowRight, Zap, FileDown, Loader
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useSupsas } from '@/contexts/SupsasContext';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { toast } from 'react-hot-toast';
 
 export function SupsasAdminHome() {
   const { edition, kontingen, sports, medalTally, fixtures, isLive } = useSupsas();
   const navigate = useNavigate();
+  const [exporting, setExporting] = useState(false);
 
   const liveFixtures = fixtures.filter(f => f.status === 'live').length;
   const completedFixtures = fixtures.filter(f => f.status === 'completed').length;
   const totalMedals = medalTally.reduce((a, k) => a + k.total_medals, 0);
   const topKontingen = medalTally[0];
+
+  // N-3: Export PDF Laporan SUPSAS
+  const handleExportPDF = async () => {
+    if (!edition) { toast.error('Tiada edisi untuk dieksport'); return; }
+    setExporting(true);
+    try {
+      const kontingenMap: Record<string, string> = {};
+      kontingen.forEach(k => { kontingenMap[k.id] = k.short_code + ' — ' + k.name; });
+      const sportMap: Record<string, string> = {};
+      sports.forEach(s => { sportMap[s.id] = s.name; });
+
+      const tallyRows = medalTally.map((t, i) => `
+        <tr>
+          <td style="padding:8px 12px;font-weight:900;color:#b45309">${i + 1}</td>
+          <td style="padding:8px 12px;font-weight:700">${t.name} (${t.short_code})</td>
+          <td style="padding:8px 12px;text-align:center">${t.gold}</td>
+          <td style="padding:8px 12px;text-align:center">${t.silver}</td>
+          <td style="padding:8px 12px;text-align:center">${t.bronze}</td>
+          <td style="padding:8px 12px;text-align:center;font-weight:900">${t.total_medals}</td>
+        </tr>`).join('');
+
+      const completedFx = fixtures.filter(f => f.status === 'completed');
+      const fixtureRows = completedFx.map(f => `
+        <tr>
+          <td style="padding:6px 10px">${sportMap[f.sport_id] ?? '-'}</td>
+          <td style="padding:6px 10px">${f.group_name ? 'Kump. ' + f.group_name : f.bracket_round === 2 ? 'Separuh Akhir' : f.bracket_round === 1 ? 'Akhir' : f.round ?? '-'}</td>
+          <td style="padding:6px 10px">${kontingenMap[f.kontingen_a_id ?? ''] ?? 'TBD'}</td>
+          <td style="padding:6px 10px;text-align:center;font-weight:900">${f.score_a ?? '-'} — ${f.score_b ?? '-'}</td>
+          <td style="padding:6px 10px">${kontingenMap[f.kontingen_b_id ?? ''] ?? 'TBD'}</td>
+          <td style="padding:6px 10px">${f.winner_id ? (kontingenMap[f.winner_id] ?? '-') : '-'}</td>
+        </tr>`).join('');
+
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+        <title>Laporan SUPSAS — ${edition.name}</title>
+        <style>
+          body { font-family: Arial, sans-serif; background: #fff; color: #111; padding: 32px; }
+          h1 { font-size: 28px; font-weight: 900; margin: 0; }
+          h2 { font-size: 16px; font-weight: 900; margin: 32px 0 8px; color: #444; border-bottom: 2px solid #eee; padding-bottom: 6px; }
+          p  { color: #555; margin: 4px 0; }
+          table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+          th { background: #1a1a1a; color: #fbbf24; padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; }
+          tr:nth-child(even) td { background: #f9f9f9; }
+          .footer { margin-top: 48px; font-size: 11px; color: #bbb; text-align: center; }
+        </style></head><body>
+        <h1>SUPSAS — ${edition.name}</h1>
+        ${edition.tagline ? `<p>${edition.tagline}</p>` : ''}
+        <p style="color:#999">Dijana: ${new Date().toLocaleString('ms-MY')} &bull; ${completedFx.length} perlawanan selesai &bull; ${totalMedals} medal &bull; ${kontingen.length} kontinjen</p>
+
+        <h2>Papan Kedudukan Medal</h2>
+        <table><thead><tr><th>#</th><th>Kontinjen</th><th>🥇 Emas</th><th>🥈 Perak</th><th>🥉 Gangsa</th><th>Jumlah</th></tr></thead>
+        <tbody>${tallyRows || '<tr><td colspan="6" style="text-align:center;color:#bbb;padding:20px">Tiada data</td></tr>'}</tbody></table>
+
+        <h2>Keputusan Perlawanan Selesai</h2>
+        <table><thead><tr><th>Sukan</th><th>Pusingan</th><th>Pasukan A</th><th>Skor</th><th>Pasukan B</th><th>Pemenang</th></tr></thead>
+        <tbody>${fixtureRows || '<tr><td colspan="6" style="text-align:center;color:#bbb;padding:20px">Tiada perlawanan selesai</td></tr>'}</tbody></table>
+
+        <div class="footer">Laporan Rasmi SUPSAS &bull; ${edition.name} &bull; Sistem JPP POLISAS</div>
+        </body></html>`;
+
+      const win = window.open('', '_blank');
+      if (win) {
+        win.document.write(html);
+        win.document.close();
+        setTimeout(() => { win.print(); }, 600);
+      } else {
+        toast.error('Sila benarkan popup untuk mencetak laporan');
+      }
+    } catch {
+      toast.error('Gagal jana laporan');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const STAT_CARDS = [
     { label: 'Kontinjen',       value: kontingen.length, icon: Users,    color: 'violet', sub: 'jabatan berdaftar',    path: '/supsas/admin/kontinjen' },
@@ -52,12 +127,25 @@ export function SupsasAdminHome() {
             <p className="text-white/30 font-medium mt-1">{edition.tagline}</p>
           )}
         </div>
-        {isLive && (
-          <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-red-500/15 border border-red-500/25">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-            <span className="text-xs font-black uppercase tracking-widest text-red-400">Acara Sedang Berlangsung</span>
-          </div>
-        )}
+        <div className="flex items-center gap-3 flex-wrap">
+          {isLive && (
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-red-500/15 border border-red-500/25">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+              <span className="text-xs font-black uppercase tracking-widest text-red-400">Acara Sedang Berlangsung</span>
+            </div>
+          )}
+          {/* N-3: Export PDF button */}
+          {edition && (
+            <button
+              onClick={handleExportPDF}
+              disabled={exporting}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white/50 text-[10px] font-black uppercase tracking-widest hover:text-white hover:border-white/20 transition-all disabled:opacity-40"
+            >
+              {exporting ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
+              Export PDF
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Stat Cards */}

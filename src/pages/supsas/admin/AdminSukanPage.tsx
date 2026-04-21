@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Save, X, Shuffle } from 'lucide-react';
+import { Trophy, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Save, X, Shuffle, CheckCircle, Loader, ChevronRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useSupsas, SupsasSport } from '@/contexts/SupsasContext';
 import { toast } from 'react-hot-toast';
@@ -55,7 +55,7 @@ function inputCls() {
 }
 
 export function AdminSukanPage() {
-  const { sports, edition, refetch, kontingen } = useSupsas();
+  const { sports, edition, refetch, kontingen, fixtures } = useSupsas();
   const [showForm, setShowForm] = useState(false);
   const [editTarget, setEditTarget] = useState<SupsasSport | null>(null);
   const [form, setForm] = useState<SportForm>(DEFAULT_FORM);
@@ -93,6 +93,32 @@ export function AdminSukanPage() {
     const { error } = await supabase.from('supsas_sports').delete().eq('id', sport.id);
     if (error) { toast.error('Gagal padam'); return; }
     toast.success('Sukan dipadam');
+    refetch();
+  };
+
+  const [advancing, setAdvancing] = useState<string | null>(null);
+
+  // K-3: Advance group winners to SF
+  const handleAdvanceGroupWinners = async (sport: SupsasSport) => {
+    if (!confirm(`Jana Separuh Akhir untuk "${sport.name}"?\n\nPastikan SEMUA perlawanan kumpulan sudah selesai dahulu.`)) return;
+    setAdvancing(sport.id + '_group');
+    const { data, error } = await supabase.rpc('advance_group_winners', { p_sport_id: sport.id });
+    setAdvancing(null);
+    if (error) { toast.error('Ralat: ' + error.message); return; }
+    if (data?.ok === false) { toast.error(data.error ?? 'Ralat tidak diketahui'); return; }
+    toast.success('✅ Separuh Akhir berjaya dijana! Pasukan telah ditempatkan.');
+    refetch();
+  };
+
+  // K-3b: Advance SF winners to Final
+  const handleAdvanceSFWinners = async (sport: SupsasSport) => {
+    if (!confirm(`Jana Final untuk "${sport.name}"?\n\nPastikan kedua-dua Separuh Akhir sudah selesai dan pemenang ditetapkan.`)) return;
+    setAdvancing(sport.id + '_sf');
+    const { data, error } = await supabase.rpc('advance_sf_winners', { p_sport_id: sport.id });
+    setAdvancing(null);
+    if (error) { toast.error('Ralat: ' + error.message); return; }
+    if (data?.ok === false) { toast.error(data.error ?? 'Ralat tidak diketahui'); return; }
+    toast.success('🏆 Final berjaya dijana! Pemenang SF telah ditempatkan.');
     refetch();
   };
 
@@ -135,6 +161,16 @@ export function AdminSukanPage() {
       <div className="space-y-3">
         {sports.map((sport, i) => {
           const Ic = (LucideIcons as any)[sport.icon] || LucideIcons.Trophy;
+          const sportFixtures = fixtures.filter(f => f.sport_id === sport.id);
+          const groupFixtures = sportFixtures.filter(f => f.group_name != null);
+          const sfFixtures    = sportFixtures.filter(f => f.bracket_round === 2);
+          const finalFixture  = sportFixtures.find(f => f.bracket_round === 1);
+          const groupDone     = groupFixtures.length > 0 && groupFixtures.every(f => f.status === 'completed');
+          const sfDone        = sfFixtures.length > 0 && sfFixtures.every(f => f.status === 'completed') && sfFixtures.every(f => f.winner_id != null);
+          const sfHasTeams    = sfFixtures.some(f => f.kontingen_a_id != null);
+          const finalHasTeams = finalFixture?.kontingen_a_id != null;
+          const isGroupKO     = sport.format === 'group_knockout';
+
           return (
             <motion.div
               key={sport.id}
@@ -142,49 +178,115 @@ export function AdminSukanPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
               className={cn(
-                'flex items-center gap-4 p-4 rounded-2xl border transition-all',
+                'rounded-2xl border transition-all',
                 sport.is_active ? 'bg-white/[0.02] border-white/5' : 'bg-white/[0.01] border-white/[0.03] opacity-60'
               )}
             >
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
-                <Ic className="w-5 h-5 text-amber-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-black text-white text-sm">{sport.name}</p>
-                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                  <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">{sport.format.replace('_', ' ')}</span>
-                  <span className="text-white/10">·</span>
-                  <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">{sport.gender}</span>
-                  <span className="text-white/10">·</span>
-                  <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">{sport.category}</span>
+              {/* Main row */}
+              <div className="flex items-center gap-4 p-4">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
+                  <Ic className="w-5 h-5 text-amber-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-black text-white text-sm">{sport.name}</p>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">{sport.format.replace(/_/g, ' ')}</span>
+                    <span className="text-white/10">·</span>
+                    <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">{sport.gender}</span>
+                    <span className="text-white/10">·</span>
+                    <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">{sport.category}</span>
+                    {/* Progress badge */}
+                    {isGroupKO && groupFixtures.length > 0 && (
+                      <span className={cn(
+                        'px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border',
+                        finalHasTeams ? 'bg-amber-500/20 border-amber-500/30 text-amber-400'
+                        : sfHasTeams ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                        : groupDone ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                        : 'bg-white/5 border-white/10 text-white/30'
+                      )}>
+                        {finalHasTeams ? '🏆 Final' : sfHasTeams ? '⚔️ SF' : groupDone ? '✅ Kumpulan Selesai' : `${sportFixtures.filter(f=>f.status==='completed').length}/${groupFixtures.length} match`}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
+                  <span className={cn('px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border',
+                    sport.is_active ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-white/20 bg-white/5 border-white/10'
+                  )}>
+                    {sport.is_active ? 'Aktif' : 'Nonaktif'}
+                  </span>
+                  {/* Jana Bracket button */}
+                  {(sport.format === 'knockout' || sport.format === 'group_knockout') && sport.is_active && (
+                    <button
+                      onClick={() => setDrawSport(sport)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/15 border border-purple-500/25 text-purple-400 text-[9px] font-black uppercase tracking-widest hover:bg-purple-500/25 transition-all"
+                    >
+                      <Shuffle className="w-3 h-3" />
+                      Jana Bracket
+                    </button>
+                  )}
+                  <button onClick={() => openEdit(sport)} className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white/30 hover:text-white hover:bg-white/10 transition-all">
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => handleToggle(sport)} className={cn('w-8 h-8 flex items-center justify-center rounded-xl border transition-all', sport.is_active ? 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20')}>
+                    {sport.is_active ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                  </button>
+                  <button onClick={() => handleDelete(sport)} className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white/20 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition-all">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <span className={cn('px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border',
-                  sport.is_active ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-white/20 bg-white/5 border-white/10'
-                )}>
-                  {sport.is_active ? 'Aktif' : 'Nonaktif'}
-                </span>
-                {/* Jana Bracket button — only for knockout formats */}
-                {(sport.format === 'knockout' || sport.format === 'group_knockout') && sport.is_active && (
-                  <button
-                    onClick={() => setDrawSport(sport)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/15 border border-purple-500/25 text-purple-400 text-[9px] font-black uppercase tracking-widest hover:bg-purple-500/25 transition-all"
-                  >
-                    <Shuffle className="w-3 h-3" />
-                    Jana Bracket
-                  </button>
-                )}
-                <button onClick={() => openEdit(sport)} className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white/30 hover:text-white hover:bg-white/10 transition-all">
-                  <Edit2 className="w-3.5 h-3.5" />
-                </button>
-                <button onClick={() => handleToggle(sport)} className={cn('w-8 h-8 flex items-center justify-center rounded-xl border transition-all', sport.is_active ? 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20')}>
-                  {sport.is_active ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                </button>
-                <button onClick={() => handleDelete(sport)} className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white/20 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition-all">
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
+
+              {/* K-3: Phase advancement buttons — only for group_knockout with bracket */}
+              {isGroupKO && groupFixtures.length > 0 && sport.is_active && (
+                <div className="px-4 pb-4 flex flex-wrap gap-2 border-t border-white/5 pt-3">
+                  {/* Step 1: Kumpulan → SF */}
+                  {!sfHasTeams && (
+                    <button
+                      onClick={() => handleAdvanceGroupWinners(sport)}
+                      disabled={!groupDone || advancing === sport.id + '_group'}
+                      className={cn(
+                        'flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all',
+                        groupDone
+                          ? 'bg-emerald-500/15 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/25'
+                          : 'bg-white/[0.02] border-white/5 text-white/20 cursor-not-allowed'
+                      )}
+                    >
+                      {advancing === sport.id + '_group'
+                        ? <Loader className="w-3 h-3 animate-spin" />
+                        : <ChevronRight className="w-3 h-3" />}
+                      {groupDone ? 'Jana Separuh Akhir dari Kumpulan' : `Tunggu ${groupFixtures.filter(f=>f.status!=='completed').length} match kumpulan lagi`}
+                    </button>
+                  )}
+
+                  {/* Step 2: SF → Final */}
+                  {sfHasTeams && !finalHasTeams && (
+                    <button
+                      onClick={() => handleAdvanceSFWinners(sport)}
+                      disabled={!sfDone || advancing === sport.id + '_sf'}
+                      className={cn(
+                        'flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all',
+                        sfDone
+                          ? 'bg-amber-500/15 border-amber-500/25 text-amber-400 hover:bg-amber-500/25'
+                          : 'bg-white/[0.02] border-white/5 text-white/20 cursor-not-allowed'
+                      )}
+                    >
+                      {advancing === sport.id + '_sf'
+                        ? <Loader className="w-3 h-3 animate-spin" />
+                        : <Trophy className="w-3 h-3" />}
+                      {sfDone ? 'Jana Final dari Separuh Akhir' : `Tunggu ${sfFixtures.filter(f=>f.status!=='completed'||!f.winner_id).length} SF lagi`}
+                    </button>
+                  )}
+
+                  {/* Done state */}
+                  {finalHasTeams && (
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                      <CheckCircle className="w-3.5 h-3.5 text-amber-400" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Final Bersedia</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </motion.div>
           );
         })}

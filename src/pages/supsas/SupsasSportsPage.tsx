@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Users, Filter, Search } from 'lucide-react';
+import { Trophy, Users, Filter, Search, LayoutGrid } from 'lucide-react';
 import { useSupsas } from '@/contexts/SupsasContext';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import * as LucideIcons from 'lucide-react';
 
@@ -10,7 +11,8 @@ const FORMAT_LABEL: Record<string, string> = { knockout: 'Sistem Gugur', round_r
 const GENDER_COLOR: Record<string, string> = { male: 'text-blue-400 bg-blue-500/10 border-blue-500/20', female: 'text-pink-400 bg-pink-500/10 border-pink-500/20', mixed: 'text-violet-400 bg-violet-500/10 border-violet-500/20' };
 
 export function SupsasSportsPage() {
-  const { sports, isLoading, edition } = useSupsas();
+  const { sports, fixtures, isLoading, edition } = useSupsas();
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'team' | 'individual'>('all');
 
@@ -92,7 +94,7 @@ export function SupsasSportsPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.06 }}
-                    className="group relative p-6 rounded-3xl bg-white/[0.02] border border-white/5 hover:bg-white/5 hover:border-white/10 transition-all duration-300 cursor-pointer"
+                    className="group relative p-6 rounded-3xl bg-white/[0.02] border border-white/5 hover:bg-white/5 hover:border-white/10 transition-all duration-300"
                   >
                     {/* Icon */}
                     <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
@@ -121,6 +123,17 @@ export function SupsasSportsPage() {
                         <span className="w-1 h-1 rounded-full bg-white/20" />
                         {sport.venue}
                       </p>
+                    )}
+
+                    {/* P-2: Lihat Bracket button — only for group_knockout */}
+                    {(sport.format === 'group_knockout' || sport.format === 'knockout') && fixtures.some(f => f.sport_id === sport.id && (f.group_name || f.bracket_round != null)) && (
+                      <button
+                        onClick={() => navigate(`/supsas/bracket/${sport.id}`)}
+                        className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all"
+                      >
+                        <LayoutGrid className="w-3.5 h-3.5" />
+                        Lihat Bracket
+                      </button>
                     )}
                   </motion.div>
                 );

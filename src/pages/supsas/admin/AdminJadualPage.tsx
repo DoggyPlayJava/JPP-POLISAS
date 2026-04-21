@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Plus, Save, X, Edit2, Trash2, Loader } from 'lucide-react';
+import { Calendar, Plus, Save, X, Edit2, Trash2, Loader, Pencil } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useSupsas, SupsasFixture } from '@/contexts/SupsasContext';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+import { AdminMatchScoreModal } from './components/AdminMatchScoreModal';
 
 interface FixtureForm {
   sport_id: string;
@@ -50,6 +51,7 @@ export function AdminJadualPage() {
   const { fixtures, sports, kontingen, edition, refetch } = useSupsas();
   const [showForm, setShowForm] = useState(false);
   const [editTarget, setEditTarget] = useState<SupsasFixture | null>(null);
+  const [scoreTarget, setScoreTarget] = useState<SupsasFixture | null>(null);
   const [form, setForm] = useState<FixtureForm>(DEFAULT_FORM);
   const [saving, setSaving] = useState(false);
   const [filterSport, setFilterSport] = useState<string>('all');
@@ -225,6 +227,15 @@ export function AdminJadualPage() {
 
                       {/* Actions */}
                       <div className="flex gap-1.5 flex-shrink-0">
+                        {/* Quick Score button */}
+                        <button
+                          onClick={() => setScoreTarget(f)}
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase tracking-widest hover:bg-emerald-500/20 transition-all"
+                          title="Kemaskini Skor"
+                        >
+                          <Pencil className="w-3 h-3" />
+                          Skor
+                        </button>
                         <button onClick={() => openEdit(f)} className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white/30 hover:text-white hover:bg-white/10 transition-all">
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
@@ -241,18 +252,30 @@ export function AdminJadualPage() {
         </div>
       )}
 
-      {/* Modal */}
+      {/* Score Quick Update Modal */}
+      <AnimatePresence>
+        {scoreTarget && (
+          <AdminMatchScoreModal
+            fixture={scoreTarget}
+            kontingenMap={Object.fromEntries(kontingen.map(k => [k.id, k]))}
+            onClose={() => setScoreTarget(null)}
+            onSaved={() => { setScoreTarget(null); refetch(); }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Full Edit Modal */}
       <AnimatePresence>
         {showForm && (
-          <>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setShowForm(false)}
-              className="fixed inset-0 bg-black/70 z-50 backdrop-blur-sm" />
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 40 }}
-              className="fixed inset-x-4 bottom-4 top-16 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[560px] z-50 bg-[#0A1628] border border-white/10 rounded-[2rem] shadow-[0_20px_80px_rgba(0,0,0,0.7)] overflow-y-auto"
+              className="relative w-full max-w-[560px] max-h-[90vh] bg-[#0A1628] border border-white/10 rounded-[2rem] shadow-[0_20px_80px_rgba(0,0,0,0.7)] overflow-y-auto z-10"
             >
               <div className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
@@ -361,7 +384,7 @@ export function AdminJadualPage() {
                 </button>
               </div>
             </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
     </div>

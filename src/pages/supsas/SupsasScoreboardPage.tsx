@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart3, Trophy, Maximize2, Minimize2, RefreshCw, Wifi, WifiOff, Filter } from 'lucide-react';
+import { BarChart3, Trophy, Maximize2, Minimize2, RefreshCw } from 'lucide-react';
 import { useSupsas, SupsasMedalTally } from '@/contexts/SupsasContext';
 import { cn } from '@/lib/utils';
 
