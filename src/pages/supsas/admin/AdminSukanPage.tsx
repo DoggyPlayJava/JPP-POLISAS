@@ -100,11 +100,12 @@ export function AdminSukanPage() {
 
   // K-3: Advance group winners to SF
   const handleAdvanceGroupWinners = async (sport: SupsasSport) => {
-    if (!confirm(`Jana Separuh Akhir untuk "${sport.name}"?\n\nPastikan SEMUA perlawanan kumpulan sudah selesai dahulu.`)) return;
     setAdvancing(sport.id + '_group');
     const { data, error } = await supabase.rpc('advance_group_winners', { p_sport_id: sport.id });
     setAdvancing(null);
-    if (error) { toast.error('Ralat: ' + error.message); return; }
+    console.log('[advance_group_winners] data:', data, 'error:', error);
+    if (error) { toast.error('Ralat RPC: ' + error.message); return; }
+    if (!data) { toast.error('Tiada respons dari pelayan. Sila cuba semula.'); return; }
     if (data?.ok === false) { toast.error(data.error ?? 'Ralat tidak diketahui'); return; }
     toast.success('✅ Separuh Akhir berjaya dijana! Pasukan telah ditempatkan.');
     refetch();
@@ -112,11 +113,12 @@ export function AdminSukanPage() {
 
   // K-3b: Advance SF winners to Final
   const handleAdvanceSFWinners = async (sport: SupsasSport) => {
-    if (!confirm(`Jana Final untuk "${sport.name}"?\n\nPastikan kedua-dua Separuh Akhir sudah selesai dan pemenang ditetapkan.`)) return;
     setAdvancing(sport.id + '_sf');
     const { data, error } = await supabase.rpc('advance_sf_winners', { p_sport_id: sport.id });
     setAdvancing(null);
-    if (error) { toast.error('Ralat: ' + error.message); return; }
+    console.log('[advance_sf_winners] data:', data, 'error:', error);
+    if (error) { toast.error('Ralat RPC: ' + error.message); return; }
+    if (!data) { toast.error('Tiada respons dari pelayan. Sila cuba semula.'); return; }
     if (data?.ok === false) { toast.error(data.error ?? 'Ralat tidak diketahui'); return; }
     toast.success('🏆 Final berjaya dijana! Pemenang SF telah ditempatkan.');
     refetch();

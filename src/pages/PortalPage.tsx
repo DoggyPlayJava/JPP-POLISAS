@@ -770,7 +770,7 @@ export function PortalPage() {
 
         {/* ── SUPSAS EPIC ANNOUNCEMENT BANNER ─────────────────────── */}
         <AnimatePresence>
-          {isModuleEnabled('supsas') && (
+          {isModuleEnabled('supsas') && supsasEdition?.is_active && (
             <motion.div
               key="supsas-banner"
               initial={{ opacity: 0, scale: 0.94, y: -20 }}

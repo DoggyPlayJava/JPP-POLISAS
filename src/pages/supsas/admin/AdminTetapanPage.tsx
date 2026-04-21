@@ -60,7 +60,6 @@ export function AdminTetapanPage() {
 
   const handleActivate = async () => {
     if (!edition) return;
-    if (!confirm('Aktifkan edisi ini? Hanya satu edisi boleh aktif pada satu masa.')) return;
     const { error } = await supabase.from('supsas_editions').update({ is_active: true }).eq('id', edition.id);
     if (error) { toast.error('Gagal aktifkan: ' + error.message); return; }
     toast.success('Edisi diaktifkan! SUPSAS sekarang aktif.');
@@ -69,7 +68,6 @@ export function AdminTetapanPage() {
 
   const handleDeactivate = async () => {
     if (!edition) return;
-    if (!confirm('Nyahaktifkan edisi ini? Scoreboard akan show "tiada edisi aktif".')) return;
     const { error } = await supabase.from('supsas_editions').update({ is_active: false }).eq('id', edition.id);
     if (error) { toast.error('Gagal nyahaktifkan'); return; }
     toast.success('Edisi dinyahaktifkan');
