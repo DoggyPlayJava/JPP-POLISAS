@@ -6,6 +6,7 @@ import {
   Medal, Flame, Star, Zap, Shield, Target, Activity
 } from 'lucide-react';
 import { useSupsas } from '@/contexts/SupsasContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
 // ─── Countdown Hook ───────────────────────────────────────────
@@ -107,7 +108,34 @@ function MiniPodium({ tally }: { tally: any[] }) {
 export function SupsasLandingPage() {
   const navigate = useNavigate();
   const { edition, kontingen, sports, medalTally, isLoading, isLive } = useSupsas();
+  const { profile } = useAuth();
   const countdown = useCountdown(edition?.start_date ?? null);
+
+  // ── Loading skeleton — dark, matches SUPSAS theme ──
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center px-4">
+        {/* Animated logo placeholder */}
+        <motion.div
+          animate={{ opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+          className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-500/20 flex items-center justify-center mb-8"
+        >
+          <Trophy className="w-8 h-8 text-amber-400/60" />
+        </motion.div>
+        <motion.div
+          animate={{ opacity: [0.3, 0.7, 0.3] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', delay: 0.1 }}
+          className="h-8 w-48 bg-white/10 rounded-xl mb-4"
+        />
+        <motion.div
+          animate={{ opacity: [0.2, 0.5, 0.2] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }}
+          className="h-4 w-32 bg-white/5 rounded-lg"
+        />
+      </div>
+    );
+  }
 
   // ── No active edition ──
   if (!isLoading && !edition) {
@@ -322,6 +350,46 @@ export function SupsasLandingPage() {
             );
           })}
         </div>
+      </section>
+
+      {/* ── Portal Ketua Kontinjen CTA ── */}
+      <section className="max-w-6xl mx-auto px-4 pb-10">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="relative overflow-hidden rounded-[2rem] border border-amber-500/20 bg-gradient-to-br from-amber-500/8 via-transparent to-amber-600/5 p-8 md:p-10"
+        >
+          {/* Decorative glow */}
+          <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-amber-500/10 blur-[80px] pointer-events-none" />
+
+          <div className="relative flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-10">
+            {/* Icon */}
+            <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center flex-shrink-0 shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+              <Shield className="w-8 h-8 text-amber-400" />
+            </div>
+
+            {/* Text */}
+            <div className="flex-1">
+              <p className="text-[10px] font-black uppercase tracking-[0.35em] text-amber-400/60 mb-1">Untuk Ketua Kontingen</p>
+              <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight mb-2">Portal Pengurusan Pasukan</h3>
+              <p className="text-sm text-white/40 font-medium leading-relaxed max-w-lg">
+                Daftarkan peserta, urus lineup pasukan, dan pantau penyertaan kontinjen anda.
+                Dapatkan <span className="text-amber-400 font-black">kod jemputan</span> daripada Exco Sukan untuk mula.
+              </p>
+            </div>
+
+            {/* CTA */}
+            <button
+              onClick={() => navigate(profile ? '/supsas/ketua' : '/login?redirect=/supsas/ketua')}
+              className="group relative px-7 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-black uppercase text-[11px] tracking-widest transition-all hover:scale-105 active:scale-[0.98] flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(245,158,11,0.35)] overflow-hidden flex-shrink-0 w-full md:w-auto"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+              <Shield className="w-3.5 h-3.5 relative" />
+              <span className="relative">{profile ? 'Masuk ke Portal Ketua' : 'Log Masuk Dahulu'}</span>
+            </button>
+          </div>
+        </motion.div>
       </section>
 
       {/* ── Live Medal Snapshot (if edition is live or has results) ── */}

@@ -14,7 +14,9 @@ export function SupsasSportsPage() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'team' | 'individual'>('all');
 
-  const filtered = sports.filter(s => {
+  // Public view: only show active sports
+  const activeSports = sports.filter(s => s.is_active);
+  const filtered = activeSports.filter(s => {
     const matchSearch = s.name.toLowerCase().includes(search.toLowerCase());
     const matchFilter = filter === 'all' || s.category === filter;
     return matchSearch && matchFilter;
@@ -128,7 +130,7 @@ export function SupsasSportsPage() {
 
           <div className="mt-6 text-center">
             <p className="text-[9px] font-black uppercase tracking-widest text-white/20">
-              {filtered.length} daripada {sports.length} sukan dipapar
+              {filtered.length} daripada {activeSports.length} sukan aktif dipapar
             </p>
           </div>
         </div>

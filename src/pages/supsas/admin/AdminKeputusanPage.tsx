@@ -15,6 +15,7 @@ const MEDAL_OPTIONS = [
 
 export function AdminKeputusanPage() {
   const { edition, sports, kontingen, refetch } = useSupsas();
+  const activeKontingen = kontingen.filter(k => k.is_active); // K-1: admin page only assigns medals to active kontingen
   const [selectedSport, setSelectedSport] = useState<string>('');
   const [results, setResults] = useState<Record<string, { medal: string | null; position: string; notes: string }>>({});
   const [saving, setSaving] = useState(false);
@@ -30,7 +31,13 @@ export function AdminKeputusanPage() {
     const entries = Object.entries(results).filter(([, v]) => v.medal !== undefined);
     if (entries.length === 0) { toast.error('Tiada keputusan untuk disimpan'); return; }
 
-    setSaving(true);
+    // S-1: Validate medal uniqueness — only 1 of each medal type per sport
+    const medalCounts: Record<string, number> = { gold: 0, silver: 0, bronze: 0 };
+    entries.forEach(([, v]) => { if (v.medal && v.medal in medalCounts) medalCounts[v.medal]++; });
+    if (medalCounts.gold > 1) { toast.error('Hanya satu pemenang 🥇 Emas dibenarkan'); return; }
+    if (medalCounts.silver > 1) { toast.error('Hanya satu pemenang 🥈 Perak dibenarkan'); return; }
+    if (medalCounts.bronze > 1) { toast.error('Hanya satu pemenang 🥉 Gangsa dibenarkan'); return; }
+
     const upsertData = entries.map(([kontingenId, vals]) => ({
       edition_id: edition.id,
       sport_id: selectedSport,
@@ -40,6 +47,7 @@ export function AdminKeputusanPage() {
       recorded_by: null, // will use auth.uid() via RLS
     }));
 
+    setSaving(true);
     const { error } = await supabase
       .from('supsas_results')
       .upsert(upsertData, { onConflict: 'sport_id,kontingen_id' });
@@ -106,7 +114,7 @@ export function AdminKeputusanPage() {
           </div>
 
           <div className="space-y-3">
-            {kontingen.map((k, i) => (
+            {activeKontingen.map((k, i) => (
               <motion.div
                 key={k.id}
                 initial={{ opacity: 0, x: -16 }}

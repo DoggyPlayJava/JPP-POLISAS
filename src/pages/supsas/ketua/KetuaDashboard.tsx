@@ -53,6 +53,15 @@ export function KetuaDashboard() {
 
   const handleAdd = async (person: Profile) => {
     if (!edition || !selectedSport) { toast.error('Sila pilih sukan'); return; }
+
+    // S-3: Enforce max_per_team limit
+    const sportObj = sports.find(s => s.id === selectedSport);
+    const currentCount = participants.filter(p => p.sport_id === selectedSport).length;
+    if (sportObj && currentCount >= sportObj.max_per_team) {
+      toast.error(`Had maksimum ${sportObj.max_per_team} peserta untuk ${sportObj.name} telah dicapai`);
+      return;
+    }
+
     setAdding(person.id);
     const { error } = await supabase.from('supsas_participants').insert({
       edition_id: edition.id,

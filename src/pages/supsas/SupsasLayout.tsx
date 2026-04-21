@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, BarChart3, Calendar, Users, Settings, Menu, X, ArrowLeft, Wifi, WifiOff } from 'lucide-react';
+import { Trophy, BarChart3, Calendar, Users, Settings, Menu, X, ArrowLeft, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSupsas } from '@/contexts/SupsasContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,6 +22,12 @@ export function SupsasLayout() {
   const [scrolled, setScrolled] = useState(false);
 
   const isAdmin = isSuperAdmin || profile?.role === 'JPP';
+
+  useEffect(() => {
+    // Immediately darken <body> to prevent white-flash on mobile
+    document.body.classList.add('supsas-route');
+    return () => document.body.classList.remove('supsas-route');
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -107,6 +113,25 @@ export function SupsasLayout() {
               Admin
             </button>
           )}
+          {/* Portal Ketua — only for logged-in users */}
+          {profile && !isAdmin && (
+            <button
+              onClick={() => navigate('/supsas/ketua')}
+              className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400/80 hover:text-amber-300 hover:bg-amber-500/20 text-[11px] font-black uppercase tracking-widest transition-all"
+            >
+              <Shield className="w-3.5 h-3.5" />
+              Portal Ketua
+            </button>
+          )}
+          {profile && isAdmin && (
+            <button
+              onClick={() => navigate('/supsas/ketua')}
+              className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/30 hover:text-white/60 hover:bg-white/10 text-[11px] font-black uppercase tracking-widest transition-all"
+            >
+              <Shield className="w-3.5 h-3.5" />
+              Ketua
+            </button>
+          )}
           <button
             onClick={() => navigate('/portal')}
             className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white text-[11px] font-black uppercase tracking-widest transition-all"
@@ -164,6 +189,15 @@ export function SupsasLayout() {
               >
                 <Settings className="w-4 h-4 flex-shrink-0" />
                 Panel Admin
+              </button>
+            )}
+            {profile && (
+              <button
+                onClick={() => { navigate('/supsas/ketua'); setMobileOpen(false); }}
+                className="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-black uppercase tracking-widest text-amber-400/80 hover:text-amber-300 hover:bg-amber-500/10 transition-all border border-amber-500/20 mt-1"
+              >
+                <Shield className="w-4 h-4 flex-shrink-0" />
+                Portal Ketua Kontinjen
               </button>
             )}
             <button

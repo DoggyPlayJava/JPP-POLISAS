@@ -205,3 +205,12 @@
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ── SUPSAS Dark Theme Override ──────────────────────────────────
+   Applied to <body> when on /supsas routes via SupsasLayout.
+   This prevents the white flash before JS renders the dark layout.
+   Uses !important to override :root --background white default.   */
+body.supsas-route {
+  background-color: #050A14 !important;
+  color: #ffffff !important;
+}
