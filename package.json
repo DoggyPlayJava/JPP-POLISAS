@@ -13,9 +13,12 @@
     "lint:types": "tsc --noEmit",
     "check:css-vars": "node scripts/check-css-variables.js",
     "check:css-classes": "node scripts/check-css-classes.js",
-    "lint": "bun run lint:types && bun run lint:js && bun run lint:css && bun run check:css-vars && bun run check:css-classes"
+    "lint": "bun run lint:types && bun run lint:js && bun run lint:css && bun run check:css-vars && bun run check:css-classes",
+    "test": "vitest",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@vitest/ui": "^4.1.2",
     "typescript": "~5.9.3",
     "vite": "^7.2.4",
@@ -107,6 +110,7 @@
     "tailwindcss-animate": "^1.0.7",
     "unzipper": "^0.12.3",
     "vaul": "^1.1.2",
-    "zod": "^4.3.5"
+    "zod": "^4.3.5",
+    "zustand": "^5.0.12"
   }
 }

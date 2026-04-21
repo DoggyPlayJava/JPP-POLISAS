@@ -11,7 +11,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNotifications } from '@/contexts/NotificationContext';
+import { useNotificationStore } from '@/store/useNotificationStore';
 import {
   KebajikanTicket, KebajikanPublicStats,
   KebajikanMonthlyStats, KEBAJIKAN_STATUS_LABELS, KEBAJIKAN_STATUS_COLORS,
@@ -24,7 +24,9 @@ const TEAL = KEBAJIKAN_THEME_COLOR;
 
 export function KebajikanDashboard() {
   const { user, profile } = useAuth();
-  const { unreadCount, notifs, markRead } = useNotifications();
+  const unreadCount = useNotificationStore(state => state.unreadCount);
+  const notifs = useNotificationStore(state => state.notifs);
+  const markRead = useNotificationStore(state => state.markRead);
   const [stats, setStats]     = useState<KebajikanPublicStats | null>(null);
   const [monthly, setMonthly] = useState<KebajikanMonthlyStats[]>([]);
   const [recent, setRecent]   = useState<KebajikanTicket[]>([]);

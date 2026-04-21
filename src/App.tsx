@@ -1,107 +1,118 @@
-import React from 'react';
+import { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { AuthProvider, useAuth } from '@/contexts/AuthContext'; // Import useAuth di sini
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute, PublicRoute } from '@/components/RouteGuards';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { LoginPage } from '@/pages/LoginPage';
-import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
-import { OnboardingPage } from '@/pages/OnboardingPage';
-import { LandingPage } from '@/pages/LandingPage';
-import { DashboardPage } from '@/pages/DashboardPage';
-import { KelabPage } from '@/pages/KelabPage';
-import { AktivitiFull } from '@/pages/AktivitiFull';
-import { AhliPage } from '@/pages/AhliPage';
-import { SettingsPage } from '@/pages/SettingsPage';
-import { LaporanPage } from '@/pages/LaporanPage';
-import { SemakanLaporanPage } from '@/pages/SemakanLaporanPage';
-import { CarianPage } from '@/pages/CarianPage';
-import { PendingPage } from '@/pages/PendingPage';
-import { ClubDetailPage } from '@/pages/ClubDetailPage';
-import { RejectedPage } from '@/pages/RejectedPage';
-import { UrusKelabPage } from '@/pages/UrusKelabPage'; // Import di atas sekali
-import { LeaderboardPage } from './pages/LeaderboardPage';
-import { PenasihatLogPage } from './pages/PenasihatLogPage';
-import { KarnivalVotingPage } from './pages/KarnivalVotingPage';
-import { NexusPage } from './pages/NexusPage';
-import { PortalPage } from './pages/PortalPage';
-// ── JPP HQ Portal (prefix: /jpp/) ──
-import { JppLayout }          from './pages/jpp/JppLayout';
-import { JppHomePage }        from './pages/jpp/JppHomePage';
-import { JppMembersPage }     from './pages/jpp/JppMembersPage';
-import { JppOverviewPage }    from './pages/jpp/JppOverviewPage';
-import { JppUnitDashboard }   from './pages/jpp/JppUnitDashboard';
-import AnnouncementsPage      from './pages/jpp/AnnouncementsPage';
-// ── Exco Reporting System (universal template) ──
-import { ExcoAktivitiWrapper, ExcoLaporanWrapper } from './pages/jpp/ExcoWrappers';
-import { ExcoSemakanLaporanPage } from './components/exco/ExcoSemakanLaporanPage';
-// ── e-Keusahawanan (prefix: /keusahawanan/) ──
-import { KeusahawananLayout } from './pages/keusahawanan/KeusahawananLayout';
-import { KeusahawananDashboard } from './pages/keusahawanan/KeusahawananDashboard';
-import { KeusahawananProgram } from './pages/keusahawanan/KeusahawananProgram';
-import { KeusahawananIdea, KeusahawananGeran, KeusahawananLaporan } from './pages/keusahawanan/KeusahawananPlaceholders';
-import { KeusahawananOnboarding } from './pages/keusahawanan/KeusahawananOnboarding';
-import { UrusPerniagaanPage } from './pages/keusahawanan/UrusPerniagaanPage';
-import { PosOrderPage }   from './pages/keusahawanan/pos/PosOrderPage';
-import { PosProductPage } from './pages/keusahawanan/pos/PosProductPage';
-import { PosStatsPage }   from './pages/keusahawanan/pos/PosStatsPage';
-import { PosHistoryPage } from './pages/keusahawanan/pos/PosHistoryPage';
-// ── PolyMart Marketplace (prefix: /polymart/) ──
-import { PolyMartLayout }          from './pages/polymart/PolyMartLayout';
-import { PolyMartHome }            from './pages/polymart/PolyMartHome';
-import { PolyMartProductDetail }   from './pages/polymart/PolyMartProductDetail';
-import { PolyMartMyOrders }        from './pages/polymart/PolyMartMyOrders';
-import { PolyMartVendorDashboard } from './pages/polymart/PolyMartVendorDashboard';
-import { PolyMartAdminPanel }      from './pages/polymart/PolyMartAdminPanel';
-// ── e-Akademik (prefix: /akademik/) ──
-import { AkademikLayout }      from './pages/akademik/AkademikLayout';
-import { AkademikDashboard }   from './pages/akademik/AkademikDashboard';
-// ── SUPSAS — Sukan Polisas (prefix: /supsas/) ──
-import { SupsasProvider }          from './contexts/SupsasContext';
-import { SupsasLayout }            from './pages/supsas/SupsasLayout';
-import { SupsasLandingPage }       from './pages/supsas/SupsasLandingPage';
-import { SupsasScoreboardPage }    from './pages/supsas/SupsasScoreboardPage';
-import { SupsasSportsPage }        from './pages/supsas/SupsasSportsPage';
-import { SupsasSchedulePage }      from './pages/supsas/SupsasSchedulePage';
-import { SupsasAdminLayout }       from './pages/supsas/admin/SupsasAdminLayout';
-import { SupsasAdminHome }         from './pages/supsas/admin/SupsasAdminHome';
-import { AdminSukanPage }          from './pages/supsas/admin/AdminSukanPage';
-import { AdminKontigenPage }       from './pages/supsas/admin/AdminKontigenPage';
-import { AdminKeputusanPage }      from './pages/supsas/admin/AdminKeputusanPage';
-import { AdminTetapanPage }        from './pages/supsas/admin/AdminTetapanPage';
-import { AdminJadualPage }         from './pages/supsas/admin/AdminJadualPage';
-import { KetuaLayout }             from './pages/supsas/ketua/KetuaLayout';
-import { KetuaDashboard }          from './pages/supsas/ketua/KetuaDashboard';
-import { BracketPage }             from './pages/supsas/BracketPage';
-import { SupsasHistoryPage }       from './pages/supsas/SupsasHistoryPage';
-import { AkademikPencapaian }  from './pages/akademik/AkademikPencapaian';
-import { AkademikMeritPage }   from './pages/akademik/AkademikMeritPage';
-// ── E-Kebajikan Ticketing System ──
-import { KebajikanLayout }      from './pages/kebajikan/KebajikanLayout';
-import { KebajikanStatsPage }   from './pages/kebajikan/KebajikanPublicStats';
-import { KebajikanSubmitPage }  from './pages/kebajikan/KebajikanSubmitPage';
-import { KebajikanMyTickets }   from './pages/kebajikan/KebajikanMyTickets';
-import { KebajikanDashboard }   from './pages/kebajikan/KebajikanDashboard';
-import { KebajikanTicketsPage } from './pages/kebajikan/KebajikanTicketsPage';
-import { KebajikanTicketDetail }from './pages/kebajikan/KebajikanTicketDetail';
-import { KebajikanStudentChat } from './pages/kebajikan/KebajikanStudentChat';
-import { KebajikanReportPage }   from './pages/kebajikan/KebajikanReportPage';
-import { KebajikanStaffPage }    from './pages/kebajikan/KebajikanStaffPage';
-import { KebajikanSettingsPage } from './pages/kebajikan/KebajikanSettingsPage';
-import { AkademikQrPage }      from './pages/akademik/AkademikQrPage';
-import { AkademikQrScan }      from './pages/akademik/AkademikQrScan';
-import { AkademikCgpa }        from './pages/akademik/AkademikCgpa';
-import { AkademikFolderPage }  from './pages/akademik/AkademikFolderPage';
-import { AkademikLeaderboard } from './pages/akademik/AkademikLeaderboard';
 
-import { JppUsersPage } from './pages/jpp/JppUsersPage';
-import { JppTakwimPage } from './pages/jpp/JppTakwimPage';
-import { JppLogsPage } from './pages/jpp/JppLogsPage';
-import { JppSettingsPage } from './pages/jpp/JppSettingsPage';
-import { JppNexusPage } from './pages/jpp/JppNexusPage';
-import { JppAsramaPage } from './pages/jpp/JppAsramaPage';
+// Ceraikan (Lazy Load) semua halaman untuk mengurangkan saiz awal
+const LoginPage = lazy(() => import('@/pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
+const OnboardingPage = lazy(() => import('@/pages/OnboardingPage').then(m => ({ default: m.OnboardingPage })));
+const LandingPage = lazy(() => import('@/pages/LandingPage').then(m => ({ default: m.LandingPage })));
+const DashboardPage = lazy(() => import('@/pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const KelabPage = lazy(() => import('@/pages/KelabPage').then(m => ({ default: m.KelabPage })));
+const AktivitiFull = lazy(() => import('@/pages/AktivitiFull').then(m => ({ default: m.AktivitiFull })));
+const AhliPage = lazy(() => import('@/pages/AhliPage').then(m => ({ default: m.AhliPage })));
+const SettingsPage = lazy(() => import('@/pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const LaporanPage = lazy(() => import('@/pages/LaporanPage').then(m => ({ default: m.LaporanPage })));
+const SemakanLaporanPage = lazy(() => import('@/pages/SemakanLaporanPage').then(m => ({ default: m.SemakanLaporanPage })));
+const CarianPage = lazy(() => import('@/pages/CarianPage').then(m => ({ default: m.CarianPage })));
+const PendingPage = lazy(() => import('@/pages/PendingPage').then(m => ({ default: m.PendingPage })));
+const ClubDetailPage = lazy(() => import('@/pages/ClubDetailPage').then(m => ({ default: m.ClubDetailPage })));
+const RejectedPage = lazy(() => import('@/pages/RejectedPage').then(m => ({ default: m.RejectedPage })));
+const UrusKelabPage = lazy(() => import('@/pages/UrusKelabPage').then(m => ({ default: m.UrusKelabPage })));
+const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage').then(m => ({ default: m.LeaderboardPage })));
+const PenasihatLogPage = lazy(() => import('./pages/PenasihatLogPage').then(m => ({ default: m.PenasihatLogPage })));
+const KarnivalVotingPage = lazy(() => import('./pages/KarnivalVotingPage').then(m => ({ default: m.KarnivalVotingPage })));
+const NexusPage = lazy(() => import('./pages/NexusPage').then(m => ({ default: m.NexusPage })));
+const PortalPage = lazy(() => import('./pages/PortalPage').then(m => ({ default: m.PortalPage })));
+// ── JPP HQ Portal ──
+import { JppLayout } from './pages/jpp/JppLayout';
+const JppHomePage = lazy(() => import('./pages/jpp/JppHomePage').then(m => ({ default: m.JppHomePage })));
+const JppMembersPage = lazy(() => import('./pages/jpp/JppMembersPage').then(m => ({ default: m.JppMembersPage })));
+const JppOverviewPage = lazy(() => import('./pages/jpp/JppOverviewPage').then(m => ({ default: m.JppOverviewPage })));
+const JppUnitDashboard = lazy(() => import('./pages/jpp/JppUnitDashboard').then(m => ({ default: m.JppUnitDashboard })));
+const AnnouncementsPage = lazy(() => import('./pages/jpp/AnnouncementsPage').then(m => ({ default: m.default || m.AnnouncementsPage })));
+
+// ── Exco Reporting System ──
+const ExcoAktivitiWrapper = lazy(() => import('./pages/jpp/ExcoWrappers').then(m => ({ default: m.ExcoAktivitiWrapper })));
+const ExcoLaporanWrapper = lazy(() => import('./pages/jpp/ExcoWrappers').then(m => ({ default: m.ExcoLaporanWrapper })));
+const ExcoSemakanLaporanPage = lazy(() => import('./components/exco/ExcoSemakanLaporanPage').then(m => ({ default: m.ExcoSemakanLaporanPage })));
+
+// ── e-Keusahawanan ──
+import { KeusahawananLayout } from './pages/keusahawanan/KeusahawananLayout';
+const KeusahawananDashboard = lazy(() => import('./pages/keusahawanan/KeusahawananDashboard').then(m => ({ default: m.KeusahawananDashboard })));
+const KeusahawananProgram = lazy(() => import('./pages/keusahawanan/KeusahawananProgram').then(m => ({ default: m.KeusahawananProgram })));
+const KeusahawananIdea = lazy(() => import('./pages/keusahawanan/KeusahawananPlaceholders').then(m => ({ default: m.KeusahawananIdea })));
+const KeusahawananGeran = lazy(() => import('./pages/keusahawanan/KeusahawananPlaceholders').then(m => ({ default: m.KeusahawananGeran })));
+const KeusahawananLaporan = lazy(() => import('./pages/keusahawanan/KeusahawananPlaceholders').then(m => ({ default: m.KeusahawananLaporan })));
+const KeusahawananOnboarding = lazy(() => import('./pages/keusahawanan/KeusahawananOnboarding').then(m => ({ default: m.KeusahawananOnboarding })));
+const UrusPerniagaanPage = lazy(() => import('./pages/keusahawanan/UrusPerniagaanPage').then(m => ({ default: m.UrusPerniagaanPage })));
+const PosOrderPage = lazy(() => import('./pages/keusahawanan/pos/PosOrderPage').then(m => ({ default: m.PosOrderPage })));
+const PosProductPage = lazy(() => import('./pages/keusahawanan/pos/PosProductPage').then(m => ({ default: m.PosProductPage })));
+const PosStatsPage = lazy(() => import('./pages/keusahawanan/pos/PosStatsPage').then(m => ({ default: m.PosStatsPage })));
+const PosHistoryPage = lazy(() => import('./pages/keusahawanan/pos/PosHistoryPage').then(m => ({ default: m.PosHistoryPage })));
+
+// ── PolyMart Marketplace ──
+import { PolyMartLayout } from './pages/polymart/PolyMartLayout';
+const PolyMartHome = lazy(() => import('./pages/polymart/PolyMartHome').then(m => ({ default: m.PolyMartHome })));
+const PolyMartProductDetail = lazy(() => import('./pages/polymart/PolyMartProductDetail').then(m => ({ default: m.PolyMartProductDetail })));
+const PolyMartMyOrders = lazy(() => import('./pages/polymart/PolyMartMyOrders').then(m => ({ default: m.PolyMartMyOrders })));
+const PolyMartVendorDashboard = lazy(() => import('./pages/polymart/PolyMartVendorDashboard').then(m => ({ default: m.PolyMartVendorDashboard })));
+const PolyMartAdminPanel = lazy(() => import('./pages/polymart/PolyMartAdminPanel').then(m => ({ default: m.PolyMartAdminPanel })));
+
+// ── e-Akademik ──
+import { AkademikLayout } from './pages/akademik/AkademikLayout';
+const AkademikDashboard = lazy(() => import('./pages/akademik/AkademikDashboard').then(m => ({ default: m.AkademikDashboard })));
+const AkademikPencapaian = lazy(() => import('./pages/akademik/AkademikPencapaian').then(m => ({ default: m.AkademikPencapaian })));
+const AkademikMeritPage = lazy(() => import('./pages/akademik/AkademikMeritPage').then(m => ({ default: m.AkademikMeritPage })));
+const AkademikQrPage = lazy(() => import('./pages/akademik/AkademikQrPage').then(m => ({ default: m.AkademikQrPage })));
+const AkademikQrScan = lazy(() => import('./pages/akademik/AkademikQrScan').then(m => ({ default: m.AkademikQrScan })));
+const AkademikCgpa = lazy(() => import('./pages/akademik/AkademikCgpa').then(m => ({ default: m.AkademikCgpa })));
+const AkademikFolderPage = lazy(() => import('./pages/akademik/AkademikFolderPage').then(m => ({ default: m.AkademikFolderPage })));
+const AkademikLeaderboard = lazy(() => import('./pages/akademik/AkademikLeaderboard').then(m => ({ default: m.AkademikLeaderboard })));
+
+// ── SUPSAS ──
+import { SupsasProvider } from './contexts/SupsasContext';
+import { SupsasLayout } from './pages/supsas/SupsasLayout';
+import { SupsasAdminLayout } from './pages/supsas/admin/SupsasAdminLayout';
+import { KetuaLayout } from './pages/supsas/ketua/KetuaLayout';
+const SupsasLandingPage = lazy(() => import('./pages/supsas/SupsasLandingPage').then(m => ({ default: m.SupsasLandingPage })));
+const SupsasScoreboardPage = lazy(() => import('./pages/supsas/SupsasScoreboardPage').then(m => ({ default: m.SupsasScoreboardPage })));
+const SupsasSportsPage = lazy(() => import('./pages/supsas/SupsasSportsPage').then(m => ({ default: m.SupsasSportsPage })));
+const SupsasSchedulePage = lazy(() => import('./pages/supsas/SupsasSchedulePage').then(m => ({ default: m.SupsasSchedulePage })));
+const SupsasAdminHome = lazy(() => import('./pages/supsas/admin/SupsasAdminHome').then(m => ({ default: m.SupsasAdminHome })));
+const AdminSukanPage = lazy(() => import('./pages/supsas/admin/AdminSukanPage').then(m => ({ default: m.AdminSukanPage })));
+const AdminKontigenPage = lazy(() => import('./pages/supsas/admin/AdminKontigenPage').then(m => ({ default: m.AdminKontigenPage })));
+const AdminKeputusanPage = lazy(() => import('./pages/supsas/admin/AdminKeputusanPage').then(m => ({ default: m.AdminKeputusanPage })));
+const AdminTetapanPage = lazy(() => import('./pages/supsas/admin/AdminTetapanPage').then(m => ({ default: m.AdminTetapanPage })));
+const AdminJadualPage = lazy(() => import('./pages/supsas/admin/AdminJadualPage').then(m => ({ default: m.AdminJadualPage })));
+const KetuaDashboard = lazy(() => import('./pages/supsas/ketua/KetuaDashboard').then(m => ({ default: m.KetuaDashboard })));
+const BracketPage = lazy(() => import('./pages/supsas/BracketPage').then(m => ({ default: m.BracketPage })));
+const SupsasHistoryPage = lazy(() => import('./pages/supsas/SupsasHistoryPage').then(m => ({ default: m.SupsasHistoryPage })));
+
+// ── E-Kebajikan ──
+import { KebajikanLayout } from './pages/kebajikan/KebajikanLayout';
+const KebajikanStatsPage = lazy(() => import('./pages/kebajikan/KebajikanPublicStats').then(m => ({ default: m.KebajikanPublicStats })));
+const KebajikanSubmitPage = lazy(() => import('./pages/kebajikan/KebajikanSubmitPage').then(m => ({ default: m.KebajikanSubmitPage })));
+const KebajikanMyTickets = lazy(() => import('./pages/kebajikan/KebajikanMyTickets').then(m => ({ default: m.KebajikanMyTickets })));
+const KebajikanDashboard = lazy(() => import('./pages/kebajikan/KebajikanDashboard').then(m => ({ default: m.KebajikanDashboard })));
+const KebajikanTicketsPage = lazy(() => import('./pages/kebajikan/KebajikanTicketsPage').then(m => ({ default: m.KebajikanTicketsPage })));
+const KebajikanTicketDetail = lazy(() => import('./pages/kebajikan/KebajikanTicketDetail').then(m => ({ default: m.KebajikanTicketDetail })));
+const KebajikanStudentChat = lazy(() => import('./pages/kebajikan/KebajikanStudentChat').then(m => ({ default: m.KebajikanStudentChat })));
+const KebajikanReportPage = lazy(() => import('./pages/kebajikan/KebajikanReportPage').then(m => ({ default: m.KebajikanReportPage })));
+const KebajikanStaffPage = lazy(() => import('./pages/kebajikan/KebajikanStaffPage').then(m => ({ default: m.KebajikanStaffPage })));
+const KebajikanSettingsPage = lazy(() => import('./pages/kebajikan/KebajikanSettingsPage').then(m => ({ default: m.KebajikanSettingsPage })));
+
+const JppUsersPage = lazy(() => import('./pages/jpp/JppUsersPage').then(m => ({ default: m.JppUsersPage })));
+const JppTakwimPage = lazy(() => import('./pages/jpp/JppTakwimPage').then(m => ({ default: m.JppTakwimPage })));
+const JppLogsPage = lazy(() => import('./pages/jpp/JppLogsPage').then(m => ({ default: m.JppLogsPage })));
+const JppSettingsPage = lazy(() => import('./pages/jpp/JppSettingsPage').then(m => ({ default: m.JppSettingsPage })));
+const JppNexusPage = lazy(() => import('./pages/jpp/JppNexusPage').then(m => ({ default: m.JppNexusPage })));
+const JppAsramaPage = lazy(() => import('./pages/jpp/JppAsramaPage').then(m => ({ default: m.JppAsramaPage })));
 
 import { CompleteProfileModal } from '@/components/ui/CompleteProfileModal';
 import { GlobalAnnouncementModal } from '@/components/GlobalAnnouncementModal';
@@ -138,9 +149,20 @@ function RequireApproval({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Global Fallback Loader semasa lazy loading
+function InitialPageLoader() {
+  return (
+    <div className="h-screen w-screen flex flex-col items-center justify-center bg-slate-950 text-white">
+      <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mb-4" />
+      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 animate-pulse">Memuat turun data...</p>
+    </div>
+  );
+}
+
 function AppRoutes() {
   return (
-    <Routes>
+    <Suspense fallback={<InitialPageLoader />}>
+      <Routes>
       {/* 🔓 PUBLIC ROUTES */}
       <Route element={<PublicRoute />}>
         <Route path="/" element={<LandingPage />} />
@@ -297,6 +319,7 @@ function AppRoutes() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </Suspense>
   );
 }
 

@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNotifications } from '@/contexts/NotificationContext';
+import { useNotificationStore } from '@/store/useNotificationStore';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn, hexToRgba } from '@/lib/utils';
@@ -18,7 +18,7 @@ const TEAL = KEBAJIKAN_THEME_COLOR; // #2DD4BF
 export function KebajikanSidebar() {
   const { user, profile, signOut, isSuperAdmin, isKebajikanExco, isUnitKebajikanStaff } = useAuth();
   const navigate  = useNavigate();
-  const { unreadCount } = useNotifications();
+  const unreadCount = useNotificationStore(state => state.unreadCount);
 
   const displayName = profile?.full_name || user?.email?.split('@')[0] || '?';
   const initials    = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();

@@ -2,7 +2,8 @@ import React from 'react';
 import { Bell, ChevronRight } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { useNotifications, type AppNotification } from '@/contexts/NotificationContext';
+import { useNotificationStore } from '@/store/useNotificationStore';
+import type { AppNotification } from '@/lib/notifications';
 import { formatDistanceToNow } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
@@ -97,7 +98,10 @@ function NotifItem({ notif, onRead }: { notif: AppNotification; onRead: () => vo
 }
 
 export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'light' }) {
-  const { notifs, unreadCount, markRead, markAllRead } = useNotifications();
+  const notifs = useNotificationStore(state => state.notifs);
+  const unreadCount = useNotificationStore(state => state.unreadCount);
+  const markRead = useNotificationStore(state => state.markRead);
+  const markAllRead = useNotificationStore(state => state.markAllRead);
   const navigate = useNavigate();
 
   const handleNotifClick = async (notif: AppNotification) => {
