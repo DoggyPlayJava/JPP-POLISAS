@@ -58,6 +58,22 @@ import { PolyMartAdminPanel }      from './pages/polymart/PolyMartAdminPanel';
 // ── e-Akademik (prefix: /akademik/) ──
 import { AkademikLayout }      from './pages/akademik/AkademikLayout';
 import { AkademikDashboard }   from './pages/akademik/AkademikDashboard';
+// ── SUPSAS — Sukan Polisas (prefix: /supsas/) ──
+import { SupsasProvider }          from './contexts/SupsasContext';
+import { SupsasLayout }            from './pages/supsas/SupsasLayout';
+import { SupsasLandingPage }       from './pages/supsas/SupsasLandingPage';
+import { SupsasScoreboardPage }    from './pages/supsas/SupsasScoreboardPage';
+import { SupsasSportsPage }        from './pages/supsas/SupsasSportsPage';
+import { SupsasSchedulePage }      from './pages/supsas/SupsasSchedulePage';
+import { SupsasAdminLayout }       from './pages/supsas/admin/SupsasAdminLayout';
+import { SupsasAdminHome }         from './pages/supsas/admin/SupsasAdminHome';
+import { AdminSukanPage }          from './pages/supsas/admin/AdminSukanPage';
+import { AdminKontigenPage }       from './pages/supsas/admin/AdminKontigenPage';
+import { AdminKeputusanPage }      from './pages/supsas/admin/AdminKeputusanPage';
+import { AdminTetapanPage }        from './pages/supsas/admin/AdminTetapanPage';
+import { AdminJadualPage }         from './pages/supsas/admin/AdminJadualPage';
+import { KetuaLayout }             from './pages/supsas/ketua/KetuaLayout';
+import { KetuaDashboard }          from './pages/supsas/ketua/KetuaDashboard';
 import { AkademikPencapaian }  from './pages/akademik/AkademikPencapaian';
 import { AkademikMeritPage }   from './pages/akademik/AkademikMeritPage';
 // ── E-Kebajikan Ticketing System ──
@@ -249,6 +265,29 @@ function AppRoutes() {
           <Route path="/kebajikan/laporan"     element={<KebajikanReportPage />} />
           <Route path="/kebajikan/staff"       element={<KebajikanStaffPage />} />
           <Route path="/kebajikan/tetapan"     element={<KebajikanSettingsPage />} />
+        </Route>
+      </Route>
+
+      {/* ── SUPSAS — Sukan Polisas (PUBLIC — no login needed for scoreboard) ── */}
+      <Route element={<SupsasProvider><SupsasLayout /></SupsasProvider>}>
+        <Route path="/supsas"             element={<SupsasLandingPage />} />
+        <Route path="/supsas/scoreboard"  element={<SupsasScoreboardPage />} />
+        <Route path="/supsas/jadual"      element={<SupsasSchedulePage />} />
+        <Route path="/supsas/sukan"       element={<SupsasSportsPage />} />
+
+        {/* Admin Panel — role guard inside SupsasAdminLayout */}
+        <Route element={<SupsasAdminLayout />}>
+          <Route path="/supsas/admin"            element={<SupsasAdminHome />} />
+          <Route path="/supsas/admin/sukan"      element={<AdminSukanPage />} />
+          <Route path="/supsas/admin/kontinjen"  element={<AdminKontigenPage />} />
+          <Route path="/supsas/admin/keputusan"  element={<AdminKeputusanPage />} />
+          <Route path="/supsas/admin/jadual"     element={<AdminJadualPage />} />
+          <Route path="/supsas/admin/tetapan"    element={<AdminTetapanPage />} />
+        </Route>
+
+        {/* Ketua Kontingen Portal — auth guard inside KetuaLayout */}
+        <Route element={<KetuaLayout />}>
+          <Route path="/supsas/ketua" element={<KetuaDashboard />} />
         </Route>
       </Route>
 

@@ -51,10 +51,10 @@ export const EXCO_MODULES: ExcoModule[] = [
     fullName: 'Exco Keusahawanan & Inovasi',
     tagline: 'Inovasi · Usaha · Kejayaan',
     description: 'Program keusahawanan, geran, pameran & pembangunan bakat pelajar.',
-    defaultColor: '#4ADE80',  // Hijau terang cergas (Green-400)
+    defaultColor: '#4ADE80',
     icon: 'Lightbulb',
     basePath: '/keusahawanan/dashboard',
-    isActive: false,          // Akan Datang
+    isActive: false,
   },
   {
     id: 'akademik',
@@ -62,11 +62,14 @@ export const EXCO_MODULES: ExcoModule[] = [
     fullName: 'Exco Akademik & Pembangunan Intelek',
     tagline: 'Ilmu · Pencapaian · Kecemerlangan',
     description: 'Portal akademik pelajar — rekod pencapaian, sijil, CGPA & merit secara digital.',
-    defaultColor: '#818CF8',  // Indigo terang premium (Indigo-400)
+    defaultColor: '#818CF8',
     icon: 'GraduationCap',
     basePath: '/akademik',
     isActive: true,
   },
+  // NOTA: SUPSAS tidak dimasukkan dalam senarai ini — ia dikawal
+  // secara berasingan melalui event banner dalam PortalPage,
+  // dan hanya muncul apabila Exco Sukan mengaktifkan toggle.
 ];
 
 // ============================================================

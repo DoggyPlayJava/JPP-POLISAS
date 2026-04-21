@@ -429,6 +429,12 @@ export function JppSidebar() {
                   subItems.push({ icon: ClipboardCheck,  label: 'Senarai Tiket',    href: '/kebajikan/tiket' });
                   subItems.push({ icon: FileText,         label: 'Laporan Bulanan',  href: '/kebajikan/laporan' });
                 }
+                // SUPSAS shortcuts untuk SRK
+                if (code === 'SRK') {
+                  subItems.push({ icon: ExternalLink,    label: 'SUPSAS Admin',     href: '/supsas/admin' });
+                  subItems.push({ icon: BarChart3,        label: 'Papan Markah',     href: '/supsas/scoreboard' });
+                  subItems.push({ icon: CalendarDays,     label: 'Jadual SUPSAS',    href: '/supsas/jadual' });
+                }
               } else if (canReview) {
                 // MT / YDP menyemak laporan unit ini
                 if (isYDP) {

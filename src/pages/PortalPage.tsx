@@ -307,6 +307,12 @@ export function PortalPage() {
   // PolyMart live stats
   const [polyMartStats, setPolyMartStats] = useState<{ listings: number; businesses: number } | null>(null);
 
+  // SUPSAS edition data (untuk countdown)
+  const [supsasEdition, setSupsasEdition] = useState<{
+    name: string; start_date: string | null; end_date: string | null; is_active: boolean;
+  } | null>(null);
+  const [supsasCountdown, setSupsasCountdown] = useState({ days: 0, hours: 0, mins: 0, secs: 0, expired: false });
+
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
@@ -365,6 +371,41 @@ export function PortalPage() {
     };
     loadPolyMart();
   }, []);
+
+  // Fetch SUPSAS edition bila toggle ON
+  useEffect(() => {
+    if (!isModuleEnabled('supsas')) return;
+    supabase.from('supsas_editions')
+      .select('name, start_date, end_date, is_active')
+      .order('edition_year', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => { if (data) setSupsasEdition(data as any); });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings]);
+
+  // Live countdown ticker
+  useEffect(() => {
+    if (!supsasEdition?.start_date) return;
+    const target = new Date(supsasEdition.start_date).getTime();
+    const tick = () => {
+      const diff = target - Date.now();
+      if (diff <= 0) {
+        setSupsasCountdown({ days: 0, hours: 0, mins: 0, secs: 0, expired: true });
+        return;
+      }
+      setSupsasCountdown({
+        days:  Math.floor(diff / 86400000),
+        hours: Math.floor((diff % 86400000) / 3600000),
+        mins:  Math.floor((diff % 3600000) / 60000),
+        secs:  Math.floor((diff % 60000) / 1000),
+        expired: false,
+      });
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [supsasEdition?.start_date]);
 
   const isModuleEnabled = (moduleId: string): boolean => {
     const s = settings.find(s => s.exco_module === moduleId);
@@ -727,7 +768,179 @@ export function PortalPage() {
           </motion.div>
         )}
 
-        {/* Modules Grid */}
+        {/* ── SUPSAS EPIC ANNOUNCEMENT BANNER ─────────────────────── */}
+        <AnimatePresence>
+          {isModuleEnabled('supsas') && (
+            <motion.div
+              key="supsas-banner"
+              initial={{ opacity: 0, scale: 0.94, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: -20 }}
+              transition={{ type: 'spring', stiffness: 240, damping: 20 }}
+              className="mb-12 max-w-4xl mx-auto"
+            >
+              {/* Outer glow ring — animated */}
+              <div
+                className="relative rounded-[2rem] p-[1.5px]"
+                style={{
+                  background: 'linear-gradient(135deg, #F59E0B55 0%, #F59E0B11 40%, #F59E0B55 100%)',
+                  animation: 'supsasBorderSpin 4s linear infinite',
+                }}
+              >
+                <style>{`
+                  @keyframes supsasBorderSpin {
+                    0%   { background: linear-gradient(0deg,   #F59E0B66 0%, #F59E0B11 50%, #F59E0B66 100%); }
+                    25%  { background: linear-gradient(90deg,  #F59E0B66 0%, #F59E0B11 50%, #F59E0B66 100%); }
+                    50%  { background: linear-gradient(180deg, #F59E0B66 0%, #F59E0B11 50%, #F59E0B66 100%); }
+                    75%  { background: linear-gradient(270deg, #F59E0B66 0%, #F59E0B11 50%, #F59E0B66 100%); }
+                    100% { background: linear-gradient(360deg, #F59E0B66 0%, #F59E0B11 50%, #F59E0B66 100%); }
+                  }
+                  @keyframes supsasShimmer {
+                    0%   { transform: translateX(-100%); }
+                    100% { transform: translateX(300%); }
+                  }
+                `}</style>
+
+                <div
+                  onClick={() => navigate('/supsas')}
+                  className="relative cursor-pointer rounded-[1.9rem] overflow-hidden"
+                  style={{ background: 'linear-gradient(135deg, #0d1117 0%, #0f1a0a 50%, #1a0d00 100%)' }}
+                >
+                  {/* Shimmer sweep */}
+                  <div
+                    className="absolute inset-0 -skew-x-12 w-1/3 opacity-0 hover:opacity-100"
+                    style={{
+                      background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.08), transparent)',
+                      animation: 'supsasShimmer 2s ease-in-out infinite',
+                      pointerEvents: 'none',
+                    }}
+                  />
+
+                  {/* Top badge bar */}
+                  <div className="flex items-center justify-between px-6 pt-5 pb-0">
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500" />
+                      </span>
+                      <span className="text-[9px] font-black uppercase tracking-[0.4em] text-amber-500/80">
+                        {supsasEdition?.is_active && supsasCountdown.expired ? 'Sedang Berlangsung' : 'Pengumuman Rasmi'}
+                      </span>
+                    </div>
+                    <span className="text-[9px] font-black uppercase tracking-[0.3em] px-2.5 py-1 rounded-full"
+                      style={{ background: 'rgba(245,158,11,0.12)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.2)' }}>
+                      {supsasEdition?.name ?? 'SUPSAS'}
+                    </span>
+                  </div>
+
+                  <div className="px-6 pt-4 pb-6 space-y-5">
+                    {/* Title */}
+                    <div className="text-center space-y-1">
+                      <h2 className="text-3xl sm:text-5xl font-black tracking-tight" style={{ color: '#F59E0B' }}>
+                        SUPSAS
+                      </h2>
+                      <p className="text-xs text-white/30 font-medium tracking-widest uppercase">Sukan Polisas — Event Tahunan JPP</p>
+                    </div>
+
+                    {/* Countdown OR Live state */}
+                    {supsasEdition?.start_date && !supsasCountdown.expired ? (
+                      <>
+                        <p className="text-center text-[10px] font-black uppercase tracking-[0.4em] text-white/25">Bermula Dalam</p>
+                        {/* Countdown digits */}
+                        <div className="flex items-center justify-center gap-3 sm:gap-5">
+                          {[
+                            { v: supsasCountdown.days,  l: 'HARI'   },
+                            { v: supsasCountdown.hours, l: 'JAM'    },
+                            { v: supsasCountdown.mins,  l: 'MINIT'  },
+                            { v: supsasCountdown.secs,  l: 'SAAT'   },
+                          ].map(({ v, l }, i) => (
+                            <React.Fragment key={l}>
+                              <div className="flex flex-col items-center gap-2">
+                                <div
+                                  className="relative w-16 sm:w-20 h-16 sm:h-20 rounded-2xl flex items-center justify-center font-black text-3xl sm:text-4xl text-white overflow-hidden"
+                                  style={{
+                                    background: 'rgba(245,158,11,0.08)',
+                                    border: '1px solid rgba(245,158,11,0.25)',
+                                    boxShadow: '0 0 30px rgba(245,158,11,0.1) inset, 0 4px 20px rgba(0,0,0,0.5)',
+                                  }}
+                                >
+                                  {/* Digit shine */}
+                                  <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.5), transparent)' }} />
+                                  {/* Separating midline */}
+                                  <div className="absolute inset-x-0 top-1/2" style={{ borderTop: '1px solid rgba(245,158,11,0.08)' }} />
+                                  <motion.span
+                                    key={v}
+                                    initial={{ y: -8, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    className="relative z-10 tabular-nums"
+                                    style={{ textShadow: '0 0 20px rgba(245,158,11,0.5)' }}
+                                  >
+                                    {String(v).padStart(2, '0')}
+                                  </motion.span>
+                                </div>
+                                <span className="text-[8px] font-black uppercase tracking-[0.35em]" style={{ color: 'rgba(245,158,11,0.5)' }}>{l}</span>
+                              </div>
+                              {i < 3 && (
+                                <span className="text-2xl sm:text-3xl font-black mb-6" style={{ color: 'rgba(245,158,11,0.2)' }}>:</span>
+                              )}
+                            </React.Fragment>
+                          ))}
+                        </div>
+                        {supsasEdition?.start_date && (
+                          <p className="text-center text-[10px] text-white/20 font-medium">
+                            {new Date(supsasEdition.start_date).toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      /* Event Live / no date state */
+                      <div className="text-center py-2 space-y-2">
+                        <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl"
+                          style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)' }}>
+                          <span className="relative flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                            <span className="relative inline-flex h-3 w-3 rounded-full bg-amber-500" />
+                          </span>
+                          <span className="font-black uppercase tracking-widest text-sm" style={{ color: '#F59E0B' }}>Sedang Berlangsung!</span>
+                        </div>
+                        <p className="text-[10px] text-white/25">Ikuti keputusan terkini dalam masa nyata</p>
+                      </div>
+                    )}
+
+                    {/* CTA Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-3 pt-1">
+                      <button
+                        onClick={e => { e.stopPropagation(); navigate('/supsas/scoreboard'); }}
+                        className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-102 active:scale-95"
+                        style={{ background: '#F59E0B', color: '#000', boxShadow: '0 6px 25px rgba(245,158,11,0.4)' }}
+                      >
+                        <LucideIcons.BarChart3 className="w-4 h-4" />
+                        Papan Markah Medal
+                      </button>
+                      <button
+                        onClick={e => { e.stopPropagation(); navigate('/supsas'); }}
+                        className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-102 active:scale-95"
+                        style={{ background: 'rgba(245,158,11,0.1)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.2)' }}
+                      >
+                        <LucideIcons.Trophy className="w-4 h-4" />
+                        Laman SUPSAS
+                      </button>
+                      <button
+                        onClick={e => { e.stopPropagation(); navigate('/supsas/jadual'); }}
+                        className="sm:w-auto flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-102 active:scale-95"
+                        style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.06)' }}
+                      >
+                        <LucideIcons.CalendarDays className="w-4 h-4" />
+                        Jadual
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="max-w-6xl mx-auto">
           {isLoadingSettings ? (
             <div className="flex flex-col items-center justify-center py-32 space-y-6">
