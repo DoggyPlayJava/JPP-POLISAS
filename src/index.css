@@ -112,11 +112,20 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased transition-colors duration-500 ease-in-out;
+    @apply bg-background text-foreground font-sans antialiased transition-colors duration-500 ease-in-out relative;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -50;
+    pointer-events: none;
     background-image: var(--noise);
     background-size: 110px 110px;
     background-repeat: repeat;
-    background-attachment: fixed;
+    opacity: 0.03;
+    mix-blend-mode: overlay;
   }
 
   h1, h2, h3, h4, h5, h6 {

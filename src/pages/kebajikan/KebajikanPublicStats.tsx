@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   CheckCircle2, Clock, TrendingUp, ListChecks,
   HeartHandshake, Star, BarChart3, ChevronRight,
@@ -34,6 +34,7 @@ export function KebajikanStatsPage() {
   const [categories, setCategories] = useState<KebajikanCategoryStats[]>([]);
   const [ratings, setRatings]   = useState<any[]>([]);
   const [loading, setLoading]   = useState(true);
+  const navigate = useNavigate();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -146,13 +147,18 @@ export function KebajikanStatsPage() {
           <p className="relative z-10 text-sm text-slate-400 mb-8 max-w-lg mx-auto leading-relaxed">
             Aduan anda penting kepada kami. Log masuk ke portal JPP POLISAS untuk melaporkan masalah dan kami akan cuba menyelesaikannya secepat mungkin.
           </p>
-          <Link
-            to="/kebajikan/buat-aduan"
+          <button
+            onClick={() => {
+              // Simpan destinasi ke sessionStorage supaya selepas log masuk,
+              // pengguna terus diarahkan ke borang aduan (bukan portal)
+              sessionStorage.setItem('post_login_redirect', '/kebajikan/buat-aduan');
+              navigate('/login?redirect=/kebajikan/buat-aduan');
+            }}
             className="relative z-10 inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-black text-sm text-slate-950 transition-all hover:scale-[1.02] active:scale-[0.98]"
             style={{ background: TEAL, boxShadow: `0 12px 40px rgba(45,212,191,0.4)` }}
           >
             Buat Aduan Sekarang <ChevronRight className="w-5 h-5 ml-1" />
-          </Link>
+          </button>
         </div>
 
         {/* Stats Cards */}

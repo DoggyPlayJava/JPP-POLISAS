@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
@@ -44,6 +44,14 @@ export function LoginPage() {
     setPhone(''); setPasscode('');
   };
 
+  // Simpan redirect URL ke sessionStorage serta-merta bila login page dimuatkan.
+  // Ini penting untuk elak race condition — kita perlu simpan SEBELUM signInWithPassword
+  // dipanggil kerana Supabase notify onAuthStateChange sebelum Promise kita resolve semula.
+  useEffect(() => {
+    const redirectTo = new URLSearchParams(window.location.search).get('redirect');
+    if (redirectTo) sessionStorage.setItem('post_login_redirect', redirectTo);
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -58,9 +66,6 @@ export function LoginPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        // Simpan redirect URL jika datang dari halaman protected (cth: PolyMart)
-        const redirectTo = new URLSearchParams(window.location.search).get('redirect');
-        if (redirectTo) sessionStorage.setItem('post_login_redirect', redirectTo);
         toast.success('Log masuk berjaya. Selamat kembali.');
       }
     } catch (error: any) {
@@ -78,10 +83,17 @@ export function LoginPage() {
 
   const handleGoogleLogin = async () => {
     try {
+      // Bawa redirect param dari URL semasa (jika ada) ke URL callback
+      // supaya selepas OAuth, PublicRoute dapat baca dari sessionStorage
+      const currentRedirect = new URLSearchParams(window.location.search).get('redirect');
+      const callbackUrl = currentRedirect
+        ? `${window.location.origin}/login?redirect=${encodeURIComponent(currentRedirect)}`
+        : `${window.location.origin}/login`;
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/portal`,
+          redirectTo: callbackUrl,
         },
       });
       if (error) throw error;

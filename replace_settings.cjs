@@ -1,272 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import {
-  User, Bell, Shield, CreditCard, Mail, Lock, Camera, Check, Award, Globe, Loader2, FileText, Activity, HelpCircle, MessageSquare, Headphones, ExternalLink, Sparkles, Phone, ArrowLeft, Moon
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Card, CardContent, CardDescription, CardHeader, CardTitle
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'react-hot-toast';
+const fs = require('fs');
 
-export function SettingsPage() {
-  const { user, profile, refetchProfile, effectiveRole } = useAuth();
-  const { theme, setTheme } = useTheme();
+try {
+  let content = fs.readFileSync('c:/Users/Cyborg 15/Desktop/JPP-POLISAS-main/src/pages/SettingsPage.tsx', 'utf-8');
 
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const currentTab = searchParams.get('tab') || 'general';
+  // Replace Imports
+  content = content.replace(
+      'import {\n  User, Bell, Shield, CreditCard, Mail, Lock, Camera, Check, Award, Globe, Loader2, FileText, Activity, HelpCircle, MessageSquare, Headphones, ExternalLink, Sparkles, Phone, ArrowLeft\n} from \'lucide-react\';',
+      'import {\n  User, Bell, Shield, CreditCard, Mail, Lock, Camera, Check, Award, Globe, Loader2, FileText, Activity, HelpCircle, MessageSquare, Headphones, ExternalLink, Sparkles, Phone, ArrowLeft, Moon\n} from \'lucide-react\';'
+  );
 
-  const [loading, setLoading] = useState(false);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false); // State khas untuk avatar
-  const [fullName, setFullName] = useState(profile?.full_name || '');
-  const [phone, setPhone] = useState(profile?.phone || '');
-  const [email, setEmail] = useState(user?.email || '');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const old_tabs_start = `      {/* TABS PENGEMUDIAN */}
+      <Tabs value={currentTab} onValueChange={(value) => setSearchParams({ tab: value }, { replace: true })} className="w-full">
+        <TabsList className="bg-muted/30 h-auto p-1 rounded-2xl gap-1 border border-border/50 mb-8 flex-wrap">`;
 
-  // States untuk OTP
-  const [showOTPModal, setShowOTPModal] = useState(false);
-  const [otpInput, setOtpInput] = useState('');
-  const [generatedOTP, setGeneratedOTP] = useState('');
+  const end_marker = `        </AnimatePresence>
+      </Tabs>`;
 
-  useEffect(() => {
-    if (user?.email) {
-      setEmail(user.email);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (profile?.full_name) {
-      setFullName(profile.full_name);
-    }
-    if (profile?.phone) {
-      setPhone(profile.phone);
-    }
-  }, [profile]);
-
-  const displayName = profile?.full_name || user?.email?.split('@')[0] || '?';
-  const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
-
-  // 🔥 FUNGSI MUAT NAIK AVATAR DENGAN "BOUNCER 2MB"
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      setUploadingAvatar(true);
-      if (!event.target.files || event.target.files.length === 0 || !user) return;
-
-      const file = event.target.files[0];
-
-      // 🚨 Bouncer 2MB (2 * 1024 * 1024 bytes)
-      if (file.size > 2097152) {
-        toast.error("Gagal: Saiz fail terlalu besar! Maksimum 2MB sahaja.");
-        return;
-      }
-
-      // Proses muat naik
-      const fileExt = file.name.split('.').pop();
-      // Format laluan fail: "user_id/avatar-timestamp.ext"
-      const filePath = `${user.id}/avatar-${Date.now()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      // Dapatkan URL awam gambar tersebut
-      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
-
-      // Kemaskini dalam table profiles
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
-
-      // Beritahu sistem untuk muat semula profil
-      await refetchProfile();
-      toast.success("Gambar profil berjaya dikemaskini!");
-
-    } catch (error: any) {
-      toast.error(error.message || "Ralat memuat naik gambar.");
-    } finally {
-      setUploadingAvatar(false);
-    }
-  };
-
-  const commitUpdates = async () => {
-    if (!user || !fullName.trim()) return;
-    
-    setLoading(true);
-    try {
-      const isProfileChanged = fullName !== profile?.full_name || phone !== profile?.phone;
-      const isEmailChanged = email !== user?.email;
-
-      if (isProfileChanged) {
-        const oldName = profile?.full_name;
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ 
-            full_name: fullName.trim(),
-            phone: phone.trim()
-          })
-          .eq('id', user.id);
-
-        if (profileError) throw profileError;
-
-        if (oldName && oldName !== fullName.trim()) {
-          await supabase
-            .from('club_committee')
-            .update({ full_name: fullName.trim() })
-            .eq('full_name', oldName);
-        }
-        await refetchProfile();
-      }
-
-      if (isEmailChanged) {
-        const { error: emailError } = await supabase.auth.updateUser({ email: email.trim() });
-        if (emailError) throw emailError;
-        toast.success('Sila semak emel baru anda (dan emel lama) untuk pautan pengesahan.');
-      } else if (isProfileChanged) {
-        toast.success('Profil berjaya disegerakkan dengan sistem!');
-      }
-
-    } catch (error: any) {
-      toast.error(error.message || 'Gagal mengemaskini profil.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateProfile = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    
-    const isPhoneChanged = phone !== profile?.phone;
-    
-    // Jika telefon bimbit berubah, kita perlukan verifikasi OTP
-    if (isPhoneChanged && phone.trim() !== '') {
-      handleInitiateOTP();
-      return;
-    }
-
-    // Jika tiada pertukaran nombor telefon, simpan terus
-    await commitUpdates();
-  };
-
-  const handleInitiateOTP = async () => {
-    if (!user?.email) return;
-    
-    setLoading(true);
-    try {
-      const newOTP = Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOTP(newOTP);
+  const parts = content.split(old_tabs_start);
+  if (parts.length === 2) {
+      const start_content = parts[0];
+      const rest_content = parts[1];
       
-      const { error } = await supabase.functions.invoke('send-email', {
-        body: {
-          to: user.email,
-          subject: "Kod Pengesahan Portal JPP",
-          html: `<div style="font-family: sans-serif; padding: 20px; color: #1e293b; max-width: 500px; border: 1px solid #e2e8f0; border-radius: 8px;">
-            <h2 style="color: #0f172a; margin-top: 0;">Pengesahan Penukaran Nombor Telefon</h2>
-            <p>Sistem merekodkan percubaan untuk menukar nombor telefon di akaun anda.</p>
-            <p>Gunakan kod 6-digit di bawah untuk melengkapkan pengesahan ini:</p>
-            <div style="background-color: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
-              <h1 style="letter-spacing: 8px; margin: 0; color: #4338ca; font-size: 32px;">${newOTP}</h1>
-            </div>
-            <p style="font-size: 12px; color: #64748b;">Sekiranya anda tidak meminta pertukaran ini, sila abaikan emel ini dan periksa keselamatan akaun anda.</p>
-          </div>`
-        }
-      });
-      
-      if (error) throw error;
-      
-      setShowOTPModal(true);
-      setOtpInput('');
-      toast.success('Peringatan: Kod pengesahan telah dihantar ke emel semasa anda.');
-    } catch (err: any) {
-      toast.error(err.message || "Gagal menghantar kod pengesahan.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (otpInput === generatedOTP) {
-      setShowOTPModal(false);
-      setOtpInput('');
-      setGeneratedOTP('');
-      await commitUpdates();
-    } else {
-      toast.error('Kod pengesahan (OTP) tidak sepadan atau tidak sah.');
-    }
-  };
-
-  const handleUpdatePassword = async (e?: React.FormEvent) => {
-    // ... (Fungsi password kekal sama) ...
-    if (e) e.preventDefault();
-    if (!newPassword || newPassword !== confirmPassword) {
-      toast.error('Kata laluan tidak sepadan atau kosong.');
-      return;
-    }
-    if (newPassword.length < 6) {
-      toast.error('Kata laluan mestilah sekurang-kurangnya 6 aksara.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
-      toast.success('Kata laluan berjaya ditukar!');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (error: any) {
-      toast.error(error.message || 'Gagal menukar kata laluan.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="page-container relative space-y-10 pb-20 pt-8 z-0">
-      
-      {/* Latar Belakang Dekoratif Premium */}
-      <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)]">
-        <div className="absolute top-[-10%] right-[-5%] w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-primary/10 dark:bg-primary/20 blur-[100px] rounded-full" />
-        <div className="absolute bottom-[20%] left-[-10%] w-[400px] md:w-[800px] h-[400px] md:h-[800px] bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] rounded-full" />
-      </div>
-
-      {/* ── HEADER ── */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-card/40 p-5 sm:p-8 rounded-[2.5rem] border border-border/60 backdrop-blur-sm shadow-sm relative z-10">
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300 w-fit font-bold text-[10px] uppercase tracking-widest"
-            >
-              <ArrowLeft className="w-3 h-3" />
-              Kembali
-            </button>
-            <Badge className="bg-primary/10 text-primary border-none px-3 uppercase text-[10px] font-black">Pusat Kawalan</Badge>
-          </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none">Tetapan</h1>
-          <p className="text-muted-foreground text-sm font-medium">Urus parameter peribadi dan operasi sistem anda.</p>
-        </div>
-      </header>
-
-      {/* TABS PENGEMUDIAN DIUBAH KEPADA LAYOUT SIDEBAR VERTIKAL */}
+      const parts_sub = rest_content.split(end_marker);
+      if (parts_sub.length === 2) {
+          const end_content = parts_sub[1];
+          
+          const new_tabs = `      {/* TABS PENGEMUDIAN DIUBAH KEPADA LAYOUT SIDEBAR VERTIKAL */}
       <Tabs value={currentTab} onValueChange={(value) => setSearchParams({ tab: value }, { replace: true })} orientation="vertical" className="w-full flex flex-col md:flex-row gap-8 lg:gap-12 mt-8">
         
         {/* KIRI: Sidebar (Trigger List) */}
@@ -326,11 +85,11 @@ export function SettingsPage() {
                     {/* Avatar Upload */}
                     <div className="relative group/avatar shrink-0 self-start sm:self-auto ml-2 sm:ml-0 z-10">
                       <Avatar className="h-24 w-24 sm:h-32 sm:w-32 rounded-[2rem] border-4 border-card shadow-2xl ring-1 ring-border/20 transition-transform duration-300 group-hover/avatar:scale-105 bg-card">
-                        <AvatarImage src={profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${initials}&backgroundColor=8B1A1A&textColor=FFF8F0`} className="object-cover" />
+                        <AvatarImage src={profile?.avatar_url || \`https://api.dicebear.com/7.x/initials/svg?seed=\${initials}&backgroundColor=8B1A1A&textColor=FFF8F0\`} className="object-cover" />
                         <AvatarFallback className="bg-primary text-white font-black text-2xl">{initials}</AvatarFallback>
                       </Avatar>
                       <input type="file" accept="image/*" className="hidden" id="avatar-upload" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
-                      <label htmlFor="avatar-upload" className={`h-10 w-10 sm:h-12 sm:w-12 rounded-xl absolute -bottom-2 -right-2 flex items-center justify-center text-white shadow-lg border-4 border-card transition-all cursor-pointer ${uploadingAvatar ? 'bg-slate-400 pointer-events-none' : 'bg-primary hover:bg-primary/90 hover:scale-105 active:scale-95'}`}>
+                      <label htmlFor="avatar-upload" className={\`h-10 w-10 sm:h-12 sm:w-12 rounded-xl absolute -bottom-2 -right-2 flex items-center justify-center text-white shadow-lg border-4 border-card transition-all cursor-pointer \${uploadingAvatar ? 'bg-slate-400 pointer-events-none' : 'bg-primary hover:bg-primary/90 hover:scale-105 active:scale-95'}\`}>
                         {uploadingAvatar ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
                       </label>
                     </div>
@@ -634,7 +393,7 @@ export function SettingsPage() {
                         <h4 className="text-xl font-bold text-foreground tracking-tight">Ruang Maju Idea Organisasi</h4>
                         <p className="text-xs font-medium text-muted-foreground leading-relaxed">Sekiranya anda mengesan cacat cela pada struktur sistem pelaporan atau mempunyai ilham bagi fasiliti baharu, utuskan draf cadangan menerusi lampiran emel.</p>
                       </div>
-                      <Button onClick={() => window.location.href = 'mailto:jpp@cipher-node.org?subject=Maklum%20Balas%20Portal%20JPP'} variant="outline" className="h-12 px-8 rounded-xl font-bold text-xs uppercase tracking-wider text-primary border-primary/30 bg-primary/5 hover:bg-primary hover:text-white hover:border-primary shadow-lg shadow-primary/5 w-full hover:scale-[1.02] active:scale-[0.98] transition-all relative z-10 mt-auto">
+                      <Button onClick={() => window.location.href = 'mailto:support.jpp@polisas.edu.my?subject=Maklum%20Balas%20Portal%20JPP'} variant="outline" className="h-12 px-8 rounded-xl font-bold text-xs uppercase tracking-wider text-primary border-primary/30 bg-primary/5 hover:bg-primary hover:text-white hover:border-primary shadow-lg shadow-primary/5 w-full hover:scale-[1.02] active:scale-[0.98] transition-all relative z-10 mt-auto">
                         <Mail className="w-4 h-4 mr-2" /> Lampirkan Emel Rasmi
                       </Button>
                     </div>
@@ -664,76 +423,17 @@ export function SettingsPage() {
             </TabsContent>
           </AnimatePresence>
         </div>
-      </Tabs>
+      </Tabs>`;
 
-      {/* --- MODAL PENGESAHAN OTP --- */}
-      <AnimatePresence>
-        {showOTPModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => !loading && setShowOTPModal(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-sm bg-card border border-border shadow-2xl rounded-[2rem] p-6 sm:p-8"
-            >
-              <div className="space-y-5 text-center">
-                <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary ring-4 ring-primary/5">
-                  <Shield size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-black tracking-tight mb-1">Pengesahan OTP</h3>
-                  <p className="text-muted-foreground font-medium text-xs">
-                    Kod 6-digit dihantar ke <span className="font-bold text-foreground">{user?.email}</span>.
-                  </p>
-                </div>
-
-                <form onSubmit={handleVerifyOTP} className="space-y-5 mt-4">
-                  <Input 
-                    type="text" 
-                    value={otpInput}
-                    onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    className="h-14 text-center text-2xl font-mono tracking-[0.4em] bg-muted/40 border-border/50 focus-visible:border-primary/50 rounded-xl" 
-                    placeholder="••••••" 
-                    maxLength={6}
-                    autoFocus
-                  />
-
-                  <div className="flex gap-3">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => setShowOTPModal(false)} 
-                      disabled={loading}
-                      className="flex-1 h-11 rounded-xl font-bold uppercase text-[10px] tracking-wider"
-                    >
-                      Batal
-                    </Button>
-                    <Button 
-                      type="submit" 
-                      disabled={otpInput.length !== 6 || loading}
-                      className="flex-1 h-11 rounded-xl font-bold uppercase text-[10px] tracking-wider bg-primary text-primary-foreground shadow-sm"
-                    >
-                      {loading ? 'Disahkan...' : 'Sahkan'}
-                    </Button>
-                  </div>
-                </form>
-
-                <p className="text-[10px] text-muted-foreground font-medium pt-3 mt-3 border-t border-border/40">
-                  Tidak terima emel? <button type="button" onClick={handleInitiateOTP} className="text-primary hover:underline font-bold" disabled={loading}>Hantar Semula</button>
-                </p>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-    </motion.div>
-  );
+          content = start_content + new_tabs + end_content;
+          fs.writeFileSync('c:/Users/Cyborg 15/Desktop/JPP-POLISAS-main/src/pages/SettingsPage.tsx', content, 'utf-8');
+          console.log("Success!");
+      } else {
+          console.error("Error: Could not find end_marker!");
+      }
+  } else {
+      console.error("Error: Could not find old_tabs_start!");
+  }
+} catch (e) {
+  console.error("Script execution failed:", e);
 }

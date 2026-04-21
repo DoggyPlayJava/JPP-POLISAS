@@ -1,5 +1,5 @@
-import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 function LoadingScreen() {
@@ -28,22 +28,41 @@ export function ProtectedRoute() {
 
 export function PublicRoute() {
   const { isAuthenticated, isLoading, profile } = useAuth();
-  if (isLoading) return <LoadingScreen />;
-  if (isAuthenticated) {
-    // Semak redirect yang disimpan (dari PolyMart atau mana-mana halaman protected)
+  const navigate = useNavigate();
+
+  // ── Logik redirect selepas log masuk ──────────────────────────────────────
+  // PENTING: Diletakkan dalam useEffect dan bukannya dalam render body untuk
+  // elak race condition. Supabase notify onAuthStateChange sebelum Promise
+  // signInWithPassword resolve, jadi sessionStorage mungkin belum diset
+  // semasa render pertama. useEffect dijamin berjalan SELEPAS React commit
+  // semua state updates, memastikan sessionStorage sudah bersedia.
+  useEffect(() => {
+    if (isLoading || !isAuthenticated) return;
+
     const savedRedirect = sessionStorage.getItem('post_login_redirect');
     if (savedRedirect) {
       sessionStorage.removeItem('post_login_redirect');
-      return <Navigate to={savedRedirect} replace />;
+      navigate(savedRedirect, { replace: true });
+      return;
     }
-    // SUPER_ADMIN_JPP & JPP (Ahli JPP) → terus ke JPP HQ portal
+
+    // Tiada redirect tersimpan — guna logik default berdasarkan role.
+    // Tunggu profile dimuatkan sebelum buat keputusan role-based.
+    if (profile === null) return; // profile masih loading, tunggu render seterusnya
+
     if (profile?.role === 'SUPER_ADMIN_JPP' || profile?.role === 'JPP') {
-      return <Navigate to="/jpp" replace />;
+      navigate('/jpp', { replace: true });
+    } else {
+      localStorage.removeItem('is_new_register');
+      navigate('/portal', { replace: true });
     }
-    // Semua pengguna lain → Portal Hub untuk pilih exco
-    // (localStorage is_new_register dikekalkan untuk backward compat)
-    localStorage.removeItem('is_new_register');
-    return <Navigate to="/portal" replace />;
-  }
+  }, [isAuthenticated, isLoading, profile, navigate]);
+
+  // Tunjuk loading semasa auth dalam transisi
+  if (isLoading) return <LoadingScreen />;
+
+  // Kalau sudah authenticated, tunjuk loading sementara useEffect handle redirect
+  if (isAuthenticated) return <LoadingScreen />;
+
   return <Outlet />;
 }
