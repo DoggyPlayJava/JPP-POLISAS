@@ -14,6 +14,9 @@ Font.register({
   ]
 });
 
+// Matikan hyphenation automatik
+Font.registerHyphenationCallback(word => [word]);
+
 const styles = StyleSheet.create({
   page: {
     padding: 40,
@@ -82,15 +85,15 @@ const styles = StyleSheet.create({
   coverClubName: { fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 4 },
   coverInstitution: { fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
 
-  sectionTitle: { fontSize: 12, fontWeight: 'bold', marginBottom: 10, marginTop: 10 },
+  sectionTitle: { fontSize: 12, marginBottom: 10, marginTop: 10 },
   table: { width: '100%', borderStyle: 'solid', borderWidth: 1, borderColor: '#000', marginBottom: 20 },
   tableRow: { flexDirection: 'row' },
-  tableColHeader: { width: '33.33%', borderStyle: 'solid', borderWidth: 1, borderColor: '#000', backgroundColor: '#e2e8f0', padding: 8 },
-  tableCol: { width: '33.33%', borderStyle: 'solid', borderWidth: 1, borderColor: '#000', padding: 8 },
-  tableCellHeader: { fontSize: 10, fontWeight: 'bold' },
-  tableCell: { fontSize: 10, textAlign: 'justify' },
+  tableColHeader: { borderStyle: 'solid', borderWidth: 1, borderColor: '#000', padding: 4 },
+  tableCol: { borderStyle: 'solid', borderWidth: 1, borderColor: '#000', padding: 4 },
+  tableCellHeader: { fontSize: 10, textAlign: 'center' },
+  tableCell: { fontSize: 10, textAlign: 'left' },
 
-  lampiranTitle: { fontSize: 12, fontWeight: 'bold', marginTop: 10, textDecoration: 'underline' },
+  lampiranTitle: { fontSize: 12, marginTop: 10 },
   imageContainer: {
     flexDirection: 'row',
     gap: 15,
@@ -269,22 +272,22 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
               {clubLogoUrl && <Image src={clubLogoUrl} style={styles.watermarkImage} />}
             </View>
 
-            <Text style={styles.sectionTitle}>{index + 1}. PERINCIAN AKTIVITI</Text>
+            <Text style={styles.sectionTitle}>{index + 1}.</Text>
 
             <View style={styles.table}>
               <View style={styles.tableRow}>
-                <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>TARIKH</Text></View>
-                <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>AKTIVITI</Text></View>
-                <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>TINDAKAN</Text></View>
+                <View style={[styles.tableColHeader, { width: '22%' }]}><Text style={styles.tableCellHeader}>TARIKH</Text></View>
+                <View style={[styles.tableColHeader, { width: '39%' }]}><Text style={styles.tableCellHeader}>AKTIVITI</Text></View>
+                <View style={[styles.tableColHeader, { width: '39%' }]}><Text style={styles.tableCellHeader}>TINDAKAN</Text></View>
               </View>
               <View style={styles.tableRow}>
-                <View style={styles.tableCol}>
-                  <Text style={styles.tableCell}>
+                <View style={[styles.tableCol, { width: '22%' }]}>
+                  <Text style={[styles.tableCell, { textAlign: 'center' }]}>
                     {act.start_date ? format(new Date(act.start_date), 'd MMMM yyyy', { locale: ms }) : '-'}
                   </Text>
                 </View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>{act.title}</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>{act.tindakan || '-'}</Text></View>
+                <View style={[styles.tableCol, { width: '39%' }]}><Text style={styles.tableCell}>{act.title}</Text></View>
+                <View style={[styles.tableCol, { width: '39%' }]}><Text style={styles.tableCell}>{act.tindakan || '-'}</Text></View>
               </View>
             </View>
 
