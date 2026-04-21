@@ -240,6 +240,162 @@ function VendorOrderCard({ order, onUpdate }: { order: VendorOrder; onUpdate: ()
   );
 }
 
+// ── Vendor Ads Tab ─────────────────────────────────────────────────────────────
+function VendorAdsTab() {
+  const { user } = useAuth();
+  const [ads, setAds] = useState<PolyAd[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Form states
+  const [title, setTitle] = useState('');
+  const [linkUrl, setLinkUrl] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  const loadAds = async () => {
+    if (!user) return;
+    setLoading(true);
+    const { data } = await supabase.from('polymart_ads')
+      .select('*')
+      .eq('created_by', user.id)
+      .order('created_at', { ascending: false });
+    setAds(data || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { loadAds(); }, [user]);
+
+  const handleApply = async () => {
+    if (!title.trim() || !imageFile) {
+      toast.error('Sila isi tajuk dan berikan gambar banner'); return;
+    }
+    setSaving(true);
+    try {
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const { error: uploadErr } = await supabase.storage
+        .from('polymart-ads')
+        .upload(fileName, imageFile);
+      
+      if (uploadErr) throw uploadErr;
+      const { data: { publicUrl } } = supabase.storage.from('polymart-ads').getPublicUrl(fileName);
+
+      const payload = {
+        title,
+        image_url: publicUrl,
+        link_url: linkUrl || null,
+        type: 'INTERNAL',
+        status: 'DRAFT', // Mesti diluluskan Exco
+        created_by: user?.id,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase.from('polymart_ads').insert(payload);
+      if (error) throw error;
+      
+      toast.success('Permohonan iklan dihantar! Sila tunggu kelulusan Exco.');
+      setShowModal(false);
+      setTitle(''); setLinkUrl(''); setImageFile(null);
+      loadAds();
+    } catch (e: any) {
+      toast.error('Ralat: ' + e.message);
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+      <div className="flex items-center justify-between p-4 bg-white/5 border border-border/50 rounded-2xl">
+        <div>
+          <p className="text-sm font-black text-foreground">Permohonan Iklan (Promo)</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">Iklan anda akan dipaparkan di halaman utama PolyMart selepas diluluskan.</p>
+        </div>
+        <button onClick={() => setShowModal(true)}
+          className="h-9 px-4 rounded-xl text-xs font-bold text-white transition-all shadow-xl hover:scale-105 active:scale-95 whitespace-nowrap"
+          style={{ background: PM_GRADIENT }}>
+          + Mohon Iklan
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-6"><div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" /></div>
+      ) : ads.length === 0 ? (
+        <div className="text-center py-10 opacity-50">
+          <p className="text-xs font-bold">Tiada permohonan iklan lagi.</p>
+        </div>
+      ) : (
+        <div className="grid gap-3">
+          {ads.map(ad => (
+            <div key={ad.id} className="flex gap-4 p-3 rounded-2xl border border-border/50 bg-card">
+              <img src={ad.image_url} className="w-24 h-16 object-cover rounded-xl bg-muted shrink-0 border border-border/50" alt="" />
+              <div>
+                <p className="text-sm font-black text-foreground">{ad.title}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black tracking-widest text-white uppercase ${
+                    ad.status === 'ACTIVE' ? 'bg-emerald-500' : ad.status === 'DRAFT' ? 'bg-amber-500' : 'bg-rose-500'
+                  }`}>
+                    {ad.status === 'DRAFT' ? 'Menunggu Kelulusan' : ad.status}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3 text-amber-500" /> {ad.clicks} klik
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Modal */}
+      <AnimatePresence>
+        {showModal && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60">
+            <motion.div initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '100%', opacity: 0 }}
+              className="bg-card w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl relative">
+              <div className="p-5 space-y-4">
+                <h3 className="text-lg font-black text-foreground">Permohonan Iklan</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed -mt-2">Promosikan produk anda di muka depan PolyMart! Iklan ini perlu diluluskan oleh Exco Keusahawanan.</p>
+                
+                <div className="space-y-3 pt-2">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Tajuk Promo</label>
+                    <input value={title} onChange={e => setTitle(e.target.value)}
+                      placeholder="Cth: Promosi Merdeka Diskaun 50%!"
+                      className="w-full h-10 px-3 text-xs bg-muted/50 rounded-xl border border-border outline-none focus:border-amber-500/50" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pautan / Link (Jika ada)</label>
+                    <input value={linkUrl} onChange={e => setLinkUrl(e.target.value)}
+                      placeholder="https://..."
+                      className="w-full h-10 px-3 text-xs bg-muted/50 rounded-xl border border-border outline-none focus:border-amber-500/50" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Banner Gambar (Nisbah 2.5:1)</label>
+                    <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)}
+                      className="w-full text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10px] file:font-semibold file:bg-amber-500/10 file:text-amber-600 outline-none" />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-4 border-t border-border/50 flex gap-2 bg-muted/20">
+                <button onClick={() => setShowModal(false)} className="flex-1 h-10 rounded-xl text-xs font-bold text-muted-foreground hover:bg-muted/50 transition-colors border border-border/50">
+                  Kembali
+                </button>
+                <button disabled={saving} onClick={handleApply}
+                  className="flex-1 h-10 rounded-xl text-xs font-bold text-white transition-all disabled:opacity-50"
+                  style={{ background: PM_GRADIENT }}>
+                  {saving ? 'Hantar...' : 'Hantar Permohonan'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export function PolyMartVendorDashboard() {
   const { user } = useAuth();
@@ -247,7 +403,7 @@ export function PolyMartVendorDashboard() {
 
   const [orders,   setOrders]   = useState<VendorOrder[]>([]);
   const [loading,  setLoading]  = useState(true);
-  const [activeTab, setActiveTab] = useState<OrderStatus | 'active'>('active');
+  const [activeTab, setActiveTab] = useState<OrderStatus | 'active' | 'ads'>('active');
 
   const loadOrders = async () => {
     if (!user) return;
@@ -325,7 +481,7 @@ export function PolyMartVendorDashboard() {
       )}
 
       {/* Tab filter */}
-      <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
+      <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1 border-b border-border/30 mb-2">
         {[
           { key: 'active', label: 'Aktif', emoji: '🔥' },
           { key: 'PENDING', label: 'Menunggu', emoji: '⏳' },
@@ -333,6 +489,7 @@ export function PolyMartVendorDashboard() {
           { key: 'READY', label: 'Siap', emoji: '🎉' },
           { key: 'COMPLETED', label: 'Selesai', emoji: '⭐' },
           { key: 'CANCELLED', label: 'Batal', emoji: '❌' },
+          { key: 'ads', label: 'Iklan', emoji: '🪧' },
         ].map(tab => (
           <button key={tab.key}
             onClick={() => setActiveTab(tab.key as any)}
@@ -353,26 +510,31 @@ export function PolyMartVendorDashboard() {
         ))}
       </div>
 
-      {/* Orders list */}
-      {loading ? (
-        <div className="flex items-center justify-center h-40">
-          <div className="w-8 h-8 rounded-full border-4 border-t-transparent animate-spin"
-            style={{ borderColor: PM_ACCENT, borderTopColor: 'transparent' }} />
-        </div>
-      ) : displayed.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <div className="text-5xl">🎯</div>
-          <p className="text-sm font-bold text-muted-foreground/60">Tiada pesanan dalam kategori ini</p>
-        </div>
+      {activeTab === 'ads' ? (
+        <VendorAdsTab />
       ) : (
-        <div className="space-y-3">
-          <AnimatePresence>
-            {displayed.map(o => (
-              <VendorOrderCard key={o.id} order={o} onUpdate={handleUpdate} />
-            ))}
-          </AnimatePresence>
-        </div>
+        /* Orders list */
+        loading ? (
+          <div className="flex items-center justify-center h-40">
+            <div className="w-8 h-8 rounded-full border-4 border-t-transparent animate-spin"
+              style={{ borderColor: PM_ACCENT, borderTopColor: 'transparent' }} />
+          </div>
+        ) : displayed.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <div className="text-5xl">🎯</div>
+            <p className="text-sm font-bold text-muted-foreground/60">Tiada pesanan dalam kategori ini</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <AnimatePresence>
+              {displayed.map(o => (
+                <VendorOrderCard key={o.id} order={o} onUpdate={handleUpdate} />
+              ))}
+            </AnimatePresence>
+          </div>
+        )
       )}
     </div>
   );
 }
+

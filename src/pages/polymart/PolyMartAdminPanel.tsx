@@ -21,6 +21,11 @@ interface PolyAd {
   start_date?: string;
   end_date?: string;
   clicks: number;
+  created_by?: string;
+  creator?: {
+    full_name: string;
+    matric_no: string;
+  };
 }
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -161,10 +166,13 @@ function AdsManagerTab() {
   const fetchAds = async () => {
     setLoading(true);
     const [{ data }, { data: phoneData }] = await Promise.all([
-      supabase.from('polymart_ads').select('*').order('created_at', { ascending: false }),
+      supabase.from('polymart_ads').select(`
+        *,
+        creator:profiles!created_by(full_name, matric_no)
+      `).order('created_at', { ascending: false }),
       supabase.from('system_settings').select('value').eq('key', 'polymart_ads_phone').single(),
     ]);
-    setAds(data || []);
+    setAds((data || []) as any[]);
     if (phoneData) setAdsPhone(phoneData.value?.replace(/["']/g, '') || '');
     setLoading(false);
   };
@@ -197,6 +205,41 @@ function AdsManagerTab() {
     setShowModal(true);
   };
 
+  const handleApprove = async (ad: PolyAd) => {
+    // Determine start/end date for 30 days default if not set
+    const now = new Date();
+    const end = new Date();
+    end.setDate(end.getDate() + 30);
+    
+    try {
+      setSaving(true);
+      const updates = { 
+        status: 'ACTIVE', 
+        updated_at: new Date().toISOString(),
+        start_date: ad.start_date || now.toISOString(),
+        end_date: ad.end_date || end.toISOString()
+      };
+      const { error } = await supabase.from('polymart_ads').update(updates).eq('id', ad.id);
+      if (error) throw error;
+      toast.success('Iklan berjaya diluluskan (Aktif)!');
+      
+      // Notify creator if exists
+      if (ad.created_by) {
+        await sendNotificationToUser(ad.created_by, {
+          title: 'Iklan Anda Diluluskan! 🎉',
+          message: `Iklan "${ad.title}" telah berada di halaman utama PolyMart.`,
+          type: 'polymart_ad_approved',
+          module: 'POLYMART'
+        });
+      }
+      
+      fetchAds();
+    } catch (e: any) {
+      toast.error('Gagal kelulusan: ' + e.message);
+    }
+    setSaving(false);
+  };
+
   const handleSave = async () => {
     if (!title.trim() || (!editingAd && !imageFile)) {
       toast.error('Tajuk & Gambar diperlukan'); return;
@@ -208,7 +251,7 @@ function AdsManagerTab() {
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const { data: uploadData, error: uploadErr } = await supabase.storage
+        const { error: uploadErr } = await supabase.storage
           .from('polymart-ads')
           .upload(fileName, imageFile);
         
@@ -232,6 +275,15 @@ function AdsManagerTab() {
         const { error } = await supabase.from('polymart_ads').update(payload).eq('id', editingAd.id);
         if (error) throw error;
         toast.success('Iklan dikemas kini');
+        
+        if (editingAd.status === 'DRAFT' && status === 'ACTIVE' && editingAd.created_by) {
+           await sendNotificationToUser(editingAd.created_by, {
+             title: 'Iklan Anda Diluluskan! 🎉',
+             message: `Iklan "${title}" telah berada di halaman utama PolyMart.`,
+             type: 'polymart_ad_approved',
+             module: 'POLYMART'
+           });
+        }
       } else {
         const { error } = await supabase.from('polymart_ads').insert(payload);
         if (error) throw error;
@@ -304,7 +356,7 @@ function AdsManagerTab() {
                 <div className={`absolute top-1.5 right-1.5 px-2 py-0.5 rounded-full text-[8px] font-black uppercase text-white ${
                   ad.status === 'ACTIVE' ? 'bg-emerald-500' : ad.status === 'DRAFT' ? 'bg-amber-500' : 'bg-slate-500'
                 }`}>
-                  {ad.status}
+                  {ad.status === 'DRAFT' ? 'MENUNGGU KELULUSAN' : ad.status}
                 </div>
               </div>
 
@@ -312,19 +364,29 @@ function AdsManagerTab() {
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="text-sm font-black text-foreground">{ad.title}</h3>
-                    <p className="text-[10px] text-muted-foreground/70 font-semibold">{ad.type}</p>
+                    <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground/80 font-medium">
+                      <span className="font-semibold px-1.5 py-0.5 rounded-md bg-muted/50">{ad.type}</span>
+                      {ad.creator && (
+                        <span>Oleh: {ad.creator.full_name} ({ad.creator.matric_no})</span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <button onClick={() => handleOpenModal(ad)} className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center hover:bg-emerald-500/20">
+                    {ad.status === 'DRAFT' && (
+                      <button disabled={saving} onClick={() => handleApprove(ad)} className="h-7 px-2.5 rounded-lg bg-amber-500/10 text-amber-600 font-bold text-[10px] hover:bg-amber-500/20 disabled:opacity-50 flex items-center gap-1 mr-1 transition-colors">
+                        <CheckCircle className="w-3.5 h-3.5" /> Lulus
+                      </button>
+                    )}
+                    <button disabled={saving} onClick={() => handleOpenModal(ad)} className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center hover:bg-emerald-500/20 disabled:opacity-50">
                       <Edit className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => handleDelete(ad)} className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center hover:bg-rose-500/20">
+                    <button disabled={saving} onClick={() => handleDelete(ad)} className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center hover:bg-rose-500/20 disabled:opacity-50">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 text-[10px] text-muted-foreground/80 mt-1">
+                <div className="flex items-center gap-4 text-[10px] text-muted-foreground/80 pt-1">
                   {ad.clicks > 0 && (
                     <span className="flex items-center gap-1 font-bold text-amber-600 dark:text-amber-400">
                       <TrendingUp className="w-3 h-3" /> {ad.clicks} Klik
@@ -437,7 +499,7 @@ function AdsManagerTab() {
 }
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
-export function PolyMartAdminPanel() {
+export function PolyMartAdminPanel({ hideHeader = false }: { hideHeader?: boolean }) {
   const { hasKeusahawananAccess, isSuperAdmin } = useAuth();
   const [reports,  setReports]  = useState<Report[]>([]);
   const [loading,  setLoading]  = useState(true);
@@ -481,17 +543,19 @@ export function PolyMartAdminPanel() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: PM_GRADIENT }}>
-            <Shield className="w-4 h-4 text-white" />
+      {!hideHeader && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: PM_GRADIENT }}>
+              <Shield className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-black text-foreground">Panel Admin PolyMart</h1>
+              <p className="text-xs text-muted-foreground/60">Moderasi dan statistik marketplace</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-black text-foreground">Panel Admin PolyMart</h1>
-            <p className="text-xs text-muted-foreground/60">Moderasi dan statistik marketplace</p>
-          </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-2 relative z-10 w-full overflow-x-auto scrollbar-hide pb-2">
