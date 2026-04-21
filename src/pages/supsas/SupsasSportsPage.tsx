@@ -11,7 +11,7 @@ const FORMAT_LABEL: Record<string, string> = { knockout: 'Sistem Gugur', round_r
 const GENDER_COLOR: Record<string, string> = { male: 'text-blue-400 bg-blue-500/10 border-blue-500/20', female: 'text-pink-400 bg-pink-500/10 border-pink-500/20', mixed: 'text-violet-400 bg-violet-500/10 border-violet-500/20' };
 
 export function SupsasSportsPage() {
-  const { sports, fixtures, isLoading, edition } = useSupsas();
+  const { sports, fixtures, edition } = useSupsas();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'team' | 'individual'>('all');
@@ -73,13 +73,7 @@ export function SupsasSportsPage() {
       {/* Grid */}
       <div className="px-4 sm:px-6 md:px-12">
         <div className="max-w-5xl mx-auto">
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[...Array(9)].map((_, i) => (
-                <div key={i} className="h-48 rounded-3xl bg-white/[0.02] border border-white/5 animate-pulse" />
-              ))}
-            </div>
-          ) : filtered.length === 0 ? (
+          {filtered.length === 0 ? (
             <div className="text-center py-24">
               <Trophy className="w-10 h-10 text-white/10 mx-auto mb-4" />
               <p className="text-white/30 font-black uppercase tracking-widest text-sm">Tiada sukan dijumpai</p>

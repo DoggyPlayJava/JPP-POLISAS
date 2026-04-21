@@ -803,7 +803,7 @@ export function PortalPage() {
 
                 <div
                   onClick={() => navigate('/supsas')}
-                  className="relative cursor-pointer rounded-[1.9rem] overflow-hidden"
+                  className="relative cursor-pointer rounded-[1.9rem] overflow-hidden transition-all duration-300 hover:scale-[1.01] active:scale-[0.98]"
                   style={{ background: 'linear-gradient(135deg, #0d1117 0%, #0f1a0a 50%, #1a0d00 100%)' }}
                 >
                   {/* Shimmer sweep */}

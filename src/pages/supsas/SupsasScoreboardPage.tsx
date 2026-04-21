@@ -152,7 +152,7 @@ function TallyRow({ entry, rank, isTV }: { entry: SupsasMedalTally; rank: number
 
 // ─── Main Scoreboard ──────────────────────────────────────────
 export function SupsasScoreboardPage() {
-  const { edition, medalTally, sports, isLoading, isLive, refetch } = useSupsas();
+  const { edition, medalTally, sports, isLive, refetch } = useSupsas();
   const [isTV, setIsTV] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [celebTrigger, setCelebTrigger] = useState(0);
@@ -294,14 +294,7 @@ export function SupsasScoreboardPage() {
             </div>
 
             {/* Rows */}
-            {isLoading ? (
-              <div className="space-y-3">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="h-16 rounded-2xl bg-white/[0.02] border border-white/5 animate-pulse"
-                    style={{ animationDelay: `${i * 0.1}s` }} />
-                ))}
-              </div>
-            ) : displayTally.length === 0 ? (
+            {displayTally.length === 0 ? (
               <div className="text-center py-24">
                 <Trophy className="w-12 h-12 text-white/10 mx-auto mb-4" />
                 <p className="text-white/30 font-black uppercase tracking-widest text-sm">

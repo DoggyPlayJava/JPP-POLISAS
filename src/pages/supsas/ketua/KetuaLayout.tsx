@@ -74,10 +74,10 @@ function ClaimInviteScreen() {
 // ─── Ketua Layout ─────────────────────────────────────────────
 export function KetuaLayout() {
   const { profile, isLoading: authLoading } = useAuth();
-  const { kontingen, edition, isLoading: supsasLoading } = useSupsas();
+  const { kontingen, edition } = useSupsas();
   const navigate = useNavigate();
 
-  if (authLoading || supsasLoading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader className="w-8 h-8 text-amber-400 animate-spin" />

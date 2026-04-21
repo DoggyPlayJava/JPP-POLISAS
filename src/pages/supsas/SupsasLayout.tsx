@@ -17,7 +17,7 @@ const NAV_ITEMS = [
 export function SupsasLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { edition, isLive } = useSupsas();
+  const { edition, isLive, isLoading } = useSupsas();
   const { profile, isSuperAdmin } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -214,7 +214,37 @@ export function SupsasLayout() {
 
       {/* ── Page Content ── */}
       <main className="relative z-10 pt-20">
-        <Outlet />
+        {isLoading ? (
+          <div className="min-h-[80vh] flex flex-col items-center justify-center px-4">
+            <div className="relative mb-8">
+              {/* Outer spinning ring */}
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+                className="w-24 h-24 rounded-full border-[3px] border-amber-500/10 border-t-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.2)]"
+              />
+              {/* Inner pulsing trophy */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <motion.div
+                  animate={{ scale: [0.9, 1.1, 0.9], opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <Trophy className="w-8 h-8 text-amber-400" />
+                </motion.div>
+              </div>
+            </div>
+            
+            <motion.p
+              animate={{ opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+              className="text-[11px] font-black uppercase tracking-[0.4em] text-amber-500"
+            >
+              Memuatkan Data SUPSAS...
+            </motion.p>
+          </div>
+        ) : (
+          <Outlet />
+        )}
       </main>
     </div>
   );

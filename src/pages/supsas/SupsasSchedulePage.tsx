@@ -132,7 +132,7 @@ function FixtureCard({ fixture, kontingenMap, sportMap }: {
 }
 
 export function SupsasSchedulePage() {
-  const { fixtures, kontingen, sports, edition, isLoading } = useSupsas();
+  const { fixtures, kontingen, sports, edition } = useSupsas();
   const [filterStatus, setFilterStatus] = useState<'all' | 'upcoming' | 'live' | 'completed'>('all');
   const [filterSport, setFilterSport] = useState<string>('all');
 
@@ -202,13 +202,7 @@ export function SupsasSchedulePage() {
       {/* Content */}
       <div className="px-4 sm:px-6 md:px-12">
         <div className="max-w-5xl mx-auto">
-          {isLoading ? (
-            <div className="space-y-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-40 rounded-3xl bg-white/[0.02] border border-white/5 animate-pulse" />
-              ))}
-            </div>
-          ) : Object.keys(grouped).length === 0 ? (
+          {Object.keys(grouped).length === 0 ? (
             <div className="text-center py-24">
               <Calendar className="w-12 h-12 text-white/10 mx-auto mb-4" />
               <p className="text-white/30 font-black uppercase tracking-widest text-sm">Tiada perlawanan dijadualkan</p>

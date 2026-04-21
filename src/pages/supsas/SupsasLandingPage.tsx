@@ -108,41 +108,15 @@ function MiniPodium({ tally }: { tally: any[] }) {
 // ─── Main Landing Page ────────────────────────────────────────
 export function SupsasLandingPage() {
   const navigate = useNavigate();
-  const { edition, kontingen, sports, medalTally, isLoading, isLive } = useSupsas();
+  const { edition, kontingen, sports, medalTally, isLive } = useSupsas();
   const { profile } = useAuth();
   const countdown = useCountdown(edition?.start_date ?? null);
 
   // Live draw overlay — auto-appears when admin starts a draw
   const liveDrawElement = <LiveDrawOverlay editionId={edition?.id} />;
 
-  // ── Loading skeleton — dark, matches SUPSAS theme ──
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4">
-        {/* Animated logo placeholder */}
-        <motion.div
-          animate={{ opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-          className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-500/20 flex items-center justify-center mb-8"
-        >
-          <Trophy className="w-8 h-8 text-amber-400/60" />
-        </motion.div>
-        <motion.div
-          animate={{ opacity: [0.3, 0.7, 0.3] }}
-          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', delay: 0.1 }}
-          className="h-8 w-48 bg-white/10 rounded-xl mb-4"
-        />
-        <motion.div
-          animate={{ opacity: [0.2, 0.5, 0.2] }}
-          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }}
-          className="h-4 w-32 bg-white/5 rounded-lg"
-        />
-      </div>
-    );
-  }
-
   // ── No active edition ──
-  if (!isLoading && !edition) {
+  if (!edition) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center text-center px-6 py-24">
         <motion.div

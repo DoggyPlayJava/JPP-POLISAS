@@ -19,7 +19,7 @@ type Tab = 'kumpulan' | 'bracket' | 'jadual';
 export function BracketPage() {
   const { sportId } = useParams<{ sportId: string }>();
   const navigate = useNavigate();
-  const { sports, fixtures, kontingen, isLoading } = useSupsas();
+  const { sports, fixtures, kontingen } = useSupsas();
   const [activeTab, setActiveTab] = useState<Tab>('kumpulan');
 
   const sport = sports.find(s => s.id === sportId);
@@ -43,14 +43,6 @@ export function BracketPage() {
     { id: 'bracket', label: 'Bracket KO', icon: <Trophy className="w-3.5 h-3.5" /> },
     { id: 'jadual', label: 'Semua Match', icon: <List className="w-3.5 h-3.5" /> },
   ];
-
-  if (isLoading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
-      </div>
-    );
-  }
 
   if (!sport) {
     return (
