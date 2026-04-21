@@ -8,6 +8,7 @@ import {
 import { useSupsas } from '@/contexts/SupsasContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { LiveDrawOverlay } from './components/LiveDrawOverlay';
 
 // ─── Countdown Hook ───────────────────────────────────────────
 function useCountdown(targetDate: string | null) {
@@ -111,6 +112,9 @@ export function SupsasLandingPage() {
   const { profile } = useAuth();
   const countdown = useCountdown(edition?.start_date ?? null);
 
+  // Live draw overlay — auto-appears when admin starts a draw
+  const liveDrawElement = <LiveDrawOverlay editionId={edition?.id} />;
+
   // ── Loading skeleton — dark, matches SUPSAS theme ──
   if (isLoading) {
     return (
@@ -184,6 +188,9 @@ export function SupsasLandingPage() {
 
   return (
     <div className="min-h-screen pb-24">
+      {/* Live Draw Overlay — appears for all viewers when admin starts a draw */}
+      {liveDrawElement}
+
       {/* ── Hero Section ── */}
       <section className="relative min-h-[85vh] flex flex-col items-center justify-center px-4 py-20 overflow-hidden text-center">
         {/* Decorative rings */}

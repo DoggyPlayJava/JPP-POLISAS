@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Save, X } from 'lucide-react';
+import { Trophy, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Save, X, Shuffle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useSupsas, SupsasSport } from '@/contexts/SupsasContext';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import * as LucideIcons from 'lucide-react';
+import { AdminDrawModal } from './components/AdminDrawModal';
 
 const SPORT_ICONS = ['Trophy', 'Volleyball', 'Dumbbell', 'Bike', 'Waves', 'Target', 'Footprints', 'Sword', 'Shield', 'Zap', 'Activity', 'Flame'];
 const FORMATS = [{ value: 'knockout', label: 'Sistem Gugur (KO)' }, { value: 'round_robin', label: 'Liga (Round Robin)' }, { value: 'group_knockout', label: 'Kumpulan + Gugur' }];
@@ -54,11 +55,12 @@ function inputCls() {
 }
 
 export function AdminSukanPage() {
-  const { sports, edition, refetch } = useSupsas();
+  const { sports, edition, refetch, kontingen } = useSupsas();
   const [showForm, setShowForm] = useState(false);
   const [editTarget, setEditTarget] = useState<SupsasSport | null>(null);
   const [form, setForm] = useState<SportForm>(DEFAULT_FORM);
   const [saving, setSaving] = useState(false);
+  const [drawSport, setDrawSport] = useState<SupsasSport | null>(null);
 
   const openNew = () => { setForm(DEFAULT_FORM); setEditTarget(null); setShowForm(true); };
   const openEdit = (s: SupsasSport) => { setForm({ name: s.name, category: s.category, gender: s.gender, format: s.format, icon: s.icon, venue: s.venue ?? '', max_per_team: s.max_per_team, sort_order: s.sort_order }); setEditTarget(s); setShowForm(true); };
@@ -163,6 +165,16 @@ export function AdminSukanPage() {
                 )}>
                   {sport.is_active ? 'Aktif' : 'Nonaktif'}
                 </span>
+                {/* Jana Bracket button — only for knockout formats */}
+                {(sport.format === 'knockout' || sport.format === 'group_knockout') && sport.is_active && (
+                  <button
+                    onClick={() => setDrawSport(sport)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/15 border border-purple-500/25 text-purple-400 text-[9px] font-black uppercase tracking-widest hover:bg-purple-500/25 transition-all"
+                  >
+                    <Shuffle className="w-3 h-3" />
+                    Jana Bracket
+                  </button>
+                )}
                 <button onClick={() => openEdit(sport)} className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white/30 hover:text-white hover:bg-white/10 transition-all">
                   <Edit2 className="w-3.5 h-3.5" />
                 </button>
@@ -187,15 +199,15 @@ export function AdminSukanPage() {
       {/* Modal / Drawer */}
       <AnimatePresence>
         {showForm && (
-          <>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 pointer-events-auto">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setShowForm(false)}
-              className="fixed inset-0 bg-black/70 z-50 backdrop-blur-sm" />
+              className="absolute inset-0 bg-black/80 backdrop-blur-md" />
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 40 }}
-              className="fixed inset-x-4 bottom-4 top-16 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[540px] z-50 bg-[#0A1628] border border-white/10 rounded-[2rem] shadow-[0_20px_80px_rgba(0,0,0,0.7)] overflow-y-auto"
+              className="relative w-full max-w-[540px] max-h-[90vh] bg-[#0A1628] border border-white/10 rounded-[2rem] shadow-[0_20px_80px_rgba(0,0,0,0.7)] overflow-y-auto z-10"
             >
               <div className="p-6 space-y-5">
                 {/* Modal Header */}
@@ -252,7 +264,19 @@ export function AdminSukanPage() {
                 </button>
               </div>
             </motion.div>
-          </>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Draw Modal */}
+      <AnimatePresence>
+        {drawSport && edition && (
+          <AdminDrawModal
+            sport={drawSport}
+            editionId={edition.id}
+            onClose={() => setDrawSport(null)}
+            onConfirmed={() => setDrawSport(null)}
+          />
         )}
       </AnimatePresence>
     </div>

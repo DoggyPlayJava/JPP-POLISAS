@@ -74,6 +74,7 @@ import { AdminTetapanPage }        from './pages/supsas/admin/AdminTetapanPage';
 import { AdminJadualPage }         from './pages/supsas/admin/AdminJadualPage';
 import { KetuaLayout }             from './pages/supsas/ketua/KetuaLayout';
 import { KetuaDashboard }          from './pages/supsas/ketua/KetuaDashboard';
+import { BracketPage }             from './pages/supsas/BracketPage';
 import { AkademikPencapaian }  from './pages/akademik/AkademikPencapaian';
 import { AkademikMeritPage }   from './pages/akademik/AkademikMeritPage';
 // ── E-Kebajikan Ticketing System ──
@@ -274,6 +275,7 @@ function AppRoutes() {
         <Route path="/supsas/scoreboard"  element={<SupsasScoreboardPage />} />
         <Route path="/supsas/jadual"      element={<SupsasSchedulePage />} />
         <Route path="/supsas/sukan"       element={<SupsasSportsPage />} />
+        <Route path="/supsas/bracket/:sportId" element={<BracketPage />} />
 
         {/* Admin Panel — role guard inside SupsasAdminLayout */}
         <Route element={<SupsasAdminLayout />}>

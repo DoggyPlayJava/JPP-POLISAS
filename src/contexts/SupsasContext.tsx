@@ -70,6 +70,12 @@ export interface SupsasFixture {
   score_b: string | null;
   winner_id: string | null;
   notes: string | null;
+  // Bracket fields (added in migration 37)
+  bracket_round: number | null;    // 1=Final, 2=Semi. NULL = peringkat kumpulan
+  bracket_position: number | null; // Kedudukan dalam round
+  next_match_id: string | null;    // Pemenang masuk ke match ini
+  group_name: string | null;       // 'A' atau 'B' — peringkat kumpulan sahaja
+  is_bye: boolean;
 }
 
 // ─── Context Shape ────────────────────────────────────────────
