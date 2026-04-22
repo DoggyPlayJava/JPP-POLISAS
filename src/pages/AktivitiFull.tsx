@@ -172,8 +172,8 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
     // Reset input supaya fail yang sama boleh dipilih semula
     e.target.value = '';
     const currentCount = form.imageUrls?.length || 0;
-    const remainingSlots = 3 - currentCount;
-    if (remainingSlots <= 0) { toast.error('Maksimum 3 gambar dibenarkan.'); return; }
+    const remainingSlots = 2 - currentCount;
+    if (remainingSlots <= 0) { toast.error('Maksimum 2 gambar dibenarkan.'); return; }
 
     const filesToUpload = allFiles
       .filter(f => f.type.startsWith('image/'))
@@ -191,7 +191,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
       }
       setForm((prev: any) => ({ ...prev, imageUrls: [...(prev.imageUrls || []), ...urls] }));
       if (originalCount > remainingSlots) {
-        toast.success(`${urls.length} gambar dimuat naik (Maksimum 3).`, { id: toastId });
+        toast.success(`${urls.length} gambar dimuat naik (Maksimum 2).`, { id: toastId });
       } else {
         toast.success(`${urls.length} gambar berjaya dimuat naik! ☁️`, { id: toastId });
       }
@@ -519,8 +519,8 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
 
               <div className="space-y-3 pt-2 bg-emerald-500/10/50 p-4 rounded-[2rem] border border-emerald-100">
                 <Label className="text-[10px] font-black uppercase text-emerald-800 tracking-widest flex justify-between">
-                  <span>Muat Naik Gambar Bukti (Maks 3)</span>
-                  <span className="text-emerald-500 normal-case opacity-70">{form.imageUrls?.length || 0} / 3</span>
+                  <span>Muat Naik Gambar Bukti (Maks 2)</span>
+                  <span className="text-emerald-500 normal-case opacity-70">{form.imageUrls?.length || 0} / 2</span>
                 </Label>
                 <div className="grid grid-cols-4 gap-3">
                   {(form.imageUrls || []).map((url: string, idx: number) => (
@@ -531,7 +531,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
                       </button>
                     </div>
                   ))}
-                  {(!form.imageUrls || form.imageUrls.length < 3) && (
+                  {(!form.imageUrls || form.imageUrls.length < 2) && (
                     <div className="relative border-2 border-dashed border-emerald-200 rounded-2xl p-4 flex flex-col items-center justify-center gap-1.5 hover:bg-card hover:border-emerald-400 transition-colors h-20 cursor-pointer group shadow-sm bg-emerald-500/10/30">
                       <ImageIcon size={16} className="text-emerald-300 group-hover:text-emerald-500" />
                       <span className="text-[10px] font-black text-emerald-400 uppercase text-center group-hover:text-emerald-600">Tambah</span>
@@ -730,8 +730,8 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     const currentCount = form.imageUrls?.length || 0;
-    const remainingSlots = 3 - currentCount;
-    if (remainingSlots <= 0) { toast.error('Maksimum 3 gambar dibenarkan.'); return; }
+    const remainingSlots = 2 - currentCount;
+    if (remainingSlots <= 0) { toast.error('Maksimum 2 gambar dibenarkan.'); return; }
 
     const filesToUpload = Array.from(files).slice(0, remainingSlots);
     const toastId = toast.loading('Memuat naik gambar...');
@@ -747,7 +747,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
         urls.push(publicUrl);
       }
       setForm((prev: any) => ({ ...prev, imageUrls: [...(prev.imageUrls || []), ...urls] }));
-      if (files.length > remainingSlots) toast.success(`${urls.length} gambar dimuat naik (Maks 3).`, { id: toastId });
+      if (files.length > remainingSlots) toast.success(`${urls.length} gambar dimuat naik (Maks 2).`, { id: toastId });
       else toast.success(`${urls.length} gambar dimuat naik!`, { id: toastId });
     } catch {
       toast.error('Gagal upload gambar.', { id: toastId });
@@ -1139,8 +1139,8 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
 
                   <div className="space-y-3 pt-2">
                     <Label className="text-[10px] font-black uppercase text-indigo-400 ml-2 tracking-widest flex justify-between">
-                      <span>Muat Naik Gambar Bukti (Maks 3)</span>
-                      <span className="text-indigo-300 normal-case opacity-70">{form.imageUrls?.length || 0} / 3</span>
+                      <span>Muat Naik Gambar Bukti (Maks 2)</span>
+                      <span className="text-indigo-300 normal-case opacity-70">{form.imageUrls?.length || 0} / 2</span>
                     </Label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {(form.imageUrls || []).map((url: string, idx: number) => (
@@ -1151,7 +1151,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                           </button>
                         </div>
                       ))}
-                      {(!form.imageUrls || form.imageUrls.length < 3) && (
+                      {(!form.imageUrls || form.imageUrls.length < 2) && (
                         <div className="relative border-2 border-dashed border-border rounded-2xl p-4 flex flex-col items-center justify-center gap-1.5 hover:bg-muted/50 hover:border-indigo-400 transition-colors h-24 cursor-pointer group shadow-sm bg-muted/20">
                           <ImageIcon size={20} className="text-muted-foreground group-hover:text-indigo-500 transition-colors" />
                           <span className="text-[9px] font-black text-muted-foreground uppercase text-center group-hover:text-indigo-600 transition-colors">Tambah Gambar</span>

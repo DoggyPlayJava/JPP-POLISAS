@@ -122,8 +122,8 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
     const allFiles = Array.from(rawFiles);
     // Reset input supaya fail yang sama boleh dipilih semula
     e.target.value = '';
-    const remaining = 3 - (form.imageUrls?.length || 0);
-    if (remaining <= 0) { toast.error('Maksimum 3 gambar dibenarkan.'); return; }
+    const remaining = 2 - (form.imageUrls?.length || 0);
+    if (remaining <= 0) { toast.error('Maksimum 2 gambar dibenarkan.'); return; }
     const filesToUpload = allFiles.filter(f => f.type.startsWith('image/')).slice(0, remaining);
     if (filesToUpload.length === 0) { toast.error('Tiada fail imej yang sah.'); return; }
     const toastId = toast.loading(`Memuat naik ${filesToUpload.length} gambar...`);
@@ -473,8 +473,8 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
                 {/* Gambar Bukti */}
                 <div className="p-4 rounded-[2rem] border border-white/[0.06] bg-white/[0.02] space-y-3">
                   <Label className="text-[10px] font-black uppercase text-white/40 tracking-widest flex justify-between">
-                    <span>Gambar Bukti (Maks 3)</span>
-                    <span className="text-white/20">{form.imageUrls?.length || 0} / 3</span>
+                    <span>Gambar Bukti (Maks 2)</span>
+                    <span className="text-white/20">{form.imageUrls?.length || 0} / 2</span>
                   </Label>
                   <div className="grid grid-cols-4 gap-3">
                     {(form.imageUrls || []).map((url: string, idx: number) => (
@@ -489,7 +489,7 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
                         </button>
                       </div>
                     ))}
-                    {(!form.imageUrls || form.imageUrls.length < 3) && (
+                    {(!form.imageUrls || form.imageUrls.length < 2) && (
                       <div className="relative border-2 border-dashed border-white/[0.1] rounded-2xl p-4 flex flex-col items-center justify-center gap-1.5 hover:border-white/30 transition-colors h-20 cursor-pointer group">
                         <ImageIcon size={16} className="text-white/20 group-hover:text-white/40" />
                         <span className="text-[10px] font-black text-white/20 uppercase text-center group-hover:text-white/40">Tambah</span>

@@ -264,8 +264,8 @@ export function NexusPage() {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (images.length + files.length > 3) {
-      toast.error("Maksimum 3 keping gambar sahaja dibenarkan serentak.");
+    if (images.length + files.length > 2) {
+      toast.error("Maksimum 2 keping gambar sahaja dibenarkan serentak.");
       return;
     }
 
@@ -1146,14 +1146,14 @@ export function NexusPage() {
                       <div className="space-y-2 border-t border-border/40 pt-3">
                         <Label className="text-xs font-bold uppercase tracking-widest text-emerald-600/90 dark:text-emerald-400 flex items-center justify-between">
                           Gambar Papan Putih / Catatan
-                          <span className="text-[10px] bg-secondary px-2 rounded-full font-medium">{images.length}/3</span>
+                          <span className="text-[10px] bg-secondary px-2 rounded-full font-medium">{images.length}/2</span>
                         </Label>
                         <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-dashed border-border/60 hover:border-emerald-500/50 hover:bg-emerald-500/5 bg-background/50 rounded-xl cursor-pointer transition-all">
                           <div className="flex items-center justify-center gap-2 text-muted-foreground">
                             <ImagePlus className="w-4 h-4" />
                             <span className="text-sm font-medium">Muat naik gambar (.jpg/.png)</span>
                           </div>
-                          <input type="file" disabled={images.length >= 3} className="hidden" accept="image/jpeg, image/png, image/webp" multiple onChange={handleImageUpload} />
+                          <input type="file" disabled={images.length >= 2} className="hidden" accept="image/jpeg, image/png, image/webp" multiple onChange={handleImageUpload} />
                         </label>
                         {images.length > 0 && (
                           <div className="flex gap-2 mt-2 overflow-x-auto pb-1">
