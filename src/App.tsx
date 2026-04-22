@@ -96,7 +96,7 @@ const SupsasHistoryPage = lazy(() => import('./pages/supsas/SupsasHistoryPage').
 
 // ── E-Kebajikan ──
 import { KebajikanLayout } from './pages/kebajikan/KebajikanLayout';
-const KebajikanStatsPage = lazy(() => import('./pages/kebajikan/KebajikanPublicStats').then(m => ({ default: m.KebajikanPublicStats })));
+const KebajikanStatsPage = lazy(() => import('./pages/kebajikan/KebajikanPublicStats').then(m => ({ default: m.KebajikanStatsPage })));
 const KebajikanSubmitPage = lazy(() => import('./pages/kebajikan/KebajikanSubmitPage').then(m => ({ default: m.KebajikanSubmitPage })));
 const KebajikanMyTickets = lazy(() => import('./pages/kebajikan/KebajikanMyTickets').then(m => ({ default: m.KebajikanMyTickets })));
 const KebajikanDashboard = lazy(() => import('./pages/kebajikan/KebajikanDashboard').then(m => ({ default: m.KebajikanDashboard })));

@@ -4,6 +4,7 @@ import {
 } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { ms } from 'date-fns/locale';
+import jppLogoLandscape from '@/assets/Logo-JPP-Laporan.jpeg';
 
 // Pendaftaran Font (Helvetica)
 Font.register({
@@ -19,9 +20,29 @@ Font.registerHyphenationCallback(word => [word]);
 
 const styles = StyleSheet.create({
   page: {
+    paddingHorizontal: 90,  // ≈ 1.25 inci — Exco only
+    paddingVertical: 56,
+    fontFamily: 'Helvetica',
+    fontSize: 12,
+    color: '#000000',
+    lineHeight: 1.5,
+    position: 'relative'
+  },
+  // Laporan Kelab: margin asal (40pt) — tidak diubah
+  pageClub: {
     padding: 40,
     fontFamily: 'Helvetica',
-    fontSize: 11,
+    fontSize: 12,
+    color: '#000000',
+    lineHeight: 1.5,
+    position: 'relative'
+  },
+  // Halaman tandatangan: kekal margin asal (40pt)
+  pageSignature: {
+    padding: 40,
+    fontFamily: 'Helvetica',
+    fontSize: 12,
+    color: '#000000',
     lineHeight: 1.5,
     position: 'relative'
   },
@@ -35,30 +56,40 @@ const styles = StyleSheet.create({
     zIndex: -1,
   },
   watermarkImage: {
-    width: 350,
-    opacity: 0.08,
+    width: 420,
+    opacity: 0.15,
   },
 
+  // ── HEADER ROW: fixed height, kedua logo bottom-aligned ──
   headerRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',   // bottom-align: base kedua logo rata
+    height: 90,               // fixed height supaya alignment konsisten
     marginBottom: 20,
-    paddingHorizontal: 10,
   },
-  // Politeknik logo: kiri, flex mengambil space yang ada
+  // POLISAS logo: kiri, landscape
   logoLeftWrapper: {
     flex: 1,
-    justifyContent: 'flex-start',
+    height: 90,
+    justifyContent: 'flex-end',
+    alignItems: 'flex-start',
   },
   logoLeft: {
-    width: 200,
-    height: 110,
+    width: 190,
+    height: 80,
     objectFit: 'contain',
   },
-  // JPP logo: SQUARE (imej sumber 1280x1280 — 1:1 ratio, buat box square supaya tiada whitespace)
+  // JPP/Kelab logo: kanan
+  // isExco → landscape JPP (142×80, sama tinggi dengan POLISAS)
+  // Kelab  → ikut styles.logoRight (90×78)
+  logoRightWrapper: {
+    height: 90,
+    justifyContent: 'flex-end',
+    alignItems: 'flex-end',
+  },
   logoRight: {
-    width: 150,
-    height: 150,
+    width: 90,
+    height: 78,
     objectFit: 'contain',
   },
 
@@ -68,32 +99,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: -80,
   },
-  reportMonthTitle: {
+  // 3 baris berasingan — semua saiz sama
+  coverTitleLine: {
     fontSize: 40,
     fontWeight: 'bold',
     textAlign: 'center',
-    lineHeight: 1.2
+    lineHeight: 1.2,
+    color: '#000000',
   },
 
   coverBottom: {
     position: 'absolute',
     bottom: 100,
-    left: 40,
-    right: 40,
+    left: 90,
+    right: 90,
     alignItems: 'center'
   },
-  coverClubName: { fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 4 },
-  coverInstitution: { fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
+  coverClubName: { fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 4, color: '#000000' },
+  coverInstitution: { fontSize: 18, fontWeight: 'bold', textAlign: 'center', color: '#000000' },
 
-  sectionTitle: { fontSize: 12, marginBottom: 10, marginTop: 10 },
-  table: { width: '100%', borderStyle: 'solid', borderWidth: 1, borderColor: '#000', marginBottom: 20 },
+  sectionTitle: { fontSize: 12, marginBottom: 10, marginTop: 10, color: '#000000' },
+  // border luar jadual nipis (0.5)
+  table: { width: '100%', borderStyle: 'solid', borderWidth: 0.5, borderColor: '#000', marginBottom: 20 },
   tableRow: { flexDirection: 'row' },
-  tableColHeader: { borderStyle: 'solid', borderWidth: 1, borderColor: '#000', padding: 4 },
-  tableCol: { borderStyle: 'solid', borderWidth: 1, borderColor: '#000', padding: 4 },
-  tableCellHeader: { fontSize: 10, textAlign: 'center' },
-  tableCell: { fontSize: 10, textAlign: 'left' },
+  // garisan dalam cell pun nipis
+  tableColHeader: { borderStyle: 'solid', borderWidth: 0.5, borderColor: '#000', padding: 2 },
+  tableCol: { borderStyle: 'solid', borderWidth: 0.5, borderColor: '#000', padding: 2 },
+  tableCellHeader: { fontSize: 12, textAlign: 'center', color: '#000000' },
+  tableCell: { fontSize: 12, textAlign: 'left', color: '#000000' },
 
-  lampiranTitle: { fontSize: 12, marginTop: 10 },
+  lampiranTitle: { fontSize: 12, marginTop: 10, color: '#000000' },
   imageContainer: {
     flexDirection: 'row',
     gap: 15,
@@ -102,23 +137,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexWrap: 'wrap'
   },
-  imageWrapper: { width: '45%', height: 180 },
+  imageWrapper: { width: '45%', height: 230 },
   image: { width: '100%', height: '100%', objectFit: 'contain' },
-  lampiranDesc: { fontSize: 11, textAlign: 'justify', marginTop: 10 },
+  lampiranDesc: { fontSize: 12, textAlign: 'justify', marginTop: 10, color: '#000000' },
 
   signatureSection: {
     marginTop: 40,
     flexDirection: 'column',
-    gap: 40,
+    gap: 70,                  // lebih ruang antara blok tandatangan
   },
-  // signBox: lebar dikira secara dinamik oleh calcSignWidth()
   signBox: { },
-  signRoleTitle: { fontSize: 11, marginBottom: 35 },
-  signLine: { borderBottomWidth: 1, borderBottomColor: '#000', marginBottom: 5 },
-  signText: { fontSize: 11, fontWeight: 'bold' },
-  signRole: { fontSize: 10 },
-  // signRoleBold sudah tidak bold — jawatan (MT/YDP/Exco) papar dalam saiz 10pt biasa
-  signRoleBold: { fontSize: 10 }
+  signRoleTitle: { fontSize: 12, marginBottom: 50, color: '#000000' }, // lebih ruang untuk tandatangan
+  signLine: { borderBottomWidth: 1, borderBottomColor: '#000000', marginBottom: 8 },
+  signText: { fontSize: 12, fontWeight: 'bold', color: '#000000', marginBottom: 4 },
+  signRole: { fontSize: 12, color: '#000000', marginBottom: 4 },       // sedikit ruang antara role/unit
+  signRoleBold: { fontSize: 12, color: '#000000', marginBottom: 4 }
 });
 
 interface LaporanPDFProps {
@@ -182,17 +215,18 @@ const textWidth = (text: string, fontSize: number, bold: boolean): number => {
   return (units / 1000) * fontSize;
 };
 
-// ─── Helper: lebar GARISAN — tepat sama dengan lebar nama dirender (11pt Bold) ──
+// ─── Helper: lebar GARISAN — ikut saiz font 12pt Bold yang sebenar dirender ──
 const calcLineWidth = (name: string): number =>
-  Math.ceil(textWidth(name, 11, true));
+  Math.ceil(textWidth(name, 12, true) * 1.1); // 1.1x safety buffer supaya nama tak wrap
 
-// ─── Helper: lebar KOTAK — pastikan semua baris (role/unit 10pt) muat tanpa wrap ──
+// ─── Helper: lebar KOTAK — pastikan semua baris (role/unit 12pt) muat tanpa wrap ──
 const calcBoxWidth = (lineWidth: number, ...otherTexts: (string | undefined | null)[]): number => {
   const maxRoleWidth = otherTexts
     .filter(Boolean)
-    .map(t => Math.ceil(textWidth(t as string, 10, false)))
+    .map(t => Math.ceil(textWidth(t as string, 12, false) * 1.1))
     .reduce((a, b) => Math.max(a, b), 0);
-  return Math.min(500, Math.max(lineWidth, maxRoleWidth));
+  // Tiada cap 500 — biar ikut lebar sebenar nama
+  return Math.max(lineWidth, maxRoleWidth);
 };
 
 
@@ -224,26 +258,52 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
   const currentYear = new Date().getFullYear();
   const jppLabel    = `${jppOrgName} ${currentYear}`;
 
+  // Pisah monthYear kepada bulan dan tahun (e.g. "APRIL 2026" → ["APRIL", "2026"])
+  const parts = monthYear.toUpperCase().trim().split(/\s+/);
+  const coverMonth = parts[0] ?? '';
+  const coverYear  = parts[1] ?? '';
+
   return (
     <Document>
       {/* ── MUKA DEPAN ── */}
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" style={isExco ? styles.page : styles.pageClub}>
+        {/* Watermark pada cover — logo kelab/JPP samar di belakang tajuk */}
+        <View style={styles.watermarkContainer}>
+          {clubLogoUrl && <Image src={clubLogoUrl} style={styles.watermarkImage} />}
+        </View>
+
+        {/* isExco → JPP landscape hardcoded (142×80 = sama tinggi POLISAS, alignment sempurna)
+            Kelab  → clubLogoUrl dengan saiz asal */}
         <View style={styles.headerRow}>
-          {/* Politeknik: ambil semua space kiri supaya JPP berada di hujung kanan */}
+          {/* POLISAS: kiri */}
           <View style={styles.logoLeftWrapper}>
             <Image src={poliLogo} style={styles.logoLeft} />
           </View>
-          {clubLogoUrl && <Image src={clubLogoUrl} style={styles.logoRight} />}
+          {/* Kanan: JPP landscape (Exco) atau logo kelab */}
+          {isExco ? (
+            <View style={styles.logoRightWrapper}>
+              <Image src={jppLogoLandscape} style={{ width: 142, height: 80, objectFit: 'contain' }} />
+            </View>
+          ) : (
+            clubLogoUrl && (
+              <View style={styles.logoRightWrapper}>
+                <Image src={clubLogoUrl} style={styles.logoRight} />
+              </View>
+            )
+          )}
         </View>
 
         <View style={styles.coverCenter}>
-          <Text style={styles.reportMonthTitle}>
-            LAPORAN BULANAN{'\n'}
-            {monthYear.toUpperCase()}
-          </Text>
+          {/* 3 baris berasingan, semua saiz sama (40pt bold) */}
+          <Text style={styles.coverTitleLine}>LAPORAN BULAN</Text>
+          <Text style={styles.coverTitleLine}>{coverMonth}</Text>
+          <Text style={styles.coverTitleLine}>{coverYear}</Text>
         </View>
 
-        <View style={styles.coverBottom}>
+        <View style={[
+          styles.coverBottom,
+          { left: isExco ? 90 : 40, right: isExco ? 90 : 40 }
+        ]}>
           {isExco ? (
             <>
               {/* Exco: "EXCO [NAMA UNIT]" + "JAWATANKUASA PERWAKILAN PELAJAR 2026" */}
@@ -261,13 +321,13 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
 
       {/* ── ISI LAPORAN ── */}
       {activities.map((act, index) => {
-        // Logik mendapatkan gambar yang sah dari kod lama
+        // Logik mendapatkan gambar yang sah, dihadkan kepada 2 gambar sahaja
         const validImages = Array.isArray(act.image_urls)
-          ? act.image_urls.filter((url: any) => typeof url === 'string' && url.trim() !== '')
+          ? act.image_urls.filter((url: any) => typeof url === 'string' && url.trim() !== '').slice(0, 2)
           : [];
 
         return (
-          <Page key={index} size="A4" style={styles.page}>
+          <Page key={index} size="A4" style={isExco ? styles.page : styles.pageClub}>
             <View style={styles.watermarkContainer} fixed>
               {clubLogoUrl && <Image src={clubLogoUrl} style={styles.watermarkImage} />}
             </View>
@@ -291,8 +351,8 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
               </View>
             </View>
 
-            {/* ── LAMPIRAN ── */}
-            <Text style={styles.lampiranTitle}>LAMPIRAN</Text>
+            {/* ── BUKTI ATAU GAMBAR ── */}
+            <Text style={styles.lampiranTitle}>BUKTI ATAU GAMBAR</Text>
 
             {validImages.length > 0 ? (
               <View style={styles.imageContainer}>
@@ -316,7 +376,7 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
       })}
 
       {/* ── MUKA SURAT PENGESAHAN ── */}
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" style={styles.pageSignature}>
         <View style={styles.watermarkContainer} fixed>
           {clubLogoUrl && <Image src={clubLogoUrl} style={styles.watermarkImage} />}
         </View>
@@ -325,30 +385,24 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
 
           {/* ── Disediakan oleh ─── */}
           {(() => {
-            // line ikut nama; box ikut teks terpanjang (supaya role/unit tak wrap)
-            const primaryName = submitterName || 'SETIAUSAHA';
-            const lineW = calcLineWidth(primaryName);
-            const roleTexts = submitterName
-              ? [submitterRole, isExco ? jppLabel : submitterUnit, isExco ? polytechnicName : undefined]
-              : [clubName];
-            const boxW = calcBoxWidth(lineW, ...roleTexts);
+            const primaryName = (submitterName || 'SETIAUSAHA').toUpperCase();
             return (
-              <View style={[styles.signBox, { width: boxW }]}>
+              <View>
                 <Text style={styles.signRoleTitle}>Disediakan oleh:</Text>
-                <View style={[styles.signLine, { width: lineW }]} />
+                {/* Wrapper shrink ke lebar nama — garisan auto ikut tepat */}
+                <View style={{ alignSelf: 'flex-start' }}>
+                  <View style={styles.signLine} />
+                  <Text style={styles.signText}>{primaryName}</Text>
+                </View>
                 {submitterName ? (
                   <>
-                    <Text style={styles.signText}>{submitterName.toUpperCase()}</Text>
                     {submitterRole && <Text style={styles.signRole}>{submitterRole.toUpperCase()}</Text>}
                     {isExco && <Text style={styles.signRole}>{jppLabel.toUpperCase()}</Text>}
                     {isExco && <Text style={styles.signRole}>{polytechnicName.toUpperCase()}</Text>}
                     {!isExco && submitterUnit && <Text style={styles.signRole}>{submitterUnit.toUpperCase()}</Text>}
                   </>
                 ) : (
-                  <>
-                    <Text style={styles.signText}>SETIAUSAHA</Text>
-                    <Text style={styles.signRole}>{clubName.toUpperCase()}</Text>
-                  </>
+                  <Text style={styles.signRole}>{clubName.toUpperCase()}</Text>
                 )}
               </View>
             );
@@ -356,16 +410,13 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
 
           {/* ── Disemak oleh ─── */}
           {(() => {
-            const lineW = calcLineWidth(presidenName);
-            const roleTexts = isExco
-              ? [reviewerRole, jppLabel, polytechnicName]
-              : [reviewerRole, reviewerUnit];
-            const boxW = calcBoxWidth(lineW, ...roleTexts);
             return (
-              <View style={[styles.signBox, { width: boxW }]}>
+              <View>
                 <Text style={styles.signRoleTitle}>Disemak oleh:</Text>
-                <View style={[styles.signLine, { width: lineW }]} />
-                <Text style={styles.signText}>{presidenName.toUpperCase()}</Text>
+                <View style={{ alignSelf: 'flex-start' }}>
+                  <View style={styles.signLine} />
+                  <Text style={styles.signText}>{presidenName.toUpperCase()}</Text>
+                </View>
                 <Text style={styles.signRole}>{reviewerRole.toUpperCase()}</Text>
                 {isExco ? (
                   <>
@@ -382,25 +433,25 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
           {/* ── Disahkan oleh ─── */}
           {(() => {
             const ydpDisplayName = isExco ? YDP_NAME : 'YANG DIPERTUA';
-            const lineW = calcLineWidth(ydpDisplayName);
-            const roleTexts = isExco
-              ? [YDP_TITLE, jppLabel, polytechnicName]
-              : ['JAWATANKUASA PERWAKILAN PELAJAR', 'POLITEKNIK SULTAN HAJI AHMAD SHAH'];
-            const boxW = calcBoxWidth(lineW, ...roleTexts);
             return (
-              <View style={[styles.signBox, { width: boxW }]}>
+              <View>
                 <Text style={styles.signRoleTitle}>Disahkan oleh:</Text>
-                <View style={[styles.signLine, { width: lineW }]} />
+                <View style={{ alignSelf: 'flex-start' }}>
+                  <View style={styles.signLine} />
+                  {isExco ? (
+                    <Text style={styles.signText}>{YDP_NAME}</Text>
+                  ) : (
+                    <Text style={styles.signText}>{ydpDisplayName}</Text>
+                  )}
+                </View>
                 {isExco ? (
                   <>
-                    <Text style={styles.signText}>{YDP_NAME}</Text>
                     <Text style={styles.signRoleBold}>{YDP_TITLE}</Text>
                     <Text style={styles.signRole}>{jppLabel.toUpperCase()}</Text>
                     <Text style={styles.signRole}>{polytechnicName.toUpperCase()}</Text>
                   </>
                 ) : (
                   <>
-                    <Text style={styles.signText}>YANG DIPERTUA</Text>
                     <Text style={styles.signRole}>JAWATANKUASA PERWAKILAN PELAJAR</Text>
                     <Text style={styles.signRole}>POLITEKNIK SULTAN HAJI AHMAD SHAH</Text>
                   </>

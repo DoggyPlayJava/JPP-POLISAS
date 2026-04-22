@@ -37,8 +37,21 @@ export interface SupsasSport {
   icon: string;
   venue: string | null;
   max_per_team: number;
+  max_groups_per_kontingen: number; // NEW: berapa kumpulan max per kontingen (default 1)
+  max_players_per_group: number;    // NEW: berapa pemain max per kumpulan
   is_active: boolean;
   sort_order: number;
+}
+
+export interface SupsasTeam {
+  id: string;
+  edition_id: string;
+  sport_id: string;
+  kontingen_id: string;
+  name: string;
+  group_number: number;
+  is_confirmed: boolean;
+  created_at: string;
 }
 
 export interface SupsasMedalTally {
@@ -76,6 +89,10 @@ export interface SupsasFixture {
   next_match_id: string | null;    // Pemenang masuk ke match ini
   group_name: string | null;       // 'A' atau 'B' — peringkat kumpulan sahaja
   is_bye: boolean;
+  // Team-based fields (added for multi-group support)
+  team_a_id: string | null;        // NULL untuk sukan single-group (guna kontingen_a_id)
+  team_b_id: string | null;
+  winner_team_id: string | null;
 }
 
 // ─── Context Shape ────────────────────────────────────────────
@@ -83,6 +100,7 @@ interface SupsasContextValue {
   edition: SupsasEdition | null;
   kontingen: SupsasKontingen[];
   sports: SupsasSport[];
+  teams: SupsasTeam[];
   medalTally: SupsasMedalTally[];
   fixtures: SupsasFixture[];
   isLoading: boolean;
@@ -95,6 +113,7 @@ const SupsasContext = createContext<SupsasContextValue>({
   edition: null,
   kontingen: [],
   sports: [],
+  teams: [],
   medalTally: [],
   fixtures: [],
   isLoading: true,
@@ -108,6 +127,7 @@ export function SupsasProvider({ children }: { children: React.ReactNode }) {
   const [edition, setEdition] = useState<SupsasEdition | null>(null);
   const [kontingen, setKontingen] = useState<SupsasKontingen[]>([]);
   const [sports, setSports] = useState<SupsasSport[]>([]);
+  const [teams, setTeams] = useState<SupsasTeam[]>([]);
   const [medalTally, setMedalTally] = useState<SupsasMedalTally[]>([]);
   const [fixtures, setFixtures] = useState<SupsasFixture[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -134,17 +154,17 @@ export function SupsasProvider({ children }: { children: React.ReactNode }) {
     setEdition(editionData);
 
     // 2. Get all data in parallel
-    // Note: Admin pages see ALL sports (including inactive) for management.
-    // Public pages filter is_active themselves from context.
-    const [kontingenRes, sportsRes, tallyRes, fixturesRes] = await Promise.all([
+    const [kontingenRes, sportsRes, teamsRes, tallyRes, fixturesRes] = await Promise.all([
       supabase.from('supsas_kontingen').select('*').eq('edition_id', editionData.id).order('name'),
       supabase.from('supsas_sports').select('*').eq('edition_id', editionData.id).order('sort_order'),
+      supabase.from('supsas_teams').select('*').eq('edition_id', editionData.id).order('group_number'),
       supabase.from('supsas_medal_tally').select('*').eq('edition_id', editionData.id),
       supabase.from('supsas_fixtures').select('*').eq('edition_id', editionData.id).order('match_date').order('match_time'),
     ]);
 
     if (kontingenRes.data) setKontingen(kontingenRes.data as SupsasKontingen[]);
     if (sportsRes.data) setSports(sportsRes.data as SupsasSport[]);
+    if (teamsRes.data) setTeams(teamsRes.data as SupsasTeam[]);
     if (tallyRes.data) setMedalTally(tallyRes.data as SupsasMedalTally[]);
     if (fixturesRes.data) setFixtures(fixturesRes.data as SupsasFixture[]);
     setIsLoading(false);
@@ -160,6 +180,7 @@ export function SupsasProvider({ children }: { children: React.ReactNode }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_fixtures' }, () => fetchAll())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_kontingen' }, () => fetchAll())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_sports' }, () => fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_teams' }, () => fetchAll())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_editions' }, () => fetchAll())
       .subscribe();
 
@@ -181,7 +202,7 @@ export function SupsasProvider({ children }: { children: React.ReactNode }) {
   const isUpcoming = !!edition && !!edition.start_date && new Date(edition.start_date) > now;
 
   return (
-    <SupsasContext.Provider value={{ edition, kontingen, sports, medalTally, fixtures, isLoading, isLive, isUpcoming, refetch: fetchAll }}>
+    <SupsasContext.Provider value={{ edition, kontingen, sports, teams, medalTally, fixtures, isLoading, isLive, isUpcoming, refetch: fetchAll }}>
       {children}
     </SupsasContext.Provider>
   );

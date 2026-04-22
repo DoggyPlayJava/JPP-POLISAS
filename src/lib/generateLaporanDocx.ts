@@ -73,7 +73,7 @@ const TW = 8640; // total usable width in twips
 
 /** Border presets */
 const B0: any = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
-const B1: any = { style: BorderStyle.SINGLE, size: 4, color: BLACK };
+const B1: any = { style: BorderStyle.SINGLE, size: 2, color: BLACK };
 
 const NO_BORDERS  = { top: B0, bottom: B0, left: B0, right: B0, insideH: B0, insideV: B0 };
 const ALL_BORDERS = { top: B1, bottom: B1, left: B1, right: B1, insideH: B1, insideV: B1 };
@@ -242,7 +242,7 @@ function buildActivityTable(act: any): Table {
   const W_ACT   = convertInchesToTwip(3.0);   // 4320
   const W_ACT2  = TW - W_DATE - W_ACT;        // baki ~2448
 
-  const CELL_PAD = { top: 80, bottom: 80, left: 100, right: 100 };
+  const CELL_PAD = { top: 40, bottom: 40, left: 60, right: 60 };
 
   const headerCell = (text: string, w: number) =>
     new TableCell({
@@ -251,7 +251,7 @@ function buildActivityTable(act: any): Table {
       margins:       CELL_PAD,
       shading:       { fill: GRAY, type: ShadingType.CLEAR, color: 'auto' },
       verticalAlign: VerticalAlign.CENTER,
-      children: [mkPara(mkRun(text, { bold: true, size: hp(11) }), { align: 'CENTER' })],
+      children: [mkPara(mkRun(text, { bold: true, size: hp(12) }), { align: 'CENTER' })],
     });
 
   const dataCell = (text: string, w: number) =>
@@ -260,7 +260,7 @@ function buildActivityTable(act: any): Table {
       borders:       ALL_BORDERS,
       margins:       CELL_PAD,
       verticalAlign: VerticalAlign.TOP,
-      children: [mkPara(mkRun(text || '-', { size: hp(11) }))],
+      children: [mkPara(mkRun(text || '-', { size: hp(12) }))],
     });
 
   return new Table({
@@ -294,7 +294,7 @@ function buildActivityTable(act: any): Table {
 
 function buildLampiranHeading(): Paragraph {
   return mkPara(
-    mkRun('LAMPIRAN', { bold: true, size: hp(12) }),
+    mkRun('BUKTI ATAU GAMBAR', { bold: true, size: hp(12) }),
     { before: convertInchesToTwip(0.2), after: convertInchesToTwip(0.1) },
   );
 }
@@ -381,10 +381,10 @@ function buildSignBlock(
   const out: Paragraph[] = [];
 
   // Garis pendek (15 watak) — bukan full-width
-  out.push(mkPara(mkRun('_'.repeat(15), { size: hp(12) }), { after: convertInchesToTwip(0.05) }));
+  out.push(mkPara(mkRun('_'.repeat(15), { size: hp(12) }), { after: convertInchesToTwip(0.08) }));
 
   // Nama — bold, ALL CAPS
-  out.push(mkPara(mkRun(name.toUpperCase(), { bold: true, size: hp(12) })));
+  out.push(mkPara(mkRun(name.toUpperCase(), { bold: true, size: hp(12) }), { after: convertInchesToTwip(0.04) }));
 
   if (role)  out.push(mkPara(mkRun(role,  { size: hp(12) })));
   if (unit1) out.push(mkPara(mkRun(unit1, { size: hp(12) })));
@@ -491,11 +491,11 @@ export async function generateLaporanDocx(opts: LaporanDocxOptions): Promise<voi
     // Lampiran heading
     children.push(buildLampiranHeading());
 
-    // Grid gambar
+    // Grid gambar (Dihadkan kepada 2 sahaja mengikut template PDF)
     const imgUrls: string[] = Array.isArray(act.image_urls)
-      ? (act.image_urls as unknown[]).filter(
-          (u): u is string => typeof u === 'string' && u.trim() !== '',
-        )
+      ? (act.image_urls as unknown[])
+          .filter((u): u is string => typeof u === 'string' && u.trim() !== '')
+          .slice(0, 2)
       : [];
 
     const imgElements = await buildImageGrid(imgUrls);
@@ -518,7 +518,7 @@ export async function generateLaporanDocx(opts: LaporanDocxOptions): Promise<voi
 
   // Blok 1: Disediakan oleh — TIADA label sebelum garis (ikut rujukan SRC)
   children.push(
-    blank(convertInchesToTwip(0.3)),
+    blank(convertInchesToTwip(0.6)),
     ...buildSignBlock(
       submitterName,
       submitterRole,
@@ -530,12 +530,12 @@ export async function generateLaporanDocx(opts: LaporanDocxOptions): Promise<voi
   // Label sebelum blok 2
   children.push(mkPara(
     mkRun('Disemak oleh:', { size: hp(12) }),
-    { before: convertInchesToTwip(0.6) },
+    { before: convertInchesToTwip(0.8) },
   ));
 
   // Blok 2: Presiden / Disemak oleh
   children.push(
-    blank(convertInchesToTwip(0.1)),
+    blank(convertInchesToTwip(0.3)),
     ...buildSignBlock(
       presidenName,
       reviewerRole,
@@ -547,12 +547,12 @@ export async function generateLaporanDocx(opts: LaporanDocxOptions): Promise<voi
   // Label sebelum blok 3
   children.push(mkPara(
     mkRun('Disahkan oleh:', { size: hp(12) }),
-    { before: convertInchesToTwip(0.6) },
+    { before: convertInchesToTwip(0.8) },
   ));
 
   // Blok 3: Yang Dipertua JPP
   children.push(
-    blank(convertInchesToTwip(0.1)),
+    blank(convertInchesToTwip(0.3)),
     ...buildSignBlock(
       'YANG DIPERTUA',
       'JAWATANKUASA PERWAKILAN PELAJAR',

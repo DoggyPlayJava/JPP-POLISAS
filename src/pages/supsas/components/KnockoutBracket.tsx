@@ -1,32 +1,72 @@
 /**
  * GroupStandingsTable — Jadual kedudukan kumpulan (round-robin).
- * Kiraan mata: Menang=3, Seri=1, Kalah=0. Tiebreaker: perbezaan gol.
+ * Team-aware: sokong kontingen-based DAN team-based fixtures.
  */
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Minus, CircleX } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   calculateGroupStandings,
   type GroupStanding,
+  type DrawEntry,
 } from '@/hooks/useLiveDraw';
-import type { SupsasFixture, SupsasKontingen } from '@/contexts/SupsasContext';
+import type { SupsasFixture, SupsasKontingen, SupsasTeam } from '@/contexts/SupsasContext';
 
 interface GroupStandingsTableProps {
-  group: 'A' | 'B';
+  group: string;  // 'A' | 'B' | 'C' | 'D'
   fixtures: SupsasFixture[];
   kontingen: SupsasKontingen[];
+  teams: SupsasTeam[];
+  kontingenMap: Record<string, SupsasKontingen>;
   color: string;
 }
 
-export function GroupStandingsTable({ group, fixtures, kontingen, color }: GroupStandingsTableProps) {
+export function GroupStandingsTable({ group, fixtures, kontingen, teams, kontingenMap, color }: GroupStandingsTableProps) {
   const groupFixtures = fixtures.filter(f => f.group_name === group);
-  const teamsInGroup = kontingen.filter(k =>
-    groupFixtures.some(f => f.kontingen_a_id === k.id || f.kontingen_b_id === k.id)
-  );
+  const isTeamBased = groupFixtures.some(f => f.team_a_id != null);
 
-  const standings = calculateGroupStandings(groupFixtures, teamsInGroup);
-  const qualifiedCount = 2; // Top 2 advance
+  // Build DrawEntry list for teams in this group
+  let drawEntries: DrawEntry[] = [];
+  if (isTeamBased) {
+    const teamIds = new Set<string>();
+    groupFixtures.forEach(f => {
+      if (f.team_a_id) teamIds.add(f.team_a_id);
+      if (f.team_b_id) teamIds.add(f.team_b_id);
+    });
+    drawEntries = Array.from(teamIds).map(tid => {
+      const t = teams.find(x => x.id === tid);
+      const k = t ? kontingenMap[t.kontingen_id] : undefined;
+      return {
+        id: tid,
+        name: t?.name ?? tid,
+        shortCode: t ? `${k?.short_code ?? '?'} #${t.group_number}` : tid,
+        color: k?.color ?? '#F59E0B',
+        kontingenId: t?.kontingen_id ?? '',
+        teamId: tid,
+      };
+    });
+  } else {
+    const kontIds = new Set<string>();
+    groupFixtures.forEach(f => {
+      if (f.kontingen_a_id) kontIds.add(f.kontingen_a_id);
+      if (f.kontingen_b_id) kontIds.add(f.kontingen_b_id);
+    });
+    drawEntries = Array.from(kontIds).map(kid => {
+      const k = kontingenMap[kid];
+      return {
+        id: kid,
+        name: k?.name ?? kid,
+        shortCode: k?.short_code ?? kid,
+        color: k?.color ?? '#F59E0B',
+        kontingenId: kid,
+        teamId: null,
+      };
+    });
+  }
+
+  const standings = calculateGroupStandings(groupFixtures, drawEntries, isTeamBased);
+  const qualifiedCount = 2;
 
   return (
     <div className="rounded-2xl overflow-hidden border border-white/8">
@@ -61,7 +101,7 @@ export function GroupStandingsTable({ group, fixtures, kontingen, color }: Group
               const qualified = i < qualifiedCount;
               return (
                 <motion.tr
-                  key={s.kontingenId}
+                  key={s.entryId}
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.06 }}
@@ -72,19 +112,16 @@ export function GroupStandingsTable({ group, fixtures, kontingen, color }: Group
                 >
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-2">
-                      {/* Rank */}
                       <span className={cn(
                         'w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black flex-shrink-0',
                         i === 0 ? 'text-amber-400' : i === 1 ? 'text-white/60' : 'text-white/20'
                       )}>
                         {i + 1}
                       </span>
-                      {/* Color dot */}
                       <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
                       <span className={cn('font-black', qualified ? 'text-white' : 'text-white/40')}>
                         {s.shortCode}
                       </span>
-                      {/* Qualified badge */}
                       {qualified && (
                         <span
                           className="text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded"
@@ -134,15 +171,37 @@ export function GroupStandingsTable({ group, fixtures, kontingen, color }: Group
 interface KnockoutMatchProps {
   fixture: SupsasFixture | null;
   kontingenMap: Record<string, SupsasKontingen>;
+  teamsMap: Record<string, SupsasTeam>;   // NEW
   delay?: number;
   label: string;
 }
 
-function KoMatchCard({ fixture, kontingenMap, delay = 0, label }: KnockoutMatchProps) {
-  const a = fixture?.kontingen_a_id ? kontingenMap[fixture.kontingen_a_id] : null;
-  const b = fixture?.kontingen_b_id ? kontingenMap[fixture.kontingen_b_id] : null;
-  const winnerA = fixture?.winner_id === fixture?.kontingen_a_id && !!fixture?.winner_id;
-  const winnerB = fixture?.winner_id === fixture?.kontingen_b_id && !!fixture?.winner_id;
+function KoMatchCard({ fixture, kontingenMap, teamsMap, delay = 0, label }: KnockoutMatchProps) {
+  // Team-aware: guna team_a_id jika ada, fallback ke kontingen_a_id
+  const isTeamBased = !!(fixture?.team_a_id || fixture?.team_b_id);
+
+  let aName = 'TBD', bName = 'TBD';
+  let aColor = '#ffffff15', bColor = '#ffffff15';
+  let aId: string | null = null, bId: string | null = null;
+
+  if (isTeamBased) {
+    const teamA = fixture?.team_a_id ? teamsMap[fixture.team_a_id] : null;
+    const teamB = fixture?.team_b_id ? teamsMap[fixture.team_b_id] : null;
+    const kA = teamA ? kontingenMap[teamA.kontingen_id] : null;
+    const kB = teamB ? kontingenMap[teamB.kontingen_id] : null;
+    if (teamA) { aName = `${kA?.short_code ?? '?'} #${teamA.group_number}`; aColor = kA?.color ?? '#F59E0B'; aId = fixture?.team_a_id ?? null; }
+    if (teamB) { bName = `${kB?.short_code ?? '?'} #${teamB.group_number}`; bColor = kB?.color ?? '#F59E0B'; bId = fixture?.team_b_id ?? null; }
+  } else {
+    const kA = fixture?.kontingen_a_id ? kontingenMap[fixture.kontingen_a_id] : null;
+    const kB = fixture?.kontingen_b_id ? kontingenMap[fixture.kontingen_b_id] : null;
+    if (kA) { aName = kA.short_code; aColor = kA.color; aId = fixture?.kontingen_a_id ?? null; }
+    if (kB) { bName = kB.short_code; bColor = kB.color; bId = fixture?.kontingen_b_id ?? null; }
+  }
+
+  // Winner detection
+  const winnerId = isTeamBased ? fixture?.winner_team_id : fixture?.winner_id;
+  const winnerA = !!winnerId && winnerId === aId;
+  const winnerB = !!winnerId && winnerId === bId;
   const isLive = fixture?.status === 'live';
   const isDone = fixture?.status === 'completed';
 
@@ -167,9 +226,9 @@ function KoMatchCard({ fixture, kontingenMap, delay = 0, label }: KnockoutMatchP
         )}
         {/* Team A */}
         <div className={cn('flex items-center gap-2 px-3 py-2.5', winnerA && 'bg-amber-500/10')}>
-          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: a?.color ?? '#ffffff15' }} />
-          <span className={cn('flex-1 text-sm font-black', winnerA ? 'text-amber-300' : a ? 'text-white' : 'text-white/20')}>
-            {a?.short_code ?? 'TBD'}
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: aId ? aColor : '#ffffff15' }} />
+          <span className={cn('flex-1 text-sm font-black', winnerA ? 'text-amber-300' : aId ? 'text-white' : 'text-white/20')}>
+            {aName}
           </span>
           {isDone && <span className="text-xs font-black text-white/40 w-4 text-right">{fixture?.score_a ?? '?'}</span>}
           {winnerA && <Trophy className="w-3 h-3 text-amber-400" />}
@@ -177,9 +236,9 @@ function KoMatchCard({ fixture, kontingenMap, delay = 0, label }: KnockoutMatchP
         <div className="h-px bg-white/5 mx-3" />
         {/* Team B */}
         <div className={cn('flex items-center gap-2 px-3 py-2.5', winnerB && 'bg-amber-500/10')}>
-          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: b?.color ?? '#ffffff15' }} />
-          <span className={cn('flex-1 text-sm font-black', winnerB ? 'text-amber-300' : b ? 'text-white' : 'text-white/20')}>
-            {b?.short_code ?? 'TBD'}
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: bId ? bColor : '#ffffff15' }} />
+          <span className={cn('flex-1 text-sm font-black', winnerB ? 'text-amber-300' : bId ? 'text-white' : 'text-white/20')}>
+            {bName}
           </span>
           {isDone && <span className="text-xs font-black text-white/40 w-4 text-right">{fixture?.score_b ?? '?'}</span>}
           {winnerB && <Trophy className="w-3 h-3 text-amber-400" />}
@@ -190,36 +249,75 @@ function KoMatchCard({ fixture, kontingenMap, delay = 0, label }: KnockoutMatchP
 }
 
 interface KnockoutBracketProps {
+  qfFixtures?: SupsasFixture[];  // Optional: Suku Akhir (4-group format)
   sfFixtures: SupsasFixture[];
   finalFixture: SupsasFixture | null;
   kontingenMap: Record<string, SupsasKontingen>;
+  teamsMap: Record<string, SupsasTeam>;
 }
 
-export function KnockoutBracket({ sfFixtures, finalFixture, kontingenMap }: KnockoutBracketProps) {
+export function KnockoutBracket({ qfFixtures = [], sfFixtures, finalFixture, kontingenMap, teamsMap }: KnockoutBracketProps) {
   const sf1 = sfFixtures.find(f => f.bracket_position === 1) ?? null;
   const sf2 = sfFixtures.find(f => f.bracket_position === 2) ?? null;
-  const winner = finalFixture?.winner_id ? kontingenMap[finalFixture.winner_id] : null;
+  const qf1 = qfFixtures.find(f => f.bracket_position === 1) ?? null;
+  const qf2 = qfFixtures.find(f => f.bracket_position === 2) ?? null;
+  const qf3 = qfFixtures.find(f => f.bracket_position === 3) ?? null;
+  const qf4 = qfFixtures.find(f => f.bracket_position === 4) ?? null;
+  const hasQF = qfFixtures.length > 0;
+
+  // Champion
+  const isTeamBased = !!(finalFixture?.team_a_id || finalFixture?.winner_team_id);
+  let winner: { short_code: string; color: string } | null = null;
+  if (isTeamBased && finalFixture?.winner_team_id) {
+    const t = teamsMap[finalFixture.winner_team_id];
+    const k = t ? kontingenMap[t.kontingen_id] : null;
+    if (t && k) winner = { short_code: `${k.short_code} #${t.group_number}`, color: k.color };
+  } else if (finalFixture?.winner_id) {
+    const k = kontingenMap[finalFixture.winner_id];
+    if (k) winner = { short_code: k.short_code, color: k.color };
+  }
+
+  const Connector = () => (
+    <div className="flex flex-col items-center self-stretch justify-center">
+      <div className="flex-1 border-t border-r border-white/10 w-6" />
+      <div className="w-6 h-2 border-r border-white/10" />
+      <div className="flex-1 border-b border-r border-white/10 w-6" />
+    </div>
+  );
 
   return (
     <div className="w-full overflow-x-auto pb-2">
       <div className="flex items-center gap-4 min-w-max">
-        {/* Semi Finals */}
+        {/* Suku Akhir (QF) — only for 4-group format */}
+        {hasQF && (
+          <>
+            <div className="flex flex-col gap-6">
+              <KoMatchCard fixture={qf1} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0} label="Suku Akhir 1" />
+              <KoMatchCard fixture={qf2} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0.05} label="Suku Akhir 2" />
+              <KoMatchCard fixture={qf3} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0.1} label="Suku Akhir 3" />
+              <KoMatchCard fixture={qf4} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0.15} label="Suku Akhir 4" />
+            </div>
+            <div className="flex flex-col items-center self-stretch justify-center">
+              <div className="flex-1 border-t border-r border-white/10 w-6" />
+              <div className="w-6 h-4 border-r border-white/10" />
+              <div className="w-6 h-4 border-r border-white/10" />
+              <div className="flex-1 border-b border-r border-white/10 w-6" />
+            </div>
+          </>
+        )}
+
+        {/* Separuh Akhir */}
         <div className="flex flex-col gap-6">
-          <KoMatchCard fixture={sf1} kontingenMap={kontingenMap} delay={0} label="Separuh Akhir 1" />
-          <KoMatchCard fixture={sf2} kontingenMap={kontingenMap} delay={0.1} label="Separuh Akhir 2" />
+          <KoMatchCard fixture={sf1} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0.2} label="Separuh Akhir 1" />
+          <KoMatchCard fixture={sf2} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0.25} label="Separuh Akhir 2" />
         </div>
 
-        {/* Connector */}
-        <div className="flex flex-col items-center self-stretch justify-center gap-0">
-          <div className="flex-1 border-t border-r border-white/10 w-6" style={{ borderEndEndRadius: 0 }} />
-          <div className="w-6 h-2 border-r border-white/10" />
-          <div className="flex-1 border-b border-r border-white/10 w-6" />
-        </div>
+        <Connector />
 
-        {/* Final */}
-        <KoMatchCard fixture={finalFixture} kontingenMap={kontingenMap} delay={0.2} label="🏆 Akhir" />
+        {/* Akhir */}
+        <KoMatchCard fixture={finalFixture} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0.35} label="🏆 Akhir" />
 
-        {/* Champion */}
+        {/* Juara */}
         {winner && (
           <>
             <div className="w-6 h-px bg-amber-500/30" />

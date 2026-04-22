@@ -6,7 +6,7 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Shuffle, CheckCircle, Loader, AlertTriangle, Wifi, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { useLiveDraw, generateGroupKnockoutFixtures } from '@/hooks/useLiveDraw';
+import { useLiveDraw, generateGroupKnockoutFixtures, DrawEntry } from '@/hooks/useLiveDraw';
 import { useSupsas, SupsasSport, SupsasKontingen } from '@/contexts/SupsasContext';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
@@ -73,13 +73,41 @@ function GroupPreview({ label, color, slots }: {
 }
 
 export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: AdminDrawModalProps) {
-  const { kontingen, refetch } = useSupsas();
+  const { kontingen, teams: allTeams, refetch } = useSupsas();
   const { drawState, startDraw, cancelDraw, resetDraw } = useLiveDraw(editionId, true);
   const [confirming, setConfirming] = useState(false);
   const [hasExisting, setHasExisting] = useState<boolean | null>(null);
-  const savedGroupsRef = useRef<{ groupA: SupsasKontingen[]; groupB: SupsasKontingen[] } | null>(null);
+  const savedGroupsRef = useRef<{ groupA: DrawEntry[]; groupB: DrawEntry[] } | null>(null);
 
-  const activeTeams = kontingen.filter(k => k.is_active);
+  const isMultiGroup = (sport.max_groups_per_kontingen ?? 1) > 1;
+
+  // Build draw entries:
+  // - Multi-group: 1 entry per team (nama = team.name, dari kontingen mana-mana)
+  // - Single-group (lama): 1 entry per kontingen aktif
+  const drawEntries: DrawEntry[] = isMultiGroup
+    ? allTeams
+        .filter(t => t.sport_id === sport.id)
+        .map(t => {
+          const k = kontingen.find(k => k.id === t.kontingen_id);
+          return {
+            id: t.id,
+            name: t.name,
+            shortCode: `${k?.short_code ?? '?'} #${t.group_number}`,
+            color: k?.color ?? '#F59E0B',
+            kontingenId: t.kontingen_id,
+            teamId: t.id,
+          };
+        })
+    : kontingen
+        .filter(k => k.is_active)
+        .map(k => ({
+          id: k.id,
+          name: k.name,
+          shortCode: k.short_code,
+          color: k.color,
+          kontingenId: k.id,
+          teamId: null,
+        }));
 
   React.useEffect(() => {
     (async () => {
@@ -93,8 +121,8 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
 
   // ── Start draw ─────────────────────────────────────────────
   const handleStartDraw = async () => {
-    if (activeTeams.length < 4) {
-      toast.error('Perlukan sekurang-kurangnya 4 kontinjen aktif untuk format Kumpulan+KO.');
+    if (drawEntries.length < 4) {
+      toast.error('Perlukan sekurang-kurangnya 4 entri untuk format Kumpulan+KO.');
       return;
     }
 
@@ -106,7 +134,7 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
       if (error) { toast.error('Gagal padam fixture lama: ' + error.message); return; }
     }
 
-    const result = await startDraw(sport, activeTeams);
+    const result = await startDraw(sport, drawEntries);
     if (result) savedGroupsRef.current = result;
   };
 
@@ -114,7 +142,7 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
   const handleReDraw = async () => {
     await cancelDraw();
     await new Promise(r => setTimeout(r, 400));
-    const result = await startDraw(sport, activeTeams);
+    const result = await startDraw(sport, drawEntries);
     if (result) savedGroupsRef.current = result;
   };
 
@@ -218,22 +246,22 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
             </span>
           </div>
 
-          {/* Active teams */}
+          {/* Active entries */}
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Users className="w-3.5 h-3.5 text-white/30" />
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30">
-                {activeTeams.length} Kontinjen Aktif
+                {drawEntries.length} {isMultiGroup ? 'Kumpulan Berdaftar' : 'Kontinjen Aktif'}
               </p>
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {activeTeams.map(k => (
+              {drawEntries.map(e => (
                 <span
-                  key={k.id}
+                  key={e.id}
                   className="px-2 py-0.5 rounded-lg text-xs font-black border"
-                  style={{ backgroundColor: `${k.color}15`, borderColor: `${k.color}30`, color: k.color }}
+                  style={{ backgroundColor: `${e.color}15`, borderColor: `${e.color}30`, color: e.color }}
                 >
-                  {k.short_code}
+                  {e.shortCode}
                 </span>
               ))}
             </div>
@@ -277,7 +305,7 @@ export function AdminDrawModal({ sport, editionId, onClose, onConfirmed }: Admin
             {drawState.status === 'idle' && (
               <button
                 onClick={handleStartDraw}
-                disabled={activeTeams.length < 4}
+                disabled={drawEntries.length < 4}
                 className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-black font-black uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-2"
               >
                 <Shuffle className="w-4 h-4" />

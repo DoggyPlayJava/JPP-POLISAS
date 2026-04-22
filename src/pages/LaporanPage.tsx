@@ -65,6 +65,7 @@ export function LaporanPage() {
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [logoData, setLogoData] = useState<string | undefined>(undefined);
+  const [presidentName, setPresidentName] = useState<string>('PRESIDEN KELAB');
 
   // ── Derived values ────────────────────────────────────────────────
   const monthLabel = format(parseISO(`${targetMonth}-01`), 'MMMM yyyy', { locale: ms }).toUpperCase();
@@ -194,6 +195,17 @@ export function LaporanPage() {
         }
       }
 
+      // Fetch Presiden kelab
+      const { data: presidentProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('club_id', effectiveClubId)
+        .in('role', ['CLUB_PRESIDENT', 'PRESIDEN'])
+        .single();
+      if (presidentProfile?.full_name) {
+        setPresidentName(presidentProfile.full_name);
+      }
+
       return normalizeReportData(acts || [], rawPrograms);
     } catch (err: any) {
       console.error('Error fetching report data:', err);
@@ -234,7 +246,10 @@ export function LaporanPage() {
           clubName={clubName}
           monthYear={monthLabel}
           activities={previewData}
-          presidenName={profile.full_name || "PRESIDEN KELAB"}
+          submitterName={profile?.full_name || undefined}
+          submitterRole={submitterRole}
+          submitterUnit={clubName}
+          presidenName={presidentName}
           reviewerRole="PRESIDEN"
           reviewerUnit={clubName}
           clubLogoUrl={logoData}
@@ -418,7 +433,7 @@ export function LaporanPage() {
           submitterName={profile?.full_name || undefined}
           submitterRole={submitterRole}
           submitterUnit={clubName}
-          presidenName={profile?.full_name || 'PRESIDEN KELAB'}
+          presidenName={presidentName}
           reviewerRole="PRESIDEN"
           reviewerUnit={clubName}
           clubLogoUrl={logoData}

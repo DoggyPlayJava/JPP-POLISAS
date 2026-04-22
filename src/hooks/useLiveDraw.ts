@@ -17,20 +17,37 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { SupsasKontingen } from '@/contexts/SupsasContext';
+import type { SupsasKontingen, SupsasTeam } from '@/contexts/SupsasContext';
+
+/**
+ * DrawEntry — unit generik yang bertanding dalam draw.
+ * Untuk sukan max_groups=1: satu kontingen = satu entry.
+ * Untuk sukan max_groups>1: satu team = satu entry.
+ */
+export interface DrawEntry {
+  id: string;           // kontingen.id ATAU team.id
+  name: string;         // nama untuk papar
+  shortCode: string;
+  color: string;
+  kontingenId: string;  // kontingen asal (untuk backward compat)
+  teamId: string | null; // null jika bukan team-based
+}
 
 // ─── Event Types ──────────────────────────────────────────────
 export type DrawEvent =
-  | { type: 'DRAW_START'; sportId: string; sportName: string; totalTeams: number }
-  | { type: 'GROUP_REVEAL'; group: 'A' | 'B'; slot: number; kontingenId: string; name: string; shortCode: string; color: string }
-  | { type: 'DRAW_COMPLETE'; groupA: string[]; groupB: string[] }  // arrays of kontingenId
+  | { type: 'DRAW_START'; sportId: string; sportName: string; totalTeams: number; slotDelay?: number }
+  | { type: 'GROUP_REVEAL'; group: string; slot: number; entryId: string; kontingenId: string; name: string; shortCode: string; color: string; teamId: string | null }
+  | { type: 'DRAW_COMPLETE'; groupA: string[]; groupB: string[] }
+  | { type: 'DRAW_FINALIZED'; sportId: string; sportName: string }  // instant reveal
   | { type: 'DRAW_CANCELLED' };
 
 // ─── Slot State ───────────────────────────────────────────────
 export interface GroupDrawSlot {
-  group: 'A' | 'B';
-  slot: number;   // 1,2,3 dalam kumpulan
+  group: string;   // 'A' | 'B' | 'C' | 'D' — now any string
+  slot: number;
+  entryId: string | null;
   kontingenId: string | null;
+  teamId: string | null;
   name: string | null;
   shortCode: string | null;
   color: string | null;
@@ -39,14 +56,17 @@ export interface GroupDrawSlot {
 
 // ─── Draw Session State ───────────────────────────────────────
 export interface LiveDrawState {
-  status: 'idle' | 'drawing' | 'complete' | 'cancelled';
+  status: 'idle' | 'drawing' | 'complete' | 'finalized' | 'cancelled';
   sportId: string | null;
   sportName: string | null;
   totalTeams: number;
+  // Legacy: always present for backward compat
   groupA: GroupDrawSlot[];
   groupB: GroupDrawSlot[];
-  finalGroupA: string[];  // kontingenId[] selepas draw selesai
+  finalGroupA: string[];
   finalGroupB: string[];
+  // NEW: dynamic multi-group map (A/B/C/D)
+  groups: Record<string, GroupDrawSlot[]>;
 }
 
 const INITIAL_STATE: LiveDrawState = {
@@ -58,6 +78,7 @@ const INITIAL_STATE: LiveDrawState = {
   groupB: [],
   finalGroupA: [],
   finalGroupB: [],
+  groups: {},
 };
 
 // ─── Fisher-Yates shuffle ─────────────────────────────────────
@@ -71,11 +92,13 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 // ─── Helper: Build empty slots ────────────────────────────────
-function makeSlots(group: 'A' | 'B', count: number): GroupDrawSlot[] {
+function makeSlots(group: string, count: number): GroupDrawSlot[] {
   return Array.from({ length: count }, (_, i) => ({
     group,
     slot: i + 1,
+    entryId: null,
     kontingenId: null,
+    teamId: null,
     name: null,
     shortCode: null,
     color: null,
@@ -116,6 +139,8 @@ export function useLiveDraw(editionId: string | null | undefined, isAdmin: boole
   const handleIncoming = useCallback((event: DrawEvent) => {
     switch (event.type) {
       case 'DRAW_START': {
+        // Dynamic: detect number of groups from totalTeams if slotDelay provided
+        // For now keep legacy A/B slots; groups map filled by GROUP_REVEAL events
         const groupSize = Math.ceil(event.totalTeams / 2);
         const groupBSize = event.totalTeams - groupSize;
         setDrawState({
@@ -127,24 +152,52 @@ export function useLiveDraw(editionId: string | null | undefined, isAdmin: boole
           groupB: makeSlots('B', groupBSize),
           finalGroupA: [],
           finalGroupB: [],
+          groups: {},
         });
         break;
       }
-      case 'GROUP_REVEAL':
-        setDrawState(prev => ({
-          ...prev,
-          groupA: event.group === 'A'
+
+      case 'GROUP_REVEAL': {
+        const grp = event.group;
+        setDrawState(prev => {
+          // Update legacy groupA/groupB
+          const newA = grp === 'A'
             ? prev.groupA.map(s => s.slot === event.slot
-                ? { ...s, kontingenId: event.kontingenId, name: event.name, shortCode: event.shortCode, color: event.color, revealed: true }
+                ? { ...s, entryId: event.entryId, kontingenId: event.kontingenId, teamId: event.teamId, name: event.name, shortCode: event.shortCode, color: event.color, revealed: true }
                 : s)
-            : prev.groupA,
-          groupB: event.group === 'B'
+            : prev.groupA;
+          const newB = grp === 'B'
             ? prev.groupB.map(s => s.slot === event.slot
-                ? { ...s, kontingenId: event.kontingenId, name: event.name, shortCode: event.shortCode, color: event.color, revealed: true }
+                ? { ...s, entryId: event.entryId, kontingenId: event.kontingenId, teamId: event.teamId, name: event.name, shortCode: event.shortCode, color: event.color, revealed: true }
                 : s)
-            : prev.groupB,
-        }));
+            : prev.groupB;
+
+          // Update dynamic groups map
+          const prevSlots: GroupDrawSlot[] = prev.groups[grp] ?? [];
+          // Ensure slot exists
+          const existingSlot = prevSlots.find(s => s.slot === event.slot);
+          let newSlots: GroupDrawSlot[];
+          if (existingSlot) {
+            newSlots = prevSlots.map(s => s.slot === event.slot
+              ? { ...s, entryId: event.entryId, kontingenId: event.kontingenId, teamId: event.teamId, name: event.name, shortCode: event.shortCode, color: event.color, revealed: true }
+              : s);
+          } else {
+            // Auto-grow: add new slot
+            newSlots = [
+              ...prevSlots,
+              { group: grp, slot: event.slot, entryId: event.entryId, kontingenId: event.kontingenId, teamId: event.teamId, name: event.name, shortCode: event.shortCode, color: event.color, revealed: true },
+            ].sort((a, b) => a.slot - b.slot);
+          }
+
+          return {
+            ...prev,
+            groupA: newA,
+            groupB: newB,
+            groups: { ...prev.groups, [grp]: newSlots },
+          };
+        });
         break;
+      }
 
       case 'DRAW_COMPLETE':
         setDrawState(prev => ({
@@ -155,6 +208,27 @@ export function useLiveDraw(editionId: string | null | undefined, isAdmin: boole
         }));
         break;
 
+      case 'DRAW_FINALIZED':
+        // Admin confirmed — instantly reveal all slots, skip pending animations
+        setDrawState(prev => {
+          const revealAll = (slots: GroupDrawSlot[]) =>
+            slots.map(s => ({ ...s, revealed: true }));
+          const newGroups: Record<string, GroupDrawSlot[]> = {};
+          for (const [k, v] of Object.entries(prev.groups)) {
+            newGroups[k] = revealAll(v);
+          }
+          return {
+            ...prev,
+            status: 'finalized' as const,
+            sportId: event.sportId,
+            sportName: event.sportName,
+            groupA: revealAll(prev.groupA),
+            groupB: revealAll(prev.groupB),
+            groups: newGroups,
+          };
+        });
+        break;
+
       case 'DRAW_CANCELLED':
         setDrawState(INITIAL_STATE);
         break;
@@ -162,19 +236,17 @@ export function useLiveDraw(editionId: string | null | undefined, isAdmin: boole
   }, []);
 
   // ── Admin: Start draw ──────────────────────────────────────
+  // Accepts DrawEntry[] — works for both kontingen-based & team-based sports
   const startDraw = useCallback(async (
     sport: { id: string; name: string },
-    kontingen: SupsasKontingen[],
+    entries: DrawEntry[],
   ) => {
     if (!isAdmin || !channelRef.current) return;
 
     broadcastTimersRef.current.forEach(clearTimeout);
     broadcastTimersRef.current = [];
 
-    const active = kontingen.filter(k => k.is_active);
-    const shuffled = shuffle(active);
-
-    // Split into 2 groups as evenly as possible
+    const shuffled = shuffle(entries);
     const groupASize = Math.ceil(shuffled.length / 2);
     const groupA = shuffled.slice(0, groupASize);
     const groupB = shuffled.slice(groupASize);
@@ -184,44 +256,43 @@ export function useLiveDraw(editionId: string | null | undefined, isAdmin: boole
       payload: { type: 'DRAW_START', sportId: sport.id, sportName: sport.name, totalTeams: shuffled.length } as DrawEvent,
     });
 
-    const DELAY = 1500; // ms between reveals
+    const DELAY = 1500;
     let seq = 0;
 
-    // Reveal Kumpulan A first, then Kumpulan B, interleaved for drama
-    const reveals: Array<{ group: 'A' | 'B'; slot: number; team: SupsasKontingen }> = [];
+    const reveals: Array<{ group: 'A' | 'B'; slot: number; entry: DrawEntry }> = [];
     const maxLen = Math.max(groupA.length, groupB.length);
     for (let i = 0; i < maxLen; i++) {
-      if (groupA[i]) reveals.push({ group: 'A', slot: i + 1, team: groupA[i] });
-      if (groupB[i]) reveals.push({ group: 'B', slot: i + 1, team: groupB[i] });
+      if (groupA[i]) reveals.push({ group: 'A', slot: i + 1, entry: groupA[i] });
+      if (groupB[i]) reveals.push({ group: 'B', slot: i + 1, entry: groupB[i] });
     }
 
-    reveals.forEach(({ group, slot, team }) => {
+    reveals.forEach(({ group, slot, entry }) => {
       seq++;
       const t = setTimeout(async () => {
         await channelRef.current?.send({
           type: 'broadcast', event: 'draw',
           payload: {
             type: 'GROUP_REVEAL',
-            group,
-            slot,
-            kontingenId: team.id,
-            name: team.name,
-            shortCode: team.short_code,
-            color: team.color,
+            group, slot,
+            entryId: entry.id,
+            kontingenId: entry.kontingenId,
+            teamId: entry.teamId,
+            name: entry.name,
+            shortCode: entry.shortCode,
+            color: entry.color,
           } as DrawEvent,
         });
       }, DELAY * seq);
       broadcastTimersRef.current.push(t);
     });
 
-    // Complete
     const completeT = setTimeout(async () => {
       await channelRef.current?.send({
         type: 'broadcast', event: 'draw',
         payload: {
           type: 'DRAW_COMPLETE',
-          groupA: groupA.map(t => t.id),
-          groupB: groupB.map(t => t.id),
+          groupA: groupA.map(e => e.id),
+          groupB: groupB.map(e => e.id),
         } as DrawEvent,
       });
     }, DELAY * (reveals.length + 1));
@@ -264,6 +335,8 @@ export interface BracketFixtureInsert {
   match_number: number;
   kontingen_a_id: string | null;
   kontingen_b_id: string | null;
+  team_a_id: string | null;  // NEW: untuk team-based sports
+  team_b_id: string | null;  // NEW
   status: 'upcoming';
   bracket_round: number | null;
   bracket_position: number | null;
@@ -271,11 +344,14 @@ export interface BracketFixtureInsert {
   is_bye: boolean;
 }
 
+/**
+ * Versi baharu: accept DrawEntry[] supaya boleh guna untuk kontingen-based DAN team-based.
+ */
 export function generateGroupKnockoutFixtures(
   editionId: string,
   sportId: string,
-  groupA: SupsasKontingen[],  // 3 pasukan
-  groupB: SupsasKontingen[],  // 3 pasukan
+  groupA: DrawEntry[],
+  groupB: DrawEntry[],
 ): BracketFixtureInsert[] {
   const fixtures: BracketFixtureInsert[] = [];
   let matchNum = 1;
@@ -288,10 +364,12 @@ export function generateGroupKnockoutFixtures(
         sport_id: sportId,
         round: 'Kumpulan A',
         match_number: matchNum++,
-        kontingen_a_id: groupA[i].id,
-        kontingen_b_id: groupA[j].id,
+        kontingen_a_id: groupA[i].kontingenId,
+        kontingen_b_id: groupA[j].kontingenId,
+        team_a_id: groupA[i].teamId,
+        team_b_id: groupA[j].teamId,
         status: 'upcoming',
-        bracket_round: null,   // group stage bukan KO round
+        bracket_round: null,
         bracket_position: null,
         group_name: 'A',
         is_bye: false,
@@ -307,8 +385,10 @@ export function generateGroupKnockoutFixtures(
         sport_id: sportId,
         round: 'Kumpulan B',
         match_number: matchNum++,
-        kontingen_a_id: groupB[i].id,
-        kontingen_b_id: groupB[j].id,
+        kontingen_a_id: groupB[i].kontingenId,
+        kontingen_b_id: groupB[j].kontingenId,
+        team_a_id: groupB[i].teamId,
+        team_b_id: groupB[j].teamId,
         status: 'upcoming',
         bracket_round: null,
         bracket_position: null,
@@ -318,50 +398,32 @@ export function generateGroupKnockoutFixtures(
     }
   }
 
-  // ── Separuh Akhir (2 match) — TBD, akan diisi oleh admin bila kumpulan selesai ──
-  // SF1: A1 vs B2
+  // ── Separuh Akhir: SF1 A1 vs B2, SF2 B1 vs A2 ───────────
   fixtures.push({
-    edition_id: editionId,
-    sport_id: sportId,
-    round: 'Separuh Akhir',
-    match_number: matchNum++,
-    kontingen_a_id: null, // A1 — diisi bila kumpulan A selesai
-    kontingen_b_id: null, // B2 — diisi bila kumpulan B selesai
-    status: 'upcoming',
-    bracket_round: 2,
-    bracket_position: 1,
-    group_name: null,
-    is_bye: false,
+    edition_id: editionId, sport_id: sportId,
+    round: 'Separuh Akhir', match_number: matchNum++,
+    kontingen_a_id: null, kontingen_b_id: null,
+    team_a_id: null, team_b_id: null,
+    status: 'upcoming', bracket_round: 2, bracket_position: 1,
+    group_name: null, is_bye: false,
+  });
+  fixtures.push({
+    edition_id: editionId, sport_id: sportId,
+    round: 'Separuh Akhir', match_number: matchNum++,
+    kontingen_a_id: null, kontingen_b_id: null,
+    team_a_id: null, team_b_id: null,
+    status: 'upcoming', bracket_round: 2, bracket_position: 2,
+    group_name: null, is_bye: false,
   });
 
-  // SF2: B1 vs A2
+  // ── Akhir ────────────────────────────────────────────────
   fixtures.push({
-    edition_id: editionId,
-    sport_id: sportId,
-    round: 'Separuh Akhir',
-    match_number: matchNum++,
-    kontingen_a_id: null, // B1
-    kontingen_b_id: null, // A2
-    status: 'upcoming',
-    bracket_round: 2,
-    bracket_position: 2,
-    group_name: null,
-    is_bye: false,
-  });
-
-  // ── Akhir (1 match) — TBD ────────────────────────────────
-  fixtures.push({
-    edition_id: editionId,
-    sport_id: sportId,
-    round: 'Akhir',
-    match_number: matchNum++,
-    kontingen_a_id: null,
-    kontingen_b_id: null,
-    status: 'upcoming',
-    bracket_round: 1,
-    bracket_position: 1,
-    group_name: null,
-    is_bye: false,
+    edition_id: editionId, sport_id: sportId,
+    round: 'Akhir', match_number: matchNum++,
+    kontingen_a_id: null, kontingen_b_id: null,
+    team_a_id: null, team_b_id: null,
+    status: 'upcoming', bracket_round: 1, bracket_position: 1,
+    group_name: null, is_bye: false,
   });
 
   return fixtures;
@@ -369,6 +431,7 @@ export function generateGroupKnockoutFixtures(
 
 // ─── Group standings calculation ─────────────────────────────
 export interface GroupStanding {
+  entryId: string;      // team.id atau kontingen.id
   kontingenId: string;
   name: string;
   shortCode: string;
@@ -387,21 +450,25 @@ export function calculateGroupStandings(
   groupFixtures: Array<{
     kontingen_a_id: string | null;
     kontingen_b_id: string | null;
+    team_a_id?: string | null;
+    team_b_id?: string | null;
     score_a: string | null;
     score_b: string | null;
     winner_id: string | null;
     status: string;
   }>,
-  teamsInGroup: SupsasKontingen[],
+  entries: DrawEntry[],
+  isTeamBased: boolean = false,
 ): GroupStanding[] {
   const map: Record<string, GroupStanding> = {};
 
-  for (const t of teamsInGroup) {
-    map[t.id] = {
-      kontingenId: t.id,
-      name: t.name,
-      shortCode: t.short_code,
-      color: t.color,
+  for (const e of entries) {
+    map[e.id] = {
+      entryId: e.id,
+      kontingenId: e.kontingenId,
+      name: e.name,
+      shortCode: e.shortCode,
+      color: e.color,
       played: 0, won: 0, drawn: 0, lost: 0,
       goalsFor: 0, goalsAgainst: 0, goalDiff: 0, points: 0,
     };
@@ -409,8 +476,8 @@ export function calculateGroupStandings(
 
   for (const f of groupFixtures) {
     if (f.status !== 'completed') continue;
-    const a = f.kontingen_a_id;
-    const b = f.kontingen_b_id;
+    const a = isTeamBased ? (f.team_a_id ?? null) : f.kontingen_a_id;
+    const b = isTeamBased ? (f.team_b_id ?? null) : f.kontingen_b_id;
     if (!a || !b || !map[a] || !map[b]) continue;
 
     const ga = parseInt(f.score_a ?? '0') || 0;

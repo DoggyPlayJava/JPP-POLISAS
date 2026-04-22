@@ -382,7 +382,7 @@ export const JABATAN_PROGRAMMES: Record<JabatanValue, { code: string; label: str
     { code: 'DMH', label: 'Diploma Makanan Halal — DMH' },
   ],
   perdagangan: [
-    { code: 'DAT', label: 'Diploma Akauntansi — DAT' },
+    { code: 'DAC', label: 'Diploma Akauntansi — DAC' },
     { code: 'DSK', label: 'Diploma Sains Kesetiausahaan — DSK' },
     { code: 'DLS', label: 'Diploma Pengurusan Logistik & Rangkaian Bekalan — DLS' },
     { code: 'DBS', label: 'Diploma Sistem Maklumat Perniagaan — DBS' },

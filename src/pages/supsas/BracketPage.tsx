@@ -19,18 +19,27 @@ type Tab = 'kumpulan' | 'bracket' | 'jadual';
 export function BracketPage() {
   const { sportId } = useParams<{ sportId: string }>();
   const navigate = useNavigate();
-  const { sports, fixtures, kontingen } = useSupsas();
+  const { sports, fixtures, kontingen, teams } = useSupsas();
   const [activeTab, setActiveTab] = useState<Tab>('kumpulan');
 
   const sport = sports.find(s => s.id === sportId);
   const sportFixtures = fixtures.filter(f => f.sport_id === sportId);
 
-  const groupAFixtures = sportFixtures.filter(f => f.group_name === 'A');
-  const groupBFixtures = sportFixtures.filter(f => f.group_name === 'B');
+  // Detect groups dynamically (A, B, C, D)
+  const allGroupNames = ['A', 'B', 'C', 'D'].filter(g =>
+    sportFixtures.some(f => f.group_name === g)
+  );
+  const qfFixtures = sportFixtures.filter(f => f.bracket_round === 3);
   const sfFixtures = sportFixtures.filter(f => f.bracket_round === 2);
   const finalFixture = sportFixtures.find(f => f.bracket_round === 1) ?? null;
+  const hasQF = qfFixtures.length > 0;
+
+  const GROUP_COLORS: Record<string, string> = {
+    A: '#F59E0B', B: '#8B5CF6', C: '#10B981', D: '#EF4444',
+  };
 
   const kontingenMap = Object.fromEntries(kontingen.map(k => [k.id, k]));
+  const teamsMap = Object.fromEntries(teams.map(t => [t.id, t]));
   const hasBracket = sportFixtures.some(f => f.group_name || f.bracket_round != null);
 
   const liveCount = sportFixtures.filter(f => f.status === 'live').length;
@@ -131,19 +140,27 @@ export function BracketPage() {
             {/* ── Tab: Kumpulan ─────────────────────────── */}
             {activeTab === 'kumpulan' && (
               <motion.div key="kumpulan" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
-                {/* Formula reminder */}
                 <div className="text-center py-3 px-4 rounded-xl bg-white/[0.02] border border-white/5">
                   <p className="text-white/30 text-[10px] font-medium">
                     Menang = <span className="text-emerald-400 font-black">3 mata</span> &nbsp;·&nbsp;
                     Seri = <span className="text-amber-400 font-black">1 mata</span> &nbsp;·&nbsp;
                     Kalah = <span className="text-red-400 font-black">0 mata</span>
                     &nbsp;&nbsp;|&nbsp;&nbsp;
-                    Top 2 setiap kumpulan maju ke Separuh Akhir
+                    Top 2 setiap kumpulan maju ke {hasQF ? 'Suku Akhir' : 'Separuh Akhir'}
                   </p>
                 </div>
 
-                <GroupStandingsTable group="A" fixtures={sportFixtures} kontingen={kontingen} color="#F59E0B" />
-                <GroupStandingsTable group="B" fixtures={sportFixtures} kontingen={kontingen} color="#8B5CF6" />
+                {allGroupNames.map(grp => (
+                  <GroupStandingsTable
+                    key={grp}
+                    group={grp}
+                    fixtures={sportFixtures}
+                    kontingen={kontingen}
+                    teams={teams}
+                    kontingenMap={kontingenMap}
+                    color={GROUP_COLORS[grp] ?? '#F59E0B'}
+                  />
+                ))}
               </motion.div>
             )}
 
@@ -154,17 +171,21 @@ export function BracketPage() {
                   <div className="flex items-center gap-2 mb-5">
                     <Trophy className="w-4 h-4 text-amber-400" />
                     <span className="text-sm font-black text-white">Fasa Knockout</span>
-                    <span className="text-[10px] text-white/30 font-medium ml-1">(Top 2 dari setiap kumpulan)</span>
+                    <span className="text-[10px] text-white/30 font-medium ml-1">
+                      ({hasQF ? 'QF → SF → Final' : 'SF → Final'})
+                    </span>
                   </div>
                   {sfFixtures.length === 0 && !finalFixture ? (
                     <div className="text-center py-10 text-white/20 text-xs font-black uppercase tracking-widest">
-                      Separuh Akhir bermula selepas fasa kumpulan selesai
+                      Fasa KO bermula selepas fasa kumpulan selesai
                     </div>
                   ) : (
                     <KnockoutBracket
+                      qfFixtures={qfFixtures}
                       sfFixtures={sfFixtures}
                       finalFixture={finalFixture}
                       kontingenMap={kontingenMap}
+                      teamsMap={teamsMap}
                     />
                   )}
                 </div>
@@ -194,7 +215,7 @@ export function BracketPage() {
                         <div className="h-px flex-1 bg-white/5" />
                       </div>
                       <div className="space-y-2">
-                        {gf.map(f => <MatchRow key={f.id} fixture={f} kontingenMap={kontingenMap} />)}
+                        {gf.map(f => <MatchRow key={f.id} fixture={f} kontingenMap={kontingenMap} teamsMap={teamsMap} />)}
                       </div>
                     </div>
                   );
@@ -211,8 +232,8 @@ export function BracketPage() {
                       <div className="h-px flex-1 bg-white/5" />
                     </div>
                     <div className="space-y-2">
-                      {sfFixtures.map(f => <MatchRow key={f.id} fixture={f} kontingenMap={kontingenMap} />)}
-                      {finalFixture && <MatchRow fixture={finalFixture} kontingenMap={kontingenMap} />}
+                      {sfFixtures.map(f => <MatchRow key={f.id} fixture={f} kontingenMap={kontingenMap} teamsMap={teamsMap} />)}
+                      {finalFixture && <MatchRow fixture={finalFixture} kontingenMap={kontingenMap} teamsMap={teamsMap} />}
                     </div>
                   </div>
                 )}
@@ -226,12 +247,28 @@ export function BracketPage() {
 }
 
 // ─── Match Row (shared) ───────────────────────────────────────
-function MatchRow({ fixture, kontingenMap }: {
+function MatchRow({ fixture, kontingenMap, teamsMap }: {
   fixture: import('@/contexts/SupsasContext').SupsasFixture;
   kontingenMap: Record<string, import('@/contexts/SupsasContext').SupsasKontingen>;
+  teamsMap?: Record<string, import('@/contexts/SupsasContext').SupsasTeam>;
 }) {
-  const a = fixture.kontingen_a_id ? kontingenMap[fixture.kontingen_a_id] : null;
-  const b = fixture.kontingen_b_id ? kontingenMap[fixture.kontingen_b_id] : null;
+  const isTeamBased = !!(fixture.team_a_id || fixture.team_b_id);
+  let aDisplay = 'TBD', bDisplay = 'TBD';
+  let aColor: string | undefined, bColor: string | undefined;
+
+  if (isTeamBased && teamsMap) {
+    const tA = fixture.team_a_id ? teamsMap[fixture.team_a_id] : null;
+    const tB = fixture.team_b_id ? teamsMap[fixture.team_b_id] : null;
+    const kA = tA ? kontingenMap[tA.kontingen_id] : null;
+    const kB = tB ? kontingenMap[tB.kontingen_id] : null;
+    if (tA && kA) { aDisplay = `${kA.short_code} #${tA.group_number}`; aColor = kA.color; }
+    if (tB && kB) { bDisplay = `${kB.short_code} #${tB.group_number}`; bColor = kB.color; }
+  } else {
+    const a = fixture.kontingen_a_id ? kontingenMap[fixture.kontingen_a_id] : null;
+    const b = fixture.kontingen_b_id ? kontingenMap[fixture.kontingen_b_id] : null;
+    if (a) { aDisplay = a.short_code; aColor = a.color; }
+    if (b) { bDisplay = b.short_code; bColor = b.color; }
+  }
   const isLive = fixture.status === 'live';
   const isDone = fixture.status === 'completed';
 
@@ -247,13 +284,12 @@ function MatchRow({ fixture, kontingenMap }: {
         <p className="text-[8px] text-white/20">#{fixture.match_number}</p>
       </div>
 
-      {/* Teams + score */}
       <div className="flex-1 flex items-center gap-2 min-w-0">
         <div className="flex items-center gap-1.5 flex-1 justify-end">
-          <span className={cn('text-sm font-black truncate', a ? 'text-white' : 'text-white/20')}>
-            {a?.short_code ?? 'TBD'}
+          <span className={cn('text-sm font-black truncate', aDisplay !== 'TBD' ? 'text-white' : 'text-white/20')}>
+            {aDisplay}
           </span>
-          {a?.color && <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: a.color }} />}
+          {aColor && <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: aColor }} />}
         </div>
 
         <div className="flex-shrink-0 px-2">
@@ -267,9 +303,9 @@ function MatchRow({ fixture, kontingenMap }: {
         </div>
 
         <div className="flex items-center gap-1.5 flex-1">
-          {b?.color && <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: b.color }} />}
-          <span className={cn('text-sm font-black truncate', b ? 'text-white' : 'text-white/20')}>
-            {b?.short_code ?? 'TBD'}
+          {bColor && <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: bColor }} />}
+          <span className={cn('text-sm font-black truncate', bDisplay !== 'TBD' ? 'text-white' : 'text-white/20')}>
+            {bDisplay}
           </span>
         </div>
       </div>

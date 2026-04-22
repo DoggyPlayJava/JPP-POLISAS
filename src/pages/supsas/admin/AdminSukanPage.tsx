@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Save, X, Shuffle, CheckCircle, Loader, ChevronRight } from 'lucide-react';
+import { Trophy, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Save, X, Shuffle, CheckCircle, Loader, ChevronRight, RotateCcw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useSupsas, SupsasSport } from '@/contexts/SupsasContext';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import * as LucideIcons from 'lucide-react';
-import { AdminDrawModal } from './components/AdminDrawModal';
+import { AdminBracketPanel } from './components/AdminBracketPanel';
 
 const SPORT_ICONS = ['Trophy', 'Volleyball', 'Dumbbell', 'Bike', 'Waves', 'Target', 'Footprints', 'Sword', 'Shield', 'Zap', 'Activity', 'Flame'];
 const FORMATS = [{ value: 'knockout', label: 'Sistem Gugur (KO)' }, { value: 'round_robin', label: 'Liga (Round Robin)' }, { value: 'group_knockout', label: 'Kumpulan + Gugur' }];
 const GENDERS = [{ value: 'male', label: 'Lelaki' }, { value: 'female', label: 'Wanita' }, { value: 'mixed', label: 'Campur' }];
 const CATEGORIES = [{ value: 'team', label: 'Berpasukan' }, { value: 'individual', label: 'Individu' }];
 
-interface SportForm { name: string; category: string; gender: string; format: string; icon: string; venue: string; max_per_team: number; sort_order: number; }
-const DEFAULT_FORM: SportForm = { name: '', category: 'team', gender: 'mixed', format: 'knockout', icon: 'Trophy', venue: '', max_per_team: 11, sort_order: 0 };
+interface SportForm { name: string; category: string; gender: string; format: string; icon: string; venue: string; max_per_team: number; max_groups_per_kontingen: number; max_players_per_group: number; sort_order: number; }
+const DEFAULT_FORM: SportForm = { name: '', category: 'team', gender: 'mixed', format: 'knockout', icon: 'Trophy', venue: '', max_per_team: 11, max_groups_per_kontingen: 1, max_players_per_group: 11, sort_order: 0 };
 
 function IconPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
@@ -63,7 +63,7 @@ export function AdminSukanPage() {
   const [drawSport, setDrawSport] = useState<SupsasSport | null>(null);
 
   const openNew = () => { setForm(DEFAULT_FORM); setEditTarget(null); setShowForm(true); };
-  const openEdit = (s: SupsasSport) => { setForm({ name: s.name, category: s.category, gender: s.gender, format: s.format, icon: s.icon, venue: s.venue ?? '', max_per_team: s.max_per_team, sort_order: s.sort_order }); setEditTarget(s); setShowForm(true); };
+  const openEdit = (s: SupsasSport) => { setForm({ name: s.name, category: s.category, gender: s.gender, format: s.format, icon: s.icon, venue: s.venue ?? '', max_per_team: s.max_per_team, max_groups_per_kontingen: (s as any).max_groups_per_kontingen ?? 1, max_players_per_group: (s as any).max_players_per_group ?? 11, sort_order: s.sort_order }); setEditTarget(s); setShowForm(true); };
 
   const handleSave = async () => {
     if (!edition) { toast.error('Tiada edisi ditemui. Cipta edisi dahulu dalam Tetapan.'); return; }
@@ -98,7 +98,7 @@ export function AdminSukanPage() {
 
   const [advancing, setAdvancing] = useState<string | null>(null);
 
-  // K-3: Advance group winners to SF
+  // K-3: Advance group winners to SF or QF (depending on bracket format)
   const handleAdvanceGroupWinners = async (sport: SupsasSport) => {
     setAdvancing(sport.id + '_group');
     const { data, error } = await supabase.rpc('advance_group_winners', { p_sport_id: sport.id });
@@ -107,11 +107,22 @@ export function AdminSukanPage() {
     if (error) { toast.error('Ralat RPC: ' + error.message); return; }
     if (!data) { toast.error('Tiada respons dari pelayan. Sila cuba semula.'); return; }
     if (data?.ok === false) { toast.error(data.error ?? 'Ralat tidak diketahui'); return; }
-    toast.success('✅ Separuh Akhir berjaya dijana! Pasukan telah ditempatkan.');
+    toast.success('✅ Fasa seterusnya berjaya dijana!');
     refetch();
   };
 
-  // K-3b: Advance SF winners to Final
+  // K-3a: Advance QF winners to SF (only for 4-group format)
+  const handleAdvanceQFWinners = async (sport: SupsasSport) => {
+    setAdvancing(sport.id + '_qf');
+    const { data, error } = await supabase.rpc('advance_qf_winners', { p_sport_id: sport.id });
+    setAdvancing(null);
+    if (error) { toast.error('Ralat RPC: ' + error.message); return; }
+    if (!data) { toast.error('Tiada respons dari pelayan.'); return; }
+    if (data?.ok === false) { toast.error(data.error ?? 'Ralat tidak diketahui'); return; }
+    toast.success('⚔️ Separuh Akhir berjaya dijana dari Suku Akhir!');
+    refetch();
+  };
+
   const handleAdvanceSFWinners = async (sport: SupsasSport) => {
     setAdvancing(sport.id + '_sf');
     const { data, error } = await supabase.rpc('advance_sf_winners', { p_sport_id: sport.id });
@@ -120,7 +131,31 @@ export function AdminSukanPage() {
     if (error) { toast.error('Ralat RPC: ' + error.message); return; }
     if (!data) { toast.error('Tiada respons dari pelayan. Sila cuba semula.'); return; }
     if (data?.ok === false) { toast.error(data.error ?? 'Ralat tidak diketahui'); return; }
-    toast.success('🏆 Final berjaya dijana! Pemenang SF telah ditempatkan.');
+    toast.success('🏆 Final berjaya dijana!');
+    refetch();
+  };
+
+  // Reset: Padam semua fixtures untuk sukan ini
+  const handleResetBracket = async (sport: SupsasSport) => {
+    const confirmStep1 = window.confirm(
+      `⚠️ Reset bracket "${sport.name}"?\n\nSemua keputusan perlawanan dan jadual yang dijana akan DIPADAM sepenuhnya.\n\nTekan OK untuk teruskan.`
+    );
+    if (!confirmStep1) return;
+
+    const confirmStep2 = window.confirm(
+      `🔴 PENGESAHAN AKHIR\n\nAdakah anda PASTI ingin memadam bracket "${sport.name}"?\n\nTindakan ini TIDAK BOLEH diundur.`
+    );
+    if (!confirmStep2) return;
+
+    setAdvancing(sport.id + '_reset');
+    const { error } = await supabase
+      .from('supsas_fixtures')
+      .delete()
+      .eq('sport_id', sport.id);
+    setAdvancing(null);
+
+    if (error) { toast.error('Gagal reset bracket: ' + error.message); return; }
+    toast.success(`🔄 Bracket ${sport.name} telah direset. Sedia untuk jana semula.`);
     refetch();
   };
 
@@ -164,14 +199,18 @@ export function AdminSukanPage() {
         {sports.map((sport, i) => {
           const Ic = (LucideIcons as any)[sport.icon] || LucideIcons.Trophy;
           const sportFixtures = fixtures.filter(f => f.sport_id === sport.id);
-          const groupFixtures = sportFixtures.filter(f => f.group_name != null);
-          const sfFixtures    = sportFixtures.filter(f => f.bracket_round === 2);
-          const finalFixture  = sportFixtures.find(f => f.bracket_round === 1);
-          const groupDone     = groupFixtures.length > 0 && groupFixtures.every(f => f.status === 'completed');
-          const sfDone        = sfFixtures.length > 0 && sfFixtures.every(f => f.status === 'completed') && sfFixtures.every(f => f.winner_id != null);
-          const sfHasTeams    = sfFixtures.some(f => f.kontingen_a_id != null);
-          const finalHasTeams = finalFixture?.kontingen_a_id != null;
-          const isGroupKO     = sport.format === 'group_knockout';
+          const groupFixtures  = sportFixtures.filter(f => f.group_name != null);
+          const qfFixtures      = sportFixtures.filter(f => f.bracket_round === 3); // Suku Akhir
+          const sfFixtures      = sportFixtures.filter(f => f.bracket_round === 2);
+          const finalFixture    = sportFixtures.find(f => f.bracket_round === 1);
+          const hasQF           = qfFixtures.length > 0; // 4-kumpulan format
+          const groupDone       = groupFixtures.length > 0 && groupFixtures.every(f => f.status === 'completed');
+          const qfDone          = qfFixtures.length > 0 && qfFixtures.every(f => f.status === 'completed') && qfFixtures.every(f => f.winner_id != null || (f as any).winner_team_id != null);
+          const sfDone          = sfFixtures.length > 0 && sfFixtures.every(f => f.status === 'completed') && sfFixtures.every(f => f.winner_id != null || (f as any).winner_team_id != null);
+          const qfHasTeams      = qfFixtures.some(f => f.kontingen_a_id != null || (f as any).team_a_id != null);
+          const sfHasTeams      = sfFixtures.some(f => f.kontingen_a_id != null || (f as any).team_a_id != null);
+          const finalHasTeams   = finalFixture != null && (finalFixture.kontingen_a_id != null || (finalFixture as any).team_a_id != null);
+          const isGroupKO       = sport.format === 'group_knockout';
 
           return (
             <motion.div
@@ -239,11 +278,11 @@ export function AdminSukanPage() {
                 </div>
               </div>
 
-              {/* K-3: Phase advancement buttons — only for group_knockout with bracket */}
               {isGroupKO && groupFixtures.length > 0 && sport.is_active && (
                 <div className="px-4 pb-4 flex flex-wrap gap-2 border-t border-white/5 pt-3">
-                  {/* Step 1: Kumpulan → SF */}
-                  {!sfHasTeams && (
+
+                  {/* Step 1: Kumpulan → QF atau SF */}
+                  {!qfHasTeams && !sfHasTeams && (
                     <button
                       onClick={() => handleAdvanceGroupWinners(sport)}
                       disabled={!groupDone || advancing === sport.id + '_group'}
@@ -254,14 +293,31 @@ export function AdminSukanPage() {
                           : 'bg-white/[0.02] border-white/5 text-white/20 cursor-not-allowed'
                       )}
                     >
-                      {advancing === sport.id + '_group'
-                        ? <Loader className="w-3 h-3 animate-spin" />
-                        : <ChevronRight className="w-3 h-3" />}
-                      {groupDone ? 'Jana Separuh Akhir dari Kumpulan' : `Tunggu ${groupFixtures.filter(f=>f.status!=='completed').length} match kumpulan lagi`}
+                      {advancing === sport.id + '_group' ? <Loader className="w-3 h-3 animate-spin" /> : <ChevronRight className="w-3 h-3" />}
+                      {groupDone
+                        ? (hasQF ? 'Jana Suku Akhir dari Kumpulan' : 'Jana Separuh Akhir dari Kumpulan')
+                        : `Tunggu ${groupFixtures.filter(f => f.status !== 'completed').length} match lagi`}
                     </button>
                   )}
 
-                  {/* Step 2: SF → Final */}
+                  {/* Step 2 (4-group only): QF → SF */}
+                  {hasQF && qfHasTeams && !sfHasTeams && (
+                    <button
+                      onClick={() => handleAdvanceQFWinners(sport)}
+                      disabled={!qfDone || advancing === sport.id + '_qf'}
+                      className={cn(
+                        'flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all',
+                        qfDone
+                          ? 'bg-blue-500/15 border-blue-500/25 text-blue-400 hover:bg-blue-500/25'
+                          : 'bg-white/[0.02] border-white/5 text-white/20 cursor-not-allowed'
+                      )}
+                    >
+                      {advancing === sport.id + '_qf' ? <Loader className="w-3 h-3 animate-spin" /> : <ChevronRight className="w-3 h-3" />}
+                      {qfDone ? 'Jana Separuh Akhir dari Suku Akhir' : `Tunggu ${qfFixtures.filter(f => f.status !== 'completed').length} QF lagi`}
+                    </button>
+                  )}
+
+                  {/* Step 3: SF → Final */}
                   {sfHasTeams && !finalHasTeams && (
                     <button
                       onClick={() => handleAdvanceSFWinners(sport)}
@@ -273,20 +329,31 @@ export function AdminSukanPage() {
                           : 'bg-white/[0.02] border-white/5 text-white/20 cursor-not-allowed'
                       )}
                     >
-                      {advancing === sport.id + '_sf'
-                        ? <Loader className="w-3 h-3 animate-spin" />
-                        : <Trophy className="w-3 h-3" />}
-                      {sfDone ? 'Jana Final dari Separuh Akhir' : `Tunggu ${sfFixtures.filter(f=>f.status!=='completed'||!f.winner_id).length} SF lagi`}
+                      {advancing === sport.id + '_sf' ? <Loader className="w-3 h-3 animate-spin" /> : <Trophy className="w-3 h-3" />}
+                      {sfDone ? 'Jana Akhir dari Separuh Akhir' : `Tunggu ${sfFixtures.filter(f => f.status !== 'completed' || !f.winner_id).length} SF lagi`}
                     </button>
                   )}
 
-                  {/* Done state */}
+                  {/* Done */}
                   {finalHasTeams && (
                     <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
                       <CheckCircle className="w-3.5 h-3.5 text-amber-400" />
                       <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Final Bersedia</span>
                     </div>
                   )}
+
+                  {/* Reset bracket — always visible once bracket exists */}
+                  <button
+                    onClick={() => handleResetBracket(sport)}
+                    disabled={advancing === sport.id + '_reset'}
+                    title="Padam semua fixtures dan mula semula"
+                    className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/5 border border-red-500/15 text-red-400/60 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/25 text-[9px] font-black uppercase tracking-widest transition-all disabled:opacity-30"
+                  >
+                    {advancing === sport.id + '_reset'
+                      ? <Loader className="w-3 h-3 animate-spin" />
+                      : <RotateCcw className="w-3 h-3" />}
+                    Reset Bracket
+                  </button>
                 </div>
               )}
             </motion.div>
@@ -353,9 +420,28 @@ export function AdminSukanPage() {
                   <FormField label="Gelanggang / Venue">
                     <input value={form.venue} onChange={e => setForm(p => ({ ...p, venue: e.target.value }))} placeholder="cth: Padang A" className={inputCls()} />
                   </FormField>
-                  <FormField label="Max Pemain / Pasukan">
-                    <input type="number" value={form.max_per_team} onChange={e => setForm(p => ({ ...p, max_per_team: +e.target.value }))} className={inputCls()} />
+                  <FormField label="Max Pemain / Pasukan (lama)">
+                    <input type="number" min={1} value={form.max_per_team} onChange={e => setForm(p => ({ ...p, max_per_team: +e.target.value }))} className={inputCls()} />
                   </FormField>
+                </div>
+
+                {/* Multi-group settings */}
+                <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/15 space-y-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-400/70">Tetapan Kumpulan Per Kontingen</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField label="Max Kumpulan / Kontingen">
+                      <input type="number" min={1} max={10} value={form.max_groups_per_kontingen}
+                        onChange={e => setForm(p => ({ ...p, max_groups_per_kontingen: +e.target.value }))}
+                        className={inputCls()} />
+                      <p className="text-[9px] text-white/25 mt-1">1 = sistem lama (1 unit/kontingen)</p>
+                    </FormField>
+                    <FormField label="Max Pemain / Kumpulan">
+                      <input type="number" min={1} max={50} value={form.max_players_per_group}
+                        onChange={e => setForm(p => ({ ...p, max_players_per_group: +e.target.value }))}
+                        className={inputCls()} />
+                      <p className="text-[9px] text-white/25 mt-1">Bilangan pemain dalam 1 kumpulan</p>
+                    </FormField>
+                  </div>
                 </div>
 
                 <button
@@ -375,7 +461,7 @@ export function AdminSukanPage() {
       {/* Draw Modal */}
       <AnimatePresence>
         {drawSport && edition && (
-          <AdminDrawModal
+          <AdminBracketPanel
             sport={drawSport}
             editionId={edition.id}
             onClose={() => setDrawSport(null)}
