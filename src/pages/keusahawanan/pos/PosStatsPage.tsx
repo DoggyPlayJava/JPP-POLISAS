@@ -294,6 +294,45 @@ export function PosStatsPage() {
               />
             </div>
 
+            {/* Pecahan Saluran Jualan */}
+            {(stats.onlineRevenue > 0 || stats.physicalRevenue > 0) && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}
+                className="grid grid-cols-2 gap-4">
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-card border border-border/50 hover:border-blue-500/30 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                      <ShoppingBag className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">PolyMart (Online)</p>
+                      <p className="text-lg font-black text-foreground">{fmtRM(stats.onlineRevenue)}</p>
+                    </div>
+                  </div>
+                  {stats.totalRevenue > 0 && (
+                    <p className="text-[10px] font-black text-blue-500 bg-blue-500/10 px-2 py-1 rounded-lg">
+                      {((stats.onlineRevenue / stats.totalRevenue) * 100).toFixed(0)}%
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-card border border-border/50 hover:border-emerald-500/30 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                      <Wallet className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">POS (Fizikal)</p>
+                      <p className="text-lg font-black text-foreground">{fmtRM(stats.physicalRevenue)}</p>
+                    </div>
+                  </div>
+                  {stats.totalRevenue > 0 && (
+                    <p className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg">
+                      {((stats.physicalRevenue / stats.totalRevenue) * 100).toFixed(0)}%
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
             <AdsMarketingWidget stats={stats} />
 
             {/* Discount alert — tunjuk jika ada diskaun diberi */}

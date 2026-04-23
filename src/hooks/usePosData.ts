@@ -54,6 +54,8 @@ export interface StatsData {
   totalExpenses:          number;
   netProfit:              number;
   expensesByCategory:     { category: string; amount: number }[];
+  onlineRevenue:          number;
+  physicalRevenue:        number;
 }
 
 // ── Main Hook ─────────────────────────────────────────────────────────────────
@@ -407,7 +409,7 @@ export function usePosData(businessId?: string, parentLoading = false) {
     const [txnResult, expResult] = await Promise.all([
       supabase
         .from('business_transactions')
-        .select('total_amount, subtotal, discount_amount, items, created_at')
+        .select('total_amount, subtotal, discount_amount, items, created_at, invoice_number')
         .eq('business_id', bId)
         .eq('status', 'COMPLETED')
         .gte('created_at', fromIso)
@@ -435,11 +437,20 @@ export function usePosData(businessId?: string, parentLoading = false) {
     const productMap: Record<string, { name: string; revenue: number; units: number }> = {};
     const dayMap:     Record<string, { revenue: number; count: number }> = {};
 
+    let onlineRevenue = 0;
+    let physicalRevenue = 0;
+
     safeArr.forEach((t: any) => {
       const day = t.created_at.split('T')[0];
       if (!dayMap[day]) dayMap[day] = { revenue: 0, count: 0 };
       dayMap[day].revenue += t.total_amount ?? 0;
       dayMap[day].count   += 1;
+
+      if (t.invoice_number?.startsWith('PM-')) {
+        onlineRevenue += t.total_amount ?? 0;
+      } else {
+        physicalRevenue += t.total_amount ?? 0;
+      }
 
       (t.items ?? []).forEach((item: BusinessTransactionItem) => {
         unitsSold += item.qty;
@@ -478,6 +489,8 @@ export function usePosData(businessId?: string, parentLoading = false) {
       totalExpenses,
       netProfit: totalRevenue - totalExpenses,
       expensesByCategory,
+      onlineRevenue,
+      physicalRevenue,
     };
   }, []);
 

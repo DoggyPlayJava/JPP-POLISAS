@@ -14,6 +14,8 @@ import {
 import { type BusinessProduct, type BusinessTransactionItem, type BusinessPromotion } from '@/types';
 import toast from 'react-hot-toast';
 import { EInvoiceModal } from '@/components/keusahawanan/EInvoiceModal';
+import { supabase } from '@/lib/supabase';
+import { PosScannerModal } from './PosScannerModal';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -166,6 +168,10 @@ export function PosOrderPage() {
   const [processing, setProcessing]     = useState(false);
   const [successTxn, setSuccessTxn]     = useState<any>(null);
   const [showInvoice, setShowInvoice]   = useState(false);
+
+  // PolyMart Scanner
+  const [showScanner, setShowScanner] = useState(false);
+  const [scannedOrder, setScannedOrder] = useState<any>(null);
 
   // Ciri 5: Kupon / Promosi
   const promotionsEnabled = (selectedBusiness as any)?.promotions_enabled ?? false;
@@ -334,6 +340,57 @@ export function PosOrderPage() {
     clearCart();
   };
 
+  // ── PolyMart Scan Handlers ────────────────────────────────────────────────
+  const handleScan = async (decodedText: string) => {
+    setShowScanner(false);
+    setProcessing(true);
+    try {
+      const { data, error } = await supabase
+        .from('polymart_orders')
+        .select(`
+          *,
+          business_products ( id, name, price ),
+          buyer:user_id ( id, full_name )
+        `)
+        .eq('id', decodedText)
+        .single();
+        
+      if (error || !data) throw new Error('Pesanan tidak wujud');
+      if (data.status !== 'READY' && data.status !== 'CONFIRMED') throw new Error(`Pesanan ini berstatus ${data.status}`);
+      if (data.business_id !== businessId) throw new Error('Pesanan ini bukan untuk perniagaan anda');
+      
+      setScannedOrder(data);
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal menyemak pesanan PolyMart');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleCompletePolyMart = async () => {
+    if (!scannedOrder) return;
+    setProcessing(true);
+    try {
+      const pm = scannedOrder.payment_method || 'CASH';
+      const { error } = await supabase.rpc('complete_polymart_order', {
+        p_order_id: scannedOrder.id,
+        p_business_id: scannedOrder.business_id,
+        p_product_id: scannedOrder.product_id,
+        p_quantity: scannedOrder.quantity,
+        p_unit_price: scannedOrder.unit_price,
+        p_payment_method: pm,
+        p_served_by: profile?.id
+      });
+      if (error) throw error;
+      toast.success('Pesanan PolyMart selesai!');
+      setScannedOrder(null);
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal menyelesaikan pesanan');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   // ── Loading / access states ───────────────────────────────────────────────
 
   if (isBusinessLoading || pos.isLoading || pos.posAccess === null) {
@@ -451,11 +508,16 @@ export function PosOrderPage() {
                 </span>
               )}
             </div>
-            {cart.length > 0 && (
-              <button onClick={clearCart} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground/50 hover:text-rose-500 transition-colors">
-                <RotateCcw className="w-3 h-3" /> Kosongkan
+            <div className="flex gap-2">
+              <button onClick={() => setShowScanner(true)} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-white px-3 py-1.5 rounded-lg transition-transform hover:scale-105 active:scale-95 shadow-md" style={{ background: color }}>
+                <QrCode className="w-3 h-3" /> Imbas PolyMart
               </button>
-            )}
+              {cart.length > 0 && (
+                <button onClick={clearCart} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground/50 hover:text-rose-500 transition-colors ml-2">
+                  <RotateCcw className="w-3 h-3" /> Kosongkan
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Scrollable cart + checkout */}
@@ -696,6 +758,68 @@ export function PosOrderPage() {
       {showInvoice && successTxn && (
         <EInvoiceModal transaction={successTxn} onClose={() => { setShowInvoice(false); setSuccessTxn(null); }} />
       )}
+
+      {/* PolyMart QR Scanner */}
+      <AnimatePresence>
+        {showScanner && (
+          <PosScannerModal onScan={handleScan} onClose={() => setShowScanner(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* PolyMart Order Confirmation Modal */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {scannedOrder && (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setScannedOrder(null)} />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="relative w-full max-w-sm mx-auto rounded-3xl p-6 bg-card border border-border shadow-2xl flex flex-col"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-amber-500/20 text-amber-500">
+                    <Package className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-foreground">Pesanan PolyMart</h3>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{scannedOrder.buyer?.full_name}</p>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-muted/30 rounded-xl mb-4 text-sm font-bold border border-border/50">
+                  <p className="text-muted-foreground">{scannedOrder.business_products?.name} x {scannedOrder.quantity}</p>
+                  <p className="text-xl mt-1" style={{ color }}>{fmtRM(scannedOrder.total_price)}</p>
+                </div>
+
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Kaedah Pembayaran (POS)</p>
+                <div className="flex gap-2 mb-6">
+                  {['CASH', 'QR', 'TRANSFER'].map(m => (
+                    <button key={m} onClick={() => setScannedOrder({ ...scannedOrder, payment_method: m })}
+                      className={`flex-1 h-9 rounded-xl text-[11px] font-bold transition-colors ${(scannedOrder.payment_method || 'CASH') === m ? 'border-2' : 'border border-border/50 bg-muted/30 text-muted-foreground'}`}
+                      style={(scannedOrder.payment_method || 'CASH') === m ? { borderColor: color, color, background: hexToRgba(color, 0.1) } : {}}>
+                      {m === 'CASH' ? 'Tunai' : m === 'QR' ? 'QR Pay' : 'Transfer'}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex gap-2">
+                  <button onClick={() => setScannedOrder(null)} disabled={processing}
+                    className="flex-1 h-11 rounded-xl text-xs font-bold border border-border/50 hover:bg-muted/50 transition-colors">
+                    Batal
+                  </button>
+                  <button onClick={handleCompletePolyMart} disabled={processing}
+                    className="flex-1 h-11 rounded-xl text-white text-xs font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-2"
+                    style={{ background: color }}>
+                    {processing ? <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" /> : 'Selesaikan'}
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+      , document.body)}
     </div>
   );
 }

@@ -19,6 +19,7 @@ interface Product {
   category: string;
   image_url: string | null;
   stock_quantity: number;
+  reserved_stock: number;
   is_available: boolean;
   publish_to_polymart: boolean;
   polymart_location: string | null;
@@ -96,7 +97,8 @@ function OrderModal({
   const [sharePhone, setSharePhone] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  const maxQty = Math.min(product.stock_quantity, 10);
+  const availableStock = Math.max(0, product.stock_quantity - (product.reserved_stock || 0));
+  const maxQty = Math.min(availableStock, 10);
   const total  = (product.price * qty).toFixed(2);
 
   const submit = async () => {
@@ -104,6 +106,14 @@ function OrderModal({
     if (!pickupTime.trim()) { toast.error('Sila isi masa ambil'); return; }
     setSubmitting(true);
     try {
+      // 1. Tempah stok dahulu
+      const { error: reserveError } = await supabase.rpc('reserve_polymart_stock', {
+        p_product_id: product.id,
+        p_quantity: qty
+      });
+      if (reserveError) throw new Error('Stok tidak mencukupi atau sedang ditempah.');
+
+      // 2. Cipta pesanan
       const { data: order, error } = await supabase.from('polymart_orders').insert({
         product_id:  product.id,
         business_id: product.business_id,
@@ -116,7 +126,11 @@ function OrderModal({
         status:      'PENDING',
       }).select('id').single();
 
-      if (error) throw error;
+      if (error) {
+        // Jika gagal insert, lepaskan kembali stok
+        await supabase.rpc('release_polymart_stock', { p_product_id: product.id, p_quantity: qty });
+        throw error;
+      }
 
       // Notify vendor
       await sendNotificationToBusinessVendor(product.business_id, {
@@ -189,7 +203,7 @@ function OrderModal({
                 disabled={qty >= maxQty}>
                 <Plus className="w-3.5 h-3.5 text-muted-foreground" />
               </button>
-              <span className="text-[10px] text-muted-foreground/50 ml-1">Stok: {product.stock_quantity}</span>
+              <span className="text-[10px] text-muted-foreground/50 ml-1">Stok: {availableStock}</span>
             </div>
           </div>
 
@@ -318,7 +332,8 @@ export function PolyMartProductDetail() {
   );
 
   const emoji = CATEGORY_EMOJI[product.category] ?? '📦';
-  const isOut = product.stock_quantity === 0;
+  const availableStock = Math.max(0, product.stock_quantity - (product.reserved_stock || 0));
+  const isOut = availableStock <= 0;
   const business = product.keusahawanan_businesses;
 
   return (
@@ -373,7 +388,7 @@ export function PolyMartProductDetail() {
           <div className="flex flex-wrap gap-2">
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-muted/40 border border-border/40">
               <Package className="w-3 h-3 text-muted-foreground" />
-              <span>Stok: {product.stock_quantity}</span>
+              <span>Stok: {availableStock}</span>
             </div>
             {product.polymart_location && (
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-muted/40 border border-border/40">

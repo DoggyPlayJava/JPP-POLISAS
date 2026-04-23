@@ -905,6 +905,7 @@ export type Database = {
           publish_to_polymart: boolean | null
           stock_alert_threshold: number
           stock_quantity: number
+          reserved_stock: number
           total_cost: number | null
         }
         Insert: {
@@ -925,6 +926,7 @@ export type Database = {
           publish_to_polymart?: boolean | null
           stock_alert_threshold?: number
           stock_quantity?: number
+          reserved_stock?: number
           total_cost?: number | null
         }
         Update: {
@@ -945,6 +947,7 @@ export type Database = {
           publish_to_polymart?: boolean | null
           stock_alert_threshold?: number
           stock_quantity?: number
+          reserved_stock?: number
           total_cost?: number | null
         }
         Relationships: [
@@ -4240,7 +4243,7 @@ export type Database = {
         | "PROMO_USED"
         | "PROMO_TOGGLE"
         | "CASH_CHECKPOINT"
-      pos_payment_method: "CASH" | "QR" | "TRANSFER"
+      pos_payment_method: "CASH" | "QR" | "TRANSFER" | "POLYMART"
       pos_transaction_status: "COMPLETED" | "VOIDED"
       program_status:
         | "DRAFT"
@@ -4402,7 +4405,7 @@ export const Constants = {
         "PROMO_TOGGLE",
         "CASH_CHECKPOINT",
       ],
-      pos_payment_method: ["CASH", "QR", "TRANSFER"],
+      pos_payment_method: ["CASH", "QR", "TRANSFER", "POLYMART"],
       pos_transaction_status: ["COMPLETED", "VOIDED"],
       program_status: [
         "DRAFT",

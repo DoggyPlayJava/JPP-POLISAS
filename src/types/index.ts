@@ -479,7 +479,7 @@ export interface StudentBusinessMembership {
 
 // ─── POS System Types ──────────────────────────────────────────────────────────
 
-export type PosPaymentMethod = 'CASH' | 'QR' | 'TRANSFER';
+export type PosPaymentMethod = 'CASH' | 'QR' | 'TRANSFER' | 'POLYMART';
 export type PosDiscountType  = 'FIXED' | 'PERCENT';
 export type PosTransactionStatus = 'COMPLETED' | 'VOIDED';
 export type PosLogAction =
@@ -518,6 +518,7 @@ export interface BusinessProduct {
   price:                 number;
   category:              string;
   stock_quantity:        number;
+  reserved_stock:        number;
   stock_alert_threshold: number;
   image_url:             string | null;
   is_available:          boolean;

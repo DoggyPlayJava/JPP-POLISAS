@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import QRCode from 'react-qr-code';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
@@ -179,13 +180,21 @@ function OrderCard({ order, onReview }: { order: Order; onReview: (o: Order) => 
       </div>
 
       {/* Actions */}
-      {(order.status === 'CONFIRMED' || order.status === 'READY') && whatsappUrl && (
-        <div className="px-3.5 pb-3.5 flex gap-2">
-          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl border border-green-500/30 bg-green-500/10 text-[11px] font-bold text-green-600 dark:text-green-400 hover:bg-green-500/20 transition-colors">
-            <MessageCircle className="w-3.5 h-3.5" />
-            <span>Hubungi via WhatsApp</span>
-          </a>
+      {(order.status === 'CONFIRMED' || order.status === 'READY') && (
+        <div className="px-3.5 pb-3.5 space-y-3">
+          <div className="bg-white p-4 rounded-2xl flex flex-col items-center justify-center border border-border/50 shadow-sm mx-auto max-w-[200px]">
+            <QRCode value={order.id} size={120} />
+            <p className="text-[10px] text-center text-muted-foreground font-bold mt-3 leading-tight">
+              Tunjuk QR ini kepada vendor semasa ambil pesanan
+            </p>
+          </div>
+          {whatsappUrl && (
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-1.5 h-9 rounded-xl border border-green-500/30 bg-green-500/10 text-[11px] font-bold text-green-600 dark:text-green-400 hover:bg-green-500/20 transition-colors">
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>Hubungi via WhatsApp</span>
+            </a>
+          )}
         </div>
       )}
 

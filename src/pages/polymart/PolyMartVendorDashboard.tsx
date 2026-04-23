@@ -24,6 +24,7 @@ interface VendorOrder {
   share_phone: boolean;
   status: OrderStatus;
   created_at: string;
+  business_id: string;
   business_products: { id: string; name: string; image_url: string | null; category: string } | null;
   buyer: { id: string; full_name: string; matric_no: string; phone: string | null } | null;
 }
@@ -57,6 +58,8 @@ function VendorOrderCard({ order, onUpdate }: { order: VendorOrder; onUpdate: ()
   const [expanded,    setExpanded]   = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [showCancel,  setShowCancel] = useState(false);
+  const [showComplete,setShowComplete] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'CASH'|'QR'|'TRANSFER'>('QR');
   const [loading,     setLoading]    = useState(false);
   const cfg = STATUS_CONFIG[order.status];
   const emoji = CATEGORY_EMOJI[order.business_products?.category ?? ''] ?? '📦';
@@ -71,8 +74,29 @@ function VendorOrderCard({ order, onUpdate }: { order: VendorOrder; onUpdate: ()
       if (newStatus === 'COMPLETED') updates.completed_at = now;
       if (newStatus === 'CANCELLED') updates.cancelled_at = now;
 
-      const { error } = await supabase.from('polymart_orders').update(updates).eq('id', order.id);
-      if (error) throw error;
+      if (newStatus === 'CANCELLED') {
+        // Bebaskan reserved_stock
+        await supabase.rpc('release_polymart_stock', {
+          p_product_id: order.business_products?.id,
+          p_quantity: order.quantity
+        });
+      }
+
+      if (newStatus === 'COMPLETED') {
+        const { error } = await supabase.rpc('complete_polymart_order', {
+          p_order_id: order.id,
+          p_business_id: order.business_id,
+          p_product_id: order.business_products?.id,
+          p_quantity: order.quantity,
+          p_unit_price: order.unit_price,
+          p_payment_method: paymentMethod,
+          p_served_by: profile?.id
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('polymart_orders').update(updates).eq('id', order.id);
+        if (error) throw error;
+      }
 
       // Notify buyer
       const buyerId = order.buyer?.id;
@@ -108,6 +132,7 @@ function VendorOrderCard({ order, onUpdate }: { order: VendorOrder; onUpdate: ()
     } finally {
       setLoading(false);
       setShowCancel(false);
+      setShowComplete(false);
     }
   };
 
@@ -200,6 +225,36 @@ function VendorOrderCard({ order, onUpdate }: { order: VendorOrder; onUpdate: ()
           )}
         </AnimatePresence>
 
+        {/* Complete form */}
+        <AnimatePresence>
+          {showComplete && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+              <div className="mt-3 pt-3 border-t border-border/40 space-y-3">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Cara Bayaran Pelajar</p>
+                <div className="flex gap-2">
+                  {['CASH', 'QR', 'TRANSFER'].map(m => (
+                    <button key={m} onClick={() => setPaymentMethod(m as any)}
+                      className={`flex-1 h-9 rounded-xl text-[11px] font-bold transition-colors ${paymentMethod === m ? 'bg-amber-500/10 border-amber-500/50 text-amber-600' : 'bg-muted/30 border-border/50 text-muted-foreground'} border`}>
+                      {m === 'CASH' ? 'Tunai' : m === 'QR' ? 'QR Pay' : 'Transfer'}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button onClick={() => setShowComplete(false)}
+                    className="flex-1 h-9 rounded-xl text-[11px] font-bold border border-border/50 hover:bg-muted/50 transition-colors">
+                    Batal
+                  </button>
+                  <button onClick={() => updateStatus('COMPLETED')}
+                    disabled={loading} className="flex-1 h-9 rounded-xl text-[11px] font-black text-white bg-green-500 hover:bg-green-600 transition-colors">
+                    Sahkan Selesai
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Action buttons */}
         <div className="mt-3 flex gap-2">
           {order.status === 'PENDING' && (
@@ -228,9 +283,10 @@ function VendorOrderCard({ order, onUpdate }: { order: VendorOrder; onUpdate: ()
               </button>
             </>
           )}
-          {order.status === 'READY' && (
-            <button onClick={() => updateStatus('COMPLETED')} disabled={loading}
-              className="flex-1 h-9 rounded-xl text-[11px] font-black text-muted-foreground border border-border/50 hover:bg-muted/50 transition-colors disabled:opacity-60">
+          {order.status === 'READY' && !showComplete && (
+            <button onClick={() => setShowComplete(true)} disabled={loading}
+              className="flex-1 h-9 rounded-xl text-[11px] font-black text-white transition-all disabled:opacity-60"
+              style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
               ✔️ Tandakan Selesai
             </button>
           )}
