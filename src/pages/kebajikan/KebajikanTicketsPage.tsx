@@ -23,7 +23,7 @@ const TEAL  = KEBAJIKAN_THEME_COLOR;
 const ALL_STATUSES: KebajikanTicketStatus[] = ['NEW','IN_PROGRESS','WAITING_INFO','DELEGATED','ESCALATED','REOPENED','RESOLVED','CLOSED','CANCELLED'];
 
 export function KebajikanTicketsPage() {
-  const { isUnitKebajikanStaff, user } = useAuth();
+  const { isUnitKebajikanStaff, isKediamanExco, isKebajikanExco, isSuperAdmin, isYdp, user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [tickets, setTickets]   = useState<KebajikanTicket[]>([]);
@@ -43,6 +43,19 @@ export function KebajikanTicketsPage() {
       .order('created_at', { ascending: false });
 
     if (isUnitKebajikanStaff && !user?.id) q = q.eq('delegated_to', user?.id);
+
+    // Auto-filter berdasarkan unit exco:
+    // - Exco KK: nampak tiket kafeteria sahaja
+    // - Exco Kebajikan: nampak semua kecuali kafeteria
+    // - Super Admin / YDP: nampak semua
+    if (!isSuperAdmin && !isYdp) {
+      if (isKediamanExco) {
+        q = q.eq('handled_by_unit', 'KK');
+      } else if (isKebajikanExco) {
+        q = q.neq('handled_by_unit', 'KK');
+      }
+    }
+
     if (statusFilter && statusFilter !== 'ALL') q = q.eq('status', statusFilter);
     if (catFilter && catFilter !== 'ALL') q = q.eq('category', catFilter);
 
@@ -62,7 +75,7 @@ export function KebajikanTicketsPage() {
 
     setTickets(result);
     setLoading(false);
-  }, [search, statusFilter, catFilter, isUnitKebajikanStaff, user?.id]);
+  }, [search, statusFilter, catFilter, isUnitKebajikanStaff, isKediamanExco, isKebajikanExco, isSuperAdmin, isYdp, user?.id]);
 
   useEffect(() => { fetchTickets(); }, [fetchTickets]);
 
@@ -82,7 +95,9 @@ export function KebajikanTicketsPage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-8 relative z-10">
         <div>
-          <h1 className="text-3xl font-black text-slate-50 mb-2 tracking-tight">Senarai Tiket</h1>
+          <h1 className="text-3xl font-black text-slate-50 mb-2 tracking-tight">
+            {isKediamanExco && !isSuperAdmin && !isYdp ? 'Aduan Kafeteria' : 'Senarai Tiket'}
+          </h1>
           <p className="text-xs text-white/40">
             {loading ? 'Memuatkan...' : `${tickets.length} tiket`}
             {urgentCount > 0 && <span className="ml-2 text-red-400 font-black">· {urgentCount} diescalate!</span>}

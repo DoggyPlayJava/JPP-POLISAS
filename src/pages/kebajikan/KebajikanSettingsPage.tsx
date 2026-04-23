@@ -2,8 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { KEBAJIKAN_THEME_COLOR } from '@/types';
-import { Settings, Save, Clock, Mail, MessageSquare, AlertTriangle, Trash2, Database, ShieldAlert } from 'lucide-react';
+import { Settings, Save, Clock, Mail, MessageSquare, AlertTriangle, Trash2, Database, ShieldAlert, Users, Plus, ToggleLeft, ToggleRight } from 'lucide-react';
+import { KEBAJIKAN_THEME_COLOR, KebajikanPic } from '@/types';
 import { toast } from 'react-hot-toast';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
@@ -73,6 +73,22 @@ export function KebajikanSettingsPage() {
   const [cleanupPreview, setCleanupPreview]   = useState<{ count: number; images: number } | null>(null);
   const [loadingPreview, setLoadingPreview]   = useState(false);
   const [cleaning, setCleaning]               = useState(false);
+
+  // PIC Presets state
+  const [pics, setPics]           = useState<KebajikanPic[]>([]);
+  const [picLoading, setPicLoading] = useState(false);
+  const [showAddPic, setShowAddPic] = useState(false);
+  const [newPic, setNewPic]       = useState({ jabatan_label: '', pic_name: '', pic_title: '', pic_email: '', pic_phone: '' });
+  const [savingPic, setSavingPic] = useState(false);
+
+  const fetchPics = useCallback(async () => {
+    setPicLoading(true);
+    const { data } = await supabase.from('kebajikan_pics').select('*').order('jabatan_label');
+    setPics((data || []) as KebajikanPic[]);
+    setPicLoading(false);
+  }, []);
+
+  useEffect(() => { if (isAllowed) fetchPics(); }, [fetchPics, isAllowed]);
 
 
   const fetchSettings = useCallback(async () => {
@@ -512,8 +528,114 @@ export function KebajikanSettingsPage() {
             </div>
           </GlassCard>
 
+          {/* PIC Presets */}
+          <GlassCard>
+            <SectionHeader icon={Users} title="Pengurusan Preset PIC" subtitle="Senarai PIC (Person-in-Charge) per jabatan untuk laporan escalated" />
+            <div className="space-y-3">
+              {picLoading ? (
+                <p className="text-xs text-white/30 text-center py-4">Memuatkan...</p>
+              ) : pics.length === 0 ? (
+                <p className="text-xs text-white/30 text-center py-4">Tiada preset PIC lagi. Tambah di bawah.</p>
+              ) : pics.map(p => (
+                <div key={p.id} className={cn('flex items-center gap-3 p-3.5 rounded-2xl border transition-colors', p.is_active ? 'border-white/[0.06] bg-white/[0.02]' : 'border-white/[0.03] bg-black/20 opacity-50')}>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-black text-slate-200 truncate">{p.jabatan_label}</p>
+                    <p className="text-[10px] text-white/40">{p.pic_name}{p.pic_title ? ` · ${p.pic_title}` : ''}{p.pic_email ? ` · ${p.pic_email}` : ''}</p>
+                  </div>
+                  <button onClick={async () => {
+                    await supabase.from('kebajikan_pics').update({ is_active: !p.is_active }).eq('id', p.id);
+                    fetchPics();
+                  }} className="text-white/30 hover:text-teal-400 transition-colors" title={p.is_active ? 'Nyahaktifkan' : 'Aktifkan'}>
+                    {p.is_active ? <ToggleRight className="w-4 h-4 text-teal-400" /> : <ToggleLeft className="w-4 h-4" />}
+                  </button>
+                  <button onClick={async () => {
+                    if (!confirm(`Padam preset PIC "${p.pic_name}"?`)) return;
+                    await supabase.from('kebajikan_pics').delete().eq('id', p.id);
+                    fetchPics();
+                    toast.success('Preset PIC dipadam.');
+                  }} className="text-white/20 hover:text-red-400 transition-colors">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Add New PIC */}
+            <div className="mt-4">
+              {!showAddPic ? (
+                <button onClick={() => setShowAddPic(true)} className="flex items-center gap-2 text-xs font-black text-teal-400 hover:text-teal-300 transition-colors">
+                  <Plus className="w-3.5 h-3.5" /> Tambah Preset PIC
+                </button>
+              ) : (
+                <div className="rounded-2xl border border-teal-500/20 bg-teal-500/[0.03] p-4 space-y-3">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-teal-400/70 mb-2">Preset PIC Baru</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-1">Nama Jabatan / Kemudahan *</p>
+                      <input value={newPic.jabatan_label} onChange={e => setNewPic(p => ({ ...p, jabatan_label: e.target.value }))}
+                        placeholder="cth: Jabatan Kejuruteraan Mekanikal"
+                        className="w-full h-8 px-3 rounded-xl text-xs bg-white/[0.04] border border-white/10 text-white placeholder:text-white/20 focus:border-teal-500/40 focus:outline-none" />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-1">Nama PIC *</p>
+                      <input value={newPic.pic_name} onChange={e => setNewPic(p => ({ ...p, pic_name: e.target.value }))}
+                        placeholder="cth: Encik Ahmad bin Ali"
+                        className="w-full h-8 px-3 rounded-xl text-xs bg-white/[0.04] border border-white/10 text-white placeholder:text-white/20 focus:border-teal-500/40 focus:outline-none" />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-1">Jawatan</p>
+                      <input value={newPic.pic_title} onChange={e => setNewPic(p => ({ ...p, pic_title: e.target.value }))}
+                        placeholder="cth: Ketua Jabatan"
+                        className="w-full h-8 px-3 rounded-xl text-xs bg-white/[0.04] border border-white/10 text-white placeholder:text-white/20 focus:border-teal-500/40 focus:outline-none" />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-1">Emel</p>
+                      <input value={newPic.pic_email} onChange={e => setNewPic(p => ({ ...p, pic_email: e.target.value }))}
+                        placeholder="pic@polisas.edu.my"
+                        className="w-full h-8 px-3 rounded-xl text-xs bg-white/[0.04] border border-white/10 text-white placeholder:text-white/20 focus:border-teal-500/40 focus:outline-none" />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-1">No. Telefon</p>
+                      <input value={newPic.pic_phone} onChange={e => setNewPic(p => ({ ...p, pic_phone: e.target.value }))}
+                        placeholder="01x-xxxxxxx"
+                        className="w-full h-8 px-3 rounded-xl text-xs bg-white/[0.04] border border-white/10 text-white placeholder:text-white/20 focus:border-teal-500/40 focus:outline-none" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button onClick={async () => {
+                      if (!newPic.jabatan_label.trim() || !newPic.pic_name.trim()) { toast.error('Nama jabatan dan nama PIC wajib diisi.'); return; }
+                      setSavingPic(true);
+                      const { error } = await supabase.from('kebajikan_pics').insert({
+                        category: 'FASILITI_JABATAN',
+                        jabatan_label: newPic.jabatan_label.trim(),
+                        pic_name: newPic.pic_name.trim(),
+                        pic_title: newPic.pic_title.trim() || null,
+                        pic_email: newPic.pic_email.trim() || null,
+                        pic_phone: newPic.pic_phone.trim() || null,
+                        created_by: user?.id,
+                      });
+                      if (!error) {
+                        toast.success('Preset PIC berjaya ditambah!');
+                        setNewPic({ jabatan_label: '', pic_name: '', pic_title: '', pic_email: '', pic_phone: '' });
+                        setShowAddPic(false);
+                        fetchPics();
+                      } else {
+                        toast.error('Gagal tambah PIC: ' + error.message);
+                      }
+                      setSavingPic(false);
+                    }} disabled={savingPic} className="flex items-center gap-1.5 px-4 h-8 rounded-xl text-xs font-black text-slate-950 transition-all hover:brightness-110" style={{ background: TEAL }}>
+                      <Save className="w-3.5 h-3.5" /> {savingPic ? 'Menyimpan...' : 'Simpan'}
+                    </button>
+                    <button onClick={() => setShowAddPic(false)} className="px-4 h-8 rounded-xl text-xs font-black text-white/40 hover:text-white border border-white/10 transition-colors">Batal</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </GlassCard>
+
         </div>
       )}
     </div>
   );
 }
+

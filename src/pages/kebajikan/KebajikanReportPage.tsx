@@ -9,12 +9,15 @@ import { ms } from 'date-fns/locale';
 import {
   BarChart3, ChevronLeft, ChevronRight, TrendingUp, Clock,
   CheckCircle2, AlertTriangle, Users, Star, FileDown, Printer,
+  ClipboardList, Filter, UserCheck, X,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { KEBAJIKAN_THEME_COLOR, KEBAJIKAN_CATEGORY_LABELS, KebajikanTicketCategory } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { KEBAJIKAN_THEME_COLOR, KEBAJIKAN_CATEGORY_LABELS, KebajikanTicketCategory, KebajikanPic, KebajikanTicket } from '@/types';
 import { cn } from '@/lib/utils';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { KebajikanReportPDF } from '@/components/pdf/KebajikanReportPDF';
+import { KebajikanPicReportPDF, type PicReportTicket } from '@/components/pdf/KebajikanPicReportPDF';
 
 const TEAL = KEBAJIKAN_THEME_COLOR;
 const PIE_COLORS = ['#6366F1','#2DD4BF','#F59E0B','#EF4444','#10B981'];
@@ -69,10 +72,28 @@ function SectionTitle({ num, title, subtitle }: { num: string; title: string; su
 }
 
 export function KebajikanReportPage() {
+  const { isKediamanExco, isSuperAdmin, isYdp, isKebajikanExco, user, profile } = useAuth();
+  const generatedByName = profile?.full_name || user?.email || 'Exco Kebajikan';
   const now   = new Date();
+  const [activeTab, setActiveTab] = useState<'bulanan' | 'pic'>('bulanan');
   const [monthOffset, setMonthOffset] = useState(0);
   const [data, setData]     = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // ── PIC Report state ─────────────────────────────────────────────────
+  const [picTickets, setPicTickets]         = useState<KebajikanTicket[]>([]);
+  const [picPresets, setPicPresets]         = useState<KebajikanPic[]>([]);
+  const [picLoading, setPicLoading]         = useState(false);
+  const [selectedTicketIds, setSelectedTicketIds] = useState<Set<string>>(new Set());
+  // Filters for PIC tab
+  const [picMonthOffset, setPicMonthOffset] = useState(0);
+  const [picCatFilter, setPicCatFilter]     = useState('ALL');
+  const [picJabatanFilter, setPicJabatanFilter] = useState('ALL');
+  const [picStatusFilter, setPicStatusFilter] = useState('ALL');
+  // PIC report form
+  const [reportPicName, setReportPicName]   = useState('');
+  const [reportPicId, setReportPicId]       = useState('');
+  const [reportPicTitle, setReportPicTitle] = useState('');
 
   const targetMonth = subMonths(now, monthOffset);
   const monthStart  = startOfMonth(targetMonth).toISOString();
@@ -82,8 +103,8 @@ export function KebajikanReportPage() {
   const fetchReport = useCallback(async () => {
     setLoading(true);
     try {
-      // 1. Tickets in the month
-      const { data: tickets } = await supabase
+      // 1. Tickets in the month — filter berdasarkan unit exco
+      let ticketQuery = supabase
         .from('kebajikan_tickets')
         .select(`
           id, ticket_no, category, status, assigned_to, priority,
@@ -91,6 +112,17 @@ export function KebajikanReportPage() {
         `)
         .gte('created_at', monthStart)
         .lte('created_at', monthEnd);
+
+      // Auto-filter: KK Exco → kafeteria sahaja; Kebajikan Exco → semua kecuali kafeteria
+      if (!isSuperAdmin && !isYdp) {
+        if (isKediamanExco) {
+          ticketQuery = ticketQuery.eq('handled_by_unit', 'KK');
+        } else {
+          ticketQuery = ticketQuery.neq('handled_by_unit', 'KK');
+        }
+      }
+
+      const { data: tickets } = await ticketQuery;
 
       if (!tickets) { setLoading(false); return; }
 
@@ -186,11 +218,68 @@ export function KebajikanReportPage() {
     } finally {
       setLoading(false);
     }
-  }, [monthStart, monthEnd]);
+  }, [monthStart, monthEnd, isKediamanExco, isSuperAdmin, isYdp]);
 
   useEffect(() => { fetchReport(); }, [fetchReport]);
 
+  // ── PIC Tab — fetch data ─────────────────────────────────────────────────
+  const picTargetMonth  = subMonths(now, picMonthOffset);
+  const picMonthStart   = startOfMonth(picTargetMonth).toISOString();
+  const picMonthEnd     = endOfMonth(picTargetMonth).toISOString();
+  const picMonthLabel   = format(picTargetMonth, 'MMMM yyyy', { locale: ms });
+
+  const fetchPicTabData = useCallback(async () => {
+    if (activeTab !== 'pic') return;
+    setPicLoading(true);
+    try {
+      let q = supabase
+        .from('kebajikan_tickets')
+        .select('id, ticket_no, title, description, category, status, full_name, matric_no, created_at, handled_by_unit, image_urls')
+        .gte('created_at', picMonthStart)
+        .lte('created_at', picMonthEnd)
+        .neq('handled_by_unit', 'KK') // Laporan PIC hanya untuk tiket Kebajikan
+        .order('created_at', { ascending: false });
+      if (picStatusFilter !== 'ALL') q = q.eq('status', picStatusFilter);
+      if (picCatFilter !== 'ALL') q = q.eq('category', picCatFilter);
+      const [ticketRes, picRes] = await Promise.all([
+        q,
+        supabase.from('kebajikan_pics').select('*').eq('is_active', true).order('jabatan_label'),
+      ]);
+      setPicTickets((ticketRes.data || []) as KebajikanTicket[]);
+      setPicPresets((picRes.data || []) as KebajikanPic[]);
+    } finally {
+      setPicLoading(false);
+    }
+  }, [activeTab, picMonthStart, picMonthEnd, picStatusFilter, picCatFilter]);
+
+  useEffect(() => { fetchPicTabData(); }, [fetchPicTabData]);
+
+  const toggleTicket = (id: string) => setSelectedTicketIds(prev => {
+    const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n;
+  });
+  const selectAll = () => setSelectedTicketIds(new Set(picTickets.map(t => t.id)));
+  const selectEscalated = () => setSelectedTicketIds(new Set(picTickets.filter(t => t.status === 'ESCALATED').map(t => t.id)));
+  const clearAll = () => setSelectedTicketIds(new Set());
+  const selectedTickets = picTickets.filter(t => selectedTicketIds.has(t.id));
+  const selectedPic = picPresets.find(p => p.id === reportPicId);
+
+  const KEBAJIKAN_STATUSES = [
+    { key: 'ALL', label: 'Semua Status' },
+    { key: 'ESCALATED', label: 'Escalated' },
+    { key: 'NEW', label: 'Baru' },
+    { key: 'IN_PROGRESS', label: 'Dalam Proses' },
+    { key: 'WAITING_INFO', label: 'Tunggu Maklumat' },
+    { key: 'RESOLVED', label: 'Selesai' },
+  ];
+  const KEBAJIKAN_CATS = [
+    { key: 'ALL', label: 'Semua Kategori' },
+    ...Object.entries(KEBAJIKAN_CATEGORY_LABELS).map(([key, label]) => ({ key, label })),
+  ];
+
   const generatedAt = format(new Date(), "dd/MM/yyyy 'pukul' HH:mm");
+
+  // Tab switcher: KK Exco hanya nampak Laporan Bulanan
+  const showPicTab = isKebajikanExco || isSuperAdmin || isYdp;
 
   return (
     <div className="p-8 max-w-6xl mx-auto min-h-screen">
@@ -204,7 +293,9 @@ export function KebajikanReportPage() {
               </div>
               <div>
                 <motion.h1 className="text-2xl font-black text-slate-50 tracking-tight">
-                  Laporan Prestasi E-Kebajikan
+                  {isKediamanExco && !isSuperAdmin && !isYdp
+                    ? 'Laporan Prestasi Kafeteria'
+                    : 'Laporan Prestasi E-Kebajikan'}
                 </motion.h1>
                 <p className="text-xs text-slate-500">Edisi: <span className="font-bold text-slate-300 capitalize">{monthLabel}</span> · Dijana: {generatedAt}</p>
               </div>
@@ -254,6 +345,34 @@ export function KebajikanReportPage() {
         </div>
       </div>
 
+      {/* Tab Switcher */}
+      {showPicTab && (
+        <div className="flex items-center gap-1 mb-8 p-1 rounded-2xl border border-white/[0.06] bg-white/[0.02] w-fit">
+          {[
+            { key: 'bulanan', label: 'Laporan Bulanan', icon: BarChart3 },
+            { key: 'pic', label: 'Laporan PIC', icon: ClipboardList },
+          ].map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key as 'bulanan' | 'pic')}
+              className={cn(
+                'flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-200',
+                activeTab === tab.key
+                  ? 'text-slate-950 shadow-lg'
+                  : 'text-slate-400 hover:text-white'
+              )}
+              style={activeTab === tab.key ? { background: TEAL } : {}}
+            >
+              <tab.icon className="w-3.5 h-3.5" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ── TAB: Laporan Bulanan ── */}
+      {activeTab === 'bulanan' && (
+        <>
       {loading ? (
         <div className="flex items-center justify-center py-32">
           <div className="w-12 h-12 rounded-full border-2 border-teal-500/30 border-t-teal-400 animate-spin" />
@@ -495,9 +614,181 @@ export function KebajikanReportPage() {
 
         </div>
       )}
+        </>
+      )} {/* end activeTab === 'bulanan' */}
+
+      {/* ── TAB: Laporan PIC ── */}
+      {activeTab === 'pic' && showPicTab && (
+        <div className="space-y-6">
+
+          {/* PIC Tab Header + Month Nav */}
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h2 className="text-lg font-black text-slate-50">Jana Laporan untuk PIC</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Pilih tiket, tetapkan PIC, jana PDF untuk edaran</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setPicMonthOffset(o => o + 1)} className="w-8 h-8 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 text-slate-400 transition-colors">
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="text-sm font-black text-slate-200 min-w-[130px] text-center capitalize">{picMonthLabel}</span>
+              <button onClick={() => setPicMonthOffset(o => Math.max(0, o - 1))} disabled={picMonthOffset === 0} className="w-8 h-8 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 text-slate-400 transition-colors disabled:opacity-30">
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Filter Bar */}
+          <GlassCard>
+            <div className="flex items-center gap-2 mb-4">
+              <Filter className="w-3.5 h-3.5 text-teal-400" />
+              <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">Penapis Tiket</p>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">Kategori</p>
+                <select value={picCatFilter} onChange={e => { setPicCatFilter(e.target.value); setSelectedTicketIds(new Set()); }}
+                  className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-teal-500/40">
+                  {KEBAJIKAN_CATS.map(c => <option key={c.key} value={c.key} className="bg-slate-800">{c.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">Status</p>
+                <select value={picStatusFilter} onChange={e => { setPicStatusFilter(e.target.value); setSelectedTicketIds(new Set()); }}
+                  className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-teal-500/40">
+                  {KEBAJIKAN_STATUSES.map(s => <option key={s.key} value={s.key} className="bg-slate-800">{s.label}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Quick Select */}
+            <div className="flex items-center gap-2 mt-4 flex-wrap">
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mr-1">Pilih Cepat:</p>
+              <button onClick={selectAll} className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-white/[0.05] hover:bg-white/10 text-slate-300 border border-white/10 transition-all">
+                ☑ Semua ({picTickets.length})
+              </button>
+              <button onClick={selectEscalated} className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all">
+                ⚠ Escalated Sahaja ({picTickets.filter(t => t.status === 'ESCALATED').length})
+              </button>
+              <button onClick={clearAll} className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-white/[0.03] hover:bg-white/5 text-white/30 border border-white/5 transition-all">
+                ☐ Bersih Semua
+              </button>
+              {selectedTicketIds.size > 0 && (
+                <span className="ml-auto text-xs font-black" style={{ color: TEAL }}>{selectedTicketIds.size} tiket dipilih</span>
+              )}
+            </div>
+          </GlassCard>
+
+          {/* Ticket Table */}
+          <GlassCard>
+            {picLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="w-10 h-10 rounded-full border-2 border-teal-500/30 border-t-teal-400 animate-spin" />
+              </div>
+            ) : picTickets.length === 0 ? (
+              <p className="text-center text-sm text-white/30 py-12">Tiada tiket untuk bulan dan penapis ini.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-white/5">
+                      <th className="pb-3 text-left w-8"><input type="checkbox" checked={selectedTicketIds.size === picTickets.length && picTickets.length > 0} onChange={e => e.target.checked ? selectAll() : clearAll()} className="accent-teal-400 w-3.5 h-3.5" /></th>
+                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">No. Tiket</th>
+                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">Tarikh</th>
+                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">Kategori</th>
+                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">Tajuk</th>
+                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.03]">
+                    {picTickets.map(t => (
+                      <tr key={t.id} onClick={() => toggleTicket(t.id)} className={cn('cursor-pointer transition-colors', selectedTicketIds.has(t.id) ? 'bg-teal-500/5' : 'hover:bg-white/[0.02]')}>
+                        <td className="py-3"><input type="checkbox" checked={selectedTicketIds.has(t.id)} onChange={() => toggleTicket(t.id)} onClick={e => e.stopPropagation()} className="accent-teal-400 w-3.5 h-3.5" /></td>
+                        <td className="py-3 font-black text-teal-400/80">{t.ticket_no}</td>
+                        <td className="py-3 text-white/50">{format(new Date(t.created_at), 'dd/MM/yyyy')}</td>
+                        <td className="py-3 text-white/60">{KEBAJIKAN_CATEGORY_LABELS[t.category as KebajikanTicketCategory] || t.category}</td>
+                        <td className="py-3 text-white/80 max-w-[200px] truncate">{t.title}</td>
+                        <td className="py-3">
+                          <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider', t.status === 'ESCALATED' ? 'bg-red-500/15 text-red-400' : t.status === 'RESOLVED' ? 'bg-green-500/15 text-green-400' : t.status === 'NEW' ? 'bg-teal-500/15 text-teal-400' : 'bg-white/5 text-white/40')}>
+                            {t.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </GlassCard>
+
+          {/* Report Generation Panel */}
+          {selectedTicketIds.size > 0 && (
+            <GlassCard>
+              <div className="flex items-center gap-2 mb-5">
+                <UserCheck className="w-4 h-4" style={{ color: TEAL }} />
+                <p className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-400">Jana Laporan</p>
+                <span className="ml-auto text-xs font-black" style={{ color: TEAL }}>{selectedTickets.length} tiket dipilih</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">Pilih Preset PIC</p>
+                  <select value={reportPicId} onChange={e => {
+                    setReportPicId(e.target.value);
+                    const found = picPresets.find(p => p.id === e.target.value);
+                    if (found) { setReportPicName(found.pic_name); setReportPicTitle(found.pic_title || ''); }
+                    else { setReportPicName(''); setReportPicTitle(''); }
+                  }} className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-teal-500/40">
+                    <option value="" className="bg-slate-800">— Pilih atau taip manual —</option>
+                    {picPresets.map(p => <option key={p.id} value={p.id} className="bg-slate-800">{p.jabatan_label} — {p.pic_name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">Nama PIC</p>
+                  <input value={reportPicName} onChange={e => setReportPicName(e.target.value)} placeholder="Nama PIC..."
+                    className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-white/[0.04] border border-white/10 text-white placeholder:text-white/30 focus:border-teal-500/40 focus:outline-none" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">Jawatan PIC</p>
+                  <input value={reportPicTitle} onChange={e => setReportPicTitle(e.target.value)} placeholder="cth: Ketua Jabatan JKM..."
+                    className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-white/[0.04] border border-white/10 text-white placeholder:text-white/30 focus:border-teal-500/40 focus:outline-none" />
+                </div>
+              </div>
+              <PDFDownloadLink
+                document={
+                  <KebajikanPicReportPDF
+                    picName={reportPicName}
+                    picTitle={reportPicTitle}
+                    jabatanLabel={picPresets.find(p => p.id === reportPicId)?.jabatan_label || reportPicName}
+                    picEmail={picPresets.find(p => p.id === reportPicId)?.pic_email || undefined}
+                    picPhone={picPresets.find(p => p.id === reportPicId)?.pic_phone || undefined}
+                    tickets={selectedTickets as PicReportTicket[]}
+                    monthLabel={picMonthLabel}
+                    generatedAt={generatedAt}
+                    generatedBy={generatedByName}
+                  />
+                }
+                fileName={`Laporan_PIC_${reportPicName.replace(/\s+/g,'_') || 'PIC'}_${picMonthLabel.replace(' ','_')}.pdf`}
+                className={cn(
+                  'flex items-center justify-center gap-2 w-full h-10 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:brightness-110',
+                  !reportPicName.trim() && 'opacity-40 pointer-events-none'
+                )}
+                style={{ background: TEAL, color: '#0f172a' }}
+              >
+                {({ loading: pdfLoading }) => (
+                  <><FileDown className={cn('w-4 h-4', pdfLoading && 'animate-bounce')} />{pdfLoading ? 'Menjana PDF...' : `Jana & Muat Turun PDF (${selectedTickets.length} tiket)`}</>
+                )}
+              </PDFDownloadLink>
+              {!reportPicName.trim() && <p className="text-[10px] text-center text-white/25 mt-2">Sila masukkan nama PIC dahulu</p>}
+            </GlassCard>
+          )}
+
+        </div>
+      )} {/* end activeTab === 'pic' */}
+
     </div>
   );
 }
+
 
 function hexStr(hex: string) {
   const r = parseInt(hex.slice(1, 3), 16);

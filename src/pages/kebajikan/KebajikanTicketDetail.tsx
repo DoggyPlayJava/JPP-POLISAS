@@ -14,6 +14,7 @@ import { sendNotificationToUser } from '@/lib/notifications';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   KebajikanTicket, KebajikanTicketComment, KebajikanStaffAssignment,
+  KebajikanPic, KebajikanEscalationAction,
   KEBAJIKAN_STATUS_LABELS, KEBAJIKAN_STATUS_COLORS,
   KEBAJIKAN_CATEGORY_LABELS, KEBAJIKAN_PRIORITY_LABELS,
   KEBAJIKAN_PRIORITY_COLORS, KEBAJIKAN_THEME_COLOR, KebajikanTicketStatus,
@@ -39,15 +40,19 @@ const STATUSES: { key: KebajikanTicketStatus; label: string }[] = [
 export function KebajikanTicketDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, profile, isKebajikanExco, isSuperAdmin, isUnitKebajikanStaff } = useAuth();
+  const { user, profile, isKebajikanExco, isSuperAdmin, isUnitKebajikanStaff, isKediamanExco } = useAuth();
 
-  const isStaff = isKebajikanExco || isSuperAdmin;
-
-  const [ticket, setTicket]             = useState<KebajikanTicket | null>(null);
+  // isStaff dikira selepas ticket dimuatkan untuk KK Exco — lihat computed value di bawah
+  const [ticket, setTicket] = useState<KebajikanTicket | null>(null);
   const [comments, setComments]         = useState<KebajikanTicketComment[]>([]);
   const [staffList, setStaffList]       = useState<KebajikanStaffAssignment[]>([]);
   const [loading, setLoading]           = useState(true);
   const bottomRef                       = useRef<HTMLDivElement>(null);
+
+  // isStaff: Exco Kebajikan + Super Admin boleh urus semua tiket.
+  // Exco KK boleh urus tiket kafeteria (handled_by_unit === 'KK') sahaja.
+  const isKKTicket = ticket?.handled_by_unit === 'KK';
+  const isStaff = isKebajikanExco || isSuperAdmin || (isKediamanExco && isKKTicket);
 
   const [newComment, setNewComment]     = useState('');
   const [isInternal, setIsInternal]     = useState(false);
@@ -60,18 +65,32 @@ export function KebajikanTicketDetail() {
   const [resolutionNote, setResolutionNote] = useState('');
   const [saving, setSaving]             = useState(false);
 
-  const actorRole = isKebajikanExco || isSuperAdmin ? 'EXCO' : isUnitKebajikanStaff ? 'PEGAWAI' : 'PELAJAR';
+  // ─── Escalation Actions state ──────────────────────────────────────────────
+  const [escalationActions, setEscalationActions] = useState<KebajikanEscalationAction[]>([]);
+  const [picPresets, setPicPresets]               = useState<KebajikanPic[]>([]);
+  const [escActionText, setEscActionText]         = useState('');
+  const [escPicId, setEscPicId]                   = useState('');
+  const [escPicManual, setEscPicManual]           = useState('');
+  const [escSaving, setEscSaving]                 = useState(false);
+
+  const actorRole = isKebajikanExco || isSuperAdmin ? 'EXCO' : (isKediamanExco && isKKTicket) ? 'EXCO' : isUnitKebajikanStaff ? 'PEGAWAI' : 'PELAJAR';
 
   const fetchAll = useCallback(async () => {
     if (!id) return;
-    const [tRes, cRes, sRes] = await Promise.all([
+    const [tRes, cRes, sRes, eaRes, picRes] = await Promise.all([
       supabase.from('kebajikan_tickets').select('*, assignee:assigned_to(id,full_name), delegate:delegated_to(id,full_name)').eq('id', id).single(),
       supabase.from('kebajikan_ticket_comments').select('*').eq('ticket_id', id).order('created_at'),
       isStaff ? supabase.from('kebajikan_staff_assignments').select('*, staff:staff_user_id(id,full_name,email)').eq('is_active', true) : Promise.resolve({ data: [] }),
+      // Escalation actions untuk tiket ini
+      supabase.from('kebajikan_escalation_actions').select('*, pic:pic_id(id,pic_name,jabatan_label,pic_title), recorder:recorded_by(id,full_name)').eq('ticket_id', id).order('recorded_at'),
+      // PIC presets aktif
+      supabase.from('kebajikan_pics').select('*').eq('is_active', true).order('jabatan_label'),
     ]);
     if (tRes.data)  setTicket(tRes.data as KebajikanTicket);
     if (cRes.data)  setComments(cRes.data as KebajikanTicketComment[]);
     if (sRes.data)  setStaffList(sRes.data as KebajikanStaffAssignment[]);
+    if (eaRes.data)  setEscalationActions(eaRes.data as KebajikanEscalationAction[]);
+    if (picRes.data) setPicPresets(picRes.data as KebajikanPic[]);
     setLoading(false);
   }, [id, isStaff]);
 
@@ -460,6 +479,40 @@ export function KebajikanTicketDetail() {
               </Section>
             )}
 
+            {/* Panel Tindakan Escalated — hanya untuk Exco Kebajikan & Super Admin, tiket ESCALATED */}
+            {(isKebajikanExco || isSuperAdmin) && ticket.status === 'ESCALATED' && (
+              <EscalationActionPanel
+                ticket={ticket}
+                picPresets={picPresets}
+                actions={escalationActions}
+                actionText={escActionText}
+                picId={escPicId}
+                picManual={escPicManual}
+                saving={escSaving}
+                onActionTextChange={setEscActionText}
+                onPicIdChange={setEscPicId}
+                onPicManualChange={setEscPicManual}
+                onSave={async () => {
+                  if (!escActionText.trim()) return;
+                  setEscSaving(true);
+                  const { error } = await supabase.from('kebajikan_escalation_actions').insert({
+                    ticket_id: ticket.id,
+                    pic_id: escPicId || null,
+                    pic_name_manual: !escPicId ? (escPicManual || null) : null,
+                    action_summary: escActionText.trim(),
+                    recorded_by: user?.id,
+                  });
+                  if (!error) {
+                    setEscActionText('');
+                    setEscPicId('');
+                    setEscPicManual('');
+                    await fetchAll();
+                  }
+                  setEscSaving(false);
+                }}
+              />
+            )}
+
             {/* Pengadu info quick */}
             <Section title="Pengadu">
               <div className="space-y-2">
@@ -498,3 +551,125 @@ function Info({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+// ─── Panel Tindakan Escalated ─────────────────────────────────────────────────
+interface EscalationActionPanelProps {
+  ticket: KebajikanTicket;
+  picPresets: KebajikanPic[];
+  actions: KebajikanEscalationAction[];
+  actionText: string;
+  picId: string;
+  picManual: string;
+  saving: boolean;
+  onActionTextChange: (v: string) => void;
+  onPicIdChange: (v: string) => void;
+  onPicManualChange: (v: string) => void;
+  onSave: () => void;
+}
+
+function EscalationActionPanel({
+  ticket, picPresets, actions,
+  actionText, picId, picManual, saving,
+  onActionTextChange, onPicIdChange, onPicManualChange, onSave,
+}: EscalationActionPanelProps) {
+  const RED = '#EF4444';
+  const selectedPic = picPresets.find(p => p.id === picId);
+
+  return (
+    <div
+      className="relative rounded-3xl border p-6 backdrop-blur-xl shadow-2xl overflow-hidden"
+      style={{ borderColor: 'rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.03)' }}
+    >
+      <div className="absolute top-0 right-0 w-32 h-32 blur-[80px] pointer-events-none" style={{ background: 'rgba(239,68,68,0.06)' }} />
+      <div className="relative z-10">
+        {/* Header */}
+        <div className="flex items-center gap-2 mb-5">
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(239,68,68,0.1)' }}>
+            <AlertTriangle className="w-4 h-4" style={{ color: RED }} />
+          </div>
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.25em]" style={{ color: RED }}>Tindakan Escalated</p>
+            <p className="text-[9px] text-white/30 mt-0.5">Rekod cadangan / tindakan Exco kepada PIC</p>
+          </div>
+        </div>
+
+        {/* PIC Selection */}
+        <div className="mb-3">
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">PIC yang Dihubungi</p>
+          <Select value={picId} onValueChange={onPicIdChange}>
+            <SelectTrigger className="bg-white/[0.04] border-white/10 text-white rounded-xl text-xs h-9 mb-2">
+              <SelectValue placeholder="Pilih dari senarai preset..." />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-800 border-white/10 max-h-48">
+              <SelectItem value="" className="text-white/50 text-xs focus:bg-white/10">— Taip nama manual —</SelectItem>
+              {picPresets.map(p => (
+                <SelectItem key={p.id} value={p.id} className="text-white/80 text-xs focus:bg-white/10">
+                  {p.jabatan_label} — {p.pic_name} {p.pic_title ? `(${p.pic_title})` : ''}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {/* Manual name input if no preset selected */}
+          {!picId && (
+            <input
+              value={picManual}
+              onChange={e => onPicManualChange(e.target.value)}
+              placeholder="Nama PIC (taip manual)..."
+              className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-white/[0.04] border border-white/10 text-white placeholder:text-white/30 focus:border-red-500/40 focus:outline-none transition-all"
+            />
+          )}
+          {selectedPic && (
+            <p className="text-[10px] text-white/40 mt-1.5 px-1">
+              {selectedPic.jabatan_label} · {selectedPic.pic_title || 'PIC'}
+              {selectedPic.pic_email && <> · <span className="text-teal-400/60">{selectedPic.pic_email}</span></>}
+            </p>
+          )}
+        </div>
+
+        {/* Action text */}
+        <div className="mb-4">
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Cadangan / Tindakan Exco</p>
+          <Textarea
+            value={actionText}
+            onChange={e => onActionTextChange(e.target.value)}
+            placeholder="Tuliskan cadangan atau tindakan yang telah/akan diambil berhubung isu ini..."
+            rows={3}
+            className="bg-white/[0.03] border-red-500/20 text-white text-xs rounded-xl resize-none focus:border-red-500/40 focus:ring-red-500/20 focus:ring-1 transition-all"
+          />
+        </div>
+
+        <Button
+          onClick={onSave}
+          disabled={!actionText.trim() || saving}
+          className="w-full h-9 text-xs font-black uppercase tracking-widest rounded-xl text-white shadow-lg transition-all hover:brightness-110"
+          style={{ background: saving ? 'rgba(239,68,68,0.3)' : 'rgba(239,68,68,0.7)' }}
+        >
+          {saving ? <><Loader2 className="w-3 h-3 mr-1.5 animate-spin" /> Menyimpan...</> : '✓ Rekod Tindakan'}
+        </Button>
+
+        {/* Previous actions */}
+        {actions.length > 0 && (
+          <div className="mt-5 pt-4 border-t border-red-500/10">
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-3">Rekod Tindakan Sebelum</p>
+            <div className="space-y-2.5">
+              {actions.map(a => (
+                <div key={a.id} className="rounded-2xl p-3.5" style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.12)' }}>
+                  {(a.pic?.pic_name || a.pic_name_manual) && (
+                    <p className="text-[10px] font-black text-red-400/70 mb-1">
+                      PIC: {a.pic ? `${a.pic.pic_name} (${a.pic.jabatan_label})` : a.pic_name_manual}
+                    </p>
+                  )}
+                  <p className="text-xs text-white/70 leading-relaxed whitespace-pre-wrap">{a.action_summary}</p>
+                  <p className="text-[9px] text-white/25 mt-2">
+                    {a.recorder?.full_name || '—'} · {format(new Date(a.recorded_at), 'dd/MM/yyyy HH:mm')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+

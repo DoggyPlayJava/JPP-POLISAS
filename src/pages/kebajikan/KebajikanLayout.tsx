@@ -8,7 +8,7 @@ import { NotificationBell } from '@/components/ui/NotificationBell';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 export function KebajikanLayout() {
-  const { isLoading, hasKebajikanAccess } = useAuth();
+  const { isLoading, hasKebajikanAccess, hasKebajikanKKAccess } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
 
@@ -34,7 +34,8 @@ export function KebajikanLayout() {
                       location.pathname.startsWith('/kebajikan/staff') || 
                       location.pathname.startsWith('/kebajikan/tetapan');
 
-  if (!hasKebajikanAccess && isExcoRoute) {
+  // Pengguna yang tidak ada akses Kebajikan MAHUPUN KK → redirect ke submit page
+  if (!hasKebajikanAccess && !hasKebajikanKKAccess && isExcoRoute) {
     return <Navigate to="/kebajikan/buat-aduan" replace />;
   }
 

@@ -16,14 +16,14 @@ import { KEBAJIKAN_THEME_COLOR } from '@/types';
 const TEAL = KEBAJIKAN_THEME_COLOR; // #2DD4BF
 
 export function KebajikanSidebar() {
-  const { user, profile, signOut, isSuperAdmin, isKebajikanExco, isUnitKebajikanStaff } = useAuth();
+  const { user, profile, signOut, isSuperAdmin, isKebajikanExco, isUnitKebajikanStaff, isKediamanExco, isYdp } = useAuth();
   const navigate  = useNavigate();
   const unreadCount = useNotificationStore(state => state.unreadCount);
 
   const displayName = profile?.full_name || user?.email?.split('@')[0] || '?';
   const initials    = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
-  const posLabel    = isKebajikanExco ? 'Exco Kebajikan' : isUnitKebajikanStaff ? 'Unit Kebajikan' : isSuperAdmin ? 'Super Admin' : 'Ahli JPP';
-  const isStaffOrAbove = isKebajikanExco || isUnitKebajikanStaff || isSuperAdmin;
+  const posLabel    = isKebajikanExco ? 'Exco Kebajikan' : isKediamanExco ? 'Exco KK (Kafeteria)' : isUnitKebajikanStaff ? 'Unit Kebajikan' : isSuperAdmin ? 'Super Admin' : 'Ahli JPP';
+  const isStaffOrAbove = isKebajikanExco || isKediamanExco || isUnitKebajikanStaff || isSuperAdmin || isYdp;
   const isJpp = isSuperAdmin || profile?.role === 'JPP';
 
   const bg = {
@@ -102,8 +102,10 @@ export function KebajikanSidebar() {
           <>
             <p className="px-4 mb-3 mt-2 text-[10px] font-black uppercase tracking-[0.25em] text-teal-500/50">Pengurusan</p>
             {navItem('/kebajikan', LayoutDashboard, 'Dashboard', true, unreadCount)}
-            {navItem('/kebajikan/tiket', Inbox, 'Senarai Tiket')}
-            {navItem('/kebajikan/laporan', FileBarChart2, 'Laporan Bulanan')}
+            {navItem('/kebajikan/tiket', Inbox, isKediamanExco && !isSuperAdmin && !isYdp ? 'Aduan Kafeteria' : 'Senarai Tiket')}
+            {/* Laporan — KK Exco nampak juga tapi laporan akan difilter oleh peranan */}
+            {navItem('/kebajikan/laporan', FileBarChart2, 'Laporan')}
+            {/* Unit Staff & Tetapan: hanya Exco Kebajikan + Super Admin */}
             {(isKebajikanExco || isSuperAdmin) && navItem('/kebajikan/staff', Users, 'Unit Kebajikan Staff')}
             {(isKebajikanExco || isSuperAdmin) && navItem('/kebajikan/tetapan', Settings, 'Tetapan')}
           </>

@@ -148,6 +148,43 @@ export async function sendNotificationToKebajikanStaff(
   }
 }
 
+// ─── Broadcast ke Exco KK (Kediaman & Kerohanian) ───────────────────────────
+// Digunakan untuk tiket kategori KAFETERIA yang diuruskan oleh unit KK
+export async function sendNotificationToKKExco(
+  payload: NotificationPayload
+): Promise<void> {
+  try {
+    const [excoByUnit, mtAssigned, superAdmins] = await Promise.all([
+      supabase.from('profiles').select('id').eq('role', 'JPP').eq('jpp_unit', 'KK'),
+      supabase.from('jpp_mt_assignments').select('mt_user_id').eq('unit', 'KK'),
+      supabase.from('profiles').select('id').eq('role', 'SUPER_ADMIN_JPP'),
+    ]);
+
+    const userIds = new Set<string>();
+    excoByUnit.data?.forEach(p => userIds.add(p.id));
+    mtAssigned.data?.forEach(m => userIds.add(m.mt_user_id));
+    superAdmins.data?.forEach(a => userIds.add(a.id));
+
+    if (userIds.size === 0) return;
+
+    const rows = Array.from(userIds).map(user_id => ({
+      user_id,
+      ...payload,
+      is_read: false,
+    }));
+
+    const { error } = await supabase.from('notifications').insert(rows);
+    if (error) {
+      console.error('[sendNotificationToKKExco] Error:', error.message);
+      return;
+    }
+
+    Array.from(userIds).forEach(uid => firePush(uid, payload).catch(() => {}));
+  } catch (err) {
+    console.error('[sendNotificationToKKExco] Unexpected error:', err);
+  }
+}
+
 // ─── Broadcast notifikasi PolyMart ke Exco/MT Keusahawanan (laporan produk dll) ─
 export async function sendNotificationToKeusahawananExco(
   payload: NotificationPayload

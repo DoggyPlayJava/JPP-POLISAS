@@ -715,6 +715,7 @@ export interface KebajikanTicket {
   phone: string | null;
   class: string | null;
   category: KebajikanTicketCategory;
+  handled_by_unit: 'KEBAJIKAN' | 'KK'; // Unit exco yang bertanggungjawab
   title: string;
   description: string;
   form_data: Record<string, any>;
@@ -795,6 +796,35 @@ export interface KebajikanTag {
   color: string;
   created_by: string | null;
   created_at: string;
+}
+
+export interface KebajikanPic {
+  id: string;
+  category: string;
+  jabatan_key: string | null;
+  jabatan_label: string;
+  pic_name: string;
+  pic_title: string | null;
+  pic_email: string | null;
+  pic_phone: string | null;
+  pic_user_id: string | null;
+  is_active: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface KebajikanEscalationAction {
+  id: string;
+  ticket_id: string;
+  pic_id: string | null;
+  pic_name_manual: string | null;
+  action_summary: string;
+  recorded_by: string | null;
+  recorded_at: string;
+  // Joined
+  pic?: KebajikanPic;
+  recorder?: { id: string; full_name: string };
 }
 
 export interface KebajikanPublicStats {

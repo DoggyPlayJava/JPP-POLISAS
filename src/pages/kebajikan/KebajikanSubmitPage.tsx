@@ -9,7 +9,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { sendNotificationToKebajikanExco, sendNotificationToUser } from '@/lib/notifications';
+import { sendNotificationToKebajikanExco, sendNotificationToUser, sendNotificationToKKExco } from '@/lib/notifications';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -183,6 +183,12 @@ export function KebajikanSubmitPage() {
 
       if (error) throw error;
 
+      // Tentukan unit yang bertanggungjawab berdasarkan kategori
+      const handled_by_unit = form.category === 'KAFETERIA' ? 'KK' : 'KEBAJIKAN';
+
+      // Kemaskini tiket dengan unit yang betul
+      await supabase.from('kebajikan_tickets').update({ handled_by_unit }).eq('id', data.id);
+
       // Fetch auto-reply settings
       const { data: settings } = await supabase.from('kebajikan_settings').select('auto_reply_message').limit(1).single();
       const rawAutoReply = settings?.auto_reply_message || 'Terima kasih atas aduan anda. No. Tiket anda ialah {ticket_no}. Exco Kebajikan akan menghubungi anda dalam masa yang singkat. Terima kasih.';
@@ -209,17 +215,23 @@ export function KebajikanSubmitPage() {
         actor_name: 'Sistem E-Kebajikan',
       });
 
-      // Notify all Kebajikan Exco about the new ticket
+      // Notify unit Exco yang betul tentang tiket baru
       const ticketTitle = buildTitle();
-      await sendNotificationToKebajikanExco({
+      const newTicketPayload = {
         title:       `Aduan Baru: ${data.ticket_no}`,
         message:     `${form.full_name || 'Pelajar'} telah menghantar aduan baharu — "${ticketTitle}" (${KEBAJIKAN_CATEGORY_LABELS[form.category!]})`,
         type:        'NEW_TICKET',
-        module:      'KEBAJIKAN',
+        module:      'KEBAJIKAN' as const,
         link:        `/kebajikan/tiket/${data.id}`,
         reference_id: data.ticket_no,
         actor_name:  form.full_name || profile?.full_name || 'Pelajar',
-      });
+      };
+
+      if (handled_by_unit === 'KK') {
+        await sendNotificationToKKExco(newTicketPayload);
+      } else {
+        await sendNotificationToKebajikanExco(newTicketPayload);
+      }
 
       setSubmittedNo(data.ticket_no);
       setStep('SUCCESS');

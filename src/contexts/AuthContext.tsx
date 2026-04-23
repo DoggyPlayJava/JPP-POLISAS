@@ -38,9 +38,11 @@ interface AuthContextType {
   hasKediamanAccess: boolean;      // SuperAdmin || Kediaman Exco (jpp_unit='KK') || MT assigned to KK || YDP || Unit Pengurusan Asrama admin
   isKediamanExco: boolean;
   hasKebajikanAccess: boolean;     // SuperAdmin || Kebajikan Exco (jpp_unit='KEBAJIKAN') || YDP || Unit Kebajikan Staff
+  hasKebajikanKKAccess: boolean;   // SuperAdmin || KK Exco || MT assigned to KK || YDP (akses tiket kafeteria)
   isKebajikanExco: boolean;
   isUnitKebajikanStaff: boolean;   // Staff yang diassign dalam kebajikan_staff_assignments
   isJppMember: boolean;
+  isYdp: boolean;                  // YDP / YANG_DIPERTUA — oversee semua unit
   refetchProfile: () => Promise<void>;
   refreshClubs: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -438,10 +440,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isKebajikanExco,
         isUnitKebajikanStaff,
         isJppMember,
+        isYdp,
         hasKppAccess: isSuperAdmin || isKppExco || isMTKpp || isYdp,
         hasKeusahawananAccess: isSuperAdmin || isKeusahawananExco || isMTKeusahawanan || isUnitKeusahawananAdmin || isYdp,
         hasKediamanAccess: isSuperAdmin || isKediamanExco || isMTKediaman || isUnitAsramaAdmin || isYdp,
         hasKebajikanAccess: isSuperAdmin || isKebajikanExco || isUnitKebajikanStaff || isYdp,
+        hasKebajikanKKAccess: isSuperAdmin || isKediamanExco || isMTKediaman || isYdp,
         userClubIds,
         userMemberships,
         primaryClubId,

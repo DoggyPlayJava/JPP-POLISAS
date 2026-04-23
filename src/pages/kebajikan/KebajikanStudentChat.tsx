@@ -15,7 +15,7 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
-import { sendNotificationToKebajikanExco, sendNotificationToUser } from '@/lib/notifications';
+import { sendNotificationToKebajikanExco, sendNotificationToUser, sendNotificationToKKExco } from '@/lib/notifications';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   KebajikanTicket, KebajikanTicketComment,
@@ -203,27 +203,23 @@ export function KebajikanStudentChat() {
         .update({ updated_at: now })
         .eq('id', ticket.id);
         
-      // NOTIFY Exco
+      // NOTIFY Exco berdasarkan unit yang menguruskan tiket ini
+      const msgPayload = {
+        title: `Mesej Baharu daripada Pelajar: ${ticket.ticket_no}`,
+        message: `${profile?.full_name || 'Pelajar'}: "${content.slice(0, 80)}${content.length > 80 ? '...' : ''}"`,
+        type: 'NEW_MESSAGE' as const,
+        module: 'KEBAJIKAN' as const,
+        link: `/kebajikan/aduan/${ticket.id}`,
+        reference_id: ticket.id,
+        actor_name: profile?.full_name || 'Pelajar',
+      };
+
       if (ticket.assigned_to) {
-        await sendNotificationToUser(ticket.assigned_to, {
-          title: `Mesej Baharu daripada Pelajar: ${ticket.ticket_no}`,
-          message: `${profile?.full_name || 'Pelajar'}: "${content.slice(0, 80)}${content.length > 80 ? '...' : ''}"`,
-          type: 'NEW_MESSAGE',
-          module: 'KEBAJIKAN',
-          link: `/kebajikan/aduan/${ticket.id}`,
-          reference_id: ticket.id,
-          actor_name: profile?.full_name || 'Pelajar',
-        });
+        await sendNotificationToUser(ticket.assigned_to, msgPayload);
+      } else if (ticket.handled_by_unit === 'KK') {
+        await sendNotificationToKKExco(msgPayload);
       } else {
-        await sendNotificationToKebajikanExco({
-          title: `Mesej Baharu daripada Pelajar: ${ticket.ticket_no}`,
-          message: `${profile?.full_name || 'Pelajar'}: "${content.slice(0, 80)}${content.length > 80 ? '...' : ''}"`,
-          type: 'NEW_MESSAGE',
-          module: 'KEBAJIKAN',
-          link: `/kebajikan/aduan/${ticket.id}`,
-          reference_id: ticket.id,
-          actor_name: profile?.full_name || 'Pelajar',
-        });
+        await sendNotificationToKebajikanExco(msgPayload);
       }
     }
     setSending(false);
