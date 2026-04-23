@@ -120,6 +120,80 @@ function ReviewModal({ order, onClose }: { order: Order; onClose: (submitted: bo
   );
 }
 
+// ── Order Timeline ─────────────────────────────────────────────────────────────
+function OrderTimeline({ status, cancelReason }: { status: OrderStatus, cancelReason?: string | null }) {
+  if (status === 'CANCELLED') {
+    return (
+      <div className="px-3.5 py-3 border-t border-border/30 bg-rose-500/5">
+        <div className="flex items-center gap-3">
+          <XCircle className="w-6 h-6 text-rose-500" />
+          <div>
+            <p className="text-sm font-black text-rose-500">Dibatalkan</p>
+            {cancelReason && <p className="text-[11px] font-bold text-rose-500/70 mt-0.5">{cancelReason}</p>}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const steps = [
+    { key: 'PENDING',   label: 'Dibuat',   icon: Clock },
+    { key: 'CONFIRMED', label: 'Diproses', icon: Package },
+    { key: 'READY',     label: 'Sedia',    icon: Truck },
+    { key: 'COMPLETED', label: 'Selesai',  icon: Star },
+  ];
+
+  const currentIdx = steps.findIndex(s => s.key === status);
+
+  return (
+    <div className="px-6 py-5 border-t border-border/30 bg-muted/5">
+      <div className="flex items-center justify-between relative">
+        {/* Progress Background Line */}
+        <div className="absolute top-4 left-2 right-2 h-1 bg-muted rounded-full" />
+        
+        {/* Active Progress Line */}
+        <motion.div 
+          className="absolute top-4 left-2 h-1 rounded-full z-0"
+          style={{ background: PM_ACCENT }}
+          initial={{ width: 0 }}
+          animate={{ width: `${Math.max(0, currentIdx) * (100 / (steps.length - 1))}%` }}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
+        />
+
+        {steps.map((step, idx) => {
+          const isActive = idx <= currentIdx;
+          const isCurrent = idx === currentIdx;
+          const StepIcon = step.icon;
+          
+          return (
+            <div key={step.key} className="flex flex-col items-center gap-2 z-10 relative">
+              <motion.div 
+                initial={false}
+                animate={{ 
+                  backgroundColor: isActive ? PM_ACCENT : 'hsl(var(--muted))',
+                  color: isActive ? '#fff' : 'hsl(var(--muted-foreground))',
+                  scale: isCurrent ? 1.15 : 1,
+                  boxShadow: isCurrent ? `0 0 12px ${PM_ACCENT}40` : 'none'
+                }}
+                className="w-8 h-8 rounded-full flex items-center justify-center border-[3px] border-card transition-colors duration-300"
+              >
+                <StepIcon className="w-3.5 h-3.5" />
+              </motion.div>
+              <span 
+                className={`text-[9px] font-black uppercase tracking-wider transition-colors duration-300 ${
+                  isActive ? 'text-foreground' : 'text-muted-foreground/40'
+                }`}
+              >
+                {step.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Order Card ─────────────────────────────────────────────────────────────────
 function OrderCard({ order, onReview }: { order: Order; onReview: (o: Order) => void }) {
   const navigate = useNavigate();
@@ -173,11 +247,11 @@ function OrderCard({ order, onReview }: { order: Order; onReview: (o: Order) => 
               <Clock className="w-2.5 h-2.5" /> {order.pickup_time}
             </p>
           )}
-          {order.cancel_reason && (
-            <p className="text-[10px] text-rose-400 mt-0.5">Sebab: {order.cancel_reason}</p>
-          )}
         </div>
       </div>
+
+      {/* Visual Timeline Tracker */}
+      <OrderTimeline status={order.status} cancelReason={order.cancel_reason} />
 
       {/* Actions */}
       {(order.status === 'CONFIRMED' || order.status === 'READY') && (
@@ -248,6 +322,31 @@ export function PolyMartMyOrders() {
   };
 
   useEffect(() => { loadOrders(); }, [user]);
+
+  // Realtime Auto-Refresh Subscription
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase.channel('polymart-myorders-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'polymart_orders', filter: `buyer_id=eq.${user.id}` },
+        (payload) => {
+          const updated = payload.new as Order;
+          setOrders(prev => prev.map(o => o.id === updated.id ? { ...o, ...updated } : o));
+          
+          if (updated.status === 'READY') {
+            toast.success(`Pesanan ${updated.id.slice(0, 8)} sedia diambil! 🎉`);
+          } else if (updated.status === 'CONFIRMED') {
+            toast.success(`Pesanan sedang diproses! 📦`);
+          } else if (updated.status === 'CANCELLED') {
+            toast.error(`Pesanan dibatalkan.`);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
 
   const filtered = activeTab === 'all' ? orders : orders.filter(o => o.status === activeTab);
   const tabCounts: Record<string, number> = {};

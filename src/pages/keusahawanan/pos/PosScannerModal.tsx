@@ -27,7 +27,6 @@ export function PosScannerModal({ onScan, onClose }: PosScannerModalProps) {
           onScan(decodedText);
         }
       },
-      },
       (error) => { /* ignore normal errors */ }
     ).catch((err) => {
       console.error("QR Scanner failed to start", err);
