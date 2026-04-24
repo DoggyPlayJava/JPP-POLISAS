@@ -334,7 +334,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
     
     // Subscribe to realtime changes on this user's memberships
-    const channel = supabase.channel(`auth_memberships_changes_${user.id}_${Math.random().toString(36).substring(7)}`)
+    const channel = supabase.channel(`auth_memberships_changes_${user.id}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
