@@ -75,11 +75,8 @@ export function KarnivalProvider({ children }: { children: React.ReactNode }) {
       )
       .subscribe();
 
-    const pollInterval = setInterval(fetchSettings, 10000); // 10s poll as fallback
-
     return () => {
       mounted = false;
-      clearInterval(pollInterval);
       supabase.removeChannel(channel);
     };
   }, []);

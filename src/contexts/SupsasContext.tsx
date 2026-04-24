@@ -184,12 +184,8 @@ export function SupsasProvider({ children }: { children: React.ReactNode }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_editions' }, () => fetchAll())
       .subscribe();
 
-    // Poll every 30 seconds as fallback (e.g. iOS PWA WebSocket sleep)
-    const poll = setInterval(fetchAll, 30_000);
-
     return () => {
       supabase.removeChannel(resultsChannel);
-      clearInterval(poll);
     };
   }, [fetchAll]);
 

@@ -17,7 +17,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const { setNotifs, setIsLoading, addNotif, updateNotif } = useNotificationStore();
   
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchNotifs = useCallback(async () => {
     if (!user?.id) return;
@@ -74,21 +73,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     channelRef.current = channel;
   }, [user?.id, addNotif, updateNotif]);
 
-  // Polling fallback
-  const startPolling = useCallback(() => {
-    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-    pollTimerRef.current = setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        fetchNotifs();
-      }
-    }, POLL_INTERVAL_MS);
-  }, [fetchNotifs]);
+
 
   useEffect(() => {
     if (!isAuthenticated || !user?.id) return;
 
     subscribeRealtime();
-    startPolling();
 
     const handleVisible = () => {
       fetchNotifs();
@@ -106,9 +96,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       window.removeEventListener('pageshow', handleVisible);
       window.removeEventListener('focus', handleVisible);
       if (channelRef.current) supabase.removeChannel(channelRef.current);
-      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
     };
-  }, [isAuthenticated, user?.id, subscribeRealtime, startPolling, fetchNotifs]);
+  }, [isAuthenticated, user?.id, subscribeRealtime, fetchNotifs]);
 
   // Render children normally, no context provider wrapper
   return <>{children}</>;
