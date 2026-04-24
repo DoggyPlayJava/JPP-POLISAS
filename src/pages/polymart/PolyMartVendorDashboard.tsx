@@ -116,7 +116,7 @@ function VendorOrderCard({ order, onUpdate }: { order: VendorOrder; onUpdate: ()
 
           // WhatsApp link for vendor to contact buyer (if applicable)
           if (newStatus === 'CONFIRMED' && order.share_phone && order.buyer?.phone) {
-            const phone = order.buyer.phone.replace(/[^0-9]/g, '');
+            const phone = order.buyer.phone.replace(/\D/g, '').replace(/^0/, '60');
             const waMsg = encodeURIComponent(`Hai ${order.buyer.full_name}! Pesanan anda di PolyMart sudah kami sahkan 🎉\n\n📦 ${order.quantity}x ${order.business_products?.name}\n⏰ Ambil: ${order.pickup_time ?? 'TBA'}\n\nTerima kasih!`);
             const waUrl = `https://wa.me/${phone}?text=${waMsg}`;
             // Open WhatsApp in new tab for vendor
@@ -459,7 +459,17 @@ export function PolyMartVendorDashboard() {
 
   const [orders,   setOrders]   = useState<VendorOrder[]>([]);
   const [loading,  setLoading]  = useState(true);
-  const [activeTab, setActiveTab] = useState<OrderStatus | 'active' | 'ads'>('active');
+  const [activeTab, setActiveTab] = useState<OrderStatus | 'active' | 'all' | 'ads'>('active');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('order');
+    if (orderId) {
+      setSearchQuery(orderId);
+      setActiveTab('all');
+    }
+  }, []);
 
   const loadOrders = async () => {
     if (!user) return;
@@ -498,6 +508,7 @@ export function PolyMartVendorDashboard() {
   const totalRev  = orders.filter(o => o.status === 'COMPLETED').reduce((s, o) => s + (o.total_price ?? o.unit_price * o.quantity), 0);
 
   const tabMap: Record<string, VendorOrder[]> = {
+    all:       orders,
     active:    active,
     PENDING:   pending,
     CONFIRMED: orders.filter(o => o.status === 'CONFIRMED'),
@@ -505,7 +516,16 @@ export function PolyMartVendorDashboard() {
     COMPLETED: orders.filter(o => o.status === 'COMPLETED'),
     CANCELLED: orders.filter(o => o.status === 'CANCELLED'),
   };
-  const displayed = tabMap[activeTab] ?? active;
+  
+  let displayed = tabMap[activeTab] ?? active;
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase();
+    displayed = displayed.filter(o => 
+      o.id.toLowerCase().includes(q) || 
+      o.buyer?.full_name?.toLowerCase().includes(q) ||
+      o.buyer?.matric_no?.toLowerCase().includes(q)
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -539,6 +559,7 @@ export function PolyMartVendorDashboard() {
       {/* Tab filter */}
       <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1 border-b border-border/30 mb-2">
         {[
+          { key: 'all', label: 'Semua', emoji: '📋' },
           { key: 'active', label: 'Aktif', emoji: '🔥' },
           { key: 'PENDING', label: 'Menunggu', emoji: '⏳' },
           { key: 'CONFIRMED', label: 'Disahkan', emoji: '✅' },
@@ -565,6 +586,16 @@ export function PolyMartVendorDashboard() {
           </button>
         ))}
       </div>
+
+      {searchQuery && (
+        <div className="flex items-center justify-between px-4 py-2 bg-muted/30 border border-border/50 rounded-xl">
+          <p className="text-xs font-bold text-muted-foreground">Pencarian QR: {searchQuery.slice(0,8)}...</p>
+          <button onClick={() => { setSearchQuery(''); window.history.replaceState({}, '', '/polymart/vendor'); }} 
+            className="text-[10px] font-black text-rose-500 hover:underline">
+            Kosongkan
+          </button>
+        </div>
+      )}
 
       {activeTab === 'ads' ? (
         <VendorAdsTab />

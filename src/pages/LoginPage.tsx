@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'react-hot-toast';
-import { Mail, Lock, ArrowRight, User, Hash, Building2, ChevronLeft, Sparkles, Crown } from 'lucide-react';
+import { Mail, Lock, ArrowRight, User, Hash, Building2, ChevronLeft, ChevronDown, Sparkles, Crown } from 'lucide-react';
 import { UserRole, JABATAN_LIST, JabatanValue, ALL_CLUBS, ROLE_LABELS, getAkademikClubId } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -27,6 +27,7 @@ export function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [showManualRegister, setShowManualRegister] = useState(false);
 
   // Register flow state
   const [step, setStep] = useState<Step>(1);
@@ -41,7 +42,7 @@ export function LoginPage() {
   const resetForm = () => {
     setStep(1); setRegisterMode('student'); setJabatan(''); setLeaderRole('CLUB_PRESIDENT');
     setStaffRole('STAFF'); setLeaderClubId(''); setFullName(''); setMatricNo(''); setEmail(''); setPassword('');
-    setPhone(''); setPasscode('');
+    setPhone(''); setPasscode(''); setShowManualRegister(false);
   };
 
   // Simpan redirect URL ke sessionStorage serta-merta bila login page dimuatkan.
@@ -273,84 +274,120 @@ export function LoginPage() {
                     onSubmit={(e) => { e.preventDefault(); if (!fullName.trim() || !email || !password || !matricNo.trim() || !phone.trim()) { toast.error('Sila lengkapkan semua maklumat.'); return; } setStep(2); }}>
 
                     {/* Toggle: Pelajar atau Staf */}
-                    <div className="grid grid-cols-2 gap-1.5 p-1.5 bg-muted/40 rounded-xl mb-2">
-                      <button type="button" onClick={() => setRegisterMode(registerMode === 'leader' ? 'leader' : 'student')}
+                    <div className="grid grid-cols-2 gap-1.5 p-1.5 bg-muted/40 rounded-xl mb-4">
+                      <button type="button" onClick={() => { setRegisterMode(registerMode === 'leader' ? 'leader' : 'student'); setShowManualRegister(false); }}
                         className={cn("flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
                           (registerMode === 'student' || registerMode === 'leader') ? "bg-card shadow-md text-foreground" : "text-muted-foreground hover:text-foreground")}>
                         <Sparkles className="w-3.5 h-3.5" /> Pelajar
                       </button>
-                      <button type="button" onClick={() => setRegisterMode('staff')}
+                      <button type="button" onClick={() => { setRegisterMode('staff'); setShowManualRegister(true); }}
                         className={cn("flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
                           registerMode === 'staff' ? "bg-card shadow-md text-emerald-600" : "text-muted-foreground hover:text-emerald-600")}>
                         <Building2 className="w-3.5 h-3.5" /> Staf
                       </button>
                     </div>
 
-                    {/* Nama Penuh */}
-                    <div className="space-y-1.5">
-                      <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Nama Penuh</Label>
-                      <div className="relative group">
-                        <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
-                        <Input placeholder="NAMA PENUH SEPERTI DALAM IC" required value={fullName}
-                          onChange={e => setFullName(e.target.value.toUpperCase())}
-                          className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-medium uppercase" />
+                    {registerMode !== 'staff' && (
+                      <div className="space-y-4 mb-2">
+                        {/* Google Register Button */}
+                        <Button type="button" onClick={handleGoogleLogin} 
+                          className="w-full h-12 rounded-xl border border-border/60 bg-card hover:bg-muted/50 text-foreground font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 transition-colors shadow-sm">
+                          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5 bg-white rounded-full p-0.5" />
+                          Daftar bersama Google
+                        </Button>
+                        
+                        <div className="relative pt-2">
+                          <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-border/60"></div>
+                          </div>
+                          <div className="relative flex justify-center">
+                            <button type="button" onClick={() => setShowManualRegister(!showManualRegister)}
+                              className="bg-card/80 backdrop-blur-2xl px-4 py-1.5 rounded-full border border-border/60 text-[10px] uppercase font-black tracking-widest text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors">
+                              ATAU DAFTAR MANUAL
+                              <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-300", showManualRegister && "rotate-180")} />
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
-                    {/* No. Matrik / No Pekerja */}
-                    <div className="space-y-1.5">
-                      <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">
-                        {registerMode === 'staff' ? 'No. Pekerja (Staf ID)' : 'No. Matrik'}
-                      </Label>
-                      <div className="relative group">
-                        <Hash className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
-                        <Input 
-                          placeholder={registerMode === 'staff' ? "CTH: S123456" : "CTH: 02DKM1234"} 
-                          required 
-                          pattern={registerMode === 'staff' ? undefined : "^02.*"}
-                          value={matricNo} 
-                          onChange={e => setMatricNo(e.target.value.toUpperCase())}
-                          className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-medium uppercase" 
-                        />
-                      </div>
-                    </div>
+                    <AnimatePresence>
+                      {showManualRegister && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-4 overflow-hidden pt-2"
+                        >
 
-                    {/* Email */}
-                    <div className="space-y-1.5">
-                      <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Emel</Label>
-                      <div className="relative group">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
-                        <Input type="email" placeholder="emel@gmail.com" required value={email}
-                          onChange={e => setEmail(e.target.value)}
-                          className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-medium" />
-                      </div>
-                    </div>
+                          {/* Nama Penuh */}
+                          <div className="space-y-1.5">
+                            <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Nama Penuh</Label>
+                            <div className="relative group">
+                              <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
+                              <Input placeholder="NAMA PENUH SEPERTI DALAM IC" required value={fullName}
+                                onChange={e => setFullName(e.target.value.toUpperCase())}
+                                className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-medium uppercase" />
+                            </div>
+                          </div>
 
-                    {/* No Telefon */}
-                    <div className="space-y-1.5">
-                      <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">No Telefon Bimbit</Label>
-                      <div className="relative group">
-                        <Input placeholder="CTH: 0123456789" required value={phone} onChange={e => setPhone(e.target.value)}
-                          className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-medium" />
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-accent transition-colors">📱</span>
-                      </div>
-                    </div>
+                          {/* No. Matrik / No Pekerja */}
+                          <div className="space-y-1.5">
+                            <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">
+                              {registerMode === 'staff' ? 'No. Pekerja (Staf ID)' : 'No. Matrik'}
+                            </Label>
+                            <div className="relative group">
+                              <Hash className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
+                              <Input 
+                                placeholder={registerMode === 'staff' ? "CTH: S123456" : "CTH: 02DKM1234"} 
+                                required 
+                                pattern={registerMode === 'staff' ? undefined : "^02.*"}
+                                value={matricNo} 
+                                onChange={e => setMatricNo(e.target.value.toUpperCase())}
+                                className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-medium uppercase" 
+                              />
+                            </div>
+                          </div>
 
-                    {/* Password */}
-                    <div className="space-y-1.5">
-                      <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Kata Laluan</Label>
-                      <div className="relative group">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
-                        <Input type="password" required value={password} onChange={e => setPassword(e.target.value)}
-                          className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-bold tracking-[0.3em]" />
-                      </div>
-                    </div>
+                          {/* Email */}
+                          <div className="space-y-1.5">
+                            <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Emel</Label>
+                            <div className="relative group">
+                              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
+                              <Input type="email" placeholder="emel@gmail.com" required value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-medium" />
+                            </div>
+                          </div>
 
-                    <Button type="submit" className="w-full h-12 rounded-xl font-black text-xs uppercase tracking-[0.2em] bg-primary text-primary-foreground shadow-xl shadow-primary/20 mt-2 group relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-r from-accent/0 via-accent/15 to-accent/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                      <span className="relative z-10">Seterusnya</span>
-                      <ArrowRight className="ml-2 h-4 w-4 relative z-10 transition-transform group-hover:translate-x-1" />
-                    </Button>
+                          {/* No Telefon */}
+                          <div className="space-y-1.5">
+                            <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">No Telefon Bimbit</Label>
+                            <div className="relative group">
+                              <Input placeholder="CTH: 0123456789" required value={phone} onChange={e => setPhone(e.target.value)}
+                                className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-medium" />
+                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-accent transition-colors">📱</span>
+                            </div>
+                          </div>
+
+                          {/* Password */}
+                          <div className="space-y-1.5">
+                            <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Kata Laluan</Label>
+                            <div className="relative group">
+                              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
+                              <Input type="password" required value={password} onChange={e => setPassword(e.target.value)}
+                                className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-bold tracking-[0.3em]" />
+                            </div>
+                          </div>
+
+                          <Button type="submit" className="w-full h-12 rounded-xl font-black text-xs uppercase tracking-[0.2em] bg-primary text-primary-foreground shadow-xl shadow-primary/20 mt-2 group relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-r from-accent/0 via-accent/15 to-accent/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                            <span className="relative z-10">Seterusnya</span>
+                            <ArrowRight className="ml-2 h-4 w-4 relative z-10 transition-transform group-hover:translate-x-1" />
+                          </Button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </motion.form>
                 ) : (
                   <motion.form key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}

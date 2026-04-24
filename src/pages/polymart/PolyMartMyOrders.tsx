@@ -257,7 +257,7 @@ function OrderCard({ order, onReview }: { order: Order; onReview: (o: Order) => 
       {(order.status === 'CONFIRMED' || order.status === 'READY') && (
         <div className="px-3.5 pb-3.5 space-y-3">
           <div className="bg-white p-4 rounded-2xl flex flex-col items-center justify-center border border-border/50 shadow-sm mx-auto max-w-[200px]">
-            <QRCode value={order.id} size={120} />
+            <QRCode value={`${window.location.origin}/polymart/vendor?order=${order.id}`} size={120} />
             <p className="text-[10px] text-center text-muted-foreground font-bold mt-3 leading-tight">
               Tunjuk QR ini kepada vendor semasa ambil pesanan
             </p>
