@@ -165,12 +165,44 @@ export function KebajikanTicketDetail() {
     });
 
     if (!isInternal) {
+      // AUTOMATION: Auto-assign first-time staff public replier
+      if (!ticket.assigned_to && actorRole !== 'PELAJAR') {
+        await supabase.from('kebajikan_tickets').update({
+          status: 'WAITING_INFO',
+          assigned_to: user.id
+        }).eq('id', ticket.id);
+        
+        await supabase.from('kebajikan_ticket_status_log').insert({
+          ticket_id: ticket.id,
+          actor_id: user.id,
+          actor_name: profile?.full_name,
+          actor_role: actorRole,
+          old_status: ticket.status,
+          new_status: 'WAITING_INFO',
+          note: 'Auto-assign melalui perbualan awam pertama'
+        });
+        
+        await sendAssignmentEmail(profile?.full_name || 'Exco Kebajikan');
+        
+        if (ticket.submitter_id) {
+          await sendNotificationToUser(ticket.submitter_id, {
+            title: \`Status Aduan Dikemaskini — \${ticket.ticket_no}\`,
+            message: \`Status aduan anda telah dikemaskini kepada "Menunggu Maklumat".\`,
+            type: 'STATUS_UPDATE',
+            module: 'KEBAJIKAN',
+            link: \`/kebajikan/aduan/\${ticket.id}\`,
+            reference_id: ticket.id,
+            actor_name: profile?.full_name,
+          });
+        }
+      }
+
       const msgPayload = {
-        title:       `Mesej Baru — ${ticket.ticket_no}`,
-        message:     `${profile?.full_name || 'Exco Kebajikan'}: "${newComment.slice(0, 80)}${newComment.length > 80 ? '...' : ''}"`,
+        title:       \`Mesej Baru — \${ticket.ticket_no}\`,
+        message:     \`\${profile?.full_name || 'Exco Kebajikan'}: "\${newComment.slice(0, 80)}\${newComment.length > 80 ? '...' : ''}"\`,
         type:        'NEW_MESSAGE' as const,
         module:      'KEBAJIKAN' as const,
-        link:        `/kebajikan/aduan/${ticket.id}`,
+        link:        \`/kebajikan/aduan/\${ticket.id}\`,
         reference_id: ticket.id,
         actor_name:  profile?.full_name || 'Exco Kebajikan',
       };
