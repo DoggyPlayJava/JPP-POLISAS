@@ -268,7 +268,8 @@ export function KebajikanSubmitPage() {
             const { data: excos } = await supabase
               .from('profiles')
               .select('email')
-              .eq('role', 'EXCO_KEBAJIKAN');
+              .eq('role', 'JPP')
+              .eq('jpp_unit', 'KEBAJIKAN');
 
             const emails = excos?.map(e => e.email).filter(Boolean) as string[];
 

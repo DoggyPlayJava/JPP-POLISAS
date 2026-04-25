@@ -28,7 +28,8 @@ Deno.serve(async (_req: Request) => {
       const { data: excos } = await supabase
         .from("profiles")
         .select("email")
-        .eq("role", "EXCO_KEBAJIKAN");
+        .eq("role", "JPP")
+        .eq("jpp_unit", "KEBAJIKAN");
       excosEmails = (excos?.map((e: any) => e.email).filter(Boolean) as string[]) || [];
     }
 
