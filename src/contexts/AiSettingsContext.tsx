@@ -33,44 +33,9 @@ export function AiSettingsProvider({ children }: { children: React.ReactNode }) 
     };
     fetchSettings();
 
-    // Single realtime subscription for the entire app
-    const channel = supabase
-      .channel('global_ai_settings')
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'system_settings' },
-        (payload: any) => {
-          if (!mounted) return;
-          const val = payload.new.value === true || String(payload.new.value).toLowerCase() === 'true';
-          if (payload.new.key === 'allow_ai_chat') {
-            setSettings(prev => ({ ...prev, allowAiChat: val }));
-          }
-          if (payload.new.key === 'allow_ai_budget') {
-            setSettings(prev => ({ ...prev, allowAiBudget: val }));
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'system_settings' },
-        (payload: any) => {
-          if (!mounted) return;
-          const val = payload.new.value === true || String(payload.new.value).toLowerCase() === 'true';
-          if (payload.new.key === 'allow_ai_chat') {
-            setSettings(prev => ({ ...prev, allowAiChat: val }));
-          }
-          if (payload.new.key === 'allow_ai_budget') {
-            setSettings(prev => ({ ...prev, allowAiBudget: val }));
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log('[AiSettings] Realtime status:', status);
-      });
-
+    // Realtime subscription removed to save connections during high traffic
     return () => {
       mounted = false;
-      supabase.removeChannel(channel);
     };
   }, []);
 

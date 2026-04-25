@@ -53,7 +53,7 @@ AS $$
 DECLARE 
     deleted_count integer;
 BEGIN
-    -- Delete account pengguna tidak aktif > 6 bulan (termasuk auth.users)
+    -- Delete account pengguna tidak aktif > 12 bulan (termasuk auth.users)
     -- Returns the number of rows deleted.
     WITH deleted AS (
         DELETE FROM auth.users 
@@ -61,7 +61,7 @@ BEGIN
             SELECT p.id FROM public.profiles p
             LEFT JOIN auth.users u ON u.id = p.id
             WHERE 
-                (u.last_sign_in_at < NOW() - INTERVAL '6 months' OR (u.last_sign_in_at IS NULL AND u.created_at < NOW() - INTERVAL '6 months'))
+                (u.last_sign_in_at < NOW() - INTERVAL '12 months' OR (u.last_sign_in_at IS NULL AND u.created_at < NOW() - INTERVAL '12 months'))
                 AND p.email NOT ILIKE '%admin%'
                 AND p.email != 'jpp@polisas.edu.my'
         )
@@ -71,7 +71,7 @@ BEGIN
 
     IF deleted_count > 0 THEN
         INSERT INTO public.club_logs (action_type, actor_name, description)
-        VALUES ('SYSTEM_MAINTENANCE', 'SISTEM (JPP)', format('Pembersihan %s akaun tidak aktif melebihi 6 bulan telah dilakukan.', deleted_count));
+        VALUES ('SYSTEM_MAINTENANCE', 'SISTEM (JPP)', format('Pembersihan %s akaun tidak aktif melebihi 12 bulan telah dilakukan.', deleted_count));
     END IF;
 
     RETURN deleted_count;

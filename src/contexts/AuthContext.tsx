@@ -80,17 +80,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // ── 1. FUNGSI TARIK PROFIL ──
   const fetchProfile = useCallback(async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      // OPTIMIZATION: Lakukan parallel fetching untuk profile dan semua memberships serentak
+      const [profileRes, membershipsRes] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', userId).single(),
+        supabase.from('student_club_memberships').select('id, club_id, role, is_primary, account_status').eq('user_id', userId)
+      ]);
 
-      // Simpan rujukan ke data profil untuk fallback
-      const profileData = data as Profile;
+      const profileData = profileRes.data as Profile;
 
-      if (error) {
-        console.error('[AuthContext] fetchProfile error:', error.message);
+      if (profileRes.error) {
+        console.error('[AuthContext] fetchProfile error:', profileRes.error.message);
         setProfile(null);
       } else {
         setProfile(profileData);
@@ -104,17 +103,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Tarik semua keahlian dari junction table (multi-kelab) — TERMASUK ROLE
-      const { data: memberships } = await supabase
-        .from('student_club_memberships')
-        .select('club_id, role, is_primary')
-        .eq('user_id', userId)
-        .eq('account_status', 'APPROVED')
-        .order('is_primary', { ascending: false });
+      const allMemberships = membershipsRes.data || [];
+      const approvedMemberships = allMemberships.filter(m => m.account_status === 'APPROVED');
+      
+      // Sort to prioritize is_primary
+      approvedMemberships.sort((a, b) => (a.is_primary === b.is_primary ? 0 : a.is_primary ? -1 : 1));
 
-      if (memberships && memberships.length > 0) {
-        const ids = memberships.map((m: any) => m.club_id);
-        const mData: ClubMembership[] = memberships.map((m: any) => ({
+      if (approvedMemberships.length > 0) {
+        const ids = approvedMemberships.map(m => m.club_id);
+        const mData: ClubMembership[] = approvedMemberships.map(m => ({
           club_id: m.club_id,
           role: m.role,
           is_primary: m.is_primary,
@@ -128,13 +125,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       } else if (profileData?.club_id) {
         // FIX SECURITY LEAK: Before auto-repairing, ensure there isn't already a PENDING/REJECTED request for this club!
-        const { data: existingAll } = await supabase
-          .from('student_club_memberships')
-          .select('id, account_status')
-          .eq('user_id', userId)
-          .eq('club_id', profileData.club_id);
+        const existingAll = allMemberships.filter(m => m.club_id === profileData.club_id);
 
-        if (!existingAll || existingAll.length === 0) {
+        if (existingAll.length === 0) {
           // AUTO-REPAIR ONLY IF TRULY MISSING
           console.log("🛠️ Auto-repairing missing club membership for user...");
           const { error: insErr } = await supabase.from('student_club_memberships').insert({
@@ -179,37 +172,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // ── Run all role/permission checks in PARALLEL for speed ──────────────
+      // OPTIMIZATION: Combine queries to prevent N+1 issues and reduce network roundtrips
       const isJppRole = profileData?.role === 'JPP' || profileData?.role === 'SUPER_ADMIN_JPP';
 
-      const [kppAssign, keusahawananAssign, kediamanAssign,
-             keusahawananAdmin, asramaAdmin, kebajikanStaff] = await Promise.all([
-        // MT assignments — only meaningful for JPP roles
-        isJppRole
-          ? supabase.from('jpp_mt_assignments').select('unit').eq('mt_user_id', userId).eq('unit', 'KPP').maybeSingle()
-          : Promise.resolve({ data: null }),
-        isJppRole
-          ? supabase.from('jpp_mt_assignments').select('unit').eq('mt_user_id', userId).eq('unit', 'KEUSAHAWANAN').maybeSingle()
-          : Promise.resolve({ data: null }),
-        isJppRole
-          ? supabase.from('jpp_mt_assignments').select('unit').eq('mt_user_id', userId).eq('unit', 'KK').maybeSingle()
-          : Promise.resolve({ data: null }),
-        // Unit admin checks — only meaningful for JPP roles
-        isJppRole
-          ? supabase.from('keusahawanan_unit_admins').select('id').eq('user_id', userId).maybeSingle()
-          : Promise.resolve({ data: null }),
-        isJppRole
-          ? supabase.from('asrama_unit_admins').select('id').eq('user_id', userId).maybeSingle()
-          : Promise.resolve({ data: null }),
-        // Kebajikan staff — check for ALL users
-        supabase.from('kebajikan_staff_assignments').select('id').eq('staff_user_id', userId).eq('is_active', true).maybeSingle(),
-      ]);
+      let mtUnits: string[] = [];
+      let isKeuAdmin = false;
+      let isAsramaAdmin = false;
+      let isKebajikanStaff = false;
 
-      setIsMTKpp(!!kppAssign.data);
-      setIsMTKeusahawanan(!!keusahawananAssign.data);
-      setIsMTKediaman(!!kediamanAssign.data);
-      setIsUnitKeusahawananAdmin(!!keusahawananAdmin.data);
-      setIsUnitAsramaAdmin(!!asramaAdmin.data);
-      setIsUnitKebajikanStaff(!!kebajikanStaff.data);
+      // Kebajikan staff check runs for everyone
+      const kebajikanPromise = supabase.from('kebajikan_staff_assignments').select('id').eq('staff_user_id', userId).eq('is_active', true).maybeSingle();
+
+      if (isJppRole) {
+        // Gabungkan 3 queries jpp_mt_assignments kepada 1 query
+        const mtPromise = supabase.from('jpp_mt_assignments').select('unit').eq('mt_user_id', userId);
+        const keuAdminPromise = supabase.from('keusahawanan_unit_admins').select('id').eq('user_id', userId).maybeSingle();
+        const asramaAdminPromise = supabase.from('asrama_unit_admins').select('id').eq('user_id', userId).maybeSingle();
+        
+        const [kebajikanRes, mtRes, keuRes, asramaRes] = await Promise.all([
+          kebajikanPromise, mtPromise, keuAdminPromise, asramaAdminPromise
+        ]);
+        
+        mtUnits = mtRes.data?.map((r: any) => r.unit) || [];
+        isKeuAdmin = !!keuRes.data;
+        isAsramaAdmin = !!asramaRes.data;
+        isKebajikanStaff = !!kebajikanRes.data;
+      } else {
+        const kebajikanRes = await kebajikanPromise;
+        isKebajikanStaff = !!kebajikanRes.data;
+      }
+
+      setIsMTKpp(mtUnits.includes('KPP'));
+      setIsMTKeusahawanan(mtUnits.includes('KEUSAHAWANAN'));
+      setIsMTKediaman(mtUnits.includes('KK'));
+      setIsUnitKeusahawananAdmin(isKeuAdmin);
+      setIsUnitAsramaAdmin(isAsramaAdmin);
+      setIsUnitKebajikanStaff(isKebajikanStaff);
     } catch (err) {
       // Jika junction table belum wujud (sebelum migration), jangan crash
       console.warn('[AuthContext] fetchMemberships: fetch or auto-repair failed', err);
@@ -329,27 +327,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [fetchProfile, refreshClubs]);
 
-  // Real-time listener for multi-role membership changes
+  // Realtime listener for multi-role membership changes REMOVED to save 1,500 connections!
   useEffect(() => {
     if (!user) return;
     
-    // Subscribe to realtime changes on this user's memberships
-    const channel = supabase.channel(`auth_memberships_changes_${user.id}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'student_club_memberships',
-        filter: `user_id=eq.${user.id}`
-      }, (payload) => {
-        console.log("🔄 Realtime: Membership updated for logged in user", payload);
-        fetchProfile(user.id);
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, fetchProfile]);
+    // Instead of realtime, we just fetch on mount/focus which is handled by fetchProfile elsewhere
+    return () => {};
+  }, [user]);
 
   const refetchProfile = async () => {
     if (user) await fetchProfile(user.id);

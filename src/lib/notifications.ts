@@ -87,31 +87,18 @@ export async function sendNotificationToKebajikanExco(
   payload: NotificationPayload
 ): Promise<void> {
   try {
-    // 1. Exco Kebajikan = role JPP + jpp_unit = KEBAJIKAN (sama logik dengan AuthContext)
-    const { data: excoByUnit } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('role', 'JPP')
-      .eq('jpp_unit', 'KEBAJIKAN');
-
-    // 2. Cari dari user_exco_access (kalau ada konfigurasi manual)
-    const { data: excoByAccess } = await supabase
-      .from('user_exco_access')
-      .select('user_id')
-      .eq('exco_module', 'KEBAJIKAN')
-      .eq('is_active', true);
-
-    // 3. Super Admin sentiasa dapat notifikasi (oversight)
-    const { data: superAdmins } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('role', 'SUPER_ADMIN_JPP');
+    // 1-3. Parallel fetch: Exco Kebajikan + manual access + Super Admins
+    const [excoByUnitRes, excoByAccessRes, superAdminsRes] = await Promise.all([
+      supabase.from('profiles').select('id').eq('role', 'JPP').eq('jpp_unit', 'KEBAJIKAN'),
+      supabase.from('user_exco_access').select('user_id').eq('exco_module', 'KEBAJIKAN').eq('is_active', true),
+      supabase.from('profiles').select('id').eq('role', 'SUPER_ADMIN_JPP'),
+    ]);
 
     // Gabungkan dan deduplicate
     const userIds = new Set<string>();
-    excoByUnit?.forEach(p => userIds.add(p.id));
-    excoByAccess?.forEach(e => userIds.add(e.user_id));
-    superAdmins?.forEach(a => userIds.add(a.id));
+    excoByUnitRes.data?.forEach(p => userIds.add(p.id));
+    excoByAccessRes.data?.forEach(e => userIds.add(e.user_id));
+    superAdminsRes.data?.forEach(a => userIds.add(a.id));
 
     if (userIds.size === 0) return;
 

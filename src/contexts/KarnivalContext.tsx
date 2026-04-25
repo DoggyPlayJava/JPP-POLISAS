@@ -46,38 +46,9 @@ export function KarnivalProvider({ children }: { children: React.ReactNode }) {
     };
     fetchSettings();
 
-    // Subscribe to changes
-    const channel = supabase
-      .channel('karnival_settings')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'system_settings' },
-        (payload: any) => {
-          if (!mounted) return;
-          const key = payload.new?.key || payload.old?.key;
-          const val = payload.new?.value === true || String(payload.new?.value).toLowerCase() === 'true';
-
-          if (key === 'show_karnival') {
-            setSettings(prev => ({ ...prev, showKarnival: val }));
-          }
-          if (key === 'karnival_voting_enabled') {
-            setSettings(prev => ({ ...prev, karnivalVotingEnabled: val }));
-          }
-          if (key === 'karnival_registration_open') {
-            setSettings(prev => ({ ...prev, karnivalRegistrationOpen: val }));
-          }
-          
-          // Re-fetch everything if it's a batch change or to be safe
-          if (['show_karnival', 'karnival_voting_enabled', 'karnival_registration_open'].includes(key)) {
-            // fetchSettings(); // Slow, better to rely on payload.new
-          }
-        }
-      )
-      .subscribe();
-
+    // Susbcription removed to save Realtime Connections during high traffic
     return () => {
       mounted = false;
-      supabase.removeChannel(channel);
     };
   }, []);
 

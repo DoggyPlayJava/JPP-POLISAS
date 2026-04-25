@@ -42,35 +42,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     fetchNotifs().finally(() => setIsLoading(false));
   }, [isAuthenticated, user?.id, fetchNotifs, setNotifs, setIsLoading]);
 
-  // Setup Realtime
+  // Setup Realtime REMOVED to save 1,500 connections!
   const subscribeRealtime = useCallback(() => {
-    if (!user?.id) return;
-
-    if (channelRef.current) {
-      supabase.removeChannel(channelRef.current);
-      channelRef.current = null;
-    }
-
-    const channel = supabase
-      .channel(`notifs_${user.id}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
-        (payload) => {
-          console.log('[Zustand] New notification received ✅', payload.new);
-          addNotif(payload.new as AppNotification);
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
-        (payload) => {
-          updateNotif(payload.new as AppNotification);
-        }
-      )
-      .subscribe();
-
-    channelRef.current = channel;
+    // Instead of realtime, rely on the visibilitychange / focus events below
   }, [user?.id, addNotif, updateNotif]);
 
 
