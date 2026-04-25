@@ -78,27 +78,34 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     if (!isAuthenticated || !user?.id) return;
 
+    // Subscribe sekali sahaja bila user authenticate
     subscribeRealtime();
 
-    const handleVisible = () => {
-      fetchNotifs();
-      subscribeRealtime();
+    // ─── Hanya re-fetch data bila tab jadi visible semula ─────────────────────
+    // TIDAK recreate channel — channel Realtime masih hidup walaupun tab ditutup
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchNotifs();
+      }
     };
 
-    // ─── Gunakan named function untuk visibility agar cleanup berjaya ──────────
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') handleVisible();
+    // pageshow: handle bila user guna back/forward browser cache
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) fetchNotifs();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('pageshow', handleVisible);
-    window.addEventListener('focus', handleVisible);
+    window.addEventListener('pageshow', handlePageShow);
+
+    // ─── DIHAPUS: window 'focus' — terlalu sensitif, fire setiap klik ─────────
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('pageshow', handleVisible);
-      window.removeEventListener('focus', handleVisible);
-      if (channelRef.current) supabase.removeChannel(channelRef.current);
+      window.removeEventListener('pageshow', handlePageShow);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [isAuthenticated, user?.id, subscribeRealtime, fetchNotifs]);
 
