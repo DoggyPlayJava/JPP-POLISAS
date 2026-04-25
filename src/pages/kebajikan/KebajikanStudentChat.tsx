@@ -33,15 +33,16 @@ const TEAL = KEBAJIKAN_THEME_COLOR;
 /* ─── helpers ──────────────────────────────────────────────── */
 function statusMeta(s: KebajikanTicketStatus) {
   const map: Record<string, { icon: React.ElementType; color: string; glow: string }> = {
-    NEW:          { icon: Clock,          color: TEAL,      glow: hexToRgba(TEAL, 0.25) },
-    IN_PROGRESS:  { icon: Clock,          color: '#3B82F6', glow: 'rgba(59,130,246,0.25)' },
-    WAITING_INFO: { icon: Clock,          color: '#F59E0B', glow: 'rgba(245,158,11,0.25)' },
-    DELEGATED:    { icon: ShieldCheck,    color: '#8B5CF6', glow: 'rgba(139,92,246,0.25)' },
-    ESCALATED:    { icon: AlertTriangle,  color: '#EF4444', glow: 'rgba(239,68,68,0.25)' },
-    REOPENED:     { icon: RefreshCw,      color: '#8B5CF6', glow: 'rgba(139,92,246,0.25)' },
-    RESOLVED:     { icon: CheckCircle2,   color: '#10B981', glow: 'rgba(16,185,129,0.25)' },
-    CLOSED:       { icon: CheckCircle2,   color: '#6B7280', glow: 'rgba(107,114,128,0.25)' },
-    CANCELLED:    { icon: XCircle,        color: '#6B7280', glow: 'rgba(107,114,128,0.25)' },
+    NEW:              { icon: Clock,          color: TEAL,      glow: hexToRgba(TEAL, 0.25) },
+    IN_PROGRESS:      { icon: Clock,          color: '#3B82F6', glow: 'rgba(59,130,246,0.25)' },
+    WAITING_INFO:     { icon: Clock,          color: '#F59E0B', glow: 'rgba(245,158,11,0.25)' },
+    PENDING_EXTERNAL: { icon: Clock,          color: '#F97316', glow: 'rgba(249,115,22,0.25)' },
+    DELEGATED:        { icon: ShieldCheck,    color: '#8B5CF6', glow: 'rgba(139,92,246,0.25)' },
+    ESCALATED:        { icon: AlertTriangle,  color: '#EF4444', glow: 'rgba(239,68,68,0.25)' },
+    REOPENED:         { icon: RefreshCw,      color: '#8B5CF6', glow: 'rgba(139,92,246,0.25)' },
+    RESOLVED:         { icon: CheckCircle2,   color: '#10B981', glow: 'rgba(16,185,129,0.25)' },
+    CLOSED:           { icon: CheckCircle2,   color: '#6B7280', glow: 'rgba(107,114,128,0.25)' },
+    CANCELLED:        { icon: XCircle,        color: '#6B7280', glow: 'rgba(107,114,128,0.25)' },
   };
   return map[s] ?? map.NEW;
 }

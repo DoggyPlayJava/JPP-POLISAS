@@ -674,15 +674,16 @@ export interface UserAnnouncementResponse {
 // ─── E-Kebajikan Ticketing System ────────────────────────────────────────────
 
 export type KebajikanTicketStatus =
-  | 'NEW'           // Diterima — pelajar boleh batal
-  | 'IN_PROGRESS'   // Dalam Tindakan
-  | 'WAITING_INFO'  // Menunggu Maklumat Tambahan
-  | 'DELEGATED'     // Didelegasikan ke Pegawai
-  | 'ESCALATED'     // Diescalate (auto 72j atau manual)
-  | 'RESOLVED'      // Selesai
-  | 'CLOSED'        // Ditutup (auto selepas rating / 7 hari)
-  | 'CANCELLED'     // Dibatal oleh pelajar (jika NEW)
-  | 'REOPENED';     // Pelajar minta dibuka semula (pending Exco approve)
+  | 'NEW'              // Diterima — pelajar boleh batal
+  | 'IN_PROGRESS'      // Dalam Tindakan
+  | 'WAITING_INFO'     // Menunggu Maklumat Tambahan dari Pelajar
+  | 'PENDING_EXTERNAL' // Menunggu Tindakan Pihak Lain (jabatan, pentadbiran)
+  | 'DELEGATED'        // Didelegasikan ke Pegawai
+  | 'ESCALATED'        // Diescalate (auto 72j atau manual)
+  | 'RESOLVED'         // Selesai
+  | 'CLOSED'           // Ditutup (auto selepas rating / 7 hari)
+  | 'CANCELLED'        // Dibatal oleh pelajar (jika NEW)
+  | 'REOPENED';        // Pelajar minta dibuka semula (pending Exco approve)
 
 export type KebajikanTicketCategory =
   | 'FASILITI_JABATAN'
@@ -831,6 +832,7 @@ export interface KebajikanPublicStats {
   total_tickets: number;
   total_resolved: number;
   total_active: number;
+  total_escalated: number;
   resolution_rate: number;
   avg_resolution_hours: number;
   avg_rating: number;
@@ -856,27 +858,29 @@ export interface KebajikanCategoryStats {
 // ── Labels & Colors ──────────────────────────────────────────────────────────
 
 export const KEBAJIKAN_STATUS_LABELS: Record<KebajikanTicketStatus, string> = {
-  NEW:          'Diterima',
-  IN_PROGRESS:  'Dalam Tindakan',
-  WAITING_INFO: 'Menunggu Maklumat',
-  DELEGATED:    'Didelegasikan',
-  ESCALATED:    'Diescalate',
-  RESOLVED:     'Selesai',
-  CLOSED:       'Ditutup',
-  CANCELLED:    'Dibatal',
-  REOPENED:     'Dibuka Semula',
+  NEW:              'Diterima',
+  IN_PROGRESS:      'Dalam Tindakan',
+  WAITING_INFO:     'Menunggu Maklumat',
+  PENDING_EXTERNAL: 'Menunggu Pihak Lain',
+  DELEGATED:        'Didelegasikan',
+  ESCALATED:        'Diescalate',
+  RESOLVED:         'Selesai',
+  CLOSED:           'Ditutup',
+  CANCELLED:        'Dibatal',
+  REOPENED:         'Dibuka Semula',
 };
 
 export const KEBAJIKAN_STATUS_COLORS: Record<KebajikanTicketStatus, string> = {
-  NEW:          'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-  IN_PROGRESS:  'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-  WAITING_INFO: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-  DELEGATED:    'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
-  ESCALATED:    'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-  RESOLVED:     'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-  CLOSED:       'bg-slate-100 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400',
-  CANCELLED:    'bg-slate-100 text-slate-400 dark:bg-slate-800/30 dark:text-slate-500',
-  REOPENED:     'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300',
+  NEW:              'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  IN_PROGRESS:      'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+  WAITING_INFO:     'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  PENDING_EXTERNAL: 'bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400',
+  DELEGATED:        'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+  ESCALATED:        'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  RESOLVED:         'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+  CLOSED:           'bg-slate-100 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400',
+  CANCELLED:        'bg-slate-100 text-slate-400 dark:bg-slate-800/30 dark:text-slate-500',
+  REOPENED:         'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300',
 };
 
 export const KEBAJIKAN_CATEGORY_LABELS: Record<KebajikanTicketCategory, string> = {

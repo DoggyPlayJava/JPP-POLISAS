@@ -18,6 +18,9 @@ import { cn } from '@/lib/utils';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { KebajikanReportPDF } from '@/components/pdf/KebajikanReportPDF';
 import { KebajikanPicReportPDF, type PicReportTicket } from '@/components/pdf/KebajikanPicReportPDF';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
+
 
 const TEAL = KEBAJIKAN_THEME_COLOR;
 const PIE_COLORS = ['#6366F1','#2DD4BF','#F59E0B','#EF4444','#10B981'];
@@ -45,6 +48,7 @@ interface ReportData {
 
 const STATUS_LABEL: Record<string, string> = {
   NEW: 'Diterima', IN_PROGRESS: 'Dalam Tindakan', WAITING_INFO: 'Menunggu',
+  PENDING_EXTERNAL: 'Menunggu Pihak Lain',
   DELEGATED: 'Didelegasikan', ESCALATED: 'Diescalate', RESOLVED: 'Selesai',
   CLOSED: 'Ditutup', CANCELLED: 'Dibatal', REOPENED: 'Dibuka Semula',
 };
@@ -77,8 +81,9 @@ export function KebajikanReportPage() {
   const now   = new Date();
   const [activeTab, setActiveTab] = useState<'bulanan' | 'pic'>('bulanan');
   const [monthOffset, setMonthOffset] = useState(0);
-  const [data, setData]     = useState<ReportData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData]         = useState<ReportData | null>(null);
+  const [loading, setLoading]   = useState(true);
+  const [rawTickets, setRawTickets] = useState<any[]>([]);
 
   // ── PIC Report state ─────────────────────────────────────────────────
   const [picTickets, setPicTickets]         = useState<KebajikanTicket[]>([]);
@@ -100,6 +105,266 @@ export function KebajikanReportPage() {
   const monthEnd    = endOfMonth(targetMonth).toISOString();
   const monthLabel  = format(targetMonth, 'MMMM yyyy', { locale: ms });
 
+  // ─── Helper: apply header row style ───────────────────────────────────────
+  const styleHeader = (ws: ExcelJS.Worksheet, row: ExcelJS.Row, bgHex: string) => {
+    row.eachCell(cell => {
+      cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgHex } };
+      cell.font   = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+      cell.border = {
+        top: { style: 'thin' }, bottom: { style: 'thin' },
+        left: { style: 'thin' }, right: { style: 'thin' },
+      };
+      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    });
+    row.height = 22;
+  };
+
+  const styleDataRow = (row: ExcelJS.Row, shade: boolean) => {
+    row.eachCell({ includeEmpty: true }, cell => {
+      cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: shade ? 'FFF1F5F9' : 'FFFFFFFF' } };
+      cell.border = {
+        top: { style: 'hair' }, bottom: { style: 'hair' },
+        left: { style: 'thin' }, right: { style: 'thin' },
+      };
+      cell.alignment = { vertical: 'middle', wrapText: true };
+      cell.font = { size: 9 };
+    });
+    row.height = 18;
+  };
+
+  const addCoverSheet = (wb: ExcelJS.Workbook, title: string, subtitle: string, genBy: string) => {
+    const ws = wb.addWorksheet('Muka Hadapan');
+    ws.mergeCells('A1:F1');
+    ws.getCell('A1').value = 'JABATAN PERWAKILAN PELAJAR (JPP) POLISAS';
+    ws.getCell('A1').font = { bold: true, size: 16, color: { argb: 'FF0F172A' } };
+    ws.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
+    ws.getRow(1).height = 36;
+
+    ws.mergeCells('A2:F2');
+    ws.getCell('A2').value = 'UNIT E-KEBAJIKAN';
+    ws.getCell('A2').font = { bold: true, size: 12, color: { argb: 'FF2DD4BF' } };
+    ws.getCell('A2').alignment = { horizontal: 'center' };
+
+    ws.mergeCells('A3:F3');
+    ws.getCell('A3').value = title.toUpperCase();
+    ws.getCell('A3').font = { bold: true, size: 14, color: { argb: 'FF0F172A' } };
+    ws.getCell('A3').alignment = { horizontal: 'center', vertical: 'middle' };
+    ws.getCell('A3').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2F8F5' } };
+    ws.getRow(3).height = 32;
+
+    ws.mergeCells('A4:F4');
+    ws.getCell('A4').value = subtitle;
+    ws.getCell('A4').font = { italic: true, size: 10, color: { argb: 'FF64748B' } };
+    ws.getCell('A4').alignment = { horizontal: 'center' };
+
+    ws.addRow([]);
+    ws.addRow(['Tarikh Jana:', format(new Date(), 'dd MMMM yyyy, HH:mm', { locale: ms })]);
+    ws.addRow(['Dijana Oleh:', genBy]);
+    ws.addRow(['Sistem:', 'Portal E-Kebajikan JPP POLISAS']);
+
+    ws.getColumn('A').width = 22;
+    [2,3,4,5,6].forEach(i => { ws.getColumn(i).width = 18; });
+  };
+
+  // ── Excel Export: Laporan Bulanan ─────────────────────────────────────────
+  const exportMonthlyExcel = async () => {
+    if (!data) return;
+    const wb = new ExcelJS.Workbook();
+    wb.creator = generatedByName;
+    wb.created = new Date();
+    const TEAL_ARGB = 'FF0D9488';
+    const DARK_ARGB = 'FF1E293B';
+    const RED_ARGB  = 'FFDC2626';
+
+    // Sheet 1: Muka Hadapan
+    addCoverSheet(wb, `Laporan Bulanan E-Kebajikan`, monthLabel, generatedByName);
+
+    // Sheet 2: Ringkasan Eksekutif
+    const ws2 = wb.addWorksheet('Ringkasan Eksekutif');
+    ws2.mergeCells('A1:C1');
+    ws2.getCell('A1').value = `RINGKASAN EKSEKUTIF — ${monthLabel.toUpperCase()}`;
+    ws2.getCell('A1').font = { bold: true, size: 13, color: { argb: 'FFFFFFFF' } };
+    ws2.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: DARK_ARGB } };
+    ws2.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
+    ws2.getRow(1).height = 28;
+    ws2.addRow([]);
+
+    const summaryItems = [
+      ['Jumlah Aduan Diterima',   data.total_received],
+      ['Jumlah Aduan Diselesaikan', data.total_resolved],
+      ['Masih Tertunggak',         data.total_pending],
+      ['Kes Dibatalkan',           data.total_cancelled],
+      ['Kes Diescalate',           data.escalated_count],
+      ['Kadar Penyelesaian (%)',   data.resolution_rate],
+      ['Purata Masa Selesai (jam)', data.avg_hours],
+      ['Rating Purata Pelajar',    data.avg_rating ?? 'Tiada Data'],
+      ['Pelajar Berpuas Hati (≥4★)', data.satisfied_count],
+      ['Neutral (3★)',             data.neutral_count],
+      ['Tidak Berpuas Hati (≤2★)', data.unsatisfied_count],
+    ];
+    const hRow2 = ws2.addRow(['Petunjuk Prestasi', 'Nilai']);
+    styleHeader(ws2, hRow2, TEAL_ARGB);
+    summaryItems.forEach((item, i) => {
+      const r = ws2.addRow(item);
+      styleDataRow(r, i % 2 === 0);
+    });
+    ws2.getColumn(1).width = 35;
+    ws2.getColumn(2).width = 20;
+
+    // Sheet 3: Senarai Semua Tiket
+    const ws3 = wb.addWorksheet('Senarai Semua Tiket');
+    const h3 = ws3.addRow(['No.','No. Tiket','Tarikh Hantar','Kategori','Tajuk Aduan','Nama Pengadu','No. Matrik','Status','Keutamaan','Diselesaikan Pada','Masa Selesai (j)','Rating']);
+    styleHeader(ws3, h3, DARK_ARGB);
+    ws3.views = [{ state: 'frozen', ySplit: 1 }];
+    const assigneeNamesCopy: Record<string,string> = {};
+    rawTickets.forEach((t: any, i: number) => {
+      const resolvedHours = t.resolved_at
+        ? Math.round((new Date(t.resolved_at).getTime() - new Date(t.created_at).getTime()) / 360000) / 10
+        : null;
+      const r = ws3.addRow([
+        i + 1,
+        t.ticket_no,
+        format(new Date(t.created_at), 'dd/MM/yyyy HH:mm'),
+        KEBAJIKAN_CATEGORY_LABELS[t.category as KebajikanTicketCategory] || t.category,
+        t.title || '—',
+        t.full_name || '—',
+        t.matric_no || '—',
+        STATUS_LABEL[t.status] || t.status,
+        t.priority,
+        t.resolved_at ? format(new Date(t.resolved_at), 'dd/MM/yyyy') : '—',
+        resolvedHours ?? '—',
+        t.rating ? `${t.rating}★` : '—',
+      ]);
+      styleDataRow(r, i % 2 === 0);
+      if (t.status === 'ESCALATED') {
+        r.getCell(8).font = { bold: true, color: { argb: 'FFDC2626' }, size: 9 };
+      } else if (t.status === 'RESOLVED' || t.status === 'CLOSED') {
+        r.getCell(8).font = { bold: true, color: { argb: 'FF059669' }, size: 9 };
+      }
+    });
+    [5,8,8,16,28,18,14,18,10,16,14,8].forEach((w, i) => { ws3.getColumn(i+1).width = w; });
+    ws3.autoFilter = { from: 'A1', to: 'L1' };
+
+    // Sheet 4: Analisis Mengikut Kategori
+    const ws4 = wb.addWorksheet('Mengikut Kategori');
+    const h4 = ws4.addRow(['Kategori','Jumlah Aduan','Diselesaikan','Belum Selesai','% Selesai']);
+    styleHeader(ws4, h4, TEAL_ARGB);
+    data.by_category.forEach((c, i) => {
+      const pct = c.total > 0 ? Math.round(c.resolved / c.total * 100) : 0;
+      const r = ws4.addRow([
+        KEBAJIKAN_CATEGORY_LABELS[c.category as KebajikanTicketCategory] || c.category,
+        c.total, c.resolved, c.total - c.resolved, `${pct}%`,
+      ]);
+      styleDataRow(r, i % 2 === 0);
+    });
+    [28,15,15,15,12].forEach((w,i) => { ws4.getColumn(i+1).width = w; });
+
+    // Sheet 5: Prestasi Exco
+    if (data.by_assignee.length) {
+      const ws5 = wb.addWorksheet('Prestasi Exco');
+      const h5 = ws5.addRow(['Nama Exco','Tiket Diagihkan','Tiket Diselesaikan','% Penyelesaian','Purata Masa (j)']);
+      styleHeader(ws5, h5, DARK_ARGB);
+      data.by_assignee.sort((a,b) => b.resolved - a.resolved).forEach((a, i) => {
+        const pct = a.assigned > 0 ? Math.round(a.resolved / a.assigned * 100) : 0;
+        const r = ws5.addRow([a.name, a.assigned, a.resolved, `${pct}%`, a.avg_hours]);
+        styleDataRow(r, i % 2 === 0);
+      });
+      [28,18,18,16,18].forEach((w,i) => { ws5.getColumn(i+1).width = w; });
+    }
+
+    // Sheet 6: Kes Escalated
+    if (data.escalated_tickets.length) {
+      const ws6 = wb.addWorksheet('Kes Diescalate');
+      const h6 = ws6.addRow(['No. Tiket','Kategori','Status Semasa','Jam Terbuka']);
+      styleHeader(ws6, h6, RED_ARGB);
+      data.escalated_tickets.forEach((t, i) => {
+        const r = ws6.addRow([t.ticket_no, KEBAJIKAN_CATEGORY_LABELS[t.category as KebajikanTicketCategory] || t.category, STATUS_LABEL[t.status] || t.status, t.hours_open]);
+        styleDataRow(r, i % 2 === 0);
+      });
+      [16,24,18,14].forEach((w,i) => { ws6.getColumn(i+1).width = w; });
+    }
+
+    // Sheet 7: Kes Tertunggak
+    if (data.pending_tickets.length) {
+      const ws7 = wb.addWorksheet('Kes Tertunggak');
+      const h7 = ws7.addRow(['No. Tiket','Kategori','Status','Hari Terbuka','Diuruskan Oleh']);
+      styleHeader(ws7, h7, 'FFF59E0B');
+      ws7.getRow(1).eachCell(c => { c.font = { bold: true, color: { argb: 'FF0F172A' }, size: 10 }; });
+      data.pending_tickets.sort((a,b) => b.days_open - a.days_open).forEach((t, i) => {
+        const r = ws7.addRow([t.ticket_no, KEBAJIKAN_CATEGORY_LABELS[t.category as KebajikanTicketCategory] || t.category, STATUS_LABEL[t.status] || t.status, t.days_open, t.assigned_to]);
+        styleDataRow(r, i % 2 === 0);
+        if (t.days_open >= 7) r.getCell(4).font = { bold: true, color: { argb: 'FFDC2626' }, size: 9 };
+      });
+      [16,24,18,12,24].forEach((w,i) => { ws7.getColumn(i+1).width = w; });
+    }
+
+    const buf = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `Laporan_Kebajikan_${monthLabel.replace(' ','_')}.xlsx`);
+  };
+
+  // ── Excel Export: Laporan PIC ─────────────────────────────────────────────
+  const exportPicExcel = async (tickets: KebajikanTicket[]) => {
+    const wb = new ExcelJS.Workbook();
+    wb.creator = generatedByName;
+    wb.created = new Date();
+    const picMonthLabelLocal = format(subMonths(now, picMonthOffset), 'MMMM yyyy', { locale: ms });
+    const TEAL_ARGB = 'FF0D9488';
+    const DARK_ARGB = 'FF1E293B';
+
+    // Sheet 1: Muka Hadapan
+    addCoverSheet(wb, `Laporan Kepada PIC — ${reportPicName || 'PIC'}`, picMonthLabelLocal, generatedByName);
+    const ws0 = wb.getWorksheet('Muka Hadapan')!;
+    ws0.addRow([]);
+    ws0.addRow(['Nama PIC:',    reportPicName || '—']);
+    ws0.addRow(['Jawatan PIC:', reportPicTitle || '—']);
+    ws0.addRow(['Jumlah Tiket:', tickets.length]);
+
+    // Sheet 2: Senarai Lengkap Tiket
+    const ws2 = wb.addWorksheet('Senarai Tiket');
+    const h2 = ws2.addRow(['No.','No. Tiket','Tarikh Hantar','Kategori','Tajuk Aduan','Penerangan Ringkas','Nama Pengadu','No. Matrik','Status','Keutamaan','Tarikh Selesai']);
+    styleHeader(ws2, h2, DARK_ARGB);
+    ws2.views = [{ state: 'frozen', ySplit: 1 }];
+    tickets.forEach((t: any, i: number) => {
+      const desc = t.description ? (t.description.length > 120 ? t.description.slice(0,120)+'...' : t.description) : '—';
+      const r = ws2.addRow([
+        i + 1,
+        t.ticket_no,
+        format(new Date(t.created_at), 'dd/MM/yyyy HH:mm'),
+        KEBAJIKAN_CATEGORY_LABELS[t.category as KebajikanTicketCategory] || t.category,
+        t.title || '—',
+        desc,
+        t.full_name || '—',
+        t.matric_no || '—',
+        STATUS_LABEL[t.status] || t.status,
+        t.priority,
+        t.resolved_at ? format(new Date(t.resolved_at), 'dd/MM/yyyy') : 'Belum Selesai',
+      ]);
+      styleDataRow(r, i % 2 === 0);
+      if (t.status === 'ESCALATED') r.getCell(9).font = { bold: true, color: { argb: 'FFDC2626' }, size: 9 };
+      if (['RESOLVED','CLOSED'].includes(t.status)) r.getCell(9).font = { bold: true, color: { argb: 'FF059669' }, size: 9 };
+    });
+    [5,14,18,22,30,40,20,14,20,12,16].forEach((w,i) => { ws2.getColumn(i+1).width = w; });
+    ws2.autoFilter = { from: 'A1', to: 'K1' };
+
+    // Sheet 3: Ringkasan Status
+    const ws3 = wb.addWorksheet('Ringkasan Status');
+    const h3 = ws3.addRow(['Status','Bilangan','Peratus (%)']);
+    styleHeader(ws3, h3, TEAL_ARGB);
+    const statMap: Record<string,number> = {};
+    tickets.forEach((t:any) => { statMap[t.status] = (statMap[t.status]||0) + 1; });
+    Object.entries(statMap).sort((a,b) => b[1]-a[1]).forEach(([s,cnt], i) => {
+      const pct = Math.round(cnt / tickets.length * 100);
+      const r = ws3.addRow([STATUS_LABEL[s] || s, cnt, `${pct}%`]);
+      styleDataRow(r, i % 2 === 0);
+    });
+    const totalRow = ws3.addRow(['JUMLAH', tickets.length, '100%']);
+    totalRow.eachCell(c => { c.font = { bold: true, size: 10 }; c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2F8F5' } }; });
+    [28,14,14].forEach((w,i) => { ws3.getColumn(i+1).width = w; });
+
+    const buf = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `Laporan_PIC_${(reportPicName||'PIC').replace(/\s+/g,'_')}_${picMonthLabelLocal.replace(' ','_')}.xlsx`);
+  };
+
   const fetchReport = useCallback(async () => {
     setLoading(true);
     try {
@@ -107,7 +372,8 @@ export function KebajikanReportPage() {
       let ticketQuery = supabase
         .from('kebajikan_tickets')
         .select(`
-          id, ticket_no, category, status, assigned_to, priority,
+          id, ticket_no, category, status, assigned_to, priority, title, description,
+          full_name, matric_no, phone, class, gender,
           created_at, resolved_at, escalated_at, rating, rating_comment, cancelled_at
         `)
         .gte('created_at', monthStart)
@@ -209,6 +475,7 @@ export function KebajikanReportPage() {
         .slice(0, 5)
         .map(t => ({ comment: t.rating_comment!, rating: t.rating! }));
 
+      setRawTickets(tickets);
       setData({
         total_received, total_resolved, total_cancelled, total_pending,
         resolution_rate, avg_hours, escalated_count, sla_breach_count,
@@ -319,26 +586,35 @@ export function KebajikanReportPage() {
               <ChevronRight className="w-4 h-4" />
             </button>
             {data ? (
-              <PDFDownloadLink
-                document={<KebajikanReportPDF data={data} monthLabel={monthLabel} generatedAt={generatedAt} />}
-                fileName={`Laporan_Kebajikan_${monthLabel.replace(' ','_')}.pdf`}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border transition-colors hover:opacity-80"
-                style={{ background: 'rgba(45,212,191,0.08)', borderColor: 'rgba(45,212,191,0.2)', color: TEAL }}
-              >
-                {({ loading }) => (
-                  <>
-                    <FileDown className={cn("w-3.5 h-3.5", loading && "animate-bounce")} /> 
-                    {loading ? 'Menjana PDF...' : 'Muat Turun PDF'}
-                  </>
-                )}
-              </PDFDownloadLink>
+              <div className="flex flex-wrap items-center gap-2">
+                <PDFDownloadLink
+                  document={<KebajikanReportPDF data={data} monthLabel={monthLabel} generatedAt={generatedAt} />}
+                  fileName={`Laporan_Kebajikan_${monthLabel.replace(' ','_')}.pdf`}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border transition-colors hover:opacity-80"
+                  style={{ background: 'rgba(45,212,191,0.08)', borderColor: 'rgba(45,212,191,0.2)', color: TEAL }}
+                >
+                  {({ loading }) => (
+                    <>
+                      <FileDown className={cn("w-3.5 h-3.5", loading && "animate-bounce")} /> 
+                      {loading ? 'Menjana PDF...' : 'PDF'}
+                    </>
+                  )}
+                </PDFDownloadLink>
+                <button
+                  onClick={exportMonthlyExcel}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border transition-colors hover:opacity-80"
+                  style={{ background: 'rgba(34,197,94,0.08)', borderColor: 'rgba(34,197,94,0.2)', color: '#22C55E' }}
+                >
+                  <FileDown className="w-3.5 h-3.5" /> Excel
+                </button>
+              </div>
             ) : (
               <button
                 disabled
                 className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border opacity-50 cursor-not-allowed"
                 style={{ background: 'rgba(45,212,191,0.08)', borderColor: 'rgba(45,212,191,0.2)', color: TEAL }}
               >
-                <FileDown className="w-3.5 h-3.5" /> Muat Turun PDF
+                <FileDown className="w-3.5 h-3.5" /> PDF
               </button>
             )}
           </div>
@@ -753,31 +1029,44 @@ export function KebajikanReportPage() {
                     className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-white/[0.04] border border-white/10 text-white placeholder:text-white/30 focus:border-teal-500/40 focus:outline-none" />
                 </div>
               </div>
-              <PDFDownloadLink
-                document={
-                  <KebajikanPicReportPDF
-                    picName={reportPicName}
-                    picTitle={reportPicTitle}
-                    jabatanLabel={picPresets.find(p => p.id === reportPicId)?.jabatan_label || reportPicName}
-                    picEmail={picPresets.find(p => p.id === reportPicId)?.pic_email || undefined}
-                    picPhone={picPresets.find(p => p.id === reportPicId)?.pic_phone || undefined}
-                    tickets={selectedTickets as PicReportTicket[]}
-                    monthLabel={picMonthLabel}
-                    generatedAt={generatedAt}
-                    generatedBy={generatedByName}
-                  />
-                }
-                fileName={`Laporan_PIC_${reportPicName.replace(/\s+/g,'_') || 'PIC'}_${picMonthLabel.replace(' ','_')}.pdf`}
-                className={cn(
-                  'flex items-center justify-center gap-2 w-full h-10 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:brightness-110',
-                  !reportPicName.trim() && 'opacity-40 pointer-events-none'
-                )}
-                style={{ background: TEAL, color: '#0f172a' }}
-              >
-                {({ loading: pdfLoading }) => (
-                  <><FileDown className={cn('w-4 h-4', pdfLoading && 'animate-bounce')} />{pdfLoading ? 'Menjana PDF...' : `Jana & Muat Turun PDF (${selectedTickets.length} tiket)`}</>
-                )}
-              </PDFDownloadLink>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <PDFDownloadLink
+                  document={
+                    <KebajikanPicReportPDF
+                      picName={reportPicName}
+                      picTitle={reportPicTitle}
+                      jabatanLabel={picPresets.find(p => p.id === reportPicId)?.jabatan_label || reportPicName}
+                      picEmail={picPresets.find(p => p.id === reportPicId)?.pic_email || undefined}
+                      picPhone={picPresets.find(p => p.id === reportPicId)?.pic_phone || undefined}
+                      tickets={selectedTickets as PicReportTicket[]}
+                      monthLabel={picMonthLabel}
+                      generatedAt={generatedAt}
+                      generatedBy={generatedByName}
+                    />
+                  }
+                  fileName={`Laporan_PIC_${reportPicName.replace(/\s+/g,'_') || 'PIC'}_${picMonthLabel.replace(' ','_')}.pdf`}
+                  className={cn(
+                    'flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:brightness-110',
+                    !reportPicName.trim() && 'opacity-40 pointer-events-none'
+                  )}
+                  style={{ background: TEAL, color: '#0f172a' }}
+                >
+                  {({ loading: pdfLoading }) => (
+                    <><FileDown className={cn('w-4 h-4', pdfLoading && 'animate-bounce')} />{pdfLoading ? 'Menjana PDF...' : `PDF (${selectedTickets.length} tiket)`}</>
+                  )}
+                </PDFDownloadLink>
+                <button
+                  onClick={() => exportPicExcel(selectedTickets)}
+                  disabled={selectedTickets.length === 0}
+                  className={cn(
+                    'flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:brightness-110',
+                    selectedTickets.length === 0 && 'opacity-40 cursor-not-allowed'
+                  )}
+                  style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', color: '#22C55E' }}
+                >
+                  <FileDown className="w-4 h-4" /> Excel ({selectedTickets.length} tiket)
+                </button>
+              </div>
               {!reportPicName.trim() && <p className="text-[10px] text-center text-white/25 mt-2">Sila masukkan nama PIC dahulu</p>}
             </GlassCard>
           )}

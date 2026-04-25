@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 import { hexToRgba } from '@/lib/utils';
 
 const TEAL  = KEBAJIKAN_THEME_COLOR;
-const ALL_STATUSES: KebajikanTicketStatus[] = ['NEW','IN_PROGRESS','WAITING_INFO','DELEGATED','ESCALATED','REOPENED','RESOLVED','CLOSED','CANCELLED'];
+const ALL_STATUSES: KebajikanTicketStatus[] = ['NEW','IN_PROGRESS','WAITING_INFO','PENDING_EXTERNAL','DELEGATED','ESCALATED','REOPENED','RESOLVED','CLOSED','CANCELLED'];
 
 export function KebajikanTicketsPage() {
   const { isUnitKebajikanStaff, isKediamanExco, isKebajikanExco, isSuperAdmin, isYdp, user } = useAuth();
@@ -192,7 +192,7 @@ export function KebajikanTicketsPage() {
                       <span className="text-teal-400/80 font-medium">{formatDistanceToNow(new Date(t.created_at), { addSuffix: true, locale: ms })}</span>
                     </div>
                     {(t as any).assignee && (
-                      <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400/80 mt-2">Dihandle oleh: {(t as any).assignee.full_name}</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400/80 mt-2">Diuruskan oleh: {(t as any).assignee.full_name}</p>
                     )}
                   </div>
 

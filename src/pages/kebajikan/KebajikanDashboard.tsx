@@ -65,7 +65,7 @@ export function KebajikanDashboard() {
 
   const statCards = [
     { label: 'Tiket Baru', value: stats?.total_active ?? 0,    icon: Inbox,         color: '#6366F1', href: '/kebajikan/tiket?status=NEW' },
-    { label: 'Diescalate', value: 0,                           icon: AlertTriangle, color: '#EF4444', href: '/kebajikan/tiket?status=ESCALATED' },
+    { label: 'Diescalate', value: stats?.total_escalated ?? 0,        icon: AlertTriangle, color: '#EF4444', href: '/kebajikan/tiket?status=ESCALATED' },
     { label: 'Kes Selesai', value: stats?.total_resolved ?? 0, icon: CheckCircle2,  color: '#10B981', href: '/kebajikan/tiket?status=RESOLVED' },
     { label: 'Rating Pelajar', value: stats?.avg_rating ? `${stats.avg_rating}⭐` : 'N/A', icon: TrendingUp, color: '#F59E0B', href: '/kebajikan/laporan' },
   ];

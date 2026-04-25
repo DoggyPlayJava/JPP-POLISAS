@@ -94,11 +94,17 @@ export function KebajikanSubmitPage() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
 
-  const [step, setStep]         = useState<Step>('STATS');
-  const [submitting, setSubmitting] = useState(false);
+  const [step, setStep]             = useState<Step>('STATS');
+  const [submitting, setSubmitting]   = useState(false);
   const [submittedNo, setSubmittedNo] = useState('');
-  const [images, setImages]     = useState<File[]>([]);
+  const [images, setImages]           = useState<File[]>([]);
   const [publicStats, setPublicStats] = useState<KebajikanPublicStats | null>(null);
+
+  // Duplicate detection state
+  const [duplicateWarning, setDuplicateWarning] = useState<{
+    id: string; ticket_no: string; title: string; status: string;
+  } | null>(null);
+  const [bypassDuplicate, setBypassDuplicate] = useState(false);
 
   const [form, setForm] = useState<FormData>({
     full_name:    profile?.full_name || '',
@@ -164,6 +170,24 @@ export function KebajikanSubmitPage() {
     if (!user || !form.category) return;
     setSubmitting(true);
     try {
+      // ─ Duplicate detection ─
+      if (!bypassDuplicate) {
+        const { data: existing } = await supabase
+          .from('kebajikan_tickets')
+          .select('id, ticket_no, title, status')
+          .eq('submitter_id', user.id)
+          .eq('category', form.category)
+          .not('status', 'in', '("RESOLVED","CLOSED","CANCELLED")')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (existing) {
+          setDuplicateWarning(existing);
+          setSubmitting(false);
+          return;
+        }
+      }
       const image_urls = await uploadImages();
       const { data, error } = await supabase.from('kebajikan_tickets').insert({
         submitter_id: user.id,
@@ -545,6 +569,39 @@ export function KebajikanSubmitPage() {
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} />
               <p className="text-xs text-white/60">Dengan menghantar aduan ini, anda bersetuju maklumat anda dikongsi dengan pihak Exco Kebajikan JPP POLISAS untuk tindakan lanjut.</p>
             </div>
+
+            {/* ── Duplicate Warning ── */}
+            {duplicateWarning && (
+              <div className="mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-black text-amber-400 uppercase tracking-widest mb-1">Aduan Serupa Sedang Diproses</p>
+                    <p className="text-xs text-white/60 leading-relaxed">
+                      Anda mempunyai aduan dalam kategori yang sama yang masih dalam proses:{' '}
+                      <span className="font-bold text-white/80">{duplicateWarning.ticket_no}</span> — {duplicateWarning.title}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <a
+                    href={`/kebajikan/aduan/${duplicateWarning.id}`}
+                    className="flex-1 h-9 flex items-center justify-center rounded-xl text-xs font-black uppercase tracking-wider border border-teal-500/30 text-teal-400 hover:bg-teal-500/10 transition-colors"
+                  >
+                    Lihat Tiket Sedia Ada
+                  </a>
+                  <button
+                    onClick={() => {
+                      setBypassDuplicate(true);
+                      setDuplicateWarning(null);
+                    }}
+                    className="flex-1 h-9 rounded-xl text-xs font-black uppercase tracking-wider bg-red-500/80 hover:bg-red-500 text-white transition-colors"
+                  >
+                    Hantar Aduan Tetap
+                  </button>
+                </div>
+              </div>
+            )}
 
             <Button
               onClick={handleSubmit}

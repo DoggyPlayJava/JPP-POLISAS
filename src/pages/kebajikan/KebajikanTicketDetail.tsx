@@ -3,13 +3,13 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ChevronLeft, Clock, MessageSquare, Send, User, Shield, Lock,
   AlertTriangle, CheckCircle2, RefreshCw, XCircle, ArrowUpRight, Tag,
-  Loader2, Users, Flag,
+  Loader2, Users, Flag, Zap, ChevronDown,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
-import { sendNotificationToUser } from '@/lib/notifications';
+import { sendNotificationToUser, sendNotificationToKKExco, sendNotificationToKebajikanExco } from '@/lib/notifications';
 
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -30,11 +30,12 @@ import {
 const TEAL = KEBAJIKAN_THEME_COLOR;
 
 const STATUSES: { key: KebajikanTicketStatus; label: string }[] = [
-  { key: 'NEW',          label: 'Diterima'          },
-  { key: 'IN_PROGRESS',  label: 'Dalam Tindakan'    },
-  { key: 'WAITING_INFO', label: 'Menunggu Maklumat' },
-  { key: 'RESOLVED',     label: 'Selesai'           },
-  { key: 'CLOSED',       label: 'Ditutup'           },
+  { key: 'NEW',              label: 'Diterima'              },
+  { key: 'IN_PROGRESS',      label: 'Dalam Tindakan'        },
+  { key: 'WAITING_INFO',     label: 'Menunggu Maklumat'     },
+  { key: 'PENDING_EXTERNAL', label: 'Menunggu Pihak Lain'   },
+  { key: 'RESOLVED',         label: 'Selesai'               },
+  { key: 'CLOSED',           label: 'Ditutup'               },
 ];
 
 export function KebajikanTicketDetail() {
@@ -64,6 +65,11 @@ export function KebajikanTicketDetail() {
   const [delegateNote, setDelegateNote] = useState('');
   const [resolutionNote, setResolutionNote] = useState('');
   const [saving, setSaving]             = useState(false);
+
+  // ─── Quick Action Bar state ────────────────────────────────────────────────
+  const [quickTarget, setQuickTarget]   = useState<KebajikanTicketStatus | ''>('');
+  const [quickNote, setQuickNote]       = useState('');
+  const [quickSaving, setQuickSaving]   = useState(false);
 
   // ─── Escalation Actions state ──────────────────────────────────────────────
   const [escalationActions, setEscalationActions] = useState<KebajikanEscalationAction[]>([]);
@@ -125,21 +131,95 @@ export function KebajikanTicketDetail() {
       is_internal: isInternal,
       content: newComment,
     });
-    // Notify student if public comment from Exco/Pegawai
-    if (!isInternal && ticket.submitter_id) {
-      await sendNotificationToUser(ticket.submitter_id, {
+
+    if (!isInternal) {
+      const msgPayload = {
         title:       `Mesej Baru — ${ticket.ticket_no}`,
         message:     `${profile?.full_name || 'Exco Kebajikan'}: "${newComment.slice(0, 80)}${newComment.length > 80 ? '...' : ''}"`,
-        type:        'NEW_MESSAGE',
-        module:      'KEBAJIKAN',
+        type:        'NEW_MESSAGE' as const,
+        module:      'KEBAJIKAN' as const,
         link:        `/kebajikan/aduan/${ticket.id}`,
         reference_id: ticket.id,
         actor_name:  profile?.full_name || 'Exco Kebajikan',
-      });
+      };
+
+      if (actorRole === 'PELAJAR') {
+        // Pelajar komen → notify Exco assigned (atau broadcast jika belum ada)
+        if (ticket.assigned_to) {
+          await sendNotificationToUser(ticket.assigned_to, msgPayload);
+        } else if (ticket.handled_by_unit === 'KK') {
+          await sendNotificationToKKExco(msgPayload);
+        } else {
+          await sendNotificationToKebajikanExco(msgPayload);
+        }
+      } else {
+        // Exco/Pegawai komen → notify pelajar
+        if (ticket.submitter_id) {
+          await sendNotificationToUser(ticket.submitter_id, {
+            ...msgPayload,
+            title: `Mesej Baru — ${ticket.ticket_no}`,
+          });
+        }
+        // Juga notify Exco assigned yang lain jika bukan dia yang komen
+        if (ticket.assigned_to && ticket.assigned_to !== user.id) {
+          await sendNotificationToUser(ticket.assigned_to, {
+            ...msgPayload,
+            title: `Komen Baru pada Tiket Anda — ${ticket.ticket_no}`,
+          });
+        }
+      }
     }
+
     setNewComment('');
     setCLoading(false);
-    fetchAll(); // Improvise: Terus panggil fetchAll selepas berjaya insert supaya tak perlu tunggu isyarat Realtime.
+    fetchAll();
+  };
+
+
+
+  // ─── Quick Action (dari Quick Action Bar atas chat) ────────────────────────
+  // Sama seperti changeStatus() tapi dipanggil terus dengan nilai tanpa dropdown.
+  // Auto-assign exco yang klik sebagai assigned_to jika belum ada.
+  const quickAction = async (newStatus: KebajikanTicketStatus, note: string) => {
+    if (!ticket) return;
+    setQuickSaving(true);
+    const upd: Record<string, unknown> = { status: newStatus };
+    // Auto-assign exco yang klik
+    if (newStatus === 'IN_PROGRESS' && !ticket.assigned_to) {
+      upd.assigned_to = user?.id;
+    }
+    if (newStatus === 'RESOLVED') {
+      upd.resolved_at = new Date().toISOString();
+      upd.resolved_by = user?.id;
+      upd.resolution_note = note;
+      if (!ticket.assigned_to) upd.assigned_to = user?.id;
+    }
+    if (newStatus === 'ESCALATED') {
+      upd.escalated_at = new Date().toISOString();
+      if (!ticket.assigned_to) upd.assigned_to = user?.id;
+    }
+    await supabase.from('kebajikan_tickets').update(upd).eq('id', ticket.id);
+    await supabase.from('kebajikan_ticket_status_log').insert({
+      ticket_id: ticket.id, actor_id: user?.id,
+      actor_name: profile?.full_name, actor_role: actorRole,
+      old_status: ticket.status, new_status: newStatus,
+      note: note || null,
+    });
+    if (ticket.submitter_id) {
+      await sendNotificationToUser(ticket.submitter_id, {
+        title:   `Status Aduan Dikemaskini — ${ticket.ticket_no}`,
+        message: `Status aduan anda telah dikemaskini kepada "${KEBAJIKAN_STATUS_LABELS[newStatus]}"`,
+        type:    'STATUS_UPDATE',
+        module:  'KEBAJIKAN',
+        link:    `/kebajikan/aduan/${ticket.id}`,
+        reference_id: ticket.id,
+        actor_name: profile?.full_name,
+      });
+    }
+    setQuickTarget('');
+    setQuickNote('');
+    setQuickSaving(false);
+    await fetchAll();
   };
 
 
@@ -154,6 +234,10 @@ export function KebajikanTicketDetail() {
     }
     if (statusChange === 'IN_PROGRESS' && !ticket.assigned_to) {
       upd.assigned_to = user?.id;
+    }
+    if (statusChange === 'ESCALATED') {
+      upd.escalated_at = new Date().toISOString();
+      if (!ticket.assigned_to) upd.assigned_to = user?.id;
     }
     await supabase.from('kebajikan_tickets').update(upd).eq('id', ticket.id);
     await supabase.from('kebajikan_ticket_status_log').insert({
@@ -387,11 +471,25 @@ export function KebajikanTicketDetail() {
                     {c.author_name[0]}
                   </div>
                   <div className={cn('flex-1 max-w-[80%]', c.author_role === 'PELAJAR' && 'items-end flex flex-col')}>
-                    <div className={cn('px-4 py-3 rounded-2xl text-sm shadow-md', c.is_delegation_note ? 'border border-indigo-500/30 bg-indigo-500/10 backdrop-blur-md' : c.is_internal ? 'bg-indigo-600/20 border border-indigo-500/30 backdrop-blur-md' : c.author_role === 'PELAJAR' ? 'bg-indigo-600/20 backdrop-blur-md border border-indigo-500/10' : 'bg-white/[0.03] border border-white/5 backdrop-blur-md')}>
-                      {c.is_delegation_note && <p className="text-[10px] font-black text-indigo-400 mb-1.5 uppercase tracking-widest flex items-center gap-1.5"><ArrowUpRight className="w-3 h-3" /> Nota Delegasi</p>}
-                      {c.is_internal && <p className="text-[10px] font-black text-indigo-400 mb-1.5 uppercase tracking-widest flex items-center gap-1.5"><Lock className="w-3 h-3" /> Internal</p>}
-                      <p className="text-slate-200 leading-relaxed whitespace-pre-wrap">{c.content}</p>
-                    </div>
+                  <div className={cn(
+                    'px-4 py-3 rounded-2xl text-sm shadow-md',
+                    c.is_delegation_note
+                      ? 'border border-indigo-500/30 bg-indigo-500/10 backdrop-blur-md'
+                      : c.is_internal
+                        ? 'border-l-4 border-l-indigo-400 border border-indigo-500/20 bg-indigo-950/70 backdrop-blur-md'
+                        : c.author_role === 'PELAJAR'
+                          ? 'bg-indigo-600/20 backdrop-blur-md border border-indigo-500/10'
+                          : 'bg-white/[0.03] border border-white/5 backdrop-blur-md'
+                  )}>
+                    {c.is_delegation_note && <p className="text-[10px] font-black text-indigo-400 mb-1.5 uppercase tracking-widest flex items-center gap-1.5"><ArrowUpRight className="w-3 h-3" /> Nota Delegasi</p>}
+                    {c.is_internal && (
+                      <div className="flex items-center gap-1.5 mb-2.5 px-2 py-1 rounded-lg bg-indigo-500/20 w-fit">
+                        <Lock className="w-3 h-3 text-indigo-300" />
+                        <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Nota Dalaman — Exco Sahaja</span>
+                      </div>
+                    )}
+                    <p className="text-slate-200 leading-relaxed whitespace-pre-wrap">{c.content}</p>
+                  </div>
                     <p className="text-[10px] font-black tracking-wider uppercase text-slate-500 mt-1.5 px-2">{c.author_name} <span className="mx-1 opacity-50">·</span> {format(new Date(c.created_at), 'dd/MM HH:mm')}</p>
                   </div>
                 </div>
@@ -400,7 +498,31 @@ export function KebajikanTicketDetail() {
               <div ref={bottomRef} />
             </div>
 
+            {/* ── Quick Action Bar (Staff only, ticket not closed) ── */}
+            {isStaff && !['RESOLVED', 'CLOSED', 'CANCELLED'].includes(ticket.status) && (
+              <QuickActionBar
+                status={ticket.status as KebajikanTicketStatus}
+                quickTarget={quickTarget}
+                quickNote={quickNote}
+                quickSaving={quickSaving}
+                onSelect={(s) => {
+                  if (s === 'RESOLVED') {
+                    // Pilihan B — expand inline note
+                    setQuickTarget(t => t === 'RESOLVED' ? '' : 'RESOLVED');
+                    setQuickNote('');
+                  } else {
+                    // Pilihan A — langsung simpan
+                    quickAction(s, '');
+                  }
+                }}
+                onNoteChange={setQuickNote}
+                onConfirmResolve={() => quickAction('RESOLVED', quickNote)}
+                onCancelResolve={() => { setQuickTarget(''); setQuickNote(''); }}
+              />
+            )}
+
             {/* New comment */}
+
             <div className="flex gap-2">
               <Textarea
                 value={newComment}
@@ -529,7 +651,140 @@ export function KebajikanTicketDetail() {
   );
 }
 
+// ─── Quick Action Bar ─────────────────────────────────────────────────────────
+interface QuickActionBarProps {
+  status: KebajikanTicketStatus;
+  quickTarget: KebajikanTicketStatus | '';
+  quickNote: string;
+  quickSaving: boolean;
+  onSelect: (s: KebajikanTicketStatus) => void;
+  onNoteChange: (v: string) => void;
+  onConfirmResolve: () => void;
+  onCancelResolve: () => void;
+}
+
+// Butang kontekstual berdasarkan status semasa
+const QUICK_TRANSITIONS: Record<string, { key: KebajikanTicketStatus; label: string; icon: string; color: string; bg: string }[]> = {
+  NEW: [
+    { key: 'IN_PROGRESS',      label: 'Ambil Tindakan',     icon: '▶', color: '#2DD4BF', bg: 'rgba(45,212,191,0.10)'  },
+    { key: 'WAITING_INFO',     label: 'Tunggu Maklumat',    icon: '⏳', color: '#F59E0B', bg: 'rgba(245,158,11,0.10)'  },
+    { key: 'RESOLVED',         label: 'Selesaikan',         icon: '✓',  color: '#22C55E', bg: 'rgba(34,197,94,0.10)'   },
+  ],
+  IN_PROGRESS: [
+    { key: 'WAITING_INFO',     label: 'Tunggu Maklumat',    icon: '⏳', color: '#F59E0B', bg: 'rgba(245,158,11,0.10)'  },
+    { key: 'PENDING_EXTERNAL', label: 'Tunggu Pihak Lain',  icon: '🏢', color: '#F97316', bg: 'rgba(249,115,22,0.10)'  },
+    { key: 'RESOLVED',         label: 'Selesaikan',         icon: '✓',  color: '#22C55E', bg: 'rgba(34,197,94,0.10)'   },
+    { key: 'ESCALATED',        label: 'Escalate',           icon: '⚠',  color: '#EF4444', bg: 'rgba(239,68,68,0.10)'   },
+  ],
+  WAITING_INFO: [
+    { key: 'IN_PROGRESS',      label: 'Sambung Tindakan',   icon: '▶', color: '#2DD4BF', bg: 'rgba(45,212,191,0.10)'  },
+    { key: 'PENDING_EXTERNAL', label: 'Tunggu Pihak Lain',  icon: '🏢', color: '#F97316', bg: 'rgba(249,115,22,0.10)'  },
+    { key: 'RESOLVED',         label: 'Selesaikan',         icon: '✓',  color: '#22C55E', bg: 'rgba(34,197,94,0.10)'   },
+  ],
+  PENDING_EXTERNAL: [
+    { key: 'IN_PROGRESS',      label: 'Sambung Tindakan',   icon: '▶', color: '#2DD4BF', bg: 'rgba(45,212,191,0.10)'  },
+    { key: 'RESOLVED',         label: 'Selesaikan',         icon: '✓',  color: '#22C55E', bg: 'rgba(34,197,94,0.10)'   },
+    { key: 'ESCALATED',        label: 'Escalate',           icon: '⚠',  color: '#EF4444', bg: 'rgba(239,68,68,0.10)'   },
+  ],
+  ESCALATED: [
+    { key: 'IN_PROGRESS',      label: 'Sambung Tindakan',   icon: '▶', color: '#2DD4BF', bg: 'rgba(45,212,191,0.10)'  },
+    { key: 'RESOLVED',         label: 'Selesaikan',         icon: '✓',  color: '#22C55E', bg: 'rgba(34,197,94,0.10)'   },
+  ],
+  REOPENED: [
+    { key: 'IN_PROGRESS',      label: 'Ambil Tindakan',     icon: '▶', color: '#2DD4BF', bg: 'rgba(45,212,191,0.10)'  },
+    { key: 'RESOLVED',         label: 'Selesaikan',         icon: '✓',  color: '#22C55E', bg: 'rgba(34,197,94,0.10)'   },
+  ],
+  DELEGATED: [
+    { key: 'IN_PROGRESS',      label: 'Ambil Semula',       icon: '▶', color: '#2DD4BF', bg: 'rgba(45,212,191,0.10)'  },
+    { key: 'RESOLVED',         label: 'Selesaikan',         icon: '✓',  color: '#22C55E', bg: 'rgba(34,197,94,0.10)'   },
+  ],
+};
+
+function QuickActionBar({
+  status, quickTarget, quickNote, quickSaving,
+  onSelect, onNoteChange, onConfirmResolve, onCancelResolve,
+}: QuickActionBarProps) {
+  const actions = QUICK_TRANSITIONS[status] ?? [];
+  if (actions.length === 0) return null;
+
+  return (
+    <div className="mb-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-3 space-y-3">
+      {/* Label row */}
+      <div className="flex items-center gap-2">
+        <Zap className="w-3 h-3 text-teal-400" />
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">Tindakan Pantas</p>
+        {quickSaving && <span className="ml-auto text-[10px] text-white/30 animate-pulse">Menyimpan...</span>}
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex flex-wrap gap-2">
+        {actions.map(a => (
+          <button
+            key={a.key}
+            onClick={() => onSelect(a.key)}
+            disabled={quickSaving}
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider border transition-all',
+              'hover:brightness-125 active:scale-95 disabled:opacity-40',
+              quickTarget === a.key ? 'ring-2 ring-offset-1 ring-offset-transparent' : '',
+            )}
+            style={{
+              color: a.color,
+              background: a.bg,
+              borderColor: `${a.color}30`,
+            }}
+          >
+            <span>{a.icon}</span>
+            <span>{a.label}</span>
+            {a.key === 'RESOLVED' && <ChevronDown className={cn('w-3 h-3 transition-transform', quickTarget === 'RESOLVED' && 'rotate-180')} />}
+          </button>
+        ))}
+      </div>
+
+      {/* Inline nota resolusi — hanya untuk RESOLVED (Pilihan B) */}
+      <AnimatePresence>
+        {quickTarget === 'RESOLVED' && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="rounded-xl border border-green-500/20 bg-green-500/[0.04] p-3 space-y-2">
+              <p className="text-[10px] font-black uppercase tracking-widest text-green-400/70">Nota Resolusi (wajib)</p>
+              <textarea
+                value={quickNote}
+                onChange={e => onNoteChange(e.target.value)}
+                placeholder="Terangkan bagaimana aduan ini diselesaikan..."
+                rows={3}
+                className="w-full rounded-xl resize-none text-xs p-3 bg-white/[0.03] border border-white/10 text-white placeholder:text-white/20 focus:outline-none focus:border-green-500/40"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={onConfirmResolve}
+                  disabled={!quickNote.trim() || quickSaving}
+                  className="flex-1 h-8 rounded-xl text-xs font-black uppercase tracking-widest bg-green-500/80 hover:bg-green-500 text-white transition-all disabled:opacity-30"
+                >
+                  {quickSaving ? 'Menyimpan...' : '✓ Sahkan Selesai'}
+                </button>
+                <button
+                  onClick={onCancelResolve}
+                  className="px-4 h-8 rounded-xl text-xs font-black text-white/30 hover:text-white border border-white/10 transition-colors"
+                >
+                  Batal
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+
   return (
     <div className="relative rounded-3xl border border-white/[0.05] p-6 bg-white/[0.02] backdrop-blur-xl shadow-2xl overflow-hidden group hover:border-white/10 transition-colors">
       <div className="absolute top-0 left-0 right-0 h-[100px] bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
@@ -596,12 +851,15 @@ function EscalationActionPanel({
         {/* PIC Selection */}
         <div className="mb-3">
           <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">PIC yang Dihubungi</p>
-          <Select value={picId} onValueChange={onPicIdChange}>
+          <Select
+            value={picId === '' ? '__manual__' : picId}
+            onValueChange={v => onPicIdChange(v === '__manual__' ? '' : v)}
+          >
             <SelectTrigger className="bg-white/[0.04] border-white/10 text-white rounded-xl text-xs h-9 mb-2">
               <SelectValue placeholder="Pilih dari senarai preset..." />
             </SelectTrigger>
             <SelectContent className="bg-slate-800 border-white/10 max-h-48">
-              <SelectItem value="" className="text-white/50 text-xs focus:bg-white/10">— Taip nama manual —</SelectItem>
+              <SelectItem value="__manual__" className="text-white/50 text-xs focus:bg-white/10">— Taip nama manual —</SelectItem>
               {picPresets.map(p => (
                 <SelectItem key={p.id} value={p.id} className="text-white/80 text-xs focus:bg-white/10">
                   {p.jabatan_label} — {p.pic_name} {p.pic_title ? `(${p.pic_title})` : ''}

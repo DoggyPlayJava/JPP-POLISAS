@@ -32,6 +32,7 @@ export interface KebajikanPicReportProps {
 
 const STATUS_LABEL: Record<string, string> = {
   NEW: 'Diterima', IN_PROGRESS: 'Dalam Tindakan', WAITING_INFO: 'Menunggu Maklumat',
+  PENDING_EXTERNAL: 'Menunggu Pihak Lain',
   DELEGATED: 'Didelegasikan', ESCALATED: 'Diescalate', RESOLVED: 'Selesai',
   CLOSED: 'Ditutup', CANCELLED: 'Dibatal', REOPENED: 'Dibuka Semula',
 };
