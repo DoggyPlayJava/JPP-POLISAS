@@ -28,7 +28,7 @@ export function PenasihatLogPage() {
             if (!profile) return;
             setIsLoading(true);
 
-            let query = supabase.from('club_logs').select('*');
+            let query = supabase.from('club_logs').select('id, action_type, type, description, content, actor_name, user_id, created_at, club_id');
 
             if (profile.role !== 'SUPER_ADMIN_JPP') {
                 if (!profile.club_id) {

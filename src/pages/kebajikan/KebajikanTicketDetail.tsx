@@ -10,6 +10,8 @@ import { ms } from 'date-fns/locale';
 import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { sendNotificationToUser, sendNotificationToKKExco, sendNotificationToKebajikanExco } from '@/lib/notifications';
+import { sendEmail } from '@/lib/email';
+import { generateTicketAssignedEmail } from '@/lib/emailTemplates';
 
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -85,7 +87,7 @@ export function KebajikanTicketDetail() {
     if (!id) return;
     const [tRes, cRes, sRes, eaRes, picRes] = await Promise.all([
       supabase.from('kebajikan_tickets').select('*, assignee:assigned_to(id,full_name), delegate:delegated_to(id,full_name)').eq('id', id).single(),
-      supabase.from('kebajikan_ticket_comments').select('*').eq('ticket_id', id).order('created_at'),
+      supabase.from('kebajikan_ticket_comments').select('id, author_id, author_name, author_role, is_internal, is_delegation_note, content, created_at').eq('ticket_id', id).order('created_at'),
       isStaff ? supabase.from('kebajikan_staff_assignments').select('*, staff:staff_user_id(id,full_name,email)').eq('is_active', true) : Promise.resolve({ data: [] }),
       // Escalation actions untuk tiket ini
       supabase.from('kebajikan_escalation_actions').select('*, pic:pic_id(id,pic_name,jabatan_label,pic_title), recorder:recorded_by(id,full_name)').eq('ticket_id', id).order('recorded_at'),
@@ -119,6 +121,36 @@ export function KebajikanTicketDetail() {
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [id, fetchAll]);
+
+  // ─── Email Notification Helper ─────────────────────────────────────────────
+  const sendAssignmentEmail = async (assignedExcoName: string) => {
+    if (!ticket?.submitter_id) return;
+    
+    try {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('email, full_name')
+        .eq('id', ticket.submitter_id)
+        .single();
+        
+      if (profileData?.email) {
+        const html = generateTicketAssignedEmail(
+          profileData.full_name || 'Pelajar',
+          assignedExcoName,
+          ticket.ticket_no,
+          `/kebajikan/aduan/${ticket.id}`
+        );
+        
+        await sendEmail({
+          to: profileData.email,
+          subject: `[JPP POLISAS] Aduan Anda Sedang Diuruskan (${ticket.ticket_no})`,
+          html
+        });
+      }
+    } catch (err) {
+      console.error("Gagal menghantar emel tugasan:", err);
+    }
+  };
 
   const addComment = async () => {
     if (!newComment.trim() || !ticket || !user) return;
@@ -184,19 +216,28 @@ export function KebajikanTicketDetail() {
     if (!ticket) return;
     setQuickSaving(true);
     const upd: Record<string, unknown> = { status: newStatus };
+    let justAssigned = false;
+    
     // Auto-assign exco yang klik
     if (newStatus === 'IN_PROGRESS' && !ticket.assigned_to) {
       upd.assigned_to = user?.id;
+      justAssigned = true;
     }
     if (newStatus === 'RESOLVED') {
       upd.resolved_at = new Date().toISOString();
       upd.resolved_by = user?.id;
       upd.resolution_note = note;
-      if (!ticket.assigned_to) upd.assigned_to = user?.id;
+      if (!ticket.assigned_to) {
+        upd.assigned_to = user?.id;
+        justAssigned = true;
+      }
     }
     if (newStatus === 'ESCALATED') {
       upd.escalated_at = new Date().toISOString();
-      if (!ticket.assigned_to) upd.assigned_to = user?.id;
+      if (!ticket.assigned_to) {
+        upd.assigned_to = user?.id;
+        justAssigned = true;
+      }
     }
     await supabase.from('kebajikan_tickets').update(upd).eq('id', ticket.id);
     await supabase.from('kebajikan_ticket_status_log').insert({
@@ -216,6 +257,11 @@ export function KebajikanTicketDetail() {
         actor_name: profile?.full_name,
       });
     }
+    
+    if (justAssigned) {
+      await sendAssignmentEmail(profile?.full_name || 'Exco Kebajikan');
+    }
+    
     setQuickTarget('');
     setQuickNote('');
     setQuickSaving(false);
@@ -227,6 +273,8 @@ export function KebajikanTicketDetail() {
     if (!ticket || !statusChange) return;
     setSaving(true);
     const upd: any = { status: statusChange };
+    let justAssigned = false;
+    
     if (statusChange === 'RESOLVED') {
       upd.resolved_at = new Date().toISOString();
       upd.resolved_by = user?.id;
@@ -234,10 +282,14 @@ export function KebajikanTicketDetail() {
     }
     if (statusChange === 'IN_PROGRESS' && !ticket.assigned_to) {
       upd.assigned_to = user?.id;
+      justAssigned = true;
     }
     if (statusChange === 'ESCALATED') {
       upd.escalated_at = new Date().toISOString();
-      if (!ticket.assigned_to) upd.assigned_to = user?.id;
+      if (!ticket.assigned_to) {
+        upd.assigned_to = user?.id;
+        justAssigned = true;
+      }
     }
     await supabase.from('kebajikan_tickets').update(upd).eq('id', ticket.id);
     await supabase.from('kebajikan_ticket_status_log').insert({
@@ -257,6 +309,11 @@ export function KebajikanTicketDetail() {
         actor_name:  profile?.full_name,
       });
     }
+    
+    if (justAssigned) {
+      await sendAssignmentEmail(profile?.full_name || 'Exco Kebajikan');
+    }
+    
     await fetchAll();
     setStatusChange('');
     setStatusNote('');

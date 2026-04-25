@@ -32,7 +32,7 @@ export function JppUsersPage() {
 
     const fetchAdminData = async () => {
         setLoading(true);
-        const { data: usersData } = await supabase.from('profiles').select('*').order('full_name', { ascending: true });
+        const { data: usersData } = await supabase.from('profiles').select('id, full_name, email, role, matric_no, programme_code, intake_year, intake_period, semester_override, subscription_tier, ai_token_balance, ai_tier_expiration, jpp_position, club_id').order('full_name', { ascending: true });
         setAllUsers(usersData || []);
         
         const { data: requestsData } = await supabase.from('ai_tier_requests').select('*, profiles(full_name)').order('created_at', { ascending: false });
