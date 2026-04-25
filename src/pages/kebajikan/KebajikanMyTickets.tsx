@@ -87,6 +87,57 @@ export function KebajikanMyTickets() {
       link:        `/kebajikan/tiket/${reopenTicket.id}`,
       reference_id: reopenTicket.id,
     });
+
+    // ── EMAIL NOTIFICATION: REOPEN REQUEST ──────────────────────────────
+    try {
+      const { data: settingsData } = await supabase
+        .from('kebajikan_settings')
+        .select('email_reopen')
+        .limit(1)
+        .single();
+
+      if (settingsData?.email_reopen) {
+        // If ticket was assigned, notify that specific Exco. Otherwise, notify all.
+        let emails: string[] = [];
+        if (reopenTicket.assigned_to) {
+          const { data: exco } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('id', reopenTicket.assigned_to)
+            .single();
+          if (exco?.email) emails = [exco.email];
+        } else {
+          const { data: excos } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('role', 'EXCO_KEBAJIKAN');
+          emails = (excos?.map(e => e.email).filter(Boolean) as string[]) || [];
+        }
+
+        if (emails.length > 0) {
+          const { generateStaffNotificationEmail } = await import('@/lib/emailTemplates');
+          const emailHtml = generateStaffNotificationEmail(
+            'REOPEN',
+            reopenTicket.ticket_no,
+            reopenTicket.title,
+            user?.user_metadata?.full_name || 'Pelajar',
+            `/kebajikan/tiket/${reopenTicket.id}`,
+            reopenReason
+          );
+
+          await supabase.functions.invoke('send-email', {
+            body: {
+              to: emails,
+              subject: `Permohonan Buka Semula: ${reopenTicket.ticket_no}`,
+              html: emailHtml,
+            },
+          });
+        }
+      }
+    } catch (emailErr) {
+      console.error('Error sending reopen email:', emailErr);
+    }
+
     setReopenLoading(false);
     setReopenTicket(null);
     setReopenReason('');

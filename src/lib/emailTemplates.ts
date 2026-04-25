@@ -133,3 +133,97 @@ export function generateTicketAssignedEmail(studentName: string, excoName: strin
 </html>
   `;
 }
+
+/**
+ * Generate an HTML email for notifying Exco Kebajikan about ticket updates (New, SLA, Escalate, Reopen).
+ */
+export function generateStaffNotificationEmail(
+  type: 'NEW' | 'WARNING' | 'ESCALATION' | 'REOPEN',
+  ticketNo: string,
+  ticketTitle: string,
+  studentName: string,
+  ticketUrl: string,
+  additionalInfo?: string
+): string {
+  const primaryColor = KEBAJIKAN_THEME_COLOR; // '#0D9488'
+  const appUrl = window.location.origin;
+  const fullTicketUrl = ticketUrl.startsWith('http') ? ticketUrl : `${appUrl}${ticketUrl}`;
+
+  let title = '';
+  let badgeColor = '';
+  let message = '';
+
+  switch (type) {
+    case 'NEW':
+      title = 'Aduan Baharu Diterima';
+      badgeColor = '#3b82f6'; // Blue
+      message = 'Satu aduan baharu telah diterima dan menunggu tindakan Exco Kebajikan.';
+      break;
+    case 'WARNING':
+      title = '⚠️ Amaran SLA (48 Jam)';
+      badgeColor = '#f59e0b'; // Amber
+      message = 'Tiket ini belum menerima sebarang kemaskini melebihi 48 jam. Sila ambil tindakan segera.';
+      break;
+    case 'ESCALATION':
+      title = '🔴 Auto-Escalation (72 Jam)';
+      badgeColor = '#ef4444'; // Red
+      message = 'Sistem telah auto-escalate tiket ini kerana tiada tindakan selama lebih 72 jam.';
+      break;
+    case 'REOPEN':
+      title = 'Permohonan Buka Semula (Reopen)';
+      badgeColor = '#6366f1'; // Indigo
+      message = 'Pelajar telah memohon untuk membuka semula tiket ini. Sila semak kelulusan.';
+      break;
+  }
+
+  return `
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title} - ${ticketNo}</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9; margin: 0; padding: 0; color: #334155; }
+    .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .header { background-color: ${primaryColor}; color: white; padding: 20px; text-align: center; }
+    .header h1 { margin: 0; font-size: 20px; font-weight: 600; }
+    .content { padding: 32px; line-height: 1.6; }
+    .status-badge { display: inline-block; background-color: ${badgeColor}; color: white; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; margin-bottom: 20px; }
+    .details { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 16px; margin: 20px 0; }
+    .details strong { color: #0f172a; }
+    .cta-container { text-align: center; margin: 32px 0; }
+    .btn { display: inline-block; background-color: ${primaryColor}; color: #ffffff !important; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 16px; }
+    .footer { background-color: #f8fafc; padding: 24px; text-align: center; font-size: 13px; color: #64748b; border-top: 1px solid #e2e8f0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Sistem E-Kebajikan (Notifikasi Exco)</h1>
+    </div>
+    <div class="content">
+      <div class="status-badge">${title}</div>
+      <p>${message}</p>
+      
+      <div class="details">
+        <p style="margin-top: 0;"><strong>No. Tiket:</strong> ${ticketNo}</p>
+        <p><strong>Tajuk Aduan:</strong> ${ticketTitle}</p>
+        <p><strong>Nama Pelajar:</strong> ${studentName}</p>
+        ${additionalInfo ? `<p><strong>Nota:</strong> ${additionalInfo}</p>` : ''}
+      </div>
+      
+      <p>Sila log masuk ke portal untuk menyemak aduan ini dengan segera.</p>
+      
+      <div class="cta-container">
+        <a href="${fullTicketUrl}" class="btn">Buka Tiket</a>
+      </div>
+    </div>
+    <div class="footer">
+      <p>Ini adalah notifikasi automatik dari Sistem E-Kebajikan JPP POLISAS untuk Exco Kebajikan.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+}

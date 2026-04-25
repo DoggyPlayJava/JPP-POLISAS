@@ -11,16 +11,26 @@ const DEFAULT_ESCALATE_HOURS = 72;
 
 Deno.serve(async (_req: Request) => {
   try {
-    // 1. Read SLA config from portal_settings
+    // 1. Read SLA config from kebajikan_settings
     const { data: settingsRow } = await supabase
-      .from("portal_settings")
-      .select("value")
-      .eq("key", "kebajikan_settings")
+      .from("kebajikan_settings")
+      .select("*")
+      .limit(1)
       .single();
 
-    const slaConfig = settingsRow?.value?.sla ?? {};
-    const warningHours  = Number(slaConfig.warning_hours  ?? DEFAULT_WARNING_HOURS);
-    const escalateHours = Number(slaConfig.escalate_hours ?? DEFAULT_ESCALATE_HOURS);
+    const warningHours  = Number(settingsRow?.sla_warning_hours ?? DEFAULT_WARNING_HOURS);
+    const escalateHours = Number(settingsRow?.sla_escalate_hours ?? DEFAULT_ESCALATE_HOURS);
+    const emailWarning = settingsRow?.email_warning ?? false;
+    const emailEscalation = settingsRow?.email_escalation ?? false;
+
+    let excosEmails: string[] = [];
+    if (emailWarning || emailEscalation) {
+      const { data: excos } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("role", "EXCO_KEBAJIKAN");
+      excosEmails = (excos?.map((e: any) => e.email).filter(Boolean) as string[]) || [];
+    }
 
     const now = new Date();
     const warningCutoff  = new Date(now.getTime() - warningHours  * 3600000).toISOString();
@@ -76,6 +86,19 @@ Deno.serve(async (_req: Request) => {
           type:          "ESCALATION",
         });
 
+        if (emailEscalation && excosEmails.length > 0) {
+          const html = `
+          <div style="font-family: sans-serif; padding: 20px;">
+            <h2>🔴 Auto-Escalation (${escalateHours} Jam)</h2>
+            <p>Sistem telah auto-escalate tiket ini kerana tiada tindakan selama lebih ${escalateHours} jam.</p>
+            <p><strong>No. Tiket:</strong> ${ticket.ticket_no}</p>
+            <p><strong>Tajuk:</strong> ${ticket.title}</p>
+          </div>`;
+          await supabase.functions.invoke("send-email", {
+            body: { to: excosEmails, subject: `🔴 Auto-Escalation: ${ticket.ticket_no}`, html }
+          });
+        }
+
         results.escalated++;
         continue;
       }
@@ -100,6 +123,19 @@ Deno.serve(async (_req: Request) => {
           body:          `Tiket "${ticket.title}" belum diproses lebih dari ${warningHours} jam. Sila ambil tindakan segera.`,
           type:          "WARNING",
         });
+
+        if (emailWarning && excosEmails.length > 0) {
+          const html = `
+          <div style="font-family: sans-serif; padding: 20px;">
+            <h2>⚠️ Amaran SLA (${warningHours} Jam)</h2>
+            <p>Tiket ini belum menerima sebarang kemaskini melebihi ${warningHours} jam. Sila ambil tindakan segera.</p>
+            <p><strong>No. Tiket:</strong> ${ticket.ticket_no}</p>
+            <p><strong>Tajuk:</strong> ${ticket.title}</p>
+          </div>`;
+          await supabase.functions.invoke("send-email", {
+            body: { to: excosEmails, subject: `⚠️ Amaran SLA: ${ticket.ticket_no}`, html }
+          });
+        }
 
         results.warned++;
         continue;

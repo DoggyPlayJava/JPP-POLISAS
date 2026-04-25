@@ -255,6 +255,45 @@ export function KebajikanSubmitPage() {
         await sendNotificationToKKExco(newTicketPayload);
       } else {
         await sendNotificationToKebajikanExco(newTicketPayload);
+        
+        // ── EMAIL NOTIFICATION: TIKET BARU ──────────────────────────────
+        try {
+          const { data: settingsData } = await supabase
+            .from('kebajikan_settings')
+            .select('email_new_ticket')
+            .limit(1)
+            .single();
+
+          if (settingsData?.email_new_ticket) {
+            const { data: excos } = await supabase
+              .from('profiles')
+              .select('email')
+              .eq('role', 'EXCO_KEBAJIKAN');
+
+            const emails = excos?.map(e => e.email).filter(Boolean) as string[];
+
+            if (emails && emails.length > 0) {
+              const { generateStaffNotificationEmail } = await import('@/lib/emailTemplates');
+              const emailHtml = generateStaffNotificationEmail(
+                'NEW',
+                data.ticket_no,
+                ticketTitle,
+                form.full_name || profile?.full_name || 'Pelajar',
+                `/kebajikan/tiket/${data.id}`
+              );
+
+              await supabase.functions.invoke('send-email', {
+                body: {
+                  to: emails,
+                  subject: `Aduan Baharu: ${data.ticket_no}`,
+                  html: emailHtml,
+                },
+              });
+            }
+          }
+        } catch (emailErr) {
+          console.error('Error sending new ticket email:', emailErr);
+        }
       }
 
       setSubmittedNo(data.ticket_no);

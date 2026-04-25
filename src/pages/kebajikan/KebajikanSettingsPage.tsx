@@ -346,7 +346,7 @@ export function KebajikanSettingsPage() {
 
           {/* Email Notifications */}
           <GlassCard>
-            <SectionHeader icon={Mail} title="Notifikasi Email" subtitle="Toggle notifikasi email untuk akaun anda (per-user)" />
+            <SectionHeader icon={Mail} title="Notifikasi Email" subtitle="Tetapan Global (Master Switch) notifikasi e-mel untuk semua Exco Kebajikan" />
             <div className="space-y-4">
               {EMAIL_TOGGLES.map(({ key, label, desc }) => (
                 <div key={key} className="flex items-center justify-between p-4 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-colors">
