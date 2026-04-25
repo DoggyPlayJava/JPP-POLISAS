@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, ChevronRight } from 'lucide-react';
+import { Bell, ChevronRight, CheckCheck, Loader2, ArrowRight } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { useNotificationStore } from '@/store/useNotificationStore';
@@ -29,13 +29,13 @@ function getNotifLink(notif: AppNotification): string | null {
 
 // ─── Module badge config ───────────────────────────────────────────────────────
 const MODULE_CONFIG: Record<NotificationModule, { label: string; color: string; bg: string; dot: string }> = {
-  KEBAJIKAN:    { label: 'E-Kebajikan',    color: '#2DD4BF', bg: 'rgba(45,212,191,0.12)', dot: '#2DD4BF' },
-  EKPP:         { label: 'Portal Kelab',          color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', dot: '#f59e0b' },
-  AKADEMIK:     { label: 'E-Akademik',     color: '#6366f1', bg: 'rgba(99,102,241,0.12)', dot: '#6366f1' },
-  KEUSAHAWANAN: { label: 'Keusahawanan',   color: '#f97316', bg: 'rgba(249,115,22,0.12)', dot: '#f97316' },
-  JPP:          { label: 'JPP HQ',         color: '#8b1a1a', bg: 'rgba(139,26,26,0.12)',  dot: '#ef4444' },
-  SYSTEM:       { label: 'Sistem',         color: '#94a3b8', bg: 'rgba(148,163,184,0.10)', dot: '#94a3b8' },
-  POLYMART:     { label: 'PolyMart',       color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', dot: '#f59e0b' },
+  KEBAJIKAN:    { label: 'E-Kebajikan',  color: '#2DD4BF', bg: 'rgba(45,212,191,0.12)',   dot: '#2DD4BF' },
+  EKPP:         { label: 'Portal Kelab', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b' },
+  AKADEMIK:     { label: 'E-Akademik',   color: '#6366f1', bg: 'rgba(99,102,241,0.12)',   dot: '#6366f1' },
+  KEUSAHAWANAN: { label: 'Keusahawanan', color: '#f97316', bg: 'rgba(249,115,22,0.12)',   dot: '#f97316' },
+  JPP:          { label: 'JPP HQ',       color: '#8b1a1a', bg: 'rgba(139,26,26,0.12)',    dot: '#ef4444' },
+  SYSTEM:       { label: 'Sistem',       color: '#94a3b8', bg: 'rgba(148,163,184,0.10)', dot: '#94a3b8' },
+  POLYMART:     { label: 'PolyMart',     color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b' },
 };
 
 function ModuleBadge({ module }: { module: NotificationModule }) {
@@ -59,7 +59,7 @@ function NotifItem({ notif, onRead }: { notif: AppNotification; onRead: () => vo
       layout
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, height: 0 }}
+      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
       onClick={onRead}
       className={cn(
         'relative px-4 py-3.5 cursor-pointer transition-colors group',
@@ -98,11 +98,12 @@ function NotifItem({ notif, onRead }: { notif: AppNotification; onRead: () => vo
 }
 
 export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'light' }) {
-  const notifs = useNotificationStore(state => state.notifs);
-  const unreadCount = useNotificationStore(state => state.unreadCount);
-  const markRead = useNotificationStore(state => state.markRead);
-  const markAllRead = useNotificationStore(state => state.markAllRead);
-  const navigate = useNavigate();
+  const notifs        = useNotificationStore(state => state.notifs);
+  const unreadCount   = useNotificationStore(state => state.unreadCount);
+  const isMarkingAll  = useNotificationStore(state => state.isMarkingAll);
+  const markRead      = useNotificationStore(state => state.markRead);
+  const markAllRead   = useNotificationStore(state => state.markAllRead);
+  const navigate      = useNavigate();
 
   const handleNotifClick = async (notif: AppNotification) => {
     await markRead(notif.id);
@@ -167,15 +168,31 @@ export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'li
           {unreadCount > 0 && (
             <button
               onClick={markAllRead}
-              className="text-[9px] font-bold text-slate-500 hover:text-slate-300 transition-colors uppercase tracking-wider"
+              disabled={isMarkingAll}
+              className={cn(
+                'flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider transition-all',
+                isMarkingAll
+                  ? 'text-slate-600 cursor-not-allowed'
+                  : 'text-slate-500 hover:text-emerald-400'
+              )}
             >
-              Baca semua
+              {isMarkingAll ? (
+                <>
+                  <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                  <span>Menyimpan...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCheck className="w-2.5 h-2.5" />
+                  <span>Baca semua</span>
+                </>
+              )}
             </button>
           )}
         </div>
 
         {/* Content */}
-        <div className="max-h-[380px] overflow-y-auto scrollbar-hide">
+        <div className="max-h-[340px] overflow-y-auto scrollbar-hide">
           {notifs.length === 0 ? (
             <div className="py-10 text-center">
               <Bell className="w-8 h-8 text-slate-700 mx-auto mb-2 opacity-40" />
@@ -202,6 +219,22 @@ export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'li
             </AnimatePresence>
           )}
         </div>
+
+        {/* Footer — Lihat Semua */}
+        {notifs.length > 0 && (
+          <div
+            className="border-t px-4 py-2.5"
+            style={{ borderColor: 'rgba(255,255,255,0.06)' }}
+          >
+            <button
+              onClick={() => navigate('/notifikasi')}
+              className="w-full flex items-center justify-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-300 transition-colors py-0.5"
+            >
+              <span>Lihat Semua Notifikasi</span>
+              <ArrowRight className="w-2.5 h-2.5" />
+            </button>
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   );

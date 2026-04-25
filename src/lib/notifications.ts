@@ -17,6 +17,22 @@ export interface NotificationPayload {
   actor_name?: string;
 }
 
+// ─── Shape of a notification row returned from Supabase ───────────────────────
+export interface AppNotification {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  type: string;
+  module: NotificationModule;
+  link?: string | null;
+  reference_id?: string | null;
+  actor_name?: string | null;
+  target_role?: string | null;
+  is_read: boolean;
+  created_at: string;
+}
+
 // ─── Send push notification via Edge Function ─────────────────────────────────
 async function firePush(user_id: string, payload: NotificationPayload): Promise<void> {
   try {

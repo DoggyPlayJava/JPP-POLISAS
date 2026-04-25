@@ -29,6 +29,7 @@ const PenasihatLogPage = lazy(() => import('./pages/PenasihatLogPage').then(m =>
 const KarnivalVotingPage = lazy(() => import('./pages/KarnivalVotingPage').then(m => ({ default: m.KarnivalVotingPage })));
 const NexusPage = lazy(() => import('./pages/NexusPage').then(m => ({ default: m.NexusPage })));
 const PortalPage = lazy(() => import('./pages/PortalPage').then(m => ({ default: m.PortalPage })));
+const NotifikasiPage = lazy(() => import('./pages/NotifikasiPage').then(m => ({ default: m.NotifikasiPage })));
 // ── JPP HQ Portal ──
 import { JppLayout } from './pages/jpp/JppLayout';
 const JppHomePage = lazy(() => import('./pages/jpp/JppHomePage').then(m => ({ default: m.JppHomePage })));
@@ -181,7 +182,10 @@ function AppRoutes() {
 
         {/* 🌐 PORTAL HUB — standalone tanpa sidebar */}
         <Route path="/portal" element={<RequireApproval><PortalPage /></RequireApproval>} />
-        
+
+        {/* 🔔 NOTIFIKASI — standalone tanpa sidebar */}
+        <Route path="/notifikasi" element={<RequireApproval><NotifikasiPage /></RequireApproval>} />
+
         {/* ⚙️ TETAPAN GLOBAL — standalone tanpa sidebar */}
         <Route path="/tetapan" element={<RequireApproval><SettingsPage /></RequireApproval>} />
 

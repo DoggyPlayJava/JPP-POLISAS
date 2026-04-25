@@ -4,7 +4,7 @@ import { useAuth } from './AuthContext';
 import { useNotificationStore } from '@/store/useNotificationStore';
 import type { AppNotification } from '@/lib/notifications';
 
-const POLL_INTERVAL_MS = 20_000;
+// (polling dihapuskan — guna Realtime Supabase sahaja)
 
 /**
  * Headless Component that sets up Supabase Realtime listeners
@@ -25,7 +25,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(30);
+      .limit(50);
       
     if (data) {
       setNotifs(data as AppNotification[]);
@@ -82,17 +82,20 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
     const handleVisible = () => {
       fetchNotifs();
-      subscribeRealtime(); 
+      subscribeRealtime();
     };
 
-    document.addEventListener('visibilitychange', () => {
+    // ─── Gunakan named function untuk visibility agar cleanup berjaya ──────────
+    const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') handleVisible();
-    });
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('pageshow', handleVisible);
     window.addEventListener('focus', handleVisible);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisible);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('pageshow', handleVisible);
       window.removeEventListener('focus', handleVisible);
       if (channelRef.current) supabase.removeChannel(channelRef.current);
