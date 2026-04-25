@@ -186,11 +186,11 @@ export function KebajikanTicketDetail() {
         
         if (ticket.submitter_id) {
           await sendNotificationToUser(ticket.submitter_id, {
-            title: \`Status Aduan Dikemaskini — \${ticket.ticket_no}\`,
-            message: \`Status aduan anda telah dikemaskini kepada "Menunggu Maklumat".\`,
+            title: `Status Aduan Dikemaskini — ${ticket.ticket_no}`,
+            message: `Status aduan anda telah dikemaskini kepada "Menunggu Maklumat".`,
             type: 'STATUS_UPDATE',
             module: 'KEBAJIKAN',
-            link: \`/kebajikan/aduan/\${ticket.id}\`,
+            link: `/kebajikan/aduan/${ticket.id}`,
             reference_id: ticket.id,
             actor_name: profile?.full_name,
           });
@@ -198,11 +198,11 @@ export function KebajikanTicketDetail() {
       }
 
       const msgPayload = {
-        title:       \`Mesej Baru — \${ticket.ticket_no}\`,
-        message:     \`\${profile?.full_name || 'Exco Kebajikan'}: "\${newComment.slice(0, 80)}\${newComment.length > 80 ? '...' : ''}"\`,
+        title:       `Mesej Baru — ${ticket.ticket_no}`,
+        message:     `${profile?.full_name || 'Exco Kebajikan'}: "${newComment.slice(0, 80)}${newComment.length > 80 ? '...' : ''}"`,
         type:        'NEW_MESSAGE' as const,
         module:      'KEBAJIKAN' as const,
-        link:        \`/kebajikan/aduan/\${ticket.id}\`,
+        link:        `/kebajikan/aduan/${ticket.id}`,
         reference_id: ticket.id,
         actor_name:  profile?.full_name || 'Exco Kebajikan',
       };
