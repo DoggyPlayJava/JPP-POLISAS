@@ -34,7 +34,7 @@ export function JppLayout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#0a0a0f]">
+    <div className="dark flex h-screen overflow-hidden bg-[#0a0a0f]">
 
       {/* Mobile backdrop */}
       <AnimatePresence>

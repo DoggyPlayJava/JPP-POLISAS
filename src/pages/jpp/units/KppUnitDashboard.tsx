@@ -212,6 +212,7 @@ export function KppUnitDashboard() {
   type KppSubTab = 'overview' | 'aktiviti' | 'laporan' | 'keahlian' | 'kelab' | 'tetapan';
   const [kppSubTab, setKppSubTab] = useState<KppSubTab>('overview');
   const [kppClubFilter, setKppClubFilter] = useState('ALL');
+  const [memberRoleFilter, setMemberRoleFilter] = useState<'all' | 'kepimpinan' | 'ahli'>('all');
   const [kppLoading, setKppLoading] = useState(false);
 
   // Settings states
@@ -265,6 +266,79 @@ export function KppUnitDashboard() {
       toast.success(`Had keahlian: ${newLimit} kelab`, { id: toastId });
     } catch (e: any) {
       toast.error(e.message || 'Gagal kemaskini had', { id: toastId });
+    }
+  };
+
+  // Action Handler
+  const handleMembershipAction = async (userId: string, clubId: string, status: 'APPROVED' | 'REJECTED') => {
+    try {
+      if (status === 'REJECTED') {
+        // Tulis log keselamatan
+        await supabase.from('club_logs').insert({
+          club_id: clubId,
+          action_type: 'MEMBER_REJECTED',
+          actor_id: profile?.id,
+          actor_name: profile?.full_name,
+          description: `Permohonan ditolak oleh unit KPP`,
+          metadata: { target_user_id: userId }
+        });
+        
+        // Padam keahlian terus jika dibuang atau direject permohonan baru
+        const { error: delErr } = await supabase.from('student_club_memberships')
+          .delete()
+          .eq('user_id', userId)
+          .eq('club_id', clubId);
+        if (delErr) throw delErr;
+
+        // Buka semula akaun sebagai ahli biasa jika direject
+        await supabase.from('profiles').update({ account_status: 'APPROVED' }).eq('id', userId);
+      } else {
+        // Luluskan
+        const { error: updErr } = await supabase.from('student_club_memberships')
+          .update({ account_status: status })
+          .eq('user_id', userId)
+          .eq('club_id', clubId);
+        if (updErr) throw updErr;
+          
+        // Buka pintu untuk pengguna
+        await supabase.from('profiles').update({ account_status: 'APPROVED' }).eq('id', userId);
+
+        // Sync profiles.role jika kelab ini adalah primary club user
+        const { data: membershipInfo } = await supabase
+          .from('student_club_memberships')
+          .select('role, is_primary')
+          .eq('user_id', userId)
+          .eq('club_id', clubId)
+          .single();
+        
+        if (membershipInfo?.is_primary && membershipInfo?.role) {
+          await supabase.from('profiles')
+            .update({ role: membershipInfo.role })
+            .eq('id', userId);
+        }
+      }
+
+      // Hantar Notifikasi kepada Pengguna Sendiri
+      const clubName = ALL_CLUBS.find(c => c.id === clubId)?.name || 'Kelab tersebut';
+      const notifTitle = status === 'APPROVED' ? 'Permohonan Diluluskan' : 'Permohonan Ditolak';
+      const notifMsg = status === 'APPROVED' 
+          ? `Tahniah! Permohonan anda untuk menyertai ${clubName} telah diluluskan.`
+          : `Dukacita dimaklumkan permohonan anda untuk menyertai ${clubName} telah ditolak.`;
+
+      await supabase.from('notifications').insert({
+          user_id: userId,
+          title: notifTitle,
+          message: notifMsg,
+          type: 'SYSTEM',
+          is_read: false
+      });
+
+      toast.success(status === 'APPROVED' ? 'Permohonan diluluskan!' : 'Permohonan ditolak.');
+      fetchKppData();
+      fetchOverviewData();
+    } catch (e) {
+      console.error(e);
+      toast.error('Operasi gagal.');
     }
   };
 
@@ -393,9 +467,8 @@ export function KppUnitDashboard() {
   // Derived stats for quick display in overview
   const pendingMembersCount = allMemberships.length;
   const pendingReportsCount = allReports.filter(r => r.status === 'Menunggu').length;
-  const totalPendingLeaders = pendingLeaders.filter(u =>
-    ['CLUB_PRESIDENT', 'CLUB_ADVISOR', 'PRESIDEN', 'PENASIHAT'].includes(u.role)
-  ).length;
+  const pendingLeadershipCount = allMemberships.filter(m => ['CLUB_PRESIDENT', 'CLUB_ADVISOR', 'PRESIDEN', 'PENASIHAT'].includes(m.role)).length;
+  const pendingAhliCount = allMemberships.length - pendingLeadershipCount;
 
   return (
     <div className="space-y-6">
@@ -475,15 +548,15 @@ export function KppUnitDashboard() {
           {/* Pending Leaders card */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-card border border-border/50 rounded-[2rem] p-6">
-              <div className="w-10 h-10 rounded-2xl flex items-center justify-center mb-4 text-white shadow-lg bg-orange-500">
+               <div className="w-10 h-10 rounded-2xl flex items-center justify-center mb-4 text-white shadow-lg bg-orange-500">
                 <Users className="w-5 h-5" />
               </div>
               <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Akaun Tertunggak: Kepimpinan</p>
               <div className="flex items-center justify-between mt-1">
                 <span className="text-3xl font-black text-foreground">
-                  {pendingLeaders.filter(u => ['CLUB_PRESIDENT', 'CLUB_ADVISOR', 'PRESIDEN', 'PENASIHAT'].includes(u.role)).length}
+                  {pendingLeadershipCount}
                 </span>
-                <Button size="sm" onClick={() => setKppSubTab('keahlian')} className="rounded-xl px-4 text-[10px] uppercase font-black">
+                <Button size="sm" onClick={() => { setKppSubTab('keahlian'); setMemberRoleFilter('kepimpinan'); }} className="rounded-xl px-4 text-[10px] uppercase font-black">
                   Urus Kepimpinan
                 </Button>
               </div>
@@ -496,9 +569,9 @@ export function KppUnitDashboard() {
               <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Akaun Tertunggak: Ahli Biasa</p>
               <div className="flex items-center justify-between mt-1">
                 <span className="text-3xl font-black text-foreground">
-                  {pendingLeaders.filter(u => !['CLUB_PRESIDENT', 'CLUB_ADVISOR', 'PRESIDEN', 'PENASIHAT'].includes(u.role)).length}
+                  {pendingAhliCount}
                 </span>
-                <Button size="sm" onClick={() => setKppSubTab('keahlian')}
+                <Button size="sm" onClick={() => { setKppSubTab('keahlian'); setMemberRoleFilter('ahli'); }}
                   className="rounded-xl px-4 text-[10px] uppercase font-black bg-blue-500 hover:bg-blue-600">
                   Urus Ahli Biasa
                 </Button>
@@ -668,6 +741,13 @@ export function KppUnitDashboard() {
               className="w-full bg-card border border-border/50 rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500/30 outline-none"
             />
           </div>
+
+          <div className="flex gap-2 pb-2 overflow-x-auto no-scrollbar">
+            <button onClick={() => setMemberRoleFilter('all')} className={cn('px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors whitespace-nowrap', memberRoleFilter === 'all' ? 'bg-orange-500 text-white shadow-md' : 'bg-card border border-border/50 text-muted-foreground hover:bg-muted/80')}>Semua</button>
+            <button onClick={() => setMemberRoleFilter('kepimpinan')} className={cn('px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors whitespace-nowrap', memberRoleFilter === 'kepimpinan' ? 'bg-orange-500 text-white shadow-md' : 'bg-card border border-border/50 text-muted-foreground hover:bg-muted/80')}>Kepimpinan</button>
+            <button onClick={() => setMemberRoleFilter('ahli')} className={cn('px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors whitespace-nowrap', memberRoleFilter === 'ahli' ? 'bg-orange-500 text-white shadow-md' : 'bg-card border border-border/50 text-muted-foreground hover:bg-muted/80')}>Ahli Biasa</button>
+          </div>
+
           {kppLoading ? (
             <div className="flex items-center justify-center py-16">
               <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
@@ -679,6 +759,9 @@ export function KppUnitDashboard() {
               {allMemberships
                 .filter(m => {
                   const p = m.profiles;
+                  const isLeadership = ['CLUB_PRESIDENT', 'CLUB_ADVISOR', 'PRESIDEN', 'PENASIHAT'].includes(m.role);
+                  if (memberRoleFilter === 'kepimpinan' && !isLeadership) return false;
+                  if (memberRoleFilter === 'ahli' && isLeadership) return false;
                   if (!memberSearch) return true;
                   return p?.full_name?.toLowerCase().includes(memberSearch.toLowerCase())
                     || p?.matric_no?.toLowerCase().includes(memberSearch.toLowerCase());
@@ -687,15 +770,27 @@ export function KppUnitDashboard() {
                   const p = m.profiles;
                   const club = ALL_CLUBS.find(c => c.id === m.club_id);
                   return (
-                    <div key={m.id} className="flex items-center gap-4 bg-card border border-border/40 rounded-2xl px-4 py-3 hover:border-orange-300 transition-all">
-                      <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 font-black text-sm flex-shrink-0">
-                        {p?.full_name?.[0] || '?'}
+                    <div key={m.id} className="flex flex-col sm:flex-row sm:items-center gap-4 bg-card border border-border/40 rounded-2xl px-4 py-3 hover:border-orange-300 transition-all">
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 font-black text-sm flex-shrink-0">
+                          {p?.full_name?.[0] || '?'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm text-foreground truncate">{p?.full_name || m.user_id}</p>
+                          <p className="text-[11px] text-muted-foreground">{p?.matric_no || p?.email} · {club?.shortName || '—'}</p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-foreground truncate">{p?.full_name || m.user_id}</p>
-                        <p className="text-[11px] text-muted-foreground">{p?.matric_no || p?.email} · {club?.shortName || '—'}</p>
+                      <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/30">
+                        <span className="text-[10px] font-black uppercase bg-orange-100 text-orange-700 px-2.5 py-1 rounded-xl flex-shrink-0">{m.role}</span>
+                        <div className="flex items-center gap-1.5">
+                          <button onClick={() => handleMembershipAction(m.user_id, m.club_id, 'APPROVED')} className="flex items-center justify-center h-8 w-8 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 transition-colors">
+                            <CheckCheck className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => handleMembershipAction(m.user_id, m.club_id, 'REJECTED')} className="flex items-center justify-center h-8 w-8 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 transition-colors">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                      <span className="text-[10px] font-black uppercase bg-orange-100 text-orange-700 px-2.5 py-1 rounded-xl flex-shrink-0">{m.role}</span>
                     </div>
                   );
                 })}

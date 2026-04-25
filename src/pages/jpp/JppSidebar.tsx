@@ -103,6 +103,8 @@ export function JppSidebar() {
     ? (positionLabels[jppPosition] ?? jppPosition)
     : isSuperAdmin ? 'Super Admin' : 'Ahli JPP';
 
+  const isNormalExco = !isYDP && !isMT && !!jppUnit;
+
   return (
     <aside
       className="w-72 h-screen flex flex-col select-none overflow-hidden"
@@ -242,7 +244,12 @@ export function JppSidebar() {
         {/* Main nav */}
         <p className="px-3 mb-2 text-[9px] font-black uppercase tracking-[0.3em] text-white/25">Navigasi</p>
         {[
-          { icon: LayoutDashboard, label: 'Laman Utama',    href: '/jpp',          end: true  },
+          { 
+            icon: LayoutDashboard, 
+            label: isNormalExco && jppUnit && unitConfig[jppUnit] ? `Dashboard ${unitConfig[jppUnit].shortLabel}` : 'Laman Utama',    
+            href: isNormalExco && jppUnit ? `/jpp/unit/${jppUnit.toLowerCase()}` : '/jpp',          
+            end: !isNormalExco  
+          },
           { icon: Users,           label: 'Ahli JPP',        href: '/jpp/members',  end: false },
           { icon: BarChart3,       label: 'Gambaran Sistem', href: '/jpp/overview', end: false },
           { icon: CalendarDays,    label: 'Takwim Global',   href: '/jpp/takwim',   end: false },

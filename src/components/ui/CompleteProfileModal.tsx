@@ -58,6 +58,17 @@ export function CompleteProfileModal() {
   const [leaderClubId,     setLeaderClubId]     = useState('');
   const [passcode,         setPasscode]         = useState('');
   const [loading,          setLoading]          = useState(false);
+  const [showWarning,      setShowWarning]      = useState(false);
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (loading) {
+      timeout = setTimeout(() => setShowWarning(true), 3000);
+    } else {
+      setShowWarning(false);
+    }
+    return () => clearTimeout(timeout);
+  }, [loading]);
 
   // Intake config from system_settings
   const [sm1, setSm1] = useState(7);
@@ -665,13 +676,29 @@ export function CompleteProfileModal() {
                 </>
               )}
 
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full h-14 rounded-2xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-black text-sm uppercase tracking-widest shadow-xl transition-all"
-              >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Simpan'}
-              </Button>
+              <div className="space-y-3 pt-2">
+                {showWarning && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-700 dark:text-amber-400 font-medium leading-relaxed text-center flex flex-col items-center justify-center gap-1 overflow-hidden"
+                  >
+                    <div className="flex items-center gap-1.5 font-bold">
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      <span>Pernah Isi?</span>
+                    </div>
+                    <span>Internet anda mungkin mengalami gangguan. Sila <strong>refresh/reopen</strong> website.</span>
+                  </motion.div>
+                )}
+
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-14 rounded-2xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-black text-sm uppercase tracking-widest shadow-xl transition-all"
+                >
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Simpan'}
+                </Button>
+              </div>
 
               {/* Helpline */}
               <div className="text-center pt-1">

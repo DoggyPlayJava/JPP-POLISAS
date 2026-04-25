@@ -177,6 +177,7 @@ export function JppHomePage() {
   const jppUnit     = profile?.jpp_unit as string | undefined;
   const isYDP       = jppPosition === 'YDP' || jppPosition === 'YANG_DIPERTUA' || isSuperAdmin;
   const isMT        = !isYDP && JPP_MT_POSITIONS.includes(jppPosition as any);
+  const isNormalExco = !isYDP && !isMT && !!jppUnit;
 
   const displayName = useMemo(() => getMalaysianNickname(profile?.full_name) || 'Sahabat', [profile]);
   const posLabel    = jppPosition
@@ -223,12 +224,23 @@ export function JppHomePage() {
     fetchData();
   }, []);
 
+  // Auto-redirect normal exco to their respective module
+  useEffect(() => {
+    if (isNormalExco && jppUnit && unitConfig[jppUnit]) {
+      navigate(`/jpp/unit/${jppUnit.toLowerCase()}`, { replace: true });
+    }
+  }, [isNormalExco, jppUnit, unitConfig, navigate]);
+
   // Determine visible units
   const visibleUnits = unitOrder.filter(code => {
     if (isYDP)  return true;
     if (isMT)   return assignedUnits.includes(code);
     return code === jppUnit;
   });
+
+  if (isNormalExco) {
+    return null; // The useEffect above handles the redirect
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white overflow-x-hidden">
@@ -285,12 +297,14 @@ export function JppHomePage() {
         </motion.div>
 
         {/* ── Quick Stats ──────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard label="Ahli JPP"     value={stats.jppMembers}      icon={Crown}         color={themeColor}  delay={0.1} />
-          <StatCard label="Kelab Aktif"  value={stats.totalClubs}      icon={Flag}          color="#60A5FA"     delay={0.15} />
-          <StatCard label="Perniagaan"   value={stats.totalBusinesses} icon={Store}         color="#F59E0B"     delay={0.2} />
-          <StatCard label="Aduan E-Bantu" value={stats.totalTickets}   icon={Heart}         color="#EF4444"     delay={0.25} />
-        </div>
+        {(isYDP || (isMT && (assignedUnits.includes('KPP') || assignedUnits.includes('KEUSAHAWANAN') || assignedUnits.includes('KEBAJIKAN')))) && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {isYDP && <StatCard label="Ahli JPP" value={stats.jppMembers} icon={Crown} color={themeColor} delay={0.1} />}
+            {(isYDP || (isMT && assignedUnits.includes('KPP'))) && <StatCard label="Kelab Aktif" value={stats.totalClubs} icon={Flag} color="#60A5FA" delay={0.15} />}
+            {(isYDP || (isMT && assignedUnits.includes('KEUSAHAWANAN'))) && <StatCard label="Perniagaan" value={stats.totalBusinesses} icon={Store} color="#F59E0B" delay={0.2} />}
+            {(isYDP || (isMT && assignedUnits.includes('KEBAJIKAN'))) && <StatCard label="Aduan E-Bantu" value={stats.totalTickets} icon={Heart} color="#EF4444" delay={0.25} />}
+          </div>
+        )}
 
         {/* ── Unit Exco Grid ───────────────────────────────────────────── */}
         <div className="space-y-4">
