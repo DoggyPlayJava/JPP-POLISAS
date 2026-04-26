@@ -15,6 +15,7 @@ import { Menu } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { NotificationBell } from '@/components/ui/NotificationBell';
+import { useKarnivalStatus } from '@/contexts/KarnivalContext';
 
 // ─── Color Picker Popover ───
 interface ColorPickerProps {
@@ -134,9 +135,11 @@ interface ExcoCardProps {
   isSuperAdmin: boolean;
   onToggle: (moduleId: string, newState: boolean) => void;
   onColorSave: (moduleId: string, color: string) => void;
+  karnivalActive?: boolean;
+  supsasActive?: boolean;
 }
 
-function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onColorSave }: ExcoCardProps) {
+function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onColorSave, karnivalActive, supsasActive }: ExcoCardProps) {
   const navigate = useNavigate();
   const [showColorPicker, setShowColorPicker] = useState(false);
 
@@ -169,8 +172,13 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
       transition={{ delay: index * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       onClick={handleClick}
       className={cn(
-        "group relative cursor-pointer overflow-hidden rounded-[2.5rem] bg-black/[0.03] dark:bg-white/5 border border-black/5 dark:border-white/10 backdrop-blur-md p-8 hover:bg-black/5 dark:bg-white/10 transition-all duration-500 min-h-[280px] flex flex-col justify-between",
-        !canAccess && "opacity-80 grayscale-[0.5] cursor-not-allowed"
+        "group relative cursor-pointer overflow-hidden rounded-[2.5rem] bg-black/[0.03] dark:bg-white/5 border backdrop-blur-md p-8 transition-all duration-500 min-h-[280px] flex flex-col justify-between",
+        !canAccess && "opacity-80 grayscale-[0.5] cursor-not-allowed",
+        karnivalActive
+          ? "border-violet-500/20 hover:border-violet-400/40 hover:bg-white/[0.06] hover:shadow-[0_0_30px_rgba(139,92,246,0.12)]"
+          : supsasActive
+            ? "border-amber-500/20 hover:border-amber-400/40 hover:bg-white/[0.06] hover:shadow-[0_0_30px_rgba(245,158,11,0.12)]"
+            : "border-black/5 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/10"
       )}
     >
       {/* Hover Gradient Overlay */}
@@ -294,10 +302,15 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
 export function PortalPage() {
   const { profile, signOut, isSuperAdmin, isKebajikanExco, hasKebajikanAccess } = useAuth();
   const navigate = useNavigate();
+  const karnivalStatus = useKarnivalStatus();
+  const karnivalActive = !!karnivalStatus?.isActive;
   const [settings, setSettings] = useState<ExcoColorSetting[]>([]);
   const [isLoadingSettings, setIsLoadingSettings] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [confettiDone, setConfettiDone] = useState(false);
+  const [karnivalCountdown, setKarnivalCountdown] = useState({ h: 0, m: 0, s: 0, expired: false });
+  const [supsasBurstDone, setSupsasBurstDone] = useState(false);
 
   // Kebajikan live stats
   const [kbStats, setKbStats] = useState<{ open: number; resolved: number; rating: number | null } | null>(null);
@@ -319,6 +332,65 @@ export function PortalPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // ── Karnival: confetti 15s timer ─────────────────────────────
+  useEffect(() => {
+    if (!karnivalActive) { setConfettiDone(false); return; }
+    const t = setTimeout(() => setConfettiDone(true), 15000);
+    return () => clearTimeout(t);
+  }, [karnivalActive]);
+
+  // ── Karnival: countdown timer ────────────────────────────────
+  useEffect(() => {
+    if (!karnivalStatus?.endDate) return;
+    const tick = () => {
+      const diff = new Date(karnivalStatus.endDate!).getTime() - Date.now();
+      if (diff <= 0) { setKarnivalCountdown(c => ({ ...c, expired: true })); return; }
+      setKarnivalCountdown({
+        h: Math.floor(diff / 3600000),
+        m: Math.floor((diff % 3600000) / 60000),
+        s: Math.floor((diff % 60000) / 1000),
+        expired: false,
+      });
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [karnivalStatus?.endDate]);
+
+  // ── Karnival: session toast (sekali per session) ──────────────
+  useEffect(() => {
+    if (!karnivalActive || !karnivalStatus?.name) return;
+    const key = `karnival_toast_${karnivalStatus.name}`;
+    if (!sessionStorage.getItem(key)) {
+      const t = setTimeout(() => {
+        toast('🎊 Karnival JPP sedang berlangsung! Undi booth kegemaran anda sekarang.', { duration: 5000 });
+        sessionStorage.setItem(key, '1');
+      }, 1800);
+      return () => clearTimeout(t);
+    }
+  }, [karnivalActive, karnivalStatus?.name]);
+
+  // ── SUPSAS: burst 10s timer ───────────────────────────────────
+  useEffect(() => {
+    if (!isModuleEnabled('supsas')) { setSupsasBurstDone(false); return; }
+    const t = setTimeout(() => setSupsasBurstDone(true), 10000);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings]);
+
+  // ── SUPSAS: session toast ─────────────────────────────────────
+  useEffect(() => {
+    if (!isModuleEnabled('supsas') || !supsasEdition?.name) return;
+    const key = `supsas_toast_${supsasEdition.name}`;
+    if (!sessionStorage.getItem(key)) {
+      const t = setTimeout(() => {
+        toast('🏆 SUPSAS sedang berlangsung! Pantau keputusan dan jadual sukan terkini.', { duration: 5000 });
+        sessionStorage.setItem(key, '1');
+      }, 1800);
+      return () => clearTimeout(t);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings, supsasEdition?.name]);
 
   const fetchSettings = useCallback(async () => {
     const controller = new AbortController();
@@ -438,9 +510,17 @@ export function PortalPage() {
 
   const displayName = useMemo(() => getMalaysianNickname(profile?.full_name) || 'Student', [profile]);
   const mainColor = getExcoColor('ekpp', settings);
+  const supsasActive = isModuleEnabled('supsas');
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-white font-sans selection:bg-emerald-500/20 overflow-x-hidden transition-colors duration-500 relative flex flex-col">
+    <div className={cn(
+      'min-h-screen font-sans overflow-x-hidden transition-colors duration-700 relative flex flex-col',
+      karnivalActive
+        ? 'bg-[#060010] text-white selection:bg-violet-500/20'
+        : supsasActive
+          ? 'bg-[#030d1a] text-white selection:bg-amber-500/20'
+          : 'bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-white selection:bg-emerald-500/20'
+    )}>
       
       <PortalSidebar 
         isOpen={isSidebarOpen} 
@@ -449,18 +529,279 @@ export function PortalPage() {
         settings={settings}
       />
       
-      {/* Keusahawanan Onboarding Style Background */}
+      {/* Background blobs — conditional karnival/supsas/normal */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full mix-blend-screen opacity-10 bg-amber-600 blur-3xl" />
-        <div className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full mix-blend-screen opacity-10 bg-teal-600 blur-3xl" />
+        {karnivalActive ? (
+          <>
+            <div className="absolute -top-[15%] -left-[10%] w-[80vw] h-[80vw] rounded-full opacity-25 blur-[100px]" style={{ background: 'radial-gradient(circle, #4c1d95 0%, transparent 70%)', animation: 'aurora-blob-1 30s ease-in-out infinite' }} />
+            <div className="absolute top-[50%] -right-[15%] w-[70vw] h-[70vw] rounded-full opacity-15 blur-[100px]" style={{ background: 'radial-gradient(circle, #831843 0%, transparent 70%)', animation: 'aurora-blob-2 40s ease-in-out infinite' }} />
+            <div className="absolute top-[20%] left-[40%] w-[50vw] h-[50vw] rounded-full opacity-10 blur-[120px]" style={{ background: 'radial-gradient(circle, #6d28d9 0%, transparent 70%)', animation: 'aurora-blob-1 50s ease-in-out infinite reverse' }} />
+          </>
+        ) : supsasActive ? (
+          <>
+            <div className="absolute -top-[15%] -left-[10%] w-[80vw] h-[80vw] rounded-full opacity-20 blur-[100px]" style={{ background: 'radial-gradient(circle, #78350f 0%, transparent 70%)', animation: 'aurora-blob-1 18s ease-in-out infinite' }} />
+            <div className="absolute top-[50%] -right-[15%] w-[70vw] h-[70vw] rounded-full opacity-15 blur-[100px]" style={{ background: 'radial-gradient(circle, #92400e 0%, transparent 70%)', animation: 'aurora-blob-2 25s ease-in-out infinite' }} />
+            <div className="absolute top-[25%] left-[40%] w-[55vw] h-[55vw] rounded-full opacity-10 blur-[120px]" style={{ background: 'radial-gradient(circle, #b45309 0%, transparent 70%)', animation: 'aurora-blob-1 30s ease-in-out infinite reverse' }} />
+          </>
+        ) : (
+          <>
+            <div className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full mix-blend-screen opacity-10 bg-amber-600 blur-3xl" />
+            <div className="absolute top-[40%] -right-[20%] w-[60vw] h-[60vw] rounded-full mix-blend-screen opacity-10 bg-teal-600 blur-3xl" />
+          </>
+        )}
       </div>
+
+      {/* Karnival + SUPSAS CSS Keyframes */}
+      {(karnivalActive || supsasActive) && (
+        <style>{`
+          @keyframes confetti-fall {
+            0%   { transform: translateY(-10px) rotate(0deg);    opacity: 1; }
+            85%  { opacity: 0.8; }
+            100% { transform: translateY(105vh) rotate(1080deg); opacity: 0; }
+          }
+          @keyframes sparkle-pulse {
+            0%, 100% { opacity: 0.12; transform: scale(1); }
+            50%       { opacity: 0.65; transform: scale(1.5); }
+          }
+          @keyframes aurora-blob-1 {
+            0%, 100% { transform: translate(0px, 0px) scale(1); }
+            33%       { transform: translate(40px, -30px) scale(1.05); }
+            66%       { transform: translate(-20px, 20px) scale(0.97); }
+          }
+          @keyframes aurora-blob-2 {
+            0%, 100% { transform: translate(0px, 0px) scale(1); }
+            40%       { transform: translate(-50px, 30px) scale(1.08); }
+            70%       { transform: translate(30px, -20px) scale(0.95); }
+          }
+          @keyframes gradient-shift {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          @keyframes karnival-glow-pulse {
+            0%, 100% { box-shadow: 0 0 30px rgba(139,92,246,0.2), 0 0 60px rgba(139,92,246,0.05); }
+            50%       { box-shadow: 0 0 50px rgba(139,92,246,0.4), 0 0 100px rgba(139,92,246,0.1); }
+          }
+          @keyframes supsas-burst {
+            0%   { transform: translateY(0px) rotate(0deg); opacity: 1; }
+            85%  { opacity: 0.9; }
+            100% { transform: translateY(-110vh) rotate(-720deg); opacity: 0; }
+          }
+          @keyframes meteor-streak {
+            0%   { transform: translateX(-60px) translateY(60px); opacity: 0; }
+            10%  { opacity: 0.7; }
+            90%  { opacity: 0.4; }
+            100% { transform: translateX(200px) translateY(-200px); opacity: 0; }
+          }
+          @keyframes supsas-glow-pulse {
+            0%, 100% { box-shadow: 0 0 30px rgba(245,158,11,0.2), 0 0 60px rgba(245,158,11,0.05); }
+            50%       { box-shadow: 0 0 50px rgba(245,158,11,0.4), 0 0 100px rgba(245,158,11,0.1); }
+          }
+          @keyframes supsas-gradient-shift {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+        `}</style>
+      )}
+
+      {/* Confetti Layer (15s) */}
+      {karnivalActive && !confettiDone && (
+        <div className="fixed inset-0 z-50 pointer-events-none overflow-hidden">
+          {[
+            { l:'3%',  s:8,  r:0.5, c:'#a855f7', d:'3.1s', dl:'0s',    sh:'square'    },
+            { l:'7%',  s:6,  r:1.8, c:'#fbbf24', d:'4.2s', dl:'0.3s',  sh:'rect'      },
+            { l:'11%', s:9,  r:1,   c:'#f472b6', d:'3.5s', dl:'0.7s',  sh:'circle'    },
+            { l:'15%', s:7,  r:0.6, c:'#818cf8', d:'5.0s', dl:'0.1s',  sh:'square'    },
+            { l:'19%', s:10, r:1.5, c:'#c084fc', d:'3.8s', dl:'1.2s',  sh:'rect'      },
+            { l:'23%', s:5,  r:1,   c:'#e879f9', d:'4.5s', dl:'0.5s',  sh:'circle'    },
+            { l:'27%', s:8,  r:0.7, c:'#fbbf24', d:'3.2s', dl:'0.9s',  sh:'square'    },
+            { l:'31%', s:6,  r:2,   c:'#a78bfa', d:'4.8s', dl:'0.2s',  sh:'rect'      },
+            { l:'35%', s:9,  r:1,   c:'#f9a8d4', d:'3.6s', dl:'1.4s',  sh:'circle'    },
+            { l:'39%', s:7,  r:0.5, c:'#7c3aed', d:'5.2s', dl:'0.6s',  sh:'square'    },
+            { l:'43%', s:11, r:1.3, c:'#f472b6', d:'3.4s', dl:'0.4s',  sh:'rect'      },
+            { l:'47%', s:6,  r:1,   c:'#fbbf24', d:'4.1s', dl:'1.1s',  sh:'circle'    },
+            { l:'51%', s:8,  r:0.8, c:'#c084fc', d:'3.9s', dl:'0.8s',  sh:'square'    },
+            { l:'55%', s:7,  r:1.6, c:'#818cf8', d:'4.7s', dl:'0s',    sh:'rect'      },
+            { l:'59%', s:9,  r:1,   c:'#a855f7', d:'3.3s', dl:'1.3s',  sh:'circle'    },
+            { l:'63%', s:6,  r:0.6, c:'#e879f9', d:'5.1s', dl:'0.3s',  sh:'square'    },
+            { l:'67%', s:10, r:1.4, c:'#fbbf24', d:'3.7s', dl:'0.7s',  sh:'rect'      },
+            { l:'71%', s:7,  r:1,   c:'#f9a8d4', d:'4.4s', dl:'1.0s',  sh:'circle'    },
+            { l:'75%', s:8,  r:0.7, c:'#7c3aed', d:'3.0s', dl:'0.5s',  sh:'square'    },
+            { l:'79%', s:6,  r:2,   c:'#a78bfa', d:'4.9s', dl:'0.2s',  sh:'rect'      },
+            { l:'83%', s:9,  r:1,   c:'#c084fc', d:'3.5s', dl:'1.5s',  sh:'circle'    },
+            { l:'87%', s:7,  r:0.5, c:'#fbbf24', d:'5.3s', dl:'0.6s',  sh:'square'    },
+            { l:'91%', s:8,  r:1.7, c:'#f472b6', d:'3.8s', dl:'0.9s',  sh:'rect'      },
+            { l:'95%', s:6,  r:1,   c:'#818cf8', d:'4.3s', dl:'0.1s',  sh:'circle'    },
+            { l:'5%',  s:7,  r:0.8, c:'#e879f9', d:'4.6s', dl:'1.8s',  sh:'square'    },
+            { l:'13%', s:9,  r:1.2, c:'#fbbf24', d:'3.1s', dl:'2.1s',  sh:'rect'      },
+            { l:'22%', s:6,  r:1,   c:'#a855f7', d:'5.0s', dl:'1.7s',  sh:'circle'    },
+            { l:'33%', s:10, r:0.6, c:'#f9a8d4', d:'3.4s', dl:'2.3s',  sh:'square'    },
+            { l:'44%', s:7,  r:1.5, c:'#7c3aed', d:'4.2s', dl:'1.6s',  sh:'rect'      },
+            { l:'56%', s:8,  r:1,   c:'#c084fc', d:'3.7s', dl:'2.0s',  sh:'circle'    },
+            { l:'68%', s:6,  r:0.7, c:'#fbbf24', d:'4.8s', dl:'1.9s',  sh:'square'    },
+            { l:'77%', s:9,  r:1.3, c:'#a78bfa', d:'3.2s', dl:'2.4s',  sh:'rect'      },
+            { l:'89%', s:7,  r:1,   c:'#f472b6', d:'5.1s', dl:'1.5s',  sh:'circle'    },
+          ].map((p, i) => (
+            <div key={i} style={{
+              position: 'absolute', top: 0, left: p.l,
+              width: p.s,
+              height: p.sh === 'circle' ? p.s : p.sh === 'square' ? p.s : p.s * p.r,
+              borderRadius: p.sh === 'circle' ? '50%' : '2px',
+              backgroundColor: p.c,
+              animationName: 'confetti-fall',
+              animationDuration: p.d,
+              animationDelay: p.dl,
+              animationTimingFunction: 'linear',
+              animationFillMode: 'forwards',
+            }} />
+          ))}
+        </div>
+      )}
+
+      {/* Floating Sparkles (Karnival only) */}
+      {karnivalActive && (
+        <div className="fixed inset-0 z-[5] pointer-events-none overflow-hidden">
+          {[
+            { x:'8%',  y:'15%', s:3, c:'#c084fc', dur:'2.1s', dl:'0s'   },
+            { x:'15%', y:'45%', s:2, c:'#fbbf24', dur:'3.0s', dl:'0.5s' },
+            { x:'22%', y:'72%', s:4, c:'#f472b6', dur:'2.5s', dl:'1.1s' },
+            { x:'31%', y:'28%', s:2, c:'#818cf8', dur:'3.5s', dl:'0.3s' },
+            { x:'40%', y:'60%', s:3, c:'#a855f7', dur:'2.3s', dl:'0.8s' },
+            { x:'50%', y:'18%', s:5, c:'#fbbf24', dur:'2.8s', dl:'1.4s' },
+            { x:'58%', y:'80%', s:2, c:'#e879f9', dur:'3.2s', dl:'0.2s' },
+            { x:'66%', y:'35%', s:4, c:'#c084fc', dur:'2.0s', dl:'0.9s' },
+            { x:'74%', y:'65%', s:3, c:'#f9a8d4', dur:'3.7s', dl:'0.6s' },
+            { x:'82%', y:'22%', s:2, c:'#7c3aed', dur:'2.6s', dl:'1.2s' },
+            { x:'89%', y:'52%', s:4, c:'#fbbf24', dur:'3.1s', dl:'0.4s' },
+            { x:'94%', y:'78%', s:3, c:'#a78bfa', dur:'2.4s', dl:'1.0s' },
+            { x:'5%',  y:'88%', s:2, c:'#f472b6', dur:'3.3s', dl:'1.6s' },
+            { x:'27%', y:'10%', s:3, c:'#818cf8', dur:'2.7s', dl:'0.7s' },
+            { x:'70%', y:'5%',  s:4, c:'#c084fc', dur:'3.0s', dl:'1.3s' },
+            { x:'45%', y:'92%', s:2, c:'#fbbf24', dur:'2.2s', dl:'0.1s' },
+            { x:'55%', y:'48%', s:3, c:'#e879f9', dur:'2.9s', dl:'1.5s' },
+            { x:'12%', y:'58%', s:4, c:'#a855f7', dur:'3.4s', dl:'0.8s' },
+          ].map((sp, i) => (
+            <div key={i} style={{
+              position: 'absolute', left: sp.x, top: sp.y,
+              width: sp.s, height: sp.s,
+              borderRadius: '50%',
+              backgroundColor: sp.c,
+              animationName: 'sparkle-pulse',
+              animationDuration: sp.dur,
+              animationDelay: sp.dl,
+              animationTimingFunction: 'ease-in-out',
+              animationIterationCount: 'infinite',
+            }} />
+          ))}
+        </div>
+      )}
+
+      {/* SUPSAS: Upward Medal Burst (10s) */}
+      {supsasActive && !supsasBurstDone && (
+        <div className="fixed inset-0 z-50 pointer-events-none overflow-hidden">
+          {[
+            { l:'4%',  s:12, c:'#fbbf24', d:'2.0s', dl:'0s'   },
+            { l:'9%',  s:10, c:'#e5e7eb', d:'2.5s', dl:'0.2s' },
+            { l:'14%', s:14, c:'#cd7c2f', d:'1.8s', dl:'0.5s' },
+            { l:'19%', s:11, c:'#fbbf24', d:'2.3s', dl:'0.1s' },
+            { l:'24%', s:9,  c:'#ffffff', d:'2.8s', dl:'0.6s' },
+            { l:'29%', s:13, c:'#f59e0b', d:'2.1s', dl:'0.3s' },
+            { l:'34%', s:10, c:'#e5e7eb', d:'2.6s', dl:'0.8s' },
+            { l:'39%', s:12, c:'#fbbf24', d:'1.9s', dl:'0.4s' },
+            { l:'44%', s:14, c:'#cd7c2f', d:'2.4s', dl:'0.7s' },
+            { l:'49%', s:10, c:'#ffffff', d:'2.2s', dl:'0s'   },
+            { l:'54%', s:11, c:'#fbbf24', d:'2.7s', dl:'0.9s' },
+            { l:'59%', s:9,  c:'#f59e0b', d:'2.0s', dl:'0.2s' },
+            { l:'64%', s:13, c:'#e5e7eb', d:'2.5s', dl:'0.5s' },
+            { l:'69%', s:12, c:'#fbbf24', d:'1.8s', dl:'0.3s' },
+            { l:'74%', s:10, c:'#cd7c2f', d:'2.3s', dl:'0.6s' },
+            { l:'79%', s:11, c:'#ffffff', d:'2.9s', dl:'0.1s' },
+            { l:'84%', s:14, c:'#fbbf24', d:'2.1s', dl:'0.7s' },
+            { l:'89%', s:9,  c:'#f59e0b', d:'2.6s', dl:'0.4s' },
+            { l:'94%', s:12, c:'#e5e7eb', d:'2.0s', dl:'0.8s' },
+            { l:'7%',  s:10, c:'#fbbf24', d:'2.4s', dl:'1.1s' },
+            { l:'17%', s:13, c:'#cd7c2f', d:'2.2s', dl:'1.3s' },
+            { l:'27%', s:11, c:'#ffffff', d:'2.8s', dl:'1.0s' },
+            { l:'37%', s:14, c:'#fbbf24', d:'1.9s', dl:'1.4s' },
+            { l:'47%', s:9,  c:'#f59e0b', d:'2.5s', dl:'1.2s' },
+            { l:'57%', s:12, c:'#e5e7eb', d:'2.0s', dl:'1.5s' },
+            { l:'67%', s:10, c:'#fbbf24', d:'2.7s', dl:'1.6s' },
+            { l:'77%', s:13, c:'#cd7c2f', d:'2.3s', dl:'1.1s' },
+            { l:'87%', s:11, c:'#ffffff', d:'2.1s', dl:'1.7s' },
+            { l:'97%', s:9,  c:'#fbbf24', d:'2.6s', dl:'1.3s' },
+            { l:'12%', s:14, c:'#f59e0b', d:'2.4s', dl:'1.8s' },
+            { l:'32%', s:10, c:'#fbbf24', d:'2.2s', dl:'2.0s' },
+            { l:'52%', s:12, c:'#e5e7eb', d:'1.8s', dl:'1.9s' },
+            { l:'72%', s:11, c:'#cd7c2f', d:'2.5s', dl:'2.1s' },
+          ].map((p, i) => (
+            <div key={i} style={{
+              position: 'absolute', bottom: 0, left: p.l,
+              width: p.s, height: p.s,
+              borderRadius: '50%',
+              backgroundColor: p.c,
+              boxShadow: `0 0 ${p.s/2}px ${p.c}80`,
+              animationName: 'supsas-burst',
+              animationDuration: p.d,
+              animationDelay: p.dl,
+              animationTimingFunction: 'ease-out',
+              animationFillMode: 'forwards',
+            }} />
+          ))}
+        </div>
+      )}
+
+      {/* SUPSAS: Diagonal Meteor Streaks (permanent ambient) */}
+      {supsasActive && (
+        <div className="fixed inset-0 z-[5] pointer-events-none overflow-hidden">
+          {[
+            { x:'5%',  y:'70%', w:1, h:40, dur:'3.2s', dl:'0s'   },
+            { x:'12%', y:'45%', w:2, h:55, dur:'4.1s', dl:'0.7s' },
+            { x:'20%', y:'80%', w:1, h:35, dur:'3.6s', dl:'1.3s' },
+            { x:'28%', y:'30%', w:2, h:60, dur:'2.8s', dl:'0.4s' },
+            { x:'36%', y:'60%', w:1, h:45, dur:'3.9s', dl:'1.0s' },
+            { x:'44%', y:'20%', w:2, h:50, dur:'4.3s', dl:'0.2s' },
+            { x:'52%', y:'75%', w:1, h:38, dur:'3.1s', dl:'1.6s' },
+            { x:'60%', y:'40%', w:2, h:65, dur:'2.7s', dl:'0.9s' },
+            { x:'68%', y:'85%', w:1, h:42, dur:'4.0s', dl:'0.5s' },
+            { x:'76%', y:'25%', w:2, h:52, dur:'3.5s', dl:'1.2s' },
+            { x:'84%', y:'65%', w:1, h:36, dur:'2.9s', dl:'0.1s' },
+            { x:'92%', y:'50%', w:2, h:48, dur:'4.2s', dl:'0.8s' },
+            { x:'8%',  y:'15%', w:1, h:44, dur:'3.7s', dl:'1.5s' },
+            { x:'25%', y:'90%', w:2, h:58, dur:'3.3s', dl:'0.6s' },
+            { x:'70%', y:'10%', w:1, h:32, dur:'4.5s', dl:'1.1s' },
+            { x:'88%', y:'35%', w:2, h:62, dur:'2.6s', dl:'1.8s' },
+          ].map((m, i) => (
+            <div key={i} style={{
+              position: 'absolute', left: m.x, top: m.y,
+              width: m.w, height: m.h,
+              borderRadius: '1px',
+              background: 'linear-gradient(135deg, rgba(251,191,36,0.8) 0%, rgba(245,158,11,0.2) 100%)',
+              transform: 'rotate(-45deg)',
+              animationName: 'meteor-streak',
+              animationDuration: m.dur,
+              animationDelay: m.dl,
+              animationTimingFunction: 'ease-in-out',
+              animationIterationCount: 'infinite',
+            }} />
+          ))}
+        </div>
+      )}
 
       {/* Navigation */}
       <nav className={cn(
         "fixed top-0 inset-x-0 z-[100] transition-all duration-700 px-4 md:px-8 py-4 flex items-center justify-between",
-        isScrolled 
-          ? "bg-slate-50 dark:bg-slate-950/80 backdrop-blur-md border-b border-black/[0.03] dark:border-white/5 py-3 shadow-2xl" 
-          : "bg-transparent"
+        karnivalActive
+          ? isScrolled
+            ? 'bg-violet-950/90 backdrop-blur-xl border-b border-violet-500/20 py-3 shadow-[0_4px_30px_rgba(139,92,246,0.2)]'
+            : 'bg-violet-950/30 backdrop-blur-sm'
+          : supsasActive
+            ? isScrolled
+              ? 'bg-amber-950/90 backdrop-blur-xl border-b border-amber-500/20 py-3 shadow-[0_4px_30px_rgba(245,158,11,0.15)]'
+              : 'bg-amber-950/20 backdrop-blur-sm'
+            : isScrolled
+              ? 'bg-slate-50 dark:bg-slate-950/80 backdrop-blur-md border-b border-black/[0.03] dark:border-white/5 py-3 shadow-2xl'
+              : 'bg-transparent'
       )}>
         <div className="flex items-center gap-4">
           <Button
@@ -537,17 +878,187 @@ export function PortalPage() {
             className="space-y-4"
           >
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1] max-w-4xl mx-auto text-transparent bg-clip-text bg-gradient-to-b from-slate-900 to-slate-600 dark:from-white dark:to-white/60">
-              Selamat kembali, <br />
-              <span className="text-emerald-500 dark:text-emerald-400">
+              {supsasActive && !karnivalActive ? 'Semangat Sukan,' : 'Selamat kembali,'} <br />
+              <span className={supsasActive && !karnivalActive ? 'text-amber-400' : karnivalActive ? 'text-violet-400' : 'text-emerald-500 dark:text-emerald-400'}>
                 {displayName}
               </span>
             </h1>
             <p className="text-sm md:text-lg text-slate-500 dark:text-white/50 font-medium max-w-2xl mx-auto leading-relaxed px-4">
-              Platform bersepadu untuk pengurusan kelab, perniagaan, dan aktiviti JPP Polisas. <br className="hidden md:block" />
-              Bawa kepimpinan anda ke tahap seterusnya.
+              {supsasActive && !karnivalActive
+                ? <>Sokong pasukan anda. Pantau keputusan sukan secara langsung. <br className="hidden md:block" />Bawa semangat ke padang! 🏅</>
+                : <>Platform bersepadu untuk pengurusan kelab, perniagaan, dan aktiviti JPP Polisas. <br className="hidden md:block" />Bawa kepimpinan anda ke tahap seterusnya.</>
+              }
             </p>
 
-            <motion.div 
+            {/* ── Event Banners (di atas CTA — nampak dulu) ── */}
+            <AnimatePresence>
+              {supsasActive && !karnivalActive && (
+                <motion.div
+                  key="supsas-mega-banner"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ type: 'spring', stiffness: 180, damping: 22 }}
+                  className="w-full max-w-4xl"
+                >
+                  <div
+                    onClick={() => navigate('/supsas')}
+                    className="relative cursor-pointer rounded-[2.2rem] overflow-hidden transition-all duration-500 hover:scale-[1.008] active:scale-[0.995] text-left"
+                    style={{
+                      background: 'linear-gradient(135deg, #030d1a 0%, #1a0d00 50%, #0a0500 100%)',
+                      animation: 'supsas-glow-pulse 3s ease-in-out infinite',
+                      minHeight: 260,
+                    }}
+                  >
+                    <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '28px 28px' }} />
+                    <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% -10%, rgba(245,158,11,0.3) 0%, transparent 65%)' }} />
+                    <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 80% 100%, rgba(180,83,9,0.2) 0%, transparent 50%)' }} />
+
+                    <div className="flex items-center justify-between px-7 pt-6 pb-0">
+                      <div className="flex items-center gap-2">
+                        <span className="relative flex h-3 w-3">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                          <span className="relative inline-flex h-3 w-3 rounded-full bg-amber-500" />
+                        </span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-300">Sedang Berlangsung</span>
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] px-3 py-1.5 rounded-full" style={{ background: 'rgba(245,158,11,0.2)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.3)' }}>
+                        🏆 SUPSAS
+                      </span>
+                    </div>
+
+                    <div className="px-7 pt-5 pb-8 text-center space-y-4">
+                      <div className="text-5xl sm:text-6xl" style={{ filter: 'drop-shadow(0 0 20px rgba(245,158,11,0.6))' }}>🏆</div>
+                      <div>
+                        <h2 className="text-3xl sm:text-5xl font-black tracking-tight"
+                          style={{
+                            backgroundImage: 'linear-gradient(90deg, #fbbf24, #ffffff, #f59e0b, #fbbf24)',
+                            backgroundSize: '300% 100%',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text',
+                            animation: 'supsas-gradient-shift 4s linear infinite',
+                          }}
+                        >
+                          {supsasEdition?.name ?? 'SUPSAS'}
+                        </h2>
+                        {supsasEdition?.start_date && (
+                          <p className="text-sm text-white/50 font-medium mt-2 tracking-wide">
+                            {new Date(supsasEdition.start_date).toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                          </p>
+                        )}
+                      </div>
+
+                      {supsasEdition?.start_date && !supsasCountdown.expired && (
+                        <div className="inline-flex items-center gap-1 px-5 py-2.5 rounded-2xl" style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.2)' }}>
+                          <LucideIcons.Clock className="w-3.5 h-3.5 text-amber-400 mr-1" />
+                          <span className="text-xs text-white/60 font-medium">Bermula dalam</span>
+                          {[{ v: supsasCountdown.days, l: 'h' }, { v: supsasCountdown.hours, l: 'j' }, { v: supsasCountdown.mins, l: 'm' }, { v: supsasCountdown.secs, l: 's' }].map(({ v, l }) => (
+                            <span key={l} className="flex items-baseline gap-0.5">
+                              <span className="text-lg font-black text-white tabular-nums">{String(v).padStart(2, '0')}</span>
+                              <span className="text-[10px] text-white/40 font-bold">{l}</span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {supsasEdition?.is_active && supsasCountdown.expired && (
+                        <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl" style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)' }}>
+                          <span className="relative flex h-2.5 w-2.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" /><span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500" /></span>
+                          <span className="text-xs text-amber-300 font-black">Sedang Berlangsung!</span>
+                        </div>
+                      )}
+
+                      <div className="flex flex-col sm:flex-row gap-3 justify-center pt-1">
+                        <button onClick={e => { e.stopPropagation(); navigate('/supsas/scoreboard'); }}
+                          className="flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
+                          style={{ background: 'linear-gradient(135deg, #b45309, #f59e0b)', boxShadow: '0 8px 30px rgba(245,158,11,0.35)', color: '#000' }}>
+                          <LucideIcons.BarChart3 className="w-4 h-4" /> Papan Markah
+                        </button>
+                        <button onClick={e => { e.stopPropagation(); navigate('/supsas/jadual'); }}
+                          className="flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
+                          style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)', color: '#fbbf24' }}>
+                          <LucideIcons.CalendarDays className="w-4 h-4" /> Jadual
+                        </button>
+                        <button onClick={e => { e.stopPropagation(); navigate('/supsas'); }}
+                          className="flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
+                          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}>
+                          <LucideIcons.Trophy className="w-4 h-4" /> Laman SUPSAS
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {karnivalActive && (
+                <motion.div
+                  key="karnival-top-banner"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ type: 'spring', stiffness: 180, damping: 22 }}
+                  className="w-full max-w-4xl"
+                >
+                  <div
+                    onClick={() => navigate('/karnival')}
+                    className="relative cursor-pointer rounded-[2.2rem] overflow-hidden transition-all duration-500 hover:scale-[1.008] active:scale-[0.995] text-left"
+                    style={{
+                      background: 'linear-gradient(135deg, #0a0018 0%, #1e0840 40%, #0f0025 100%)',
+                      animation: 'karnival-glow-pulse 3s ease-in-out infinite',
+                      minHeight: 260,
+                    }}
+                  >
+                    <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '28px 28px' }} />
+                    <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% -10%, rgba(139,92,246,0.35) 0%, transparent 65%)' }} />
+                    <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 100%, rgba(219,39,119,0.15) 0%, transparent 50%)' }} />
+
+                    <div className="flex items-center justify-between px-7 pt-6 pb-0">
+                      <div className="flex items-center gap-2">
+                        <span className="relative flex h-3 w-3"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75" /><span className="relative inline-flex h-3 w-3 rounded-full bg-violet-500" /></span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-violet-300">Sedang Berlangsung</span>
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] px-3 py-1.5 rounded-full" style={{ background: 'rgba(139,92,246,0.2)', color: '#c084fc', border: '1px solid rgba(139,92,246,0.3)' }}>🎪 Karnival JPP</span>
+                    </div>
+
+                    <div className="px-7 pt-5 pb-8 text-center space-y-4">
+                      <div className="text-5xl sm:text-6xl" style={{ filter: 'drop-shadow(0 0 20px rgba(168,85,247,0.6))' }}>🎪</div>
+                      <div>
+                        <h2 className="text-3xl sm:text-5xl font-black tracking-tight"
+                          style={{ backgroundImage: 'linear-gradient(90deg, #c084fc, #f472b6, #fbbf24, #a855f7, #c084fc)', backgroundSize: '300% 100%', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', animation: 'gradient-shift 4s linear infinite' }}>
+                          {karnivalStatus?.name}
+                        </h2>
+                        {karnivalStatus?.tagline && <p className="text-sm text-white/50 font-medium mt-2 tracking-wide">{karnivalStatus.tagline}</p>}
+                      </div>
+                      {karnivalStatus?.endDate && !karnivalCountdown.expired && (
+                        <div className="inline-flex items-center gap-1 px-5 py-2.5 rounded-2xl" style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.2)' }}>
+                          <LucideIcons.Clock className="w-3.5 h-3.5 text-violet-400 mr-1" />
+                          <span className="text-xs text-white/60 font-medium">Undi ditutup dalam</span>
+                          {[{ v: karnivalCountdown.h, l: 'j' }, { v: karnivalCountdown.m, l: 'm' }, { v: karnivalCountdown.s, l: 's' }].map(({ v, l }) => (
+                            <span key={l} className="flex items-baseline gap-0.5"><span className="text-lg font-black text-white tabular-nums">{String(v).padStart(2, '0')}</span><span className="text-[10px] text-white/40 font-bold">{l}</span></span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex flex-col sm:flex-row gap-3 justify-center pt-1">
+                        <button onClick={e => { e.stopPropagation(); navigate('/karnival'); }}
+                          className="flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
+                          style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)', boxShadow: '0 8px 30px rgba(139,92,246,0.4)', color: 'white' }}>
+                          <LucideIcons.QrCode className="w-4 h-4" /> Undi Booth Sekarang
+                        </button>
+                        <button onClick={e => { e.stopPropagation(); navigate('/karnival/scoreboard'); }}
+                          className="flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
+                          style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.3)', color: '#c084fc' }}>
+                          <LucideIcons.Trophy className="w-4 h-4" /> Papan Markah
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -768,178 +1279,6 @@ export function PortalPage() {
           </motion.div>
         )}
 
-        {/* ── SUPSAS EPIC ANNOUNCEMENT BANNER ─────────────────────── */}
-        <AnimatePresence>
-          {isModuleEnabled('supsas') && (
-            <motion.div
-              key="supsas-banner"
-              initial={{ opacity: 0, scale: 0.94, y: -20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.94, y: -20 }}
-              transition={{ type: 'spring', stiffness: 240, damping: 20 }}
-              className="mb-12 max-w-4xl mx-auto"
-            >
-              {/* Outer glow ring — animated */}
-              <div
-                className="relative rounded-[2rem] p-[1.5px]"
-                style={{
-                  background: 'linear-gradient(135deg, #F59E0B55 0%, #F59E0B11 40%, #F59E0B55 100%)',
-                  animation: 'supsasBorderSpin 4s linear infinite',
-                }}
-              >
-                <style>{`
-                  @keyframes supsasBorderSpin {
-                    0%   { background: linear-gradient(0deg,   #F59E0B66 0%, #F59E0B11 50%, #F59E0B66 100%); }
-                    25%  { background: linear-gradient(90deg,  #F59E0B66 0%, #F59E0B11 50%, #F59E0B66 100%); }
-                    50%  { background: linear-gradient(180deg, #F59E0B66 0%, #F59E0B11 50%, #F59E0B66 100%); }
-                    75%  { background: linear-gradient(270deg, #F59E0B66 0%, #F59E0B11 50%, #F59E0B66 100%); }
-                    100% { background: linear-gradient(360deg, #F59E0B66 0%, #F59E0B11 50%, #F59E0B66 100%); }
-                  }
-                  @keyframes supsasShimmer {
-                    0%   { transform: translateX(-100%); }
-                    100% { transform: translateX(300%); }
-                  }
-                `}</style>
-
-                <div
-                  onClick={() => navigate('/supsas')}
-                  className="relative cursor-pointer rounded-[1.9rem] overflow-hidden transition-all duration-300 hover:scale-[1.01] active:scale-[0.98]"
-                  style={{ background: 'linear-gradient(135deg, #0d1117 0%, #0f1a0a 50%, #1a0d00 100%)' }}
-                >
-                  {/* Shimmer sweep */}
-                  <div
-                    className="absolute inset-0 -skew-x-12 w-1/3 opacity-0 hover:opacity-100"
-                    style={{
-                      background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.08), transparent)',
-                      animation: 'supsasShimmer 2s ease-in-out infinite',
-                      pointerEvents: 'none',
-                    }}
-                  />
-
-                  {/* Top badge bar */}
-                  <div className="flex items-center justify-between px-6 pt-5 pb-0">
-                    <div className="flex items-center gap-2">
-                      <span className="relative flex h-2.5 w-2.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500" />
-                      </span>
-                      <span className="text-[9px] font-black uppercase tracking-[0.4em] text-amber-500/80">
-                        {supsasEdition?.is_active && supsasCountdown.expired ? 'Sedang Berlangsung' : 'Pengumuman Rasmi'}
-                      </span>
-                    </div>
-                    <span className="text-[9px] font-black uppercase tracking-[0.3em] px-2.5 py-1 rounded-full"
-                      style={{ background: 'rgba(245,158,11,0.12)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.2)' }}>
-                      {supsasEdition?.name ?? 'SUPSAS'}
-                    </span>
-                  </div>
-
-                  <div className="px-6 pt-4 pb-6 space-y-5">
-                    {/* Title */}
-                    <div className="text-center space-y-1">
-                      <h2 className="text-3xl sm:text-5xl font-black tracking-tight" style={{ color: '#F59E0B' }}>
-                        SUPSAS
-                      </h2>
-                      <p className="text-xs text-white/30 font-medium tracking-widest uppercase">Sukan Polisas — Event Tahunan JPP</p>
-                    </div>
-
-                    {/* Countdown OR Live state */}
-                    {supsasEdition?.start_date && !supsasCountdown.expired ? (
-                      <>
-                        <p className="text-center text-[10px] font-black uppercase tracking-[0.4em] text-white/25">Bermula Dalam</p>
-                        {/* Countdown digits */}
-                        <div className="flex items-center justify-center gap-3 sm:gap-5">
-                          {[
-                            { v: supsasCountdown.days,  l: 'HARI'   },
-                            { v: supsasCountdown.hours, l: 'JAM'    },
-                            { v: supsasCountdown.mins,  l: 'MINIT'  },
-                            { v: supsasCountdown.secs,  l: 'SAAT'   },
-                          ].map(({ v, l }, i) => (
-                            <React.Fragment key={l}>
-                              <div className="flex flex-col items-center gap-2">
-                                <div
-                                  className="relative w-16 sm:w-20 h-16 sm:h-20 rounded-2xl flex items-center justify-center font-black text-3xl sm:text-4xl text-white overflow-hidden"
-                                  style={{
-                                    background: 'rgba(245,158,11,0.08)',
-                                    border: '1px solid rgba(245,158,11,0.25)',
-                                    boxShadow: '0 0 30px rgba(245,158,11,0.1) inset, 0 4px 20px rgba(0,0,0,0.5)',
-                                  }}
-                                >
-                                  {/* Digit shine */}
-                                  <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.5), transparent)' }} />
-                                  {/* Separating midline */}
-                                  <div className="absolute inset-x-0 top-1/2" style={{ borderTop: '1px solid rgba(245,158,11,0.08)' }} />
-                                  <motion.span
-                                    key={v}
-                                    initial={{ y: -8, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    className="relative z-10 tabular-nums"
-                                    style={{ textShadow: '0 0 20px rgba(245,158,11,0.5)' }}
-                                  >
-                                    {String(v).padStart(2, '0')}
-                                  </motion.span>
-                                </div>
-                                <span className="text-[8px] font-black uppercase tracking-[0.35em]" style={{ color: 'rgba(245,158,11,0.5)' }}>{l}</span>
-                              </div>
-                              {i < 3 && (
-                                <span className="text-2xl sm:text-3xl font-black mb-6" style={{ color: 'rgba(245,158,11,0.2)' }}>:</span>
-                              )}
-                            </React.Fragment>
-                          ))}
-                        </div>
-                        {supsasEdition?.start_date && (
-                          <p className="text-center text-[10px] text-white/20 font-medium">
-                            {new Date(supsasEdition.start_date).toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                          </p>
-                        )}
-                      </>
-                    ) : (
-                      /* Event Live / no date state */
-                      <div className="text-center py-2 space-y-2">
-                        <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl"
-                          style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)' }}>
-                          <span className="relative flex h-3 w-3">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                            <span className="relative inline-flex h-3 w-3 rounded-full bg-amber-500" />
-                          </span>
-                          <span className="font-black uppercase tracking-widest text-sm" style={{ color: '#F59E0B' }}>Sedang Berlangsung!</span>
-                        </div>
-                        <p className="text-[10px] text-white/25">Ikuti keputusan terkini dalam masa nyata</p>
-                      </div>
-                    )}
-
-                    {/* CTA Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-3 pt-1">
-                      <button
-                        onClick={e => { e.stopPropagation(); navigate('/supsas/scoreboard'); }}
-                        className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-102 active:scale-95"
-                        style={{ background: '#F59E0B', color: '#000', boxShadow: '0 6px 25px rgba(245,158,11,0.4)' }}
-                      >
-                        <LucideIcons.BarChart3 className="w-4 h-4" />
-                        Papan Markah Medal
-                      </button>
-                      <button
-                        onClick={e => { e.stopPropagation(); navigate('/supsas'); }}
-                        className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-102 active:scale-95"
-                        style={{ background: 'rgba(245,158,11,0.1)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.2)' }}
-                      >
-                        <LucideIcons.Trophy className="w-4 h-4" />
-                        Laman SUPSAS
-                      </button>
-                      <button
-                        onClick={e => { e.stopPropagation(); navigate('/supsas/jadual'); }}
-                        className="sm:w-auto flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-102 active:scale-95"
-                        style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.06)' }}
-                      >
-                        <LucideIcons.CalendarDays className="w-4 h-4" />
-                        Jadual
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         <div className="max-w-6xl mx-auto">
           {isLoadingSettings ? (
@@ -962,13 +1301,13 @@ export function PortalPage() {
                   isSuperAdmin={isSuperAdmin}
                   onToggle={handleToggle}
                   onColorSave={handleColorSave}
+                  karnivalActive={karnivalActive}
+                  supsasActive={supsasActive}
                 />
               ))}
             </div>
           )}
         </div>
-
-
         {/* Global Admin Status Line */}
         {isSuperAdmin && (
           <motion.div 

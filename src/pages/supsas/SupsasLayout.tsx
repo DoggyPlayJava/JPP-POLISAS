@@ -240,6 +240,20 @@ export function SupsasLayout() {
                 Portal Ketua Kontinjen
               </button>
             )}
+            {/* Butang Refresh Data — untuk pengguna mobile yang tiada auto-live */}
+            {!isLoading && (
+              <button
+                onClick={() => { handleRefresh(); setMobileOpen(false); }}
+                disabled={isRefreshing}
+                className="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-black uppercase tracking-widest transition-all border-t border-white/5 mt-1 disabled:opacity-50 text-white/40 hover:text-white hover:bg-white/5"
+              >
+                <RefreshCw className={`w-4 h-4 flex-shrink-0 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span>{isRefreshing ? 'Memuatkan...' : `Muat Semula Data`}</span>
+                {lastUpdated && !isRefreshing && (
+                  <span className="ml-auto text-[9px] font-bold text-white/20">{relativeTime}</span>
+                )}
+              </button>
+            )}
             <button
               onClick={() => { navigate('/portal'); setMobileOpen(false); }}
               className="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-black uppercase tracking-widest text-white/30 hover:text-white hover:bg-white/5 transition-all border-t border-white/5 mt-1"
@@ -248,6 +262,7 @@ export function SupsasLayout() {
               Kembali ke Portal
             </button>
           </motion.div>
+
         )}
       </AnimatePresence>
 

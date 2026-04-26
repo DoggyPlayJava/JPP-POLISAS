@@ -15,7 +15,7 @@ import {
   Users, Activity, FileText, Building2, CalendarRange,
   Search, CheckCheck, X, ChevronRight, RefreshCw,
   AlertTriangle, Flag, BarChart3, Clock, BookOpen,
-  Loader2, ExternalLink, Settings as SettingsIcon,
+  Loader2, ExternalLink, Settings as SettingsIcon, PartyPopper, QrCode, Trophy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -209,7 +209,7 @@ export function KppUnitDashboard() {
   const { isSuperAdmin, profile } = useAuth();
   const navigate = useNavigate();
 
-  type KppSubTab = 'overview' | 'aktiviti' | 'laporan' | 'keahlian' | 'kelab' | 'tetapan';
+  type KppSubTab = 'overview' | 'aktiviti' | 'laporan' | 'keahlian' | 'kelab' | 'karnival' | 'tetapan';
   const [kppSubTab, setKppSubTab] = useState<KppSubTab>('overview');
   const [kppClubFilter, setKppClubFilter] = useState('ALL');
   const [memberRoleFilter, setMemberRoleFilter] = useState<'all' | 'kepimpinan' | 'ahli'>('all');
@@ -475,12 +475,13 @@ export function KppUnitDashboard() {
       {/* ── Sub-navigation ── */}
       <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
         {([
-          { id: 'overview', label: 'Overview' },
-          { id: 'aktiviti', label: 'Semua Aktiviti' },
-          { id: 'laporan', label: 'Semua Laporan' },
-          { id: 'keahlian', label: 'Keahlian Menunggu' },
-          { id: 'kelab', label: 'Senarai Kelab' },
-          { id: 'tetapan', label: 'Tetapan KPP' },
+          { id: 'overview',  label: 'Overview' },
+          { id: 'aktiviti',  label: 'Semua Aktiviti' },
+          { id: 'laporan',   label: 'Semua Laporan' },
+          { id: 'keahlian',  label: 'Keahlian Menunggu' },
+          { id: 'kelab',     label: 'Senarai Kelab' },
+          { id: 'karnival',  label: '🎪 Karnival' },
+          { id: 'tetapan',   label: 'Tetapan KPP' },
         ] as { id: KppSubTab; label: string }[]).map(t => (
           <SubTabBtn key={t.id} id={t.id} label={t.label} active={kppSubTab === t.id} onClick={() => setKppSubTab(t.id)} />
         ))}
@@ -612,6 +613,77 @@ export function KppUnitDashboard() {
               <span className="text-xs font-black text-muted-foreground/60 group-hover:text-foreground transition-colors">Buka Modul Pengurusan Kelab</span>
             </div>
             <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-muted-foreground transition-colors" />
+          </button>
+
+          {/* Quick link to Karnival Admin */}
+          <button
+            onClick={() => navigate('/karnival/admin')}
+            className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-2xl border border-violet-500/20 bg-violet-600/5 hover:bg-violet-600/10 transition-all group"
+          >
+            <div className="flex items-center gap-3">
+              <PartyPopper className="w-4 h-4 text-violet-400" />
+              <div className="text-left">
+                <p className="text-xs font-black text-violet-400 group-hover:text-violet-300 transition-colors">Panel Admin Karnival JPP</p>
+                <p className="text-[10px] text-white/25 mt-0.5">Urus edisi, kategori, booth & keputusan</p>
+              </div>
+            </div>
+            <ExternalLink className="w-3.5 h-3.5 text-violet-400/40 group-hover:text-violet-400 transition-colors" />
+          </button>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════
+          SUB-TAB: KARNIVAL
+      ══════════════════════════════════════════════ */}
+      {kppSubTab === 'karnival' && (
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Header */}
+          <div className="rounded-[2rem] p-7 text-white relative overflow-hidden shadow-xl" style={{ background: 'linear-gradient(135deg, #4c1d95 0%, #7c3aed 60%, #a855f7 100%)' }}>
+            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+            <div className="relative z-10">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-violet-200 mb-1">Exco KPP</p>
+              <h2 className="text-2xl font-black">🎪 Sistem Undian Karnival</h2>
+              <p className="text-violet-100/70 text-xs mt-1">Urus edisi, kategori, booth, QR code & keputusan undian</p>
+            </div>
+            <PartyPopper className="absolute bottom-4 right-8 w-20 h-20 text-white/10" />
+          </div>
+
+          {/* Quick actions grid */}
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { icon: PartyPopper, label: 'Urus Edisi',     sub: 'Aktif / Tutup Karnival',    path: '/karnival/admin/edition',    color: '#7c3aed' },
+              { icon: Flag,        label: 'Kategori',        sub: 'Tambah kategori pertandingan', path: '/karnival/admin/categories', color: '#a855f7' },
+              { icon: Building2,   label: 'Booth & QR',     sub: 'Cipta booth + generate QR',  path: '/karnival/admin/booths',     color: '#8b5cf6' },
+              { icon: Trophy,      label: 'Keputusan',       sub: 'Paparan & export CSV',        path: '/karnival/admin/results',    color: '#c084fc' },
+              { icon: BarChart3,   label: 'Dashboard',       sub: 'Live stats & monitor',       path: '/karnival/admin',            color: '#6d28d9' },
+              { icon: QrCode,      label: 'Lihat Scoreboard', sub: 'LCD papan skor auto-rotate', path: '/karnival/scoreboard',       color: '#4c1d95' },
+            ].map(({ icon: Icon, label, sub, path, color }) => (
+              <button
+                key={path}
+                onClick={() => navigate(path)}
+                className="flex flex-col gap-3 p-4 rounded-2xl text-left border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05] hover:border-violet-500/30 transition-all group"
+              >
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${color}25`, border: `1px solid ${color}40` }}>
+                  <Icon className="w-4 h-4" style={{ color }} />
+                </div>
+                <div>
+                  <p className="text-xs font-black text-white group-hover:text-violet-300 transition-colors">{label}</p>
+                  <p className="text-[10px] text-white/30 mt-0.5">{sub}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* CTA buka karnival public */}
+          <button
+            onClick={() => navigate('/karnival')}
+            className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-2xl border border-violet-500/20 bg-violet-600/5 hover:bg-violet-600/10 transition-all group"
+          >
+            <div className="flex items-center gap-3">
+              <ExternalLink className="w-4 h-4 text-violet-400" />
+              <span className="text-xs font-black text-violet-400 group-hover:text-violet-300 transition-colors">Buka Halaman Karnival (Student View)</span>
+            </div>
+            <ExternalLink className="w-3.5 h-3.5 text-violet-400/40 group-hover:text-violet-400 transition-colors" />
           </button>
         </div>
       )}

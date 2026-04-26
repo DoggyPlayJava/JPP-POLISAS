@@ -26,7 +26,15 @@ const RejectedPage = lazy(() => import('@/pages/RejectedPage').then(m => ({ defa
 const UrusKelabPage = lazy(() => import('@/pages/UrusKelabPage').then(m => ({ default: m.UrusKelabPage })));
 const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage').then(m => ({ default: m.LeaderboardPage })));
 const PenasihatLogPage = lazy(() => import('./pages/PenasihatLogPage').then(m => ({ default: m.PenasihatLogPage })));
-const KarnivalVotingPage = lazy(() => import('./pages/KarnivalVotingPage').then(m => ({ default: m.KarnivalVotingPage })));
+// [Karnival v2 — sistem undian baharu]
+const KarnivalLandingPage   = lazy(() => import('./pages/karnival/KarnivalLandingPage').then(m => ({ default: m.KarnivalLandingPage })));
+const KarnivalVotePage      = lazy(() => import('./pages/karnival/KarnivalVotePage').then(m => ({ default: m.KarnivalVotePage })));
+const KarnivalScoreboard    = lazy(() => import('./pages/karnival/KarnivalScoreboard').then(m => ({ default: m.KarnivalScoreboard })));
+const KarnivalAdminDashboard  = lazy(() => import('./pages/karnival/admin/KarnivalAdminDashboard').then(m => ({ default: m.KarnivalAdminDashboard })));
+const KarnivalAdminEdition    = lazy(() => import('./pages/karnival/admin/KarnivalAdminEdition').then(m => ({ default: m.KarnivalAdminEdition })));
+const KarnivalAdminCategories = lazy(() => import('./pages/karnival/admin/KarnivalAdminCategories').then(m => ({ default: m.KarnivalAdminCategories })));
+const KarnivalAdminBooths     = lazy(() => import('./pages/karnival/admin/KarnivalAdminBooths').then(m => ({ default: m.KarnivalAdminBooths })));
+const KarnivalAdminResults    = lazy(() => import('./pages/karnival/admin/KarnivalAdminResults').then(m => ({ default: m.KarnivalAdminResults })));
 const NexusPage = lazy(() => import('./pages/NexusPage').then(m => ({ default: m.NexusPage })));
 const PortalPage = lazy(() => import('./pages/PortalPage').then(m => ({ default: m.PortalPage })));
 const NotifikasiPage = lazy(() => import('./pages/NotifikasiPage').then(m => ({ default: m.NotifikasiPage })));
@@ -94,6 +102,11 @@ const AdminJadualPage = lazy(() => import('./pages/supsas/admin/AdminJadualPage'
 const KetuaDashboard = lazy(() => import('./pages/supsas/ketua/KetuaDashboard').then(m => ({ default: m.KetuaDashboard })));
 const BracketPage = lazy(() => import('./pages/supsas/BracketPage').then(m => ({ default: m.BracketPage })));
 const SupsasHistoryPage = lazy(() => import('./pages/supsas/SupsasHistoryPage').then(m => ({ default: m.SupsasHistoryPage })));
+
+// ── Karnival JPP v2 (Layouts — import terus seperti SUPSAS) ──
+import { KarnivalProvider } from './contexts/KarnivalContext';
+import { KarnivalLayout } from './pages/karnival/KarnivalLayout';
+import { KarnivalAdminLayout } from './pages/karnival/admin/KarnivalAdminLayout';
 
 // ── E-Kebajikan ──
 import { KebajikanLayout } from './pages/kebajikan/KebajikanLayout';
@@ -204,7 +217,6 @@ function AppRoutes() {
           <Route path="/semakan-laporan" element={<SemakanLaporanPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/logs" element={<PenasihatLogPage />} />
-          <Route path="/karnival" element={<KarnivalVotingPage />} />
           <Route path="/nexus" element={<NexusPage />} />
         </Route>
         {/* ── JPP HQ Portal (prefix: /jpp/) ── */}
@@ -321,6 +333,22 @@ function AppRoutes() {
         </Route>
       </Route>
 
+      {/* ── Karnival JPP v2 — PUBLIC (scoreboard/landing tanpa login, undi wajib login) ── */}
+      <Route element={<KarnivalLayout />}>
+        <Route path="/karnival"            element={<KarnivalLandingPage />} />
+        <Route path="/karnival/undi"       element={<KarnivalVotePage />} />
+        <Route path="/karnival/scoreboard" element={<KarnivalScoreboard />} />
+
+        {/* Admin Panel — role guard inside KarnivalAdminLayout */}
+        <Route element={<KarnivalAdminLayout />}>
+          <Route path="/karnival/admin"             element={<KarnivalAdminDashboard />} />
+          <Route path="/karnival/admin/edition"     element={<KarnivalAdminEdition />} />
+          <Route path="/karnival/admin/categories"  element={<KarnivalAdminCategories />} />
+          <Route path="/karnival/admin/booths"      element={<KarnivalAdminBooths />} />
+          <Route path="/karnival/admin/results"     element={<KarnivalAdminResults />} />
+        </Route>
+      </Route>
+
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     </Suspense>
@@ -329,7 +357,6 @@ function AppRoutes() {
 
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AiSettingsProvider } from '@/contexts/AiSettingsContext';
-import { KarnivalProvider } from '@/contexts/KarnivalContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { JppConfigProvider } from '@/contexts/JppConfigContext';
 import { PwaUpdater } from '@/components/PwaUpdater';
@@ -346,21 +373,21 @@ function App() {
                 <JppConfigProvider>
                   <KarnivalProvider>
                     <AppRoutes />
-                  <PwaUpdater />
-                  <InstallAppPrompt />
-                  <Toaster
-                    position="top-right"
-                    toastOptions={{
-                      className: 'glass !bg-white/90 dark:!bg-slate-900/90 !backdrop-blur-xl !border-white/20 !shadow-2xl rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest !text-slate-900 dark:!text-white py-4 px-6',
-                      duration: 4000,
-                      success: {
-                        iconTheme: { primary: '#10b981', secondary: '#fff' },
-                      },
-                      error: {
-                        iconTheme: { primary: '#ef4444', secondary: '#fff' },
-                      },
-                    }}
-                  />
+                    <PwaUpdater />
+                    <InstallAppPrompt />
+                    <Toaster
+                      position="top-right"
+                      toastOptions={{
+                        className: 'glass !bg-white/90 dark:!bg-slate-900/90 !backdrop-blur-xl !border-white/20 !shadow-2xl rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest !text-slate-900 dark:!text-white py-4 px-6',
+                        duration: 4000,
+                        success: {
+                          iconTheme: { primary: '#10b981', secondary: '#fff' },
+                        },
+                        error: {
+                          iconTheme: { primary: '#ef4444', secondary: '#fff' },
+                        },
+                      }}
+                    />
                     <SpeedInsights />
                   </KarnivalProvider>
                 </JppConfigProvider>
