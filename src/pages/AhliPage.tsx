@@ -126,10 +126,13 @@ export function AhliPage() {
     load();
   }, [user, profile, selectedClubId]);
 
-  // Real-time listener untuk kemaskini UI tanpa refresh page
+  // Real-time listener — hanya untuk Presiden, Penasihat, dan JPP yang boleh luluskan ahli
+  // Mereka perlu nampak permohonan baru secara serta-merta tanpa perlu refresh
+  // Ahli biasa (MT, Member): senarai dikemas kini bila mereka buka halaman sahaja (fetch-on-mount)
   useEffect(() => {
     const targetClubId = selectedClubId ?? profile?.club_id;
     if (!targetClubId) return;
+    if (!canApprove) return; // ← Ahli biasa keluar di sini
 
     const channel = supabase.channel(`ahli_page_changes_${targetClubId}`)
       .on('postgres_changes', {
@@ -146,7 +149,7 @@ export function AhliPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedClubId, profile?.club_id]);
+  }, [selectedClubId, profile?.club_id, canApprove]);
 
   // ✅ FUNGSI LULUS / TOLAK / RESIGN
   const handleStatusAction = async (userId: string, clubId: string, status: 'APPROVED' | 'REJECTED' | 'KICKED') => {

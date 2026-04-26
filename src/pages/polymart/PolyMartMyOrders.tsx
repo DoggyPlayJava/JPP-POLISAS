@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import QRCode from 'react-qr-code';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,7 +9,7 @@ import { sendNotificationToUser } from '@/lib/notifications';
 import toast from 'react-hot-toast';
 import {
   Package, Clock, CheckCircle, XCircle, Truck, Star, Store,
-  ChevronRight, MessageCircle, Phone, X,
+  ChevronRight, MessageCircle, Phone, X, RefreshCw,
 } from 'lucide-react';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -288,14 +288,17 @@ function OrderCard({ order, onReview }: { order: Order; onReview: (o: Order) => 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export function PolyMartMyOrders() {
   const { user } = useAuth();
-  const [orders,       setOrders]       = useState<Order[]>([]);
-  const [loading,      setLoading]      = useState(true);
-  const [activeTab,    setActiveTab]    = useState<OrderStatus | 'all'>('all');
-  const [reviewTarget, setReviewTarget] = useState<Order | null>(null);
-  const [reviewedIds,  setReviewedIds]  = useState<Set<string>>(new Set());
+  const [orders,         setOrders]         = useState<Order[]>([]);
+  const [loading,        setLoading]        = useState(true);
+  const [isRefreshing,   setIsRefreshing]   = useState(false);
+  const [lastRefreshed,  setLastRefreshed]  = useState<Date | null>(null);
+  const [activeTab,      setActiveTab]      = useState<OrderStatus | 'all'>('all');
+  const [reviewTarget,   setReviewTarget]   = useState<Order | null>(null);
+  const [reviewedIds,    setReviewedIds]    = useState<Set<string>>(new Set());
 
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async (showRefreshSpinner = false) => {
     if (!user) return;
+    if (showRefreshSpinner) setIsRefreshing(true);
     const { data } = await supabase.from('polymart_orders')
       .select(`
         *,
@@ -310,6 +313,7 @@ export function PolyMartMyOrders() {
       .order('created_at', { ascending: false });
 
     setOrders((data ?? []) as Order[]);
+    setLastRefreshed(new Date());
 
     // Check which orders already have reviews
     const completedIds = (data ?? []).filter(o => o.status === 'COMPLETED').map(o => o.id);
@@ -319,11 +323,24 @@ export function PolyMartMyOrders() {
       setReviewedIds(new Set(rv?.map(r => r.order_id) ?? []));
     }
     setLoading(false);
-  };
+    if (showRefreshSpinner) setIsRefreshing(false);
+  }, [user]);
 
-  useEffect(() => { loadOrders(); }, [user]);
+  useEffect(() => { loadOrders(); }, [loadOrders]);
 
-  // Realtime Auto-Refresh Subscription
+  // Auto-refresh bila pengguna kembali ke tab ini (visibilitychange)
+  // Lebih bijak dari setInterval — hanya fire bila pengguna benar-benar aktif semula
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadOrders();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [loadOrders]);
+
+  // Realtime Auto-Refresh Subscription (DIKEKALKAN — sudah optimal, ada filter buyer_id)
   useEffect(() => {
     if (!user) return;
     const channel = supabase.channel('polymart-myorders-realtime')
@@ -357,8 +374,29 @@ export function PolyMartMyOrders() {
       <div className="space-y-4">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-xl font-black text-foreground">Pesanan Saya</h1>
-          <p className="text-xs text-muted-foreground/60 mt-0.5">{orders.length} pesanan keseluruhan</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-black text-foreground">Pesanan Saya</h1>
+              <p className="text-xs text-muted-foreground/60 mt-0.5">{orders.length} pesanan keseluruhan</p>
+            </div>
+            {/* Butang Semak Status + Masa Terakhir Dikemas Kini */}
+            <div className="flex flex-col items-end gap-1">
+              <button
+                onClick={() => loadOrders(true)}
+                disabled={isRefreshing}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black transition-all disabled:opacity-60"
+                style={{ background: PM_LIGHT, color: PM_ACCENT }}
+              >
+                <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? 'Menyemak...' : 'Semak Status'}
+              </button>
+              {lastRefreshed && (
+                <p className="text-[9px] text-muted-foreground/40 font-bold">
+                  Dikemas kini: {lastRefreshed.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              )}
+            </div>
+          </div>
         </motion.div>
 
         {/* Tabs */}

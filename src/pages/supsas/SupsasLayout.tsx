@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, BarChart3, Calendar, Users, Settings, Menu, X, ArrowLeft, Shield, Clock } from 'lucide-react';
+import { Trophy, BarChart3, Calendar, Users, Settings, Menu, X, ArrowLeft, Shield, Clock, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSupsas } from '@/contexts/SupsasContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,12 +17,38 @@ const NAV_ITEMS = [
 export function SupsasLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { edition, isLive, isLoading } = useSupsas();
+  const { edition, isLive, isLoading, lastUpdated, refetch } = useSupsas();
   const { profile, isSuperAdmin } = useAuth();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen,   setMobileOpen]   = useState(false);
+  const [scrolled,     setScrolled]     = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const isAdmin = isSuperAdmin || profile?.role === 'JPP';
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refetch();
+    setIsRefreshing(false);
+  };
+
+  // Format masa relative (contoh: "2 minit lalu")
+  const getRelativeTime = (date: Date | null): string => {
+    if (!date) return 'Belum pernah';
+    const diffMs = Date.now() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return 'Baru sahaja';
+    if (diffMins === 1) return '1 minit lalu';
+    return `${diffMins} minit lalu`;
+  };
+
+  const [relativeTime, setRelativeTime] = useState(() => getRelativeTime(lastUpdated));
+
+  // Kemas kini label masa setiap 30 saat
+  useEffect(() => {
+    setRelativeTime(getRelativeTime(lastUpdated));
+    const interval = setInterval(() => setRelativeTime(getRelativeTime(lastUpdated)), 30000);
+    return () => clearInterval(interval);
+  }, [lastUpdated]);
 
   useEffect(() => {
     // Immediately darken <body> to prevent white-flash on mobile
@@ -77,6 +103,19 @@ export function SupsasLayout() {
             <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/20 border border-red-500/30">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
               <span className="text-[8px] font-black uppercase tracking-widest text-red-400">Live</span>
+            </div>
+          )}
+          {/* Bar Terakhir Dikemas Kini — untuk semua pengguna (bukan admin realtime) */}
+          {!isLoading && (
+            <div className="hidden sm:flex items-center gap-1.5">
+              <button
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="flex items-center gap-1 px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-wider transition-all disabled:opacity-50 bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10"
+              >
+                <RefreshCw className={`w-2.5 h-2.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? 'Memuatkan...' : relativeTime}
+              </button>
             </div>
           )}
         </div>

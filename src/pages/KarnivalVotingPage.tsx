@@ -111,15 +111,17 @@ export function KarnivalVotingPage() {
   useEffect(() => { loadAll(); }, [loadAll]);
 
   // ── Supabase Realtime subscription ────────────────────────────────────────
-  // Setiap kali ada undi baru → update vote counts secara live
+  // Hanya SUPER_ADMIN_JPP yang mendapat live vote counts (untuk paparan LCD dewan)
+  // Pelajar biasa: kiraan dikemas kini secara local selepas mengundi, atau tekan refresh manual
   useEffect(() => {
+    if (!isSuperAdmin) return; // ← Pelajar biasa keluar di sini
+
     const channel = supabase
-      .channel(`karnival-votes-realtime-${Math.random().toString(36).substring(7)}`)
+      .channel('karnival-votes-admin-live') // ← Nama tetap, bukan random
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'karnival_votes' },
         () => {
-          // Invalidate cache dan fetch semula
           queryCache.invalidate('karnival_vote_counts');
           fetchVoteCounts();
         }
@@ -128,7 +130,7 @@ export function KarnivalVotingPage() {
 
     channelRef.current = channel;
     return () => { supabase.removeChannel(channel); };
-  }, [fetchVoteCounts]);
+  }, [fetchVoteCounts, isSuperAdmin]);
 
   // ── Buat undi ─────────────────────────────────────────────────────────────
   const handleVote = async (kelabId: string, kelabName: string) => {
@@ -161,6 +163,8 @@ export function KarnivalVotingPage() {
 
       setMyVotes(prev => [...prev, kelabId]);
       queryCache.invalidate('karnival_vote_counts');
+      // ← Fetch semula kiraan selepas undi berjaya (untuk pelajar yang tiada Realtime)
+      await fetchVoteCounts();
       toast.success(`Undi untuk ${kelabName} berjaya! 🎉`);
     } catch (err: any) {
       toast.error(err.message || 'Gagal mengundi. Cuba lagi.');

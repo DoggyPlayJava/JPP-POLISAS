@@ -106,7 +106,10 @@ interface SupsasContextValue {
   isLoading: boolean;
   isLive: boolean;
   isUpcoming: boolean;
+  lastUpdated: Date | null;   // ← BARU: masa data terakhir diambil
   refetch: () => void;
+  enableRealtime: () => void;  // ← BARU: dipanggil oleh SupsasAdminLayout
+  disableRealtime: () => void; // ← BARU: dipanggil semasa Admin unmount
 }
 
 const SupsasContext = createContext<SupsasContextValue>({
@@ -119,18 +122,23 @@ const SupsasContext = createContext<SupsasContextValue>({
   isLoading: true,
   isLive: false,
   isUpcoming: false,
+  lastUpdated: null,
   refetch: () => {},
+  enableRealtime: () => {},
+  disableRealtime: () => {},
 });
 
 // ─── Provider ────────────────────────────────────────────────
 export function SupsasProvider({ children }: { children: React.ReactNode }) {
-  const [edition, setEdition] = useState<SupsasEdition | null>(null);
-  const [kontingen, setKontingen] = useState<SupsasKontingen[]>([]);
-  const [sports, setSports] = useState<SupsasSport[]>([]);
-  const [teams, setTeams] = useState<SupsasTeam[]>([]);
-  const [medalTally, setMedalTally] = useState<SupsasMedalTally[]>([]);
-  const [fixtures, setFixtures] = useState<SupsasFixture[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [edition,     setEdition]     = useState<SupsasEdition | null>(null);
+  const [kontingen,   setKontingen]   = useState<SupsasKontingen[]>([]);
+  const [sports,      setSports]      = useState<SupsasSport[]>([]);
+  const [teams,       setTeams]       = useState<SupsasTeam[]>([]);
+  const [medalTally,  setMedalTally]  = useState<SupsasMedalTally[]>([]);
+  const [fixtures,    setFixtures]    = useState<SupsasFixture[]>([]);
+  const [isLoading,   setIsLoading]   = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null); // ← BARU
+  const realtimeChannelRef = React.useRef<any>(null);                 // ← BARU
 
   const fetchAll = useCallback(async () => {
     // 1. Get the most recent edition (active OR inactive — admin needs to see it)
@@ -168,26 +176,57 @@ export function SupsasProvider({ children }: { children: React.ReactNode }) {
     if (tallyRes.data) setMedalTally(tallyRes.data as SupsasMedalTally[]);
     if (fixturesRes.data) setFixtures(fixturesRes.data as SupsasFixture[]);
     setIsLoading(false);
+    setLastUpdated(new Date()); // ← BARU: catat masa dikemas kini
   }, []);
 
+  // Fetch sekali waktu mount (untuk semua pengguna termasuk orang awam)
   useEffect(() => {
     fetchAll();
+  }, [fetchAll]);
 
-    // Realtime subscription — listen to changes for live scoreboard
-    const resultsChannel = supabase
-      .channel('supsas_realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_results' }, () => fetchAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_fixtures' }, () => fetchAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_kontingen' }, () => fetchAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_sports' }, () => fetchAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_teams' }, () => fetchAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_editions' }, () => fetchAll())
+  // Auto-refresh bila pengguna kembali ke tab SUPSAS (untuk semua pengguna)
+  // Lebih bijak dari setInterval — hanya fire bila pengguna benar-benar aktif semula
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchAll();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [fetchAll]);
+
+  // ── enableRealtime: dipanggil oleh SupsasAdminLayout sahaja ──────────────
+  // Admin yang sedang masukkan keputusan perlawanan memerlukan paparan live
+  // supaya mereka nampak kesan perubahan mereka sendiri dengan serta-merta
+  const enableRealtime = useCallback(() => {
+    if (realtimeChannelRef.current) return; // Elak duplikasi
+
+    const channel = supabase
+      .channel('supsas_admin_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_results' },    () => fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_fixtures' },   () => fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_kontingen' },  () => fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_sports' },     () => fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_teams' },      () => fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'supsas_editions' },   () => fetchAll())
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(resultsChannel);
-    };
+    realtimeChannelRef.current = channel;
   }, [fetchAll]);
+
+  // ── disableRealtime: dipanggil semasa Admin keluar dari panel admin ───────
+  const disableRealtime = useCallback(() => {
+    if (realtimeChannelRef.current) {
+      supabase.removeChannel(realtimeChannelRef.current);
+      realtimeChannelRef.current = null;
+    }
+  }, []);
+
+  // Pastikan channel dibersihkan bila SupsasProvider unmount
+  useEffect(() => {
+    return () => { disableRealtime(); };
+  }, [disableRealtime]);
 
   // isLive = edisi is_active=true DAN masa sekarang dalam range tarikh
   const now = new Date();
@@ -198,7 +237,14 @@ export function SupsasProvider({ children }: { children: React.ReactNode }) {
   const isUpcoming = !!edition && !!edition.start_date && new Date(edition.start_date) > now;
 
   return (
-    <SupsasContext.Provider value={{ edition, kontingen, sports, teams, medalTally, fixtures, isLoading, isLive, isUpcoming, refetch: fetchAll }}>
+    <SupsasContext.Provider value={{
+      edition, kontingen, sports, teams, medalTally, fixtures,
+      isLoading, isLive, isUpcoming,
+      lastUpdated,       // ← BARU
+      refetch: fetchAll,
+      enableRealtime,    // ← BARU
+      disableRealtime,   // ← BARU
+    }}>
       {children}
     </SupsasContext.Provider>
   );
@@ -207,3 +253,4 @@ export function SupsasProvider({ children }: { children: React.ReactNode }) {
 export function useSupsas() {
   return useContext(SupsasContext);
 }
+

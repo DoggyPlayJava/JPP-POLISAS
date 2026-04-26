@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSupsas } from '@/contexts/SupsasContext';
 
 const ADMIN_NAV = [
   { label: 'Gambaran Keseluruhan', path: '/supsas/admin',          icon: BarChart3, exact: true },
@@ -19,11 +20,21 @@ const ADMIN_NAV = [
 
 export function SupsasAdminLayout() {
   const { profile, isSuperAdmin, isLoading } = useAuth();
+  const { enableRealtime, disableRealtime } = useSupsas();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const isAdmin = isSuperAdmin || profile?.role === 'JPP';
+
+  // Aktifkan Realtime semasa Admin berada dalam panel admin
+  // Supaya keputusan perlawanan yang baru dimasukkan terus kelihatan tanpa refresh
+  useEffect(() => {
+    if (!isLoading && isAdmin) {
+      enableRealtime();
+    }
+    return () => { disableRealtime(); };
+  }, [isLoading, isAdmin, enableRealtime, disableRealtime]);
 
   if (!isLoading && !isAdmin) {
     return <Navigate to="/supsas" replace />;

@@ -93,14 +93,17 @@ export function PolyMartLayout() {
 
   useEffect(() => { refetchCounts(); }, [user]);
 
-  // Realtime subscription for order changes
+  // Realtime subscription — hanya untuk VENDOR sahaja
+  // Vendor perlu nampak pesanan baru masuk secara serta-merta (badge count dikemas kini live)
+  // Pembeli biasa: badge count dikemas kini setiap kali mereka buka PolyMart (fetch-on-mount sudah ada di atas)
   useEffect(() => {
-    if (!user) return;
-    const sub = supabase.channel('polymart_orders_realtime')
+    if (!user || !isVendor) return; // \u2190 Pembeli biasa keluar di sini
+
+    const sub = supabase.channel('polymart_vendor_orders_live')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'polymart_orders' }, refetchCounts)
       .subscribe();
     return () => { supabase.removeChannel(sub); };
-  }, [user]);
+  }, [user, isVendor]);
 
   return (
     <PolymartContext.Provider value={{
