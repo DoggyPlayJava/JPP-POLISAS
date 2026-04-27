@@ -6,7 +6,6 @@ import { Sparkles, Brain, ShieldCheck, AlertTriangle, Lock, Shield, CheckCheck, 
 import { toast } from 'react-hot-toast';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { hexToRgba, cn } from '@/lib/utils';
-import { Progress } from '@/components/ui/progress';
 
 export function JppNexusPage() {
     const { isSuperAdmin, profile } = useAuth();
@@ -27,8 +26,10 @@ export function JppNexusPage() {
     useEffect(() => {
         supabase.from('portal_settings').select('color').eq('exco_module', JPP_MODULE_ID).maybeSingle()
             .then(({ data }) => { if (data?.color) setThemeColor(data.color); });
-        fetchData();
-    }, []);
+        // Only fetch sensitive data once auth resolves and role is confirmed
+        if (isYDP || isSuperAdmin) fetchData();
+        else if (!loading) setLoading(false);
+    }, [isYDP]); // re-runs when profile loads and isYDP becomes true
 
     const fetchData = async () => {
         setLoading(true);
@@ -61,7 +62,9 @@ export function JppNexusPage() {
         const newValue = !currentValue;
         const toastId = toast.loading('Mengemaskini...');
         try {
-            const { error } = await supabase.from('system_settings').update({ value: newValue }).eq('key', key);
+            // upsert handles both create and update — avoids silent fail if row missing
+            const { error } = await supabase.from('system_settings')
+                .upsert({ key, value: String(newValue) }, { onConflict: 'key' });
             if (error) throw error;
             setSettings(s => ({ ...s, [key]: newValue }));
             toast.success(`Berjaya dilaras.`, { id: toastId });
@@ -223,13 +226,19 @@ export function JppNexusPage() {
                                     <div className="grid grid-cols-2 gap-3">
                                         <div className="bg-black/20 backdrop-blur-md rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-colors">
                                             <Sparkles className="w-4 h-4 text-amber-400 mb-2" />
-                                            <p className="text-xl font-black text-white tabular-nums">845</p>
-                                            <p className="text-[8px] font-black text-indigo-300/70 uppercase tracking-widest mt-1">Panggilan API</p>
+                                            <p className="text-xl font-black text-white tabular-nums">
+                                                {settings.ai_total_tokens
+                                                    ? Math.round(settings.ai_total_tokens / 480).toLocaleString()
+                                                    : '—'}
+                                            </p>
+                                            <p className="text-[8px] font-black text-indigo-300/70 uppercase tracking-widest mt-1">Anggaran Panggilan</p>
                                         </div>
                                         <div className="bg-black/20 backdrop-blur-md rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-colors">
-                                            <Activity className="w-4 h-4 text-emerald-400 mb-2" />
-                                            <p className="text-xl font-black text-emerald-400 uppercase">Aman</p>
-                                            <p className="text-[8px] font-black text-indigo-300/70 uppercase tracking-widest mt-1">Status API</p>
+                                            <Activity className={`w-4 h-4 mb-2 ${settings.allow_ai_chat ? 'text-emerald-400' : 'text-rose-400'}`} />
+                                            <p className={`text-xl font-black uppercase ${settings.allow_ai_chat ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                {settings.allow_ai_chat ? 'Aktif' : 'Ditutup'}
+                                            </p>
+                                            <p className="text-[8px] font-black text-indigo-300/70 uppercase tracking-widest mt-1">Status AI Chat</p>
                                         </div>
                                     </div>
                                 </div>

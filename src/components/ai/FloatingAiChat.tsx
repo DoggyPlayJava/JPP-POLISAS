@@ -263,7 +263,7 @@ export function FloatingAiChat() {
             if (targetClubId) {
               const { data: club } = await supabase.from('clubs').select('name, members_count').eq('id', targetClubId).single();
               if (club) {
-                const { count: pr } = await supabase.from('activity_reports').select('id', { count: 'exact', head: true }).eq('club_id', targetClubId).eq('status', 'draft');
+                const { count: pr } = await supabase.from('club_reports').select('id', { count: 'exact', head: true }).eq('club_id', targetClubId).eq('status', 'draft');
                 ctx.clubInfo = { name: club.name, membersCount: club.members_count, pendingReports: pr || 0 };
 
                 const { data: progs } = await supabase.from('programs').select('nama_program, tarikh_mula, location')
@@ -334,7 +334,7 @@ export function FloatingAiChat() {
           }
           // ─ 2D. DATA JPP HQ ────────────────────────────────────
           else if (p.startsWith('/jpp')) {
-             const { count: pdgReports } = await supabase.from('activity_reports').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+             const { count: pdgReports } = await supabase.from('club_reports').select('id', { count: 'exact', head: true }).eq('status', 'pending');
              const { count: pdgMerits }  = await supabase.from('akademik_pencapaian').select('id', { count: 'exact', head: true }).eq('status', 'PENDING');
              ctx.jppHqInfo = {
                totalPendingReports: pdgReports || 0,

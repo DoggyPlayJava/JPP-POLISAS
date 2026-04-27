@@ -550,6 +550,15 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
          await supabase.rpc('spend_ai_tokens', { task_name: spendKey });
       }
 
+      // Track real Google API token consumption (fire-and-forget)
+      const googleTokens = responseData?.usageMetadata?.totalTokenCount;
+      if (googleTokens && googleTokens > 0) {
+        void (async () => {
+          try { await supabase.rpc('increment_ai_google_tokens', { tokens_used: googleTokens }); }
+          catch (err) { console.warn('[Nexus] Token tracking failed:', err); }
+        })();
+      }
+
       cacheRef.current[cacheKey] = text; // Simpan ke dalam cache
       setResult(text);
       return text;
@@ -782,6 +791,15 @@ Sila pandu pengguna langkah demi langkah dengan cara yang sangat santai, jelas d
       // === LOG PENGGUNAAN CHAT UNTUK AUDIT (DEEP ANALYSIS) ===
       await supabase.rpc('spend_ai_tokens', { task_name: 'chat' });
 
+      // Track real Google API token consumption (fire-and-forget)
+      const googleTokens = responseData?.usageMetadata?.totalTokenCount;
+      if (googleTokens && googleTokens > 0) {
+        void (async () => {
+          try { await supabase.rpc('increment_ai_google_tokens', { tokens_used: googleTokens }); }
+          catch (err) { console.warn('[Nexus] Token tracking failed:', err); }
+        })();
+      }
+
       return text;
 
     } catch (e: any) {
@@ -966,6 +984,15 @@ Sila pandu pengguna langkah demi langkah dengan cara yang sangat santai, jelas d
 
       // Log usage (0 token cost — Exco chat is free)
       await supabase.rpc('spend_ai_tokens', { task_name: 'chat' });
+
+      // Track real Google API token consumption (fire-and-forget)
+      const googleTokensExco = responseData?.usageMetadata?.totalTokenCount;
+      if (googleTokensExco && googleTokensExco > 0) {
+        void (async () => {
+          try { await supabase.rpc('increment_ai_google_tokens', { tokens_used: googleTokensExco }); }
+          catch (err) { console.warn('[Nexus] Token tracking failed:', err); }
+        })();
+      }
 
       return text;
 
