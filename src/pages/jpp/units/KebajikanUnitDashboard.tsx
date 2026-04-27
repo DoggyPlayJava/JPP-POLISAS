@@ -117,7 +117,7 @@ function StatCard({ label, value, icon: Icon, color, sub, delay = 0, onClick }: 
 
 // ─── Ticket row ───────────────────────────────────────────────────────────────
 function TicketRow({ ticket, onClick }: { ticket: KebajikanTicket; onClick: () => void }) {
-  const sm = STATUS_META[ticket.status];
+  const sm = STATUS_META[ticket.status] || { color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' };
   const pm = PRIORITY_META[ticket.priority] ?? PRIORITY_META.NORMAL;
   return (
     <motion.div
