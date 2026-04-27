@@ -73,3 +73,31 @@ export function getMalaysianNickname(fullName?: string | null): string {
   // ambil perkataan terakhir sebagai fallback.
   return nickname || words[words.length - 1];
 }
+
+/**
+ * Picu getaran haptik fizikal pada peranti pintar (mudah alih).
+ * Memerlukan sokongan API navigator.vibrate.
+ */
+export function triggerHaptic(type: 'light' | 'medium' | 'heavy' | 'success' | 'warning' = 'light') {
+  if (typeof window !== 'undefined' && navigator && navigator.vibrate) {
+    switch (type) {
+      case 'light':
+        navigator.vibrate(50);
+        break;
+      case 'medium':
+        navigator.vibrate(100);
+        break;
+      case 'heavy':
+        navigator.vibrate(200);
+        break;
+      case 'success':
+        navigator.vibrate([50, 50, 100]); // Dua kali ganda pantas, satu panjang
+        break;
+      case 'warning':
+        navigator.vibrate([100, 50, 100, 50, 100]); // Getaran berulang
+        break;
+      default:
+        navigator.vibrate(50);
+    }
+  }
+}
