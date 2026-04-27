@@ -112,7 +112,7 @@ export function UrusKelabPage() {
 
             if (error) throw error;
             toast.success(`Merit berjaya di-reset untuk kitaran ${period}!`);
-            await createLog(selectedClubId, profile?.id, profile?.full_name, 'RESET_MERIT', `Presiden meriset semua merit ahli untuk kitaran ${period}`);
+            await createLog(selectedClubId, profile?.id, profile?.full_name, 'RESET_MERIT', `Presiden meriset semua merit ahli ${clubData?.name ? `bagi ${clubData.name}` : ''} untuk kitaran ${period}`);
             fetchData(); 
         } catch (err: any) {
             toast.error("Gagal meriset merit: " + err.message);
@@ -157,7 +157,7 @@ export function UrusKelabPage() {
 
             await refreshClubs();
             toast.success("Segala identiti & barisan kepimpinan disimpan!");
-            await createLog(selectedClubId, profile?.id, profile?.full_name, 'UPDATE_CLUB', 'Presiden mengemaskini maklumat kelab dan struktur jawatankuasa.');
+            await createLog(selectedClubId, profile?.id, profile?.full_name, 'UPDATE_CLUB', `Presiden mengemaskini maklumat dan jawatankuasa ${clubData?.name ? `bagi ${clubData.name}` : 'kelab'}.`);
             
             fetchData();
         } catch(err: any) {
@@ -182,7 +182,7 @@ export function UrusKelabPage() {
             setClubData((prev: any) => ({ ...prev, logo_url: publicUrl }));
             await refreshClubs();
             toast.success("Logo dikemaskini!");
-            await createLog(selectedClubId, profile?.id, profile?.full_name, 'UPDATE_CLUB', 'Presiden telah memuat naik logo kelab yang baharu.');
+            await createLog(selectedClubId, profile?.id, profile?.full_name, 'UPDATE_CLUB', `Presiden memuat naik logo baharu ${clubData?.name ? `untuk ${clubData.name}` : 'kelab'}.`);
         } catch (err) {
             toast.error("Ralat muat naik logo.");
         } finally {

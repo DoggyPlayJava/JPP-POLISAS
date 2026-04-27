@@ -28,6 +28,7 @@ export function LoginPage() {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [showManualRegister, setShowManualRegister] = useState(false);
+  const [traditionalRegistrationEnabled, setTraditionalRegistrationEnabled] = useState(true);
 
   // Register flow state
   const [step, setStep] = useState<Step>(1);
@@ -51,6 +52,14 @@ export function LoginPage() {
   useEffect(() => {
     const redirectTo = new URLSearchParams(window.location.search).get('redirect');
     if (redirectTo) sessionStorage.setItem('post_login_redirect', redirectTo);
+
+    // Dapatkan tetapan pendaftaran tradisional
+    supabase.from('system_settings').select('value').eq('key', 'traditional_registration_enabled').maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setTraditionalRegistrationEnabled(data.value === 'true' || data.value === true);
+        }
+      });
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -348,11 +357,17 @@ export function LoginPage() {
                             <div className="w-full border-t border-border/60"></div>
                           </div>
                           <div className="relative flex justify-center">
-                            <button type="button" onClick={() => setShowManualRegister(!showManualRegister)}
-                              className="bg-card/80 backdrop-blur-2xl px-4 py-1.5 rounded-full border border-border/60 text-[10px] uppercase font-black tracking-widest text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors">
-                              ATAU DAFTAR MANUAL
-                              <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-300", showManualRegister && "rotate-180")} />
-                            </button>
+                            {traditionalRegistrationEnabled ? (
+                              <button type="button" onClick={() => setShowManualRegister(!showManualRegister)}
+                                className="bg-card/80 backdrop-blur-2xl px-4 py-1.5 rounded-full border border-border/60 text-[10px] uppercase font-black tracking-widest text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors">
+                                ATAU DAFTAR MANUAL
+                                <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-300", showManualRegister && "rotate-180")} />
+                              </button>
+                            ) : (
+                              <span className="bg-card/80 backdrop-blur-2xl px-4 py-1.5 rounded-full border border-rose-500/20 text-[10px] font-black uppercase tracking-widest text-rose-500 flex items-center gap-2">
+                                Pendaftaran Manual Ditutup Sementara
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>

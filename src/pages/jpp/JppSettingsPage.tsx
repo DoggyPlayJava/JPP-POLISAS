@@ -20,7 +20,8 @@ export function JppSettingsPage() {
     const [savingIntake, setSavingIntake] = useState(false);
 
     const [settings, setSettings] = useState<Record<string, any>>({
-        staff_registration_code: ''
+        staff_registration_code: '',
+        traditional_registration_enabled: true
     });
 
     useEffect(() => {
@@ -92,8 +93,16 @@ export function JppSettingsPage() {
         const newValue = !currentValue;
         const toastId = toast.loading('Mengemaskini...');
         try {
-            const { error } = await supabase.from('system_settings').update({ value: newValue }).eq('key', key);
+            const strVal = String(newValue);
+            const { data, error } = await supabase.from('system_settings')
+                .update({ value: strVal })
+                .eq('key', key)
+                .select();
             if (error) throw error;
+            if (!data || data.length === 0) {
+                const { error: insErr } = await supabase.from('system_settings').insert({ key, value: strVal });
+                if (insErr) throw insErr;
+            }
             setSettings(s => ({ ...s, [key]: newValue }));
             toast.success(`Berjaya dilaras.`, { id: toastId });
         } catch (e: any) {
@@ -156,6 +165,35 @@ export function JppSettingsPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Tetapan KPP telah dipindahkan ke Dashboard KPP (Laporan PDF, Had Keahlian, Takwim) */}
+
+                        {/* Traditional Registration Toggle */}
+                        {isSuperAdmin && (
+                            <div className="p-6 rounded-[2rem] bg-gradient-to-br from-violet-900/10 to-violet-900/5 border border-violet-500/20 flex flex-col sm:flex-row items-center justify-between gap-6 md:col-span-2 group hover:from-violet-900/20 transition-all">
+                                <div className="flex items-center gap-4 w-full sm:w-auto flex-col sm:flex-row text-center sm:text-left">
+                                    <div className="w-12 h-12 rounded-2xl bg-violet-500/20 text-violet-400 flex items-center justify-center border border-violet-500/30">
+                                        <KeyRound className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <p className="text-base font-black text-white">Traditional Registration (Emel & Kata Laluan)</p>
+                                        <p className="text-xs text-violet-400/70 font-medium">Benarkan pendaftaran menggunakan emel dan kata laluan untuk pelajar. Tutup fungsi ini waktu orientasi untuk elak database overload.</p>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                                    <button
+                                        onClick={() => toggleSetting('traditional_registration_enabled', settings.traditional_registration_enabled !== false)}
+                                        className={cn(
+                                            "relative inline-flex h-8 w-14 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                                            settings.traditional_registration_enabled !== false ? "bg-violet-600" : "bg-white/10"
+                                        )}
+                                    >
+                                        <span className={cn(
+                                            "pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out",
+                                            settings.traditional_registration_enabled !== false ? "translate-x-3" : "-translate-x-3"
+                                        )} />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Kod Pendaftaran Staf - Hanya untuk SUPER ADMIN */}
                         {isSuperAdmin && (

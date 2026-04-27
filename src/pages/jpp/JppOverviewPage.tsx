@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
-  Users, Flag, BarChart3, Activity, Database,
-  TrendingUp, Shield, Clock, FileText, Loader2,
-  Store, ShoppingBag, Heart, Trophy
+  Users, Flag, BarChart3, FileText, Loader2,
+  Store, ShoppingBag, Heart, Trophy, Shield, CalendarDays
 } from 'lucide-react';
 import { hexToRgba } from '@/lib/utils';
-import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID, UNIT_CFG, UNIT_ORDER } from './jppConfig';
-import { JPP_UNIT_LABELS } from '@/types';
+import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
+import {
+  AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend
+} from 'recharts';
+import { format, subDays, isAfter, parseISO } from 'date-fns';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface SystemStats {
@@ -19,11 +22,10 @@ interface SystemStats {
   totalActivities: number;
   totalReports: number;
   totalStudents: number;
-}
-
-interface UnitStat {
-  code: string;
-  memberCount: number;
+  totalBusinesses: number;
+  totalProducts: number;
+  totalTickets: number;
+  totalSports: number;
 }
 
 // ── Stat block ────────────────────────────────────────────────────────────────
@@ -58,53 +60,18 @@ function BigStatCard({
   );
 }
 
-// ── Unit breakdown row ────────────────────────────────────────────────────────
-function UnitStatRow({ code, count, total, delay }: { code: string; count: number; total: number; delay: number }) {
-  const cfg = UNIT_CFG[code];
-  if (!cfg) return null;
-  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay, duration: 0.4 }}
-      className="flex items-center gap-3"
-    >
-      <div
-        className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-        style={{ background: hexToRgba(cfg.color, 0.12) }}
-      >
-        <cfg.icon className="w-3.5 h-3.5" style={{ color: cfg.color }} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-[11px] font-black text-white/60 truncate">{cfg.shortLabel}</span>
-          <span className="text-[11px] font-black text-white/40 ml-2 flex-shrink-0">{count} ahli</span>
-        </div>
-        <div className="h-1 rounded-full bg-white/5 overflow-hidden">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${pct}%` }}
-            transition={{ delay: delay + 0.2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="h-full rounded-full"
-            style={{ background: cfg.color }}
-          />
-        </div>
-      </div>
-      <span className="text-[10px] font-black text-white/25 flex-shrink-0 w-8 text-right">{pct}%</span>
-    </motion.div>
-  );
-}
-
 // ── Main page ─────────────────────────────────────────────────────────────────
 export function JppOverviewPage() {
   const { isSuperAdmin } = useAuth();
 
   const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
   const [stats, setStats]           = useState<SystemStats | null>(null);
-  const [unitStats, setUnitStats]   = useState<UnitStat[]>([]);
   const [loading, setLoading]       = useState(true);
+
+  // Chart states
+  const [timeRange, setTimeRange] = useState<'7d' | '30d'>('30d');
+  const [rawProfiles, setRawProfiles] = useState<{ created_at: string }[]>([]);
+  const [ticketStats, setTicketStats] = useState<{ name: string; value: number; color: string }[]>([]);
 
   // Fetch theme color
   useEffect(() => {
@@ -117,8 +84,8 @@ export function JppOverviewPage() {
     const fetchStats = async () => {
       setLoading(true);
       const [
-        jppRes, studRes, allClubRes, actClubRes, actRes, repRes, unitRes,
-        bizRes, prodRes, tickRes, sportRes
+        jppRes, studRes, allClubRes, actClubRes, actRes, repRes, 
+        bizRes, prodRes, tickRes, sportRes, profRes, ticketStatusRes
       ] = await Promise.all([
         // Total JPP members
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'JPP'),
@@ -132,13 +99,15 @@ export function JppOverviewPage() {
         supabase.from('club_activities').select('id', { count: 'exact', head: true }),
         // Total reports
         supabase.from('club_reports').select('id', { count: 'exact', head: true }),
-        // JPP members by unit
-        supabase.from('profiles').select('jpp_unit').eq('role', 'JPP').not('jpp_unit', 'is', null),
         // Additional modules
         supabase.from('keusahawanan_businesses').select('id', { count: 'exact', head: true }),
         supabase.from('business_products').select('id', { count: 'exact', head: true }),
         supabase.from('kebajikan_tickets').select('id', { count: 'exact', head: true }),
         supabase.from('supsas_sports').select('id', { count: 'exact', head: true }),
+        // Raw Profiles for chart
+        supabase.from('profiles').select('created_at'),
+        // Kebajikan for pie chart
+        supabase.from('kebajikan_tickets').select('status')
       ]);
 
       setStats({
@@ -154,19 +123,66 @@ export function JppOverviewPage() {
         totalSports:     sportRes.count ?? 0,
       });
 
-      // Tally by unit
-      const tally: Record<string, number> = {};
-      (unitRes.data ?? []).forEach((row: any) => {
-        if (row.jpp_unit) tally[row.jpp_unit] = (tally[row.jpp_unit] ?? 0) + 1;
-      });
-      setUnitStats(UNIT_ORDER.map(code => ({ code, memberCount: tally[code] ?? 0 })));
+      if (profRes.data) {
+        setRawProfiles(profRes.data);
+      }
+
+      if (ticketStatusRes.data) {
+        let open = 0;
+        let resolved = 0;
+        ticketStatusRes.data.forEach(t => {
+          if (t.status === 'RESOLVED' || t.status === 'CLOSED') resolved++;
+          else if (t.status !== 'CANCELLED') open++;
+        });
+        setTicketStats([
+          { name: 'Terbuka', value: open, color: '#EF4444' }, // Red
+          { name: 'Selesai', value: resolved, color: '#10B981' } // Green
+        ]);
+      }
 
       setLoading(false);
     };
     fetchStats();
   }, []);
 
-  const totalJppUnassigned = (stats?.totalJpp ?? 0) - unitStats.reduce((s, u) => s + u.memberCount, 0);
+  const chartData = useMemo(() => {
+    const days = timeRange === '7d' ? 7 : 30;
+    const startDate = subDays(new Date(), days - 1);
+    
+    // Initialize map
+    const dateMap = new Map<string, number>();
+    for (let i = 0; i < days; i++) {
+      const d = format(subDays(new Date(), days - 1 - i), 'MMM dd');
+      dateMap.set(d, 0);
+    }
+
+    rawProfiles.forEach(p => {
+      if (!p.created_at) return;
+      const d = parseISO(p.created_at);
+      if (isAfter(d, startDate) || format(d, 'MMM dd') === format(startDate, 'MMM dd')) {
+        const key = format(d, 'MMM dd');
+        if (dateMap.has(key)) {
+          dateMap.set(key, dateMap.get(key)! + 1);
+        }
+      }
+    });
+
+    return Array.from(dateMap.entries()).map(([date, count]) => ({ date, count }));
+  }, [rawProfiles, timeRange]);
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-[#0a0a0f] border border-white/10 rounded-xl p-3 shadow-xl backdrop-blur-md">
+          <p className="text-white/60 text-xs font-bold mb-1">{label}</p>
+          <p className="text-white font-black text-lg">
+            {payload[0].value} <span className="text-xs font-medium text-white/50">pelajar</span>
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -219,77 +235,150 @@ export function JppOverviewPage() {
               <BigStatCard label="Laporan"           value={stats?.totalReports ?? 0}    icon={FileText}  color="#A78BFA"    delay={0.40} />
             </div>
 
-            {/* ── Unit Breakdown ─── */}
-            <div className="rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-6 space-y-5">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xs font-black uppercase tracking-[0.25em] text-white/40">
-                  Taburan Ahli JPP per Unit
+            {/* ── Charts Grid ─── */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              
+              {/* Registration Trend Area Chart */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.45 }}
+                className="lg:col-span-2 rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-6 flex flex-col"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+                  <div>
+                    <h2 className="text-xs font-black uppercase tracking-[0.25em] text-white/40 mb-1">
+                      Trend Pendaftaran Pelajar
+                    </h2>
+                    <p className="text-2xl font-black text-white">
+                      {chartData.reduce((acc, curr) => acc + curr.count, 0)} <span className="text-xs text-white/30 font-medium">baru mendaftar</span>
+                    </p>
+                  </div>
+                  <div className="flex items-center bg-white/5 rounded-xl p-1 shrink-0">
+                    <button
+                      onClick={() => setTimeRange('7d')}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${
+                        timeRange === '7d' ? 'bg-white/10 text-white' : 'text-white/30 hover:text-white/60'
+                      }`}
+                    >
+                      7 Hari
+                    </button>
+                    <button
+                      onClick={() => setTimeRange('30d')}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${
+                        timeRange === '30d' ? 'bg-white/10 text-white' : 'text-white/30 hover:text-white/60'
+                      }`}
+                    >
+                      30 Hari
+                    </button>
+                  </div>
+                </div>
+
+                <div className="h-64 w-full mt-auto">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={themeColor} stopOpacity={0.4} />
+                          <stop offset="95%" stopColor={themeColor} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis 
+                        dataKey="date" 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 700 }}
+                        dy={10}
+                        minTickGap={20}
+                      />
+                      <YAxis 
+                        hide 
+                      />
+                      <RechartsTooltip content={<CustomTooltip />} />
+                      <Area 
+                        type="monotone" 
+                        dataKey="count" 
+                        stroke={themeColor} 
+                        strokeWidth={3}
+                        fillOpacity={1} 
+                        fill="url(#colorCount)" 
+                        animationDuration={1500}
+                        animationEasing="ease-in-out"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </motion.div>
+
+              {/* Kebajikan Tickets Pie Chart */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-6 flex flex-col"
+              >
+                <h2 className="text-xs font-black uppercase tracking-[0.25em] text-white/40 mb-2">
+                  Status Tiket Kebajikan
                 </h2>
-                <span className="text-[10px] font-black text-white/20">
-                  {stats?.totalJpp ?? 0} ahli
-                </span>
-              </div>
-              <div className="space-y-4">
-                {unitStats.map((u, i) => (
-                  <UnitStatRow
-                    key={u.code}
-                    code={u.code}
-                    count={u.memberCount}
-                    total={stats?.totalJpp ?? 1}
-                    delay={0.05 * i}
-                  />
-                ))}
-                {totalJppUnassigned > 0 && (
-                  <div className="flex items-center gap-3 opacity-40">
-                    <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0">
-                      <Users className="w-3.5 h-3.5 text-white/30" />
+                
+                <div className="flex-1 min-h-[200px] w-full flex items-center justify-center relative mt-4">
+                  {ticketStats.every(t => t.value === 0) ? (
+                    <div className="text-center">
+                      <Heart className="w-8 h-8 text-white/10 mx-auto mb-2" />
+                      <p className="text-xs text-white/30 font-medium">Tiada tiket kebajikan</p>
                     </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between mb-1">
-                        <span className="text-[11px] font-black text-white/40">Belum Di-assign</span>
-                        <span className="text-[11px] font-black text-white/25">{totalJppUnassigned} ahli</span>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={ticketStats}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="value"
+                          stroke="none"
+                          animationDuration={1500}
+                        >
+                          {ticketStats.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <RechartsTooltip 
+                          contentStyle={{ backgroundColor: '#0a0a0f', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', color: 'white', fontWeight: 800 }}
+                          itemStyle={{ color: 'white' }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
+                  {/* Center Text for Donut */}
+                  {!ticketStats.every(t => t.value === 0) && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-3xl font-black text-white leading-none">
+                        {stats?.totalTickets ?? 0}
+                      </span>
+                      <span className="text-[9px] uppercase tracking-widest font-black text-white/30 mt-1">
+                        Tiket
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Custom Legend */}
+                {!ticketStats.every(t => t.value === 0) && (
+                  <div className="flex justify-center gap-6 mt-6">
+                    {ticketStats.map(stat => (
+                      <div key={stat.name} className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: stat.color }} />
+                        <span className="text-xs font-black text-white/50">{stat.name}</span>
                       </div>
-                      <div className="h-1 rounded-full bg-white/5" />
-                    </div>
+                    ))}
                   </div>
                 )}
-              </div>
+              </motion.div>
             </div>
-
-            {/* ── Module Status ─── */}
-            <div className="rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-6 space-y-4">
-              <h2 className="text-xs font-black uppercase tracking-[0.25em] text-white/40">Status Modul</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {UNIT_ORDER.map((code, i) => {
-                  const cfg = UNIT_CFG[code];
-                  if (!cfg) return null;
-                  return (
-                    <motion.div
-                      key={code}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.04 * i }}
-                      className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/[0.02] border border-white/[0.04]"
-                    >
-                      <div
-                        className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{ background: hexToRgba(cfg.color, 0.12) }}
-                      >
-                        <cfg.icon className="w-3.5 h-3.5" style={{ color: cfg.color }} />
-                      </div>
-                      <span className="text-xs font-black text-white/50 flex-1 truncate">{cfg.shortLabel}</span>
-                      <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
-                        cfg.isActive
-                          ? 'bg-emerald-500/15 text-emerald-400'
-                          : 'bg-white/5 text-white/20'
-                      }`}>
-                        {cfg.isActive ? 'Aktif' : 'Akan Datang'}
-                      </span>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </div>
+            
           </>
         )}
       </div>
