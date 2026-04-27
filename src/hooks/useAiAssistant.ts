@@ -102,8 +102,7 @@ export function useAiAssistant() {
     setResult(null);
 
     try {
-      const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
-      if (!apiKey) throw new Error("Sila konfigurasikan VITE_GEMINI_API_KEY dalam fail .env anda.");
+      // Security: VITE_GEMINI_API_KEY removed from frontend. Request proxied through Edge Function.
 
       // === SEMAKAN BAKI & KESELAMATAN NEXUS AI ===
       let taskKey = params.task as string;
@@ -477,35 +476,36 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
             await new Promise(res => setTimeout(res, attempt * 2000));
           }
 
-          let response = await fetch(`${endpoint}?key=${apiKey}`, {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: requestBody,
+          const { data, error } = await supabase.functions.invoke('ai-assistant', {
+            body: { action: 'proxy', endpoint, payload: JSON.parse(requestBody) }
           });
-
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => null);
-            const errorMsg = errorData?.error?.message || `Google API Error: ${response.status}`;
+          
+          if (error) {
+             throw new Error(error.message || "Gagal menghubungi Edge Function AI.");
+          }
+          
+          if (data.status && data.status !== 200) {
+            const errorMsg = data.error?.message || `Google API Error: ${data.status}`;
             
-            // Auto fallback if model is overloaded
-            if (errorMsg.toLowerCase().includes("high demand") || response.status === 503) {
+            if (errorMsg.toLowerCase().includes("high demand") || data.status === 503) {
               console.warn(`Model ${modelEndpointString} is overloaded. Falling back to gemini-2.5-flash-lite...`);
               const fallbackEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent`;
               
-              response = await fetch(`${fallbackEndpoint}?key=${apiKey}`, {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: requestBody,
+              const { data: data2, error: error2 } = await supabase.functions.invoke('ai-assistant', {
+                body: { action: 'proxy', endpoint: fallbackEndpoint, payload: JSON.parse(requestBody) }
               });
               
-              if (!response.ok) {
-                 const errorData2 = await response.json().catch(() => null);
-                 throw new Error(errorData2?.error?.message || `Google API Error (Fallback): ${response.status}`);
+              if (error2) throw new Error(error2.message || "Gagal menghubungi Edge Function AI (Fallback).");
+              if (data2.status && data2.status !== 200) {
+                 throw new Error(data2.error?.message || `Google API Error (Fallback): ${data2.status}`);
               }
+              responseData = data2;
             } else {
                throw new Error(errorMsg);
             }
+          } else {
+             responseData = data;
           }
-
-          responseData = await response.json();
           setRetryCount(0);
           break; // success
         } catch (apiError: any) {
@@ -613,8 +613,7 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
         }
       }
 
-      const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
-      if (!apiKey) throw new Error('Sila konfigurasikan VITE_GEMINI_API_KEY dalam fail .env anda.');
+      // Security: VITE_GEMINI_API_KEY removed from frontend. Request proxied through Edge Function.
 
       const systemInstruction = [
         'Nama anda adalah Nexus AI.',
@@ -747,22 +746,25 @@ Sila pandu pengguna langkah demi langkah dengan cara yang sangat santai, jelas d
             await new Promise(res => setTimeout(res, attempt * 2000));
           }
 
-          const response = await fetch(`${endpoint}?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              system_instruction: { parts: [{ text: systemInstruction }] },
-              contents,
-              generationConfig: { temperature: 0.3, maxOutputTokens: 1500, topP: 0.85 }, // Tingkatkan dari 700 ke 1500 untuk elak jawapan tergantung
-            }),
+          const { data, error } = await supabase.functions.invoke('ai-assistant', {
+            body: {
+              action: 'proxy',
+              endpoint: endpoint,
+              payload: {
+                system_instruction: { parts: [{ text: systemInstruction }] },
+                contents,
+                generationConfig: { temperature: 0.3, maxOutputTokens: 1500, topP: 0.85 }
+              }
+            }
           });
 
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => null);
-            throw new Error(errorData?.error?.message || `Google API Error: ${response.status}`);
+          if (error) {
+             throw new Error(error.message || "Gagal menghubungi Edge Function AI.");
           }
-
-          responseData = await response.json();
+          if (data.status && data.status !== 200) {
+             throw new Error(data.error?.message || `Google API Error: ${data.status}`);
+          }
+          responseData = data;
           setRetryCount(0);
           break; // success
         } catch (apiError: any) {
@@ -832,8 +834,7 @@ Sila pandu pengguna langkah demi langkah dengan cara yang sangat santai, jelas d
         throw new Error(usageError.message);
       }
 
-      const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
-      if (!apiKey) throw new Error('Sila konfigurasikan VITE_GEMINI_API_KEY dalam fail .env anda.');
+      // Security: VITE_GEMINI_API_KEY removed from frontend. Request proxied through Edge Function.
 
       // ─ Build live context block ──────────────────────────────────────────────
       const kb = context?.kebajikanInfo;
@@ -934,35 +935,38 @@ Sila pandu pengguna langkah demi langkah dengan cara yang sangat santai, jelas d
             await new Promise(res => setTimeout(res, attempt * 2000));
           }
 
-          const response = await fetch(`${endpoint}?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              system_instruction: { parts: [{ text: systemInstruction }] },
-              contents,
-              generationConfig: { temperature: 0.7, maxOutputTokens: 1200, topP: 0.9 },
-            }),
+          const { data, error } = await supabase.functions.invoke('ai-assistant', {
+            body: {
+              action: 'proxy',
+              endpoint: endpoint,
+              payload: {
+                system_instruction: { parts: [{ text: systemInstruction }] },
+                contents,
+                generationConfig: { temperature: 0.7, maxOutputTokens: 1200, topP: 0.9 }
+              }
+            }
           });
 
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => null);
-            const errorMsg = errorData?.error?.message || `Google API Error: ${response.status}`;
-            // Fallback to flash-lite if overloaded
-            if (errorMsg.toLowerCase().includes('high demand') || response.status === 503) {
-              const fallbackRes = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
-                { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ system_instruction: { parts: [{ text: systemInstruction }] }, contents, generationConfig: { temperature: 0.7, maxOutputTokens: 1200, topP: 0.9 } }) }
-              );
-              if (!fallbackRes.ok) throw new Error(`Fallback error: ${fallbackRes.status}`);
-              responseData = await fallbackRes.json();
+          if (error) {
+             throw new Error(error.message || "Gagal menghubungi Edge Function AI.");
+          }
+          
+          if (data.status && data.status !== 200) {
+            const errorMsg = data.error?.message || `Google API Error: ${data.status}`;
+            if (errorMsg.toLowerCase().includes('high demand') || data.status === 503) {
+              const fallbackEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent`;
+              const { data: data2, error: error2 } = await supabase.functions.invoke('ai-assistant', {
+                body: { action: 'proxy', endpoint: fallbackEndpoint, payload: { system_instruction: { parts: [{ text: systemInstruction }] }, contents, generationConfig: { temperature: 0.7, maxOutputTokens: 1200, topP: 0.9 } } }
+              });
+              if (error2) throw new Error(error2.message || `Fallback error: Edge function failure`);
+              if (data2.status && data2.status !== 200) throw new Error(data2.error?.message || `Fallback error: ${data2.status}`);
+              responseData = data2;
               setRetryCount(0);
               break;
             }
             throw new Error(errorMsg);
           }
-
-          responseData = await response.json();
+          responseData = data;
           setRetryCount(0);
           break;
         } catch (apiError: any) {

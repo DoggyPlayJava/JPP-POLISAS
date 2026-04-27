@@ -159,20 +159,38 @@ export function QuickActions({
           navigate('/akademik/qr');
         }}
         className={cn(
-          "col-span-1 md:col-span-1 group relative flex flex-col justify-between p-5 sm:p-6 rounded-[2rem] bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-left overflow-hidden border border-black/10 dark:border-white/10 transition-all duration-500",
+          "group relative p-5 sm:p-6 rounded-[2rem] text-left overflow-hidden transition-all duration-500",
+          "bg-white dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200/50 dark:border-white/10",
+          isJPPMode 
+            ? "col-span-1 md:col-span-1 flex flex-col justify-between" 
+            : "col-span-2 md:col-span-2 flex flex-row items-center gap-4",
           (!isModuleEnabled('akademik') && !isSuperAdmin)
             ? "opacity-60 grayscale-[0.8] cursor-not-allowed"
-            : "hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[0_20px_50px_-12px_rgba(16,185,129,0.3)]"
+            : "hover:scale-[1.02] active:scale-[0.98] shadow-sm hover:shadow-[0_20px_50px_-12px_rgba(16,185,129,0.25)] dark:hover:shadow-[0_20px_50px_-12px_rgba(16,185,129,0.15)]"
         )}
       >
-        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 dark:text-emerald-600 mb-4 group-hover:scale-110 transition-transform relative z-10">
-          <LucideIcons.QrCode className="w-6 h-6" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className={cn(
+          "rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform relative z-10 border border-emerald-500/20 shrink-0",
+          isJPPMode ? "w-12 h-12 mb-4" : "w-14 h-14"
+        )}>
+          <LucideIcons.QrCode className={isJPPMode ? "w-6 h-6" : "w-7 h-7"} />
         </div>
-        <div className="relative z-10">
-          <h3 className="text-base font-black leading-tight">Scan QR</h3>
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Kumpul Merit</p>
+        <div className="relative z-10 flex-1">
+          <h3 className={cn(
+            "font-black leading-tight text-slate-800 dark:text-white tracking-tight",
+            isJPPMode ? "text-base" : "text-lg"
+          )}>Scan QR</h3>
+          <p className={cn(
+            "text-slate-500 dark:text-slate-400 mt-1",
+            isJPPMode ? "text-[10px]" : "text-[11px] font-medium tracking-wide"
+          )}>Kumpul Merit</p>
         </div>
+        {!isJPPMode && (
+          <div className="hidden sm:flex w-10 h-10 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 items-center justify-center flex-shrink-0 relative z-10">
+            <LucideIcons.ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform" />
+          </div>
+        )}
       </button>
 
       {/* ── BENTO 4: JPP HQ (Small Square) ── */}

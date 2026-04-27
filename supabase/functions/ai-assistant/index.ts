@@ -164,7 +164,47 @@ Deno.serve(async (req: Request) => {
         });
     }
 
-    const body: AiRequest = await req.json();
+    const body: any = await req.json();
+    
+    // --- MOD PROXY KESELAMATAN (DARI USEAIASSISTANT) ---
+    if (body.action === 'proxy') {
+        const { endpoint, payload } = body;
+        
+        if (!endpoint || !endpoint.startsWith('https://generativelanguage.googleapis.com/')) {
+            throw new Error("Endpoint API tidak dibenarkan. Keselamatan diceroboh.");
+        }
+        
+        const geminiResponse = await fetch(`${endpoint}?key=${apiKey}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        
+        const geminiData = await geminiResponse.json();
+        
+        // Rekod penggunaan Token ke dalam pangkalan data
+        const usedTokens = geminiData?.usageMetadata?.totalTokenCount || 0;
+        if (usedTokens > 0) {
+            const newTotal = totalTokens + usedTokens;
+            const { data: existingTokenRow } = await supabaseAdmin.from('system_settings').select('id').eq('key', 'ai_total_tokens');
+            if (existingTokenRow && existingTokenRow.length > 0) {
+                 await supabaseAdmin.from('system_settings').update({ value: newTotal }).eq('key', 'ai_total_tokens');
+            } else {
+                 await supabaseAdmin.from('system_settings').insert({ key: 'ai_total_tokens', value: newTotal });
+            }
+        }
+        
+        // Memulangkan status HTTP asal Google API dan datanya
+        return new Response(JSON.stringify({
+             status: geminiResponse.status,
+             ...geminiData
+        }), {
+             status: 200, // Supabase client expect 200, ralat API akan dikendalikan di frontend
+             headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+    }
+    // --- TAMAT MOD PROXY ---
+
     if (!body.task) {
       throw new Error("Parameter 'task' diperlukan.");
     }
