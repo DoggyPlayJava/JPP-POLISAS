@@ -250,6 +250,26 @@ function EkppSidebarContent() {
           }).map(item => (
             <SidebarNavItem key={item.href} item={item} accentColor="rose" />
           ))}
+
+          {/* JPP HQ Shortcut */}
+          <NavLink
+            to="/jpp"
+            className={({ isActive }) => cn(
+              'flex items-center gap-3 px-3 py-2.5 mt-1 rounded-xl transition-all duration-300 group',
+              isActive
+                ? 'bg-rose-500/20 text-rose-300 shadow-inner border border-rose-500/30'
+                : 'bg-rose-500/5 text-rose-400/80 hover:bg-rose-500/15 hover:text-rose-300 border border-rose-500/10'
+            )}
+          >
+            <div className={cn(
+              'w-7 h-7 rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:scale-110',
+              'bg-rose-500/20 shadow-lg'
+            )}>
+              <Crown className="w-3.5 h-3.5 text-rose-400" />
+            </div>
+            <span className="text-xs font-bold tracking-tight">JPP HQ Portal</span>
+            <Badge className="ml-auto text-[8px] bg-rose-500/20 text-rose-400 px-1.5 py-0 border-none">KHAS</Badge>
+          </NavLink>
         </>
       )}
 

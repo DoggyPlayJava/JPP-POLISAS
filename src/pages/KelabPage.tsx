@@ -283,14 +283,14 @@ export function KelabPage() {
       )}
 
       {/* ── FILTER KATEGORI ── */}
-      <div className="flex flex-wrap justify-center gap-3 p-2 bg-muted/20 backdrop-blur-md rounded-[2rem] border border-border/40 max-w-fit mx-auto">
+      <div className="flex flex-wrap justify-center gap-1.5 p-1.5 bg-muted/30 backdrop-blur-md rounded-[2rem] border border-border/40 max-w-fit mx-auto">
         {categories.map((cat) => {
           const meta = CATEGORY_META[cat];
           const Icon = meta?.icon || LayoutGrid;
           return (
             <button key={cat} onClick={() => setActiveTab(cat)}
-              className={cn("relative flex items-center gap-2 px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300",
-                activeTab === cat ? "bg-primary text-white shadow-lg shadow-primary/20 scale-105" : "text-muted-foreground hover:bg-muted/50")}>
+              className={cn("relative flex items-center gap-2 px-6 py-2.5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all duration-300",
+                activeTab === cat ? "bg-card border border-border shadow-md text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/40 border border-transparent")}>
               <Icon className="w-3.5 h-3.5" />
               {cat === 'Semua' ? 'Semua' : cat}
             </button>
@@ -313,119 +313,129 @@ export function KelabPage() {
               const isRestricted = RESTRICTED_CATEGORIES.some(c => club.category?.toLowerCase() === c.toLowerCase());
 
               return (
-                <motion.div key={club.id} layout initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ delay: index * 0.03 }} className="group">
-                  <Card className={cn("bento-card h-full overflow-hidden hover:shadow-2xl transition-all duration-500",
-                    status === 'APPROVED' ? "border-2 border-emerald-500/30" :
-                      status === 'PENDING' ? "border-2 border-amber-500/30" :
-                        "border-border")}>
-                    <CardContent className="p-0 flex flex-col h-full">
-                      <div className="h-2 w-full shrink-0" style={{ backgroundColor: club.theme_color || '#0f172a' }} />
-                      <div className="p-6 space-y-4 flex-1 flex flex-col relative">
+                <motion.div key={club.id} layout initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ delay: index * 0.02 }} className="group">
+                  <Card 
+                    onClick={() => navigate(`/kelab/${club.id}`)}
+                    className={cn("h-full overflow-hidden cursor-pointer bg-card/80 backdrop-blur-sm hover:bg-card transition-all duration-500 rounded-[2rem] border",
+                      status === 'APPROVED' ? "border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/5" :
+                        status === 'PENDING' ? "border-amber-500/30 hover:border-amber-500/60 shadow-amber-500/5" :
+                          "border-border/60 hover:border-primary/40 shadow-xl hover:shadow-2xl hover:-translate-y-1")}>
+                    
+                    <CardContent className="p-6 flex flex-col h-full relative">
+                      {/* Subtle Background Glow based on Theme Color */}
+                      <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-10 blur-[40px] pointer-events-none transition-opacity duration-500 group-hover:opacity-20"
+                           style={{ backgroundColor: club.theme_color || '#0f172a' }} />
 
-                        {/* Status badge */}
+                      {/* Status badges top right */}
+                      <div className="absolute top-5 right-5 flex flex-col gap-1.5 items-end z-10">
                         {status === 'APPROVED' && (
-                          <div className="absolute top-4 right-4 flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-500/10 px-2 py-1 rounded-lg">
+                          <div className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full shadow-sm">
                             <CheckCircle2 className="w-3 h-3" /> Ahli
                           </div>
                         )}
                         {status === 'PENDING' && (
-                          <div className="absolute top-4 right-4 flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-amber-600 bg-amber-500/10 px-2 py-1 rounded-lg">
+                          <div className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-amber-600 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full shadow-sm">
                             <Clock className="w-3 h-3" /> Menunggu
                           </div>
                         )}
+                      </div>
 
-                        {/* Logo */}
-                        <div className="w-14 h-14 shrink-0 rounded-[1.25rem] flex items-center justify-center text-white font-black text-xl shadow-lg transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3 overflow-hidden"
-                          style={{ backgroundColor: club.theme_color || '#0f172a' }}>
-                          {club.logo_url
-                            ? <img src={club.logo_url} className="w-full h-full object-cover" alt={club.short_name} />
-                            : club.short_name?.slice(0, 2).toUpperCase() || 'K'}
-                        </div>
-
-                        <div className="space-y-1.5 flex-1">
-                          <div className="flex items-center gap-1.5">
-                            <CategoryIcon className={cn("w-3.5 h-3.5", meta.color)} />
-                            <Badge className={cn("border-none font-black text-[10px] uppercase tracking-widest px-2", meta.bg, meta.color)}>
-                              {club.category || 'Kelab'}
-                            </Badge>
+                      {/* Logo Area */}
+                      <div className="mb-5 relative z-10">
+                        <div className="relative w-16 h-16">
+                          {/* Inner glowing shadow */}
+                          <div className="absolute inset-0 rounded-[1.25rem] blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"
+                               style={{ backgroundColor: club.theme_color || '#0f172a' }} />
+                          <div className="relative w-full h-full rounded-[1.25rem] flex items-center justify-center text-white font-black text-2xl shadow-sm transition-transform duration-500 group-hover:scale-105 overflow-hidden border border-white/10"
+                            style={{ backgroundColor: club.theme_color || '#0f172a' }}>
+                            {club.logo_url
+                              ? <img src={club.logo_url} className="w-full h-full object-cover" alt={club.short_name} />
+                              : club.short_name?.slice(0, 2).toUpperCase() || 'K'}
                           </div>
-                          <h3 className="text-lg font-black tracking-tighter leading-tight group-hover:text-primary transition-colors line-clamp-2">
-                            {club.name}
-                          </h3>
-                          {club.description && (
-                            <p className="text-xs text-muted-foreground line-clamp-2 font-medium">{club.description}</p>
-                          )}
-                        </div>
-
-                        {/* Actions */}
-                        <div className="pt-3 flex gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => navigate(`/kelab/${club.id}`)}
-                            className="flex-1 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-muted/60">
-                            Lihat <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-                          </Button>
-
-                          {status === 'APPROVED' && (() => {
-                            const membership = myMemberships.find(m => m.club_id === club.id);
-                            if (membership?.role !== 'CLUB_MEMBER') {
-                              return (
-                                <Badge className="flex-1 justify-center h-9 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-600 border-none">
-                                  {membership?.role?.replace('CLUB_', '')}
-                                </Badge>
-                              );
-                            }
-                            if (membership?.is_primary) {
-                              return (
-                                <Button size="sm" onClick={() => {
-                                  if (confirm('Anda pasti mahu memohon keluar kelab Akademik? Ini memerlukan kelulusan Penasihat.')) {
-                                    handleResign(club.id, true);
-                                  }
-                                }}
-                                  className="flex-1 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest bg-rose-500/10 text-rose-600 hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20">
-                                  Mohon Pindah
-                                </Button>
-                              );
-                            }
-                            return (
-                              <Button size="sm" onClick={() => {
-                                if (confirm('Tarik diri serta merta dari kelab ini? Rekod aktiviti mungkin terjejas.')) {
-                                  handleResign(club.id, false);
-                                }
-                              }}
-                                className="flex-1 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest bg-rose-500/10 text-rose-600 hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20">
-                                <X className="w-3.5 h-3.5 mr-1" /> Tarik Diri
-                              </Button>
-                            );
-                          })()}
-
-                          {joinable && status === 'none' && (
-                            <Button size="sm" onClick={() => handleApply(club)} disabled={applying === club.id}
-                              className="flex-1 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all border border-primary/20">
-                              <Plus className="w-3.5 h-3.5 mr-1" />
-                              {applying === club.id ? 'Hantar...' : 'Apply'}
-                            </Button>
-                          )}
-
-                          {isAutoAssign && status === 'none' && (
-                            <Badge className="flex-1 justify-center h-9 rounded-xl text-[10px] font-black uppercase tracking-widest bg-blue-500/10 text-blue-600 border-none">
-                              <Building2 className="w-3.5 h-3.5 mr-1" /> Auto-Assign
-                            </Badge>
-                          )}
-
-                          {isRestricted && status === 'none' && (
-                            <Badge className="flex-1 justify-center h-9 rounded-xl text-[10px] font-black uppercase tracking-widest bg-muted text-muted-foreground border-none">
-                              <Shield className="w-3.5 h-3.5 mr-1" /> Terhad
-                            </Badge>
-                          )}
-
-                          {!joinable && club.short_name?.toUpperCase() === 'GEOSAS' && status === 'none' && (
-                            <Badge className="flex-1 justify-center h-9 rounded-xl text-[10px] font-black uppercase tracking-widest bg-rose-500/10 text-rose-600 border-none">
-                              <X className="w-3.5 h-3.5 mr-1" /> Khas JKA
-                            </Badge>
-                          )}
                         </div>
                       </div>
+
+                      {/* Content Area */}
+                      <div className="space-y-2 flex-1 relative z-10">
+                        <div className="flex items-center gap-1.5">
+                          <CategoryIcon className={cn("w-3.5 h-3.5", meta.color)} />
+                          <span className={cn("font-bold text-[9px] uppercase tracking-[0.2em]", meta.color)}>
+                            {club.category || 'Kelab'}
+                          </span>
+                        </div>
+                        <h3 className="text-xl font-black tracking-tight leading-tight group-hover:text-primary transition-colors">
+                          {club.name}
+                        </h3>
+                        {club.description && (
+                          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{club.description}</p>
+                        )}
+                      </div>
+
+                      {/* Explicit Actions Area (Prevent propagation to not trigger card click) */}
+                      <div className="pt-6 flex gap-2 relative z-20" onClick={e => e.stopPropagation()}>
+                        {status === 'APPROVED' && (() => {
+                          const membership = myMemberships.find(m => m.club_id === club.id);
+                          if (membership?.role !== 'CLUB_MEMBER') {
+                            return (
+                              <Badge className="flex-1 justify-center h-10 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-500/5 text-emerald-600 border border-emerald-500/20 shadow-sm">
+                                {membership?.role?.replace('CLUB_', '')}
+                              </Badge>
+                            );
+                          }
+                          if (membership?.is_primary) {
+                            return (
+                              <Button size="sm" onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm('Anda pasti mahu memohon keluar kelab Akademik? Ini memerlukan kelulusan Penasihat.')) {
+                                  handleResign(club.id, true);
+                                }
+                              }}
+                                className="flex-1 h-10 rounded-xl text-[10px] font-black uppercase tracking-widest bg-rose-500/5 text-rose-600 hover:bg-rose-500/10 transition-colors border border-rose-500/20 shadow-sm">
+                                Mohon Pindah
+                              </Button>
+                            );
+                          }
+                          return (
+                            <Button size="sm" onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm('Tarik diri serta merta dari kelab ini? Rekod aktiviti mungkin terjejas.')) {
+                                handleResign(club.id, false);
+                              }
+                            }}
+                              className="flex-1 h-10 rounded-xl text-[10px] font-black uppercase tracking-widest bg-rose-500/5 text-rose-600 hover:bg-rose-500/10 transition-colors border border-rose-500/20 shadow-sm">
+                              Tarik Diri
+                            </Button>
+                          );
+                        })()}
+
+                        {joinable && status === 'none' && (
+                          <Button size="sm" onClick={(e) => { e.stopPropagation(); handleApply(club); }} disabled={applying === club.id}
+                            className="flex-1 h-10 rounded-xl text-[10px] font-black uppercase tracking-widest bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
+                            {applying === club.id ? 'Menghantar...' : 'Mohon Sertai'}
+                          </Button>
+                        )}
+
+                        {isAutoAssign && status === 'none' && (
+                          <div className="flex-1 flex items-center justify-center h-10 rounded-xl text-[10px] font-black uppercase tracking-widest bg-blue-500/5 text-blue-600 border border-blue-500/20 shadow-sm">
+                            <Building2 className="w-3.5 h-3.5 mr-1.5" /> Auto-Assign
+                          </div>
+                        )}
+
+                        {isRestricted && status === 'none' && (
+                          <div className="flex-1 flex items-center justify-center h-10 rounded-xl text-[10px] font-black uppercase tracking-widest bg-muted/50 text-muted-foreground border border-border shadow-sm">
+                            <Shield className="w-3.5 h-3.5 mr-1.5" /> Keahlian Terhad
+                          </div>
+                        )}
+
+                        {!joinable && club.short_name?.toUpperCase() === 'GEOSAS' && status === 'none' && (
+                          <div className="flex-1 flex items-center justify-center h-10 rounded-xl text-[10px] font-black uppercase tracking-widest bg-rose-500/5 text-rose-600 border border-rose-500/20 shadow-sm">
+                            <X className="w-3.5 h-3.5 mr-1.5" /> Khas JKA
+                          </div>
+                        )}
+                      </div>
+
                     </CardContent>
                   </Card>
                 </motion.div>

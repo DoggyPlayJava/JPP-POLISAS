@@ -196,62 +196,109 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden px-4">
-      <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-primary/8 rounded-full blur-[120px] -mr-80 -mt-80 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/10 rounded-full blur-[100px] -ml-60 -mb-60 pointer-events-none" />
-      <div className="absolute inset-0 opacity-[0.025] pointer-events-none"
-        style={{ backgroundImage: 'radial-gradient(circle, hsl(0 67% 32%) 1px, transparent 0)', backgroundSize: '36px 36px' }} />
-
-      <motion.div
-        initial={{ opacity: 0, y: 24, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-md relative z-10"
-      >
-        {/* Logo */}
-        <div className="flex flex-col items-center mb-10 space-y-3">
-          <div className="w-20 h-20 rounded-[2rem] bg-primary flex items-center justify-center shadow-2xl glow-accent overflow-hidden">
-            <img src="/jpp-logo.png" alt="JPP Logo" className="w-14 h-14 object-contain" />
+    <div className="min-h-screen grid lg:grid-cols-2 bg-background relative overflow-hidden">
+      {/* Left Panel - Visual (Hidden on Mobile) */}
+      <div className="hidden lg:flex flex-col justify-between relative bg-primary/5 p-12 overflow-hidden border-r border-border/50">
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[120px] -mr-[400px] -mt-[400px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/10 rounded-full blur-[100px] -ml-[300px] -mb-[300px] pointer-events-none" />
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--primary)) 1px, transparent 0)', backgroundSize: '32px 32px' }} />
+        
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="w-16 h-16 rounded-[1.5rem] bg-primary flex items-center justify-center shadow-xl glow-accent overflow-hidden">
+            <img src="/jpp-logo.png" alt="JPP Logo" className="w-10 h-10 object-contain" />
           </div>
-          <div className="text-center">
-            <h1 className="text-3xl font-black tracking-tighter text-foreground">JPP Digital Portal</h1>
-            <p className="text-[11px] font-black uppercase tracking-[0.35em] text-accent mt-0.5">JPP Polisas</p>
-            <p className="text-[10px] text-muted-foreground/60 mt-1 font-medium">Portal JPP · e-Kebajikan · e-Keusahawanan</p>
+          <div>
+            <h1 className="text-2xl font-black tracking-tighter text-foreground">JPP POLISAS</h1>
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent">Digital Portal</p>
           </div>
         </div>
 
-        <Card className="border border-border/60 shadow-2xl bg-card/80 backdrop-blur-2xl rounded-[2.5rem] overflow-hidden">
-          <div className="h-1 bg-gradient-to-r from-primary via-accent to-primary" />
+        <div className="relative z-10 flex-1 flex flex-col justify-center">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 backdrop-blur-md">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-[11px] font-black text-primary uppercase tracking-widest">Sistem Pintar Bersepadu</span>
+            </div>
+            <h2 className="text-5xl font-black tracking-tighter leading-[1.1] mb-6">
+              Membentuk<br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
+                Kepimpinan<br/>Masa Hadapan
+              </span>
+            </h2>
+            <p className="text-muted-foreground font-medium text-lg max-w-md leading-relaxed">
+              Platform rasmi untuk pengurusan pelajar, aktiviti kelab, e-Kebajikan dan pembangunan usahawan muda POLISAS.
+            </p>
+            <div className="mt-12 flex gap-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="w-16 h-2 rounded-full bg-gradient-to-r from-primary/20 to-transparent" />
+              ))}
+            </div>
+          </motion.div>
+        </div>
 
-          <CardHeader className="px-10 pt-8 pb-4 space-y-1">
-            <CardTitle className="text-2xl font-black tracking-tight flex items-center gap-2">
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-md">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Sistem Beroperasi Penuh</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Panel - Auth Form */}
+      <div className="flex items-center justify-center p-6 sm:p-12 relative overflow-y-auto">
+        {/* Subtle background for mobile where left panel is hidden */}
+        <div className="absolute inset-0 bg-background lg:hidden" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -mr-60 -mt-60 pointer-events-none lg:hidden" />
+        <div className="absolute inset-0 opacity-[0.02] pointer-events-none lg:hidden"
+          style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--primary)) 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="w-full max-w-[420px] relative z-10"
+        >
+          {/* Mobile Logo (Only visible on small screens) */}
+          <div className="flex lg:hidden flex-col items-center mb-10 space-y-3">
+            <div className="w-20 h-20 rounded-[2rem] bg-primary flex items-center justify-center shadow-2xl glow-accent overflow-hidden">
+              <img src="/jpp-logo.png" alt="JPP Logo" className="w-14 h-14 object-contain" />
+            </div>
+            <div className="text-center">
+              <h1 className="text-3xl font-black tracking-tighter text-foreground">JPP Digital Portal</h1>
+              <p className="text-[11px] font-black uppercase tracking-[0.35em] text-accent mt-0.5">JPP Polisas</p>
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-3xl font-black tracking-tighter flex items-center gap-2">
               {isSignUp && step === 2 && (
                 <button onClick={() => setStep(1)} className="mr-1 p-1 rounded-lg hover:bg-muted transition-colors">
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="w-6 h-6" />
                 </button>
               )}
-              {isForgotPassword ? 'Tetapkan Semula Kata Laluan'
-                : isSignUp ? (step === 1 ? 'Daftar Akaun Baharu' : 'Maklumat Keahlian')
-                  : 'Log Masuk'}
-            </CardTitle>
-            <CardDescription className="text-sm text-muted-foreground">
+              {isForgotPassword ? 'Tetapkan Semula'
+                : isSignUp ? (step === 1 ? 'Daftar Akaun' : 'Maklumat Keahlian')
+                  : 'Selamat Kembali'}
+            </h2>
+            <p className="text-sm text-muted-foreground mt-2 font-medium">
               {isForgotPassword
                 ? 'Masukkan emel anda untuk menerima pautan tetapan semula.'
                 : isSignUp && step === 1
                   ? 'Lengkapkan maklumat asas anda.'
                   : isSignUp && step === 2
                     ? 'Pilih jabatan atau peranan anda dalam kelab.'
-                    : 'Masukkan emel dan kata laluan anda untuk teruskan.'}
-            </CardDescription>
+                    : 'Log masuk ke akaun anda untuk meneruskan.'}
+            </p>
             {isSignUp && (
-              <div className="flex items-center gap-2 pt-2">
-                <div className={cn("w-8 h-1.5 rounded-full transition-colors", step >= 1 ? "bg-primary" : "bg-muted")} />
-                <div className={cn("w-8 h-1.5 rounded-full transition-colors", step >= 2 ? "bg-primary" : "bg-muted")} />
+              <div className="flex items-center gap-2 pt-4">
+                <div className={cn("w-10 h-1.5 rounded-full transition-colors", step >= 1 ? "bg-primary" : "bg-muted")} />
+                <div className={cn("w-10 h-1.5 rounded-full transition-colors", step >= 2 ? "bg-primary" : "bg-muted")} />
               </div>
             )}
-          </CardHeader>
+          </div>
 
-          <CardContent className="px-10 pb-4">
+          <div className="space-y-6">
             {resetSent ? (
               <div className="py-8 text-center space-y-4">
                 <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto">
@@ -592,10 +639,10 @@ export function LoginPage() {
                 )}
               </form>
             )}
-          </CardContent>
+          </div>
 
           {!resetSent && (
-            <CardFooter className="px-10 pb-8 flex justify-center">
+            <div className="mt-8 flex justify-center">
               {isForgotPassword ? (
                 <button type="button" onClick={() => setIsForgotPassword(false)}
                   className="text-[11px] font-black uppercase tracking-widest text-accent hover:text-primary transition-colors">
@@ -613,18 +660,14 @@ export function LoginPage() {
                   </button>
                 </div>
               )}
-            </CardFooter>
+            </div>
           )}
-        </Card>
 
-        <div className="mt-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">JPP Digital Portal Beroperasi</span>
+          <div className="mt-12 text-center lg:hidden">
+            <p className="text-[10px] font-medium text-muted-foreground/40">© 2026 JPP Digital Portal. Hak cipta terpelihara.</p>
           </div>
-          <p className="text-[10px] font-medium text-muted-foreground/40 mt-3">© 2026 JPP Digital Portal · Polisas. Hak cipta terpelihara.</p>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }

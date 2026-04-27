@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
@@ -58,6 +58,7 @@ export function PolyMartLayout() {
   const [activeCategory,    setActiveCategory]    = useState('all');
   const [searchQuery,       setSearchQuery]        = useState('');
   const [showSearch,        setShowSearch]         = useState(false);
+  const [showMobileSearch,  setShowMobileSearch]   = useState(false);
   const [isVendor,          setIsVendor]           = useState(false);
   const [pendingVendorCount,setPendingVendorCount] = useState(0);
   const [myActiveOrdersCount, setMyActiveOrdersCount] = useState(0);
@@ -246,22 +247,107 @@ export function PolyMartLayout() {
           <Outlet />
         </main>
 
+        {/* ── Mobile Fullscreen Search & Filter Overlay ── */}
+        <AnimatePresence>
+          {showMobileSearch && (
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-2xl flex flex-col sm:hidden"
+            >
+              {/* Header */}
+              <div className="flex items-center gap-3 p-4 border-b border-border/40 bg-background safe-area-pt">
+                <button onClick={() => setShowMobileSearch(false)} className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center shrink-0">
+                  <ArrowLeft className="w-5 h-5 text-foreground" />
+                </button>
+                <div className="flex-1 flex items-center gap-2 h-11 px-4 rounded-full bg-muted/50 border border-border focus-within:border-primary/50 transition-colors">
+                  <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <input
+                    autoFocus
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Cari produk..."
+                    className="flex-1 text-[13px] font-medium bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
+                  />
+                  {searchQuery && (
+                    <button onClick={() => setSearchQuery('')} className="shrink-0 p-1 rounded-full bg-muted-foreground/10 hover:bg-muted-foreground/20">
+                      <X className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Body: Categories */}
+              <div className="flex-1 overflow-y-auto p-5">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Penapis Kategori</p>
+                <div className="flex flex-col gap-2">
+                  {CATEGORY_LIST.map(cat => (
+                    <button
+                      key={cat.key}
+                      onClick={() => {
+                        setActiveCategory(cat.key);
+                        setShowMobileSearch(false);
+                        navigate('/polymart');
+                      }}
+                      className="flex items-center gap-3 px-4 py-3.5 rounded-[1.25rem] border border-border/40 transition-all hover:bg-muted/50"
+                      style={activeCategory === cat.key ? { background: PM_LIGHT, color: PM_ACCENT, borderColor: `${PM_ACCENT}40` } : {}}
+                    >
+                      <span className="text-lg">{cat.emoji}</span>
+                      <span className="text-sm font-bold flex-1 text-left">{cat.label}</span>
+                      {activeCategory === cat.key && (
+                        <div className="w-2 h-2 rounded-full" style={{ background: PM_ACCENT }} />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* ── Mobile Bottom Nav ───────────────────────────────────────── */}
         <nav className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-background/92 backdrop-blur-xl border-t border-border/50 safe-area-pb">
           <div className="grid grid-cols-4 h-16">
             {[
-              { icon: Home,        label: 'Utama',   path: '/polymart',              active: isHome,    badge: 0 },
-              { icon: Search,      label: 'Cari',    path: '',                       active: false,     badge: 0, action: () => setShowSearch(true) },
-              { icon: Package,     label: 'Pesanan', path: '/polymart/pesanan-saya', active: isOrders,  badge: myActiveOrdersCount,
-                action: !user ? () => navigate(`/login?redirect=${encodeURIComponent('/polymart/pesanan-saya')}`) : undefined },
-              { icon: isVendor ? LayoutGrid : SlidersHorizontal,
-                                   label: isVendor ? 'Kedai' : 'Filter',
-                                   path: isVendor ? '/polymart/vendor' : '',
-                                   active: isVendorP,
-                                   badge: isVendor ? pendingVendorCount : 0 },
+              { 
+                icon: Home,        
+                label: 'Utama',   
+                active: isHome,    
+                badge: 0, 
+                action: () => navigate('/polymart') 
+              },
+              { 
+                icon: Search,      
+                label: 'Cari',    
+                active: showMobileSearch,     
+                badge: 0, 
+                action: () => setShowMobileSearch(true)
+              },
+              { 
+                icon: Package,     
+                label: 'Pesanan', 
+                active: isOrders,  
+                badge: myActiveOrdersCount,
+                action: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/pesanan-saya')}`) : navigate('/polymart/pesanan-saya') 
+              },
+              { 
+                icon: isVendor ? LayoutGrid : SlidersHorizontal,
+                label: isVendor ? 'Kedai' : 'Filter',
+                active: isVendorP,
+                badge: isVendor ? pendingVendorCount : 0,
+                action: () => {
+                  if (isVendor) {
+                    navigate('/polymart/vendor');
+                  } else {
+                    setShowMobileSearch(true);
+                  }
+                }
+              },
             ].map((item, i) => (
               <button key={i}
-                onClick={() => item.action ? item.action() : item.path && navigate(item.path)}
+                onClick={item.action}
                 className="flex flex-col items-center justify-center gap-1 relative transition-colors">
                 {/* Active indicator */}
                 {item.active && <div className="absolute top-0 inset-x-4 h-0.5 rounded-b-full" style={{ background: PM_GRADIENT }} />}
@@ -269,7 +355,7 @@ export function PolyMartLayout() {
                   <item.icon className="w-5 h-5 transition-colors"
                     style={{ color: item.active ? PM_ACCENT : 'hsl(var(--muted-foreground))' }} />
                   {(item.badge ?? 0) > 0 && (
-                    <span className="absolute -top-1 -right-1.5 w-3.5 h-3.5 rounded-full bg-rose-500 text-white text-[7px] font-black flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1.5 w-3.5 h-3.5 rounded-full bg-rose-500 text-white text-[7px] font-black flex items-center justify-center shadow-md">
                       {(item.badge ?? 0) > 9 ? '9+' : item.badge}
                     </span>
                   )}
