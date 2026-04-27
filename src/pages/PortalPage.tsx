@@ -28,7 +28,7 @@ interface ColorPickerProps {
 
 function ColorPickerPopover({ moduleId, moduleName, currentColor, onSave, onClose }: ColorPickerProps) {
   const [selectedColor, setSelectedColor] = useState(currentColor);
-  const [hexInput, setHexInput]           = useState(currentColor);
+  const [hexInput, setHexInput] = useState(currentColor);
 
   const sync = (hex: string) => { setSelectedColor(hex); setHexInput(hex); };
 
@@ -44,8 +44,8 @@ function ColorPickerPopover({ moduleId, moduleName, currentColor, onSave, onClos
   };
 
   const PRESET_GROUPS = [
-    { label: 'Primary & Corporate', colors: ['#7B1C1C','#1A237E','#1B5E20','#E65100','#4A148C'] },
-    { label: 'Modern Vibrancy',    colors: ['#F43F5E','#3B82F6','#10B981','#F59E0B','#8B5CF6'] },
+    { label: 'Primary & Corporate', colors: ['#7B1C1C', '#1A237E', '#1B5E20', '#E65100', '#4A148C'] },
+    { label: 'Modern Vibrancy', colors: ['#F43F5E', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6'] },
   ];
 
   return (
@@ -59,7 +59,7 @@ function ColorPickerPopover({ moduleId, moduleName, currentColor, onSave, onClos
             <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Customize Theme</h4>
             <p className="text-xs font-bold truncate max-w-[140px]">{moduleName}</p>
           </div>
-          <div 
+          <div
             className="w-10 h-10 rounded-2xl shadow-inner border border-black/10 dark:border-white/20"
             style={{ background: selectedColor }}
           />
@@ -111,8 +111,8 @@ function ColorPickerPopover({ moduleId, moduleName, currentColor, onSave, onClos
         <Button
           onClick={() => onSave(moduleId, selectedColor)}
           className="w-full rounded-2xl h-11 font-bold text-xs uppercase tracking-widest transition-all"
-          style={{ 
-            background: selectedColor, 
+          style={{
+            background: selectedColor,
             color: getContrastText(selectedColor),
             boxShadow: `0 8px 20px -6px ${hexToRgba(selectedColor, 0.4)}`
           }}
@@ -155,7 +155,7 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
       });
       return;
     }
-    
+
     if (isPreviewMode) {
       toast.success('Admin Preview Mode Active', {
         icon: '👁️',
@@ -182,16 +182,16 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
       )}
     >
       {/* Hover Gradient Overlay */}
-      <div 
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" 
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
         style={{ background: `linear-gradient(to bottom right, ${hexToRgba(color, 0.1)}, transparent)` }}
       />
 
       <div className="relative z-10 space-y-6">
         <div className="flex items-start justify-between">
-          <div 
+          <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center mb-2 shadow-inner transition-transform duration-500 group-hover:scale-110"
-            style={{ 
+            style={{
               background: hexToRgba(color, 0.2),
               color: canAccess ? '#FFFFFF' : 'rgba(255,255,255,0.4)',
               boxShadow: `inset 0 0 0 1px ${hexToRgba(color, 0.3)}`
@@ -204,12 +204,12 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
 
           <div className="flex flex-col items-end gap-2" onClick={e => e.stopPropagation()}>
             {/* Status Badge */}
-            <div 
+            <div
               className={cn(
                 "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all duration-300",
-                isEnabled 
-                  ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400" 
-                  : isPreviewMode 
+                isEnabled
+                  ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400"
+                  : isPreviewMode
                     ? "bg-amber-500/20 border-amber-500/30 text-amber-400"
                     : "bg-black/[0.03] dark:bg-white/5 border-black/5 dark:border-white/10 text-slate- dark:text-white/40"
               )}
@@ -237,9 +237,9 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
                       <LucideIcons.Palette className="w-4 h-4" />
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent 
-                    align="end" 
-                    sideOffset={16} 
+                  <PopoverContent
+                    align="end"
+                    sideOffset={16}
                     className="w-72 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-black/5 dark:border-white/10 bg-slate-900/90 backdrop-blur-3xl p-0 overflow-hidden"
                   >
                     <ColorPickerPopover
@@ -256,8 +256,8 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
                     onClick={() => onToggle(module.id, !isEnabled)}
                     className={cn(
                       "p-2 rounded-xl border border-black/5 dark:border-white/10 bg-black/[0.03] dark:bg-white/5 transition-all duration-300",
-                      isEnabled 
-                        ? "text-rose-400 hover:bg-rose-500/20 hover:border-rose-500/30" 
+                      isEnabled
+                        ? "text-rose-400 hover:bg-rose-500/20 hover:border-rose-500/30"
                         : "text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/30"
                     )}
                   >
@@ -287,7 +287,7 @@ function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onC
           <span>{canAccess ? "Akses Modul" : "Bakal Tiba"}</span>
           <LucideIcons.ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
         </div>
-        
+
         <div className="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-lg bg-black/[0.03] dark:bg-white/5 text-slate- dark:text-white/40">
           {module.tagline}
         </div>
@@ -375,7 +375,7 @@ export function PortalPage() {
     if (!isModuleEnabled('supsas')) { setSupsasBurstDone(false); return; }
     const t = setTimeout(() => setSupsasBurstDone(true), 10000);
     return () => clearTimeout(t);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings]);
 
   // ── SUPSAS: session toast ─────────────────────────────────────
@@ -389,7 +389,7 @@ export function PortalPage() {
       }, 1800);
       return () => clearTimeout(t);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings, supsasEdition?.name]);
 
   const fetchSettings = useCallback(async () => {
@@ -401,7 +401,7 @@ export function PortalPage() {
         .from('portal_settings')
         .select('exco_module, color, is_enabled')
         .abortSignal(controller.signal);
-        
+
       if (data) setSettings(data as ExcoColorSetting[]);
     } catch (e: any) {
       if (e.name === 'AbortError') {
@@ -453,7 +453,7 @@ export function PortalPage() {
       .limit(1)
       .maybeSingle()
       .then(({ data }) => { if (data) setSupsasEdition(data as any); });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings]);
 
   // Live countdown ticker
@@ -467,10 +467,10 @@ export function PortalPage() {
         return;
       }
       setSupsasCountdown({
-        days:  Math.floor(diff / 86400000),
+        days: Math.floor(diff / 86400000),
         hours: Math.floor((diff % 86400000) / 3600000),
-        mins:  Math.floor((diff % 3600000) / 60000),
-        secs:  Math.floor((diff % 60000) / 1000),
+        mins: Math.floor((diff % 3600000) / 60000),
+        secs: Math.floor((diff % 60000) / 1000),
         expired: false,
       });
     };
@@ -521,14 +521,14 @@ export function PortalPage() {
           ? 'bg-[#030d1a] text-white selection:bg-amber-500/20'
           : 'bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-white selection:bg-emerald-500/20'
     )}>
-      
-      <PortalSidebar 
-        isOpen={isSidebarOpen} 
-        onOpen={() => setIsSidebarOpen(true)} 
-        onClose={() => setIsSidebarOpen(false)} 
+
+      <PortalSidebar
+        isOpen={isSidebarOpen}
+        onOpen={() => setIsSidebarOpen(true)}
+        onClose={() => setIsSidebarOpen(false)}
         settings={settings}
       />
-      
+
       {/* Background blobs — conditional karnival/supsas/normal */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         {karnivalActive ? (
@@ -609,39 +609,39 @@ export function PortalPage() {
       {karnivalActive && !confettiDone && (
         <div className="fixed inset-0 z-50 pointer-events-none overflow-hidden">
           {[
-            { l:'3%',  s:8,  r:0.5, c:'#a855f7', d:'3.1s', dl:'0s',    sh:'square'    },
-            { l:'7%',  s:6,  r:1.8, c:'#fbbf24', d:'4.2s', dl:'0.3s',  sh:'rect'      },
-            { l:'11%', s:9,  r:1,   c:'#f472b6', d:'3.5s', dl:'0.7s',  sh:'circle'    },
-            { l:'15%', s:7,  r:0.6, c:'#818cf8', d:'5.0s', dl:'0.1s',  sh:'square'    },
-            { l:'19%', s:10, r:1.5, c:'#c084fc', d:'3.8s', dl:'1.2s',  sh:'rect'      },
-            { l:'23%', s:5,  r:1,   c:'#e879f9', d:'4.5s', dl:'0.5s',  sh:'circle'    },
-            { l:'27%', s:8,  r:0.7, c:'#fbbf24', d:'3.2s', dl:'0.9s',  sh:'square'    },
-            { l:'31%', s:6,  r:2,   c:'#a78bfa', d:'4.8s', dl:'0.2s',  sh:'rect'      },
-            { l:'35%', s:9,  r:1,   c:'#f9a8d4', d:'3.6s', dl:'1.4s',  sh:'circle'    },
-            { l:'39%', s:7,  r:0.5, c:'#7c3aed', d:'5.2s', dl:'0.6s',  sh:'square'    },
-            { l:'43%', s:11, r:1.3, c:'#f472b6', d:'3.4s', dl:'0.4s',  sh:'rect'      },
-            { l:'47%', s:6,  r:1,   c:'#fbbf24', d:'4.1s', dl:'1.1s',  sh:'circle'    },
-            { l:'51%', s:8,  r:0.8, c:'#c084fc', d:'3.9s', dl:'0.8s',  sh:'square'    },
-            { l:'55%', s:7,  r:1.6, c:'#818cf8', d:'4.7s', dl:'0s',    sh:'rect'      },
-            { l:'59%', s:9,  r:1,   c:'#a855f7', d:'3.3s', dl:'1.3s',  sh:'circle'    },
-            { l:'63%', s:6,  r:0.6, c:'#e879f9', d:'5.1s', dl:'0.3s',  sh:'square'    },
-            { l:'67%', s:10, r:1.4, c:'#fbbf24', d:'3.7s', dl:'0.7s',  sh:'rect'      },
-            { l:'71%', s:7,  r:1,   c:'#f9a8d4', d:'4.4s', dl:'1.0s',  sh:'circle'    },
-            { l:'75%', s:8,  r:0.7, c:'#7c3aed', d:'3.0s', dl:'0.5s',  sh:'square'    },
-            { l:'79%', s:6,  r:2,   c:'#a78bfa', d:'4.9s', dl:'0.2s',  sh:'rect'      },
-            { l:'83%', s:9,  r:1,   c:'#c084fc', d:'3.5s', dl:'1.5s',  sh:'circle'    },
-            { l:'87%', s:7,  r:0.5, c:'#fbbf24', d:'5.3s', dl:'0.6s',  sh:'square'    },
-            { l:'91%', s:8,  r:1.7, c:'#f472b6', d:'3.8s', dl:'0.9s',  sh:'rect'      },
-            { l:'95%', s:6,  r:1,   c:'#818cf8', d:'4.3s', dl:'0.1s',  sh:'circle'    },
-            { l:'5%',  s:7,  r:0.8, c:'#e879f9', d:'4.6s', dl:'1.8s',  sh:'square'    },
-            { l:'13%', s:9,  r:1.2, c:'#fbbf24', d:'3.1s', dl:'2.1s',  sh:'rect'      },
-            { l:'22%', s:6,  r:1,   c:'#a855f7', d:'5.0s', dl:'1.7s',  sh:'circle'    },
-            { l:'33%', s:10, r:0.6, c:'#f9a8d4', d:'3.4s', dl:'2.3s',  sh:'square'    },
-            { l:'44%', s:7,  r:1.5, c:'#7c3aed', d:'4.2s', dl:'1.6s',  sh:'rect'      },
-            { l:'56%', s:8,  r:1,   c:'#c084fc', d:'3.7s', dl:'2.0s',  sh:'circle'    },
-            { l:'68%', s:6,  r:0.7, c:'#fbbf24', d:'4.8s', dl:'1.9s',  sh:'square'    },
-            { l:'77%', s:9,  r:1.3, c:'#a78bfa', d:'3.2s', dl:'2.4s',  sh:'rect'      },
-            { l:'89%', s:7,  r:1,   c:'#f472b6', d:'5.1s', dl:'1.5s',  sh:'circle'    },
+            { l: '3%', s: 8, r: 0.5, c: '#a855f7', d: '3.1s', dl: '0s', sh: 'square' },
+            { l: '7%', s: 6, r: 1.8, c: '#fbbf24', d: '4.2s', dl: '0.3s', sh: 'rect' },
+            { l: '11%', s: 9, r: 1, c: '#f472b6', d: '3.5s', dl: '0.7s', sh: 'circle' },
+            { l: '15%', s: 7, r: 0.6, c: '#818cf8', d: '5.0s', dl: '0.1s', sh: 'square' },
+            { l: '19%', s: 10, r: 1.5, c: '#c084fc', d: '3.8s', dl: '1.2s', sh: 'rect' },
+            { l: '23%', s: 5, r: 1, c: '#e879f9', d: '4.5s', dl: '0.5s', sh: 'circle' },
+            { l: '27%', s: 8, r: 0.7, c: '#fbbf24', d: '3.2s', dl: '0.9s', sh: 'square' },
+            { l: '31%', s: 6, r: 2, c: '#a78bfa', d: '4.8s', dl: '0.2s', sh: 'rect' },
+            { l: '35%', s: 9, r: 1, c: '#f9a8d4', d: '3.6s', dl: '1.4s', sh: 'circle' },
+            { l: '39%', s: 7, r: 0.5, c: '#7c3aed', d: '5.2s', dl: '0.6s', sh: 'square' },
+            { l: '43%', s: 11, r: 1.3, c: '#f472b6', d: '3.4s', dl: '0.4s', sh: 'rect' },
+            { l: '47%', s: 6, r: 1, c: '#fbbf24', d: '4.1s', dl: '1.1s', sh: 'circle' },
+            { l: '51%', s: 8, r: 0.8, c: '#c084fc', d: '3.9s', dl: '0.8s', sh: 'square' },
+            { l: '55%', s: 7, r: 1.6, c: '#818cf8', d: '4.7s', dl: '0s', sh: 'rect' },
+            { l: '59%', s: 9, r: 1, c: '#a855f7', d: '3.3s', dl: '1.3s', sh: 'circle' },
+            { l: '63%', s: 6, r: 0.6, c: '#e879f9', d: '5.1s', dl: '0.3s', sh: 'square' },
+            { l: '67%', s: 10, r: 1.4, c: '#fbbf24', d: '3.7s', dl: '0.7s', sh: 'rect' },
+            { l: '71%', s: 7, r: 1, c: '#f9a8d4', d: '4.4s', dl: '1.0s', sh: 'circle' },
+            { l: '75%', s: 8, r: 0.7, c: '#7c3aed', d: '3.0s', dl: '0.5s', sh: 'square' },
+            { l: '79%', s: 6, r: 2, c: '#a78bfa', d: '4.9s', dl: '0.2s', sh: 'rect' },
+            { l: '83%', s: 9, r: 1, c: '#c084fc', d: '3.5s', dl: '1.5s', sh: 'circle' },
+            { l: '87%', s: 7, r: 0.5, c: '#fbbf24', d: '5.3s', dl: '0.6s', sh: 'square' },
+            { l: '91%', s: 8, r: 1.7, c: '#f472b6', d: '3.8s', dl: '0.9s', sh: 'rect' },
+            { l: '95%', s: 6, r: 1, c: '#818cf8', d: '4.3s', dl: '0.1s', sh: 'circle' },
+            { l: '5%', s: 7, r: 0.8, c: '#e879f9', d: '4.6s', dl: '1.8s', sh: 'square' },
+            { l: '13%', s: 9, r: 1.2, c: '#fbbf24', d: '3.1s', dl: '2.1s', sh: 'rect' },
+            { l: '22%', s: 6, r: 1, c: '#a855f7', d: '5.0s', dl: '1.7s', sh: 'circle' },
+            { l: '33%', s: 10, r: 0.6, c: '#f9a8d4', d: '3.4s', dl: '2.3s', sh: 'square' },
+            { l: '44%', s: 7, r: 1.5, c: '#7c3aed', d: '4.2s', dl: '1.6s', sh: 'rect' },
+            { l: '56%', s: 8, r: 1, c: '#c084fc', d: '3.7s', dl: '2.0s', sh: 'circle' },
+            { l: '68%', s: 6, r: 0.7, c: '#fbbf24', d: '4.8s', dl: '1.9s', sh: 'square' },
+            { l: '77%', s: 9, r: 1.3, c: '#a78bfa', d: '3.2s', dl: '2.4s', sh: 'rect' },
+            { l: '89%', s: 7, r: 1, c: '#f472b6', d: '5.1s', dl: '1.5s', sh: 'circle' },
           ].map((p, i) => (
             <div key={i} style={{
               position: 'absolute', top: 0, left: p.l,
@@ -663,24 +663,24 @@ export function PortalPage() {
       {karnivalActive && (
         <div className="fixed inset-0 z-[5] pointer-events-none overflow-hidden">
           {[
-            { x:'8%',  y:'15%', s:3, c:'#c084fc', dur:'2.1s', dl:'0s'   },
-            { x:'15%', y:'45%', s:2, c:'#fbbf24', dur:'3.0s', dl:'0.5s' },
-            { x:'22%', y:'72%', s:4, c:'#f472b6', dur:'2.5s', dl:'1.1s' },
-            { x:'31%', y:'28%', s:2, c:'#818cf8', dur:'3.5s', dl:'0.3s' },
-            { x:'40%', y:'60%', s:3, c:'#a855f7', dur:'2.3s', dl:'0.8s' },
-            { x:'50%', y:'18%', s:5, c:'#fbbf24', dur:'2.8s', dl:'1.4s' },
-            { x:'58%', y:'80%', s:2, c:'#e879f9', dur:'3.2s', dl:'0.2s' },
-            { x:'66%', y:'35%', s:4, c:'#c084fc', dur:'2.0s', dl:'0.9s' },
-            { x:'74%', y:'65%', s:3, c:'#f9a8d4', dur:'3.7s', dl:'0.6s' },
-            { x:'82%', y:'22%', s:2, c:'#7c3aed', dur:'2.6s', dl:'1.2s' },
-            { x:'89%', y:'52%', s:4, c:'#fbbf24', dur:'3.1s', dl:'0.4s' },
-            { x:'94%', y:'78%', s:3, c:'#a78bfa', dur:'2.4s', dl:'1.0s' },
-            { x:'5%',  y:'88%', s:2, c:'#f472b6', dur:'3.3s', dl:'1.6s' },
-            { x:'27%', y:'10%', s:3, c:'#818cf8', dur:'2.7s', dl:'0.7s' },
-            { x:'70%', y:'5%',  s:4, c:'#c084fc', dur:'3.0s', dl:'1.3s' },
-            { x:'45%', y:'92%', s:2, c:'#fbbf24', dur:'2.2s', dl:'0.1s' },
-            { x:'55%', y:'48%', s:3, c:'#e879f9', dur:'2.9s', dl:'1.5s' },
-            { x:'12%', y:'58%', s:4, c:'#a855f7', dur:'3.4s', dl:'0.8s' },
+            { x: '8%', y: '15%', s: 3, c: '#c084fc', dur: '2.1s', dl: '0s' },
+            { x: '15%', y: '45%', s: 2, c: '#fbbf24', dur: '3.0s', dl: '0.5s' },
+            { x: '22%', y: '72%', s: 4, c: '#f472b6', dur: '2.5s', dl: '1.1s' },
+            { x: '31%', y: '28%', s: 2, c: '#818cf8', dur: '3.5s', dl: '0.3s' },
+            { x: '40%', y: '60%', s: 3, c: '#a855f7', dur: '2.3s', dl: '0.8s' },
+            { x: '50%', y: '18%', s: 5, c: '#fbbf24', dur: '2.8s', dl: '1.4s' },
+            { x: '58%', y: '80%', s: 2, c: '#e879f9', dur: '3.2s', dl: '0.2s' },
+            { x: '66%', y: '35%', s: 4, c: '#c084fc', dur: '2.0s', dl: '0.9s' },
+            { x: '74%', y: '65%', s: 3, c: '#f9a8d4', dur: '3.7s', dl: '0.6s' },
+            { x: '82%', y: '22%', s: 2, c: '#7c3aed', dur: '2.6s', dl: '1.2s' },
+            { x: '89%', y: '52%', s: 4, c: '#fbbf24', dur: '3.1s', dl: '0.4s' },
+            { x: '94%', y: '78%', s: 3, c: '#a78bfa', dur: '2.4s', dl: '1.0s' },
+            { x: '5%', y: '88%', s: 2, c: '#f472b6', dur: '3.3s', dl: '1.6s' },
+            { x: '27%', y: '10%', s: 3, c: '#818cf8', dur: '2.7s', dl: '0.7s' },
+            { x: '70%', y: '5%', s: 4, c: '#c084fc', dur: '3.0s', dl: '1.3s' },
+            { x: '45%', y: '92%', s: 2, c: '#fbbf24', dur: '2.2s', dl: '0.1s' },
+            { x: '55%', y: '48%', s: 3, c: '#e879f9', dur: '2.9s', dl: '1.5s' },
+            { x: '12%', y: '58%', s: 4, c: '#a855f7', dur: '3.4s', dl: '0.8s' },
           ].map((sp, i) => (
             <div key={i} style={{
               position: 'absolute', left: sp.x, top: sp.y,
@@ -701,46 +701,46 @@ export function PortalPage() {
       {supsasActive && !supsasBurstDone && (
         <div className="fixed inset-0 z-50 pointer-events-none overflow-hidden">
           {[
-            { l:'4%',  s:12, c:'#fbbf24', d:'2.0s', dl:'0s'   },
-            { l:'9%',  s:10, c:'#e5e7eb', d:'2.5s', dl:'0.2s' },
-            { l:'14%', s:14, c:'#cd7c2f', d:'1.8s', dl:'0.5s' },
-            { l:'19%', s:11, c:'#fbbf24', d:'2.3s', dl:'0.1s' },
-            { l:'24%', s:9,  c:'#ffffff', d:'2.8s', dl:'0.6s' },
-            { l:'29%', s:13, c:'#f59e0b', d:'2.1s', dl:'0.3s' },
-            { l:'34%', s:10, c:'#e5e7eb', d:'2.6s', dl:'0.8s' },
-            { l:'39%', s:12, c:'#fbbf24', d:'1.9s', dl:'0.4s' },
-            { l:'44%', s:14, c:'#cd7c2f', d:'2.4s', dl:'0.7s' },
-            { l:'49%', s:10, c:'#ffffff', d:'2.2s', dl:'0s'   },
-            { l:'54%', s:11, c:'#fbbf24', d:'2.7s', dl:'0.9s' },
-            { l:'59%', s:9,  c:'#f59e0b', d:'2.0s', dl:'0.2s' },
-            { l:'64%', s:13, c:'#e5e7eb', d:'2.5s', dl:'0.5s' },
-            { l:'69%', s:12, c:'#fbbf24', d:'1.8s', dl:'0.3s' },
-            { l:'74%', s:10, c:'#cd7c2f', d:'2.3s', dl:'0.6s' },
-            { l:'79%', s:11, c:'#ffffff', d:'2.9s', dl:'0.1s' },
-            { l:'84%', s:14, c:'#fbbf24', d:'2.1s', dl:'0.7s' },
-            { l:'89%', s:9,  c:'#f59e0b', d:'2.6s', dl:'0.4s' },
-            { l:'94%', s:12, c:'#e5e7eb', d:'2.0s', dl:'0.8s' },
-            { l:'7%',  s:10, c:'#fbbf24', d:'2.4s', dl:'1.1s' },
-            { l:'17%', s:13, c:'#cd7c2f', d:'2.2s', dl:'1.3s' },
-            { l:'27%', s:11, c:'#ffffff', d:'2.8s', dl:'1.0s' },
-            { l:'37%', s:14, c:'#fbbf24', d:'1.9s', dl:'1.4s' },
-            { l:'47%', s:9,  c:'#f59e0b', d:'2.5s', dl:'1.2s' },
-            { l:'57%', s:12, c:'#e5e7eb', d:'2.0s', dl:'1.5s' },
-            { l:'67%', s:10, c:'#fbbf24', d:'2.7s', dl:'1.6s' },
-            { l:'77%', s:13, c:'#cd7c2f', d:'2.3s', dl:'1.1s' },
-            { l:'87%', s:11, c:'#ffffff', d:'2.1s', dl:'1.7s' },
-            { l:'97%', s:9,  c:'#fbbf24', d:'2.6s', dl:'1.3s' },
-            { l:'12%', s:14, c:'#f59e0b', d:'2.4s', dl:'1.8s' },
-            { l:'32%', s:10, c:'#fbbf24', d:'2.2s', dl:'2.0s' },
-            { l:'52%', s:12, c:'#e5e7eb', d:'1.8s', dl:'1.9s' },
-            { l:'72%', s:11, c:'#cd7c2f', d:'2.5s', dl:'2.1s' },
+            { l: '4%', s: 12, c: '#fbbf24', d: '2.0s', dl: '0s' },
+            { l: '9%', s: 10, c: '#e5e7eb', d: '2.5s', dl: '0.2s' },
+            { l: '14%', s: 14, c: '#cd7c2f', d: '1.8s', dl: '0.5s' },
+            { l: '19%', s: 11, c: '#fbbf24', d: '2.3s', dl: '0.1s' },
+            { l: '24%', s: 9, c: '#ffffff', d: '2.8s', dl: '0.6s' },
+            { l: '29%', s: 13, c: '#f59e0b', d: '2.1s', dl: '0.3s' },
+            { l: '34%', s: 10, c: '#e5e7eb', d: '2.6s', dl: '0.8s' },
+            { l: '39%', s: 12, c: '#fbbf24', d: '1.9s', dl: '0.4s' },
+            { l: '44%', s: 14, c: '#cd7c2f', d: '2.4s', dl: '0.7s' },
+            { l: '49%', s: 10, c: '#ffffff', d: '2.2s', dl: '0s' },
+            { l: '54%', s: 11, c: '#fbbf24', d: '2.7s', dl: '0.9s' },
+            { l: '59%', s: 9, c: '#f59e0b', d: '2.0s', dl: '0.2s' },
+            { l: '64%', s: 13, c: '#e5e7eb', d: '2.5s', dl: '0.5s' },
+            { l: '69%', s: 12, c: '#fbbf24', d: '1.8s', dl: '0.3s' },
+            { l: '74%', s: 10, c: '#cd7c2f', d: '2.3s', dl: '0.6s' },
+            { l: '79%', s: 11, c: '#ffffff', d: '2.9s', dl: '0.1s' },
+            { l: '84%', s: 14, c: '#fbbf24', d: '2.1s', dl: '0.7s' },
+            { l: '89%', s: 9, c: '#f59e0b', d: '2.6s', dl: '0.4s' },
+            { l: '94%', s: 12, c: '#e5e7eb', d: '2.0s', dl: '0.8s' },
+            { l: '7%', s: 10, c: '#fbbf24', d: '2.4s', dl: '1.1s' },
+            { l: '17%', s: 13, c: '#cd7c2f', d: '2.2s', dl: '1.3s' },
+            { l: '27%', s: 11, c: '#ffffff', d: '2.8s', dl: '1.0s' },
+            { l: '37%', s: 14, c: '#fbbf24', d: '1.9s', dl: '1.4s' },
+            { l: '47%', s: 9, c: '#f59e0b', d: '2.5s', dl: '1.2s' },
+            { l: '57%', s: 12, c: '#e5e7eb', d: '2.0s', dl: '1.5s' },
+            { l: '67%', s: 10, c: '#fbbf24', d: '2.7s', dl: '1.6s' },
+            { l: '77%', s: 13, c: '#cd7c2f', d: '2.3s', dl: '1.1s' },
+            { l: '87%', s: 11, c: '#ffffff', d: '2.1s', dl: '1.7s' },
+            { l: '97%', s: 9, c: '#fbbf24', d: '2.6s', dl: '1.3s' },
+            { l: '12%', s: 14, c: '#f59e0b', d: '2.4s', dl: '1.8s' },
+            { l: '32%', s: 10, c: '#fbbf24', d: '2.2s', dl: '2.0s' },
+            { l: '52%', s: 12, c: '#e5e7eb', d: '1.8s', dl: '1.9s' },
+            { l: '72%', s: 11, c: '#cd7c2f', d: '2.5s', dl: '2.1s' },
           ].map((p, i) => (
             <div key={i} style={{
               position: 'absolute', bottom: 0, left: p.l,
               width: p.s, height: p.s,
               borderRadius: '50%',
               backgroundColor: p.c,
-              boxShadow: `0 0 ${p.s/2}px ${p.c}80`,
+              boxShadow: `0 0 ${p.s / 2}px ${p.c}80`,
               animationName: 'supsas-burst',
               animationDuration: p.d,
               animationDelay: p.dl,
@@ -755,22 +755,22 @@ export function PortalPage() {
       {supsasActive && (
         <div className="fixed inset-0 z-[5] pointer-events-none overflow-hidden">
           {[
-            { x:'5%',  y:'70%', w:1, h:40, dur:'3.2s', dl:'0s'   },
-            { x:'12%', y:'45%', w:2, h:55, dur:'4.1s', dl:'0.7s' },
-            { x:'20%', y:'80%', w:1, h:35, dur:'3.6s', dl:'1.3s' },
-            { x:'28%', y:'30%', w:2, h:60, dur:'2.8s', dl:'0.4s' },
-            { x:'36%', y:'60%', w:1, h:45, dur:'3.9s', dl:'1.0s' },
-            { x:'44%', y:'20%', w:2, h:50, dur:'4.3s', dl:'0.2s' },
-            { x:'52%', y:'75%', w:1, h:38, dur:'3.1s', dl:'1.6s' },
-            { x:'60%', y:'40%', w:2, h:65, dur:'2.7s', dl:'0.9s' },
-            { x:'68%', y:'85%', w:1, h:42, dur:'4.0s', dl:'0.5s' },
-            { x:'76%', y:'25%', w:2, h:52, dur:'3.5s', dl:'1.2s' },
-            { x:'84%', y:'65%', w:1, h:36, dur:'2.9s', dl:'0.1s' },
-            { x:'92%', y:'50%', w:2, h:48, dur:'4.2s', dl:'0.8s' },
-            { x:'8%',  y:'15%', w:1, h:44, dur:'3.7s', dl:'1.5s' },
-            { x:'25%', y:'90%', w:2, h:58, dur:'3.3s', dl:'0.6s' },
-            { x:'70%', y:'10%', w:1, h:32, dur:'4.5s', dl:'1.1s' },
-            { x:'88%', y:'35%', w:2, h:62, dur:'2.6s', dl:'1.8s' },
+            { x: '5%', y: '70%', w: 1, h: 40, dur: '3.2s', dl: '0s' },
+            { x: '12%', y: '45%', w: 2, h: 55, dur: '4.1s', dl: '0.7s' },
+            { x: '20%', y: '80%', w: 1, h: 35, dur: '3.6s', dl: '1.3s' },
+            { x: '28%', y: '30%', w: 2, h: 60, dur: '2.8s', dl: '0.4s' },
+            { x: '36%', y: '60%', w: 1, h: 45, dur: '3.9s', dl: '1.0s' },
+            { x: '44%', y: '20%', w: 2, h: 50, dur: '4.3s', dl: '0.2s' },
+            { x: '52%', y: '75%', w: 1, h: 38, dur: '3.1s', dl: '1.6s' },
+            { x: '60%', y: '40%', w: 2, h: 65, dur: '2.7s', dl: '0.9s' },
+            { x: '68%', y: '85%', w: 1, h: 42, dur: '4.0s', dl: '0.5s' },
+            { x: '76%', y: '25%', w: 2, h: 52, dur: '3.5s', dl: '1.2s' },
+            { x: '84%', y: '65%', w: 1, h: 36, dur: '2.9s', dl: '0.1s' },
+            { x: '92%', y: '50%', w: 2, h: 48, dur: '4.2s', dl: '0.8s' },
+            { x: '8%', y: '15%', w: 1, h: 44, dur: '3.7s', dl: '1.5s' },
+            { x: '25%', y: '90%', w: 2, h: 58, dur: '3.3s', dl: '0.6s' },
+            { x: '70%', y: '10%', w: 1, h: 32, dur: '4.5s', dl: '1.1s' },
+            { x: '88%', y: '35%', w: 2, h: 62, dur: '2.6s', dl: '1.8s' },
           ].map((m, i) => (
             <div key={i} style={{
               position: 'absolute', left: m.x, top: m.y,
@@ -813,12 +813,12 @@ export function PortalPage() {
             <Menu className="w-5 h-5" />
           </Button>
 
-          <div 
+          <div
             className="flex items-center gap-4 cursor-pointer group"
             onClick={() => setIsSidebarOpen(true)}
           >
-            <motion.div 
-              whileHover={{ scale: 1.05, rotate: 2 }} 
+            <motion.div
+              whileHover={{ scale: 1.05, rotate: 2 }}
               className="w-10 h-10 md:w-11 md:h-11 rounded-2xl bg-black/[0.03] dark:bg-white/5 flex items-center justify-center p-1.5 shadow-2xl border border-black/5 dark:border-white/10 backdrop-blur-xl group-hover:border-emerald-500/30 transition-all"
             >
               <img src="/jpp-logo.png" alt="JPP" className="w-full h-full object-contain" />
@@ -833,8 +833,8 @@ export function PortalPage() {
         <div className="flex items-center gap-2 md:gap-4">
           <ThemeToggle />
           <NotificationBell />
-          
-          <div 
+
+          <div
             className="flex items-center gap-3 pl-4 border-l border-black/5 dark:border-white/10 cursor-pointer group"
             onClick={() => setIsSidebarOpen(true)}
           >
@@ -860,18 +860,18 @@ export function PortalPage() {
       <main className="relative z-10 pt-32 md:pt-40 pb-20 px-4 md:px-8 max-w-7xl mx-auto">
         {/* Title Section */}
         <div className="flex flex-col items-center text-center mb-16 md:mb-24 space-y-6 md:space-y-8">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/[0.03] dark:bg-white/5 border border-black/5 dark:border-white/10 shadow-lg backdrop-blur-md"
           >
             <LucideIcons.Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
             <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 dark:text-white/50">
-              EKOSISTEM DIGITAL V2.0
+              EKOSISTEM DIGITAL V26.0
             </span>
           </motion.div>
-          
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -1080,19 +1080,19 @@ export function PortalPage() {
                 }}
                 className={cn(
                   "group relative flex flex-nowrap items-center justify-center gap-4 px-6 sm:px-8 py-4 sm:py-5 rounded-[2rem] sm:rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black tracking-wide sm:tracking-widest transition-all overflow-hidden border border-black/10 dark:border-white/10 w-full sm:w-auto min-w-[280px]",
-                  (!isModuleEnabled('akademik') && !isSuperAdmin) 
-                    ? "opacity-60 grayscale-[0.8] cursor-not-allowed" 
+                  (!isModuleEnabled('akademik') && !isSuperAdmin)
+                    ? "opacity-60 grayscale-[0.8] cursor-not-allowed"
                     : "hover:scale-105 active:scale-[0.98] shadow-[0_20px_50px_-12px_rgba(16,185,129,0.3)] dark:shadow-[0_20px_50px_-12px_rgba(16,185,129,0.15)]"
                 )}
               >
                 {/* Sweep effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/0 via-emerald-400/20 to-emerald-400/0 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out" />
-                
+
                 {/* Icon wrapper */}
                 <div className="w-12 h-12 sm:w-10 sm:h-10 rounded-2xl sm:rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 dark:text-emerald-600 shrink-0 shadow-inner">
                   <LucideIcons.QrCode className="w-6 h-6 sm:w-5 sm:h-5" />
                 </div>
-                
+
                 {/* Text section */}
                 <div className="flex flex-col items-start gap-0.5 text-left pr-4">
                   <span className="text-[13px] sm:text-sm uppercase tracking-widest leading-none mt-0.5">Scan QR Merit</span>
@@ -1175,12 +1175,12 @@ export function PortalPage() {
                 >
                   {/* Sweep effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-teal-400/0 via-teal-400/10 to-teal-400/0 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out" />
-                  
+
                   {/* Icon wrapper */}
                   <div className="w-12 h-12 sm:w-10 sm:h-10 rounded-2xl sm:rounded-xl bg-teal-500/10 dark:bg-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0 shadow-inner">
                     <LucideIcons.MessageSquarePlus className="w-6 h-6 sm:w-5 sm:h-5" />
                   </div>
-                  
+
                   {/* Text section */}
                   <div className="flex flex-col items-start gap-0.5 text-left pr-4">
                     <span className="text-[13px] sm:text-sm uppercase tracking-widest leading-none mt-0.5">Buat Aduan</span>
@@ -1199,8 +1199,8 @@ export function PortalPage() {
                 <div
                   className={cn(
                     "rounded-[2rem] border overflow-hidden shadow-2xl w-full sm:w-auto min-w-[280px] transition-transform duration-300 bg-black/[0.02] dark:bg-white/[0.02]",
-                    (!isModuleEnabled('kebajikan') && !isSuperAdmin) 
-                      ? "opacity-60 grayscale-[0.8]" 
+                    (!isModuleEnabled('kebajikan') && !isSuperAdmin)
+                      ? "opacity-60 grayscale-[0.8]"
                       : "hover:scale-[1.02]"
                   )}
                   style={{ borderColor: 'rgba(45,212,191,0.15)' }}
@@ -1208,8 +1208,8 @@ export function PortalPage() {
                   <div
                     className={cn(
                       "flex items-center justify-between gap-3 px-5 py-3.5 group transition-all",
-                      (!isModuleEnabled('kebajikan') && !isSuperAdmin) 
-                        ? "cursor-not-allowed" 
+                      (!isModuleEnabled('kebajikan') && !isSuperAdmin)
+                        ? "cursor-not-allowed"
                         : "cursor-pointer hover:bg-teal-500/5"
                     )}
                     onClick={() => {
@@ -1241,16 +1241,16 @@ export function PortalPage() {
                   {/* Live stats row */}
                   <div className="grid grid-cols-3" style={{ borderTop: '1px solid rgba(45,212,191,0.08)' }}>
                     <div className="flex flex-col items-center py-2.5 px-2">
-                       <p className="text-base sm:text-lg font-black text-slate-800 dark:text-white leading-none">{kbStats ? kbStats.open : '—'}</p>
-                       <p className="text-[8px] sm:text-[9px] font-bold text-slate-500 mt-1 uppercase tracking-widest">Aktif</p>
+                      <p className="text-base sm:text-lg font-black text-slate-800 dark:text-white leading-none">{kbStats ? kbStats.open : '—'}</p>
+                      <p className="text-[8px] sm:text-[9px] font-bold text-slate-500 mt-1 uppercase tracking-widest">Aktif</p>
                     </div>
                     <div className="flex flex-col items-center py-2.5 px-2" style={{ borderLeft: '1px solid rgba(45,212,191,0.08)' }}>
-                       <p className="text-base sm:text-lg font-black text-emerald-500 dark:text-emerald-400 leading-none">{kbStats ? kbStats.resolved : '—'}</p>
-                       <p className="text-[8px] sm:text-[9px] font-bold text-slate-500 mt-1 uppercase tracking-widest">Selesai</p>
+                      <p className="text-base sm:text-lg font-black text-emerald-500 dark:text-emerald-400 leading-none">{kbStats ? kbStats.resolved : '—'}</p>
+                      <p className="text-[8px] sm:text-[9px] font-bold text-slate-500 mt-1 uppercase tracking-widest">Selesai</p>
                     </div>
                     <div className="flex flex-col items-center py-2.5 px-2" style={{ borderLeft: '1px solid rgba(45,212,191,0.08)' }}>
-                       <p className="text-base sm:text-lg font-black text-amber-500 dark:text-amber-400 leading-none">{kbStats?.rating != null ? kbStats.rating.toFixed(1) : '—'}</p>
-                       <p className="text-[8px] sm:text-[9px] font-bold text-slate-500 mt-1 uppercase tracking-widest">Rating</p>
+                      <p className="text-base sm:text-lg font-black text-amber-500 dark:text-amber-400 leading-none">{kbStats?.rating != null ? kbStats.rating.toFixed(1) : '—'}</p>
+                      <p className="text-[8px] sm:text-[9px] font-bold text-slate-500 mt-1 uppercase tracking-widest">Rating</p>
                     </div>
                   </div>
                 </div>
@@ -1310,7 +1310,7 @@ export function PortalPage() {
         </div>
         {/* Global Admin Status Line */}
         {isSuperAdmin && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1 }}
