@@ -38,6 +38,8 @@ export interface ChatContext {
     activeShifts?: string;
     shopName?: string;
     isManager?: boolean;
+    todaySales?: number;
+    lowStockCount?: number;
   };
   jppHqInfo?: {
     totalPendingReports?: number;
@@ -45,6 +47,17 @@ export interface ChatContext {
   };
   kebajikanInfo?: {
     role: string;
+    // Exco-specific enriched fields:
+    urgentTicketsList?: string;       // formatted list: ticket_no | title | category | age
+    assignedToMeList?: string;        // my assigned tickets with age
+    totalWarning?: number;
+    totalEscalated?: number;
+    unassignedCount?: number;
+    resolvedThisWeek?: number;
+    topCategoryThisMonth?: string;
+    slaConfig?: string;               // "Warning: 48j, Escalation: 72j"
+    currentTicket?: string;           // Full detail of ticket currently open on screen
+    // Student / shared fields:
     activeTicketsCount?: number;
     urgentTicketsUnresolved?: number;
     assignedToMe?: number;
@@ -633,7 +646,15 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
         context?.pendingTasksCount ? `\nStatus Tugas Kelab: Anda mempunyai ${context.pendingTasksCount} tugasan aktif yang belum selesai.` : '',
         
         context?.akademikInfo ? `\n[Data E-Akademik]\nCGPA Terkini: ${context.akademikInfo.cgpa?.toFixed(2) || 'Tiada'}\nJum. Merit Terkumpul: ${context.akademikInfo.meritPoints || 0}\nStatus Permohonan Fail: ${context.akademikInfo.statusUnlock || 'Tiada'}` : '',
-        context?.keusahawananInfo ? `\n[Data E-Keusahawanan]\nPenglibatan Kedai: ${context.keusahawananInfo.shopName || 'Tiada'}\nStatus Pengurus: ${context.keusahawananInfo.isManager ? 'Ya' : 'Tidak'}\nSyif Aktif Hari Ini: ${context.keusahawananInfo.activeShifts || 'Tiada'}` : '',
+        context?.keusahawananInfo ? `\n[Data E-Keusahawanan]\nPenglibatan Kedai: ${context.keusahawananInfo.shopName || 'Tiada'}\nStatus Pengurus: ${context.keusahawananInfo.isManager ? 'Ya' : 'Tidak'}\nSyif Aktif Hari Ini: ${context.keusahawananInfo.activeShifts || 'Tiada'}\nJualan Hari Ini: ${context.keusahawananInfo.todaySales !== undefined ? 'RM ' + context.keusahawananInfo.todaySales.toFixed(2) : 'Tiada Data'}\nAmaran Stok Rendah: ${context.keusahawananInfo.lowStockCount || 0} barang
+
+== MOD PAKAR E-KEUSAHAWANAN ==
+Jika ditanya tentang operasi Kedai, POS System, atau Cara Mula Bisnes, bertindak sebagai pakar pembimbing:
+1. MULA BISNES/KEDAI: Pengguna (vendor) perlu mohon perniagaan. Selepas diluluskan Exco, mereka boleh mula urus Kedai POS dan tambah pekerja.
+2. CARA GUNA POS SYSTEM: Masuk menu "Kedai POS", pilih produk (tambah produk di "Katalog Produk" jika kosong), masuk troli (cart), masukkan bayaran (tunai/QR), dan klik "Bayar". Statistik jualan dikira automatik.
+3. URUS SYIF (SHIFT): Pekerja MESTI "Mula Syif" (Clock In) untuk merekod jualan. Di akhir waktu niaga, tekan "Tamat Syif" (Clock Out) untuk tutup laporan kewangan sesi tersebut.
+4. URUS PERNIAGAAN (Untuk Pengurus): Pengurus boleh melantik pekerja, menukar logo kedai, dan menyemak rekod sejarah transaksi.
+Sila pandu pengguna langkah demi langkah dengan cara yang sangat santai, jelas dan membantu jika mereka keliru.` : '',
         context?.jppHqInfo ? `\n[Maklumat HQ JPP]\nLaporan Menunggu Kelulusan: ${context.jppHqInfo.totalPendingReports || 0}\nMerit Menunggu Kelulusan (Tuntutan): ${context.jppHqInfo.totalMeritPending || 0}` : '',
         context?.kebajikanInfo ? `\n[Data E-Kebajikan]\nPeranan: ${context.kebajikanInfo.role}\n${context.kebajikanInfo.role === 'PELAJAR' ? `Tiket Aktif Saya: ${context.kebajikanInfo.activeTicketsCount || 0}\nTiket Terkini:\n${context.kebajikanInfo.recentTickets || 'Tiada'}` : `Tiket Urgent/Baharu: ${context.kebajikanInfo.urgentTicketsUnresolved || 0}\nTiket Ditugaskan Kepada Saya: ${context.kebajikanInfo.assignedToMe || 0}`}` : '',
         context?.polymartInfo ? `\n[Data PolyMart]\nPeranan: ${context.polymartInfo.userType}\nPembelian Aktif: ${context.polymartInfo.activePurchases || 0}\nPesanan Terdekat:\n${context.polymartInfo.recentPurchases}\nPesanan Kedai (Masuk): ${context.polymartInfo.pendingIncomingOrders || 0}\nNota Platform: ${context.polymartInfo.systemNote}` : '',
@@ -662,7 +683,16 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
         '- / (Dashboard / JPP Portal)',
         '- /aktiviti ATAU /kelab (Ruangan Takwim, Aktiviti Kelab, dan Laporan)',
         '- /akademik (Sistem E-Akademik - CGPA, Merit, Sijil Pengecualian Kuliah)',
-        '- /keusahawanan (Sistem E-Keusahawanan - POS, Shift, Kedai Kiosk)',
+        '- /keusahawanan (Papan Pemuka Utama E-Keusahawanan)',
+        '- /keusahawanan/program (Senarai Program Keusahawanan)',
+        '- /keusahawanan/pos (Kedai POS Utama / Juruwang)',
+        '- /keusahawanan/pos/products (Katalog Produk Kedai)',
+        '- /keusahawanan/pos/stats (Statistik & Analisis Jualan)',
+        '- /keusahawanan/pos/history (Sejarah Transaksi POS)',
+        '- /keusahawanan/urus-perniagaan (Urus Pekerja & Profil Perniagaan)',
+        '- /keusahawanan/laporan (Laporan Kewangan / Syif)',
+        '- /keusahawanan/idea (Cadangan Idea Bisnes)',
+        '- /keusahawanan/geran (Mohon Geran & Hadiah)',
         '- /kebajikan (Sistem E-Kebajikan - Tiket Aduan, Kerosakan Kolej)',
         '- /polymart (PolyMart - Marketplace, Kedai, Pembelian)',
         '- /jpp (JPP HQ - Hanya untuk Ahli Majlis Tertinggi JPP bagi kelulusan data)',
@@ -770,5 +800,190 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
     }
   };
 
-  return { callAi, sendChatMessage, isLoading, isChatLoading, retryCount, result, setResult };
+  // ─── Dedicated AI function for Kebajikan Exco ──────────────────────────────
+  const sendKebajikanExcoMessage = async (
+    userText: string,
+    history: ChatMessage[],
+    context?: ChatContext
+  ): Promise<string | null> => {
+    setIsChatLoading(true);
+    try {
+      // Security check (0 token cost for Exco chat)
+      const { error: usageError } = await supabase.rpc('check_ai_tokens', { task_name: 'chat' });
+      if (usageError?.message?.includes('digantung') || usageError?.message?.includes('kekal')) {
+        throw new Error(usageError.message);
+      }
+
+      const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
+      if (!apiKey) throw new Error('Sila konfigurasikan VITE_GEMINI_API_KEY dalam fail .env anda.');
+
+      // ─ Build live context block ──────────────────────────────────────────────
+      const kb = context?.kebajikanInfo;
+      const contextLines: string[] = [];
+      if (kb) {
+        contextLines.push('== DATA OPERASI SEMASA (DIKEMASKINI SEMASA SESI DIMULAKAN) ==');
+        if (kb.slaConfig)                  contextLines.push(`Konfigurasi SLA: ${kb.slaConfig}`);
+        if (kb.urgentTicketsUnresolved !== undefined) contextLines.push(`Jumlah Tiket Urgent (NEW + ESCALATED + REOPENED): ${kb.urgentTicketsUnresolved}`);
+        if (kb.totalWarning !== undefined) contextLines.push(`Tiket dalam status WARNING: ${kb.totalWarning}`);
+        if (kb.totalEscalated !== undefined) contextLines.push(`Tiket dalam status ESCALATED: ${kb.totalEscalated}`);
+        if (kb.unassignedCount !== undefined) contextLines.push(`Tiket tanpa tugasan (Unassigned): ${kb.unassignedCount}`);
+        if (kb.resolvedThisWeek !== undefined) contextLines.push(`Tiket diselesaikan minggu ini: ${kb.resolvedThisWeek}`);
+        if (kb.topCategoryThisMonth)       contextLines.push(`Kategori aduan terbanyak bulan ini: ${kb.topCategoryThisMonth}`);
+        if (kb.urgentTicketsList)          contextLines.push(`\nSenarai Tiket Urgent (tertua dahulu):\n${kb.urgentTicketsList}`);
+        if (kb.assignedToMe !== undefined) contextLines.push(`\nTiket ditugaskan kepada anda: ${kb.assignedToMe}`);
+        if (kb.assignedToMeList)           contextLines.push(`Senarai tugasan anda:\n${kb.assignedToMeList}`);
+        if (kb.currentTicket) {
+          contextLines.push('');
+          contextLines.push('== TIKET SEMASA DI SKRIN EXCO ==');
+          contextLines.push('Exco sedang melihat tiket berikut secara langsung:');
+          contextLines.push(kb.currentTicket);
+          contextLines.push('Apabila Exco meminta pendapat, fokus kepada tiket ini secara spesifik.');
+        }
+      } // end if (kb)
+
+      const systemInstruction = [
+        // ── IDENTITY ──────────────────────────────────────────────────────────
+        'Anda adalah pembantu peribadi pintar untuk Exco Kebajikan POLISAS. Anggap diri anda macam kawan rapat yang tahu semua pasal sistem e-Kebajikan — boleh bagi pendapat, cadangan, dan bantuan tanpa perlu bersopan-santun lebih.',
+        '',
+        // ── WHO IS THE USER ────────────────────────────────────────────────────
+        'Pengguna anda = Exco Kebajikan atau Admin. Mereka busy, tak ada masa nak baca esei. Berikan jawapan yang terus kepada point.',
+        context?.currentPage ? `Halaman semasa: ${context.currentPage}` : '',
+        '',
+        // ── SYSTEM KNOWLEDGE (compact) ─────────────────────────────────────────
+        'Status tiket: NEW (baru masuk), IN_PROGRESS (sedang diurus), WARNING (hampir exceed SLA), ESCALATED (dah exceed SLA, kritikal!), RESOLVED (tunggu pengesahan pelajar), CLOSED (selesai), REOPENED (pelajar tak puas hati), CANCELLED.',
+        'Kategori: FASILITI, KESELAMATAN, KEWANGAN, AKADEMIK, KEBAJIKAN.',
+        '',
+        // ── LIVE DATA ─────────────────────────────────────────────────────────
+        contextLines.join('\n'),
+        '',
+        // ── PERSONALITY & TONE ────────────────────────────────────────────────
+        'CARA ANDA BERCAKAP:',
+        '- Macam kawan yang bijak — direct, jujur, no nonsense',
+        '- BM santai bila borak, BM formal bila nak draf surat/dokumen',
+        '- Boleh guna singkatan biasa (tak payah tulis "Adalah dimaklumkan bahawa...")',
+        '- Kalau ada data dari context, terus sebut — jangan tanya balik benda yang AI dah tahu',
+        '- Kalau minta pendapat, bagi pendapat SEBENAR. Jangan "bergantung kepada situasi"',
+        '',
+        // ── STRICT LENGTH RULES ───────────────────────────────────────────────
+        'PANJANG JAWAPAN — INI PALING PENTING:',
+        '- Soalan pendek / biasa → jawab dalam 1 hingga 3 ayat SAHAJA. Habis.',
+        '- Analisis / pendapat → max 4-5 bullet point pendek. Tiada intro panjang.',
+        '- Draf surat / laporan rasmi → barulah boleh panjang.',
+        '- JANGAN gunakan header (##, **Bahagian 1**, dll) dalam perbualan biasa.',
+        '- JANGAN ulang soalan pengguna sebelum jawab.',
+        '- JANGAN tulis "Berdasarkan data yang diberikan..." atau frasa AI klise lain.',
+        '',
+        // ── EXAMPLES (few-shot guide) ─────────────────────────────────────────
+        'CONTOH JAWAPAN YANG BETUL:',
+        'Soalan: "Ada berapa tiket urgent?"  →  "3 tiket — 2 ESCALATED, 1 REOPENED. Yang paling lama dah 72 jam. Nak saya list sekali?"',
+        'Soalan: "Macam mana nak resolve tiket wifi ni?"  →  "Kemungkinan besar router overload atau coverage issue. Steps: (1) Hubungi IT/BTMK, (2) Minta nombor work order, (3) Update status jadi IN_PROGRESS dulu. Nak saya draf emel ke IT?"',
+        'Soalan: "Apa pendapat kau pasal tiket ni?"  →  "Rasanya ni kes yang boleh settle dalam 24 jam kalau assign terus ke Fasiliti. Tapi kalau dah masuk ESCALATED, perlu buat nota rasmi dulu."',
+        '',
+        // ── SCOPE ─────────────────────────────────────────────────────────────
+        'Boleh bantu apa sahaja yang Exco perlukan — sistem, draf surat, pendapat, nasihat am. Tiada sekatan topik.',
+      ].filter(Boolean).join('\n');
+
+      // Build conversation history (allow 16 messages = 8 turns for Exco)
+      const validHistory = history
+        .filter(m => m.role === 'user' || m.role === 'ai')
+        .reduce<ChatMessage[]>((acc, msg) => {
+          if (acc.length > 0 && acc[acc.length - 1].role === msg.role) {
+            acc[acc.length - 1] = msg;
+          } else {
+            acc.push(msg);
+          }
+          return acc;
+        }, [])
+        .slice(-16);
+
+      const contents = [
+        ...validHistory.map(m => ({
+          role: m.role === 'user' ? 'user' : 'model',
+          parts: [{ text: m.content }],
+        })),
+        { role: 'user', parts: [{ text: userText }] },
+      ];
+
+      const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+      let responseData;
+      let attempt = 0;
+      const maxRetries = 3;
+
+      while (attempt < maxRetries) {
+        try {
+          if (attempt > 0) {
+            setRetryCount(attempt);
+            await new Promise(res => setTimeout(res, attempt * 2000));
+          }
+
+          const response = await fetch(`${endpoint}?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              system_instruction: { parts: [{ text: systemInstruction }] },
+              contents,
+              generationConfig: { temperature: 0.7, maxOutputTokens: 1200, topP: 0.9 },
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            const errorMsg = errorData?.error?.message || `Google API Error: ${response.status}`;
+            // Fallback to flash-lite if overloaded
+            if (errorMsg.toLowerCase().includes('high demand') || response.status === 503) {
+              const fallbackRes = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+                { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ system_instruction: { parts: [{ text: systemInstruction }] }, contents, generationConfig: { temperature: 0.7, maxOutputTokens: 1200, topP: 0.9 } }) }
+              );
+              if (!fallbackRes.ok) throw new Error(`Fallback error: ${fallbackRes.status}`);
+              responseData = await fallbackRes.json();
+              setRetryCount(0);
+              break;
+            }
+            throw new Error(errorMsg);
+          }
+
+          responseData = await response.json();
+          setRetryCount(0);
+          break;
+        } catch (apiError: any) {
+          const apiErrorMsg = apiError.message || String(apiError);
+          if (apiErrorMsg.includes('API key')) throw apiError;
+          attempt++;
+          if (attempt >= maxRetries) { setRetryCount(0); throw apiError; }
+          console.warn(`Kebajikan Exco AI Retry ${attempt}/${maxRetries}:`, apiErrorMsg);
+        }
+      }
+
+      const finishReason = responseData?.candidates?.[0]?.finishReason;
+      if (finishReason === 'SAFETY') {
+        throw new Error('Mesej anda telah disekat kerana mengandungi elemen yang tidak mematuhi Polisi Keselamatan.');
+      }
+
+      const text = responseData?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) throw new Error('Maklumbalas AI kosong atau tidak sah.');
+
+      // Log usage (0 token cost — Exco chat is free)
+      await supabase.rpc('spend_ai_tokens', { task_name: 'chat' });
+
+      return text;
+
+    } catch (e: any) {
+      console.error('Kebajikan Exco AI Error:', e);
+      const errorMsg = e.message || String(e);
+      if (errorMsg.includes('digantung') || errorMsg.includes('kekal')) {
+        toast.error(errorMsg, { duration: 5000 });
+      } else if (errorMsg.includes('Polisi Keselamatan')) {
+        toast.error(errorMsg);
+      } else {
+        toast.error(`Sistem AI Terganggu: ${errorMsg.includes('429') ? 'Had kuota tamat' : 'Sila cuba lagi'}`);
+      }
+      return null;
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
+
+  return { callAi, sendChatMessage, sendKebajikanExcoMessage, isLoading, isChatLoading, retryCount, result, setResult };
 }

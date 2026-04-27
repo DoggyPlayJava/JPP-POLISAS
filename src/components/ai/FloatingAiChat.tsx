@@ -81,8 +81,8 @@ export function FloatingAiChat() {
   const [hintIndex, setHintIndex] = useState(0);
   const [showHint, setShowHint] = useState(false);
 
-  const { profile, isSuperAdmin, isAdvisor, isPresident, isMT, selectedClubId } = useAuth();
-  const { callAi, sendChatMessage, isLoading: isActionLoading, isChatLoading, retryCount } = useAiAssistant();
+  const { profile, isSuperAdmin, isAdvisor, isPresident, isMT, selectedClubId, hasKebajikanAccess } = useAuth();
+  const { callAi, sendChatMessage, sendKebajikanExcoMessage, isLoading: isActionLoading, isChatLoading, retryCount } = useAiAssistant();
   const { allowAiChat } = useAiSettings();
   const { positionLabels, unitLabels } = useJppConfig();
   const location = useLocation();
@@ -175,13 +175,19 @@ export function FloatingAiChat() {
   // ── Rotating Hints Logic ────────────────────────────────────────────────
   const getHints = useCallback(() => {
     const p = location.pathname;
+    // Exco Kebajikan — specialised operational hints
+    if (p.startsWith('/kebajikan') && hasKebajikanAccess) return [
+      "Berikan pendapat tentang situasi tiket hari ini.",
+      "Ada tiket urgent yang perlu saya selesaikan?",
+      "Bantu saya draf balasan rasmi untuk tiket baru.",
+    ];
     if (p.startsWith('/akademik')) return ["Berapa jumlah merit saya?", "Kira purata skor (CGPA) saya.", "Bagaimana nak mohon folder khas?"];
     if (p.startsWith('/keusahawanan')) return ["Adakah saya bertugas lusa?", "Bantu saya rancang jualan POS.", "Siapa pengurus perniagaan ni?"];
     if (p.startsWith('/jpp')) return ["Semak bilangan laporan kelab tertunggak.", "Ada permohonan merit baru tak?", "Siapa MT bertugas minggu depan?"];
     if (p.startsWith('/kebajikan')) return ["Apa status aduan saya?", "Bagaimana nak lapor kerosakan fasiliti?", "Berapa aduan belum diselesaikan?"];
     if (p.startsWith('/polymart')) return ["Di mana pesanan makanan saya?", "Macam mana nak bayar pesanan?", "Ada diskaun tak hari ini?"];
     return ["Bila aktiviti kelab terdekat?", "Siapakah Jawatankuasa pimpinan?", "Bantu drafkan kertas kerja laporan."];
-  }, [location.pathname]);
+  }, [location.pathname, hasKebajikanAccess]);
 
   useEffect(() => {
     if (isOpen || !allowAiChat) {
@@ -291,16 +297,36 @@ export function FloatingAiChat() {
           // ─ 2C. DATA E-KEUSAHAWANAN ────────────────────────────
           else if (p.startsWith('/keusahawanan')) {
              const { data: memberships } = await supabase.from('student_business_memberships')
-               .select('role, status, business_shops(name)')
+               .select('business_id, role, status, business:keusahawanan_businesses(name)')
                .eq('user_id', profile.id)
                .eq('status', 'ACTIVE')
                .limit(1).maybeSingle();
              
-             if (memberships?.business_shops) {
+             if (memberships?.business) {
+               // Live data fetching
+               const startOfDay = new Date();
+               startOfDay.setHours(0, 0, 0, 0);
+
+               const [txsRes, stockRes] = await Promise.all([
+                 supabase.from('business_transactions')
+                   .select('total_amount')
+                   .eq('business_id', memberships.business_id)
+                   .gte('created_at', startOfDay.toISOString()),
+                 supabase.from('business_products')
+                   .select('id', { count: 'exact', head: true })
+                   .eq('business_id', memberships.business_id)
+                   .lt('stock_quantity', 5)
+               ]);
+
+               const todaySales = txsRes.data?.reduce((acc, curr) => acc + (curr.total_amount || 0), 0) || 0;
+               const lowStockCount = stockRes.count || 0;
+
                ctx.keusahawananInfo = {
-                 shopName: (memberships.business_shops as any).name,
+                 shopName: (memberships.business as any).name,
                  isManager: memberships.role === 'MANAGER' || memberships.role === 'OWNER',
-                 activeShifts: 'Disembunyikan (Lazy Loaded)' // to prevent heavy query
+                 activeShifts: 'Disembunyikan (Lazy Loaded)',
+                 todaySales,
+                 lowStockCount
                };
              } else {
                ctx.keusahawananInfo = { shopName: 'Bukan Ahli', isManager: false };
@@ -318,14 +344,97 @@ export function FloatingAiChat() {
           // ─ 2E. DATA E-KEBAJIKAN ────────────────────────────────
           else if (p.startsWith('/kebajikan') || p.startsWith('/jpp/unit/kebajikan')) {
             if (profile.role === 'SUPER_ADMIN_JPP' || (profile.role === 'JPP' && profile.jpp_unit === 'KEBAJIKAN')) {
-              const { count: urgent } = await supabase.from('kebajikan_tickets').select('id', { count: 'exact', head: true }).in('status', ['NEW', 'ESCALATED']);
-              const { count: myTasks } = await supabase.from('kebajikan_tickets').select('id', { count: 'exact', head: true }).eq('assigned_to', profile.id).not('status', 'in', '("RESOLVED", "CLOSED", "CANCELLED")');
-              
+              // ── Rich Exco context: 8 parallel queries ──
+              const weekAgo = new Date(Date.now() - 7 * 24 * 3600_000).toISOString();
+              const monthAgo = new Date(Date.now() - 30 * 24 * 3600_000).toISOString();
+              const ageHours = (iso: string) => Math.round((Date.now() - new Date(iso).getTime()) / 3_600_000);
+
+              const [
+                urgentRes, warningCount, escalatedCount,
+                assignedRes, unassignedCount, resolvedWeekCount,
+                categoryRes, slaRes
+              ] = await Promise.all([
+                supabase.from('kebajikan_tickets')
+                  .select('ticket_no, title, category, status, created_at')
+                  .in('status', ['NEW', 'ESCALATED', 'REOPENED'])
+                  .order('created_at', { ascending: true }).limit(7),
+                supabase.from('kebajikan_tickets')
+                  .select('id', { count: 'exact', head: true }).eq('status', 'WARNING'),
+                supabase.from('kebajikan_tickets')
+                  .select('id', { count: 'exact', head: true }).eq('status', 'ESCALATED'),
+                supabase.from('kebajikan_tickets')
+                  .select('ticket_no, title, status, created_at')
+                  .eq('assigned_to', profile.id)
+                  .not('status', 'in', '("RESOLVED","CLOSED","CANCELLED")')
+                  .order('created_at', { ascending: true }).limit(5),
+                supabase.from('kebajikan_tickets')
+                  .select('id', { count: 'exact', head: true })
+                  .is('assigned_to', null)
+                  .not('status', 'in', '("RESOLVED","CLOSED","CANCELLED")'),
+                supabase.from('kebajikan_tickets')
+                  .select('id', { count: 'exact', head: true })
+                  .eq('status', 'RESOLVED').gte('updated_at', weekAgo),
+                supabase.from('kebajikan_tickets')
+                  .select('category').gte('created_at', monthAgo),
+                supabase.from('kebajikan_settings')
+                  .select('sla_warning_hours, sla_escalate_hours').limit(1).maybeSingle(),
+              ]);
+
+              // Format urgent list
+              const urgentList = urgentRes.data?.map(t =>
+                `  • [${t.ticket_no}] ${t.title} | ${t.category || 'UMUM'} | ${t.status} | ${ageHours(t.created_at)}j lalu`
+              ).join('\n') || 'Tiada';
+
+              // Format my assigned list
+              const assignedList = assignedRes.data?.map(t =>
+                `  • [${t.ticket_no}] ${t.title} | ${t.status} | ${ageHours(t.created_at)}j lalu`
+              ).join('\n') || 'Tiada';
+
+              // Top category this month
+              const catMap: Record<string, number> = {};
+              categoryRes.data?.forEach((t: any) => {
+                if (t.category) catMap[t.category] = (catMap[t.category] || 0) + 1;
+              });
+              const topCat = Object.entries(catMap).sort((a, b) => b[1] - a[1])[0];
+
               ctx.kebajikanInfo = {
                 role: 'EXCO/ADMIN',
-                urgentTicketsUnresolved: urgent || 0,
-                assignedToMe: myTasks || 0
+                urgentTicketsUnresolved: urgentRes.data?.length || 0,
+                urgentTicketsList: urgentList,
+                totalWarning: warningCount.count || 0,
+                totalEscalated: escalatedCount.count || 0,
+                assignedToMe: assignedRes.data?.length || 0,
+                assignedToMeList: assignedList,
+                unassignedCount: unassignedCount.count || 0,
+                resolvedThisWeek: resolvedWeekCount.count || 0,
+                topCategoryThisMonth: topCat ? `${topCat[0]} (${topCat[1]} aduan)` : 'Tiada data',
+                slaConfig: slaRes.data
+                  ? `Warning: ${slaRes.data.sla_warning_hours}j, Escalation: ${slaRes.data.sla_escalate_hours}j`
+                  : 'Warning: 48j, Escalation: 72j',
               };
+
+              // ─ If on ticket detail page, fetch that specific ticket's full info ─
+              const ticketDetailMatch = p.match(/^\/kebajikan\/(tiket|aduan)\/([^/]+)/);
+              const ticketDetailId = ticketDetailMatch?.[2];
+              if (ticketDetailId) {
+                const { data: tkt } = await supabase
+                  .from('kebajikan_tickets')
+                  .select('ticket_no, title, description, status, category, created_at, priority')
+                  .eq('id', ticketDetailId)
+                  .maybeSingle();
+                if (tkt) {
+                  const tktAge = ageHours(tkt.created_at);
+                  ctx.kebajikanInfo.currentTicket = [
+                    `Nombor: ${tkt.ticket_no}`,
+                    `Tajuk: ${tkt.title}`,
+                    `Kategori: ${tkt.category || 'UMUM'}`,
+                    `Status: ${tkt.status}`,
+                    `Umur: ${tktAge} jam`,
+                    tkt.priority ? `Keutamaan: ${tkt.priority}` : '',
+                    `Keterangan pelajar: ${tkt.description || 'Tiada keterangan diberikan'}`,
+                  ].filter(Boolean).join(' | ');
+                }
+              }
             } else {
               const { data: myTkts } = await supabase.from('kebajikan_tickets').select('ticket_no, status, title').eq('submitter_id', profile.id).order('created_at', { ascending: false }).limit(3);
               const { count: activeCount } = await supabase.from('kebajikan_tickets').select('id', { count: 'exact', head: true }).eq('submitter_id', profile.id).not('status', 'in', '("RESOLVED", "CLOSED", "CANCELLED")');
@@ -401,8 +510,11 @@ export function FloatingAiChat() {
       userMsg,
     ];
 
-    // 5. Call API
-    let aiText = await sendChatMessage(text, historyForApi, chatContext || undefined);
+    // 5. Call API — route to Exco AI if applicable
+    const isExcoOnKebajikan = hasKebajikanAccess && location.pathname.startsWith('/kebajikan');
+    let aiText = isExcoOnKebajikan
+      ? await sendKebajikanExcoMessage(text, historyForApi, chatContext || undefined)
+      : await sendChatMessage(text, historyForApi, chatContext || undefined);
 
     // ── Smart Routing Interceptor ──
     if (aiText) {
@@ -454,15 +566,40 @@ export function FloatingAiChat() {
   // Derived loading states for UI
   const isBusy = isChatLoading || isActionLoading;
 
-  // ── Derived Route-Aware Positioning ──────────────────────────────────────
+  // ── Derived state ─────────────────────────────────────────────────────────
   const isPolymart = location.pathname.startsWith('/polymart');
   const isKebajikanChat = location.pathname.match(/^\/kebajikan\/(tiket|aduan)\/[^/]+/);
+  const isExcoMode = hasKebajikanAccess && location.pathname.startsWith('/kebajikan');
   
   const bottomMarginClass = isKebajikanChat 
-    ? 'mb-24'        // Avoid overlapping the sticky input bar on all devices (96px extra lift)
+    ? 'mb-24'
     : isPolymart 
-    ? 'max-md:mb-16' // Avoid overlapping PolyMart's mobile-only bottom nav (64px lift)
+    ? 'max-md:mb-16'
     : '';
+
+  // ── Exco quick-action chips ──────────────────────────────────────────────
+  const EXCO_CHIPS: { icon: string; label: string; prompt: string }[] = [
+    {
+      icon: '💬',
+      label: 'Berikan Pendapat',
+      prompt: chatContext?.kebajikanInfo?.currentTicket
+        ? `Saya sedang melihat tiket ini:\n${chatContext.kebajikanInfo.currentTicket}\n\nBerikan pendapat anda: apakah punca masalah yang paling munasabah dan apakah langkah-langkah konkrit untuk menyelesaikannya? Siapa yang patut dipertanggungjawabkan?`
+        : 'Berdasarkan situasi semasa, berikan pendapat anda tentang apa yang perlu saya lakukan sekarang sebagai Exco Kebajikan.',
+    },
+    { icon: '📊', label: 'Analisis Hari Ini', prompt: 'Bagi saya ringkasan situasi tiket hari ini dan cadangan tindakan segera.' },
+    { icon: '⚠️', label: 'Tiket Urgent', prompt: 'Senaraikan tiket yang paling kritikal dan cadangkan tindakan yang perlu diambil.' },
+    { icon: '📝', label: 'Draft Balasan', prompt: 'Bantu saya draf balasan profesional untuk tiket yang masih belum dibalas.' },
+    { icon: '📈', label: 'Trend Aduan', prompt: 'Apa trend aduan bulan ini? Ada pattern yang perlu diberi perhatian?' },
+    { icon: '📋', label: 'Laporan Ringkas', prompt: 'Jana laporan status ringkas yang boleh saya kongsikan dalam mesyuarat.' },
+  ];
+
+  const KEUSAHAWANAN_CHIPS: { icon: string; label: string; prompt: string }[] = [
+    { icon: '💰', label: 'Ringkasan Jualan', prompt: 'Berapa total jualan hari ini dan ada produk kurang stok?' },
+    { icon: '🛒', label: 'Cara Guna POS', prompt: 'Boleh ajar macam mana nak buat transaksi POS?' },
+    { icon: '⏰', label: 'Urus Syif', prompt: 'Bagaimana cara nak rekod syif masuk kerja?' },
+    { icon: '📊', label: 'Laporan', prompt: 'Di mana nak semak rekod transaksi lepas?' },
+    { icon: '💡', label: 'Idea Bisnes', prompt: 'Ada cadangan bisnes menarik untuk student kampus?' }
+  ];
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
@@ -546,13 +683,20 @@ export function FloatingAiChat() {
             style={{ height: 'min(580px, calc(100dvh - 12rem))', border: 'none' }}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-indigo-600 to-violet-600 p-5 text-white relative shrink-0 flex items-center justify-between">
+            <div className={`p-5 text-white relative shrink-0 flex items-center justify-between ${
+              isExcoMode
+                ? 'bg-gradient-to-r from-teal-700 to-emerald-600'
+                : 'bg-gradient-to-r from-indigo-600 to-violet-600'
+            }`}>
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
               <div className="relative z-10">
                 <h3 className="font-black text-lg italic flex items-center gap-2">
-                  <Sparkles size={18} className="text-violet-200" /> JPP Nexus
+                  <Sparkles size={18} className={isExcoMode ? 'text-teal-200' : 'text-violet-200'} />
+                  {isExcoMode ? 'Kebajikan AI' : 'JPP Nexus'}
                 </h3>
-                <p className="text-[11px] text-violet-100/80 font-medium mt-0.5">Pembantu pintar rasmi POLISAS</p>
+                <p className="text-[11px] text-white/70 font-medium mt-0.5">
+                  {isExcoMode ? 'Pembantu peribadi Exco Kebajikan POLISAS' : 'Pembantu pintar rasmi POLISAS'}
+                </p>
               </div>
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -575,9 +719,12 @@ export function FloatingAiChat() {
                   <Sparkles size={14} />
                 </div>
                 <div className="bg-card border border-border/50 p-4 rounded-2xl rounded-tl-sm text-sm text-foreground shadow-sm flex-1">
-                  <p className="font-bold mb-1">Hai {getMalaysianNickname(profile?.full_name)}! 👋</p>
+                  <p className="font-bold mb-1">{isExcoMode ? `Hai ${getMalaysianNickname(profile?.full_name)}! 🛡️` : `Hai ${getMalaysianNickname(profile?.full_name)}! 👋`}</p>
                   <p className="text-muted-foreground text-xs leading-relaxed">
-                    Saya pembantu AI JPP anda. Sila tanya apa sahaja soalan berkaitan kelab atau aktiviti POLISAS!
+                    {isExcoMode
+                      ? "Saya penasihat AI peribadi anda. Tanya apa sahaja — analisis tiket, draf surat, atau sekadar minta pendapat. Sedia membantu!"
+                      : "Saya pembantu AI JPP anda. Sila tanya apa sahaja soalan berkaitan kelab atau aktiviti POLISAS!"
+                    }
                   </p>
                 </div>
               </motion.div>
@@ -684,6 +831,48 @@ export function FloatingAiChat() {
 
             {/* Input area */}
             <div className="p-3 bg-background border-t border-border/50 shrink-0">
+              {/* Exco quick-action chips */}
+              {isExcoMode && (
+                <div className="flex gap-1.5 overflow-x-auto pb-2 mb-2 scrollbar-hide">
+                  {EXCO_CHIPS.map((chip) => (
+                    <button
+                      key={chip.label}
+                      onClick={() => setInputValue(chip.prompt)}
+                      disabled={isChatLoading}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-black whitespace-nowrap transition-all border shrink-0"
+                      style={{
+                        background: 'rgba(45,212,191,0.08)',
+                        borderColor: 'rgba(45,212,191,0.25)',
+                        color: '#2DD4BF',
+                      }}
+                    >
+                      <span>{chip.icon}</span>
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {/* Keusahawanan quick-action chips */}
+              {location.pathname.startsWith('/keusahawanan') && !isExcoMode && (
+                <div className="flex gap-1.5 overflow-x-auto pb-2 mb-2 scrollbar-hide">
+                  {KEUSAHAWANAN_CHIPS.map((chip) => (
+                    <button
+                      key={chip.label}
+                      onClick={() => setInputValue(chip.prompt)}
+                      disabled={isChatLoading}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-black whitespace-nowrap transition-all border shrink-0"
+                      style={{
+                        background: 'rgba(99,102,241,0.08)', // indigo-500 tint
+                        borderColor: 'rgba(99,102,241,0.25)',
+                        color: '#6366f1',
+                      }}
+                    >
+                      <span>{chip.icon}</span>
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
+              )}
               <div className="flex gap-2 items-end">
                 <textarea
                   ref={textareaRef}
