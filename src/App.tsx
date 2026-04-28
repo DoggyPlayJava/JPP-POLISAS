@@ -12,6 +12,8 @@ const LoginPage = lazy(() => import('@/pages/LoginPage').then(m => ({ default: m
 const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
 const OnboardingPage = lazy(() => import('@/pages/OnboardingPage').then(m => ({ default: m.OnboardingPage })));
 const LandingPage = lazy(() => import('@/pages/LandingPage').then(m => ({ default: m.LandingPage })));
+const PromoPage = lazy(() => import('@/pages/PromoPage').then(m => ({ default: m.PromoPage })));
+const LaunchVideo = lazy(() => import('@/pages/LaunchVideo').then(m => ({ default: m.LaunchVideo })));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
 const KelabPage = lazy(() => import('@/pages/KelabPage').then(m => ({ default: m.KelabPage })));
 const AktivitiFull = lazy(() => import('@/pages/AktivitiFull').then(m => ({ default: m.AktivitiFull })));
@@ -180,6 +182,8 @@ function AppRoutes() {
       {/* 🔓 PUBLIC ROUTES */}
       <Route element={<PublicRoute />}>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/promo" element={<PromoPage />} />
+        <Route path="/launch" element={<LaunchVideo />} />
         <Route path="/login" element={<LoginPage />} />
       </Route>
 

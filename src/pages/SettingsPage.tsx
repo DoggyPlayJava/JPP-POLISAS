@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
+import { sendEmail } from '@/lib/email';
 import { toast } from 'react-hot-toast';
 
 export function SettingsPage() {
@@ -173,23 +174,19 @@ export function SettingsPage() {
       const newOTP = Math.floor(100000 + Math.random() * 900000).toString();
       setGeneratedOTP(newOTP);
       
-      const { error } = await supabase.functions.invoke('send-email', {
-        body: {
-          to: user.email,
-          subject: "Kod Pengesahan Portal JPP",
-          html: `<div style="font-family: sans-serif; padding: 20px; color: #1e293b; max-width: 500px; border: 1px solid #e2e8f0; border-radius: 8px;">
-            <h2 style="color: #0f172a; margin-top: 0;">Pengesahan Penukaran Nombor Telefon</h2>
-            <p>Sistem merekodkan percubaan untuk menukar nombor telefon di akaun anda.</p>
-            <p>Gunakan kod 6-digit di bawah untuk melengkapkan pengesahan ini:</p>
-            <div style="background-color: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
-              <h1 style="letter-spacing: 8px; margin: 0; color: #4338ca; font-size: 32px;">${newOTP}</h1>
-            </div>
-            <p style="font-size: 12px; color: #64748b;">Sekiranya anda tidak meminta pertukaran ini, sila abaikan emel ini dan periksa keselamatan akaun anda.</p>
-          </div>`
-        }
+      await sendEmail({
+        to: user.email,
+        subject: "Kod Pengesahan Portal JPP",
+        html: `<div style="font-family: sans-serif; padding: 20px; color: #1e293b; max-width: 500px; border: 1px solid #e2e8f0; border-radius: 8px;">
+          <h2 style="color: #0f172a; margin-top: 0;">Pengesahan Penukaran Nombor Telefon</h2>
+          <p>Sistem merekodkan percubaan untuk menukar nombor telefon di akaun anda.</p>
+          <p>Gunakan kod 6-digit di bawah untuk melengkapkan pengesahan ini:</p>
+          <div style="background-color: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+            <h1 style="letter-spacing: 8px; margin: 0; color: #4338ca; font-size: 32px;">${newOTP}</h1>
+          </div>
+          <p style="font-size: 12px; color: #64748b;">Sekiranya anda tidak meminta pertukaran ini, sila abaikan emel ini dan periksa keselamatan akaun anda.</p>
+        </div>`
       });
-      
-      if (error) throw error;
       
       setShowOTPModal(true);
       setOtpInput('');

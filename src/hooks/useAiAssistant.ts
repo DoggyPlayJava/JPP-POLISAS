@@ -1,6 +1,34 @@
 import { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { API_BASE_URL } from '@/lib/utils';
+
+export const invokeLocalApi = async (path: string, options: any) => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    
+    const apiPath = path.startsWith('/api/') ? path : `/api/${path}`;
+    const response = await fetch(`${API_BASE_URL}${apiPath}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify(options?.body || {})
+    });
+    
+    if (!response.ok) {
+      const errText = await response.text();
+      return { data: null, error: new Error(errText) };
+    }
+    
+    const data = await response.json();
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
+};
 
 export type AiTask = "analyze_performance" | "review_kertas_kerja" | "suggest_program" | "generate_draft" | "summarize_report" | "custom_query" | "semak_tatabahasa_laporan" | "jana_belanjawan_ai" | "pecahkan_tugasan_ai" | "jana_kertas_kerja" | "jana_minit_mesyuarat";
 
@@ -476,7 +504,7 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
             await new Promise(res => setTimeout(res, attempt * 2000));
           }
 
-          const { data, error } = await supabase.functions.invoke('ai-assistant', {
+          const { data, error } = await invokeLocalApi('ai-assistant', {
             body: { action: 'proxy', endpoint, payload: JSON.parse(requestBody) }
           });
           
@@ -491,7 +519,7 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
               console.warn(`Model ${modelEndpointString} is overloaded. Falling back to gemini-2.5-flash-lite...`);
               const fallbackEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent`;
               
-              const { data: data2, error: error2 } = await supabase.functions.invoke('ai-assistant', {
+              const { data: data2, error: error2 } = await invokeLocalApi('ai-assistant', {
                 body: { action: 'proxy', endpoint: fallbackEndpoint, payload: JSON.parse(requestBody) }
               });
               
@@ -746,7 +774,7 @@ Sila pandu pengguna langkah demi langkah dengan cara yang sangat santai, jelas d
             await new Promise(res => setTimeout(res, attempt * 2000));
           }
 
-          const { data, error } = await supabase.functions.invoke('ai-assistant', {
+          const { data, error } = await invokeLocalApi('ai-assistant', {
             body: {
               action: 'proxy',
               endpoint: endpoint,
@@ -935,7 +963,7 @@ Sila pandu pengguna langkah demi langkah dengan cara yang sangat santai, jelas d
             await new Promise(res => setTimeout(res, attempt * 2000));
           }
 
-          const { data, error } = await supabase.functions.invoke('ai-assistant', {
+          const { data, error } = await invokeLocalApi('ai-assistant', {
             body: {
               action: 'proxy',
               endpoint: endpoint,
@@ -955,7 +983,7 @@ Sila pandu pengguna langkah demi langkah dengan cara yang sangat santai, jelas d
             const errorMsg = data.error?.message || `Google API Error: ${data.status}`;
             if (errorMsg.toLowerCase().includes('high demand') || data.status === 503) {
               const fallbackEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent`;
-              const { data: data2, error: error2 } = await supabase.functions.invoke('ai-assistant', {
+              const { data: data2, error: error2 } = await invokeLocalApi('ai-assistant', {
                 body: { action: 'proxy', endpoint: fallbackEndpoint, payload: { system_instruction: { parts: [{ text: systemInstruction }] }, contents, generationConfig: { temperature: 0.7, maxOutputTokens: 1200, topP: 0.9 } } }
               });
               if (error2) throw new Error(error2.message || `Fallback error: Edge function failure`);
@@ -1018,3 +1046,5 @@ Sila pandu pengguna langkah demi langkah dengan cara yang sangat santai, jelas d
 
   return { callAi, sendChatMessage, sendKebajikanExcoMessage, isLoading, isChatLoading, retryCount, result, setResult };
 }
+
+

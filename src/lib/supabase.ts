@@ -2,10 +2,10 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl =
   import.meta.env.VITE_SUPABASE_URL ||
-  'https://ujklcxfbmmzxsqtidjtz.supabase.co';
+  'http://192.168.0.20.sslip.io';
 const supabaseAnonKey =
   import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqa2xjeGZibW16eHNxdGlkanR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3MTg3MDYsImV4cCI6MjA5MDI5NDcwNn0.gfIXNKnXZ5E03Sf1Xc9RuTPacxbr0NqVnbNyW__SDR4';
+  'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc3NzM2MzAyMCwiZXhwIjo0OTMzMDM2NjIwLCJyb2xlIjoiYW5vbiJ9.EhvKo74pWR9CmMBN9Dggr_inV4YbA2MhEamc7MOnZh4';
 
 // ── No-op lock implementation ──────────────────────────────────────────────
 // Supabase JS v2 uses the browser Web Locks API to serialize token refreshes

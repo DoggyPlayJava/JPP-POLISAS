@@ -4,6 +4,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { supabase } from './supabase';
+import { API_BASE_URL } from './utils';
 
 export type NotificationModule = 'EKPP' | 'KEBAJIKAN' | 'AKADEMIK' | 'KEUSAHAWANAN' | 'JPP' | 'SYSTEM' | 'POLYMART';
 
@@ -49,13 +50,15 @@ async function firePush(user_id: string, payload: NotificationPayload): Promise<
 
     await Promise.allSettled(
       subs.map(sub =>
-        supabase.functions.invoke('send-push-notification', {
-          body: {
+        fetch(`${API_BASE_URL}/api/send-push-notification`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
             subscription: { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
             title: payload.title,
             body:  payload.message,
             data:  { link: payload.link, module: payload.module, type: payload.type },
-          }
+          })
         }).catch(err => console.error("Error pushing:", err))
       )
     );

@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { ShieldAlert, Search, ShieldCheck, AlertTriangle, Activity, Trash2, User, Clock, Sparkles, RefreshCw } from 'lucide-react';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
-import { hexToRgba, cn } from '@/lib/utils';
+import { hexToRgba, cn, API_BASE_URL } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
@@ -116,8 +116,10 @@ export function JppLogsPage() {
 
   const sendAnomalyEmail = async (alerts: AnomalyAlert[]) => {
     try {
-      await supabase.functions.invoke('notify-anomaly', {
-        body: { alerts, sentAt: new Date().toISOString() }
+      await fetch(`${API_BASE_URL}/api/notify-anomaly`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alerts, sentAt: new Date().toISOString() })
       });
       sessionStorage.setItem('anomaly_email_sent', '1');
       setEmailSent(true);
@@ -134,18 +136,24 @@ export function JppLogsPage() {
       const recentLogs = logs.slice(0, 25).map(l =>
         `[${new Date(l.created_at).toLocaleDateString('ms-MY')}] ${l.full_name || 'System'} (${l.role || '-'}) → ${l.action_type} | ${l.entity_type} | ${l.details || '-'}`
       ).join('\n');
-      const { data, error } = await supabase.functions.invoke('ai-assistant', {
-        body: {
-          task: 'summarize_report',
-          data: {
-            arahan: 'Sila buat ringkasan naratif aktiviti dalam log sistem ini. Gunakan Bahasa Melayu yang profesional. JANGAN tulis perenggan yang panjang meleret. Gunakan bullet points (•) untuk menyenaraikan aktiviti penting. Gunakan **bold** untuk nama kelab atau modul. Asingkan aktiviti biasa dengan aktiviti yang mencurigakan (jika ada).',
-            log_terbaru: recentLogs
+      const response = await fetch(`${API_BASE_URL}/api/ai-assistant`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'proxy',
+          payload: {
+            task: 'summarize_report',
+            data: {
+              arahan: 'Sila buat ringkasan naratif aktiviti dalam log sistem ini. Gunakan Bahasa Melayu yang profesional. JANGAN tulis perenggan yang panjang meleret. Gunakan bullet points (•) untuk menyenaraikan aktiviti penting. Gunakan **bold** untuk nama kelab atau modul. Asingkan aktiviti biasa dengan aktiviti yang mencurigakan (jika ada).',
+              log_terbaru: recentLogs
+            }
           }
-        }
+        })
       });
       
-      if (error) throw error;
-      setAiSummary(data?.result || 'Tiada ringkasan dijana.');
+      const resData = await response.json();
+      if (!response.ok) throw new Error(resData.error || 'Failed');
+      setAiSummary(resData.result || 'Tiada ringkasan dijana.');
     } catch (e) {
       setAiSummary('Gagal jana ringkasan AI.');
     }

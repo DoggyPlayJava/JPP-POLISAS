@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { sendNotificationToKebajikanExco, sendNotificationToUser, sendNotificationToKKExco } from '@/lib/notifications';
+import { sendEmail } from '@/lib/email';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -283,12 +284,10 @@ export function KebajikanSubmitPage() {
                 `/kebajikan/tiket/${data.id}`
               );
 
-              await supabase.functions.invoke('send-email', {
-                body: {
-                  to: emails,
-                  subject: `Aduan Baharu: ${data.ticket_no}`,
-                  html: emailHtml,
-                },
+              await sendEmail({
+                to: emails,
+                subject: `Aduan Baharu: ${data.ticket_no}`,
+                html: emailHtml,
               });
             }
           }

@@ -1,0 +1,594 @@
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import multer from 'multer';
+import webpush from 'web-push';
+import { createClient } from '@supabase/supabase-js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+const port = process.env.PORT || 8000;
+
+// Enable CORS
+app.use(cors());
+
+// Body parsers
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Configure multer for file uploads in memory
+const upload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 30 * 1024 * 1024 } // 30MB limit
+});
+
+// Initialize Supabase Admin Client
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+    console.warn("WARNING: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set. Some backend API functions will fail.");
+}
+
+const supabaseAdmin = supabaseUrl && supabaseServiceKey 
+    ? createClient(supabaseUrl, supabaseServiceKey) 
+    : null;
+
+// ==========================================
+// 1. AI Assistant Endpoint
+// ==========================================
+app.post('/api/ai-assistant', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            return res.status(401).json({ error: "Akses ditolak: Tiada Authorization." });
+        }
+
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            throw new Error("GEMINI_API_KEY tidak dikonfigurasi.");
+        }
+
+        // Initialize Supabase Client context
+        const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+        const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+            global: { headers: { Authorization: authHeader } },
+        });
+
+        // RATE LIMIT CHECK
+        if (!supabaseAdmin) throw new Error("Supabase Admin Client not initialized.");
+        const { data: settingsSettings } = await supabaseAdmin.from('system_settings').select('*').in('key', ['ai_total_tokens', 'ai_token_limit']);
+        let totalTokens = 0;
+        let tokenLimit = 1000000;
+        
+        settingsSettings?.forEach((setting) => {
+            if (setting.key === 'ai_total_tokens') totalTokens = parseInt(setting.value) || 0;
+            if (setting.key === 'ai_token_limit') tokenLimit = parseInt(setting.value) || 1000000;
+        });
+
+        if (totalTokens >= tokenLimit) {
+            return res.status(403).json({ error: "Kuota token AI untuk bulan ini telah didakwa maksimum oleh Pusat Kawalan JPP. Sila hubungi Administrator." });
+        }
+
+        const body = req.body;
+        
+        // --- MOD PROXY KESELAMATAN (DARI USEAIASSISTANT) ---
+        if (body.action === 'proxy') {
+            const { endpoint, payload } = body;
+            
+            if (!endpoint || !endpoint.startsWith('https://generativelanguage.googleapis.com/')) {
+                throw new Error("Endpoint API tidak dibenarkan. Keselamatan diceroboh.");
+            }
+            
+            const geminiResponse = await fetch(`${endpoint}?key=${apiKey}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            
+            const geminiData = await geminiResponse.json();
+            
+            const usedTokens = geminiData?.usageMetadata?.totalTokenCount || 0;
+            if (usedTokens > 0) {
+                const newTotal = totalTokens + usedTokens;
+                const { data: existingTokenRow } = await supabaseAdmin.from('system_settings').select('id').eq('key', 'ai_total_tokens');
+                if (existingTokenRow && existingTokenRow.length > 0) {
+                     await supabaseAdmin.from('system_settings').update({ value: newTotal }).eq('key', 'ai_total_tokens');
+                } else {
+                     await supabaseAdmin.from('system_settings').insert({ key: 'ai_total_tokens', value: newTotal });
+                }
+            }
+            
+            return res.status(200).json({ status: geminiResponse.status, ...geminiData });
+        }
+
+        return res.status(400).json({ error: "Laluan (route) yang dipanggil bukan proksi. Gunakan modul Edge Functions jika perlukan sokongan kompleks."});
+
+    } catch (error) {
+        console.error("[ai-assistant] Error:", error.message);
+        return res.status(500).json({ error: error.message || "Ralat Pelayan Dalaman" });
+    }
+});
+
+// ==========================================
+// 2. Send Email Endpoint
+// ==========================================
+app.post('/api/send-email', async (req, res) => {
+    try {
+        const RESEND_API_KEY = process.env.RESEND_API_KEY;
+        if (!RESEND_API_KEY) {
+            throw new Error("Missing RESEND_API_KEY secret.");
+        }
+
+        const { to, subject, html } = req.body;
+
+        if (!to || !subject || !html) {
+            throw new Error("Missing required parameters: to, subject, html");
+        }
+
+        const response = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${RESEND_API_KEY}`,
+            },
+            body: JSON.stringify({
+                from: "JPP Polisas <jpp@cipher-node.org>",
+                to,
+                subject,
+                html,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            return res.status(200).json(data);
+        } else {
+            console.error("[send-email] Resend API error:", data);
+            return res.status(response.status).json(data);
+        }
+    } catch (error) {
+        const msg = error instanceof Error ? error.message : "Ralat dalam penghantaran emel.";
+        console.error("[send-email] Error:", msg);
+        return res.status(500).json({ error: msg });
+    }
+});
+
+// ==========================================
+// 3. Kebajikan SLA Check Endpoint
+// ==========================================
+app.post('/api/check-kebajikan-sla', async (req, res) => {
+    try {
+        if (!supabaseAdmin) throw new Error("Supabase Admin Client not initialized.");
+        
+        const DEFAULT_WARNING_HOURS = 48;
+        const DEFAULT_ESCALATE_HOURS = 72;
+
+        const { data: settingsRow } = await supabaseAdmin
+            .from("kebajikan_settings")
+            .select("*")
+            .limit(1)
+            .single();
+
+        const warningHours = Number(settingsRow?.sla_warning_hours ?? DEFAULT_WARNING_HOURS);
+        const escalateHours = Number(settingsRow?.sla_escalate_hours ?? DEFAULT_ESCALATE_HOURS);
+        const emailWarning = settingsRow?.email_warning ?? false;
+        const emailEscalation = settingsRow?.email_escalation ?? false;
+
+        let excosEmails = [];
+        if (emailWarning || emailEscalation) {
+            const { data: excos } = await supabaseAdmin
+                .from("profiles")
+                .select("email")
+                .eq("role", "JPP")
+                .eq("jpp_unit", "KEBAJIKAN");
+            excosEmails = excos?.map((e) => e.email).filter(Boolean) || [];
+        }
+
+        const now = new Date();
+        const warningCutoff = new Date(now.getTime() - warningHours * 3600000).toISOString();
+        const escalateCutoff = new Date(now.getTime() - escalateHours * 3600000).toISOString();
+
+        const { data: tickets, error: ticketErr } = await supabaseAdmin
+            .from("kebajikan_tickets")
+            .select("id, ticket_no, title, status, updated_at, warning_sent_at, escalated_at, assigned_to, category")
+            .not("status", "in", "(RESOLVED,CLOSED,CANCELLED)");
+
+        if (ticketErr) throw ticketErr;
+        if (!tickets || tickets.length === 0) {
+            return res.status(200).json({ message: "No active tickets." });
+        }
+
+        const results = { warned: 0, escalated: 0, skipped: 0 };
+
+        for (const ticket of tickets) {
+            const lastUpdateAt = ticket.updated_at;
+
+            if (ticket.status !== "ESCALATED" && !ticket.escalated_at && lastUpdateAt < escalateCutoff) {
+                await supabaseAdmin
+                    .from("kebajikan_tickets")
+                    .update({ status: "ESCALATED", escalated_at: now.toISOString() })
+                    .eq("id", ticket.id);
+
+                await supabaseAdmin.from("kebajikan_ticket_status_log").insert({
+                    ticket_id: ticket.id,
+                    actor_role: "SISTEM",
+                    actor_name: "Sistem Auto-Escalation",
+                    old_status: ticket.status,
+                    new_status: "ESCALATED",
+                    note: `Auto-escalated selepas ${escalateHours} jam tanpa kemaskini.`,
+                });
+
+                await supabaseAdmin.from("kebajikan_notifications").insert({
+                    ticket_id: ticket.id,
+                    target_role: "EXCO_KEBAJIKAN",
+                    title: `🚨 Auto-Escalation: ${ticket.ticket_no}`,
+                    body: `Tiket "${ticket.title}" telah diescalate secara automatik selepas ${escalateHours} jam tanpa tindakan.`,
+                    type: "ESCALATION",
+                });
+
+                if (emailEscalation && excosEmails.length > 0) {
+                    const html = `<div style="font-family: sans-serif; padding: 20px;">
+                        <h2>🚨 Auto-Escalation (${escalateHours} Jam)</h2>
+                        <p>Sistem telah auto-escalate tiket ini kerana tiada tindakan selama lebih ${escalateHours} jam.</p>
+                        <p><strong>No. Tiket:</strong> ${ticket.ticket_no}</p>
+                        <p><strong>Tajuk:</strong> ${ticket.title}</p>
+                    </div>`;
+                    
+                    fetch(`http://localhost:${port}/api/send-email`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ to: excosEmails, subject: `🚨 Auto-Escalation: ${ticket.ticket_no}`, html })
+                    });
+                }
+                results.escalated++;
+                continue;
+            }
+
+            if (!ticket.warning_sent_at && lastUpdateAt < warningCutoff && lastUpdateAt >= escalateCutoff) {
+                await supabaseAdmin
+                    .from("kebajikan_tickets")
+                    .update({ warning_sent_at: now.toISOString() })
+                    .eq("id", ticket.id);
+
+                await supabaseAdmin.from("kebajikan_notifications").insert({
+                    ticket_id: ticket.id,
+                    target_role: "EXCO_KEBAJIKAN",
+                    title: `⚠️ SLA Warning: ${ticket.ticket_no}`,
+                    body: `Tiket "${ticket.title}" belum diproses lebih dari ${warningHours} jam. Sila ambil tindakan segera.`,
+                    type: "WARNING",
+                });
+
+                if (emailWarning && excosEmails.length > 0) {
+                    const html = `<div style="font-family: sans-serif; padding: 20px;">
+                        <h2>⚠️ Amaran SLA (${warningHours} Jam)</h2>
+                        <p>Tiket ini belum menerima sebarang kemaskini melebihi ${warningHours} jam. Sila ambil tindakan segera.</p>
+                        <p><strong>No. Tiket:</strong> ${ticket.ticket_no}</p>
+                        <p><strong>Tajuk:</strong> ${ticket.title}</p>
+                    </div>`;
+                    
+                    fetch(`http://localhost:${port}/api/send-email`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ to: excosEmails, subject: `⚠️ Amaran SLA: ${ticket.ticket_no}`, html })
+                    });
+                }
+                results.warned++;
+                continue;
+            }
+            results.skipped++;
+        }
+
+        return res.status(200).json({ success: true, processed: tickets.length, ...results, sla: { warningHours, escalateHours } });
+    } catch (err) {
+        console.error("[check-kebajikan-sla] Error:", err.message);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+// ==========================================
+// 4. Kebajikan New Ticket Webhook Endpoint
+// ==========================================
+app.post('/api/kebajikan-new-ticket-notify', async (req, res) => {
+    try {
+        if (!supabaseAdmin) throw new Error("Supabase Admin Client not initialized.");
+        
+        const payload = req.body;
+
+        if (payload.type !== "INSERT") {
+            return res.status(200).send("Not an INSERT event.");
+        }
+
+        const { id, ticket_no, title, category, full_name } = payload.record;
+
+        if (!id || !ticket_no) {
+            return res.status(400).send("Missing ticket data.");
+        }
+
+        const { error: notifErr } = await supabaseAdmin.from("kebajikan_notifications").insert({
+            ticket_id: id,
+            target_user_id: null,         
+            target_role: "EXCO_KEBAJIKAN",
+            title: `📣 Aduan Baru: ${ticket_no}`,
+            body: `"${title}" dikemukakan oleh ${full_name}. Kategori: ${category}. Sila semak dan ambil tindakan.`,
+            type: "NEW_TICKET",
+        });
+
+        if (notifErr) {
+            console.error("[kebajikan-new-ticket-notify] Notification insert error:", notifErr.message);
+        }
+
+        const RESEND_API_KEY = process.env.RESEND_API_KEY;
+        if (RESEND_API_KEY) {
+            const { data: excoUsers } = await supabaseAdmin
+                .from("profiles")
+                .select("email, full_name")
+                .eq("role", "JPP")
+                .eq("jpp_unit", "KEBAJIKAN");
+        
+            for (const exco of excoUsers ?? []) {
+                fetch("https://api.resend.com/emails", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${RESEND_API_KEY}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        from: "E-Kebajikan <kebajikan@polisas.edu.my>",
+                        to: exco.email,
+                        subject: `[E-Kebajikan] Aduan Baru: ${ticket_no}`,
+                        html: `<p>Salam, ${exco.full_name}.<br/>Aduan baru <strong>${ticket_no}</strong> telah diterima.<br/><strong>${title}</strong><br/>Sila log masuk ke sistem untuk mengambil tindakan.</p>`,
+                    }),
+                });
+            }
+        }
+
+        return res.status(200).json({ success: true, ticket_no, notif_created: !notifErr });
+    } catch (err) {
+        console.error("[kebajikan-new-ticket-notify] Error:", err.message);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+// ==========================================
+// 5. Upload to Google Drive Endpoint
+// ==========================================
+function extractFolderId(input) {
+    if (input.startsWith('http')) {
+        const match = input.match(/\/folders\/([^/?]+)/);
+        if (match) return match[1];
+        const url = new URL(input);
+        const segments = url.pathname.split('/').filter(Boolean);
+        return segments[segments.length - 1];
+    }
+    return input.trim();
+}
+
+async function getGoogleAccessToken() {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+
+    if (!clientId || !clientSecret || !refreshToken) {
+        throw new Error("Missing Google Drive secrets");
+    }
+
+    const response = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+            client_id: clientId,
+            client_secret: clientSecret,
+            refresh_token: refreshToken,
+            grant_type: "refresh_token",
+        }),
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.access_token) {
+        throw new Error("Google OAuth error: " + (data.error_description || data.error || "failed"));
+    }
+    return data.access_token;
+}
+
+app.post('/api/upload-to-drive', upload.single('file'), async (req, res) => {
+    try {
+        const file = req.file;
+        const subfolder = req.body.subfolder || "dokumen";
+        const customName = req.body.customName || null;
+
+        if (!file) {
+            return res.status(400).json({ error: "Fail tidak ditemui." });
+        }
+
+        if (file.mimetype !== "application/pdf") {
+            return res.status(400).json({ error: "Hanya fail PDF sahaja dibenarkan." });
+        }
+
+        const rawFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+        if (!rawFolderId) throw new Error("GOOGLE_DRIVE_FOLDER_ID tiada.");
+
+        const parentFolderId = extractFolderId(rawFolderId);
+        const accessToken = await getGoogleAccessToken();
+        const timestamp = Date.now();
+        const fileName = customName ? customName + ".pdf" : subfolder + "_" + timestamp + ".pdf";
+
+        const metadata = {
+            name: fileName,
+            parents: [parentFolderId],
+            description: "JPP-POLISAS | " + subfolder + " | " + new Date().toISOString(),
+        };
+
+        const boundary = "boundary_jpp_polisas_upload";
+        const metadataPart = "--" + boundary + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" + JSON.stringify(metadata) + "\r\n";
+        
+        const bodyBuffer = Buffer.concat([
+            Buffer.from(metadataPart),
+            Buffer.from("--" + boundary + "\r\nContent-Type: application/pdf\r\n\r\n"),
+            file.buffer,
+            Buffer.from("\r\n--" + boundary + "--")
+        ]);
+
+        const uploadResponse = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink", {
+            method: "POST",
+            headers: {
+                Authorization: "Bearer " + accessToken,
+                "Content-Type": "multipart/related; boundary=\"" + boundary + "\"",
+            },
+            body: bodyBuffer,
+        });
+
+        if (!uploadResponse.ok) {
+            const errText = await uploadResponse.text();
+            throw new Error("Drive upload failed (" + uploadResponse.status + "): " + errText);
+        }
+
+        const uploadedFile = await uploadResponse.json();
+
+        // Set public read permissions
+        await fetch("https://www.googleapis.com/drive/v3/files/" + uploadedFile.id + "/permissions", {
+            method: "POST",
+            headers: {
+                Authorization: "Bearer " + accessToken,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ role: "reader", type: "anyone" }),
+        });
+
+        const viewUrl = uploadedFile.webViewLink || "https://drive.google.com/file/d/" + uploadedFile.id + "/view";
+
+        return res.status(200).json({
+            url: viewUrl,
+            fileId: uploadedFile.id,
+            fileName: uploadedFile.name,
+        });
+
+    } catch (error) {
+        console.error("[upload-to-drive] Error:", error.message);
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+// ==========================================
+// 6. Web Push Notification Endpoint
+// ==========================================
+app.post('/api/send-push-notification', async (req, res) => {
+    try {
+        const { subscription, title, body, data } = req.body;
+
+        const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:jpp@cipher-node.org';
+        const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
+        const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+
+        if (!vapidPublicKey || !vapidPrivateKey) {
+            throw new Error("VAPID keys belum dikonfigurasi di dalam Environment Variables.");
+        }
+
+        webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+
+        const payload = JSON.stringify({
+            title: title,
+            body: body,
+            data: data,
+            icon: '/icon-192-maskable.png',
+            badge: '/icon-192-maskable.png'
+        });
+
+        const result = await webpush.sendNotification(subscription, payload);
+
+        return res.status(200).json({ success: true, result });
+    } catch (error) {
+        console.error("[send-push-notification] Error:", error.message);
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+// ==========================================
+// 7. Notify Anomaly Endpoint
+// ==========================================
+app.post('/api/notify-anomaly', async (req, res) => {
+    try {
+        const { alerts, sentAt } = req.body;
+        
+        if (!alerts || alerts.length === 0) {
+            return res.status(400).json({ error: 'Tiada anomali disediakan' });
+        }
+
+        const html = `
+            <div style="font-family: sans-serif; padding: 20px;">
+                <h2 style="color: #e11d48;">🚨 Amaran Anomali Sistem Dikesan</h2>
+                <p>Sistem Audit JPP-POLISAS telah mengesan aktiviti mencurigakan pada <strong>${new Date(sentAt).toLocaleString('ms-MY')}</strong>.</p>
+                <br/>
+                <table border="1" cellpadding="8" style="border-collapse: collapse; width: 100%;">
+                    <tr style="background: #f87171; color: white;">
+                        <th>Pengguna</th>
+                        <th>Sebab Dikesan</th>
+                    </tr>
+                    ${alerts.map(a => `
+                    <tr>
+                        <td>${a.user}</td>
+                        <td>${a.reason}</td>
+                    </tr>
+                    `).join('')}
+                </table>
+                <p style="margin-top: 20px;">Sila log masuk ke portal untuk tindakan lanjut.</p>
+            </div>
+        `;
+
+        // Hantar emel menggunakan Resend (menggunakan logik sedia ada dalam send-email)
+        const RESEND_API_KEY = process.env.RESEND_API_KEY;
+        const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'jpp@cipher-node.org';
+
+        if (!RESEND_API_KEY) {
+            throw new Error("RESEND_API_KEY belum dikonfigurasi.");
+        }
+
+        const response = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${RESEND_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                from: 'Audit JPP-POLISAS <noreply@jpp-polisas.com>',
+                to: ADMIN_EMAIL,
+                subject: `🚨 [AMARAN] ${alerts.length} Anomali Sistem Dikesan`,
+                html: html
+            })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Gagal menghantar amaran anomali');
+
+        return res.status(200).json({ success: true, data });
+    } catch (error) {
+        console.error("[notify-anomaly] Error:", error.message);
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+// ==========================================
+// Serve Static Frontend (Vite Build)
+// ==========================================
+// After building the Vite app, it outputs to 'dist'. We serve it here.
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// SPA Fallback: Any route not matched by API or static files will return index.html
+app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api/')) {
+        res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    } else {
+        next();
+    }
+});
+
+app.listen(port, () => {
+    console.log(`[JPP-POLISAS] Server is running on port ${port}`);
+});

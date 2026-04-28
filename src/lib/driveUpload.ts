@@ -144,14 +144,11 @@ export async function uploadPdfToDrive(
   formData.append('subfolder', subfolder);
   if (customName) formData.append('customName', customName);
 
-  // Direct fetch to Edge Function (bypass supabase.functions.invoke to get full error visibility)
-  const SUPABASE_URL = 'https://ujklcxfbmmzxsqtidjtz.supabase.co';
-  const SUPABASE_ANON_KEY = session.access_token;
-
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/upload-to-drive`, {
+  // Direct fetch to Express API
+  const response = await fetch('/api/upload-to-drive', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Authorization': `Bearer ${session.access_token}`,
     },
     body: formData,
   });

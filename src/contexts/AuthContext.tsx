@@ -90,6 +90,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (profileRes.error) {
         console.error('[AuthContext] fetchProfile error:', profileRes.error.message);
+        
+        // Auto-logout jika token JWT tidak sah (Berlaku selepas migrasi pelayan)
+        const errMsg = profileRes.error.message?.toLowerCase() || '';
+        if (errMsg.includes('key') || errMsg.includes('jwt') || errMsg.includes('unauthorized')) {
+          console.warn('Token sesi tidak sah dikesan. Memaksa log keluar pengguna...');
+          await supabase.auth.signOut();
+          localStorage.removeItem('jpp-polisas-auth'); // Buang token lama secara paksa
+          window.location.href = '/login'; // Bawa ke muka depan
+          return;
+        }
+        
         setProfile(null);
       } else {
         setProfile(profileData);

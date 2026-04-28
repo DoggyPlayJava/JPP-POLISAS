@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { API_BASE_URL } from './utils';
 
 interface SendEmailParams {
   to: string | string[];
@@ -12,15 +13,23 @@ interface SendEmailParams {
  */
 export async function sendEmail({ to, subject, html }: SendEmailParams) {
   try {
-    const { data, error } = await supabase.functions.invoke('send-email', {
-      body: { to, subject, html }
-    });
+    const authSession = await supabase.auth.getSession();
+    const token = authSession.data.session?.access_token;
 
-    if (error) {
-      console.error("Supabase edge function error:", error);
-      throw new Error(error.message || "Gagal menghubungi pelayan emel");
-    }
+    const response = await fetch(`${API_BASE_URL}/api/send-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ to, subject, html })
+    });
     
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.error || "Gagal menghubungi pelayan emel");
+    }
+
     return { success: true, data };
   } catch (err: any) {
     console.error("Gagal menghantar emel:", err);

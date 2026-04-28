@@ -9,6 +9,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { supabase } from '@/lib/supabase';
 import { sendNotificationToKebajikanExco } from '@/lib/notifications';
+import { sendEmail } from '@/lib/email';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   KebajikanTicket, KEBAJIKAN_STATUS_LABELS, KEBAJIKAN_STATUS_COLORS,
@@ -126,12 +127,10 @@ export function KebajikanMyTickets() {
             reopenReason
           );
 
-          await supabase.functions.invoke('send-email', {
-            body: {
-              to: emails,
-              subject: `Permohonan Buka Semula: ${reopenTicket.ticket_no}`,
-              html: emailHtml,
-            },
+          await sendEmail({
+            to: emails,
+            subject: `Permohonan Buka Semula: ${reopenTicket.ticket_no}`,
+            html: emailHtml,
           });
         }
       }
