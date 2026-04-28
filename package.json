@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -125,6 +128,7 @@
     "unzipper": "^0.12.3",
     "uuid": "^14.0.0",
     "vaul": "^1.1.2",
+    "vite-plugin-pwa": "^0.21.1",
     "web-push": "^3.6.7",
     "zod": "^4.3.5",
     "zustand": "^5.0.12"

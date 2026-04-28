@@ -4,7 +4,7 @@ providers = ["node"]
 nixPkgs = ["nodejs"]
 
 [phases.install]
-cmds = ["npm install"]
+cmds = ["npm install --include=dev --legacy-peer-deps"]
 
 [phases.build]
 cmds = ["npm run build"]
