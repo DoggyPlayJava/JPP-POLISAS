@@ -171,7 +171,9 @@ export function SettingsPage() {
     
     setLoading(true);
     try {
-      const newOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      const array = new Uint32Array(1);
+      window.crypto.getRandomValues(array);
+      const newOTP = (100000 + (array[0] % 900000)).toString();
       setGeneratedOTP(newOTP);
       
       await sendEmail({

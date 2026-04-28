@@ -250,7 +250,7 @@ function AdsManagerTab() {
 
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const fileName = `${Date.now()}-${window.crypto.randomUUID()}.${fileExt}`;
         const { error: uploadErr } = await supabase.storage
           .from('polymart-ads')
           .upload(fileName, imageFile);

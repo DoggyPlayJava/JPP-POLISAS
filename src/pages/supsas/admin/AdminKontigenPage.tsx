@@ -13,7 +13,10 @@ const DEFAULT_FORM: KontigenForm = { name: '', short_code: '', color: '#3B82F6' 
 
 function generateCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('-').slice(0, 4) + '-' + Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  const array = new Uint32Array(8);
+  window.crypto.getRandomValues(array);
+  const code = Array.from(array, num => chars[num % chars.length]).join('');
+  return code.slice(0, 4) + '-' + code.slice(4);
 }
 
 export function AdminKontigenPage() {

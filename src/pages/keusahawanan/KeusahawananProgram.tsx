@@ -169,7 +169,7 @@ export function KeusahawananProgram() {
   // ── Image upload ──────────────────────────────────────────────────────────
   const uploadImage = async (file: File): Promise<string> => {
     const ext      = file.name.split('.').pop();
-    const fileName = `${Date.now()}_${Math.random().toString(36).slice(7)}.${ext}`;
+    const fileName = `${Date.now()}_${window.crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage.from(BUCKET).upload(fileName, file);
     if (error) throw error;
     return supabase.storage.from(BUCKET).getPublicUrl(fileName).data.publicUrl;

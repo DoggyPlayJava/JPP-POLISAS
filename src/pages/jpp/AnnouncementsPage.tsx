@@ -85,7 +85,7 @@ export default function AnnouncementsPage() {
       if (!editingId && imageFile) {
         toast.loading('Memuat naik imej...', { id: 'upload_image' });
         const fileExt = imageFile.name.split('.').pop();
-        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const fileName = `${Date.now()}_${window.crypto.randomUUID()}.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
           .from('announcements')
