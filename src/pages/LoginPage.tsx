@@ -67,12 +67,18 @@ export function LoginPage() {
     setIsLoading(true);
     try {
       if (isForgotPassword) {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`,
+        // Guna endpoint Express kita sendiri — bypass SMTP sepenuhnya
+        // Resend HTTP API digunakan di backend (tiada port SMTP diperlukan)
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+        const response = await fetch(`${API_BASE_URL}/api/reset-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim() }),
         });
-        if (error) throw error;
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Gagal menghantar emel reset.');
         setResetSent(true);
-        toast.success('Pautan tetapan semula telah dihantar.');
+        toast.success('Pautan tetapan semula telah dihantar ke emel anda.');
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;

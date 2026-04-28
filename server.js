@@ -632,6 +632,137 @@ app.post('/api/notify-anomaly', requireAuth, async (req, res) => {
 });
 
 // ==========================================
+// 8. Reset Password via Resend HTTP API
+//    (Bypass SMTP sepenuhnya — port tak perlu)
+// ==========================================
+app.post('/api/reset-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email || typeof email !== 'string' || !email.includes('@')) {
+            return res.status(400).json({ error: 'Alamat emel tidak sah.' });
+        }
+
+        if (!supabaseAdmin) {
+            throw new Error('Supabase Admin Client tidak diinisialisasi.');
+        }
+
+        const RESEND_API_KEY = process.env.RESEND_API_KEY;
+        if (!RESEND_API_KEY) {
+            throw new Error('RESEND_API_KEY tidak dikonfigurasi.');
+        }
+
+        // Langkah 1: Jana pautan reset menggunakan Supabase Admin API
+        // (Ini tidak menggunakan SMTP langsung — ia hanya menjana token selamat)
+        const redirectTo = process.env.GOTRUE_SITE_URL
+            ? `${process.env.GOTRUE_SITE_URL.replace(/\/$/, '')}/reset-password`
+            : 'https://jpp.cipher-node.org/reset-password';
+
+        const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+            type: 'recovery',
+            email: email.trim().toLowerCase(),
+            options: { redirectTo },
+        });
+
+        if (linkError) {
+            console.error('[reset-password] generateLink error:', linkError.message);
+            // Balas "berjaya" walaupun emel tiada — elak pendedahan maklumat pengguna
+            return res.status(200).json({ success: true, message: 'Jika emel ini berdaftar, pautan reset akan dihantar.' });
+        }
+
+        const resetLink = linkData?.properties?.action_link;
+        if (!resetLink) {
+            console.error('[reset-password] Tiada action_link dijana');
+            return res.status(200).json({ success: true, message: 'Jika emel ini berdaftar, pautan reset akan dihantar.' });
+        }
+
+        // Langkah 2: Hantar emel cantik menggunakan Resend HTTP API
+        const emailHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetapkan Semula Kata Laluan | JPP POLISAS</title>
+</head>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background-color:#f4f4f5;">
+    <div style="background-color:#f4f4f5;padding:40px 20px;text-align:center;">
+        <table align="center" style="max-width:550px;margin:0 auto;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 25px -5px rgba(0,0,0,0.05);width:100%;border-collapse:collapse;" cellpadding="0" cellspacing="0">
+            <tr>
+                <td style="padding:40px 30px;text-align:center;border-bottom:1px solid #f1f5f9;background-color:#ffffff;">
+                    <h1 style="color:#881B1B;font-size:26px;font-weight:900;margin:0;letter-spacing:-0.5px;">JPP POLISAS</h1>
+                    <p style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:3px;margin-top:6px;font-weight:800;margin-bottom:0;">Digital Portal</p>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding:40px 30px;text-align:center;background-color:#ffffff;">
+                    <div style="width:64px;height:64px;background-color:#fef2f2;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:24px;">
+                        <span style="font-size:32px;">🔐</span>
+                    </div>
+                    <h2 style="color:#0f172a;font-size:22px;font-weight:800;margin:0 0 16px 0;">Tetapkan Semula Kata Laluan</h2>
+                    <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 12px 0;text-align:left;">
+                        Kami menerima permintaan untuk menetapkan semula kata laluan akaun JPP POLISAS yang dikaitkan dengan emel ini.
+                    </p>
+                    <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 32px 0;text-align:left;">
+                        Klik butang di bawah untuk menetapkan kata laluan baharu anda. Pautan ini hanya sah selama <strong>1 jam</strong>.
+                    </p>
+                    <div style="margin:32px 0;">
+                        <a href="${resetLink}" style="display:inline-block;background-color:#881B1B;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:12px;text-transform:uppercase;letter-spacing:1.5px;box-shadow:0 4px 14px 0 rgba(136,27,27,0.35);">
+                            Tetapkan Semula Kata Laluan
+                        </a>
+                    </div>
+                    <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0;text-align:left;">
+                        Jika anda tidak membuat permintaan ini, sila abaikan emel ini. Akaun anda kekal selamat.
+                    </p>
+                    <div style="margin-top:24px;padding:16px;background-color:#f8fafc;border-radius:10px;text-align:left;border:1px solid #e2e8f0;">
+                        <p style="color:#64748b;font-size:12px;margin:0;word-break:break-all;">
+                            Atau salin pautan ini ke pelayar anda:<br/>
+                            <span style="color:#881B1B;font-size:11px;">${resetLink}</span>
+                        </p>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding:24px 30px;background-color:#f8fafc;text-align:center;border-top:1px solid #f1f5f9;">
+                    <p style="color:#94a3b8;font-size:12px;margin:0;font-weight:500;">&copy; ${new Date().getFullYear()} Jawatankuasa Perwakilan Pelajar POLISAS.<br/>Hak cipta terpelihara.</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>`;
+
+        const resendResponse = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${RESEND_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                from: 'Sistem JPP POLISAS <jpp@cipher-node.org>',
+                to: email.trim().toLowerCase(),
+                subject: '🔐 Tetapkan Semula Kata Laluan Anda — JPP POLISAS',
+                html: emailHtml,
+            }),
+        });
+
+        const resendData = await resendResponse.json();
+
+        if (!resendResponse.ok) {
+            console.error('[reset-password] Resend API error:', resendData);
+            throw new Error(resendData.message || 'Gagal menghantar emel melalui Resend.');
+        }
+
+        console.log(`[reset-password] Emel reset berjaya dihantar ke: ${email}`);
+        return res.status(200).json({ success: true, message: 'Pautan tetapan semula telah dihantar ke emel anda.' });
+
+    } catch (error) {
+        console.error('[reset-password] Error:', error.message);
+        return res.status(500).json({ error: error.message || 'Ralat pelayan dalaman.' });
+    }
+});
+
+// ==========================================
 // Serve Static Frontend (Vite Build)
 // ==========================================
 // After building the Vite app, it outputs to 'dist'. We serve it here.
