@@ -6,6 +6,7 @@ import webpush from 'web-push';
 import { createClient } from '@supabase/supabase-js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import rateLimit from 'express-rate-limit';
 
 dotenv.config();
 
@@ -41,24 +42,74 @@ const supabaseAdmin = supabaseUrl && supabaseServiceKey
     : null;
 
 // ==========================================
-// 1. AI Assistant Endpoint
+// Middleware: Verify Supabase JWT
 // ==========================================
-app.post('/api/ai-assistant', async (req, res) => {
+const requireAuth = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
-        if (!authHeader) {
-            return res.status(401).json({ error: "Akses ditolak: Tiada Authorization." });
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: "Unauthorized: Missing or invalid Authorization header." });
         }
+        const token = authHeader.split(' ')[1];
+        if (!supabaseAdmin) throw new Error("Supabase Admin Client not initialized.");
+        
+        const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+        if (error || !user) {
+            return res.status(401).json({ error: "Unauthorized: Invalid token." });
+        }
+        req.user = user;
+        next();
+    } catch (err) {
+        console.error("[Auth Middleware] Error:", err.message);
+        return res.status(500).json({ error: "Internal Server Error during authentication." });
+    }
+};
+
+// ==========================================
+// Middleware: Verify Webhook Secret
+// ==========================================
+const requireWebhookSecret = (req, res, next) => {
+    const secret = req.headers['x-webhook-secret'] || req.query.secret;
+    const expectedSecret = process.env.WEBHOOK_SECRET;
+    
+    if (!expectedSecret) {
+        console.warn("WARNING: WEBHOOK_SECRET is not set in environment variables. Webhook endpoints are open.");
+        return next();
+    }
+    
+    if (secret !== expectedSecret) {
+        return res.status(401).json({ error: "Unauthorized: Invalid webhook secret." });
+    }
+    next();
+};
+
+// ==========================================
+// Middleware: AI Rate Limiter (IP Based)
+// ==========================================
+const aiRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 50, // Limit each IP to 50 requests per window
+    message: { error: "Terlalu banyak permintaan AI daripada IP ini. Sila cuba lagi selepas 15 minit." },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// ==========================================
+// 1. AI Assistant Endpoint
+// ==========================================
+app.post('/api/ai-assistant', requireAuth, aiRateLimiter, async (req, res) => {
+    try {
+        // Header and token check are now handled by requireAuth middleware
 
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
             throw new Error("GEMINI_API_KEY tidak dikonfigurasi.");
         }
 
-        // Initialize Supabase Client context
+        // Initialize Supabase Client context with the validated header
         const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
         const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-            global: { headers: { Authorization: authHeader } },
+            global: { headers: { Authorization: req.headers.authorization } },
         });
 
         // RATE LIMIT CHECK
@@ -117,43 +168,49 @@ app.post('/api/ai-assistant', async (req, res) => {
 });
 
 // ==========================================
+// Reusable Email Function
+// ==========================================
+async function sendEmailInternal(to, subject, html) {
+    const RESEND_API_KEY = process.env.RESEND_API_KEY;
+    if (!RESEND_API_KEY) {
+        throw new Error("Missing RESEND_API_KEY secret.");
+    }
+
+    const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+            from: "JPP Polisas <jpp@cipher-node.org>",
+            to,
+            subject,
+            html,
+        }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+        console.error("[sendEmailInternal] Resend API error:", data);
+        throw new Error(data.message || "Ralat Resend API");
+    }
+    return data;
+}
+
+// ==========================================
 // 2. Send Email Endpoint
 // ==========================================
-app.post('/api/send-email', async (req, res) => {
+app.post('/api/send-email', requireAuth, async (req, res) => {
     try {
-        const RESEND_API_KEY = process.env.RESEND_API_KEY;
-        if (!RESEND_API_KEY) {
-            throw new Error("Missing RESEND_API_KEY secret.");
-        }
-
         const { to, subject, html } = req.body;
 
         if (!to || !subject || !html) {
-            throw new Error("Missing required parameters: to, subject, html");
+            return res.status(400).json({ error: "Missing required parameters: to, subject, html" });
         }
 
-        const response = await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${RESEND_API_KEY}`,
-            },
-            body: JSON.stringify({
-                from: "JPP Polisas <jpp@cipher-node.org>",
-                to,
-                subject,
-                html,
-            }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            return res.status(200).json(data);
-        } else {
-            console.error("[send-email] Resend API error:", data);
-            return res.status(response.status).json(data);
-        }
+        const data = await sendEmailInternal(to, subject, html);
+        return res.status(200).json(data);
     } catch (error) {
         const msg = error instanceof Error ? error.message : "Ralat dalam penghantaran emel.";
         console.error("[send-email] Error:", msg);
@@ -164,7 +221,7 @@ app.post('/api/send-email', async (req, res) => {
 // ==========================================
 // 3. Kebajikan SLA Check Endpoint
 // ==========================================
-app.post('/api/check-kebajikan-sla', async (req, res) => {
+app.post('/api/check-kebajikan-sla', requireWebhookSecret, async (req, res) => {
     try {
         if (!supabaseAdmin) throw new Error("Supabase Admin Client not initialized.");
         
@@ -242,11 +299,11 @@ app.post('/api/check-kebajikan-sla', async (req, res) => {
                         <p><strong>Tajuk:</strong> ${ticket.title}</p>
                     </div>`;
                     
-                    fetch(`http://localhost:${port}/api/send-email`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ to: excosEmails, subject: `🚨 Auto-Escalation: ${ticket.ticket_no}`, html })
-                    });
+                    sendEmailInternal(
+                        excosEmails,
+                        `🚨 Auto-Escalation: ${ticket.ticket_no}`,
+                        html
+                    ).catch(err => console.error("Gagal hantar emel escalation:", err));
                 }
                 results.escalated++;
                 continue;
@@ -274,11 +331,11 @@ app.post('/api/check-kebajikan-sla', async (req, res) => {
                         <p><strong>Tajuk:</strong> ${ticket.title}</p>
                     </div>`;
                     
-                    fetch(`http://localhost:${port}/api/send-email`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ to: excosEmails, subject: `⚠️ Amaran SLA: ${ticket.ticket_no}`, html })
-                    });
+                    sendEmailInternal(
+                        excosEmails,
+                        `⚠️ Amaran SLA: ${ticket.ticket_no}`,
+                        html
+                    ).catch(err => console.error("Gagal hantar emel warning:", err));
                 }
                 results.warned++;
                 continue;
@@ -296,7 +353,7 @@ app.post('/api/check-kebajikan-sla', async (req, res) => {
 // ==========================================
 // 4. Kebajikan New Ticket Webhook Endpoint
 // ==========================================
-app.post('/api/kebajikan-new-ticket-notify', async (req, res) => {
+app.post('/api/kebajikan-new-ticket-notify', requireWebhookSecret, async (req, res) => {
     try {
         if (!supabaseAdmin) throw new Error("Supabase Admin Client not initialized.");
         
@@ -398,7 +455,7 @@ async function getGoogleAccessToken() {
     return data.access_token;
 }
 
-app.post('/api/upload-to-drive', upload.single('file'), async (req, res) => {
+app.post('/api/upload-to-drive', requireAuth, upload.single('file'), async (req, res) => {
     try {
         const file = req.file;
         const subfolder = req.body.subfolder || "dokumen";
@@ -479,7 +536,7 @@ app.post('/api/upload-to-drive', upload.single('file'), async (req, res) => {
 // ==========================================
 // 6. Web Push Notification Endpoint
 // ==========================================
-app.post('/api/send-push-notification', async (req, res) => {
+app.post('/api/send-push-notification', requireAuth, async (req, res) => {
     try {
         const { subscription, title, body, data } = req.body;
 
@@ -513,7 +570,7 @@ app.post('/api/send-push-notification', async (req, res) => {
 // ==========================================
 // 7. Notify Anomaly Endpoint
 // ==========================================
-app.post('/api/notify-anomaly', async (req, res) => {
+app.post('/api/notify-anomaly', requireAuth, async (req, res) => {
     try {
         const { alerts, sentAt } = req.body;
         

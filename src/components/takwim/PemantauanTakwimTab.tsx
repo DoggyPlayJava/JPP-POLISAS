@@ -20,9 +20,9 @@ import { getContrastColor, formatDateDMY, formatDateRange, DEFAULT_JPP_COLOR } f
 import { toast } from 'react-hot-toast';
 
 // ── Logo URLs ──
-const LOGO_POLISAS_URL = 'https://ujklcxfbmmzxsqtidjtz.supabase.co/storage/v1/object/public/reports/LOGO%20POLISAS.jpeg';
-const LOGO_KPT_URL     = 'https://ujklcxfbmmzxsqtidjtz.supabase.co/storage/v1/object/public/reports/Logo%20Kementerian.jpeg';
-const LOGO_JPP_URL     = 'https://ujklcxfbmmzxsqtidjtz.supabase.co/storage/v1/object/public/reports/LOGO%20JPP.jpg';
+const LOGO_POLISAS_URL = 'https://api.cipher-node.org/storage/v1/object/public/reports/LOGO%20POLISAS.jpeg';
+const LOGO_KPT_URL     = 'https://api.cipher-node.org/storage/v1/object/public/reports/Logo%20Kementerian.jpeg';
+const LOGO_JPP_URL     = 'https://api.cipher-node.org/storage/v1/object/public/reports/LOGO%20JPP.jpg';
 
 // ── Session options ──
 const SESSION_OPTIONS = [

@@ -35,10 +35,10 @@ function sanitizeFilename(name: string): string {
 }
 
 function isSupabaseUrl(url: string): boolean {
-  return url.includes('supabase.co/storage') || url.includes('supabase.in/storage');
+  return url.includes('supabase.co/storage') || url.includes('supabase.in/storage') || url.includes('api.cipher-node.org/storage');
 }
 
-const SUPABASE_URL = 'https://ujklcxfbmmzxsqtidjtz.supabase.co';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://api.cipher-node.org';
 
 /** Fetch a file as Uint8Array — Supabase Storage (direct) or Google Drive (via no-auth proxy) */
 async function fetchAsBytes(

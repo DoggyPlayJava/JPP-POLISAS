@@ -182,14 +182,23 @@ function JadualAgenda({ agenda }: { agenda: AgendaItem[] }) {
                     {/* Bullet points under sub-perkara */}
                     {sub.bullet_points && sub.bullet_points.length > 0 && (
                       <ul style={{ margin: '4px 0 4px 20px', padding: 0, listStyleType: 'none' }}>
-                        {sub.bullet_points.map((bp, bIdx) => (
-                          <li key={bIdx} style={{ marginBottom: 2 }}>
-                            <span style={{ marginRight: 6 }}>-</span>
-                            <span dangerouslySetInnerHTML={{
-                              __html: bp.replace(/\*(.*?)\*/g, '<em><strong>$1</strong></em>')
-                            }} />
-                          </li>
-                        ))}
+                        {sub.bullet_points.map((bp, bIdx) => {
+                          // Selamat: Parse '*teks*' kepada <em><strong>teks</strong></em> tanpa bahaya XSS
+                          const parts = bp.split(/(\*.*?\*)/g);
+                          return (
+                            <li key={bIdx} style={{ marginBottom: 2 }}>
+                              <span style={{ marginRight: 6 }}>-</span>
+                              <span>
+                                {parts.map((part, pIdx) => {
+                                  if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+                                    return <em key={pIdx}><strong>{part.slice(1, -1)}</strong></em>;
+                                  }
+                                  return <React.Fragment key={pIdx}>{part}</React.Fragment>;
+                                })}
+                              </span>
+                            </li>
+                          );
+                        })}
                       </ul>
                     )}
                   </div>

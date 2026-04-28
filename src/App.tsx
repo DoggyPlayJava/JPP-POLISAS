@@ -179,18 +179,18 @@ function AppRoutes() {
   return (
     <Suspense fallback={<InitialPageLoader />}>
       <Routes>
-      {/* 🔓 PUBLIC ROUTES */}
+      {/* 🔓 GUEST ONLY ROUTES (Redirects to dashboard if logged in) */}
       <Route element={<PublicRoute />}>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/promo" element={<PromoPage />} />
-        <Route path="/launch" element={<LaunchVideo />} />
         <Route path="/login" element={<LoginPage />} />
       </Route>
 
       {/* 🔑 RESET PASSWORD ROUTE (Standalone to handle Supabase recovery event without kicks) */}
       <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-      {/* 🌍 TRULY PUBLIC — no auth required */}
+      {/* 🌍 TRULY PUBLIC — no auth required (Accessible to both guests and logged-in users) */}
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/promo" element={<PromoPage />} />
+      <Route path="/launch" element={<LaunchVideo />} />
       <Route path="/kebajikan/statistik" element={<KebajikanStatsPage />} />
 
       {/* 🔐 PROTECTED ROUTES */}

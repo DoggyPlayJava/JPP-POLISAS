@@ -252,7 +252,7 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
   jppOrgName = DEFAULT_JPP,
   polytechnicName = DEFAULT_POLI,
 }) => {
-  const poliLogo = "https://ujklcxfbmmzxsqtidjtz.supabase.co/storage/v1/object/public/reports/LOGO%20POLISAS.jpeg";
+  const poliLogo = "https://api.cipher-node.org/storage/v1/object/public/reports/LOGO%20POLISAS.jpeg";
 
   // Tahun semasa untuk label JPP
   const currentYear = new Date().getFullYear();
