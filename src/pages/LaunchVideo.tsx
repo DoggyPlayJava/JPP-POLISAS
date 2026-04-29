@@ -1952,155 +1952,155 @@ function PolyMartPanel({ step, gc, clicking }: { step:number; gc:string; clickin
     </div>
   );
 }
-// ─── Scene 05: Sistem Kelab — "The Talent Constellation" ───────────────────────
+// ——— Scene 05: Kelab — "Kehidupan Pelajar" ——————————————————————————————————
 function KelabScene({ mod }: SceneProps) {
   const [act, setAct] = useState(0);
-  const [tickerIdx, setTickerIdx] = useState(0);
-  useEffect(() => {
-    const ts = [
-      setTimeout(() => setAct(1), 300),   // "27" big number
-      setTimeout(() => setAct(2), 1500),  // glitch shake & explode
-      setTimeout(() => setAct(3), 2800),  // core appears + orbital cards
-      setTimeout(() => setAct(4), 3800),  // data streams
-      setTimeout(() => setAct(5), 5500),  // flash / module overlay
-    ];
-    const ticker = setInterval(() => {
-      setTickerIdx(prev => (prev + 1) % 6);
-    }, 400); // Very fast ticker
-    return () => { ts.forEach(clearTimeout); clearInterval(ticker); };
-  }, []);
   const gc = mod.gc;
   const gold = '#fbbf24';
   const fire = '#dc2626';
 
-  const tickerNames = ["KELAB ORASAS", "KELAB KEBUDAYAAN", "KELAB E-SPORT", "KELAB SILAT OLAHRAGA", "RAKAN SISWA YADIM", "KELAB KEMBARA"];
+  useEffect(() => {
+    const ts = [
+      setTimeout(() => setAct(1), 500),   // Globe forming
+      setTimeout(() => setAct(2), 2500),  // Data nodes light up & sidebars slide in
+      setTimeout(() => setAct(3), 4500),  // Laser scan
+      setTimeout(() => setAct(4), 6000),  // Cinematic camera pull-back
+      setTimeout(() => setAct(5), 7500),  // Module overlay
+    ];
+    return () => { ts.forEach(clearTimeout); };
+  }, []);
 
-  const clubs = [
-    { icon: '🎭', act: 'Seni', d: 0, r: -40, pos: { top: '10%', left: '20%' } },
-    { icon: '⚽', act: 'Sukan', d: 0.2, r: 35, pos: { top: '30%', right: '15%' } },
-    { icon: '💻', act: 'Teknologi', d: 0.4, r: 25, pos: { bottom: '20%', left: '15%' } },
-    { icon: '🏕️', act: 'Rekreasi', d: 0.6, r: -20, pos: { bottom: '25%', right: '20%' } },
+  const nodes = [
+    { x: '10vw', y: '5vw', z: '8vw', label: 'Kelab Kembara', stat: 'A+' },
+    { x: '-8vw', y: '-10vw', z: '5vw', label: 'E-Sports', stat: 'Elit' },
+    { x: '12vw', y: '-12vw', z: '-10vw', label: 'Seni Silat', stat: 'Aktif' },
+    { x: '-15vw', y: '8vw', z: '-5vw', label: 'Inovasi', stat: 'Pro' },
+    { x: '0vw', y: '15vw', z: '12vw', label: 'Sukarelawan', stat: 'A' },
   ];
 
   return (
     <CinematicEnvelope gc={fire}>
-      {/* Phase 1-2: Giant "27" fills screen */}
-      <AnimatePresence>
-        {act >= 1 && act < 3 && (
-          <motion.div key="bignum" 
-            initial={{opacity:0, scale:0.4, filter:'blur(30px)'}} 
-            animate={act>=2 ? {opacity:1, scale:1, filter:'blur(0px)', x:[0,-15,15,-10,10,-5,5,0], y:[0,10,-10,5,-5,0]} : {opacity:1, scale:1, filter:'blur(0px)'}} 
-            exit={{opacity:0, scale:8, filter:'blur(40px)'}} 
-            transition={act>=2 ? {duration:0.6, ease:'easeInOut'} : spB(0)} 
-            className="absolute inset-0 flex flex-col items-center justify-center mix-blend-screen"
-          >
-            <SlotMachineNumber target="27" active={act>=1} gc={gold} size="35vw" />
-            <motion.p initial={{clipPath:'inset(0 100% 0 0)'}} animate={{clipPath:'inset(0 0% 0 0)'}} transition={sp(0.3)} className="text-[2.5vw] font-black tracking-[0.5em] uppercase text-white drop-shadow-[0_0_20px_rgba(251,191,36,0.8)]">
-              KELAB AKTIF
-            </motion.p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <motion.div 
+        animate={act >= 4 ? { scale: 0.6, rotateY: -30, rotateX: 10, y: '-2vw' } : { scale: 1, rotateY: 0, rotateX: 0, y: 0 }}
+        transition={{ duration: 2, ease: [0.25, 1, 0.5, 1] }}
+        className="absolute inset-0 flex items-center justify-center overflow-hidden" 
+        style={{ perspective: '2000px', transformStyle: 'preserve-3d' }}
+      >
+        
+        {/* Holographic Globe Core */}
+        <AnimatePresence>
+          {act >= 1 && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0, rotateY: 90 }} 
+              animate={{ opacity: 1, scale: 1, rotateY: [-20, 20, -20], rotateX: [10, -10, 10] }} 
+              transition={{ opacity: { duration: 1 }, scale: { type: 'spring', duration: 1.5 }, rotateY: { duration: 25, repeat: Infinity, ease: 'easeInOut' }, rotateX: { duration: 30, repeat: Infinity, ease: 'easeInOut' } }}
+              className="relative w-[30vw] h-[30vw] flex items-center justify-center z-10"
+              style={{ transformStyle: 'preserve-3d' }}
+            >
+              {/* Globe Latitude/Longitude Rings */}
+              {[...Array(6)].map((_, i) => (
+                <motion.div key={`lat-${i}`} className="absolute inset-0 rounded-full border border-yellow-500/30" style={{ transform: `rotateX(${i * 30}deg)`, transformStyle: 'preserve-3d' }} />
+              ))}
+              {[...Array(6)].map((_, i) => (
+                <motion.div key={`lon-${i}`} className="absolute inset-0 rounded-full border border-red-500/20" style={{ transform: `rotateY(${i * 30}deg)`, transformStyle: 'preserve-3d' }} />
+              ))}
 
-      {/* Phase 3+: Holographic Data Core & Orbital Cards */}
-      <AnimatePresence>
-        {act >= 3 && (
-          <motion.div key="core-env" 
-            initial={{opacity:0, scale:1.5, rotateY:45, rotateX:20}} 
-            animate={{opacity:1, scale:1, rotateY:[-10,10,-10], rotateX:[5,-5,5]}} 
-            transition={{scale:{duration:1.2, ease:CE}, rotateY:{duration:15, repeat:Infinity, ease:'easeInOut'}, rotateX:{duration:12, repeat:Infinity, ease:'easeInOut'}}} 
-            className="absolute inset-0 flex items-center justify-center overflow-hidden" 
-            style={{perspective:'1500px', transformStyle:'preserve-3d'}}
-          >
-            {/* The Central Network Constellation */}
-            <div className="relative flex items-center justify-center z-10 w-[40vw] h-[40vw]" style={{transformStyle:'preserve-3d'}}>
-              
-              {/* Network Lines */}
-              <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-40">
-                <motion.circle cx="50%" cy="50%" r="30%" fill="none" stroke={gold} strokeWidth="2" strokeDasharray="10 20" animate={{rotate:360}} transition={{duration:30, repeat:Infinity, ease:'linear'}} style={{transformOrigin:'50% 50%'}} />
-                <motion.circle cx="50%" cy="50%" r="40%" fill="none" stroke={fire} strokeWidth="1" strokeDasharray="5 15" animate={{rotate:-360}} transition={{duration:40, repeat:Infinity, ease:'linear'}} style={{transformOrigin:'50% 50%'}} />
-                {/* Connecting Arcs */}
-                <path d="M 20% 20% Q 50% 50% 80% 80% M 20% 80% Q 50% 50% 80% 20%" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
-              </svg>
+              {/* Glowing Inner Core */}
+              <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} className="absolute w-[10vw] h-[10vw] bg-gradient-to-r from-red-600 to-yellow-500 rounded-full blur-[40px] mix-blend-screen" />
 
-              {/* Center Node */}
-              <motion.div 
-                animate={{scale:[1, 1.1, 1], opacity:[0.8, 1, 0.8]}} 
-                transition={{duration:0.8, repeat:Infinity, ease:'easeInOut'}} 
-                className="absolute flex items-center justify-center w-[12vw] h-[12vw] rounded-full border border-white/20 bg-black/50 backdrop-blur-md shadow-[0_0_50px_rgba(220,38,38,0.6)]" 
-                style={{transformStyle:'preserve-3d'}}
-              >
-                <p className="text-[1.5vw] font-black uppercase text-center tracking-widest text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 to-red-500 leading-tight">
-                  <span className="text-[3vw]">27</span><br/>KELAB
-                </p>
-              </motion.div>
-              
-              {/* Spinning High-Speed Ticker */}
-              <motion.div animate={{rotateZ:360}} transition={{duration:15, repeat:Infinity, ease:'linear'}} className="absolute w-[25vw] h-[25vw] rounded-full border border-dashed border-yellow-500/30" style={{transformStyle:'preserve-3d'}} />
-              
-              <div className="absolute top-[8%] flex justify-center w-full z-20">
-                <motion.div 
-                  key={tickerIdx} initial={{opacity:0, scale:0.5, filter:'blur(10px)'}} animate={{opacity:1, scale:1, filter:'blur(0px)'}} exit={{opacity:0, scale:1.5}}
-                  className="px-[1.5vw] py-[0.5vw] rounded-full border border-white/20 bg-red-900/40 backdrop-blur-md"
+              {/* Data Nodes */}
+              {act >= 2 && nodes.map((n, i) => (
+                <motion.div key={i} 
+                  initial={{ opacity: 0, scale: 0 }} 
+                  animate={{ opacity: 1, scale: 1 }} 
+                  transition={{ delay: i * 0.2, type: 'spring', stiffness: 200 }}
+                  className="absolute flex items-center justify-center" 
+                  style={{ x: n.x, y: n.y, translateZ: n.z, transformStyle: 'preserve-3d' }}
                 >
-                  <p className="text-[1.2vw] font-black text-white tracking-[0.3em] uppercase drop-shadow-[0_0_10px_rgba(255,0,0,1)]">
-                    {tickerNames[tickerIdx]}
-                  </p>
+                  <motion.div animate={{scale:[1, 1.5, 1], opacity:[0.5, 1, 0.5]}} transition={{duration:1.5, repeat:Infinity, delay:i*0.3}} className="absolute w-[2vw] h-[2vw] bg-yellow-400 rounded-full blur-[10px]" />
+                  <div className="w-[0.8vw] h-[0.8vw] bg-white rounded-full shadow-[0_0_20px_#fff] z-10 relative" />
+                  <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: '1.5vw' }} transition={{ delay: i * 0.2 + 0.5 }} className="absolute whitespace-nowrap bg-black/60 border border-yellow-500/30 px-[0.8vw] py-[0.4vw] rounded-[0.5vw] backdrop-blur-md z-20">
+                    <p className="text-[0.6vw] font-bold text-yellow-400 tracking-widest uppercase">{n.label}</p>
+                    <p className="text-[0.5vw] text-white/60 font-mono">Status: <span className="text-white font-bold">{n.stat}</span></p>
+                  </motion.div>
                 </motion.div>
-              </div>
+              ))}
 
-            </div>
+              {/* Vertical Laser Scan Ring */}
+              {act >= 3 && (
+                <motion.div 
+                  initial={{ y: '-15vw', opacity: 0 }} 
+                  animate={{ y: ['-15vw', '15vw', '-15vw'], opacity: [0, 1, 1, 0] }} 
+                  transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                  className="absolute w-[35vw] h-[1vw] bg-red-500/40 blur-[5px] rounded-full mix-blend-screen"
+                  style={{ transform: 'rotateX(90deg)' }}
+                />
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-            {/* Constellation Nodes (Icons) */}
-            {clubs.map((c, i) => (
-              <motion.div key={i} 
-                initial={{opacity:0, scale:0, filter:'blur(20px)', rotateY:c.r, rotateX:c.r}}
-                animate={{opacity:1, scale:1, filter:'blur(0px)', rotateY:0, rotateX:0, y:[0, 15, 0]}}
-                transition={{delay:0.3 + c.d, scale:{type:'spring', stiffness:200}, y:{duration:3+i*0.5, repeat:Infinity, ease:'easeInOut'}}}
-                className="absolute flex flex-col items-center gap-[0.5vw]"
-                style={{...c.pos, transformStyle:'preserve-3d'}}
+        {/* Floating Sidebars / Analytics */}
+        <AnimatePresence>
+          {act >= 2 && (
+            <>
+              <motion.div 
+                initial={{ x: '-20vw', opacity: 0 }} 
+                animate={{ x: '-32vw', opacity: 1 }} 
+                transition={{ type: 'spring', stiffness: 100 }}
+                className="absolute w-[18vw] h-[30vw] flex flex-col gap-[1vw] z-20"
               >
-                <div className="relative flex items-center justify-center w-[5vw] h-[5vw] rounded-full border border-white/20 bg-black/40 backdrop-blur-md shadow-[0_0_30px_rgba(251,191,36,0.4)]">
-                  <motion.div className="absolute inset-0 rounded-full border-[2px] border-dashed border-red-500" animate={{rotate:360}} transition={{duration:10+i, repeat:Infinity, ease:'linear'}} />
-                  <p className="text-[2.5vw] filter drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">{c.icon}</p>
+                <div className="p-[1.5vw] bg-black/50 border border-white/10 rounded-[1vw] backdrop-blur-xl shadow-[0_0_50px_rgba(220,38,38,0.2)]">
+                  <h3 className="text-[0.8vw] text-red-500 font-bold uppercase tracking-widest mb-[1vw] flex items-center gap-[0.5vw]"><div className="w-[0.5vw] h-[0.5vw] bg-red-500 rounded-full animate-pulse" /> Rangkaian Kelab</h3>
+                  <div className="flex flex-col gap-[0.8vw]">
+                    {[1,2,3,4].map(i => (
+                      <div key={i} className="w-full h-[0.3vw] bg-white/10 rounded-full overflow-hidden">
+                        <motion.div className="h-full bg-gradient-to-r from-red-500 to-yellow-500" initial={{ width: 0 }} animate={{ width: `${50 + Math.random() * 50}%` }} transition={{ duration: 1, delay: 0.5 + i*0.1 }} />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="px-[0.8vw] py-[0.3vw] rounded-[0.5vw] bg-black/60 border border-white/10 backdrop-blur-sm">
-                  <p className="text-[0.7vw] font-bold text-yellow-400 tracking-widest uppercase">{c.act}</p>
+                
+                <div className="flex-1 bg-black/50 border border-white/10 rounded-[1vw] backdrop-blur-xl p-[1.5vw] overflow-hidden flex flex-col relative">
+                  <h3 className="text-[0.6vw] text-white/50 font-bold uppercase tracking-widest mb-[1vw]">Log Aktiviti Langsung</h3>
+                  <div className="absolute inset-0 top-[3vw] overflow-hidden px-[1.5vw]">
+                    <motion.div animate={{ y: [0, -150] }} transition={{ duration: 10, repeat: Infinity, ease: 'linear' }} className="flex flex-col gap-[0.8vw]">
+                      {[...Array(15)].map((_, i) => (
+                        <div key={i} className="flex items-center gap-[0.5vw]">
+                          <div className="w-[0.4vw] h-[0.4vw] rounded-full bg-green-400" />
+                          <p className="text-[0.6vw] text-white/70 font-mono tracking-tight">SYS_AUTH: Ahli {1000 + i} log masuk.</p>
+                        </div>
+                      ))}
+                    </motion.div>
+                  </div>
                 </div>
               </motion.div>
-            ))}
 
-            {/* Phase 4: Data Constellation Flash */}
-            <AnimatePresence>
-              {act >= 4 && (
-                <div className="absolute inset-0 pointer-events-none z-0 mix-blend-screen">
-                  {[...Array(20)].map((_, i) => (
-                    <motion.div key={i}
-                      initial={{opacity:0, scale:0}}
-                      animate={{opacity:[0, 0.8, 0], scale:[0, 2]}}
-                      transition={{duration:Math.random()*0.5+0.2, repeat:Infinity, repeatDelay:Math.random()*1.5}}
-                      className="absolute w-[1vw] h-[1vw] bg-white rounded-full blur-[2px]"
-                      style={{top:Math.random()*100+'%', left:Math.random()*100+'%', boxShadow:'0 0 20px #fff'}}
-                    />
-                  ))}
-                </div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <motion.div 
+                initial={{ x: '20vw', opacity: 0 }} 
+                animate={{ x: '32vw', opacity: 1 }} 
+                transition={{ type: 'spring', stiffness: 100 }}
+                className="absolute w-[16vw] h-[16vw] bg-gradient-to-br from-yellow-500/10 to-red-600/20 border border-yellow-500/30 rounded-[1vw] backdrop-blur-xl flex items-center justify-center flex-col z-20 shadow-[0_0_50px_rgba(251,191,36,0.2)]"
+              >
+                <motion.p initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 1, type: 'spring' }} className="text-[7vw] font-black leading-none text-transparent bg-clip-text bg-gradient-to-b from-white to-white/50 drop-shadow-[0_0_20px_rgba(255,255,255,0.8)]">27</motion.p>
+                <p className="text-[0.8vw] font-bold text-yellow-400 tracking-[0.5em] uppercase mt-[0.5vw]">Sistem Aktif</p>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
 
-      <ModuleOverlay show={act>=5} num="Modul 05" name="Sistem Kelab" tagline={mod.tagline} gc={gold} pos="bottom-[6%] left-[22%]" />
+        {/* Global Impact Flash */}
+        <AnimatePresence>
+          {act === 4 && (
+            <motion.div key="core-flash" initial={{opacity:0}} animate={{opacity:[0, 0.8, 0]}} exit={{opacity:0}}
+              transition={{duration:0.6, times:[0, 0.1, 1]}} className="absolute inset-0 z-50 pointer-events-none mix-blend-screen"
+              style={{background:`radial-gradient(circle at 50% 50%, ${gold} 0%, ${fire} 40%, transparent 80%)`}} 
+            />
+          )}
+        </AnimatePresence>
 
-      {/* Screen Shake & Flash on Core Entry */}
-      <AnimatePresence>
-        {act === 3 && (
-          <motion.div key="core-flash" initial={{opacity:0}} animate={{opacity:[0, 0.8, 0]}} exit={{opacity:0}}
-            transition={{duration:0.6, times:[0, 0.1, 1]}} className="absolute inset-0 z-50 pointer-events-none mix-blend-screen"
-            style={{background:`radial-gradient(circle at 50% 50%, ${gold} 0%, ${fire} 40%, transparent 80%)`}} 
-          />
-        )}
-      </AnimatePresence>
+        <ModuleOverlay show={act >= 5} num="Modul 05" name="Sistem Kelab" tagline={mod.tagline} gc={gold} pos="bottom-[10%] left-[30%]" />
+      </motion.div>
     </CinematicEnvelope>
   );
 }
