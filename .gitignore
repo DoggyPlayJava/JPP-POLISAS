@@ -38,3 +38,5 @@ src/lib/*.json
 .env.local
 .env.*.local
 src/takwim_rasmi_workflow.md
+
+scratch/
