@@ -568,15 +568,16 @@ function JppPortalSupernova() {
 
       <motion.div 
         className="relative z-10 flex flex-col items-center"
-        initial={{ scale: 0.1, filter: 'blur(20px)', opacity: 0, rotateX: 45 }}
+        initial={{ scale: 0.1, opacity: 0, rotateX: 45 }}
         animate={warp 
-          ? { scale: 30, opacity: 0, filter: 'blur(30px)', rotateX: 0 } // Warp through the text
-          : { scale: 1, filter: 'blur(0px)', opacity: 1, rotateX: 0 }
+          ? { scale: 30, opacity: 0, rotateX: 0 } // Warp through the text
+          : { scale: 1, opacity: 1, rotateX: 0 }
         }
         transition={warp 
           ? { duration: 0.8, ease: [0.5, 0, 0, 1] } 
           : { duration: 2, ease: [0.25, 1, 0.5, 1] }
         }
+        style={{ willChange: "transform, opacity" }}
       >
         <h1 className="text-[11vw] font-black tracking-tighter leading-none text-transparent bg-clip-text bg-gradient-to-br from-white via-indigo-200 to-purple-400 drop-shadow-[0_0_30px_rgba(99,102,241,0.5)] text-center">
           JPP DIGITAL<br/>PORTAL
@@ -673,8 +674,9 @@ function ModuleSlide({ mod, idx }: { mod: typeof MODULES[0]; idx: number }) {
         {slam ? (
           /* ─── TITLE SLAM CARD ─── */
           <motion.div key="slam" className="absolute inset-0 flex items-center justify-center bg-black overflow-hidden"
-            exit={{opacity:0, scale:1.12, filter:'blur(22px)'}}
-            transition={{duration:0.3, ease:[0.76,0,0.24,1]}}>
+            exit={{opacity:0, scale:1.12}}
+            transition={{duration:0.3, ease:[0.76,0,0.24,1]}}
+            style={{ willChange: "transform, opacity" }}>
             {/* Background color wash */}
             <motion.div className="absolute inset-0"
               initial={{opacity:0}} animate={{opacity:0.12}}
@@ -845,96 +847,241 @@ function CinematicEnvelope({ gc, children }: { gc:string; children:React.ReactNo
   );
 }
 
-// ─── Scene 01: E-Kebajikan — "Dual Perspective Split" ────────────────────────
-// Camera: static diagonal split | Student left vs Exco right
+// ─── Scene 01: E-Kebajikan — "Awwwards-Grade Bento Grid & Spatial Chat" ────────
+// Camera: Cinematic Void -> 3D Bento Grid -> Gravity Drop -> Top-Down Terminal -> Spatial Chat
 function KebajikanScene({ mod }: SceneProps) {
   const [act, setAct] = useState(0);
   useEffect(() => {
     const ts = [
-      setTimeout(() => setAct(1), 400),
-      setTimeout(() => setAct(2), 2800),
-      setTimeout(() => setAct(3), 4000),
-      setTimeout(() => setAct(4), 5200),
-      setTimeout(() => setAct(5), 7500),
-      setTimeout(() => setAct(6), 9500),
+      setTimeout(() => setAct(1), 500),   // Phase 1: Massive Bento Grid Floats In
+      setTimeout(() => setAct(2), 3000),  // Phase 2: Trigger Ticket & Gravity Drop
+      setTimeout(() => setAct(3), 4500),  // Phase 3: Exco Terminal Drops
+      setTimeout(() => setAct(4), 6000),  // Phase 4: Spatial Chat Appears + Student Msg 1
+      setTimeout(() => setAct(5), 7500),  // Phase 5: Exco Reply
+      setTimeout(() => setAct(6), 9000),  // Phase 6: Student Msg 2 + Resolution Flash
+      setTimeout(() => setAct(7), 10000), // Phase 7: Overlay
     ];
     return () => ts.forEach(clearTimeout);
   }, []);
   const gc = mod.gc;
   return (
     <CinematicEnvelope gc={gc}>
-      <RadarScan active={act>=1} gc={gc} />
-      <motion.div initial={{opacity:0,scaleY:0,originY:'50%'}} animate={act>=1?{opacity:1,scaleY:1}:{}} transition={{duration:1.1, ease:CE, delay:0.3}} className="absolute inset-y-0 z-20 pointer-events-none" style={{left:'49.5%',width:'1.5px',background:`linear-gradient(to bottom,transparent,${gc},${gc},transparent)`,boxShadow:`0 0 20px ${gc}80`,transform:'skewX(-5deg)'}}/>
       
-      {/* LEFT — Student view */}
-      <motion.div initial={{x:'-100%',filter:'blur(20px)',opacity:0}} animate={act>=1?{x:'0%',filter:'blur(0px)',opacity:1,y:act>=1?[0,-12,0]:0}:{}} transition={{duration:0.9, ease:CE, y:{duration:8,repeat:Infinity,ease:'easeInOut',delay:0.5}}} className="absolute inset-y-0 left-0 flex" style={{width:'49.5%',background:'#040908',clipPath:'polygon(0 0,107% 0,100% 100%,0 100%)', perspective: '800px'}}>  
-        <div className="w-[38%] h-full flex flex-col gap-[0.5vw] p-[0.8vw] border-r border-white/5" style={{background:'#040908', transform: 'rotateY(5deg)'}}>
-          <div className="flex items-center gap-[0.5vw] mb-[0.8vw] mt-[0.3vw]">
-            <motion.div animate={{scale:[1, 1.1, 1], boxShadow:[`0 0 0 ${gc}00`,`0 0 10px ${gc}40`,`0 0 0 ${gc}00`]}} transition={{duration:3, repeat:Infinity}} className="w-[1.5vw] h-[1.5vw] rounded-full flex items-center justify-center" style={{background:gc+'30'}}><span className="text-[0.8vw]">🫀</span></motion.div>
-            <div><p className="text-[0.55vw] font-bold" style={{color:gc}}>E-Kebajikan</p><p className="text-[0.42vw] text-white/30">SISTEM ADUAN PELAJAR</p></div>
-          </div>
-          {['Dashboard','Senarai Tiket','Laporan','Unit Kebajikan','Tetapan'].map((item,i)=>(
-            <motion.div key={item} initial={{x:-30,opacity:0,filter:'blur(10px)'}} animate={act>=1?{x:0,opacity:1,filter:'blur(0px)'}:{}} transition={{duration:0.6, ease:CE, delay:0.5+i*0.07}} className={`flex items-center gap-[0.4vw] px-[0.4vw] py-[0.35vw] rounded-[0.3vw] ${i===0?'bg-teal-500/15':''}`}>
-              <div className="w-[0.5vw] h-[0.5vw] rounded-sm" style={{background:i===0?gc:'#ffffff20'}}/>
-              <span className={`text-[0.55vw] ${i===0?'text-teal-300':'text-white/35'}`}>{item}</span>
-            </motion.div>
-          ))}
-          <div className="mt-auto p-[0.4vw] rounded-[0.3vw] text-[0.45vw] text-white/20" style={{background:'#0d1410'}}>GLOBAL JPP DASHBOARD</div>
-        </div>
-        <div className="flex-1 flex flex-col items-center justify-center gap-[0.8vw] p-[1vw] relative" style={{transform: 'rotateY(2deg)'}}>
-          <motion.div initial={{scale:0,filter:'blur(20px)'}} animate={act>=1?{scale:[1,1.06,1],filter:'blur(0px)'}:{}} transition={{scale:{duration:4,repeat:Infinity,ease:'easeInOut'},filter:{duration:0.6},delay:0.3}} className="w-[4vw] h-[4vw] rounded-full flex items-center justify-center" style={{background:gc+'20'}}><span className="text-[1.8vw]">🫀</span></motion.div>
-          <motion.p initial={{y:20,opacity:0,filter:'blur(10px)'}} animate={act>=1?{y:0,opacity:1,filter:'blur(0px)'}:{}} transition={{delay:0.4,duration:0.6,ease:CE}} className="text-[1.1vw] font-bold text-white text-center">Sistem Aduan Pelajar</motion.p>
-          <motion.p initial={{opacity:0}} animate={act>=1?{opacity:1}:{}} transition={{delay:0.5}} className="text-[0.6vw] text-white/40 text-center">Aduan anda akan diproses oleh Exco Kebajikan JPP</motion.p>
-          <motion.div initial={{y:25,opacity:0,filter:'blur(15px)'}} animate={act>=1?{y:[0,-4,0],opacity:1,filter:'blur(0px)'}:{}} transition={{delay:0.6,y:{duration:5,repeat:Infinity,ease:'easeInOut'},opacity:{duration:0.6},filter:{duration:0.6}}} className="grid grid-cols-4 gap-[0.4vw] w-full p-[0.5vw] rounded-[0.4vw]" style={{background:'#0d1410'}}>
-            {[['3','Kes Selesai'],['100%','Kadar'],['43.6j','Purata'],['0','Aktif']].map(([v,l])=>(
-              <div key={l} className="text-center"><p className="text-[0.8vw] font-black text-white">{v}</p><p className="text-[0.42vw] text-white/30 uppercase">{l}</p></div>
-            ))}
-          </motion.div>
-          <motion.div animate={act>=2&&act<3?{boxShadow:[`0 0 0px ${gc}00`,`0 0 25px ${gc}aa`,`0 0 0px ${gc}00`],scale:[1,1.04,1]}:{}} transition={{duration:1.5,repeat:Infinity,ease:'easeInOut'}} className="w-full py-[0.7vw] rounded-[0.4vw] text-center cursor-pointer relative overflow-hidden" style={{background:gc}}>
-            <motion.div className="absolute inset-0 bg-white/20" animate={{x:['-100%','200%']}} transition={{duration:2,repeat:Infinity,ease:'linear',delay:1}} />
-            <span className="text-[0.75vw] font-bold text-black relative z-10">BUAT ADUAN BARU ›</span>
-          </motion.div>
-          <AnimatePresence>{act>=3&&(<motion.div key="s" initial={{opacity:0,scale:1.2,filter:'blur(10px)'}} animate={{opacity:[0,1,1,0],scale:1,filter:['blur(10px)','blur(0px)','blur(0px)','blur(10px)']}} transition={{duration:1.5,times:[0,0.1,0.8,1]}} className="absolute inset-0 flex items-center justify-center rounded" style={{background:gc+'35',backdropFilter:'blur(5px)'}}><motion.div initial={{scale:0}} animate={{scale:[0,1.2,1]}} transition={{duration:0.4,ease:[0.34,1.56,0.64,1]}} className="text-center"><p className="text-[2.5vw]">✓</p><p className="text-[0.7vw] font-bold" style={{color:gc}}>Aduan Dihantar!</p></motion.div></motion.div>)}</AnimatePresence>
-        </div>
-      </motion.div>
-      {/* RIGHT — Exco view */}
-      <motion.div initial={{x:'100%',filter:'blur(20px)',opacity:0}} animate={act>=1?{x:'0%',filter:'blur(0px)',opacity:1,y:act>=1?[0,12,0]:0}:{}} transition={{duration:1.0, ease:CE, delay:0.15, y:{duration:8,repeat:Infinity,ease:'easeInOut',delay:1}}} className="absolute inset-y-0 right-0 flex flex-col p-[1.2vw] gap-[0.7vw]" style={{left:'50.5%',background:'#040908',clipPath:'polygon(3% 0,100% 0,100% 100%,0 100%)', perspective: '800px'}}>  
-        <motion.div initial={{opacity:0,y:-20}} animate={act>=1?{opacity:1,y:0}:{}} transition={{duration:0.6, ease:CE, delay:0.7}} style={{transform: 'rotateY(-5deg)'}}><p className="text-[0.55vw] text-white/30 uppercase tracking-widest">Papan Pemuka Exco</p><p className="text-[1.3vw] font-black text-white">E-Kebajikan</p></motion.div>
-        <div className="flex flex-col gap-[0.4vw]" style={{transform: 'rotateY(-5deg)'}}>
-          {[{id:'ADU-2024-087',desc:'Bilik rosak — Blok C',s:'Diselesaikan',c:gc},{id:'ADU-2024-086',desc:'Masalah yuran semester',s:'Diproses',c:'#6366f1'},{id:'ADU-2024-085',desc:'Permohonan buku teks',s:'Menunggu',c:'#f59e0b'}].map((t,i)=>(
-            <motion.div key={t.id} initial={{x:45,opacity:0,filter:'blur(10px)'}} animate={act>=1?{x:0,opacity:1,filter:'blur(0px)',y:[0,-2,0]}:{}} transition={{x:{duration:0.65, ease:CE, delay:0.8+i*0.09},opacity:{delay:0.8+i*0.09},filter:{delay:0.8+i*0.09},y:{duration:4,repeat:Infinity,ease:'easeInOut',delay:1+i*0.2}}} className="flex items-center gap-[0.5vw] p-[0.5vw] rounded-[0.4vw] border border-white/5" style={{background:'#0a100e'}}>
-              <div className="w-[0.35vw] h-[2.5vw] rounded-full flex-shrink-0" style={{background:t.c}}/>
-              <div className="flex-1"><p className="text-[0.5vw] font-mono" style={{color:t.c}}>{t.id}</p><p className="text-[0.65vw] text-white/65">{t.desc}</p></div>
-              <span className="text-[0.5vw] px-[0.35vw] py-[0.12vw] rounded-full" style={{background:t.c+'20',color:t.c}}>{t.s}</span>
+      {/* ─── BACKGROUND: CINEMATIC VOID & MARQUEE ─── */}
+      <div className="absolute inset-0 bg-[#020405] overflow-hidden flex items-center justify-center pointer-events-none">
+        {/* Subtle Ambient Glow */}
+        <motion.div 
+          animate={{ opacity:[0.3, 0.6, 0.3], scale:[1, 1.2, 1] }} 
+          transition={{ duration:4, repeat:Infinity, ease:"easeInOut" }} 
+          className="absolute w-[60vw] h-[60vw] rounded-full blur-[100px]"
+          style={{ background: `radial-gradient(circle, ${gc}20 0%, transparent 70%)` }}
+        />
+        {/* Giant Subtle Marquee */}
+        <div className="absolute inset-0 flex flex-col justify-center gap-[5vw] opacity-10" style={{ transform: 'rotate(-5deg) scale(1.2)' }}>
+          {[1,2,3].map(i => (
+            <motion.div key={i} animate={{ x: i%2===0 ? ['0%', '-50%'] : ['-50%', '0%'] }} transition={{ duration:20, repeat:Infinity, ease:"linear" }} className="flex whitespace-nowrap">
+              {Array(10).fill("E-KEBAJIKAN — ").map((t, idx) => (
+                <span key={idx} className="text-[12vw] font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-transparent tracking-tighter mx-[2vw]">{t}</span>
+              ))}
             </motion.div>
           ))}
         </div>
-        <AnimatePresence>{act>=4&&(<motion.div key="notif" initial={{x:80,opacity:0,scale:0.85,filter:'blur(12px)'}} animate={{x:0,opacity:1,scale:1,filter:'blur(0px)',y:[0,-4,0]}} transition={{x:{duration:0.7, ease:PE},scale:{duration:0.7,ease:PE},y:{duration:3,repeat:Infinity,ease:'easeInOut',delay:0.5}}} className="flex items-center gap-[0.5vw] p-[0.6vw] rounded-[0.4vw] border mt-auto shadow-[0_10px_30px_rgba(20,184,166,0.15)]" style={{background:gc+'12',borderColor:gc+'40',transform: 'rotateY(-5deg)'}}>
-          <motion.span animate={{scale:[1,1.5,1], rotate:[0,-10,10,0]}} transition={{duration:0.6, ease:PE, repeat:Infinity, repeatDelay:2}} className="text-[1.1vw]">🔔</motion.span>
-          <div className="flex-1"><p className="text-[0.6vw] font-bold" style={{color:gc}}>Aduan Baharu Diterima!</p><p className="text-[0.5vw] text-white/45">ADU-2024-088 · Bilik air rosak · Blok A</p></div>
-          <motion.div animate={{opacity:[1,0.2,1], scale:[1,1.3,1]}} transition={{duration:1.2,repeat:Infinity}} className="w-[0.6vw] h-[0.6vw] rounded-full" style={{background:gc}}/>
-        </motion.div>)}</AnimatePresence>
-      </motion.div>
+      </div>
 
-      {/* Impact Flash — ticket submitted */}
+      {/* ─── PHASE 1: MASSIVE 3D BENTO GRID (STUDENT PORTAL) ─── */}
       <AnimatePresence>
-        {act === 3 && (
-          <motion.div key="keb-flash" initial={{opacity:0}} animate={{opacity:[0,0.6,0]}} exit={{opacity:0}}
-            transition={{duration:0.55, times:[0,0.1,1]}} className="absolute inset-0 z-50 pointer-events-none"
-            style={{background:`radial-gradient(ellipse at 25% 60%, ${gc}cc 0%, transparent 75%)`}} />
+        {act >= 1 && act < 3 && (
+          <motion.div 
+            initial={{ scale: 0.5, opacity: 0, rotateX: 30, rotateY: -20, y: '20vh' }}
+            animate={
+              act === 1 
+                ? { scale: 1, opacity: 1, rotateX: 5, rotateY: -5, y: '0vh' } // Floating
+                : { scale: 1.5, opacity: 0, rotateX: 45, y: '100vh', filter: 'blur(30px)' } // Gravity Drop
+            }
+            exit={{ opacity: 0 }}
+            transition={
+              act === 1 
+                ? { duration: 1.5, type: 'spring', bounce: 0.2 } 
+                : { duration: 0.8, ease: [0.5, 0, 0, 1] }
+            }
+            className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
+            style={{ perspective: '1500px', transformStyle: 'preserve-3d', willChange: "transform, opacity" }}
+          >
+            <div className="w-[60vw] h-[35vw] grid grid-cols-3 grid-rows-2 gap-[1vw] p-[1vw] rounded-[1.5vw] border border-white/10 bg-white/5 backdrop-blur-2xl shadow-[0_50px_100px_rgba(0,0,0,0.8)]">
+              {/* Header Box */}
+              <div className="col-span-2 row-span-1 rounded-[1vw] bg-gradient-to-br from-[#0a0f12] to-[#040608] border border-white/5 p-[2vw] flex flex-col justify-center relative overflow-hidden">
+                <motion.div className="absolute top-0 right-0 w-[15vw] h-[15vw] bg-teal-500/10 blur-[50px] rounded-full" animate={{ scale:[1,1.5,1] }} transition={{ duration:4, repeat:Infinity }} />
+                <p className="text-[0.7vw] text-white/50 tracking-[0.3em] uppercase mb-[0.5vw]">Papan Pemuka Pelajar</p>
+                <h2 className="text-[2.5vw] font-black text-white leading-none tracking-tight drop-shadow-lg">Sistem Aduan<br/><span style={{color:gc}}>E-Kebajikan</span></h2>
+              </div>
+              
+              {/* Stats Box 1 */}
+              <div className="col-span-1 row-span-1 rounded-[1vw] bg-[#0a0f12]/80 border border-white/5 p-[1.5vw] flex flex-col items-center justify-center">
+                <p className="text-[3vw] font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">342</p>
+                <p className="text-[0.6vw] text-teal-400 tracking-[0.2em] uppercase">Aduan Selesai</p>
+              </div>
+
+              {/* Stats Box 2 */}
+              <div className="col-span-1 row-span-1 rounded-[1vw] bg-[#0a0f12]/80 border border-white/5 p-[1.5vw] flex flex-col items-center justify-center">
+                <motion.div animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} className="w-[4vw] h-[4vw] rounded-full border-[0.2vw] border-dashed border-teal-500/50 flex items-center justify-center mb-[0.5vw]">
+                  <span className="text-[1.2vw] text-white">98%</span>
+                </motion.div>
+                <p className="text-[0.6vw] text-white/40 tracking-[0.2em] uppercase">Kadar Respon</p>
+              </div>
+
+              {/* Action Button Box (The Trigger) */}
+              <div className="col-span-2 row-span-1 rounded-[1vw] bg-[#0a0f12]/80 border border-white/5 p-[1vw] flex items-center justify-center relative overflow-hidden">
+                <motion.div 
+                  animate={
+                    act === 2 ? { scale: 0.9, filter: 'brightness(2)' } :
+                    act >= 1 ? { scale: [1, 1.05, 1], boxShadow: [`0 0 0px ${gc}00`, `0 0 50px ${gc}80`, `0 0 0px ${gc}00`] } : {}
+                  }
+                  transition={{ duration: act === 2 ? 0.1 : 2, repeat: act === 2 ? 0 : Infinity }}
+                  className="w-[90%] h-[80%] rounded-[0.8vw] flex items-center justify-center cursor-pointer relative"
+                  style={{ background: `linear-gradient(135deg, ${gc}, #0d9488)` }}
+                >
+                  <motion.div className="absolute inset-0 bg-white/20" animate={{ x:['-100%', '200%'] }} transition={{ duration:1.5, repeat:Infinity, ease:"linear", delay:1 }} />
+                  <span className="text-[1.5vw] font-black text-black tracking-[0.2em] uppercase relative z-10 flex items-center gap-[1vw]">
+                    <span className="text-[2vw]">⚠️</span> Lapor Isu Baru
+                  </span>
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
-      {/* Impact Flash — notification received */}
+
+      {/* ─── PHASE 2: GLOWING TICKET LASER ─── */}
       <AnimatePresence>
-        {act === 4 && (
-          <motion.div key="notif-flash" initial={{opacity:0}} animate={{opacity:[0,0.5,0]}} exit={{opacity:0}}
-            transition={{duration:0.6, times:[0,0.1,1]}} className="absolute inset-0 z-50 pointer-events-none"
-            style={{background:`radial-gradient(ellipse at 75% 60%, ${gc}cc 0%, transparent 75%)`}} />
+        {act === 2 && (
+          <motion.div 
+            initial={{ y: '20vh', scale: 0, opacity: 0 }}
+            animate={{ y: '-50vh', scale: 2, opacity: [0, 1, 1, 0] }}
+            transition={{ duration: 1.2, ease: [0.25, 1, 0.5, 1] }}
+            className="absolute left-[50%] top-[50%] -translate-x-1/2 -translate-y-1/2 z-30"
+          >
+            <div className="w-[2vw] h-[15vw] bg-white rounded-full blur-[5px]" style={{ boxShadow: `0 0 50px 20px ${gc}` }} />
+          </motion.div>
         )}
       </AnimatePresence>
 
-      <ModuleOverlay show={act>=6} num="Modul 01" name="E-Kebajikan" tagline={mod.tagline} gc={gc} pos="bottom-[8%] left-[4%]" />
-      <FloatAiChip show={act>=5} message="Tiket ADU-2024-088 sedang diproses oleh Exco Kebajikan." />
+      {/* ─── PHASE 3: EXCO COMMAND TERMINAL ─── */}
+      <AnimatePresence>
+        {act >= 3 && (
+          <motion.div 
+            initial={{ y: '-100%', opacity: 0, scale: 0.9 }}
+            animate={{ y: '0%', opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', bounce: 0.4, duration: 1 }}
+            className="absolute top-[5%] left-[10%] right-[10%] h-[12vw] bg-[#040608]/90 backdrop-blur-3xl border border-white/10 rounded-[1vw] shadow-[0_30px_60px_rgba(0,0,0,0.9)] flex overflow-hidden z-20"
+          >
+            {/* Left Decor */}
+            <div className="w-[1vw] h-full" style={{ background: `repeating-linear-gradient(45deg, ${gc} 0px, ${gc} 10px, transparent 10px, transparent 20px)` }} />
+            
+            <div className="flex-1 flex flex-col p-[2vw] justify-center relative">
+              <p className="text-[0.6vw] text-red-500 font-mono tracking-[0.5em] mb-[0.5vw] animate-pulse">SYSTEM OVERRIDE</p>
+              <h3 className="text-[2.5vw] font-black text-white leading-none uppercase tracking-tight">Incoming Ticket</h3>
+              <p className="text-[1vw] text-white/50 font-mono mt-[0.5vw]">ID: ADU-2024-088 | Kerosakan Fasiliti</p>
+              
+              {/* Flashing Alert Indicator */}
+              <motion.div animate={{ opacity:[1,0,1] }} transition={{ duration:0.5, repeat:Infinity }} className="absolute right-[3vw] top-[50%] -translate-y-1/2 w-[6vw] h-[6vw] rounded-full flex items-center justify-center border-[0.2vw] border-red-500">
+                <div className="w-[4vw] h-[4vw] rounded-full bg-red-500/50 flex items-center justify-center shadow-[0_0_30px_red]">
+                  <span className="text-[2vw]">🔔</span>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── PHASE 4 & 5: SPATIAL LIVE CHAT (APPLE VISION PRO STYLE) ─── */}
+      <AnimatePresence>
+        {act >= 4 && (
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0, y: '20vh' }} 
+            animate={{ scale: 1, opacity: 1, y: '0vh' }} 
+            transition={{ type: 'spring', bounce: 0.5, duration: 1.2 }} 
+            className="absolute top-[25%] bottom-[10%] left-[20%] right-[20%] bg-white/5 backdrop-blur-[40px] border border-white/20 rounded-[2vw] shadow-[0_50px_100px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(255,255,255,0.05)] flex flex-col overflow-hidden z-40"
+          >
+            {/* Chat Header */}
+            <div className="w-full px-[2vw] py-[1.2vw] border-b border-white/10 flex items-center justify-between bg-black/20">
+              <div className="flex items-center gap-[1vw]">
+                <div className="w-[3vw] h-[3vw] rounded-full bg-gradient-to-br from-teal-400 to-emerald-600 flex items-center justify-center shadow-[0_0_20px_rgba(45,212,191,0.5)]">
+                  <span className="text-[1.5vw]">👨‍💻</span>
+                </div>
+                <div>
+                  <p className="text-[1vw] font-bold text-white tracking-wide">Pusat Resolusi Exco</p>
+                  <p className="text-[0.6vw] text-teal-400 flex items-center gap-[0.5vw] font-mono mt-[0.2vw]">
+                    {act >= 6 ? 'Status Dikemaskini' : act >= 4 ? <>Exco sedang membalas <span className="flex gap-[0.2vw]"><motion.span animate={{y:[0,-3,0]}} transition={{repeat:Infinity, duration:0.6}} className="w-[0.4vw] h-[0.4vw] bg-teal-400 rounded-full"/><motion.span animate={{y:[0,-3,0]}} transition={{repeat:Infinity, duration:0.6, delay:0.2}} className="w-[0.4vw] h-[0.4vw] bg-teal-400 rounded-full"/><motion.span animate={{y:[0,-3,0]}} transition={{repeat:Infinity, duration:0.6, delay:0.4}} className="w-[0.4vw] h-[0.4vw] bg-teal-400 rounded-full"/></span></> : 'Menghubungkan...'}
+                  </p>
+                </div>
+              </div>
+              <motion.div animate={act >= 6 ? { scale: [1,1.2,1], backgroundColor: ['#0f766e', '#10b981', '#0f766e'] } : {}} className="px-[1vw] py-[0.4vw] rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 text-[0.6vw] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(234,179,8,0.2)]">
+                {act >= 6 ? <span className="text-white">✅ Selesai</span> : "Diproses"}
+              </motion.div>
+            </div>
+
+            {/* Chat Messages */}
+            <div className="flex-1 p-[2vw] flex flex-col gap-[1.5vw] overflow-y-auto">
+              
+              {/* Msg 1: Student */}
+              <AnimatePresence>
+                {act >= 4 && (
+                  <motion.div initial={{x:-100, opacity:0, scale:0.5, originX:0, originY:1}} animate={{x:0, opacity:1, scale:1}} transition={{type:'spring', bounce:0.6, duration:0.8}} className="self-start max-w-[70%]">
+                    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl rounded-tl-sm p-[1.5vw] text-[1vw] text-white/95 shadow-xl">
+                      Bumbung di Blok C (Bilik 204) bocor teruk. Air menitis atas katil! Mohon bantuan segera! 😭
+                    </div>
+                    <p className="text-[0.6vw] text-white/40 mt-[0.5vw] ml-[0.5vw] font-mono">Pelajar • 10:42 AM</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Msg 2: Exco */}
+              <AnimatePresence>
+                {act >= 5 && (
+                  <motion.div initial={{x:100, opacity:0, scale:0.5, originX:1, originY:1}} animate={{x:0, opacity:1, scale:1}} transition={{type:'spring', bounce:0.6, duration:0.8}} className="self-end max-w-[70%]">
+                    <div className="bg-gradient-to-r from-teal-600/40 to-teal-500/20 backdrop-blur-md border border-teal-400/50 rounded-3xl rounded-tr-sm p-[1.5vw] text-[1vw] text-white/95 shadow-[0_10px_30px_rgba(20,184,166,0.2)]">
+                      Noted! Kami dah maklumkan pihak penyelenggaraan. Technician sedang menuju ke sana sekarang. Harap bersabar! 🛠️⚡
+                    </div>
+                    <p className="text-[0.6vw] text-white/40 mt-[0.5vw] mr-[0.5vw] text-right font-mono">Exco Kebajikan • 10:44 AM</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Msg 3: Student */}
+              <AnimatePresence>
+                {act >= 6 && (
+                  <motion.div initial={{x:-100, opacity:0, scale:0.5, originX:0, originY:1}} animate={{x:0, opacity:1, scale:1}} transition={{type:'spring', bounce:0.6, duration:0.8}} className="self-start max-w-[70%]">
+                    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl rounded-tl-sm p-[1.5vw] text-[1vw] text-white/95 shadow-xl">
+                      Terima kasih atas respon yang sangat pantas JPP! Terbaik! 💯🔥
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            
+            {/* Input Bar */}
+            <div className="w-full h-[4.5vw] bg-black/40 border-t border-white/10 flex items-center px-[2vw] gap-[1vw]">
+              <div className="w-[1.5vw] h-[1.5vw] opacity-50"><svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg></div>
+              <div className="flex-1 text-[0.9vw] text-white/30 font-mono">Taip mesej balas di sini...</div>
+              <div className="w-[3vw] h-[3vw] rounded-full bg-teal-500 flex items-center justify-center text-[1vw] shadow-[0_0_15px_rgba(20,184,166,0.6)]">➤</div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── PHASE 6: RESOLUTION FLASH ─── */}
+      <AnimatePresence>
+        {act === 6 && (
+          <motion.div key="res-flash" initial={{opacity:0, scale:0}} animate={{opacity:[0,1,0], scale:[0.5, 3, 6]}} exit={{opacity:0}}
+            transition={{duration:1.2, ease:"easeOut"}} className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center"
+          >
+            <div className="w-[20vw] h-[20vw] bg-emerald-400 rounded-full blur-[100px] mix-blend-screen" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <ModuleOverlay show={act>=7} num="Modul 01" name="E-Kebajikan" tagline={mod.tagline} gc={gc} pos="bottom-[8%] left-[4%]" />
+      <FloatAiChip show={act>=6} message="Sistem Sembang Langsung mempercepatkan kadar penyelesaian aduan fasiliti." />
     </CinematicEnvelope>
   );
 }
