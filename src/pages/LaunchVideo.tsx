@@ -1371,145 +1371,289 @@ function KeusahawananScene({ mod }: SceneProps) {
   );
 }
 
-// ─── Scene 03: E-Akademik — "QR Macro Reveal" ────────────────────────────────
-// Camera: extreme macro on QR → scanline sweeps → pull-back reveals full dashboard
+// ─── Scene 03: E-Akademik — "Hyper-Scanning QR Reveal" ───────────────────────
+// Camera: extreme macro on QR → blinding laser sweep → matrix explosion → dashboard slam
 function AkademikScene({ mod }: SceneProps) {
   const [act, setAct] = useState(0);
   const [cgpa, setCgpa] = useState(0);
   const [rank, setRank] = useState(3);
+  
   useEffect(() => {
     const ts = [
-      setTimeout(() => setAct(1), 300),   // QR appears
-      setTimeout(() => setAct(2), 1500),  // scan line
-      setTimeout(() => setAct(3), 2500),  // +MERIT burst
-      setTimeout(() => setAct(4), 3500),  // reveal dashboard
-      setTimeout(() => setAct(5), 5000),  // CGPA fills
-      setTimeout(() => setRank(2), 7000), // rank up
-      setTimeout(() => setRank(1), 8500), // #1
-      setTimeout(() => setAct(6), 9500),  // module overlay
+      setTimeout(() => setAct(1), 300),   // Phase 1: QR Macro Lens
+      setTimeout(() => setAct(2), 1500),  // Phase 2: Laser Scan Sweep
+      setTimeout(() => setAct(3), 2800),  // Phase 3: Matrix Explosion & +MERIT Shockwave
+      setTimeout(() => setAct(4), 4500),  // Phase 4: Dashboard Slams In
+      setTimeout(() => setAct(5), 5500),  // Phase 5: CGPA fills
+      setTimeout(() => setRank(2), 7000), // Phase 6: Rank up to 2
+      setTimeout(() => setRank(1), 8500), // Phase 7: Rank up to 1
+      setTimeout(() => setAct(6), 9500),  // Phase 8: Module Overlay
     ];
     return () => ts.forEach(clearTimeout);
   }, []);
+
   useEffect(() => {
     if (act < 5) return;
     let cur = 0; const target = 3.72;
-    const iv = setInterval(() => { cur = Math.min(cur + 0.06, target); setCgpa(parseFloat(cur.toFixed(2))); if (cur >= target) clearInterval(iv); }, 50);
+    const iv = setInterval(() => { 
+      cur = Math.min(cur + 0.15, target); // Super fast fill
+      setCgpa(parseFloat(cur.toFixed(2))); 
+      if (cur >= target) clearInterval(iv); 
+    }, 30);
     return () => clearInterval(iv);
   }, [act]);
+
   const gc = mod.gc;
+
   return (
     <CinematicEnvelope gc={gc}>
-      {/* Phase 1-3: QR full-screen macro */}
+      {/* ─── PHASE 1-3: HYPER-SCANNING QR (SLEEK 3D) ─── */}
       <AnimatePresence>
         {act >= 1 && act < 4 && (
-          <motion.div key="qr-macro" initial={{opacity:0,scale:1.5,filter:'blur(20px)'}} animate={{opacity:1,scale:1,filter:'blur(0px)'}} exit={{opacity:0,scale:0.6,filter:'blur(15px)'}} transition={spB(0)} className="absolute inset-0 flex items-center justify-center">
-            <div className="relative">
-              <div className="w-[40vw] h-[40vw] rounded-[2vw] p-[2vw] border-2 relative overflow-hidden" style={{background:'#0a1a12',borderColor:gc+'60'}}>
-                <motion.div animate={{opacity:[0.1, 0.3, 0.1]}} transition={{duration:2, repeat:Infinity, ease:'easeInOut'}} className="absolute inset-0" style={{background:`radial-gradient(circle at center, ${gc}40, transparent 60%)`}} />
-                <div className="w-full h-full grid relative z-10" style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:'0.3vw'}}>
-                  {Array.from({length:49}).map((_,i)=>{
-                    const pattern=[1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,0,1,1,1,0,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1];
-                    const isOn = pattern[i] === 1;
-                    return <motion.div key={i} initial={{opacity:0,scale:0}} animate={{opacity:1,scale:1}} transition={{delay:i*0.008,type:'spring',stiffness:500,damping:20}} className="rounded-[0.15vw]" style={{background: isOn ? gc : gc+'15', aspectRatio:'1'}}/>;
-                  })}
-                </div>
-              </div>
-              {act >= 2 && (
-                <motion.div initial={{top:'0%'}} animate={{top:'100%'}} transition={{duration:0.6,ease:'linear'}} className="absolute left-0 right-0 h-[0.8vw] z-10 pointer-events-none" style={{background:`linear-gradient(to bottom,transparent,${gc},${gc},transparent)`,boxShadow:`0 0 40px ${gc},0 0 80px ${gc}60`}}/>
-              )}
-              <AnimatePresence>
-                {act >= 3 && (
-                  <motion.div key="merit" initial={{scale:0,filter:'blur(20px)'}} animate={{scale:[0,1.5,1],filter:['blur(20px)','blur(0px)','blur(0px)']}} exit={{opacity:0,scale:2,filter:'blur(30px)'}} transition={{duration:0.5,ease:[0.34,1.56,0.64,1]}} className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <motion.div animate={{y:[0,-10,0]}} transition={{duration:2, repeat:Infinity, ease:'easeInOut'}} className="text-center">
-                      <motion.p animate={{textShadow:[`0 0 40px ${gc}`,`0 0 100px ${gc}`,`0 0 40px ${gc}`]}} transition={{duration:0.8,repeat:Infinity}} className="font-black" style={{fontSize:'6vw',color:gc}}>+5</motion.p>
-                      <p className="text-[1.5vw] font-bold text-white/80" style={{textShadow:'0 0 10px rgba(0,0,0,0.8)'}}>★ MERIT DIKUMPUL!</p>
-                    </motion.div>
-                  </motion.div>
+          <motion.div 
+            key="qr-macro" 
+            initial={{ opacity:0, scale: 3, filter: 'blur(30px)' }} 
+            animate={{ 
+              opacity: 1, 
+              scale: act >= 3 ? 0 : 1, 
+              filter: act >= 3 ? 'blur(50px)' : 'blur(0px)',
+              rotateZ: act >= 2 ? [0, -1, 1, 0] : 0 // Subtle shake during scan
+            }} 
+            transition={{ 
+              scale: act >= 3 ? { duration: 0.5, ease: "easeIn" } : { duration: 1.5, type: 'spring', bounce: 0.2 },
+              rotateZ: { duration: 0.5, repeat: Infinity }
+            }} 
+            className="absolute inset-0 flex items-center justify-center z-40"
+            style={{ perspective: '1200px' }}
+          >
+            <motion.div 
+              className="relative w-[40vw] h-[40vw]"
+              animate={{ rotateX: [10, -10, 10], rotateY: [-15, 15, -15] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ transformStyle: 'preserve-3d' }}
+            >
+              {/* Glassmorphic Box */}
+              <div 
+                className="absolute inset-0 rounded-[2.5vw] border border-cyan-400/40 flex items-center justify-center backdrop-blur-xl overflow-hidden" 
+                style={{ 
+                  background: 'linear-gradient(135deg, rgba(6,182,212,0.1) 0%, rgba(2,6,23,0.8) 100%)', 
+                  boxShadow: '0 30px 60px rgba(0,0,0,0.5), inset 0 0 40px rgba(6,182,212,0.3)',
+                  transform: 'translateZ(0px)'
+                }}
+              >
+                {/* 3D Holographic Grid Floor (Tilted) */}
+                <div 
+                  className="absolute inset-[-50%] opacity-20" 
+                  style={{ 
+                    backgroundImage: `linear-gradient(rgba(6,182,212,0.4) 2px, transparent 2px), linear-gradient(90deg, rgba(6,182,212,0.4) 2px, transparent 2px)`, 
+                    backgroundSize: '4vw 4vw', 
+                    transform: 'translateZ(-100px) rotateX(60deg)',
+                    transformOrigin: 'bottom'
+                  }} 
+                />
+
+                {/* Sleek SVG QR Pattern */}
+                <svg viewBox="0 0 100 100" className="w-[55%] h-[55%] filter drop-shadow-[0_0_20px_rgba(6,182,212,0.8)]" style={{ transform: 'translateZ(40px)' }}>
+                  {/* Glowing QR Corner Markers */}
+                  <rect x="5" y="5" width="25" height="25" fill="none" stroke="#22d3ee" strokeWidth="3" rx="4" />
+                  <rect x="10" y="10" width="15" height="15" fill="#22d3ee" rx="2" />
+                  
+                  <rect x="70" y="5" width="25" height="25" fill="none" stroke="#22d3ee" strokeWidth="3" rx="4" />
+                  <rect x="75" y="10" width="15" height="15" fill="#22d3ee" rx="2" />
+                  
+                  <rect x="5" y="70" width="25" height="25" fill="none" stroke="#22d3ee" strokeWidth="3" rx="4" />
+                  <rect x="10" y="75" width="15" height="15" fill="#22d3ee" rx="2" />
+
+                  {/* Futuristic Circuit/Data Lines */}
+                  <path d="M40 10 h20 M40 20 h10 M50 30 h30 M15 40 h70 M10 50 h30 M60 50 h30 M30 60 h40 M40 70 h20 M40 85 h55 M85 35 v20" stroke="#22d3ee" strokeWidth="4" strokeLinecap="round" strokeDasharray="1,6" />
+                  
+                  {/* Animated Data Nodes */}
+                  <motion.circle cx="45" cy="45" r="4" fill="#fff" animate={{opacity:[0.2,1,0.2]}} transition={{duration:1,repeat:Infinity}} />
+                  <motion.circle cx="85" cy="85" r="4" fill="#fff" animate={{opacity:[0.2,1,0.2]}} transition={{duration:1.2,repeat:Infinity,delay:0.3}} />
+                </svg>
+
+                {/* ─── PHASE 2: VOLUMETRIC SCANNING PLANE ─── */}
+                {act >= 2 && act < 3 && (
+                  <motion.div 
+                    initial={{ top: '-10%' }} 
+                    animate={{ top: '110%' }} 
+                    transition={{ duration: 1.2, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" }} 
+                    className="absolute left-0 right-0 h-[8vw] z-50 pointer-events-none" 
+                    style={{ 
+                      background: `linear-gradient(to bottom, transparent, rgba(6,182,212,0.1), rgba(6,182,212,0.8))`, 
+                      borderBottom: '4px solid #fff',
+                      boxShadow: `0 20px 50px rgba(6,182,212,0.6), 0 0 20px #fff`,
+                      transform: 'translateZ(60px)'
+                    }}
+                  />
                 )}
-              </AnimatePresence>
-            </div>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Impact Flash Frame — fires on merit collect (act 3) */}
+      {/* ─── PHASE 3: MATRIX EXPLOSION & SHOCKWAVE ─── */}
       <AnimatePresence>
         {act === 3 && (
-          <motion.div key="merit-flash"
-            initial={{opacity:0}} animate={{opacity:[0,0.8,0]}} exit={{opacity:0}}
-            transition={{duration:0.55, times:[0, 0.12, 1]}}
-            className="absolute inset-0 z-50 pointer-events-none"
-            style={{background:`radial-gradient(ellipse at center, ${gc}cc 0%, ${gc}55 40%, transparent 75%)`}} />
+          <motion.div 
+            key="merit-shockwave" 
+            initial={{ scale: 0, opacity: 1 }} 
+            animate={{ scale: [0, 1.5, 2], opacity: [1, 1, 0] }} 
+            transition={{ duration: 1, ease: "easeOut" }} 
+            className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none"
+          >
+            {/* Shockwave Ring */}
+            <div className="absolute w-[50vw] h-[50vw] rounded-full border-[2vw] border-white/50" style={{ boxShadow: `0 0 100px ${gc}, inset 0 0 100px ${gc}` }} />
+            
+            <motion.div className="text-center">
+              <p className="font-black italic tracking-tighter" style={{fontSize:'12vw', color: 'white', WebkitTextStroke: `0.5vw ${gc}`, textShadow: `0 0 100px ${gc}, 0 0 200px ${gc}` }}>+5</p>
+              <p className="text-[3vw] font-black text-white uppercase tracking-[1vw]" style={{textShadow:`0 0 50px ${gc}`}}>Merit Dikumpul!</p>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Phase 4+: Full dashboard reveal */}
+      <AnimatePresence>
+        {act === 3 && (
+          <motion.div 
+            key="flash"
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: [0, 1, 0] }} 
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="absolute inset-0 z-40 bg-white"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ─── PHASE 4+: DASHBOARD SLAM ─── */}
       <AnimatePresence>
         {act >= 4 && (
-          <div className="absolute inset-0 flex items-center justify-center" style={{perspective:'1000px'}}>
+          <div className="absolute inset-0 flex items-center justify-center" style={{perspective:'1500px'}}>
             <HoloRings active={act>=4} gc={gc} />
-            <ExplodingParticles active={act>=5} emoji="A+" count={20} />
-            <motion.div key="dashboard" initial={{opacity:0,scale:1.08,filter:'blur(10px)',rotateX:-10,rotateY:10}} animate={{opacity:1,scale:1,filter:'blur(0px)',rotateX:act>=6?[0,1,-1,0]:[-2,-1,-3,-2],rotateY:act>=6?[0,-1,1,0]:[2,1,3,2]}} transition={act>=6?{duration:8,repeat:Infinity,ease:'easeInOut'}:{rotateX:{duration:6,repeat:Infinity,ease:'easeInOut'},rotateY:{duration:7,repeat:Infinity,ease:'easeInOut'}, opacity:{duration:0.8},scale:{duration:0.8},filter:{duration:0.8}}} className="w-[92vw] h-[92vh] rounded-[1.2vw] overflow-hidden border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.9)]" style={{background:'#0d1117', transformStyle:'preserve-3d'}}>
-              <div className="flex items-center gap-[0.4vw] px-[1.2vw] py-[0.6vw] border-b border-white/5" style={{background:'#161b22'}}>
-                <div className="w-[0.7vw] h-[0.7vw] rounded-full bg-red-500/70"/><div className="w-[0.7vw] h-[0.7vw] rounded-full bg-yellow-500/70"/><div className="w-[0.7vw] h-[0.7vw] rounded-full bg-green-500/70"/>
-                <div className="ml-[1vw] flex gap-[0.5vw] items-center">
-                  <motion.div animate={{scale:[1,1.1,1],boxShadow:[`0 0 0 ${gc}00`,`0 0 10px ${gc}80`,`0 0 0 ${gc}00`]}} transition={{duration:2,repeat:Infinity}} className="w-[1vw] h-[1vw] rounded-full" style={{background:gc}} />
-                  <p className="text-[0.6vw] font-bold" style={{color:gc}}>E-Akademik — JPP POLISAS</p>
+            <ExplodingParticles active={act>=5} emoji="🔥" count={20} />
+            
+            <motion.div 
+              key="dashboard" 
+              initial={{ opacity: 0, scale: 2, rotateX: 45, y: '-50vh', filter: 'blur(30px)' }} 
+              animate={{ 
+                opacity: 1, scale: 1, rotateX: act >= 6 ? [0, 2, -2, 0] : 0, 
+                rotateY: act >= 6 ? [0, -1, 1, 0] : 0, y: '0vh', filter: 'blur(0px)' 
+              }} 
+              transition={
+                act >= 6 
+                  ? { duration: 10, repeat: Infinity, ease: 'easeInOut' } 
+                  : { type: 'spring', bounce: 0.4, duration: 1.2 }
+              } 
+              className="w-[90vw] h-[85vh] rounded-[1.5vw] overflow-hidden border border-white/20 shadow-[0_50px_100px_rgba(0,0,0,0.9),0_0_50px_rgba(59,130,246,0.2)]" 
+              style={{background:'#020617', transformStyle:'preserve-3d'}}
+            >
+              {/* Header */}
+              <div className="flex items-center gap-[1vw] px-[2vw] py-[1vw] border-b border-white/10" style={{background:'#0f172a'}}>
+                <div className="flex gap-[0.5vw]">
+                  <div className="w-[1vw] h-[1vw] rounded-full bg-red-500"/><div className="w-[1vw] h-[1vw] rounded-full bg-yellow-500"/><div className="w-[1vw] h-[1vw] rounded-full bg-green-500"/>
+                </div>
+                <div className="ml-[1vw] flex gap-[0.8vw] items-center">
+                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 5, repeat: Infinity, ease: "linear" }} className="w-[1.5vw] h-[1.5vw] rounded-full border-[0.2vw] border-dashed" style={{ borderColor: gc }} />
+                  <p className="text-[1vw] font-black tracking-widest uppercase" style={{color:gc}}>E-Akademik / JPP POLISAS</p>
                 </div>
               </div>
+
+              {/* Layout Content */}
               <div className="flex h-full">
-                <div className="w-[20%] border-r border-white/5 p-[0.8vw] flex flex-col gap-[0.5vw]" style={{background:'#040909'}}>
-                  <div className="mb-[0.5vw]"><p className="text-[0.55vw] font-bold" style={{color:gc}}>e-Akademik</p><p className="text-[0.42vw] text-white/30">EXCO AKADEMIK</p></div>
+                {/* Sidebar */}
+                <div className="w-[22%] border-r border-white/10 p-[1.5vw] flex flex-col gap-[1vw]" style={{background:'#020617'}}>
                   {['Dashboard','Pencapaian','HPNM / CGPA','Merit Saya','Dokumen','Leaderboard','Scan QR'].map((item,i)=>(
-                    <motion.div key={item} initial={{x:-20,opacity:0}} animate={{x:0,opacity:1}} transition={sp(i*0.04)}
-                      className="text-[0.55vw] py-[0.35vw] px-[0.4vw] rounded-[0.3vw] text-white/35"
-                      style={i===0 ? {background:gc+'20', color:gc} : i===6 ? {color:gc, background:gc+'25', fontWeight:'700'} : {}}>{item}</motion.div>
+                    <motion.div 
+                      key={item} initial={{x:-30,opacity:0}} animate={{x:0,opacity:1}} transition={{ delay: 0.5 + i*0.05, type: 'spring' }}
+                      className="text-[0.8vw] py-[0.8vw] px-[1vw] rounded-[0.5vw] font-bold tracking-wide uppercase"
+                      style={i===0 ? {background:gc+'20', color:gc} : i===6 ? {color: '#000', background: gc} : {color: 'rgba(255,255,255,0.4)'}}
+                    >
+                      {item}
+                    </motion.div>
                   ))}
                 </div>
-                <div className="flex-1 p-[1.2vw] flex gap-[1.5vw] items-start">
-                  <div className="flex flex-col items-center gap-[0.8vw] w-[35%] relative" style={{transform:'translateZ(30px)'}}>
-                    <motion.div initial={{scale:0,filter:'blur(20px)'}} animate={{scale:1,filter:'blur(0px)'}} transition={{duration:0.8,delay:0.3}} className="relative w-[12vw] h-[12vw]">
-                      <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90 drop-shadow-[0_0_15px_rgba(34,197,94,0.3)]">
-                        <circle cx="50" cy="50" r="42" fill="none" stroke="#ffffff10" strokeWidth="8"/>
-                        <motion.circle cx="50" cy="50" r="42" fill="none" stroke={gc} strokeWidth="8" strokeLinecap="round" strokeDasharray="264" initial={{strokeDashoffset:264}} animate={act>=5?{strokeDashoffset:264-(264*(cgpa/4.0))}:{strokeDashoffset:264}} transition={{duration:2}}/>
+
+                {/* Main */}
+                <div className="flex-1 p-[2vw] flex gap-[3vw] items-center justify-center">
+                  
+                  {/* Left: Mega CGPA Ring */}
+                  <div className="flex flex-col items-center gap-[1.5vw] w-[40%] relative" style={{transform:'translateZ(50px)'}}>
+                    <motion.div initial={{scale:0,filter:'blur(20px)'}} animate={{scale:1,filter:'blur(0px)'}} transition={{duration:1,delay:0.5, type: "spring"}} className="relative w-[18vw] h-[18vw]">
+                      <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90 drop-shadow-[0_0_30px_rgba(59,130,246,0.5)]">
+                        <circle cx="50" cy="50" r="42" fill="none" stroke="#ffffff10" strokeWidth="6"/>
+                        <motion.circle cx="50" cy="50" r="42" fill="none" stroke={gc} strokeWidth="6" strokeLinecap="round" strokeDasharray="264" initial={{strokeDashoffset:264}} animate={act>=5?{strokeDashoffset:264-(264*(cgpa/4.0))}:{strokeDashoffset:264}} transition={{duration:1.5, ease: "easeOut"}}/>
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <motion.span
-                          animate={act>=5 ? {scale:[1,1.04,1,1.04,1], textShadow:[`0 0 10px ${gc}00`,`0 0 20px ${gc}80`,`0 0 10px ${gc}00`,`0 0 20px ${gc}80`,`0 0 10px ${gc}00`]} : {}}
-                          transition={{duration:3, repeat:Infinity, ease:'easeInOut', delay:2}}
-                          className="text-[2.5vw] font-black text-white">{cgpa.toFixed(2)}</motion.span>
-                        <span className="text-[0.6vw] text-white/40">CGPA</span>
+                          animate={act>=5 ? { scale:[1,1.1,1], textShadow:[`0 0 10px ${gc}00`,`0 0 30px ${gc}`,`0 0 10px ${gc}00`] } : {}}
+                          transition={{duration:2, repeat:Infinity, ease:'easeInOut', delay:1}}
+                          className="text-[4.5vw] font-black text-white font-mono"
+                        >
+                          {cgpa.toFixed(2)}
+                        </motion.span>
+                        <span className="text-[1vw] text-white/50 tracking-widest uppercase">CGPA Semasa</span>
                       </div>
                     </motion.div>
-                    <div className="text-center"><p className="text-[0.65vw] text-white/50 bg-white/5 px-[0.6vw] py-[0.2vw] rounded-full mt-[0.5vw]">Semester 4 · Elektrik</p></div>
+                    <div className="text-center bg-white/5 border border-white/10 px-[1.5vw] py-[0.5vw] rounded-full">
+                      <p className="text-[0.8vw] text-white/80 font-bold tracking-widest uppercase">Semester 4 · Kej. Elektrik</p>
+                    </div>
                   </div>
-                  <div className="flex-1 flex flex-col gap-[0.5vw]">
-                    <p className="text-[0.7vw] text-white/40 uppercase tracking-widest font-bold">Leaderboard Merit</p>
+
+                  {/* Right: Action-Packed Leaderboard */}
+                  <div className="flex-1 flex flex-col gap-[1vw]">
+                    <div className="flex justify-between items-end mb-[0.5vw]">
+                      <p className="text-[1vw] text-white/60 uppercase tracking-[0.2em] font-black">Live Leaderboard</p>
+                      <p className="text-[0.7vw] text-blue-400 font-bold animate-pulse">● Kemas kini masa nyata</p>
+                    </div>
                     {[{name:'Ahmad Hafiz',merit:98},{name:'Nur Aisyah',merit:87},{name:'Muhammad Haziq',merit:76}].map((s,i)=>(
-                      <motion.div key={s.name} initial={{x:40,opacity:0,filter:'blur(10px)'}} animate={act>=4?{x:0,opacity:1,filter:'blur(0px)',y:[0,-2,0]}:{}} transition={{x:{type:'spring',stiffness:300,damping:20,delay:i*0.08},opacity:{duration:0.5,delay:i*0.08},filter:{duration:0.5,delay:i*0.08},y:{duration:4,repeat:Infinity,ease:'easeInOut',delay:1+i*0.15}}} className="flex items-center gap-[0.6vw] p-[0.6vw] rounded-[0.4vw] border border-white/5 relative overflow-hidden" style={{background: rank===i+1&&i<2?gc+'20':'#0a100e', borderColor:rank===i+1&&i<2?gc+'50':'#ffffff0d'}}>
-                        {rank===i+1&&i<2 && <motion.div animate={{x:['-100%','200%']}} transition={{duration:1.5,repeat:Infinity,repeatDelay:2,ease:'easeInOut'}} className="absolute inset-0 w-[50%] bg-white/10 skew-x-[-20deg]" />}
-                        <motion.span animate={rank===i+1&&i<1?{scale:[1,1.4,1],color:[gc,'#ffffff',gc]}:{}} transition={{duration:0.4,repeat:rank===i+1&&i<1?3:0}} className="text-[1.2vw] font-black w-[1.5vw] text-center relative z-10" style={{color:i<2?gc:'#ffffff40'}}>#{i+1}</motion.span>
-                        <div className="flex-1 relative z-10"><p className="text-[0.7vw] text-white/80 font-bold">{s.name}</p><p className="text-[0.5vw] text-white/50">{s.merit} merit</p></div>
-                        {i===2&&rank===1&&<motion.span initial={{scale:0}} animate={{scale:[0,1.5,1]}} transition={spB(0)} className="text-[1vw] relative z-10">🏆</motion.span>}
+                      <motion.div 
+                        key={s.name} 
+                        initial={{x:50,opacity:0}} 
+                        animate={act>=4 ? {x:0, opacity:1} : {}} 
+                        transition={{type:'spring', delay: 0.8 + i*0.1}} 
+                        className="flex items-center gap-[1vw] p-[1.2vw] rounded-[1vw] border relative overflow-hidden" 
+                        style={{
+                          background: rank === i+1 && i < 2 ? `linear-gradient(90deg, ${gc}40, transparent)` : '#0f172a', 
+                          borderColor: rank === i+1 && i < 2 ? gc : '#ffffff1a'
+                        }}
+                      >
+                        {/* Shimmer Effect */}
+                        {rank === i+1 && i < 2 && (
+                          <motion.div animate={{x:['-100%','300%']}} transition={{duration:2,repeat:Infinity,repeatDelay:1}} className="absolute inset-0 w-[30%] bg-white/20 skew-x-[-30deg]" />
+                        )}
+                        
+                        <motion.div 
+                          animate={rank === i+1 && i < 1 ? { scale:[1,1.5,1], rotate:[0,10,-10,0] } : {}} 
+                          transition={{duration:0.5}} 
+                          className="w-[3vw] h-[3vw] rounded-full flex items-center justify-center font-black text-[1.5vw]"
+                          style={{ background: i < 2 ? gc : '#334155', color: i < 2 ? '#fff' : '#94a3b8' }}
+                        >
+                          #{i+1}
+                        </motion.div>
+                        
+                        <div className="flex-1 relative z-10">
+                          <p className="text-[1.2vw] text-white font-black uppercase">{s.name}</p>
+                          <p className="text-[0.8vw] text-white/60">{s.merit} Mata Merit</p>
+                        </div>
+                        
+                        {i === 2 && rank === 1 && (
+                          <motion.span initial={{scale:0}} animate={{scale:[0,2,1]}} transition={{type: "spring", bounce: 0.6}} className="text-[2vw] relative z-10 filter drop-shadow-[0_0_15px_rgba(255,215,0,0.8)]">🏆</motion.span>
+                        )}
                       </motion.div>
                     ))}
                   </div>
+
                 </div>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-      <ModuleOverlay show={act>=6} num="Modul 03" name="E-Akademik" tagline={mod.tagline} gc={gc} />
 
-      {/* Impact Flash — rank #1 achieved */}
-      <AnimatePresence>
-        {rank === 1 && act >= 6 && act < 7 && (
-          <motion.div key="rank-flash" initial={{opacity:0}} animate={{opacity:[0,0.6,0]}} exit={{opacity:0}}
-            transition={{duration:0.7, times:[0,0.08,1]}} className="absolute inset-0 z-50 pointer-events-none"
-            style={{background:`radial-gradient(ellipse at 65% 35%, ${gc}cc 0%, ${gc}44 40%, transparent 70%)`}} />
-        )}
-      </AnimatePresence>
+      <ModuleOverlay show={act>=6} num="Modul 03" name="E-Akademik" tagline={mod.tagline} gc={gc} pos="bottom-[8%] left-[4%]" />
+      <FloatAiChip show={act>=5} message="Sistem QR dinamik disahkan oleh JPP untuk memastikan ketelusan mata merit." />
     </CinematicEnvelope>
   );
 }
@@ -1648,101 +1792,257 @@ function AkademikPanel({ step, gc, clicking }: { step:number; gc:string; clickin
   );
 }
 
-// ─── Scene 04: PolyMart — "Horizontal Dolly Shot + Card Flip" ────────────────
-// Camera: wide dolly pan L→R | product cards flip 3D | FloatAI recommends
+// ─── Scene 04: PolyMart — "Marketplace Sneaker Drop Layout" ──────────────────
+// Camera: wide dolly pan | accurate layout matched to image | energetic loading
 function PolyMartScene({ mod }: SceneProps) {
   const [act, setAct] = useState(0);
-  const [flipped, setFlipped] = useState<number[]>([]);
   const [cart, setCart] = useState(0);
+
   useEffect(() => {
     const ts = [
-      setTimeout(() => setAct(1), 300),
-      setTimeout(() => setAct(2), 1500),
-      setTimeout(() => { setFlipped([0]); }, 2200),
-      setTimeout(() => { setFlipped([0,1]); }, 2800),
-      setTimeout(() => { setFlipped([0,1,2]); }, 3400),
-      setTimeout(() => setAct(3), 4200),
-      setTimeout(() => { setAct(4); setCart(1); }, 5000),
-      setTimeout(() => setAct(5), 7000),
-      setTimeout(() => setAct(6), 9500),
+      setTimeout(() => setAct(1), 500),   // Phase 1: Dashboard Frame slam entry
+      setTimeout(() => setAct(2), 1500),  // Phase 2: Stagger in categories & banner
+      setTimeout(() => setAct(3), 2500),  // Phase 3: Peniaga Aktif load
+      setTimeout(() => setAct(4), 3500),  // Phase 4: Products grid slam
+      setTimeout(() => { setAct(5); setCart(1); }, 5000),  // Phase 5: Add to cart stomp!
+      setTimeout(() => setAct(6), 7500),  // Phase 6: Resolution/Overlay
     ];
     return () => ts.forEach(clearTimeout);
   }, []);
-  const gc = mod.gc;
-  const cats = ['Semua','Makanan','Minuman','Aksesori','Pakaian','Elektronik','Umum'];
-  const products = [
-    { name:'Buku Kalkulus', price:'RM 25', emoji:'📘', seller:'Danish Bo...', stars:4.2 },
-    { name:'Earphone Sony', price:'RM 89', emoji:'🎧', seller:'Agrosea Ac...', stars:4.8 },
-    { name:'Kasut Sukan', price:'RM 120', emoji:'👟', seller:'Danish Bo...', stars:4.5 },
+
+  const gc = mod.gc; // #f59e0b (Amber/Orange)
+  
+  const cats = [
+    { name: 'Semua', emoji: '📄' }, { name: 'Makanan', emoji: '🍔' }, 
+    { name: 'Minuman', emoji: '🥤' }, { name: 'Aksesori', emoji: '💎' }, 
+    { name: 'Perkhidmatan', emoji: '🔧' }, { name: 'Pakaian', emoji: '👕' }, 
+    { name: 'Elektronik', emoji: '📱' }, { name: 'Umum', emoji: '📦' }
   ];
+
+  const products = [1, 2, 3, 4]; // Using 4 for a visually balanced grid in the short time
+
   return (
     <CinematicEnvelope gc={gc}>
-      {/* Browser frame — blur-rush entry then dramatic dolly pan + perspective tilt */}
-      <ExplodingParticles active={cart>0} emoji="🪙" count={30} />
-      <motion.div className="absolute inset-[3%] rounded-[1.2vw] overflow-hidden border border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.95)]" style={{background:'#0d0a07',transformStyle:'preserve-3d'}}
-        initial={{scale:1.08,filter:'blur(20px)',opacity:0,rotateY:8,rotateX:5}} animate={act>=1?{scale:1,filter:'blur(0px)',opacity:1,rotateY:act>=5?[-1,1,-1]:[-1,3,-1],rotateX:act>=5?[0,1,0]:[2,0,2],x: act >= 2 ? [0, -35, 10, -20, 0] : 0}:{}} transition={act>=2?{scale:{duration:1,ease:CE},filter:{duration:0.6},rotateY:{duration:10,repeat:Infinity,ease:'easeInOut'},rotateX:{duration:8,repeat:Infinity,ease:'easeInOut'},x:{duration:15,ease:'easeInOut',repeat:Infinity}}:spS(0)}>
-        {/* Navbar */}
-        <div className="flex items-center gap-[0.8vw] px-[1.5vw] py-[0.8vw] border-b border-white/5 relative z-20" style={{background:'#100c07'}}>
-          <div className="flex items-center gap-[0.5vw]">
-            <motion.div animate={{scale:[1,1.1,1], rotate:[0,5,-5,0]}} transition={{duration:3, repeat:Infinity, ease:'easeInOut'}} className="w-[1.8vw] h-[1.8vw] rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.3)]" style={{background:gc}}><span className="text-[0.8vw]">🛍️</span></motion.div>
-            <div><p className="text-[0.7vw] font-black" style={{color:gc}}>PolyMart</p><p className="text-[0.42vw] text-white/30">MARKETPLACE</p></div>
-          </div>
-          <div className="flex-1 mx-[1vw] h-[1.8vw] rounded-full border border-white/10 flex items-center px-[0.8vw] gap-[0.4vw]" style={{background:'#1a1208'}}>
-            <span className="text-[0.6vw] text-white/20">🔍</span><span className="text-[0.6vw] text-white/20">Cari produk atau kedai...</span>
-          </div>
-          <div className="flex items-center gap-[0.5vw]">
-            <div className="w-[1.5vw] h-[1.5vw] rounded-full border border-white/20 flex items-center justify-center text-[0.7vw] relative">🛒
-              {cart>0 && <motion.div initial={{scale:0}} animate={{scale:1}} className="absolute -top-[20%] -right-[20%] w-[0.6vw] h-[0.6vw] rounded-full" style={{background:gc, boxShadow:`0 0 10px ${gc}`}}/>}
+      
+      {/* ─── STROBE LIGHT EFFECT ON ENTRY ─── */}
+      <AnimatePresence>
+        {act === 1 && (
+          <motion.div 
+            initial={{ opacity: 1 }} 
+            animate={{ opacity: [1, 0, 1, 0, 0.5, 0] }} 
+            transition={{ duration: 0.8, ease: "linear" }}
+            className="absolute inset-0 bg-amber-500 mix-blend-overlay z-50 pointer-events-none"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ─── PHASE 5: CART EXPLOSION ─── */}
+      <ExplodingParticles active={cart>0} emoji="🛒" count={50} />
+
+      <motion.div 
+        className="absolute inset-[2%] rounded-[1.5vw] overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.95)]" 
+        style={{background:'#0a0a0a', transformStyle:'preserve-3d'}}
+        // Aggressive Slam Entry
+        initial={{ scale: 3, filter: 'blur(30px)', opacity: 0, rotateY: 15, rotateX: 10, y: '-20vh' }} 
+        animate={
+          act >= 1 
+            ? { scale: 1, filter: 'blur(0px)', opacity: 1, rotateY: act>=5 ? [0,2,-2,0] : [-2,2,-2], rotateX: act>=5 ? 0 : [2,0,2], y: '0vh' } 
+            : {}
+        } 
+        transition={
+          act === 1 
+            ? { scale: { type: 'spring', stiffness: 200, damping: 15 }, opacity: { duration: 0.2 }, y: { type: 'spring', stiffness: 200, damping: 15 } }
+            : act >= 2 
+            ? { rotateY: { duration: 8, repeat: Infinity, ease: 'easeInOut' }, rotateX: { duration: 6, repeat: Infinity, ease: 'easeInOut' } }
+            : spS(0)
+        }
+      >
+        
+        {/* Navbar (Top) */}
+        <div className="flex items-center gap-[2vw] px-[2vw] py-[1.2vw] border-b border-white/5 bg-[#0d0d0d] relative z-20">
+          {/* Logo */}
+          <div className="flex items-center gap-[0.8vw]">
+            <span className="text-white/60">←</span>
+            <motion.div 
+              animate={{ rotateZ: act >= 5 ? [0, 360] : 0 }} 
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+              className="w-[2.5vw] h-[2.5vw] rounded-[0.5vw] flex items-center justify-center shadow-[0_0_20px_rgba(245,158,11,0.5)]" 
+              style={{background:gc}}
+            >
+              <span className="text-[1.2vw]">🛍️</span>
+            </motion.div>
+            <div>
+              <p className="text-[1vw] font-black text-white leading-none tracking-tighter">POLYMART</p>
+              <p className="text-[0.6vw] text-amber-500 tracking-[0.2em] font-bold">MARKETPLACE</p>
             </div>
-            <AnimatePresence mode="wait"><motion.span key={cart} initial={{scale:1.5,opacity:0}} animate={{scale:1,opacity:1}} transition={{duration:0.3}} className="text-[0.65vw] font-bold" style={{color:gc}}>{cart}</motion.span></AnimatePresence>
+          </div>
+
+          {/* Search Bar */}
+          <div className="flex-1 h-[2.5vw] rounded-[0.5vw] flex items-center px-[1vw] gap-[0.5vw] bg-[#141414] border border-white/5">
+            <span className="text-[1vw] text-white/30">🔍</span>
+            <span className="text-[0.8vw] text-white/30">Cari sneakers, baju, makanan...</span>
+          </div>
+
+          {/* Icons */}
+          <div className="flex items-center gap-[1vw] text-white/40 text-[1.2vw]">
+            <span>📦</span>
+            <span>⊞</span>
           </div>
         </div>
-        {/* Category pills — stagger in */}
-        <motion.div className="flex gap-[0.5vw] px-[1.5vw] py-[0.7vw] border-b border-white/5 overflow-hidden relative z-10" style={{background:'#0d0a07'}}>
-          {cats.map((c,i) => (
-            <motion.div key={c} initial={{y:-20,opacity:0,filter:'blur(5px)'}} animate={act>=1?{y:0,opacity:1,filter:'blur(0px)'}:{}} transition={{delay:0.3+i*0.07,duration:0.6,ease:CE}} className={`px-[0.7vw] py-[0.3vw] rounded-full text-[0.6vw] font-medium whitespace-nowrap ${i===0?'text-black font-bold':'text-white/50 border border-white/10'}`} style={i===0?{background:gc}:{}}>
-              {c}
+
+        {/* Categories (Horizontal Scroll) */}
+        <div className="flex gap-[0.8vw] px-[2vw] py-[1vw] bg-[#0d0d0d] overflow-hidden relative z-10">
+          {cats.map((c, i) => (
+            <motion.div 
+              key={c.name} 
+              initial={{ x: 100, opacity: 0, skewX: -20 }} 
+              animate={act >= 2 ? { x: 0, opacity: 1, skewX: 0 } : {}} 
+              transition={{ delay: i * 0.05, type: 'spring', bounce: 0.4 }}
+              className={`flex items-center gap-[0.5vw] px-[1.2vw] py-[0.5vw] rounded-[0.5vw] text-[0.8vw] whitespace-nowrap cursor-pointer transition-colors duration-300 ${i===0 ? 'bg-[#f59e0b20] border border-[#f59e0b50] text-[#f59e0b]' : 'bg-[#141414] border border-white/5 text-white/60'}`}
+            >
+              <span>{c.emoji}</span> <span className="font-bold uppercase tracking-wider">{c.name}</span>
             </motion.div>
           ))}
-        </motion.div>
-        {/* Hero banner */}
-        <motion.div initial={{opacity:0,y:30,filter:'blur(10px)'}} animate={act>=1?{opacity:1,y:0,filter:'blur(0px)'}:{}} transition={{delay:0.5,duration:0.8,ease:CE}} className="mx-[1.5vw] mt-[1vw] p-[1vw] rounded-[0.8vw] flex justify-between items-center relative overflow-hidden" style={{background:`linear-gradient(135deg, #1a0e00, #2d1800)`, border:`1px solid ${gc}30`}}>
-          <motion.div animate={{x:['-100%','200%']}} transition={{duration:3, repeat:Infinity, repeatDelay:2, ease:'easeInOut'}} className="absolute inset-0 bg-white/5 skew-x-[-30deg] w-[30%]" />
-          <div className="relative z-10">
-            <p className="text-[0.55vw] uppercase tracking-widest font-bold mb-[0.2vw]" style={{color:gc}}>POLYMART BETA</p>
-            <p className="text-[1.3vw] font-black text-white leading-tight">Jelajah Kedai</p>
-            <p className="text-[1.3vw] font-black leading-tight mb-[0.3vw]" style={{color:gc}}>Kampus Anda</p>
-            <p className="text-[0.6vw] text-white/40 mt-[0.3vw]">Tempat produk dari peniaga berdaftar JPP.</p>
-            <div className="flex gap-[0.8vw] mt-[0.5vw]">
+        </div>
+
+        <div className="px-[2vw] py-[1.5vw] overflow-y-auto h-[calc(100%-8vw)] hide-scrollbar pb-[10vw]">
+          
+          {/* Hero Banner: SNEAKER DROP / HYPEBEAST VIBE */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8, rotateX: 20 }} 
+            animate={act >= 2 ? { opacity: 1, scale: 1, rotateX: 0 } : {}} 
+            transition={{ type: 'spring', bounce: 0.6, delay: 0.3 }}
+            className="w-full rounded-[1vw] p-[3vw] relative overflow-hidden flex justify-between items-center"
+            style={{ background: '#111', border: `2px solid ${gc}40` }}
+          >
+            {/* Background Marquee Text */}
+            <div className="absolute inset-0 overflow-hidden opacity-20 pointer-events-none flex flex-col justify-center gap-[1vw] rotate-[-5deg] scale-110">
+              <motion.div animate={{ x: ['0%', '-50%'] }} transition={{ duration: 10, repeat: Infinity, ease: 'linear' }} className="whitespace-nowrap">
+                {Array(10).fill('🔥 LIMITED DROP 🔥 NEW ARRIVALS 🔥 EXCLUSIVE ').map((t, i) => (
+                  <span key={i} className="text-[5vw] font-black text-amber-500 uppercase tracking-tighter px-[1vw]">{t}</span>
+                ))}
+              </motion.div>
+              <motion.div animate={{ x: ['-50%', '0%'] }} transition={{ duration: 8, repeat: Infinity, ease: 'linear' }} className="whitespace-nowrap">
+                {Array(10).fill('STREETWEAR ✖ KAMPUS ✖ JPP POLISAS ✖ ').map((t, i) => (
+                  <span key={i} className="text-[5vw] font-black text-transparent uppercase tracking-tighter px-[1vw]" style={{ WebkitTextStroke: '2px #f59e0b' }}>{t}</span>
+                ))}
+              </motion.div>
+            </div>
+
+            {/* Banner Content */}
+            <div className="relative z-10 w-[50%]">
+              <div className="flex items-center gap-[0.5vw] mb-[1vw]">
+                <div className="px-[0.8vw] py-[0.3vw] bg-amber-500 text-black font-black text-[0.7vw] uppercase tracking-widest rounded-sm">HYPE DROP</div>
+                <p className="text-[0.7vw] font-bold text-white uppercase tracking-widest">POLYMART BETA</p>
+              </div>
+              <h1 className="text-[4vw] font-black text-white leading-[0.9] tracking-tighter uppercase">Jelajah</h1>
+              <h1 className="text-[4vw] font-black text-amber-500 leading-[0.9] tracking-tighter uppercase mb-[1vw]" style={{ textShadow: `0 0 40px ${gc}` }}>Kampus</h1>
+              <p className="text-[0.9vw] text-white/80 mb-[2vw] font-medium border-l-4 border-amber-500 pl-[1vw]">Tempah produk eksklusif dari peniaga berdaftar JPP. Siapa cepat dia dapat.</p>
+
+              <div className="flex gap-[1vw]">
+                <div className="px-[1.5vw] py-[0.8vw] bg-white text-black font-black text-[0.9vw] uppercase tracking-wider rounded-sm cursor-pointer hover:bg-amber-500 transition-colors">Beli Sekarang</div>
+                <div className="px-[1.5vw] py-[0.8vw] border-2 border-white text-white font-black text-[0.9vw] uppercase tracking-wider rounded-sm cursor-pointer hover:bg-white hover:text-black transition-colors">Lihat Koleksi</div>
+              </div>
+            </div>
+
+            {/* 3D FLOATING SNEAKER (HYPE) */}
+            <motion.div 
+              animate={{ y: [-15, 15, -15], rotateZ: [-5, 5, -5], rotateY: [0, 10, -10, 0] }} 
+              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+              className="relative z-10 w-[20vw] h-[20vw] flex items-center justify-center filter drop-shadow-[0_40px_50px_rgba(245,158,11,0.5)]"
+              style={{ perspective: '1000px' }}
+            >
+              <motion.div 
+                animate={{ rotateY: [0, 360] }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                className="text-[15vw] leading-none"
+              >
+                👟
+              </motion.div>
+            </motion.div>
+          </motion.div>
+
+          {/* Peniaga Aktif */}
+          <div className="mt-[3vw]">
+            <div className="flex justify-between items-center mb-[1.5vw]">
+              <div className="flex items-center gap-[0.5vw]">
+                <motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 1, repeat: Infinity }} className="text-amber-500 text-[1.2vw]">●</motion.span>
+                <h2 className="text-[1.5vw] font-black text-white uppercase tracking-tighter">Peniaga Hot 🔥</h2>
+              </div>
+            </div>
+            
+            <div className="flex gap-[1.5vw]">
+              {['SUPREME BITE', 'AGROSEA HYPE'].map((name, i) => (
+                <motion.div 
+                  key={name}
+                  initial={{ scale: 0, opacity: 0, rotate: -10 }}
+                  animate={act >= 3 ? { scale: 1, opacity: 1, rotate: 0 } : {}}
+                  transition={{ type: 'spring', bounce: 0.6, delay: 0.5 + i*0.1 }}
+                  className="flex flex-col items-center gap-[0.8vw] group cursor-pointer"
+                >
+                  <div className="w-[6vw] h-[6vw] rounded-xl bg-gradient-to-tr from-amber-600 to-amber-400 border-2 border-white flex items-center justify-center text-[2.5vw] shadow-lg group-hover:scale-110 transition-transform">🏪</div>
+                  <p className="text-[0.8vw] font-black text-white uppercase tracking-wider">{name}</p>
+                </motion.div>
+              ))}
             </div>
           </div>
-          <motion.div animate={{y:[-3, 3, -3]}} transition={{duration:3, repeat:Infinity, ease:'easeInOut'}} className="text-[5vw] filter drop-shadow-[0_10px_20px_rgba(245,158,11,0.4)]">🛍️</motion.div>
-        </motion.div>
-        {/* Product cards — 3D flip in */}
-        <div className="px-[1.5vw] mt-[1vw]">
-          <motion.p initial={{opacity:0}} animate={act>=2?{opacity:1}:{}} className="text-[0.6vw] font-bold mb-[0.7vw]" style={{color:gc}}>⚡ Semua Produk (12)</motion.p>
-          <div className="flex gap-[0.8vw]">
-            {products.map((p,i) => (
-              <div key={p.name} className="flex-1" style={{perspective:'600px'}}>
-                <motion.div animate={flipped.includes(i)?{rotateY:0,opacity:1}:{rotateY:-90,opacity:0}} transition={{duration:0.5,ease:SE}} className="rounded-[0.6vw] overflow-hidden border border-white/5" style={{background:'#1a1208',backfaceVisibility:'hidden'}}>
-                  <div className="h-[6vw] flex items-center justify-center" style={{background:'#231608'}}><span className="text-[3vw]">{p.emoji}</span></div>
-                  <div className="p-[0.6vw]">
-                    <p className="text-[0.6vw] text-white/50 text-center mb-[0.2vw]">Makanan</p>
-                    <p className="text-[0.7vw] font-bold text-white text-center">{p.name}</p>
-                    <p className="text-[0.65vw] font-black text-center mt-[0.3vw]" style={{color:gc}}>{p.price}</p>
-                    <div className="flex items-center justify-between mt-[0.5vw]">
-                      <span className="text-[0.5vw] text-white/30">⭐ {p.stars}</span>
-                      <motion.button animate={act===3&&i===1?{scale:[1,0.85,1.15,1]}:{}} transition={{duration:0.4}} onClick={()=>setCart(c=>c+1)} className="px-[0.5vw] py-[0.2vw] rounded-[0.3vw] text-[0.55vw] font-bold text-black" style={{background: act>=2?gc:'#444'}}>+ Troli</motion.button>
-                    </div>
+
+          {/* Semua Produk */}
+          <div className="mt-[4vw]">
+            <div className="flex justify-between items-center mb-[2vw]">
+              <h2 className="text-[1.5vw] font-black text-white uppercase tracking-tighter">Drops Terkini <span className="text-amber-500 font-normal ml-[0.5vw]">(12)</span></h2>
+              <div className="px-[1vw] py-[0.5vw] rounded-sm bg-amber-500 text-black text-[0.8vw] font-black uppercase tracking-widest cursor-pointer hover:bg-white transition-colors">Tapis ⚡</div>
+            </div>
+
+            {/* Product Grid (Stomp Entry) */}
+            <div className="grid grid-cols-4 gap-[1.5vw]">
+              {products.map((p, i) => (
+                <motion.div 
+                  key={i}
+                  initial={{ scale: 2, opacity: 0, filter: 'blur(20px)' }}
+                  animate={act >= 4 ? { scale: 1, opacity: 1, filter: 'blur(0px)' } : {}}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.6 + i*0.1 }}
+                  className="bg-[#111] border-2 border-white/10 rounded-xl aspect-[3/4] p-[1.5vw] relative flex flex-col justify-between overflow-hidden cursor-pointer group hover:border-amber-500 transition-colors"
+                >
+                  <div className="flex justify-between items-start relative z-10">
+                    {i === 0 ? <span className="bg-red-600 text-white text-[0.6vw] font-black uppercase tracking-widest px-[0.8vw] py-[0.3vw] rounded-sm animate-pulse">Hampir Habis</span> : <span/>}
+                    <span className="text-white text-[0.7vw] font-black uppercase tracking-widest bg-white/10 px-[0.6vw] py-[0.2vw] rounded-sm backdrop-blur-md">Pakaian</span>
                   </div>
+                  
+                  <motion.div 
+                    whileHover={{ scale: 1.3, rotate: -10 }}
+                    className="absolute inset-0 flex items-center justify-center text-[6vw] drop-shadow-[0_20px_20px_rgba(0,0,0,0.8)]"
+                  >
+                    👕
+                  </motion.div>
+                  
+                  <div className="relative z-10 flex flex-col items-center mt-auto">
+                     <p className="text-[1.2vw] font-black text-white uppercase tracking-tighter mb-[0.2vw]">Hoodie Rasmi</p>
+                     <p className="text-[1vw] font-bold text-amber-500">RM 85</p>
+                  </div>
+
+                  {/* Add to Cart Interaction on first item */}
+                  {i === 0 && act >= 5 && (
+                    <motion.div 
+                      initial={{ scale: 0, opacity: 0 }} 
+                      animate={{ scale: [0, 2, 1], opacity: [0, 1, 0] }}
+                      transition={{ duration: 0.6 }}
+                      className="absolute inset-0 flex items-center justify-center bg-amber-500/50 z-20 backdrop-blur-sm"
+                    >
+                      <span className="text-[5vw] drop-shadow-lg">🛒🔥</span>
+                    </motion.div>
+                  )}
                 </motion.div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
+
         </div>
+
       </motion.div>
-      <ModuleOverlay show={act>=6} num="Modul 04" name="PolyMart" tagline={mod.tagline} gc={gc} />
-      <FloatAiChip show={act>=5} message="Syor untuk anda: Earphone Sony — ⭐ 4.8 | Paling popular minggu ini!" />
+
+      <ModuleOverlay show={act>=6} num="Modul 04" name="PolyMart" tagline={mod.tagline} gc={gc} pos="bottom-[8%] right-[4%]" />
+      <FloatAiChip show={act>=5} message="Sistem pasaran kampus berprestasi tinggi. Terus beli tanpa tunggu!" pos="top-[10%] right-[4%]" />
     </CinematicEnvelope>
   );
 }
