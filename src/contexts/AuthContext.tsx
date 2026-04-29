@@ -101,7 +101,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         
-        setProfile(null);
+        // 🔧 FIX: Jika profil tidak wujud (406 dari PostgREST), cipta profil minimum
+        // Ini berlaku apabila pengguna mendaftar melalui Google OAuth tetapi trigger
+        // handle_new_user tidak berjaya mencipta profil (race condition / trigger missing)
+        if (errMsg.includes('cannot coerce') || errMsg.includes('json object') || profileRes.error.code === 'PGRST116') {
+          console.warn('🔧 Profil tidak dijumpai — mencipta profil minimum untuk pengguna OAuth...');
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          if (authUser) {
+            const meta = authUser.user_metadata || {};
+            const fallbackName = (meta.full_name || meta.name || authUser.email?.split('@')[0] || 'User').toUpperCase();
+            const { data: newProfile, error: insertErr } = await supabase.from('profiles').upsert({
+              id: userId,
+              email: authUser.email,
+              full_name: fallbackName,
+              role: 'CLUB_MEMBER',
+              account_status: 'APPROVED',
+              avatar_url: meta.avatar_url || meta.picture || null,
+            }, { onConflict: 'id' }).select('*').single();
+            
+            if (!insertErr && newProfile) {
+              console.log('✅ Profil OAuth berjaya dicipta!');
+              setProfile(newProfile as Profile);
+              // Skip ke bawah untuk teruskan fetch memberships
+            } else {
+              console.error('❌ Gagal cipta profil OAuth:', insertErr);
+              setProfile(null);
+            }
+          } else {
+            setProfile(null);
+          }
+        } else {
+          setProfile(null);
+        }
       } else {
         setProfile(profileData);
         // Set primary club sebagai default selected

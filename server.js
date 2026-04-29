@@ -763,6 +763,276 @@ app.post('/api/reset-password', async (req, res) => {
 });
 
 // ==========================================
+// 9. Send Signup Verification Email via Resend
+//    (Bypass GoTrue SMTP — self-hosted SMTP blocked)
+// ==========================================
+app.post('/api/send-signup-verification', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email || typeof email !== 'string' || !email.includes('@')) {
+            return res.status(400).json({ error: 'Alamat emel tidak sah.' });
+        }
+
+        if (!supabaseAdmin) {
+            throw new Error('Supabase Admin Client tidak diinisialisasi.');
+        }
+
+        const RESEND_API_KEY = process.env.RESEND_API_KEY;
+        if (!RESEND_API_KEY) {
+            throw new Error('RESEND_API_KEY tidak dikonfigurasi.');
+        }
+
+        // Jana pautan pengesahan emel menggunakan Supabase Admin API
+        const redirectTo = process.env.GOTRUE_SITE_URL
+            ? `${process.env.GOTRUE_SITE_URL.replace(/\/$/, '')}/login`
+            : 'https://jpp.cipher-node.org/login';
+
+        const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+            type: 'signup',
+            email: email.trim().toLowerCase(),
+            options: { redirectTo },
+        });
+
+        if (linkError) {
+            console.error('[send-signup-verification] generateLink error:', linkError.message);
+            // Still return 200 to avoid email enumeration
+            return res.status(200).json({ success: true, message: 'Emel pengesahan akan dihantar jika akaun ditemui.' });
+        }
+
+        const verifyLink = linkData?.properties?.action_link;
+        if (!verifyLink) {
+            console.error('[send-signup-verification] Tiada action_link dijana');
+            return res.status(200).json({ success: true, message: 'Emel pengesahan akan dihantar jika akaun ditemui.' });
+        }
+
+        const emailHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengesahan Emel | JPP POLISAS</title>
+</head>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background-color:#f4f4f5;">
+    <div style="background-color:#f4f4f5;padding:40px 20px;text-align:center;">
+        <table align="center" style="max-width:550px;margin:0 auto;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 25px -5px rgba(0,0,0,0.05);width:100%;border-collapse:collapse;" cellpadding="0" cellspacing="0">
+            <tr>
+                <td style="padding:40px 30px;text-align:center;border-bottom:1px solid #f1f5f9;background-color:#ffffff;">
+                    <h1 style="color:#881B1B;font-size:26px;font-weight:900;margin:0;letter-spacing:-0.5px;">JPP POLISAS</h1>
+                    <p style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:3px;margin-top:6px;font-weight:800;margin-bottom:0;">Digital Portal</p>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding:40px 30px;text-align:center;background-color:#ffffff;">
+                    <div style="width:64px;height:64px;background-color:#ecfdf5;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:24px;">
+                        <span style="font-size:32px;">✅</span>
+                    </div>
+                    <h2 style="color:#0f172a;font-size:22px;font-weight:800;margin:0 0 16px 0;">Sahkan Akaun Anda</h2>
+                    <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 12px 0;text-align:left;">
+                        Terima kasih kerana mendaftar di Portal JPP POLISAS! Sila sahkan alamat emel anda untuk mengaktifkan akaun.
+                    </p>
+                    <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 32px 0;text-align:left;">
+                        Klik butang di bawah untuk mengesahkan emel anda. Pautan ini hanya sah selama <strong>24 jam</strong>.
+                    </p>
+                    <div style="margin:32px 0;">
+                        <a href="${verifyLink}" style="display:inline-block;background-color:#16a34a;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:12px;text-transform:uppercase;letter-spacing:1.5px;box-shadow:0 4px 14px 0 rgba(22,163,74,0.35);">
+                            Sahkan Emel Saya
+                        </a>
+                    </div>
+                    <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0;text-align:left;">
+                        Jika anda tidak mendaftar akaun ini, sila abaikan emel ini.
+                    </p>
+                    <div style="margin-top:24px;padding:16px;background-color:#f8fafc;border-radius:10px;text-align:left;border:1px solid #e2e8f0;">
+                        <p style="color:#64748b;font-size:12px;margin:0;word-break:break-all;">
+                            Atau salin pautan ini ke pelayar anda:<br/>
+                            <span style="color:#16a34a;font-size:11px;">${verifyLink}</span>
+                        </p>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding:24px 30px;background-color:#f8fafc;text-align:center;border-top:1px solid #f1f5f9;">
+                    <p style="color:#94a3b8;font-size:12px;margin:0;font-weight:500;">&copy; ${new Date().getFullYear()} Jawatankuasa Perwakilan Pelajar POLISAS.<br/>Hak cipta terpelihara.</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>`;
+
+        const resendResponse = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${RESEND_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                from: 'Sistem JPP POLISAS <jpp@cipher-node.org>',
+                to: email.trim().toLowerCase(),
+                subject: '✅ Sahkan Akaun Anda — JPP POLISAS',
+                html: emailHtml,
+            }),
+        });
+
+        const resendData = await resendResponse.json();
+
+        if (!resendResponse.ok) {
+            console.error('[send-signup-verification] Resend API error:', resendData);
+            throw new Error(resendData.message || 'Gagal menghantar emel pengesahan.');
+        }
+
+        console.log(`[send-signup-verification] Emel pengesahan berjaya dihantar ke: ${email}`);
+        return res.status(200).json({ success: true, message: 'Emel pengesahan telah dihantar.' });
+
+    } catch (error) {
+        console.error('[send-signup-verification] Error:', error.message);
+        return res.status(500).json({ error: error.message || 'Ralat pelayan dalaman.' });
+    }
+});
+
+// ==========================================
+// 10. Resend Verification Email via Resend
+//     (For users who didn't receive the first email)
+// ==========================================
+app.post('/api/resend-verification', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email || typeof email !== 'string' || !email.includes('@')) {
+            return res.status(400).json({ error: 'Alamat emel tidak sah.' });
+        }
+
+        if (!supabaseAdmin) {
+            throw new Error('Supabase Admin Client tidak diinisialisasi.');
+        }
+
+        const RESEND_API_KEY = process.env.RESEND_API_KEY;
+        if (!RESEND_API_KEY) {
+            throw new Error('RESEND_API_KEY tidak dikonfigurasi.');
+        }
+
+        // Check if user exists and is not yet confirmed
+        const { data: { users }, error: listErr } = await supabaseAdmin.auth.admin.listUsers();
+        
+        const targetUser = users?.find(u => u.email?.toLowerCase() === email.trim().toLowerCase());
+        
+        if (!targetUser) {
+            // Don't reveal whether user exists
+            return res.status(200).json({ success: true, message: 'Jika emel ini berdaftar, pautan pengesahan akan dihantar.' });
+        }
+
+        if (targetUser.email_confirmed_at) {
+            return res.status(200).json({ success: true, message: 'Emel ini sudah disahkan. Sila cuba log masuk.' });
+        }
+
+        // Generate new verification link
+        const redirectTo = process.env.GOTRUE_SITE_URL
+            ? `${process.env.GOTRUE_SITE_URL.replace(/\/$/, '')}/login`
+            : 'https://jpp.cipher-node.org/login';
+
+        const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+            type: 'signup',
+            email: email.trim().toLowerCase(),
+            options: { redirectTo },
+        });
+
+        if (linkError) {
+            console.error('[resend-verification] generateLink error:', linkError.message);
+            return res.status(200).json({ success: true, message: 'Jika emel ini berdaftar, pautan pengesahan akan dihantar.' });
+        }
+
+        const verifyLink = linkData?.properties?.action_link;
+        if (!verifyLink) {
+            return res.status(200).json({ success: true, message: 'Jika emel ini berdaftar, pautan pengesahan akan dihantar.' });
+        }
+
+        const emailHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengesahan Emel | JPP POLISAS</title>
+</head>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background-color:#f4f4f5;">
+    <div style="background-color:#f4f4f5;padding:40px 20px;text-align:center;">
+        <table align="center" style="max-width:550px;margin:0 auto;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 25px -5px rgba(0,0,0,0.05);width:100%;border-collapse:collapse;" cellpadding="0" cellspacing="0">
+            <tr>
+                <td style="padding:40px 30px;text-align:center;border-bottom:1px solid #f1f5f9;background-color:#ffffff;">
+                    <h1 style="color:#881B1B;font-size:26px;font-weight:900;margin:0;letter-spacing:-0.5px;">JPP POLISAS</h1>
+                    <p style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:3px;margin-top:6px;font-weight:800;margin-bottom:0;">Digital Portal</p>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding:40px 30px;text-align:center;background-color:#ffffff;">
+                    <div style="width:64px;height:64px;background-color:#ecfdf5;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:24px;">
+                        <span style="font-size:32px;">📬</span>
+                    </div>
+                    <h2 style="color:#0f172a;font-size:22px;font-weight:800;margin:0 0 16px 0;">Pautan Pengesahan Baharu</h2>
+                    <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 12px 0;text-align:left;">
+                        Anda telah meminta pautan pengesahan emel baharu untuk akaun JPP POLISAS anda.
+                    </p>
+                    <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 32px 0;text-align:left;">
+                        Klik butang di bawah untuk mengesahkan emel anda. Pautan ini hanya sah selama <strong>24 jam</strong>.
+                    </p>
+                    <div style="margin:32px 0;">
+                        <a href="${verifyLink}" style="display:inline-block;background-color:#16a34a;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:12px;text-transform:uppercase;letter-spacing:1.5px;box-shadow:0 4px 14px 0 rgba(22,163,74,0.35);">
+                            Sahkan Emel Saya
+                        </a>
+                    </div>
+                    <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0;text-align:left;">
+                        Jika anda tidak mendaftar akaun ini, sila abaikan emel ini.
+                    </p>
+                    <div style="margin-top:24px;padding:16px;background-color:#f8fafc;border-radius:10px;text-align:left;border:1px solid #e2e8f0;">
+                        <p style="color:#64748b;font-size:12px;margin:0;word-break:break-all;">
+                            Atau salin pautan ini ke pelayar anda:<br/>
+                            <span style="color:#16a34a;font-size:11px;">${verifyLink}</span>
+                        </p>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding:24px 30px;background-color:#f8fafc;text-align:center;border-top:1px solid #f1f5f9;">
+                    <p style="color:#94a3b8;font-size:12px;margin:0;font-weight:500;">&copy; ${new Date().getFullYear()} Jawatankuasa Perwakilan Pelajar POLISAS.<br/>Hak cipta terpelihara.</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>`;
+
+        const resendResponse = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${RESEND_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                from: 'Sistem JPP POLISAS <jpp@cipher-node.org>',
+                to: email.trim().toLowerCase(),
+                subject: '📬 Pautan Pengesahan Baharu — JPP POLISAS',
+                html: emailHtml,
+            }),
+        });
+
+        const resendData = await resendResponse.json();
+
+        if (!resendResponse.ok) {
+            console.error('[resend-verification] Resend API error:', resendData);
+            throw new Error(resendData.message || 'Gagal menghantar emel pengesahan.');
+        }
+
+        console.log(`[resend-verification] Emel pengesahan dihantar semula ke: ${email}`);
+        return res.status(200).json({ success: true, message: 'Pautan pengesahan baharu telah dihantar ke emel anda.' });
+
+    } catch (error) {
+        console.error('[resend-verification] Error:', error.message);
+        return res.status(500).json({ error: error.message || 'Ralat pelayan dalaman.' });
+    }
+});
+
+// ==========================================
 // Serve Static Frontend (Vite Build)
 // ==========================================
 // After building the Vite app, it outputs to 'dist'. We serve it here.

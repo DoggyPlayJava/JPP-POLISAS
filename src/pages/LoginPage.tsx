@@ -27,6 +27,9 @@ export function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [resendLoading, setResendLoading] = useState(false);
   const [showManualRegister, setShowManualRegister] = useState(false);
   const [traditionalRegistrationEnabled, setTraditionalRegistrationEnabled] = useState(true);
 
@@ -43,7 +46,7 @@ export function LoginPage() {
   const resetForm = () => {
     setStep(1); setRegisterMode('student'); setJabatan(''); setLeaderRole('CLUB_PRESIDENT');
     setStaffRole('STAFF'); setLeaderClubId(''); setFullName(''); setMatricNo(''); setEmail(''); setPassword('');
-    setPhone(''); setPasscode(''); setShowManualRegister(false);
+    setPhone(''); setPasscode(''); setShowManualRegister(false); setVerificationSent(false); setRegisteredEmail('');
   };
 
   // Simpan redirect URL ke sessionStorage serta-merta bila login page dimuatkan.
@@ -188,16 +191,28 @@ export function LoginPage() {
         localStorage.setItem('is_new_register', 'true');
       }
 
-      toast.success(
-        isStaff
-          ? (isAdvisor ? 'Akaun staf didaftarkan. Permohonan Penasihat kelab sedang disemak.' : 'Akaun Staf berjaya didaftar dan aktif!')
-          : (registerMode === 'student'
-            ? `Akaun berjaya didaftar! Sila semak peti masuk emel anda untuk pengesahan.`
-            : 'Akaun berjaya didaftar! Anda dimasukkan ke Kelab Akademik anda. Permohonan kepimpinan anda akan disemak oleh Penasihat.')
-      );
+      // Hantar emel pengesahan melalui Resend (bypass GoTrue SMTP yang rosak)
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+      try {
+        await fetch(`${API_BASE_URL}/api/send-signup-verification`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim().toLowerCase() }),
+        });
+      } catch (verifyErr) {
+        console.warn('[Register] Gagal hantar emel pengesahan via Resend:', verifyErr);
+      }
 
-      setIsSignUp(false);
-      resetForm();
+      if (isStaff) {
+        toast.success(isAdvisor ? 'Akaun staf didaftarkan. Permohonan Penasihat kelab sedang disemak.' : 'Akaun Staf berjaya didaftar dan aktif!');
+        setIsSignUp(false);
+        resetForm();
+      } else {
+        // Tunjuk skrin pengesahan emel dengan butang resend
+        setRegisteredEmail(email.trim().toLowerCase());
+        setVerificationSent(true);
+        toast.success('Akaun berjaya didaftar! Sila semak emel anda.');
+      }
     } catch (error: any) {
       localStorage.removeItem('is_new_register');
       const msg: Record<string, string> = {
@@ -314,7 +329,46 @@ export function LoginPage() {
           </div>
 
           <div className="space-y-6">
-            {resetSent ? (
+            {verificationSent ? (
+              <div className="py-8 text-center space-y-4">
+                <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto">
+                  <Mail className="w-8 h-8 text-emerald-500" />
+                </div>
+                <p className="font-bold text-foreground text-lg">Sahkan Emel Anda ✅</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Pautan pengesahan telah dihantar ke <span className="font-bold text-primary">{registeredEmail}</span>.
+                  <br/>Sila semak peti masuk (dan folder spam) anda.
+                </p>
+                <div className="flex flex-col gap-3 pt-4">
+                  <Button variant="outline" disabled={resendLoading}
+                    className="rounded-xl h-12 px-8 font-bold text-xs uppercase tracking-widest"
+                    onClick={async () => {
+                      setResendLoading(true);
+                      try {
+                        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+                        const resp = await fetch(`${API_BASE_URL}/api/resend-verification`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email: registeredEmail }),
+                        });
+                        const data = await resp.json();
+                        toast.success(data.message || 'Pautan pengesahan baharu telah dihantar!');
+                      } catch {
+                        toast.error('Gagal menghantar semula emel pengesahan.');
+                      } finally {
+                        setResendLoading(false);
+                      }
+                    }}>
+                    {resendLoading ? 'Menghantar...' : '📬 Hantar Semula Emel Pengesahan'}
+                  </Button>
+                  <Button variant="ghost"
+                    className="rounded-xl h-10 font-bold text-xs uppercase tracking-widest text-muted-foreground"
+                    onClick={() => { setVerificationSent(false); setIsSignUp(false); resetForm(); }}>
+                    Kembali ke Log Masuk
+                  </Button>
+                </div>
+              </div>
+            ) : resetSent ? (
               <div className="py-8 text-center space-y-4">
                 <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto">
                   <Mail className="w-8 h-8 text-emerald-500" />
@@ -662,7 +716,7 @@ export function LoginPage() {
             )}
           </div>
 
-          {!resetSent && (
+          {!resetSent && !verificationSent && (
             <div className="mt-8 flex justify-center">
               {isForgotPassword ? (
                 <button type="button" onClick={() => setIsForgotPassword(false)}
