@@ -1086,114 +1086,287 @@ function KebajikanScene({ mod }: SceneProps) {
   );
 }
 
-// ─── Scene 02: E-Keusahawanan — "Dutch Tilt + POS Receipt" ───────────────────
-// Camera: 8° dutch tilt, extreme close-up POS → receipt prints → tilt corrects
+// ─── Scene 02: E-Keusahawanan — "Venture Capital / Wall Street Dashboard" ────
+// Camera: Fast Matrix Background -> Massive Curved Dashboard Drops In -> Exponential Chart -> Product Explosion
 function KeusahawananScene({ mod }: SceneProps) {
   const [act, setAct] = useState(0);
-  const [items, setItems] = useState<number[]>([]);
-  const [total, setTotal] = useState(0);
+  const [rev, setRev] = useState(0);
+  const [margin, setMargin] = useState(0);
+
   useEffect(() => {
     const ts = [
-      setTimeout(() => setAct(1), 300),
-      setTimeout(() => setAct(2), 2000),
-      setTimeout(() => { setAct(3); setItems([0]); }, 3000),
-      setTimeout(() => setItems([0,1]), 3800),
-      setTimeout(() => setItems([0,1,2]), 4600),
-      setTimeout(() => { setAct(4); setTotal(100); }, 5400),
-      setTimeout(() => setAct(5), 6200),
-      setTimeout(() => setAct(6), 8000),
-      setTimeout(() => setAct(7), 10000),
+      setTimeout(() => setAct(1), 500),   // Phase 1: Dashboard drops in
+      setTimeout(() => setAct(2), 2000),  // Phase 2: Exponential Chart draws
+      setTimeout(() => setAct(3), 3500),  // Phase 3: Live Feed drops in
+      setTimeout(() => setAct(4), 5000),  // Phase 4: Profit Margin Overlay
+      setTimeout(() => setAct(5), 7000),  // Phase 5: 3D Product Explosion
+      setTimeout(() => setAct(6), 8500),  // Phase 6: Flash Resolution
+      setTimeout(() => setAct(7), 9500),  // Phase 7: Overlay
     ];
     return () => ts.forEach(clearTimeout);
   }, []);
-  const gc = mod.gc;
-  const posItems = [['Produk Premium A','RM 20.00'],['Produk Premium B','RM 45.00'],['Produk Premium C','RM 35.00']];
+
+  // Revenue Counter Effect
+  useEffect(() => {
+    if (act >= 1) {
+      let current = 0;
+      const target = 145290;
+      const step = target / 60; // Count over 1 second (approx 60 frames)
+      const timer = setInterval(() => {
+        current += step;
+        if (current >= target) {
+          setRev(target);
+          clearInterval(timer);
+        } else {
+          setRev(Math.floor(current));
+        }
+      }, 16);
+      return () => clearInterval(timer);
+    }
+  }, [act]);
+
+  // Margin Counter Effect
+  useEffect(() => {
+    if (act >= 4) {
+      let current = 0;
+      const target = 45;
+      const step = target / 30; // Count over 0.5 seconds
+      const timer = setInterval(() => {
+        current += step;
+        if (current >= target) {
+          setMargin(target);
+          clearInterval(timer);
+        } else {
+          setMargin(Math.floor(current));
+        }
+      }, 16);
+      return () => clearInterval(timer);
+    }
+  }, [act]);
+
+  const gc = mod.gc; // This will be green (#22c55e)
+  
   return (
     <CinematicEnvelope gc={gc}>
-      {/* Dutch-tilted container — continuous subtle tilt adjustment */}
-      <div className="absolute inset-0 flex items-center justify-center" style={{perspective: '1200px'}}>
-      <motion.div className="relative w-[85vw]"
-        initial={{rotate:-9,rotateY:15,rotateX:10,scale:0.88,filter:'blur(20px)',opacity:0}}
-        animate={act>=1?{rotate:act>=6?[0,-1,1,0]:[-5,-4,-6,-5], rotateY:act>=6?[0,2,-2,0]:[10,8,12,10], rotateX:act>=6?[0,1,-1,0]:[5,3,7,5], scale:1, filter:'blur(0px)', opacity:1}:{}}
-        transition={act>=6
-          ? {duration:10, ease:'easeInOut', repeat:Infinity}
-          : {rotate:{duration:8,repeat:Infinity,ease:'easeInOut'},rotateY:{duration:6,repeat:Infinity,ease:'easeInOut'},rotateX:{duration:7,repeat:Infinity,ease:'easeInOut'}, scale:{duration:1.1, ease:CE, delay:0.1}, filter:{duration:0.8, delay:0.1}, opacity:{duration:0.6, delay:0.1}}
-        }>
-        {/* Browser chrome */}
-        <ExplodingParticles active={act>=2} emoji="💵" count={25} />
-        <div className="rounded-[1.2vw] overflow-hidden shadow-[0_50px_120px_rgba(0,0,0,0.95)] border border-white/10 relative z-10" style={{background:'#0d1117', backdropFilter:'blur(20px)'}}>
-          <div className="flex items-center gap-[0.4vw] px-[1.2vw] py-[0.6vw] border-b border-white/5" style={{background:'#161b22'}}>
-            <div className="w-[0.7vw] h-[0.7vw] rounded-full bg-red-500/70"/><div className="w-[0.7vw] h-[0.7vw] rounded-full bg-yellow-500/70"/><div className="w-[0.7vw] h-[0.7vw] rounded-full bg-green-500/70"/>
-            <div className="ml-[1vw] flex items-center gap-[0.6vw]">
-              <motion.div animate={{scale:[1,1.1,1], rotate:[0,5,-5,0]}} transition={{duration:3, repeat:Infinity, ease:'easeInOut'}} className="w-[1.5vw] h-[1.5vw] rounded-full flex items-center justify-center text-[0.7vw]" style={{background:gc+'30', boxShadow:`0 0 10px ${gc}40`}}>💡</motion.div>
-              <div><p className="text-[0.6vw] font-bold" style={{color:gc}}>e-Keusahawanan — JPP POLISAS</p></div>
+      
+      {/* ─── BACKGROUND: HYPER-SPEED MATRIX / WALL STREET ─── */}
+      <div className="absolute inset-0 bg-[#020402] overflow-hidden flex items-center justify-center pointer-events-none">
+        <motion.div 
+          animate={{ opacity:[0.1, 0.3, 0.1] }} 
+          transition={{ duration:2, repeat:Infinity, ease:"easeInOut" }} 
+          className="absolute w-[80vw] h-[80vw] rounded-full blur-[120px]"
+          style={{ background: `radial-gradient(circle, ${gc}20 0%, transparent 60%)` }}
+        />
+        {/* Fast scrolling vertical data lines */}
+        <div className="absolute inset-0 flex justify-evenly opacity-20" style={{ transform: 'rotate(-15deg) scale(1.5)' }}>
+          {Array(10).fill(0).map((_, i) => (
+            <div key={i} className="w-[1px] h-full bg-gradient-to-b from-transparent via-green-500 to-transparent relative overflow-hidden">
+              <motion.div 
+                className="w-full h-[20vh] bg-green-400 blur-[2px]" 
+                animate={{ y: ['-100vh', '150vh'] }} 
+                transition={{ duration: Math.random()*2+1, repeat: Infinity, ease: 'linear', delay: Math.random() }}
+              />
             </div>
-          </div>
-          <div className="flex" style={{minHeight:'30vw',background:'#070d0b'}}>
-            {/* Sidebar */}
-            <div className="w-[18%] border-r border-white/5 p-[0.8vw] flex flex-col gap-[0.4vw]" style={{background:'#040909'}}>
-              <p className="text-[0.45vw] text-white/30 uppercase tracking-widest mb-[0.5vw]">SISTEM POS</p>
-              {['Papan Pemuka','Kedai POS','Katalog Produk','Statistik','Program'].map((item,i)=>(
-                <motion.div key={item} initial={{opacity:0,x:-15,filter:'blur(5px)'}} animate={act>=1?{opacity:1,x:0,filter:'blur(0px)'}:{}} transition={{delay:0.3+i*0.08,duration:0.6,ease:CE}} className={`text-[0.6vw] py-[0.4vw] px-[0.5vw] rounded-[0.3vw] ${i===1?'font-bold':'text-white/40'}`} style={i===1?{color:gc,background:gc+'15'}:{}}>
-                  {item}
+          ))}
+        </div>
+      </div>
+
+      {/* ─── PHASE 1: MASSIVE CURVED DASHBOARD ─── */}
+      <AnimatePresence>
+        {act >= 1 && (
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0, rotateX: 20, y: '20vh' }}
+            animate={
+              act >= 5 
+                ? { scale: 1.1, opacity: 0.3, rotateX: -10, y: '-10vh', filter: 'blur(20px)' } // Fall back during explosion
+                : { scale: 1, opacity: 1, rotateX: 0, y: '0vh' } 
+            }
+            transition={{ type: 'spring', bounce: 0.3, duration: 1.5 }}
+            className="absolute inset-x-0 top-[10%] bottom-[15%] mx-[5%] flex z-20 pointer-events-none"
+            style={{ perspective: '2000px', transformStyle: 'preserve-3d' }}
+          >
+            <div className="w-full h-full bg-white/5 backdrop-blur-[30px] border border-white/10 rounded-[2vw] shadow-[0_50px_100px_rgba(0,0,0,0.8),inset_0_0_50px_rgba(34,197,94,0.05)] overflow-hidden flex flex-col">
+              
+              {/* Header */}
+              <div className="w-full h-[5vw] border-b border-white/10 flex items-center px-[3vw] bg-black/40">
+                <div className="flex items-center gap-[1vw]">
+                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} className="w-[2.5vw] h-[2.5vw] rounded-full border border-green-500/50 flex items-center justify-center bg-green-500/10 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+                    <span className="text-[1.2vw]">📈</span>
+                  </motion.div>
+                  <div>
+                    <h2 className="text-[1.5vw] font-black text-white tracking-widest uppercase">E-Keusahawanan</h2>
+                    <p className="text-[0.6vw] text-green-400 tracking-[0.3em] uppercase">Sistem Kewangan & Jualan</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Content Area */}
+              <div className="flex-1 flex p-[2vw] gap-[2vw]">
+                
+                {/* Left: Mega Revenue Counter */}
+                <div className="flex-1 flex flex-col justify-center">
+                  <p className="text-[1vw] text-white/50 tracking-[0.5em] uppercase mb-[1vw] flex items-center gap-[0.5vw]">
+                    <span className="w-[0.5vw] h-[0.5vw] bg-green-500 rounded-full animate-pulse" /> Jumlah Pendapatan
+                  </p>
+                  <div className="relative">
+                    <motion.div animate={{ opacity:[0.5,1,0.5] }} transition={{ duration:2, repeat:Infinity }} className="absolute -inset-[2vw] bg-green-500/10 blur-[40px] rounded-full" />
+                    <h1 className="text-[6vw] font-black leading-none text-transparent bg-clip-text bg-gradient-to-br from-white via-green-100 to-green-600 drop-shadow-[0_0_20px_rgba(34,197,94,0.5)] font-mono">
+                      RM {rev.toLocaleString()}
+                    </h1>
+                  </div>
+                  
+                  {/* Mini Stats */}
+                  <div className="flex gap-[2vw] mt-[3vw]">
+                    <div>
+                      <p className="text-[0.7vw] text-white/40 uppercase tracking-wider">Unit Terjual</p>
+                      <p className="text-[2vw] font-bold text-white">4,821</p>
+                    </div>
+                    <div>
+                      <p className="text-[0.7vw] text-white/40 uppercase tracking-wider">Transaksi Aktif</p>
+                      <p className="text-[2vw] font-bold text-white">1,204</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Exponential Chart */}
+                <div className="flex-[1.2] bg-black/40 border border-white/5 rounded-[1.5vw] p-[2vw] relative overflow-hidden flex flex-col">
+                  <p className="text-[0.8vw] text-white/60 tracking-widest uppercase mb-[1vw]">Graf Unjuran Jualan</p>
+                  <div className="flex-1 relative border-l border-b border-white/20">
+                    
+                    {/* SVG Line Chart */}
+                    {act >= 2 && (
+                      <svg viewBox="0 0 100 50" preserveAspectRatio="none" className="w-full h-full overflow-visible drop-shadow-[0_10px_10px_rgba(34,197,94,0.5)]">
+                        <defs>
+                          <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={gc} stopOpacity="0.4" />
+                            <stop offset="100%" stopColor={gc} stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+                        {/* Area Fill */}
+                        <motion.path 
+                          d="M0,50 L0,45 Q20,40 40,30 T80,10 L100,5 L100,50 Z" 
+                          fill="url(#chartGrad)"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 1, delay: 0.5 }}
+                        />
+                        {/* Glowing Line */}
+                        <motion.path 
+                          d="M0,45 Q20,40 40,30 T80,10 L100,5" 
+                          fill="none" 
+                          stroke={gc} 
+                          strokeWidth="1.5" 
+                          strokeLinecap="round"
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ duration: 1.5, ease: "easeOut" }}
+                        />
+                        {/* Glowing Dot at end */}
+                        <motion.circle 
+                          cx="100" cy="5" r="1.5" fill="white" 
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: [0, 2, 1], opacity: 1, boxShadow: `0 0 20px ${gc}` }}
+                          transition={{ delay: 1.5, duration: 0.5 }}
+                        />
+                      </svg>
+                    )}
+
+                    {/* Background Grid Lines */}
+                    <div className="absolute inset-0 flex flex-col justify-between opacity-10 pointer-events-none">
+                      <div className="w-full border-t border-white" /><div className="w-full border-t border-white" /><div className="w-full border-t border-white" />
+                    </div>
+
+                    {/* ─── PHASE 4: PROFIT MARGIN OVERLAY ─── */}
+                    <AnimatePresence>
+                      {act >= 4 && (
+                        <motion.div 
+                          initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          transition={{ type: "spring", bounce: 0.5 }}
+                          className="absolute top-[20%] right-[10%] bg-green-500/20 backdrop-blur-md border border-green-400 p-[1vw] rounded-[1vw] shadow-[0_0_30px_rgba(34,197,94,0.4)]"
+                        >
+                          <p className="text-[0.6vw] text-green-200 uppercase tracking-widest font-bold mb-[0.2vw]">Margin Untung Kasar</p>
+                          <p className="text-[2.5vw] font-black text-white leading-none">+{margin}% <span className="text-[1.5vw]">🚀</span></p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── PHASE 3: LIVE SALES FEED SIDEBAR ─── */}
+      <AnimatePresence>
+        {act >= 3 && (
+          <motion.div 
+            initial={{ x: '100%', opacity: 0 }}
+            animate={act >= 5 ? { x: '100%', opacity: 0 } : { x: '0%', opacity: 1 }}
+            transition={{ type: 'spring', bounce: 0.3 }}
+            className="absolute right-[2vw] top-[15%] bottom-[20%] w-[18vw] bg-[#050a07]/80 backdrop-blur-xl border border-white/10 rounded-[1.5vw] p-[1.5vw] z-30 shadow-2xl overflow-hidden"
+          >
+            <p className="text-[0.7vw] text-green-400 font-mono tracking-widest uppercase mb-[1.5vw] flex items-center gap-[0.5vw]">
+              <span className="w-[0.5vw] h-[0.5vw] bg-green-500 rounded-full animate-ping" /> Live Feed
+            </p>
+            <div className="flex flex-col gap-[1vw]">
+              {[
+                { time: 'Bebaru ini', item: 'T-Shirt Korporat JPP', price: 'RM 45.00' },
+                { time: '1 minit lalu', item: 'Lanyard Edisi Khas', price: 'RM 15.00' },
+                { time: '3 minit lalu', item: 'Kupon Makanan Karnival', price: 'RM 10.00' },
+                { time: '5 minit lalu', item: 'Kit Siswa Baharu', price: 'RM 85.00' },
+              ].map((feed, i) => (
+                <motion.div 
+                  key={i} 
+                  initial={{ x: 50, opacity: 0 }} 
+                  animate={{ x: 0, opacity: 1 }} 
+                  transition={{ delay: 0.2 + i * 0.1, type: 'spring' }}
+                  className="bg-white/5 border border-white/5 p-[0.8vw] rounded-[0.8vw]"
+                >
+                  <p className="text-[0.5vw] text-white/40">{feed.time}</p>
+                  <p className="text-[0.8vw] font-bold text-white mt-[0.2vw]">{feed.item}</p>
+                  <p className="text-[0.9vw] font-black text-green-400 mt-[0.2vw]">{feed.price}</p>
                 </motion.div>
               ))}
             </div>
-            {/* Main content */}
-            <div className="flex-1 p-[1.2vw] flex flex-col gap-[0.8vw] relative">
-              {/* Stats row */}
-              <div className="grid grid-cols-5 gap-[0.5vw]">
-                {[['Jualan Bersih','RM 100.00',gc],['Transaksi','12','#fff'],['Unit Terjual','12','#fff'],['Purata AOV','RM 8.33','#fff'],['Untung Bersih','RM 60.00',gc]].map(([l,v,c],i)=>(
-                  <motion.div key={l} initial={{y:-30,opacity:0,filter:'blur(10px)'}} animate={act>=1?{y:[0,-3,0],opacity:1,filter:'blur(0px)'}:{}} transition={{y:{duration:4,repeat:Infinity,ease:'easeInOut',delay:1+i*0.1}, opacity:{duration:0.6,delay:0.4+i*0.08}, filter:{duration:0.6,delay:0.4+i*0.08}}} className="p-[0.6vw] rounded-[0.5vw] border border-white/5 relative overflow-hidden" style={{background:'#0d1410'}}>
-                    <div className="absolute top-0 right-0 w-[2vw] h-[2vw] blur-[10px] opacity-20" style={{background:c}} />
-                    <p className="text-[0.5vw] text-white/40 uppercase mb-[0.2vw]">{l}</p>
-                    <p className="text-[1.1vw] font-black" style={{color:c}}>{v}</p>
-                  </motion.div>
-                ))}
-              </div>
-              {/* POS receipt area */}
-              <div className="flex-1 flex gap-[0.8vw]">
-                <motion.div initial={{y:30,opacity:0,filter:'blur(15px)'}} animate={act>=1?{y:0,opacity:1,filter:'blur(0px)'}:{}} transition={{delay:0.6, duration:0.8, ease:CE}} className="flex-1 rounded-[0.6vw] p-[0.8vw] border relative overflow-hidden" style={{background:'#0a100e', borderColor: gc+'20'}}>
-                  <motion.div animate={{opacity:[0.05,0.15,0.05]}} transition={{duration:3,repeat:Infinity,ease:'easeInOut'}} className="absolute inset-0 pointer-events-none" style={{background:`radial-gradient(circle at top right, ${gc}40, transparent 40%)`}} />
-                  <p className="text-[0.65vw] font-bold text-white/60 mb-[0.6vw]">Kedai POS — Agrosea Academy</p>
-                  {/* Receipt items */}
-                  <div className="font-mono text-[0.65vw] flex flex-col gap-[0.3vw] relative z-10">
-                    {posItems.map(([name,price],i)=>(
-                      <AnimatePresence key={name}>{items.includes(i)&&(<motion.div initial={{opacity:0,y:-10,filter:'blur(8px)',scale:0.95}} animate={{opacity:1,y:0,filter:'blur(0px)',scale:1}} transition={{duration:0.4,ease:PE}} className="flex justify-between text-white/80 p-[0.3vw] rounded bg-white/5">
-                        <span className="text-green-400">✓</span><span className="flex-1 mx-[0.5vw]">{name}</span><span style={{color:gc}}>{price}</span>
-                      </motion.div>)}</AnimatePresence>
-                    ))}
-                    {items.length > 0 && <div className="border-t border-white/10 mt-[0.3vw] pt-[0.3vw] text-white/30">{'─'.repeat(30)}</div>}
-                    {total > 0 && (
-                      <div className="flex justify-between pt-[0.2vw]">
-                        <span className="text-white/60">JUMLAH</span><span style={{color:gc}}>RM {total}.00</span>
-                      </div>
-                    )}
-                  </div>
-                  {/* BAYARAN BERJAYA flash */}
-                  <AnimatePresence>{act>=5&&(<motion.div key="pay" initial={{opacity:0,scale:1.1}} animate={{opacity:[0,1,1,0],scale:1}} transition={{duration:2,times:[0,0.1,0.8,1]}} className="absolute inset-0 flex items-center justify-center rounded-[0.6vw]" style={{background:'#22c55e25'}}>
-                    <motion.div initial={{scale:0}} animate={{scale:[0,1.2,1]}} transition={{duration:0.5,ease:[0.34,1.56,0.64,1]}} className="text-center">
-                      <p className="text-[2vw] font-black" style={{color:gc}}>BAYARAN BERJAYA ✓</p>
-                      <p className="text-[0.7vw] text-white/60">RM 100.00 diterima</p>
-                    </motion.div>
-                  </motion.div>)}</AnimatePresence>
-                </motion.div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <ModuleOverlay show={act>=7} num="Modul 02" name="E-Keusahawanan" tagline={mod.tagline} gc={gc} pos="bottom-[6%] left-[2%]" />
-      </motion.div>
-      </div>
-
-      {/* Impact Flash — payment success */}
-      <AnimatePresence>
-        {act === 5 && (
-          <motion.div key="pay-flash" initial={{opacity:0}} animate={{opacity:[0,0.65,0]}} exit={{opacity:0}}
-            transition={{duration:0.6, times:[0,0.08,1]}} className="absolute inset-0 z-50 pointer-events-none"
-            style={{background:`radial-gradient(ellipse at 60% 55%, ${gc}bb 0%, ${gc}33 45%, transparent 70%)`}} />
+          </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ─── PHASE 5: 3D PRODUCT EXPLOSION ─── */}
+      <AnimatePresence>
+        {act === 5 && (
+          <motion.div 
+            initial={{ scale: 0, opacity: 0, rotateZ: -45, y: '20vh' }}
+            animate={{ scale: [0, 2, 3], opacity: [0, 1, 0], rotateZ: 0, y: '-10vh' }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none"
+          >
+            {/* Holographic PolyMart Box / Coin */}
+            <div className="relative w-[15vw] h-[15vw] flex items-center justify-center">
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="absolute inset-0 border-[0.5vw] border-green-400 rounded-[2vw] shadow-[0_0_50px_rgba(34,197,94,1)]" />
+              <motion.div animate={{ rotate: -360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} className="absolute inset-[2vw] border-[0.3vw] border-dashed border-white rounded-[1vw]" />
+              <span className="text-[5vw]">🛍️</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── PHASE 6: RESOLUTION FLASH ─── */}
+      <AnimatePresence>
+        {act === 6 && (
+          <motion.div key="res-flash" initial={{opacity:0, scale:0}} animate={{opacity:[0,1,0], scale:[0.5, 3, 6]}} exit={{opacity:0}}
+            transition={{duration:1.2, ease:"easeOut"}} className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center"
+          >
+            <div className="w-[20vw] h-[20vw] bg-green-400 rounded-full blur-[100px] mix-blend-screen" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <ModuleOverlay show={act>=7} num="Modul 02" name="E-Keusahawanan" tagline={mod.tagline} gc={gc} pos="bottom-[8%] left-[4%]" />
+      <FloatAiChip show={act>=6} message="Sistem POS Digital merekod setiap transaksi masa nyata untuk analisis JPP." />
     </CinematicEnvelope>
   );
 }
