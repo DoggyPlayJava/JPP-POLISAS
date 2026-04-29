@@ -182,27 +182,19 @@ export function LaunchVideo() {
     };
 
     const tl = [
-      setTimeout(() => setPhase(1),  2000),
-      setTimeout(() => setPhase(2),  4000),
-      setTimeout(() => setPhase(3),  6000),
-      setTimeout(() => setPhase(4),  6200),
-      setTimeout(() => setPhase(5),  7000),
-      setTimeout(() => setPhase(6),  10000),
-      setTimeout(() => setPhase(7),  13000),
-      setTimeout(() => setPhase(8),  16000),
-      setTimeout(() => setPhase(9),  18000),
-      setTimeout(() => { setPhase(10); doWipe(0); }, 21000),
-      setTimeout(() => doWipe(1), 33000),
-      setTimeout(() => doWipe(2), 45000),
-      setTimeout(() => doWipe(3), 57000),
-      setTimeout(() => doWipe(4), 69000),
-      setTimeout(() => doWipe(5), 81000),
-      setTimeout(() => setPhase(15), 93000),
-      setTimeout(() => setPhase(16), 97000),
-      setTimeout(() => setPhase(17), 101000),
-      setTimeout(() => setPhase(18), 103000),
-      setTimeout(() => setPhase(19), 109000),
-      setTimeout(() => setPhase(20), 114000),
+      setTimeout(() => setPhase(1),  8000),   // JPP DIGITAL Burst + Warp Sequence
+      setTimeout(() => { setPhase(10); setModuleIdx(0); }, 12000), // E-Kebajikan starts directly from the warp flash
+      setTimeout(() => doWipe(1), 24000),     // E-Keusahawanan
+      setTimeout(() => doWipe(2), 36000),     // E-Akademik
+      setTimeout(() => doWipe(3), 48000),     // PolyMart
+      setTimeout(() => doWipe(4), 60000),     // Sistem Kelab
+      setTimeout(() => doWipe(5), 72000),     // Karnival & SUPSAS
+      setTimeout(() => setPhase(15), 84000),  // Product Reveal
+      setTimeout(() => setPhase(16), 88000),  // Modul Text
+      setTimeout(() => setPhase(17), 92000),  // Fly Away
+      setTimeout(() => setPhase(18), 94000),  // The Numbers
+      setTimeout(() => setPhase(19), 100000), // Final Logo
+      setTimeout(() => setPhase(20), 105000), // Outro
     ];
     return () => tl.forEach(clearTimeout);
   }, []);
@@ -228,68 +220,12 @@ export function LaunchVideo() {
     <div className="h-screen w-screen bg-black text-white overflow-hidden relative select-none" style={{ perspective:'2000px', ...INTER }}>
 
       <AnimatePresence mode="wait">
-        {/* Pain Points — Glitch text with chromatic aberration */}
-        {phase === 0 && <GlitchText key="p0" text="Sistem Tradisional." />}
-        {phase === 1 && <GlitchText key="p1" text="Menunggu Tanpa Jawapan." />}
-        {phase === 2 && <GlitchText key="p2" text="Kertas Kerja Terabai." />}
+        
+        {/* New Cinematic 3D Phone Intro Sequence */}
+        {phase === 0 && <PhoneMockupIntro key="intro" />}
 
-        {/* Flashbang */}
-        {phase === 3 && <motion.div key="p3" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:0.08}} className="absolute inset-0 z-50 bg-white" />}
-
-        {/* Black Silence */}
-        {phase === 4 && <motion.div key="p4" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:0.3}} className="absolute inset-0 bg-black" />}
-
-        {/* Sudah Tamat — typewriter reveal: types red, resolves white */}
-        {phase === 5 && (
-          <motion.div key="p5" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:0.5}} className="absolute inset-0 flex items-center justify-center">
-            <SudahTamatText />
-          </motion.div>
-        )}
-
-        {/* Vision — warm ambient bloom + mask-lift */}
-        {phase === 6 && <VisionText key="p6" text="Bayangkan sebuah sistem..." />}
-        {phase === 7 && <VisionText key="p7" text="...yang sentiasa ada untuk anda." />}
-
-        {/* Memperkenalkan — expanding rings + dramatic mask-lift */}
-        {phase === 8 && (
-          <motion.div key="p8" className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden" exit={{opacity:0,scale:1.06,filter:'blur(10px)'}} transition={{duration:1.2}}>
-            {/* 3 expanding concentric rings */}
-            {[0, 0.4, 0.8].map((d, i) => (
-              <motion.div key={i}
-                initial={{scale:0,opacity:0.7}} animate={{scale:4,opacity:0}}
-                transition={{duration:2.8,delay:d,ease:'easeOut',repeat:Infinity,repeatDelay:0.8}}
-                className="absolute w-[12vw] h-[12vw] rounded-full"
-                style={{border:'1px solid rgba(99,102,241,0.5)'}} />
-            ))}
-            {/* Top line */}
-            <motion.div initial={{width:'0vw'}} animate={{width:'55vw'}} transition={{duration:1.3,ease:SE}} className="h-px bg-gradient-to-r from-transparent via-white/50 to-transparent mb-[2.8vw]" />
-            {/* Mask-lift text */}
-            <div style={{overflow:'hidden',paddingBottom:'0.15em'}}>
-              <motion.h2
-                initial={{y:'110%'}} animate={{y:'0%'}}
-                transition={{delay:0.35,duration:1.3,ease:[0.25,1,0.5,1]}}
-                className="text-[2.8vw] font-light tracking-[0.65em] text-white/85 uppercase">
-                Memperkenalkan
-              </motion.h2>
-            </div>
-            {/* Bottom line */}
-            <motion.div initial={{width:'0vw'}} animate={{width:'55vw'}} transition={{delay:0.3,duration:1.3,ease:SE}} className="h-px bg-gradient-to-r from-transparent via-white/25 to-transparent mt-[2.8vw]" />
-          </motion.div>
-        )}
-
-        {/* JPP DIGITAL with Lens Flare */}
-        {phase === 9 && (
-          <motion.div key="p9" className="absolute inset-0 flex items-center justify-center" exit={{opacity:0,scale:1.5,filter:'blur(20px)'}} transition={{duration:2}}>
-            <motion.h1 initial={{letterSpacing:'1em',opacity:0}} animate={{letterSpacing:'-0.05em',opacity:1}} transition={{duration:2,ease:SE}} className="text-[12vw] font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-300 to-white">
-              JPP DIGITAL
-            </motion.h1>
-            {/* Lens flare sweep — fires once */}
-            <motion.div className="absolute inset-0 pointer-events-none"
-              initial={{x:'-100%'}} animate={{x:'120%'}}
-              transition={{duration:1.4, ease:[0.4,0,0.2,1], delay:0.6}}
-              style={{background:'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.12) 45%, rgba(200,200,255,0.3) 50%, rgba(255,255,255,0.12) 55%, transparent 65%)'}} />
-          </motion.div>
-        )}
+        {/* JPP DIGITAL PORTAL Supernova Warp Reveal */}
+        {phase === 1 && <JppPortalSupernova key="p1" />}
 
         {/* Module Deep-Dives — rendered by moduleIdx, transitions via wipe overlay */}
         {phase >= 10 && phase < 15 && moduleIdx >= 0 && (
@@ -457,90 +393,223 @@ export function LaunchVideo() {
 }
 
 // ─── GlitchText — Pain point text with chromatic aberration + shake ────────────────────────────────
-function GlitchText({ text }: { text: string }) {
-  const [glitch, setGlitch] = useState(false);
+// ─── PhoneMockupIntro ────────────────────────────────────────────────────────
+function PhoneMockupIntro() {
+  const [act, setAct] = useState(0);
+  
   useEffect(() => {
-    const fire = () => { setGlitch(true); setTimeout(() => setGlitch(false), 140); };
-    const iv = setInterval(() => fire(), 1800 + Math.random() * 1200);
-    const t = setTimeout(() => fire(), 600); // First glitch fires early for impact
-    return () => { clearInterval(iv); clearTimeout(t); };
+    const ts = [
+      setTimeout(() => setAct(1), 500),   // Phone enters
+      setTimeout(() => setAct(2), 2000),  // Start scroll down
+      setTimeout(() => setAct(3), 4000),  // Scroll up fast
+      setTimeout(() => setAct(4), 5000),  // Cursor enters
+      setTimeout(() => setAct(5), 6500),  // Cursor clicks
+      setTimeout(() => setAct(6), 7000),  // Phone scales up (zoom in)
+    ];
+    return () => ts.forEach(clearTimeout);
   }, []);
+
   return (
-    <motion.div
-      initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0, filter:'blur(8px)'}}
-      transition={{duration:0.9}}
-      className="absolute inset-0 flex items-center justify-center">
-      <motion.h1
-        animate={glitch ? {x:[-3,4,-2,0], y:[0,1,-1,0]} : {x:0, y:0}}
-        transition={{duration:0.12, ease:'linear'}}
-        className="text-[3.2vw] font-light tracking-[0.08em]"
-        style={{
-          color: glitch ? 'rgba(255,80,80,0.9)' : 'rgba(255,255,255,0.72)',
-          textShadow: glitch
-            ? '-4px 0 rgba(255,20,20,0.7), 4px 0 rgba(30,100,255,0.6), 0 0 20px rgba(255,50,50,0.3)'
-            : 'none',
-          filter: glitch ? 'contrast(1.3) brightness(1.1)' : 'none',
-        }}>
-        {text}
-      </motion.h1>
-    </motion.div>
+    <div className="absolute inset-0 flex items-center justify-center bg-[#030303] overflow-hidden" style={{perspective: '2000px'}}>
+      
+      {/* Dynamic Background Glow */}
+      <motion.div animate={{scale:[1, 1.2, 1], opacity:[0.1, 0.3, 0.1]}} transition={{duration:4, repeat:Infinity}} className="absolute w-[40vw] h-[40vw] bg-indigo-600 rounded-full blur-[120px]" />
+
+      <motion.div 
+        initial={{y:'100vh', rotateX:30, rotateY:-20, scale:0.5}}
+        animate={
+          act === 6 ? {scale:10, opacity:0, rotateX:0, rotateY:0, y:0} : // Zoom to screen
+          act >= 1  ? {y:0, rotateX:10, rotateY:-10, scale:1} :          // Centered
+          {}
+        }
+        transition={
+          act === 6 ? {duration:1.5, ease:[0.76, 0, 0.24, 1]} :
+          {duration:1.5, type:'spring', bounce:0.3}
+        }
+        className="relative w-[22vw] h-[45vw] rounded-[3vw] bg-[#0d0d14] border-[0.6vw] border-[#2a2a36] shadow-2xl flex flex-col overflow-hidden"
+        style={{boxShadow:'0 40px 100px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.05)', transformStyle:'preserve-3d'}}
+      >
+        {/* Dynamic Notch */}
+        <div className="absolute top-[1vw] left-1/2 -translate-x-1/2 w-[6vw] h-[1.5vw] bg-black rounded-full z-50 flex items-center justify-center">
+          <div className="w-[0.5vw] h-[0.5vw] bg-blue-900/50 rounded-full mr-[0.5vw]" />
+          <div className="w-[0.3vw] h-[0.3vw] bg-green-500 rounded-full opacity-50" />
+        </div>
+
+        {/* Screen Content Simulator (Landing Page UI) */}
+        <motion.div 
+          animate={
+            act >= 3 ? {y:'0%'} :
+            act >= 2 ? {y:'-60%'} :
+            {y:'0%'}
+          }
+          transition={{duration:1.5, type:'spring', bounce:0.2}}
+          className="w-full h-[150%] bg-[#08080c] flex flex-col pt-[4vw] px-[1.5vw] relative"
+        >
+          {/* Top Nav */}
+          <div className="flex items-center justify-between mb-[3vw]">
+            <div className="flex items-center gap-[0.5vw]">
+              <div className="w-[1.2vw] h-[1.2vw] rounded-sm bg-gradient-to-br from-indigo-500 to-purple-600" />
+              <div className="w-[4vw] h-[0.5vw] bg-white/20 rounded-full" />
+            </div>
+            <div className="w-[2vw] h-[0.5vw] bg-white/10 rounded-full" />
+          </div>
+
+          {/* Hero Content */}
+          <div className="flex flex-col items-center text-center mt-[2vw]">
+            <div className="w-[12vw] h-[1.5vw] bg-white rounded-full mb-[1vw]" />
+            <div className="w-[16vw] h-[3vw] bg-gradient-to-r from-indigo-400 to-purple-400 rounded-md mb-[1.5vw]" />
+            <div className="w-[10vw] h-[0.5vw] bg-white/30 rounded-full mb-[0.5vw]" />
+            <div className="w-[14vw] h-[0.5vw] bg-white/20 rounded-full mb-[3vw]" />
+            
+            {/* Action Button */}
+            <motion.div 
+              animate={act === 5 ? {scale:0.9, backgroundColor:'#4338ca'} : {scale:1, backgroundColor:'#4f46e5'}}
+              transition={{duration:0.1}}
+              className="w-[12vw] py-[0.8vw] rounded-full flex justify-center items-center relative z-20 shadow-[0_0_20px_rgba(79,70,229,0.5)]"
+            >
+              <span className="w-[6vw] h-[0.6vw] bg-white rounded-full" />
+            </motion.div>
+          </div>
+
+          {/* Feature Cards Grid */}
+          <div className="grid grid-cols-2 gap-[1vw] mt-[5vw]">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-[8vw] rounded-xl bg-white/5 border border-white/10 flex flex-col justify-end p-[1vw]">
+                <div className="w-[3vw] h-[0.5vw] bg-white/30 rounded-full mb-[0.5vw]" />
+                <div className="w-[5vw] h-[0.4vw] bg-white/10 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Cursor / Finger Simulator */}
+        <AnimatePresence>
+          {act >= 4 && act < 6 && (
+            <motion.div 
+              initial={{x:'20vw', y:'30vw', opacity:0}}
+              animate={
+                act === 5 ? {x:'11vw', y:'17vw', opacity:1, scale:0.8} : // Click frame
+                {x:'11vw', y:'17vw', opacity:1, scale:1}                 // Hover frame
+              }
+              transition={{duration:1, type:'spring'}}
+              className="absolute z-50 w-[3vw] h-[3vw]"
+            >
+              <svg viewBox="0 0 24 24" className="w-full h-full fill-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]" style={{rotate:'-20deg'}}>
+                <path d="M11.5 22L4 14.5l8-8 1.5 1.5-6.5 6.5H22v2H7l4.5 4.5z" /> {/* Placeholder */}
+              </svg>
+              {/* Touch Indicator */}
+              <motion.div 
+                className="absolute inset-0 bg-white/50 rounded-full"
+                animate={act === 5 ? {scale:[1,2], opacity:[1,0]} : {scale:0, opacity:0}}
+                transition={{duration:0.5}}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+      
+      {/* Flash overlay upon entering portal */}
+      <AnimatePresence>
+        {act === 6 && (
+          <motion.div 
+            initial={{opacity:0}} 
+            animate={{opacity:1}} 
+            transition={{duration:1.5, ease:'easeIn'}} 
+            className="absolute inset-0 bg-white z-[100]" 
+          />
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
-// ─── SudahTamatText — typewriter red→white resolution ────────────────────────
-function SudahTamatText() {
-  const text = 'Sudah Tamat.';
-  const [chars, setChars] = useState(0);
-  const done = chars >= text.length;
+// ─── JppPortalSupernova — Cinematic warp and supernova text reveal ─────────
+function JppPortalSupernova() {
+  const [warp, setWarp] = useState(false);
+  
   useEffect(() => {
-    const iv = setInterval(() => {
-      setChars(c => { if (c >= text.length) { clearInterval(iv); return c; } return c + 1; });
-    }, 75);
-    return () => clearInterval(iv);
+    // At 3.2 seconds into this component, trigger the warp zoom
+    const t = setTimeout(() => setWarp(true), 3200);
+    return () => clearTimeout(t);
   }, []);
-  return (
-    <h1 className="text-[6vw] font-black tracking-tighter"
-      style={{
-        color: done ? '#ffffff' : '#ff3333',
-        textShadow: done ? 'none' : '-3px 0 rgba(255,0,0,0.4), 3px 0 rgba(0,100,255,0.3), 0 0 60px rgba(255,30,30,0.5)',
-        transition: 'color 1s ease, text-shadow 1s ease',
-      }}>
-      {text.slice(0, chars)}
-      {!done && (
-        <motion.span animate={{opacity:[1,0,1]}} transition={{duration:0.55,repeat:Infinity}}
-          className="inline-block bg-red-400 ml-[0.15em] align-middle"
-          style={{width:'0.45em',height:'0.85em'}} />
-      )}
-    </h1>
-  );
-}
 
-// ─── VisionText — warm ambient bloom + mask-lift reveal ─────────────────────────────────────────
-function VisionText({ text }: { text: string }) {
   return (
-    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0,filter:'blur(12px)'}}
-      transition={{duration:1}} className="absolute inset-0 flex items-center justify-center overflow-hidden">
-      {/* Warm indigo ambient bloom */}
-      <motion.div className="absolute inset-0 pointer-events-none"
-        initial={{opacity:0}} animate={{opacity:1}} transition={{duration:3}}
-        style={{background:'radial-gradient(ellipse at 50% 55%, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.1) 40%, transparent 70%)'}} />
-      {/* Horizontal accent lines */}
-      <motion.div initial={{width:'0%'}} animate={{width:'35%'}} transition={{duration:1.4,ease:SE}}
-        className="absolute top-[44%] left-[50%] h-px"
-        style={{background:'linear-gradient(to right,rgba(99,102,241,0.5),transparent)',transform:'translateX(-100%)'}} />
-      <motion.div initial={{width:'0%'}} animate={{width:'35%'}} transition={{duration:1.4,ease:SE}}
-        className="absolute top-[44%] left-[50%] h-px"
-        style={{background:'linear-gradient(to left,rgba(99,102,241,0.5),transparent) '}} />
-      {/* Mask-lift text */}
-      <div style={{overflow:'hidden',paddingBottom:'0.12em'}}>
-        <motion.h1
-          initial={{y:'110%'}} animate={{y:'0%'}}
-          transition={{duration:1.3,ease:[0.25,1,0.5,1],delay:0.15}}
-          className="text-[3.5vw] font-light tracking-[0.06em]"
-          style={{color:'rgba(255,255,255,0.82)'}}>
-          {text}
-        </motion.h1>
+    <motion.div className="absolute inset-0 flex flex-col items-center justify-center bg-black overflow-hidden" style={{perspective: '1000px'}}>
+      
+      {/* High-speed starfield / warp tunnel effect */}
+      <div className="absolute inset-0 z-0">
+        {[...Array(40)].map((_, i) => (
+          <motion.div 
+            key={i}
+            className="absolute top-1/2 left-1/2 w-[2px] h-[40vh] bg-white rounded-full"
+            style={{
+              rotate: `${(i * 360) / 40}deg`,
+              transformOrigin: 'top center',
+            }}
+            initial={{ opacity: 0, scaleY: 0, y: '20vh' }}
+            animate={warp ? { 
+              opacity: [0, 1, 0], 
+              scaleY: [0, 2, 0], 
+              y: ['20vh', '150vh'] 
+            } : { 
+              opacity: [0, 0.4, 0],
+              scaleY: [0, 0.5, 0],
+              y: ['20vh', '100vh']
+            }}
+            transition={{
+              duration: warp ? 0.3 : 1 + Math.random(),
+              repeat: Infinity,
+              delay: Math.random() * 2,
+              ease: "linear"
+            }}
+          />
+        ))}
       </div>
+
+      <motion.div 
+        className="relative z-10 flex flex-col items-center"
+        initial={{ scale: 0.1, filter: 'blur(20px)', opacity: 0, rotateX: 45 }}
+        animate={warp 
+          ? { scale: 30, opacity: 0, filter: 'blur(30px)', rotateX: 0 } // Warp through the text
+          : { scale: 1, filter: 'blur(0px)', opacity: 1, rotateX: 0 }
+        }
+        transition={warp 
+          ? { duration: 0.8, ease: [0.5, 0, 0, 1] } 
+          : { duration: 2, ease: [0.25, 1, 0.5, 1] }
+        }
+      >
+        <h1 className="text-[11vw] font-black tracking-tighter leading-none text-transparent bg-clip-text bg-gradient-to-br from-white via-indigo-200 to-purple-400 drop-shadow-[0_0_30px_rgba(99,102,241,0.5)] text-center">
+          JPP DIGITAL<br/>PORTAL
+        </h1>
+        
+        <motion.h2 
+          initial={{ opacity: 0, y: 30, letterSpacing: '0.1em' }}
+          animate={warp ? { opacity: 0 } : { opacity: 1, y: 0, letterSpacing: '0.4em' }}
+          transition={{ delay: 0.8, duration: 1.5, ease: 'easeOut' }}
+          className="text-[1.8vw] mt-[2vw] font-light text-white/80 uppercase text-center"
+        >
+          Mengangkat Potensi, Mencorak Transformasi
+        </motion.h2>
+
+        {/* Lens flare sweep */}
+        <motion.div className="absolute inset-0 pointer-events-none mix-blend-screen"
+          initial={{ x: '-150%' }} animate={{ x: '150%' }}
+          transition={{ duration: 1.8, ease: "easeInOut", delay: 0.4 }}
+          style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.4) 48%, rgba(200,200,255,0.8) 50%, rgba(255,255,255,0.4) 52%, transparent 60%)' }} 
+        />
+      </motion.div>
+
+      {/* Massive flash bang on warp finish */}
+      <AnimatePresence>
+        {warp && (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            transition={{ delay: 0.5, duration: 0.3 }} 
+            className="absolute inset-0 bg-white z-50 pointer-events-none" 
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
