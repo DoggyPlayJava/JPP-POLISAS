@@ -329,16 +329,18 @@ export function LaunchVideo() {
 
             <motion.div initial={{opacity:0, y:50}} animate={{opacity:1, y:0}} transition={{delay:2, duration:1.5, type:'spring'}} className="absolute bottom-[3vw] w-full flex flex-col items-center gap-[1.5vw] z-30">
               
-              {/* Pulsing Cyber Button sucking energy */}
-              <div className="relative flex items-center justify-center">
-                {/* Imploding Shockwaves (Energy Sucking) */}
-                {[0, 0.8, 1.6].map((d, i) => (
-                  <motion.div key={i} animate={{scale:[2.5, 1], opacity:[0, 0.8]}} transition={{duration:2.4, delay:d, repeat:Infinity, ease:'easeIn'}} className="absolute inset-0 rounded-full border-[2px] border-indigo-400 pointer-events-none" />
-                ))}
+              {/* Cinematic Premium Button */}
+              <div className="relative flex items-center justify-center group">
+                {/* Soft Glowing Outer Pulse */}
+                <motion.div animate={{scale:[1, 1.1, 1], opacity:[0.5, 0.8, 0.5]}} transition={{duration:3, repeat:Infinity, ease:'easeInOut'}} className="absolute inset-[-1vw] rounded-full bg-indigo-500/20 blur-[20px] pointer-events-none" />
                 
-                <button onClick={()=>navigate('/login')} className="relative overflow-hidden px-[5vw] py-[1.2vw] bg-indigo-600 rounded-full text-white font-black text-[1.2vw] hover:bg-indigo-500 hover:scale-105 transition-all tracking-[0.2em] uppercase cursor-pointer shadow-[0_0_50px_rgba(99,102,241,1)] border border-indigo-300">
-                  {/* Laser sweep */}
-                  <motion.div className="absolute inset-0 pointer-events-none" animate={{x:['-150%', '250%']}} transition={{duration:2, repeat:Infinity, repeatDelay:1, ease:'easeInOut'}} style={{background:'linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent)', width:'30%', transform:'skewX(-20deg)'}} />
+                <button onClick={()=>navigate('/login')} className="relative overflow-hidden px-[5vw] py-[1.2vw] rounded-full text-white font-black text-[1.2vw] hover:scale-105 transition-all tracking-[0.2em] uppercase cursor-pointer border border-white/20 bg-black/40 backdrop-blur-xl shadow-[0_0_30px_rgba(99,102,241,0.3)]">
+                  {/* Subtle inner gloss */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+                  
+                  {/* Smooth sweep */}
+                  <motion.div className="absolute inset-0 pointer-events-none mix-blend-overlay" animate={{x:['-100%', '200%']}} transition={{duration:3, repeat:Infinity, repeatDelay:2, ease:'easeInOut'}} style={{background:'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)', width:'50%', transform:'skewX(-20deg)'}} />
+                  
                   MASUK KE PORTAL
                 </button>
               </div>
@@ -434,219 +436,154 @@ export function LaunchVideo() {
 // ─── GlitchText — Pain point text with chromatic aberration + shake ────────────────────────────────
 // ─── PhoneMockupIntro ────────────────────────────────────────────────────────
 function PhoneMockupIntro() {
-  const [act, setAct] = useState(0);
-  
-  useEffect(() => {
-    const ts = [
-      setTimeout(() => setAct(1), 500),   // Phone enters
-      setTimeout(() => setAct(2), 2000),  // Start scroll down
-      setTimeout(() => setAct(3), 4000),  // Scroll up fast
-      setTimeout(() => setAct(4), 5000),  // Cursor enters
-      setTimeout(() => setAct(5), 6500),  // Cursor clicks
-      setTimeout(() => setAct(6), 7000),  // Phone scales up (zoom in)
-    ];
-    return () => ts.forEach(clearTimeout);
-  }, []);
-
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-[#030303] overflow-hidden" style={{perspective: '2000px'}}>
       
-      {/* Dynamic Background Glow */}
-      <motion.div animate={{scale:[1, 1.2, 1], opacity:[0.1, 0.3, 0.1]}} transition={{duration:4, repeat:Infinity}} className="absolute w-[40vw] h-[40vw] bg-indigo-600 rounded-full blur-[120px]" />
+      {/* Cinematic Aurora Glow */}
+      <motion.div animate={{rotate:360, scale:[1, 1.1, 1], opacity:[0.1, 0.2, 0.1]}} transition={{duration:20, repeat:Infinity, ease:'linear'}} className="absolute w-[60vw] h-[60vw] bg-indigo-900 rounded-full blur-[150px]" />
+      <motion.div animate={{rotate:-360, scale:[1, 1.2, 1], opacity:[0.05, 0.15, 0.05]}} transition={{duration:25, repeat:Infinity, ease:'linear'}} className="absolute w-[50vw] h-[50vw] bg-purple-900 rounded-full blur-[120px] mix-blend-screen" />
 
+      {/* Premium Glass Phone Model */}
       <motion.div 
-        initial={{y:'100vh', rotateX:30, rotateY:-20, scale:0.5}}
-        animate={
-          act === 6 ? {scale:10, opacity:0, rotateX:0, rotateY:0, y:0} : // Zoom to screen
-          act >= 1  ? {y:0, rotateX:10, rotateY:-10, scale:1} :          // Centered
-          {}
-        }
-        transition={
-          act === 6 ? {duration:1.5, ease:[0.76, 0, 0.24, 1]} :
-          {duration:1.5, type:'spring', bounce:0.3}
-        }
-        className="relative w-[22vw] h-[45vw] rounded-[3vw] bg-[#0d0d14] border-[0.6vw] border-[#2a2a36] shadow-2xl flex flex-col overflow-hidden"
-        style={{boxShadow:'0 40px 100px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.05)', transformStyle:'preserve-3d'}}
+        initial={{y:'100vh', rotateX:40, rotateY:-20, rotateZ:10, scale:0.7}}
+        animate={{
+          y:0, rotateX:[20, 15, 20], rotateY:[-15, -5, -15], rotateZ:[-5, 0, -5], scale:1
+        }}
+        transition={{
+          y: {duration:2, ease:[0.25, 1, 0.5, 1]},
+          scale: {duration:2, ease:[0.25, 1, 0.5, 1]},
+          rotateX: {duration:10, repeat:Infinity, ease:'easeInOut'},
+          rotateY: {duration:15, repeat:Infinity, ease:'easeInOut'},
+          rotateZ: {duration:12, repeat:Infinity, ease:'easeInOut'},
+        }}
+        className="relative w-[24vw] h-[48vw] rounded-[3.5vw] bg-[#050508] border-[0.4vw] border-[#3a3a46] flex flex-col overflow-hidden"
+        style={{boxShadow:'0 50px 100px rgba(0,0,0,0.9), inset 0 0 20px rgba(255,255,255,0.1), inset 0 0 5px rgba(255,255,255,0.3)', transformStyle:'preserve-3d'}}
       >
-        {/* Dynamic Notch */}
-        <div className="absolute top-[1vw] left-1/2 -translate-x-1/2 w-[6vw] h-[1.5vw] bg-black rounded-full z-50 flex items-center justify-center">
-          <div className="w-[0.5vw] h-[0.5vw] bg-blue-900/50 rounded-full mr-[0.5vw]" />
-          <div className="w-[0.3vw] h-[0.3vw] bg-green-500 rounded-full opacity-50" />
+        {/* Dynamic Island / Notch */}
+        <div className="absolute top-[1.2vw] left-1/2 -translate-x-1/2 w-[7vw] h-[2vw] bg-black rounded-[1vw] z-50 flex items-center justify-end px-[0.5vw] shadow-[0_5px_15px_rgba(0,0,0,0.5)]">
+          <div className="w-[0.6vw] h-[0.6vw] bg-indigo-500/50 rounded-full" />
         </div>
 
-        {/* Screen Content Simulator (Landing Page UI) */}
-        <motion.div 
-          animate={
-            act >= 3 ? {y:'0%'} :
-            act >= 2 ? {y:'-60%'} :
-            {y:'0%'}
-          }
-          transition={{duration:1.5, type:'spring', bounce:0.2}}
-          className="w-full h-[150%] bg-[#08080c] flex flex-col pt-[4vw] px-[1.5vw] relative"
-        >
-          {/* Top Nav */}
-          <div className="flex items-center justify-between mb-[3vw]">
+        {/* Gloss Overlay for glass realism */}
+        <div className="absolute inset-0 z-40 pointer-events-none rounded-[3vw]" style={{background:'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 40%, transparent 60%, rgba(255,255,255,0.05) 100%)'}} />
+
+        {/* Simulated Landing Page Content */}
+        <div className="w-full h-full bg-[#030014] relative z-10 flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between px-[1.5vw] py-[4vw] border-b border-white/10 backdrop-blur-md bg-black/20">
             <div className="flex items-center gap-[0.5vw]">
-              <div className="w-[1.2vw] h-[1.2vw] rounded-sm bg-gradient-to-br from-indigo-500 to-purple-600" />
-              <div className="w-[4vw] h-[0.5vw] bg-white/20 rounded-full" />
-            </div>
-            <div className="w-[2vw] h-[0.5vw] bg-white/10 rounded-full" />
-          </div>
-
-          {/* Hero Content */}
-          <div className="flex flex-col items-center text-center mt-[2vw]">
-            <div className="w-[12vw] h-[1.5vw] bg-white rounded-full mb-[1vw]" />
-            <div className="w-[16vw] h-[3vw] bg-gradient-to-r from-indigo-400 to-purple-400 rounded-md mb-[1.5vw]" />
-            <div className="w-[10vw] h-[0.5vw] bg-white/30 rounded-full mb-[0.5vw]" />
-            <div className="w-[14vw] h-[0.5vw] bg-white/20 rounded-full mb-[3vw]" />
-            
-            {/* Action Button */}
-            <motion.div 
-              animate={act === 5 ? {scale:0.9, backgroundColor:'#4338ca'} : {scale:1, backgroundColor:'#4f46e5'}}
-              transition={{duration:0.1}}
-              className="w-[12vw] py-[0.8vw] rounded-full flex justify-center items-center relative z-20 shadow-[0_0_20px_rgba(79,70,229,0.5)]"
-            >
-              <span className="w-[6vw] h-[0.6vw] bg-white rounded-full" />
-            </motion.div>
-          </div>
-
-          {/* Feature Cards Grid */}
-          <div className="grid grid-cols-2 gap-[1vw] mt-[5vw]">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-[8vw] rounded-xl bg-white/5 border border-white/10 flex flex-col justify-end p-[1vw]">
-                <div className="w-[3vw] h-[0.5vw] bg-white/30 rounded-full mb-[0.5vw]" />
-                <div className="w-[5vw] h-[0.4vw] bg-white/10 rounded-full" />
+              <div className="w-[1.5vw] h-[1.5vw] rounded-sm bg-gradient-to-br from-indigo-500 to-purple-600" />
+              <div className="flex flex-col">
+                <span className="text-[0.6vw] font-black leading-none text-white tracking-widest">JPP</span>
+                <span className="text-[0.4vw] font-bold leading-none text-white/50 tracking-widest">POLISAS</span>
               </div>
-            ))}
+            </div>
+            <div className="w-[4vw] h-[1.2vw] bg-indigo-600 rounded-full flex items-center justify-center">
+              <span className="text-[0.4vw] font-bold text-white uppercase tracking-widest">Login</span>
+            </div>
           </div>
-        </motion.div>
 
-        {/* Cursor / Finger Simulator */}
-        <AnimatePresence>
-          {act >= 4 && act < 6 && (
-            <motion.div 
-              initial={{x:'20vw', y:'30vw', opacity:0}}
-              animate={
-                act === 5 ? {x:'11vw', y:'17vw', opacity:1, scale:0.8} : // Click frame
-                {x:'11vw', y:'17vw', opacity:1, scale:1}                 // Hover frame
-              }
-              transition={{duration:1, type:'spring'}}
-              className="absolute z-50 w-[3vw] h-[3vw]"
-            >
-              <svg viewBox="0 0 24 24" className="w-full h-full fill-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]" style={{rotate:'-20deg'}}>
-                <path d="M11.5 22L4 14.5l8-8 1.5 1.5-6.5 6.5H22v2H7l4.5 4.5z" /> {/* Placeholder */}
-              </svg>
-              {/* Touch Indicator */}
-              <motion.div 
-                className="absolute inset-0 bg-white/50 rounded-full"
-                animate={act === 5 ? {scale:[1,2], opacity:[1,0]} : {scale:0, opacity:0}}
-                transition={{duration:0.5}}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+          {/* Hero Section */}
+          <div className="flex flex-col items-center text-center mt-[8vw] px-[2vw]">
+            <span className="px-[1vw] py-[0.4vw] rounded-full border border-indigo-500/30 bg-indigo-500/10 text-[0.5vw] text-indigo-300 font-medium tracking-widest mb-[2vw]">
+              PORTAL RASMI V2.0
+            </span>
+            <h1 className="text-[2.2vw] font-black leading-[1.1] tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white to-white/50 mb-[1.5vw]">
+              Suara Pelajar,<br/>Pemangkin<br/>Politeknik.
+            </h1>
+            <p className="text-[0.8vw] leading-relaxed text-white/40 mb-[3vw]">
+              Platform digital pintar untuk menyatukan ekosistem JPP POLISAS.
+            </p>
+            
+            <div className="w-full flex flex-col gap-[1vw]">
+              <div className="w-full py-[1vw] bg-white rounded-full flex items-center justify-center text-black font-bold text-[0.7vw] shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                LOG MASUK PORTAL
+              </div>
+              <div className="w-full py-[1vw] border border-white/20 rounded-full flex items-center justify-center text-white font-bold text-[0.7vw]">
+                KETAHUI LANJUT
+              </div>
+            </div>
+          </div>
+
+          {/* Cards floating in background */}
+          <div className="absolute bottom-[-5vw] left-0 right-0 flex justify-center gap-[1vw] opacity-40">
+             <div className="w-[10vw] h-[15vw] bg-white/5 rounded-[1vw] border border-white/10" />
+             <div className="w-[10vw] h-[15vw] bg-white/5 rounded-[1vw] border border-white/10 mt-[2vw]" />
+          </div>
+
+        </div>
       </motion.div>
-      
-      {/* Flash overlay upon entering portal */}
-      <AnimatePresence>
-        {act === 6 && (
-          <motion.div 
-            initial={{opacity:0}} 
-            animate={{opacity:1}} 
-            transition={{duration:1.5, ease:'easeIn'}} 
-            className="absolute inset-0 bg-white z-[100]" 
-          />
-        )}
-      </AnimatePresence>
+
+      {/* Cinematic Smooth Crossfade to Dark at the end */}
+      <motion.div initial={{opacity:0}} animate={{opacity:[0, 0, 1]}} transition={{duration:8, times:[0, 0.9, 1], ease:'easeInOut'}} className="absolute inset-0 bg-[#020205] z-[100] pointer-events-none" />
     </div>
   );
 }
 
 // ─── JppPortalSupernova — Cinematic warp and supernova text reveal ─────────
 function JppPortalSupernova() {
-  const [warp, setWarp] = useState(false);
+  const [fade, setFade] = useState(false);
   
   useEffect(() => {
-    // At 3.2 seconds into this component, trigger the warp zoom
-    const t = setTimeout(() => setWarp(true), 3200);
+    const t = setTimeout(() => setFade(true), 3200);
     return () => clearTimeout(t);
   }, []);
 
   return (
-    <motion.div className="absolute inset-0 flex flex-col items-center justify-center bg-black overflow-hidden" style={{perspective: '1000px'}}>
+    <motion.div className="absolute inset-0 flex flex-col items-center justify-center bg-[#020205] overflow-hidden" style={{perspective: '1000px'}}>
       
-      {/* High-speed starfield / warp tunnel effect */}
-      <div className="absolute inset-0 z-0">
-        {[...Array(40)].map((_, i) => (
-          <motion.div 
-            key={i}
-            className="absolute top-1/2 left-1/2 w-[2px] h-[40vh] bg-white rounded-full"
-            style={{
-              rotate: `${(i * 360) / 40}deg`,
-              transformOrigin: 'top center',
-            }}
-            initial={{ opacity: 0, scaleY: 0, y: '20vh' }}
-            animate={warp ? { 
-              opacity: [0, 1, 0], 
-              scaleY: [0, 2, 0], 
-              y: ['20vh', '150vh'] 
-            } : { 
-              opacity: [0, 0.4, 0],
-              scaleY: [0, 0.5, 0],
-              y: ['20vh', '100vh']
-            }}
-            transition={{
-              duration: warp ? 0.3 : 1 + Math.random(),
-              repeat: Infinity,
-              delay: Math.random() * 2,
-              ease: "linear"
-            }}
-          />
-        ))}
+      {/* Cinematic Deep Space / Nebula */}
+      <div className="absolute inset-0 z-0 flex items-center justify-center opacity-40 mix-blend-screen pointer-events-none">
+        <motion.div animate={{rotate:360, scale:[1,1.2,1]}} transition={{duration:40, repeat:Infinity, ease:'linear'}} className="absolute w-[100vw] h-[100vw] bg-indigo-900/30 rounded-full blur-[150px] mix-blend-screen" />
+        <motion.div animate={{rotate:-360, scale:[1,1.5,1]}} transition={{duration:50, repeat:Infinity, ease:'linear'}} className="absolute w-[80vw] h-[80vw] bg-purple-900/20 rounded-full blur-[120px] mix-blend-screen" />
       </div>
 
       <motion.div 
         className="relative z-10 flex flex-col items-center"
-        initial={{ scale: 0.1, opacity: 0, rotateX: 45 }}
-        animate={warp 
-          ? { scale: 30, opacity: 0, rotateX: 0 } // Warp through the text
-          : { scale: 1, opacity: 1, rotateX: 0 }
+        initial={{ opacity: 0, scale: 0.9, y: 30 }}
+        animate={fade 
+          ? { opacity: 0, scale: 1.5, filter: 'blur(20px)' } 
+          : { opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }
         }
-        transition={warp 
-          ? { duration: 0.8, ease: [0.5, 0, 0, 1] } 
-          : { duration: 2, ease: [0.25, 1, 0.5, 1] }
+        transition={fade 
+          ? { duration: 0.8, ease: 'easeIn' } 
+          : { duration: 3, ease: [0.25, 1, 0.5, 1] }
         }
-        style={{ willChange: "transform, opacity" }}
       >
-        <h1 className="text-[11vw] font-black tracking-tighter leading-none text-transparent bg-clip-text bg-gradient-to-br from-white via-indigo-200 to-purple-400 drop-shadow-[0_0_30px_rgba(99,102,241,0.5)] text-center">
+        <h1 className="text-[8vw] font-black tracking-tight leading-none text-transparent bg-clip-text bg-gradient-to-b from-white via-indigo-100 to-indigo-500 drop-shadow-[0_20px_40px_rgba(99,102,241,0.5)] text-center">
           JPP DIGITAL<br/>PORTAL
         </h1>
         
         <motion.h2 
-          initial={{ opacity: 0, y: 30, letterSpacing: '0.1em' }}
-          animate={warp ? { opacity: 0 } : { opacity: 1, y: 0, letterSpacing: '0.4em' }}
-          transition={{ delay: 0.8, duration: 1.5, ease: 'easeOut' }}
-          className="text-[1.8vw] mt-[2vw] font-light text-white/80 uppercase text-center"
+          initial={{ opacity: 0, letterSpacing: '0.1em' }}
+          animate={fade ? { opacity: 0 } : { opacity: 0.6, letterSpacing: '0.6em' }}
+          transition={{ delay: 1.5, duration: 2, ease: 'easeOut' }}
+          className="text-[1vw] mt-[2.5vw] font-light text-white uppercase text-center drop-shadow-md"
         >
           Mengangkat Potensi, Mencorak Transformasi
         </motion.h2>
 
-        {/* Lens flare sweep */}
-        <motion.div className="absolute inset-0 pointer-events-none mix-blend-screen"
-          initial={{ x: '-150%' }} animate={{ x: '150%' }}
-          transition={{ duration: 1.8, ease: "easeInOut", delay: 0.4 }}
-          style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.4) 48%, rgba(200,200,255,0.8) 50%, rgba(255,255,255,0.4) 52%, transparent 60%)' }} 
+        {/* Elegant Cinematic Flare */}
+        <motion.div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[1px] bg-gradient-to-r from-transparent via-indigo-400 to-transparent mix-blend-screen"
+          initial={{ scaleX: 0, opacity: 0 }}
+          animate={fade ? { opacity:0 } : { scaleX: 1, opacity: 0.5 }}
+          transition={{ duration: 2, delay: 0.5, ease: "easeInOut" }}
+        />
+        <motion.div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[20vw] h-[20vw] bg-indigo-500 rounded-full blur-[100px] mix-blend-screen"
+          initial={{ opacity: 0 }}
+          animate={fade ? { opacity:0 } : { opacity: 0.4 }}
+          transition={{ duration: 2, delay: 0.5 }}
         />
       </motion.div>
 
-      {/* Massive flash bang on warp finish */}
+      {/* Cinematic Fade Out */}
       <AnimatePresence>
-        {warp && (
+        {fade && (
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
-            transition={{ delay: 0.5, duration: 0.3 }} 
-            className="absolute inset-0 bg-white z-50 pointer-events-none" 
+            transition={{ duration: 0.8 }} 
+            className="absolute inset-0 bg-[#050508] z-50 pointer-events-none" 
           />
         )}
       </AnimatePresence>
@@ -2448,119 +2385,97 @@ function FloatingMockup({ flyAway }: { flyAway: boolean }) {
   const ctrl = useAnimation();
   const flew = useRef(false);
   const mods = [
-    { name:'E-Kebajikan',    gc:'#14b8a6', stat:'12',     sub:'Tiket Aktif',    icon:'\uD83C\uDF9F' },
-    { name:'E-Keusahawanan', gc:'#22c55e', stat:'RM 2.8k', sub:'Jualan Hari Ini', icon:'\uD83D\uDCB0' },
-    { name:'E-Akademik',     gc:'#10b981', stat:'3.72',   sub:'CGPA Purata',    icon:'\uD83D\uDCCA' },
-    { name:'PolyMart',       gc:'#f97316', stat:'23',     sub:'Pesanan Aktif',  icon:'\uD83D\uDED2' },
-    { name:'Sistem Kelab',   gc:'#ef4444', stat:'127',    sub:'Ahli Aktif',     icon:'\uD83C\uDFDB' },
+    { name:'E-Kebajikan',    gc:'#14b8a6', stat:'12',     sub:'Tiket Aktif',    icon:'\uD83C\uDF9F', z: 40 },
+    { name:'E-Keusahawanan', gc:'#22c55e', stat:'RM 2.8k', sub:'Jualan Hari Ini', icon:'\uD83D\uDCB0', z: 60 },
+    { name:'E-Akademik',     gc:'#10b981', stat:'3.72',   sub:'CGPA Purata',    icon:'\uD83D\uDCCA', z: 80 },
+    { name:'PolyMart',       gc:'#f97316', stat:'23',     sub:'Pesanan Aktif',  icon:'\uD83D\uDED2', z: 100 },
+    { name:'Sistem Kelab',   gc:'#ef4444', stat:'127',    sub:'Ahli Aktif',     icon:'\uD83C\uDFDB', z: 120 },
   ];
+  
   useEffect(()=>{
-    if(flyAway){ flew.current=true; ctrl.stop(); ctrl.start({x:'100vw',opacity:0,scale:0.5,rotateY:45,filter:'blur(20px)',transition:{duration:1.5,ease:[0.25,1,0.5,1]}}); }
-    else { ctrl.start({x:'4vw',rotateY:-18,rotateX:8,opacity:1,scale:1,transition:{duration:4,ease:[0.25,1,0.5,1]}}).then(()=>{ if(!flew.current) ctrl.start({y:[0,-14,0],transition:{duration:6,repeat:Infinity,ease:'easeInOut'}}); }); }
+    if(flyAway){ 
+      flew.current=true; 
+      ctrl.stop(); 
+      ctrl.start({x:'100vw', opacity:0, scale:0.5, rotateY:45, filter:'blur(20px)', transition:{duration:1.5, ease:[0.25,1,0.5,1]}}); 
+    }
+    else { 
+      ctrl.start({x:'2vw', rotateY:-25, rotateX:10, opacity:1, scale:1, transition:{duration:3, ease:[0.25,1,0.5,1]}})
+      .then(()=>{ 
+        if(!flew.current) ctrl.start({y:[0,-15,0], rotateY:[-25,-20,-25], transition:{duration:8, repeat:Infinity, ease:'easeInOut'}}); 
+      }); 
+    }
   },[flyAway,ctrl]);
+
   return (
-    <motion.div animate={ctrl} initial={{x:'0vw',y:0,rotateY:-10,rotateX:0,opacity:0,scale:5}}
-      className="absolute right-[1vw] w-[60vw] h-[40vw] rounded-[1.2vw] overflow-hidden flex z-20"
-      style={{transformStyle:'preserve-3d',background:'#040408',boxShadow:'-60px 60px 120px rgba(0,0,0,0.9),0 0 0 1px rgba(255,255,255,0.07)'}}>
-      {/* Gloss overlay */}
-      <div className="absolute inset-0 pointer-events-none z-50" style={{background:'linear-gradient(135deg,rgba(255,255,255,0.05) 0%,transparent 50%)'}} />
-      {/* Sidebar */}
-      <div className="w-[18%] h-full flex flex-col" style={{background:'#06060e',borderRight:'1px solid rgba(255,255,255,0.05)'}}>
-        <div className="px-[1vw] py-[0.85vw] flex items-center gap-[0.5vw]" style={{borderBottom:'1px solid rgba(255,255,255,0.05)'}}>
-          <div className="w-[1.8vw] h-[1.8vw] rounded-[0.4vw] flex-shrink-0" style={{background:'linear-gradient(135deg,#6d28d9,#7c3aed)'}} />
-          <div><p className="text-[0.55vw] font-black text-white leading-none">JPP</p><p className="text-[0.38vw] text-white/25 leading-none">POLISAS</p></div>
-        </div>
-        <div className="flex-1 px-[0.55vw] py-[0.7vw] flex flex-col gap-[0.2vw]">
-          <motion.div initial={{x:-12,opacity:0}} animate={{x:0,opacity:1}} transition={{delay:0.8}}
-            className="flex items-center gap-[0.45vw] px-[0.55vw] py-[0.4vw] rounded-[0.3vw]" style={{background:'#6366f118'}}>
-            <div className="w-[0.45vw] h-[0.45vw] rounded-full" style={{background:'#6366f1'}} />
-            <span className="text-[0.48vw] font-semibold" style={{color:'#6366f1'}}>Portal Utama</span>
-          </motion.div>
-          {mods.map((m,i)=>(
-            <motion.div key={m.name} initial={{x:-12,opacity:0}} animate={{x:0,opacity:1}} transition={{delay:0.9+i*0.06}}
-              className="flex items-center gap-[0.45vw] px-[0.55vw] py-[0.38vw] rounded-[0.3vw]">
-              <div className="w-[0.38vw] h-[0.38vw] rounded-full flex-shrink-0" style={{background:m.gc+'70'}} />
-              <span className="text-[0.45vw] text-white/30">{m.name}</span>
-            </motion.div>
-          ))}
-        </div>
-        <div className="px-[0.8vw] py-[0.7vw] flex items-center gap-[0.5vw]" style={{borderTop:'1px solid rgba(255,255,255,0.05)'}}>
-          <div className="w-[1.4vw] h-[1.4vw] rounded-full flex-shrink-0" style={{background:'linear-gradient(135deg,#14b8a6,#6366f1)'}} />
-          <div><p className="text-[0.48vw] font-medium text-white/75 leading-none">Exco JPP</p><p className="text-[0.38vw] text-white/25 leading-none">Super Admin</p></div>
-        </div>
-      </div>
-      {/* Main */}
-      <div className="flex-1 flex flex-col" style={{background:'#050509'}}>
-        {/* Topbar */}
-        <div className="flex items-center justify-between px-[1.4vw] py-[0.65vw]" style={{borderBottom:'1px solid rgba(255,255,255,0.04)'}}>
-          <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1.2}}>
-            <p className="text-[0.42vw] text-white/20 uppercase tracking-widest">Papan Pemuka</p>
-            <p className="text-[0.72vw] font-bold text-white">Portal JPP POLISAS</p>
-          </motion.div>
-          <motion.div initial={{opacity:0,scale:0.8}} animate={{opacity:1,scale:1}} transition={{delay:1.3}} className="flex items-center gap-[0.7vw]">
-            <div className="relative">
-              <div className="w-[1.7vw] h-[1.7vw] rounded-full flex items-center justify-center" style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)'}}>
-                <span className="text-[0.65vw]">&#x1F514;</span>
-              </div>
-              <div className="absolute -top-[0.1vw] -right-[0.1vw] w-[0.55vw] h-[0.55vw] rounded-full bg-red-500" style={{border:'1.5px solid #050509'}} />
-            </div>
-            <div className="w-[1.7vw] h-[1.7vw] rounded-full" style={{background:'linear-gradient(135deg,#6d28d9,#7c3aed)'}} />
-          </motion.div>
-        </div>
-        {/* Module stat cards */}
-        <div className="px-[1.1vw] pt-[0.75vw] grid grid-cols-5 gap-[0.6vw]">
-          {mods.map((m,i)=>(
-            <motion.div key={m.name} initial={{y:18,opacity:0,scale:0.95}} animate={{y:0,opacity:1,scale:1}}
-              transition={{delay:1.4+i*0.09,duration:0.5,ease:[0.34,1.56,0.64,1]}}
-              className="rounded-[0.65vw] p-[0.75vw] relative overflow-hidden"
-              style={{background:'#0a0a16',border:`1px solid ${m.gc}28`}}>
-              <div className="absolute bottom-0 right-0 w-[3.5vw] h-[3.5vw] blur-[18px] opacity-25 rounded-full" style={{background:m.gc}} />
-              <div className="w-[1.4vw] h-[1.4vw] rounded-[0.3vw] flex items-center justify-center mb-[0.45vw]" style={{background:m.gc+'1a'}}>
-                <span className="text-[0.6vw]">{m.icon}</span>
-              </div>
-              <p className="font-black leading-none mb-[0.2vw]" style={{fontSize:'1.5vw',color:m.gc}}>{m.stat}</p>
-              <p className="text-[0.38vw] text-white/30 leading-tight">{m.sub}</p>
-              <p className="text-[0.4vw] font-medium text-white/50 mt-[0.25vw]">{m.name}</p>
-            </motion.div>
-          ))}
-        </div>
-        {/* Activity + Chart */}
-        <div className="px-[1.1vw] pt-[0.65vw] flex gap-[0.7vw] flex-1 min-h-0 pb-[0.7vw]">
-          <div className="flex-1 rounded-[0.65vw] overflow-hidden flex flex-col" style={{background:'#070712',border:'1px solid rgba(255,255,255,0.04)'}}>
-            <div className="px-[0.75vw] py-[0.5vw] flex items-center justify-between" style={{borderBottom:'1px solid rgba(255,255,255,0.04)'}}>
-              <p className="text-[0.48vw] font-semibold text-white/60">Aktiviti Terkini</p>
-              <span className="text-[0.38vw] text-white/20">Hari Ini</span>
-            </div>
-            <div className="px-[0.75vw] py-[0.35vw] flex flex-col gap-[0.28vw]">
-              {[
-                {t:'Tiket ADU-2024-088 dibuka',d:'2m',c:'#14b8a6'},
-                {t:'RM 45.00 diterima — Agrosea',d:'8m',c:'#22c55e'},
-                {t:'Ahmad Hafiz — Merit +5 dikumpul',d:'15m',c:'#10b981'},
-                {t:'Pesanan POM-2024-041 baharu',d:'22m',c:'#f97316'},
-                {t:'Kelab Komputer — 3 ahli baru',d:'31m',c:'#ef4444'},
-              ].map((a,i)=>(
-                <motion.div key={i} initial={{x:15,opacity:0}} animate={{x:0,opacity:1}} transition={{delay:1.85+i*0.09}}
-                  className="flex items-center gap-[0.45vw] py-[0.28vw]" style={{borderBottom:'1px solid rgba(255,255,255,0.03)'}}>
-                  <div className="w-[0.38vw] h-[0.38vw] rounded-full flex-shrink-0" style={{background:a.c}} />
-                  <p className="text-[0.43vw] text-white/50 flex-1 leading-none">{a.t}</p>
-                  <p className="text-[0.36vw] text-white/18">{a.d} lalu</p>
-                </motion.div>
-              ))}
+    <motion.div animate={ctrl} initial={{x:'0vw', y:0, rotateY:-10, rotateX:0, opacity:0, scale:4}}
+      className="absolute right-[-2vw] w-[65vw] h-[40vw] rounded-[1.5vw] flex z-20"
+      style={{transformStyle:'preserve-3d'}}>
+      
+      {/* Background Holographic Glow */}
+      <div className="absolute inset-0 bg-indigo-500/20 blur-[100px] rounded-full mix-blend-screen" style={{transform:'translateZ(-100px)'}} />
+
+      {/* Main Glass Screen */}
+      <div className="absolute inset-0 rounded-[1.5vw] border border-white/20 bg-black/40 backdrop-blur-xl overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.8)] flex">
+        {/* Sidebar */}
+        <div className="w-[20%] h-full flex flex-col bg-white/5 border-r border-white/10 p-[1vw]">
+          <div className="flex items-center gap-[0.5vw] mb-[2vw]">
+            <div className="w-[2vw] h-[2vw] rounded-md bg-gradient-to-br from-indigo-500 to-purple-600" />
+            <div className="flex flex-col">
+              <span className="text-[0.6vw] font-black leading-none tracking-widest text-white">JPP</span>
+              <span className="text-[0.4vw] font-bold leading-none tracking-widest text-white/50">POLISAS</span>
             </div>
           </div>
-          <div className="w-[33%] rounded-[0.65vw] flex flex-col overflow-hidden" style={{background:'#070712',border:'1px solid rgba(255,255,255,0.04)'}}>
-            <div className="px-[0.75vw] py-[0.5vw]" style={{borderBottom:'1px solid rgba(255,255,255,0.04)'}}>
-              <p className="text-[0.48vw] font-semibold text-white/60">Jualan Minggu Ini</p>
-            </div>
-            <div className="flex items-end gap-[0.3vw] px-[0.75vw] pb-[0.5vw] flex-1">
-              {[55,72,40,88,65,92,70].map((h,i)=>(
-                <motion.div key={i} style={{flex:1, background: i===5?'#22c55e':'#22c55e35', borderRadius:'0.15vw 0.15vw 0 0'}}
-                  initial={{height:'0%'}} animate={{height:`${h}%`}} transition={{delay:2+i*0.07,duration:0.55}} />
-              ))}
-            </div>
+          <div className="flex-1 flex flex-col gap-[0.5vw]">
+            <div className="w-full h-[1.5vw] bg-indigo-500/20 rounded-md border border-indigo-500/30" />
+            <div className="w-full h-[1.5vw] bg-white/5 rounded-md" />
+            <div className="w-full h-[1.5vw] bg-white/5 rounded-md" />
+            <div className="w-full h-[1.5vw] bg-white/5 rounded-md" />
+          </div>
+        </div>
+        {/* Main Content Area */}
+        <div className="flex-1 p-[2vw] flex flex-col">
+          <div className="w-[15vw] h-[2vw] bg-white/10 rounded-full mb-[2vw]" />
+          {/* Chart Wireframe */}
+          <div className="flex-1 bg-white/5 rounded-[1vw] border border-white/10 p-[1vw] flex items-end gap-[0.5vw]">
+            {[40, 60, 30, 80, 50, 90, 70, 100].map((h, i) => (
+              <motion.div key={i} className="flex-1 bg-indigo-500/30 rounded-t-md" initial={{height:0}} animate={{height:`${h}%`}} transition={{duration:1, delay:1.5 + i*0.1}} />
+            ))}
           </div>
         </div>
       </div>
+
+      {/* Floating 3D Module Cards (Popping out of screen) */}
+      {mods.map((m, i) => (
+        <motion.div key={m.name} 
+          initial={{opacity:0, z:0, scale:0}} 
+          animate={flyAway ? {opacity:0} : {opacity:1, z:m.z, scale:1, x:[0, -5, 0], y:[0, 5, 0]}}
+          transition={{
+            opacity:{duration:0.5, delay:2 + i*0.1},
+            scale:{type:'spring', delay:2 + i*0.1},
+            z:{type:'spring', delay:2 + i*0.1},
+            x:{duration:4+i, repeat:Infinity, ease:'easeInOut'},
+            y:{duration:5+i, repeat:Infinity, ease:'easeInOut'}
+          }}
+          className="absolute rounded-[1vw] p-[1vw] flex flex-col border backdrop-blur-md shadow-[0_20px_40px_rgba(0,0,0,0.5)]"
+          style={{
+            background:'linear-gradient(135deg, rgba(20,20,30,0.8), rgba(10,10,15,0.9))',
+            borderColor:`${m.gc}50`,
+            top:`${15 + (i%3)*20}%`, 
+            left:`${15 + i*15}%`,
+            width:'12vw'
+          }}
+        >
+          <div className="flex items-center gap-[0.5vw] mb-[0.5vw]">
+            <div className="w-[1.5vw] h-[1.5vw] rounded-full flex items-center justify-center bg-white/10" style={{color:m.gc}}>
+              <span className="text-[0.8vw] drop-shadow-md">{m.icon}</span>
+            </div>
+            <span className="text-[0.6vw] font-bold text-white/60 uppercase tracking-widest">{m.name}</span>
+          </div>
+          <p className="text-[1.8vw] font-black leading-none" style={{color:m.gc, textShadow:`0 0 15px ${m.gc}80`}}>{m.stat}</p>
+          <p className="text-[0.5vw] text-white/40 mt-[0.2vw]">{m.sub}</p>
+        </motion.div>
+      ))}
+
     </motion.div>
   );
 }
