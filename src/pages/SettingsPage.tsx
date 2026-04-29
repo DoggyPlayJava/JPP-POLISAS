@@ -68,9 +68,9 @@ export function SettingsPage() {
 
       const file = event.target.files[0];
 
-      // 🚨 Bouncer 2MB (2 * 1024 * 1024 bytes)
-      if (file.size > 2097152) {
-        toast.error("Gagal: Saiz fail terlalu besar! Maksimum 2MB sahaja.");
+      // 🚨 Bouncer 5MB (5 * 1024 * 1024 bytes)
+      if (file.size > 5242880) {
+        toast.error("Gagal: Saiz fail terlalu besar! Maksimum 5MB sahaja.");
         return;
       }
 
@@ -340,7 +340,7 @@ export function SettingsPage() {
                           {effectiveRole ? effectiveRole.replace('CLUB_', '').replace('_', ' ') : 'AHLI'}
                         </Badge>
                         <span className="hidden sm:inline-block w-1.5 h-1.5 rounded-full bg-muted-foreground/30 shrink-0"></span>
-                        <span className="text-xs truncate">Gambar beresolusi 1:1, Max 2MB.</span>
+                        <span className="text-xs truncate">Gambar beresolusi 1:1, Max 5MB.</span>
                       </div>
                     </div>
                   </div>

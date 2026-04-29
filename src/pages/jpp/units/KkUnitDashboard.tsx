@@ -9,7 +9,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2, ChevronRight, LayoutGrid, ShieldCheck,
-  UserPlus, Trash2, RefreshCw, QrCode,
+  UserPlus, Trash2, RefreshCw, QrCode, Trophy,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,6 +17,7 @@ import { toast } from 'react-hot-toast';
 import { hexToRgba } from '@/lib/utils';
 import { ExcoGenericDashboard } from './ExcoGenericDashboard';
 import { QrMeritManager } from '@/pages/akademik/AkademikQrScan';
+import { MeritRasmiReviewPanel } from '@/components/program/MeritRasmiReviewPanel';
 
 const KK_COLOR = '#E879F9';
 
@@ -305,18 +306,18 @@ export function KkUnitDashboard() {
   const { hasKediamanAccess, isKediamanExco, isSuperAdmin } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'unit' | 'qr'>(() => {
-    return (searchParams.get('tab') as 'dashboard' | 'unit' | 'qr') || 'dashboard';
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'unit' | 'qr' | 'merit-rasmi'>(() => {
+    return (searchParams.get('tab') as any) || 'dashboard';
   });
 
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab === 'qr' || tab === 'unit' || tab === 'dashboard') {
+    if (['qr', 'unit', 'dashboard', 'merit-rasmi'].includes(tab || '')) {
       setActiveTab(tab as any);
     }
   }, [searchParams]);
 
-  const handleTabChange = (tab: 'dashboard' | 'unit' | 'qr') => {
+  const handleTabChange = (tab: 'dashboard' | 'unit' | 'qr' | 'merit-rasmi') => {
     setActiveTab(tab);
     setSearchParams({ tab });
   };
@@ -350,6 +351,17 @@ export function KkUnitDashboard() {
             }
           >
             <ShieldCheck className="w-3.5 h-3.5" /> Unit Pengurusan Asrama
+          </button>
+          <button
+            onClick={() => handleTabChange('merit-rasmi')}
+            className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all"
+            style={
+              activeTab === 'merit-rasmi'
+                ? { background: KK_COLOR, color: '#fff' }
+                : { color: 'rgba(255,255,255,0.4)' }
+            }
+          >
+            <Trophy className="w-3.5 h-3.5" /> Merit Rasmi
           </button>
           <button
             onClick={() => handleTabChange('qr')}
@@ -406,6 +418,19 @@ export function KkUnitDashboard() {
           >
             <div className="rounded-[2rem] border p-6 bg-[rgba(255,255,255,0.01)] border-[rgba(255,255,255,0.07)]">
               <QrMeritManager themeColor={KK_COLOR} />
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'merit-rasmi' && showUnitTab && (
+          <motion.div
+            key="merit-rasmi"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+          >
+            <div className="rounded-[2rem] border p-6 bg-[rgba(255,255,255,0.01)] border-[rgba(255,255,255,0.07)]">
+              <MeritRasmiReviewPanel reviewerUnit="KEDIAMAN" themeColor={KK_COLOR} />
             </div>
           </motion.div>
         )}

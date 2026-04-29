@@ -124,6 +124,8 @@ const KebajikanStaffPage = lazy(() => import('./pages/kebajikan/KebajikanStaffPa
 const KebajikanSettingsPage = lazy(() => import('./pages/kebajikan/KebajikanSettingsPage').then(m => ({ default: m.KebajikanSettingsPage })));
 
 const JppUsersPage = lazy(() => import('./pages/jpp/JppUsersPage').then(m => ({ default: m.JppUsersPage })));
+// ── Program Attendance (QR Check-in) ──
+const ProgramAttendPage = lazy(() => import('@/pages/ProgramAttendPage').then(m => ({ default: m.ProgramAttendPage })));
 const JppTakwimPage = lazy(() => import('./pages/jpp/JppTakwimPage').then(m => ({ default: m.JppTakwimPage })));
 const JppLogsPage = lazy(() => import('./pages/jpp/JppLogsPage').then(m => ({ default: m.JppLogsPage })));
 const JppSettingsPage = lazy(() => import('./pages/jpp/JppSettingsPage').then(m => ({ default: m.JppSettingsPage })));
@@ -192,6 +194,8 @@ function AppRoutes() {
       <Route path="/promo" element={<PromoPage />} />
       <Route path="/launch" element={<LaunchVideo />} />
       <Route path="/kebajikan/statistik" element={<KebajikanStatsPage />} />
+      {/* QR Program Attendance — standalone, redirect ke login diuruskan dalam page itu sendiri */}
+      <Route path="/program/attend/:token" element={<ProgramAttendPage />} />
 
       {/* 🔐 PROTECTED ROUTES */}
       <Route element={<ProtectedRoute />}>

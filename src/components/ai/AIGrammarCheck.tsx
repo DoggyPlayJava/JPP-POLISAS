@@ -70,7 +70,7 @@ export function AIGrammarCheck({ textValue, onApply, disabled = false }: AIGramm
         variant="ghost"
         disabled={disabled || isLoading}
         onClick={handleCheck}
-        className="text-[10px] uppercase font-black tracking-widest text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 h-7 px-2 border border-indigo-200 bg-indigo-50/50 rounded-xl mt-1 shrink-0"
+        className="text-[10px] uppercase font-black tracking-widest text-indigo-600 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 hover:text-indigo-700 dark:text-indigo-400 dark:bg-indigo-500/10 dark:border-indigo-500/30 dark:hover:bg-indigo-500/20 h-7 px-2 rounded-xl mt-1 shrink-0 transition-colors"
         title="Semak Tatabahasa Bersama AI"
       >
         <Wand2 size={12} className="mr-1.5" /> Semak Ejaan

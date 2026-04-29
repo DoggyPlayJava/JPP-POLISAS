@@ -13,6 +13,7 @@ import { format, parseISO } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { QrMeritManager } from '@/pages/akademik/AkademikQrScan';
 import { JPP_MT_POSITIONS } from '@/types';
+import { MeritRasmiReviewPanel } from '@/components/program/MeritRasmiReviewPanel';
 
 const THEME = '#818CF8';
 
@@ -482,11 +483,12 @@ function UnlockRequestsPanel() {
 
 // ─── Tab definition ───────────────────────────────────────────
 const TABS = [
-  { id: 'overview',    label: 'Overview',       icon: LayoutDashboard },
-  { id: 'semak',       label: 'Semak',          icon: Trophy },
-  { id: 'buka-kunci',  label: 'Buka Kunci',     icon: Unlock },
-  { id: 'qr',          label: 'QR Merit',       icon: QrCode },
-  { id: 'merit-config',label: 'Tetapan Merit',  icon: Settings },
+  { id: 'overview',     label: 'Overview',       icon: LayoutDashboard },
+  { id: 'semak',        label: 'Semak',          icon: Trophy },
+  { id: 'buka-kunci',   label: 'Buka Kunci',     icon: Unlock },
+  { id: 'qr',           label: 'QR Merit',       icon: QrCode },
+  { id: 'merit-rasmi',  label: 'Merit Rasmi',    icon: BarChart3 },
+  { id: 'merit-config', label: 'Tetapan Merit',  icon: Settings },
 ];
 
 // ─── Main Admin Dashboard ─────────────────────────────────────
@@ -596,6 +598,7 @@ export function AkademikUnitDashboard() {
               {tab.startsWith('semak')       && <PencapaianReviewPanel />}
               {tab === 'buka-kunci'          && <UnlockRequestsPanel />}
               {tab === 'qr'                  && <QrMeritManager themeColor={THEME} />}
+              {tab === 'merit-rasmi'         && <MeritRasmiReviewPanel reviewerUnit="AKADEMIK" themeColor={THEME} />}
               {tab === 'merit-config'        && <MeritConfigPanel />}
         </motion.div>
       </AnimatePresence>

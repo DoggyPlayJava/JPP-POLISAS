@@ -11,7 +11,8 @@ import {
   FileText, CheckCircle2, Lock,
   FileUp, CloudUpload, Clock, Check, Send, ChevronRight, MessageCircle,
   BellRing, Timer, History, Unlock, Archive, Info, Trash2,
-  Zap, Users, CalendarDays, Activity, Filter, Image as ImageIcon, X, Sparkles
+  Zap, Users, CalendarDays, Activity, Filter, Image as ImageIcon, X, Sparkles,
+  QrCode, Trophy, Copy, ExternalLink
 } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -41,6 +42,8 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AIGrammarCheck } from '@/components/ai/AIGrammarCheck';
 import { AIBudgetGenerator } from '@/components/ai/AIBudgetGenerator';
+import { QrCodeModal } from '@/components/program/QrCodeModal';
+import { ProgramStatistikTab } from '@/components/program/ProgramStatistikTab';
 
 // ─── STATUS CONFIG ────────────────────────────────────────────────────────────
 const ACTIVITY_STATUS: Record<string, { label: string; color: string; bg: string }> = {
@@ -89,6 +92,12 @@ export function AktivitiFull() {
           >
             <CalendarDays className="w-3.5 h-3.5" /> Takwim Rasmi
           </TabsTrigger>
+          <TabsTrigger
+            value="statistik"
+            className="flex-1 rounded-xl px-6 py-3 font-black text-[10px] uppercase tracking-[0.15em] data-[state=active]:bg-background data-[state=active]:shadow-xl data-[state=active]:text-violet-600 flex items-center gap-2 justify-center"
+          >
+            <Activity className="w-3.5 h-3.5" /> Statistik
+          </TabsTrigger>
         </TabsList>
 
         {/* ─── TAB 1: AKTIVITI KELAB ─── */}
@@ -99,6 +108,11 @@ export function AktivitiFull() {
         {/* ─── TAB 2: TAKWIM RASMI ─── */}
         <TabsContent value="takwim">
           <TakwimRasmiTab user={user} profile={profile} selectedClubId={selectedClubId} canManage={canManageTakwim} />
+        </TabsContent>
+
+        {/* ─── TAB 3: STATISTIK ─── */}
+        <TabsContent value="statistik" className="mt-6">
+          <ProgramStatistikTab selectedClubId={selectedClubId} isSuperAdmin={isSuperAdmin} />
         </TabsContent>
       </Tabs>
     </div>
@@ -122,7 +136,8 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
 
   const emptyForm = {
     title: '', description: '', status: 'perancangan', priority: 'sederhana',
-    start_date: '', end_date: '', venue: '', tindakan: '', imageUrls: []
+    start_date: '', end_date: '', venue: '', tindakan: '', imageUrls: [],
+    qr_enabled: false, qr_open_at: '', qr_close_at: '', merit_kelab: 0,
   };
   const [form, setForm] = useState(emptyForm);
 
@@ -159,6 +174,10 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
       venue: act.location || '',
       tindakan: act.tindakan || '',
       imageUrls: act.image_urls || [],
+      qr_enabled: act.qr_enabled || false,
+      qr_open_at: act.qr_open_at ? act.qr_open_at.replace('Z','').substring(0,16) : '',
+      qr_close_at: act.qr_close_at ? act.qr_close_at.replace('Z','').substring(0,16) : '',
+      merit_kelab: act.merit_kelab || 0,
     });
     setDialogOpen(true);
   };
@@ -226,6 +245,10 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
         image_urls: form.imageUrls,
         user_id: user?.id,
         budget: 0,
+        qr_enabled: form.qr_enabled,
+        qr_open_at: form.qr_open_at ? new Date(form.qr_open_at).toISOString() : null,
+        qr_close_at: form.qr_close_at ? new Date(form.qr_close_at).toISOString() : null,
+        merit_kelab: Number(form.merit_kelab) || 0,
       };
 
       if (editTarget) {
@@ -517,7 +540,71 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
                 />
               </div>
 
-              <div className="space-y-3 pt-2 bg-emerald-500/10/50 p-4 rounded-[2rem] border border-emerald-100">
+              {/* ─── QR & MERIT SECTION (Aktiviti Kelab) ─── */}
+              <div className="space-y-4 p-4 rounded-[1.5rem] border border-primary/15 bg-primary/5">
+                <div className="flex items-center gap-2">
+                  <QrCode className="w-4 h-4 text-primary" />
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary">QR & Merit Kelab</p>
+                </div>
+
+                {/* Toggle QR */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Aktifkan QR Kehadiran</Label>
+                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">Peserta scan QR untuk daftar hadir</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, qr_enabled: !form.qr_enabled })}
+                    className={cn(
+                      'relative w-12 h-6 rounded-full transition-all shrink-0',
+                      form.qr_enabled ? 'bg-primary' : 'bg-muted'
+                    )}
+                  >
+                    <div className={cn(
+                      'absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow',
+                      form.qr_enabled ? 'left-7' : 'left-1'
+                    )} />
+                  </button>
+                </div>
+
+                {form.qr_enabled && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Buka QR Pada</Label>
+                        <Input type="datetime-local" value={form.qr_open_at}
+                          onChange={e => setForm({ ...form, qr_open_at: e.target.value })}
+                          className="h-10 rounded-xl bg-muted/40 border-border/60 text-xs font-bold" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Tutup QR Pada</Label>
+                        <Input type="datetime-local" value={form.qr_close_at}
+                          onChange={e => setForm({ ...form, qr_close_at: e.target.value })}
+                          className="h-10 rounded-xl bg-muted/40 border-border/60 text-xs font-bold" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Merit Kelab */}
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5">
+                    <Trophy className="w-3 h-3 text-amber-500" />
+                    Merit Kelab (0 = tiada merit)
+                  </Label>
+                  <Input
+                    type="number" min={0} max={50}
+                    value={form.merit_kelab}
+                    onChange={e => setForm({ ...form, merit_kelab: Number(e.target.value) })}
+                    placeholder="Cth: 5"
+                    className="h-10 rounded-xl bg-muted/40 border-border/60 font-bold"
+                  />
+                </div>
+              </div>
+
+              {/* Gambar bukti */}
+              <div className="space-y-3 p-4 rounded-[2rem] border border-emerald-100 bg-emerald-500/5">
                 <Label className="text-[10px] font-black uppercase text-emerald-800 tracking-widest flex justify-between">
                   <span>Muat Naik Gambar Bukti (Maks 2)</span>
                   <span className="text-emerald-500 normal-case opacity-70">{form.imageUrls?.length || 0} / 2</span>
@@ -567,9 +654,10 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
 
 // Card untuk setiap aktiviti kelab
 function ActivityKelabCard({ act, currentUserId, effectiveRole, onEdit, onDelete }: any) {
-  const statusCfg = ACTIVITY_STATUS[act.status] || ACTIVITY_STATUS.perancangan;
+  const statusCfg  = ACTIVITY_STATUS[act.status] || ACTIVITY_STATUS.perancangan;
   const priorityCfg = PRIORITY_CONFIG[act.priority] || PRIORITY_CONFIG.sederhana;
-  const isOwner = act.user_id === currentUserId;
+  const isOwner    = act.user_id === currentUserId;
+  const [qrOpen, setQrOpen] = useState(false);
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return null;
@@ -578,77 +666,112 @@ function ActivityKelabCard({ act, currentUserId, effectiveRole, onEdit, onDelete
   };
 
   return (
-    <Card className="bento-card border-none h-full overflow-hidden group hover:shadow-2xl transition-all duration-300">
-      <CardContent className="p-6 space-y-5">
-        {/* TOP ROW */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Badge className={cn('text-[10px] font-black uppercase px-2.5 py-1 border-none', statusCfg.bg, statusCfg.color)}>
-              {statusCfg.label}
-            </Badge>
-            <div className="flex items-center gap-1.5">
-              <div className={cn('w-1.5 h-1.5 rounded-full', priorityCfg.dot)} />
-              <span className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-widest">
-                {priorityCfg.label}
-              </span>
+    <>
+      <Card className="bento-card border-none h-full overflow-hidden group hover:shadow-2xl transition-all duration-300">
+        <CardContent className="p-6 space-y-5">
+          {/* TOP ROW */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge className={cn('text-[10px] font-black uppercase px-2.5 py-1 border-none', statusCfg.bg, statusCfg.color)}>
+                {statusCfg.label}
+              </Badge>
+              <div className="flex items-center gap-1.5">
+                <div className={cn('w-1.5 h-1.5 rounded-full', priorityCfg.dot)} />
+                <span className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-widest">
+                  {priorityCfg.label}
+                </span>
+              </div>
             </div>
+            {(isOwner || ['CLUB_PRESIDENT', 'CLUB_ADVISOR', 'SUPER_ADMIN_JPP'].includes(effectiveRole)) && (
+              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={onEdit}
+                  className="w-7 h-7 rounded-xl bg-muted/60 flex items-center justify-center text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  <Pencil size={11} />
+                </button>
+                <button
+                  onClick={onDelete}
+                  className="w-7 h-7 rounded-xl bg-muted/60 flex items-center justify-center text-muted-foreground hover:bg-rose-50 hover:text-rose-500 transition-colors"
+                >
+                  <Trash2 size={11} />
+                </button>
+              </div>
+            )}
           </div>
-          {(isOwner || ['CLUB_PRESIDENT', 'CLUB_ADVISOR', 'SUPER_ADMIN_JPP'].includes(effectiveRole)) && (
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                onClick={onEdit}
-                className="w-7 h-7 rounded-xl bg-muted/60 flex items-center justify-center text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-              >
-                <Pencil size={11} />
-              </button>
-              <button
-                onClick={onDelete}
-                className="w-7 h-7 rounded-xl bg-muted/60 flex items-center justify-center text-muted-foreground hover:bg-rose-50 hover:text-rose-500 transition-colors"
-              >
-                <Trash2 size={11} />
-              </button>
-            </div>
-          )}
-        </div>
 
-        {/* TITLE */}
-        <h3 className="font-black text-lg tracking-tight leading-snug line-clamp-2">
-          {act.title}
-        </h3>
+          {/* TITLE */}
+          <h3 className="font-black text-lg tracking-tight leading-snug line-clamp-2">
+            {act.title}
+          </h3>
 
-        {/* META */}
-        <div className="space-y-2 text-[11px] font-bold text-muted-foreground">
-          {(act.start_date) && (
-            <div className="flex items-center gap-2">
-              <Calendar size={12} className="text-muted-foreground/40 shrink-0" />
-              <span>{formatDate(act.start_date)}{act.end_date ? ` — ${formatDate(act.end_date)}` : ''}</span>
-            </div>
-          )}
-          {act.location && (
-            <div className="flex items-center gap-2">
-              <MapPin size={12} className="text-muted-foreground/40 shrink-0" />
-              <span className="truncate">{act.location}</span>
-            </div>
-          )}
-          {act.creator?.full_name && (
-            <div className="flex items-center gap-2">
-              <Users size={12} className="text-muted-foreground/40 shrink-0" />
-              <span className="truncate">{act.creator.full_name}</span>
-            </div>
-          )}
-        </div>
-
-        {/* TINDAKAN */}
-        {act.tindakan && (
-          <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-100">
-            <p className="text-[10px] font-black uppercase text-emerald-600 tracking-widest mb-1">Tindakan</p>
-            <p className="text-xs font-medium text-emerald-800 line-clamp-2">{act.tindakan}</p>
+          {/* META */}
+          <div className="space-y-2 text-[11px] font-bold text-muted-foreground">
+            {(act.start_date) && (
+              <div className="flex items-center gap-2">
+                <Calendar size={12} className="text-muted-foreground/40 shrink-0" />
+                <span>{formatDate(act.start_date)}{act.end_date ? ` — ${formatDate(act.end_date)}` : ''}</span>
+              </div>
+            )}
+            {act.location && (
+              <div className="flex items-center gap-2">
+                <MapPin size={12} className="text-muted-foreground/40 shrink-0" />
+                <span className="truncate">{act.location}</span>
+              </div>
+            )}
+            {act.creator?.full_name && (
+              <div className="flex items-center gap-2">
+                <Users size={12} className="text-muted-foreground/40 shrink-0" />
+                <span className="truncate">{act.creator.full_name}</span>
+              </div>
+            )}
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {/* QR BADGE + MERIT */}
+          {(act.qr_enabled || act.merit_kelab > 0) && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {act.qr_enabled && (
+                <button
+                  onClick={() => setQrOpen(true)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/20 transition-colors"
+                >
+                  <QrCode size={10} />
+                  Jana QR
+                </button>
+              )}
+              {act.merit_kelab > 0 && (
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[9px] font-black uppercase tracking-widest text-amber-600">
+                  <Trophy size={9} />
+                  +{act.merit_kelab} Merit
+                </span>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* QR Modal */}
+      {act.qr_token && (
+        <QrCodeModal
+          open={qrOpen}
+          onClose={() => setQrOpen(false)}
+          program={{
+            id: act.id,
+            type: 'aktiviti',
+            title: act.title,
+            qr_token: act.qr_token,
+            merit_kelab: act.merit_kelab,
+            qr_open_at: act.qr_open_at,
+            qr_close_at: act.qr_close_at,
+            date: act.start_date,
+            venue: act.location,
+          }}
+        />
+      )}
+    </>
   );
 }
+
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TAB 2: TAKWIM RASMI (programs)
@@ -670,7 +793,9 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
     title: '', description: '', status: 'DRAFT',
     startDate: '', endDate: '', venue: '', budget: '',
     urlKertasKerja: '', urlPostMortem: '', isLocked: false,
-    tindakan: '', pengarahProgram: '', imageUrls: []
+    tindakan: '', pengarahProgram: '', imageUrls: [],
+    qr_enabled: false, qr_open_at: '', qr_close_at: '',
+    merit_kelab: 0, merit_eakademik: 0,
   };
   const [form, setForm] = useState<any>(emptyForm);
   const [allowAddTakwim, setAllowAddTakwim] = useState(true);
@@ -788,10 +913,15 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
       url_kertas_kerja: form.urlKertasKerja,
       url_post_mortem: form.urlPostMortem,
       user_id: user?.id,
-      club_id: selectedClubId,  // ← Simpan club_id untuk query yang lebih tepat
+      club_id: selectedClubId,
       tindakan: form.tindakan,
       pengarah_program: form.pengarahProgram,
       image_urls: form.imageUrls,
+      qr_enabled: form.qr_enabled,
+      qr_open_at: form.qr_open_at ? new Date(form.qr_open_at).toISOString() : null,
+      qr_close_at: form.qr_close_at ? new Date(form.qr_close_at).toISOString() : null,
+      merit_kelab: Number(form.merit_kelab) || 0,
+      merit_eakademik: Number(form.merit_eakademik) || 0,
     };
     try {
       const res = editTarget
@@ -878,6 +1008,11 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
       tindakan: act.tindakan || '',
       pengarahProgram: act.pengarah_program || '',
       imageUrls: act.image_urls || [],
+      qr_enabled: act.qr_enabled || false,
+      qr_open_at: act.qr_open_at ? act.qr_open_at.replace('Z','').substring(0,16) : '',
+      qr_close_at: act.qr_close_at ? act.qr_close_at.replace('Z','').substring(0,16) : '',
+      merit_kelab: act.merit_kelab || 0,
+      merit_eakademik: act.merit_eakademik || 0,
     });
     setDialogOpen(true);
   };
@@ -1102,6 +1237,79 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                 </div>
               </div>
 
+              {/* ─── QR & MERIT SECTION (Takwim Rasmi) ─── */}
+              <div className="space-y-4 p-6 rounded-[2rem] border border-primary/15 bg-primary/5">
+                <div className="flex items-center gap-2">
+                  <QrCode className="w-4 h-4 text-primary" />
+                  <p className="text-xs font-black uppercase tracking-widest text-primary">QR Check-in & Merit</p>
+                </div>
+
+                {/* Toggle QR */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Aktifkan QR Kehadiran</p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">Peserta scan QR untuk daftar hadir automatik</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, qr_enabled: !form.qr_enabled })}
+                    className={cn(
+                      'relative w-12 h-6 rounded-full transition-all shrink-0',
+                      form.qr_enabled ? 'bg-primary' : 'bg-muted'
+                    )}
+                  >
+                    <div className={cn(
+                      'absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow',
+                      form.qr_enabled ? 'left-7' : 'left-1'
+                    )} />
+                  </button>
+                </div>
+
+                {form.qr_enabled && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Buka QR Pada</Label>
+                      <Input type="datetime-local" value={form.qr_open_at}
+                        onChange={e => setForm({ ...form, qr_open_at: e.target.value })}
+                        className="h-11 rounded-2xl bg-muted/40 border-border/60 text-xs font-bold" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Tutup QR Pada</Label>
+                      <Input type="datetime-local" value={form.qr_close_at}
+                        onChange={e => setForm({ ...form, qr_close_at: e.target.value })}
+                        className="h-11 rounded-2xl bg-muted/40 border-border/60 text-xs font-bold" />
+                    </div>
+                  </div>
+                )}
+
+                {/* Merit Grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1">
+                      <Trophy className="w-3 h-3 text-amber-500" />
+                      Merit Kelab (auto)
+                    </Label>
+                    <Input type="number" min={0} max={50}
+                      value={form.merit_kelab}
+                      onChange={e => setForm({ ...form, merit_kelab: Number(e.target.value) })}
+                      placeholder="0"
+                      className="h-11 rounded-2xl bg-muted/40 border-border/60 font-bold" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1">
+                      <Trophy className="w-3 h-3 text-emerald-500" />
+                      Merit Rasmi (perlu kelulusan)
+                    </Label>
+                    <Input type="number" min={0} max={100}
+                      value={form.merit_eakademik}
+                      onChange={e => setForm({ ...form, merit_eakademik: Number(e.target.value) })}
+                      placeholder="0"
+                      className="h-11 rounded-2xl bg-muted/40 border-border/60 font-bold" />
+                    <p className="text-[9px] text-muted-foreground/60">Akademik akan vouch, Kediaman luluskan</p>
+                  </div>
+                </div>
+              </div>
+
               {/* Seksyen Post-Mortem Tambahan */}
               {(form.status === 'PENDING_POSTMORTEM' || form.status === 'CONFIRMED' || form.status === 'COMPLETED' || form.tindakan || (form.imageUrls && form.imageUrls.length > 0)) && (
                 <div className="space-y-4 p-6 bg-indigo-500/5 border border-indigo-500/10 rounded-[2rem] animate-in slide-in-from-bottom-2 fade-in">
@@ -1208,6 +1416,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
 
 function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage, onDelete, allowAddTakwim }: any) {
   const { user } = useAuth();
+  const [qrOpen, setQrOpen] = useState(false);
   const daysLeft = act.tarikh_mula ? differenceInDays(parseISO(act.tarikh_mula), new Date()) : 999;
   const isPastDeadline = daysLeft < 9 && act.status === 'DRAFT';
 
@@ -1216,7 +1425,6 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
     const { error } = await supabase.from('programs').update({ status: type, jpp_remarks: null }).eq('id', act.id);
     if (!error) {
       toast.success('Berjaya dihantar!');
-      // 4. Log Aktiviti
       await supabase.from('club_logs').insert([{
         club_id: act.club_id,
         user_id: user?.id,
@@ -1232,6 +1440,7 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
   const isRejected = isRejectedKertasKerja || isRejectedPostMortem;
 
   return (
+    <>
     <Card className={cn(
       'rounded-[2.5rem] border-none transition-all duration-300',
       isUrgent ? 'w-[300px] shrink-0 bg-card shadow-2xl ring-1 ring-rose-100 dark:ring-rose-900/50' : 'bg-card shadow-sm hover:shadow-xl',
@@ -1285,6 +1494,33 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
           )}
         </div>
 
+        {/* QR + MERIT BADGES */}
+        {(act.qr_enabled || act.merit_kelab > 0 || act.merit_eakademik > 0) && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {act.qr_enabled && (
+              <button
+                onClick={() => setQrOpen(true)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/20 transition-colors"
+              >
+                <QrCode size={10} />
+                Jana QR
+              </button>
+            )}
+            {act.merit_kelab > 0 && (
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[9px] font-black uppercase text-amber-600">
+                <Trophy size={9} />
+                +{act.merit_kelab} Kelab
+              </span>
+            )}
+            {act.merit_eakademik > 0 && (
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase text-emerald-700">
+                <Trophy size={9} />
+                +{act.merit_eakademik} Rasmi
+              </span>
+            )}
+          </div>
+        )}
+
         {act.jpp_remarks && (
           <div className="p-3.5 bg-rose-50 dark:bg-rose-950/30 rounded-2xl border border-rose-100 dark:border-rose-900/50 flex items-start gap-2">
             <Info size={13} className="text-rose-500 mt-0.5 shrink-0" />
@@ -1334,7 +1570,27 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
         </div>
       </CardContent>
     </Card>
-  );
+
+    {/* QR Modal */}
+    {act.qr_token && (
+      <QrCodeModal
+        open={qrOpen}
+        onClose={() => setQrOpen(false)}
+        program={{
+          id: act.id,
+          type: 'takwim',
+          title: act.nama_program,
+          qr_token: act.qr_token,
+          merit_kelab: act.merit_kelab,
+          merit_eakademik: act.merit_eakademik,
+          qr_open_at: act.qr_open_at,
+          qr_close_at: act.qr_close_at,
+          date: act.tarikh_mula,
+          venue: act.location,
+        }}
+      />
+    )}
+  </>);
 }
 
 function SectionHeader({ title, count, color, icon: Icon }: any) {
@@ -1414,11 +1670,14 @@ function UploadZone({ label, isReady, onUpload, color, disabled }: any) {
   return (
     <div className={cn(
       'p-6 rounded-[2rem] border-2 border-dashed relative flex flex-col items-center gap-2 transition-all h-36 justify-center group',
-      isReady ? `${color} text-white border-transparent shadow-xl scale-105` : 'bg-slate-50 border-slate-200 hover:bg-card hover:border-primary/30',
+      isReady ? `${color} text-white border-transparent shadow-xl scale-105` : 'bg-muted/30 border-border/60 hover:bg-muted/50 hover:border-primary/50',
       disabled && 'opacity-20 grayscale pointer-events-none'
     )}>
-      {isReady ? <CheckCircle2 size={28} className="animate-in zoom-in" /> : <CloudUpload size={28} className="text-slate-300 group-hover:text-primary transition-colors" />}
-      <span className="text-[10px] font-black uppercase tracking-widest text-center leading-tight">{label}</span>
+      {isReady ? <CheckCircle2 size={28} className="animate-in zoom-in" /> : <CloudUpload size={28} className="text-muted-foreground/50 group-hover:text-primary transition-colors" />}
+      <span className={cn(
+        "text-[10px] font-black uppercase tracking-widest text-center leading-tight",
+        !isReady && "text-muted-foreground group-hover:text-primary transition-colors"
+      )}>{label}</span>
       <input type="file" accept="application/pdf" onChange={onUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
     </div>
   );

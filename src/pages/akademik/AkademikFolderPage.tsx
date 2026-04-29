@@ -6,7 +6,7 @@ import { hexToRgba } from '@/lib/utils';
 import { uploadFileToDrive, uploadPdfToDrive } from '@/lib/driveUpload';
 import {
   Folder, FolderOpen, File, Download, Upload, Plus, Loader2,
-  FileText, Image, Archive, ChevronRight, Sparkles, PackageOpen,
+  FileText, Image, Archive, ChevronRight, ChevronDown, Sparkles, PackageOpen,
   FolderArchive, AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -17,16 +17,14 @@ import { zipSync, strToU8 } from 'fflate';
 
 const THEME = '#818CF8';
 
-// ─── Preset folder suggestions ────────────────────────────────
 const FOLDER_PRESETS = [
-  { name: 'Borang Permohonan JPP',    description: 'Borang-borang rasmi JPP untuk pelajar' },
-  { name: 'Koleksi Nota & Rujukan',   description: 'Nota kuliah dan bahan rujukan akademik' },
-  { name: 'Sumber Pembelajaran',      description: 'E-book, slides & modul pembelajaran' },
-  { name: 'Jadual & Takwim',          description: 'Jadual kuliah, peperiksaan & aktiviti' },
-  { name: 'Laporan & Minit Mesyuarat',description: 'Laporan rasmi JPP & minit mesyuarat' },
-  { name: 'Sijil & Anugerah',         description: 'Template sijil dan borang pencalonan anugerah' },
-  { name: 'Maklumat Bursary / Biasiswa', description: 'Flyers dan borang permohonan tajaan' },
-  { name: 'Lain-lain',               description: 'Dokumen Am' },
+  { name: 'Sijil Penyertaan',    description: 'Sijil penyertaan program dan bengkel' },
+  { name: 'Sijil Penghargaan',   description: 'Sijil penghargaan dan anugerah' },
+  { name: 'Slip Keputusan',      description: 'Slip keputusan peperiksaan setiap semester' },
+  { name: 'Surat Tawaran',       description: 'Surat tawaran masuk & tawaran biasiswa' },
+  { name: 'Resit Pembayaran',    description: 'Resit pembayaran yuran pengajian & asrama' },
+  { name: 'Nota Peribadi',       description: 'Nota dan bahan rujukan peribadi' },
+  { name: 'Lain-lain',           description: 'Dokumen dan fail am' },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────
@@ -225,8 +223,9 @@ function FolderCard({ folder, isOpen, onClick, fileCount }: any) {
 
 // ─── Main Folder Page ─────────────────────────────────────────
 export function AkademikFolderPage() {
-  const { profile, isSuperAdmin } = useAuth();
-  const isAdmin = isSuperAdmin || profile?.role === 'JPP';
+  const { profile } = useAuth();
+  // Semua pengguna adalah 'admin' untuk folder peribadi mereka sendiri
+  const isAdmin = true;
 
   const [folders,        setFolders]        = useState<any[]>([]);
   const [filesMap,       setFilesMap]       = useState<Record<string, any[]>>({});
@@ -441,8 +440,8 @@ export function AkademikFolderPage() {
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/25 mb-1">Akademik</p>
-          <h1 className="text-2xl font-black text-white">Dokumen &amp; Sumber</h1>
-          <p className="text-xs text-white/40 font-medium mt-1">Muat turun borang, nota, dan sumber akademik JPP</p>
+          <h1 className="text-2xl font-black text-white">Dokumen Peribadi</h1>
+          <p className="text-xs text-white/40 font-medium mt-1">Muat naik dan simpan sijil serta dokumen akademik anda</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* Download All ZIP */}
@@ -499,10 +498,13 @@ export function AkademikFolderPage() {
               <div>
                 <button
                   onClick={() => setShowPresets(p => !p)}
-                  className="flex items-center gap-1.5 text-[10px] font-black text-white/30 hover:text-white/50 transition-colors uppercase tracking-widest mb-2"
+                  className="flex items-center justify-between w-full bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] rounded-xl px-4 py-2.5 text-sm text-white/70 transition-all mb-3 font-medium group"
                 >
-                  <Sparkles className="w-3 h-3" />
-                  Pilih dari cadangan
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+                    <span>Pilih cadangan folder...</span>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-white/30 transition-transform ${showPresets ? 'rotate-180' : ''}`} />
                 </button>
                 <AnimatePresence>
                   {showPresets && (
@@ -572,8 +574,8 @@ export function AkademikFolderPage() {
       ) : folders.length === 0 ? (
         <div className="py-20 text-center space-y-3">
           <Folder className="w-10 h-10 mx-auto text-white/10" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/20">Tiada folder lagi</p>
-          {isAdmin && <p className="text-[10px] text-white/15">Klik "Folder Baru" untuk mulakan</p>}
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/20">Tiada folder peribadi</p>
+          <p className="text-[10px] text-white/15">Klik "Folder Baru" untuk mula simpan dokumen anda</p>
         </div>
       ) : (
         <div className="space-y-3">

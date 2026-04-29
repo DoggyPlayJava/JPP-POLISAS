@@ -78,7 +78,7 @@ export function AIBudgetGenerator({ initialTitle, initialDescription, onApplyBud
         variant="ghost"
         disabled={disabled || isLoading}
         onClick={() => setIsOpen(true)}
-        className="text-[10px] uppercase font-black tracking-widest text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 h-7 px-3 border border-emerald-200 bg-emerald-50/50 rounded-xl"
+        className="text-[10px] uppercase font-black tracking-widest text-emerald-600 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 hover:text-emerald-700 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:hover:bg-emerald-500/20 h-7 px-3 rounded-xl transition-colors"
         title="Jana Kira-Kira Bajet bersama AI"
       >
         <Wand2 size={12} className="mr-1.5" /> AI Bajet
