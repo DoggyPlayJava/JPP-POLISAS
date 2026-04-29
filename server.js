@@ -912,21 +912,7 @@ app.post('/api/resend-verification', async (req, res) => {
             throw new Error('RESEND_API_KEY tidak dikonfigurasi.');
         }
 
-        // Check if user exists and is not yet confirmed
-        const { data: { users }, error: listErr } = await supabaseAdmin.auth.admin.listUsers();
-        
-        const targetUser = users?.find(u => u.email?.toLowerCase() === email.trim().toLowerCase());
-        
-        if (!targetUser) {
-            // Don't reveal whether user exists
-            return res.status(200).json({ success: true, message: 'Jika emel ini berdaftar, pautan pengesahan akan dihantar.' });
-        }
-
-        if (targetUser.email_confirmed_at) {
-            return res.status(200).json({ success: true, message: 'Emel ini sudah disahkan. Sila cuba log masuk.' });
-        }
-
-        // Generate new verification link
+        // Terus jana pautan pengesahan — generateLink akan gagal sendiri jika user tak wujud
         const redirectTo = process.env.GOTRUE_SITE_URL
             ? `${process.env.GOTRUE_SITE_URL.replace(/\/$/, '')}/login`
             : 'https://jpp.cipher-node.org/login';

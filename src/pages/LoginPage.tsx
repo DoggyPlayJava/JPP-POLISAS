@@ -30,6 +30,7 @@ export function LoginPage() {
   const [verificationSent, setVerificationSent] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
+  const [emailSentOnce, setEmailSentOnce] = useState(false);
   const [showManualRegister, setShowManualRegister] = useState(false);
   const [traditionalRegistrationEnabled, setTraditionalRegistrationEnabled] = useState(true);
 
@@ -46,7 +47,7 @@ export function LoginPage() {
   const resetForm = () => {
     setStep(1); setRegisterMode('student'); setJabatan(''); setLeaderRole('CLUB_PRESIDENT');
     setStaffRole('STAFF'); setLeaderClubId(''); setFullName(''); setMatricNo(''); setEmail(''); setPassword('');
-    setPhone(''); setPasscode(''); setShowManualRegister(false); setVerificationSent(false); setRegisteredEmail('');
+    setPhone(''); setPasscode(''); setShowManualRegister(false); setVerificationSent(false); setRegisteredEmail(''); setEmailSentOnce(false);
   };
 
   // Simpan redirect URL ke sessionStorage serta-merta bila login page dimuatkan.
@@ -336,8 +337,7 @@ export function LoginPage() {
                 </div>
                 <p className="font-bold text-foreground text-lg">Sahkan Emel Anda ✅</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Pautan pengesahan telah dihantar ke <span className="font-bold text-primary">{registeredEmail}</span>.
-                  <br/>Sila semak peti masuk (dan folder spam) anda.
+                  Akaun anda berjaya didaftarkan! Sila klik butang di bawah untuk menerima pautan pengesahan ke <span className="font-bold text-primary">{registeredEmail}</span>.
                 </p>
                 <div className="flex flex-col gap-3 pt-4">
                   <Button variant="outline" disabled={resendLoading}
@@ -352,15 +352,23 @@ export function LoginPage() {
                           body: JSON.stringify({ email: registeredEmail }),
                         });
                         const data = await resp.json();
-                        toast.success(data.message || 'Pautan pengesahan baharu telah dihantar!');
+                        if (resp.ok) {
+                          setEmailSentOnce(true);
+                          toast.success(data.message || 'Emel pengesahan berjaya dihantar! Sila semak peti masuk anda.');
+                        } else {
+                          toast.error(data.error || 'Gagal menghantar emel pengesahan.');
+                        }
                       } catch {
-                        toast.error('Gagal menghantar semula emel pengesahan.');
+                        toast.error('Gagal menghubungi pelayan. Sila cuba lagi.');
                       } finally {
                         setResendLoading(false);
                       }
                     }}>
-                    {resendLoading ? 'Menghantar...' : '📬 Hantar Semula Emel Pengesahan'}
+                    {resendLoading ? 'Menghantar...' : emailSentOnce ? '📬 Hantar Semula' : '✉️ Hantar Emel Pengesahan'}
                   </Button>
+                  {emailSentOnce && (
+                    <p className="text-xs text-emerald-500 font-medium">✅ Emel telah dihantar! Semak peti masuk & folder spam anda.</p>
+                  )}
                   <Button variant="ghost"
                     className="rounded-xl h-10 font-bold text-xs uppercase tracking-widest text-muted-foreground"
                     onClick={() => { setVerificationSent(false); setIsSignUp(false); resetForm(); }}>
