@@ -7,6 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 
 dotenv.config();
 
@@ -16,12 +17,53 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = process.env.PORT || 8000;
 
-// Enable CORS
-app.use(cors());
+// ==========================================
+// Security Headers (Helmet)
+// ==========================================
+app.use(helmet({
+    contentSecurityPolicy: false, // Disabled for SPA — CSP set at reverse-proxy level
+    crossOriginEmbedderPolicy: false, // Allow external images/fonts
+}));
 
-// Body parsers
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// ==========================================
+// CORS — restricted to production & local dev only
+// ==========================================
+const ALLOWED_ORIGINS = [
+    'https://jpp.cipher-node.org',
+    'https://www.jpp.cipher-node.org',
+    'http://localhost:5173',
+    'http://localhost:8000',
+];
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin (mobile apps, curl, Postman, server-to-server)
+        if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+            callback(null, true);
+        } else {
+            console.warn(`[CORS] Blocked request from origin: ${origin}`);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-webhook-secret'],
+    credentials: true,
+}));
+
+// ==========================================
+// Global Rate Limiter — protects ALL endpoints
+// ==========================================
+const globalRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 300, // 300 requests per 15 min per IP
+    message: { error: 'Terlalu banyak permintaan daripada IP ini. Sila cuba lagi selepas 15 minit.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use(globalRateLimiter);
+
+// Body parsers — with explicit size limits
+app.use(express.json({ limit: '50kb' }));
+app.use(express.urlencoded({ extended: true, limit: '50kb' }));
 
 // Configure multer for file uploads in memory
 const upload = multer({ 
@@ -73,8 +115,8 @@ const requireWebhookSecret = (req, res, next) => {
     const expectedSecret = process.env.WEBHOOK_SECRET;
     
     if (!expectedSecret) {
-        console.warn("WARNING: WEBHOOK_SECRET is not set in environment variables. Webhook endpoints are open.");
-        return next();
+        console.error("FATAL: WEBHOOK_SECRET is not set. Webhook endpoints are disabled for security.");
+        return res.status(503).json({ error: "Webhook endpoint unavailable: server misconfigured." });
     }
     
     if (secret !== expectedSecret) {
@@ -82,6 +124,25 @@ const requireWebhookSecret = (req, res, next) => {
     }
     next();
 };
+
+// ==========================================
+// Rate Limiters for unauthenticated endpoints
+// ==========================================
+const authFlowLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5, // 5 requests per hour per IP
+    message: { error: "Terlalu banyak percubaan. Sila cuba lagi selepas 1 jam." },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const emailSendLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // 10 emails per 15 min per IP
+    message: { error: "Terlalu banyak emel dihantar. Sila cuba lagi selepas 15 minit." },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
 // ==========================================
 // Middleware: AI Rate Limiter (IP Based)
@@ -201,12 +262,22 @@ async function sendEmailInternal(to, subject, html) {
 // ==========================================
 // 2. Send Email Endpoint
 // ==========================================
-app.post('/api/send-email', requireAuth, async (req, res) => {
+app.post('/api/send-email', requireAuth, emailSendLimiter, async (req, res) => {
     try {
         const { to, subject, html } = req.body;
 
         if (!to || !subject || !html) {
             return res.status(400).json({ error: "Missing required parameters: to, subject, html" });
+        }
+
+        // SECURITY: Validate recipient domain — only allow university & system domains
+        const ALLOWED_EMAIL_DOMAINS = ['polisas.edu.my', 'cipher-node.org', 'gmail.com'];
+        const recipients = Array.isArray(to) ? to : [to];
+        for (const addr of recipients) {
+            const domain = String(addr).split('@')[1]?.toLowerCase();
+            if (!domain || !ALLOWED_EMAIL_DOMAINS.includes(domain)) {
+                return res.status(403).json({ error: `Domain emel '${domain}' tidak dibenarkan.` });
+            }
         }
 
         const data = await sendEmailInternal(to, subject, html);
@@ -465,8 +536,12 @@ app.post('/api/upload-to-drive', requireAuth, upload.single('file'), async (req,
             return res.status(400).json({ error: "Fail tidak ditemui." });
         }
 
+        // SECURITY: Validate both MIME type AND file extension
         if (file.mimetype !== "application/pdf") {
             return res.status(400).json({ error: "Hanya fail PDF sahaja dibenarkan." });
+        }
+        if (!file.originalname.toLowerCase().endsWith('.pdf')) {
+            return res.status(400).json({ error: "Nama fail mesti berakhiran .pdf" });
         }
 
         const rawFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
@@ -570,7 +645,7 @@ app.post('/api/send-push-notification', requireAuth, async (req, res) => {
 // ==========================================
 // 7. Notify Anomaly Endpoint
 // ==========================================
-app.post('/api/notify-anomaly', requireAuth, async (req, res) => {
+app.post('/api/notify-anomaly', requireAuth, emailSendLimiter, async (req, res) => {
     try {
         const { alerts, sentAt } = req.body;
         
@@ -588,12 +663,11 @@ app.post('/api/notify-anomaly', requireAuth, async (req, res) => {
                         <th>Pengguna</th>
                         <th>Sebab Dikesan</th>
                     </tr>
-                    ${alerts.map(a => `
-                    <tr>
-                        <td>${a.user}</td>
-                        <td>${a.reason}</td>
-                    </tr>
-                    `).join('')}
+                    ${alerts.map(a => {
+                        const safeUser = String(a.user || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        const safeReason = String(a.reason || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        return `<tr><td>${safeUser}</td><td>${safeReason}</td></tr>`;
+                    }).join('')}
                 </table>
                 <p style="margin-top: 20px;">Sila log masuk ke portal untuk tindakan lanjut.</p>
             </div>
@@ -635,7 +709,7 @@ app.post('/api/notify-anomaly', requireAuth, async (req, res) => {
 // 8. Reset Password via Resend HTTP API
 //    (Bypass SMTP sepenuhnya — port tak perlu)
 // ==========================================
-app.post('/api/reset-password', async (req, res) => {
+app.post('/api/reset-password', authFlowLimiter, async (req, res) => {
     try {
         const { email } = req.body;
 
@@ -766,7 +840,7 @@ app.post('/api/reset-password', async (req, res) => {
 // 9. Send Signup Verification Email via Resend
 //    (Bypass GoTrue SMTP — self-hosted SMTP blocked)
 // ==========================================
-app.post('/api/send-signup-verification', async (req, res) => {
+app.post('/api/send-signup-verification', authFlowLimiter, async (req, res) => {
     try {
         const { email } = req.body;
 
@@ -895,7 +969,7 @@ app.post('/api/send-signup-verification', async (req, res) => {
 // 10. Resend Verification Email via Resend
 //     (For users who didn't receive the first email)
 // ==========================================
-app.post('/api/resend-verification', async (req, res) => {
+app.post('/api/resend-verification', authFlowLimiter, async (req, res) => {
     try {
         const { email } = req.body;
 

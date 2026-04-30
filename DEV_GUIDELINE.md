@@ -79,14 +79,28 @@ src/
 │   └── ExcoThemeContext.tsx   ← Warna tema exco aktif
 │
 ├── pages/
-│   ├── JppAdminPage.tsx       ← Global JPP Dashboard (/jpp-admin) — 3000+ baris
+│   ├── jpp/                   ← Portal JPP HQ (semua page JPP admin)
+│   │   ├── JppHomePage.tsx    ← Home dashboard JPP (/jpp)
+│   │   ├── JppMembersPage.tsx ← Pengurusan ahli
+│   │   ├── JppOverviewPage.tsx← Overview rentas-kelab
+│   │   ├── JppUsersPage.tsx   ← Pengurusan pengguna
+│   │   ├── JppLogsPage.tsx    ← Audit log
+│   │   ├── JppSidebar.tsx     ← Sidebar navigasi JPP
+│   │   ├── JppLayout.tsx      ← Layout shell JPP
+│   │   ├── jppConfig.ts       ← UNIT_CFG (semua unit exco + isActive flag)
+│   │   └── ExcoWrappers.tsx   ← Thin wrappers untuk route exco universal
 │   ├── AktivitiFull.tsx       ← Pengurusan aktiviti e-KPP
 │   ├── LaporanPage.tsx        ← Submit laporan
 │   ├── SemakanLaporanPage.tsx ← Semak & luluskan laporan (Admin/Penasihat)
 │   ├── NexusPage.tsx          ← Nexus AI Hub standalone
 │   ├── PortalPage.tsx         ← Portal hub (pilih exco)
 │   ├── DashboardPage.tsx      ← Dashboard utama e-KPP
-│   └── keusahawanan/          ← Modul e-Keusahawanan (ada layout sendiri)
+│   ├── keusahawanan/          ← Modul e-Keusahawanan (ada layout sendiri)
+│   ├── kebajikan/             ← Modul e-Kebajikan (sistem tiket aduan)
+│   ├── akademik/              ← Modul e-Akademik (CGPA, merit, folder, QR)
+│   ├── polymart/              ← Modul PolyMart (marketplace pelajar)
+│   ├── supsas/                ← Modul SUPSAS (sukan & pertandingan)
+│   └── karnival/              ← Modul Karnival (sistem undian & booth)
 │
 ├── components/
 │   ├── RouteGuards.tsx        ← ProtectedRoute, PublicRoute
@@ -97,17 +111,27 @@ src/
 │   ├── tasks/                ← Komponen pengurusan tugasan
 │   └── ui/                   ← Shadcn UI components
 │
+├── store/
+│   └── useNotificationStore.ts ← Zustand store untuk notifikasi (guna atomic selector!)
+│
 ├── hooks/
 │   ├── useAiAssistant.ts     ← Hook Gemini AI (callAi + sendChatMessage)
 │   ├── useDashboardData.ts   ← Fetch data dashboard
 │   ├── useReports.ts         ← Fetch dan urus laporan
-│   └── useJppExcoUnits.ts    ← Fetch unit exco JPP
+│   ├── useJppExcoUnits.ts    ← Fetch unit exco JPP
+│   ├── useBracket.ts         ← Bracket tournament logic (SUPSAS)
+│   ├── useLiveDraw.ts        ← Live draw fixtures (SUPSAS)
+│   ├── usePosData.ts         ← POS system data (Keusahawanan)
+│   └── usePushNotifications.ts ← Web Push subscription management
 │
 ├── lib/
 │   ├── supabase.ts           ← Supabase client singleton + Profile interface + createLog()
 │   ├── driveUpload.ts        ← ⚠️ Hybrid storage: images → Supabase, PDF → Google Drive
-│   ├── cache.ts              ← Caching utility
+│   ├── cache.ts              ← Caching utility (QueryCache dengan TTL)
+│   ├── notifications.ts      ← Helper: sendNotificationToUser(), sendNotificationToRole()
 │   ├── utils.ts              ← cn(), helper functions
+│   ├── generateLaporanDocx.ts← Penjana dokumen DOCX laporan
+│   ├── email.ts              ← Email dispatch via Express server
 │   └── report-utils.ts       ← Utility untuk laporan
 │
 ├── types/
@@ -220,7 +244,8 @@ Ringkasan:
 
 ### Konfigurasi:
 ```
-VITE_SUPABASE_URL=https://ujklcxfbmmzxsqtidjtz.supabase.co
+# Sistem ini self-hosted — bukan Supabase Cloud
+VITE_SUPABASE_URL=https://api.cipher-node.org  (atau nilai dalam .env.local)
 VITE_SUPABASE_ANON_KEY=... (dalam .env.local)
 ```
 
@@ -301,6 +326,8 @@ import { something } from '../lib/supabase';  // ❌ Elakkan relative
 | `AiSettingsContext` | `useAiSettings()` | Tetapan AI (concise mode, model pilihan) |
 | `KarnivalContext` | `useKarnival()` | State undian karnival |
 | `ExcoThemeContext` | `useExcoTheme()` | Warna exco aktif untuk theming |
+| `SupsasContext` | `useSupsas()` | Data edisi, kontingen, sukan, fixtures, medal tally SUPSAS |
+| `JppConfigContext` | `useJppConfig()` | Konfigurasi portal JPP (tetapan, feature flags) |
 
 ---
 
@@ -334,8 +361,10 @@ npm run lint:css     # Stylelint sahaja
 | `src/contexts/AuthContext.tsx` | Seluruh RBAC sistem. Bug di sini = security hole |
 | `src/lib/supabase.ts` | Client singleton. Jangan buat instance baru |
 | `src/lib/driveUpload.ts` | Routing storan hibrid. Silap = data tersalah simpan |
+| `src/lib/notifications.ts` | Helper notifikasi. Guna ini — jangan `.insert()` terus tanpa ikut polisi RLS |
 | `src/types/index.ts` | Type contracts. ALL_CLUBS, constants |
 | `src/pages/jpp/jppConfig.ts` | Config semua unit exco JPP. `isActive: false` = unit tersembunyi. `moduleLink` menentukan destinasi klik sidebar |
+| `src/store/useNotificationStore.ts` | Zustand store. Guna atomic selector — jangan destructure keseluruhan store |
 | `src/components/exco/ExcoAktivitiPage.tsx` | **Template universal** aktiviti exco — jangan duplicate logik ini |
 | `src/components/exco/ExcoLaporanPage.tsx` | **Template universal** laporan exco — gunakan semula untuk semua unit |
 | `src/components/exco/ExcoSemakanLaporanPage.tsx` | Panel semakan MT — satu komponen untuk semua unit |
@@ -592,3 +621,510 @@ Apabila mana-mana `SUPER_ADMIN_JPP` atau `ADMIN` log masuk ke `/jpp/settings`, s
 ---
 
 *Dikemas kini: April 2026 — Setiap perubahan besar pada sistem perlu dikemas kini dokumen ini.*
+
+---
+
+## 15. Database-Friendly Development ⚠️ WAJIB BACA (Untuk AI Agent & Developer)
+
+> **Latar belakang:** Sistem ini perlu menanggung 1,500 pendaftaran serentak semasa Musim Orientasi. Bahagian ini mengandungi peraturan mandatori yang telah dipersetujui selepas audit prestasi mendalam (April 2026). Setiap peraturan di sini mempunyai sebab teknikal yang konkrit — **jangan abaikannya**.
+
+---
+
+### 15.1 Peraturan RLS Policy — KRITIKAL
+
+#### ✅ SELALU guna `(SELECT auth.uid())` — BUKAN `auth.uid()` terus
+
+```sql
+-- ❌ SALAH — PostgreSQL evaluate auth.uid() untuk SETIAP ROW yang discan
+CREATE POLICY "contoh_salah" ON public.my_table
+  FOR SELECT USING (user_id = auth.uid());
+
+-- ✅ BETUL — PostgreSQL evaluate auth.uid() SEKALI sahaja per query (init-plan)
+CREATE POLICY "contoh_betul" ON public.my_table
+  FOR SELECT USING (user_id = (SELECT auth.uid()));
+```
+
+**Mengapa penting:** Dengan 1,000 baris dalam jadual, `auth.uid()` tanpa `SELECT` dipanggil 1,000 kali per query. Dengan `(SELECT auth.uid())`, ia dipanggil sekali. Pada skala 1,500 pengguna serentak, ini perbezaan antara stabil dan crash.
+
+Peraturan yang sama berlaku untuk:
+- `auth.role()` → `(SELECT auth.role())`
+- `auth.jwt()` → `(SELECT auth.jwt())`
+- Sebarang RPC call dalam USING/WITH CHECK
+
+#### ✅ SATU policy per operasi per jadual — jangan buat duplikat
+
+```sql
+-- ❌ SALAH — dua policy permissive untuk UPDATE pada jadual yang sama
+CREATE POLICY "update_own" ON profiles FOR UPDATE USING (id = (SELECT auth.uid()));
+CREATE POLICY "admin_update" ON profiles FOR UPDATE USING (is_admin((SELECT auth.uid())));
+
+-- ✅ BETUL — gabungkan dalam satu policy menggunakan OR
+CREATE POLICY "profiles_update" ON profiles FOR UPDATE
+  USING (
+    (id = (SELECT auth.uid()))
+    OR is_admin((SELECT auth.uid()))
+  )
+  WITH CHECK (
+    (id = (SELECT auth.uid()))
+    OR is_admin((SELECT auth.uid()))
+  );
+```
+
+**Mengapa penting:** PostgreSQL menilai SEMUA permissive policy dan menggabungkan dengan OR. Dua policy = dua kali kerja per query. Sentiasa merge menjadi satu.
+
+#### ✅ Untuk jadual yang kerap dibaca, tambah `WITH CHECK` yang ketat
+
+Jadual seperti `notifications`, `profiles`, `portal_settings` dibaca pada SETIAP page load. Policy INSERT/UPDATE mesti mempunyai `WITH CHECK` yang mengehadkan akses — jangan `WITH CHECK (true)`.
+
+---
+
+### 15.2 Peraturan Query Frontend — KRITIKAL
+
+#### ✅ SENTIASA fetch secara selari dengan `Promise.all`
+
+```typescript
+// ❌ SALAH — sequential fetch (waterfall), lebih lambat & membazir connection
+const profile = await supabase.from('profiles').select('*').eq('id', userId).single();
+const memberships = await supabase.from('student_club_memberships').select('*').eq('user_id', userId);
+
+// ✅ BETUL — parallel fetch, 2x+ lebih pantas
+const [profileRes, membershipsRes] = await Promise.all([
+  supabase.from('profiles').select('*').eq('id', userId).single(),
+  supabase.from('student_club_memberships').select('*').eq('user_id', userId),
+]);
+```
+
+#### ✅ JANGAN buat N+1 queries
+
+```typescript
+// ❌ SALAH — N+1: satu query per item dalam array
+const clubs = await supabase.from('clubs').select('*');
+for (const club of clubs.data) {
+  const members = await supabase.from('student_club_memberships')
+    .select('*').eq('club_id', club.id); // dipanggil N kali
+}
+
+// ✅ BETUL — satu query dengan .in()
+const members = await supabase
+  .from('student_club_memberships')
+  .select('*, club:clubs(*)')
+  .in('club_id', clubs.data.map(c => c.id));
+```
+
+#### ✅ Guna `QueryCache` untuk data yang kerap diakses
+
+```typescript
+import { queryCache } from '@/lib/cache';
+
+const CACHE_KEY = `dashboard_${userId}`;
+const cached = queryCache.get(CACHE_KEY);
+if (cached) return cached;
+
+const data = await fetchDashboardData(userId);
+queryCache.set(CACHE_KEY, data, 2 * 60 * 1000); // 2 minit TTL
+return data;
+```
+
+**Panduan TTL berdasarkan jenis data:**
+
+| Jenis Data | TTL Cadangan | Sebab |
+|---|---|---|
+| `portal_settings` (feature flags) | 10 minit | Jarang berubah |
+| Senarai kelab, unit exco | 30 minit | Data statik |
+| Data dashboard (stats, laporan) | 2–3 minit | Semi-statik |
+| Notifikasi | Jangan cache | Perlu fresh |
+| Data profil pengguna sendiri | 1 minit | Boleh berubah |
+
+#### ✅ Pilih column yang diperlukan sahaja — jangan `select('*')` untuk jadual besar
+
+```typescript
+// ❌ SALAH
+const { data } = await supabase.from('profiles').select('*');
+
+// ✅ BETUL
+const { data } = await supabase.from('profiles').select('id, full_name, email, role, club_id');
+```
+
+---
+
+### 15.3 Peraturan Realtime & WebSocket — PENTING
+
+#### ❌ JANGAN tambah Realtime subscription untuk ciri high-traffic
+
+Realtime subscription = satu WebSocket connection kekal per komponen yang subscribe. Dengan 1,500 pengguna serentak, ini bermaksud 1,500 connection terbuka serentak ke Supabase Realtime.
+
+**Peraturan:**
+- **DILARANG** guna `supabase.channel().on('postgres_changes', ...)` dalam komponen yang dimuatkan pada setiap page load (cth: layout, sidebar, notifikasi global)
+- Guna **polling berasaskan visibility** sebagai ganti:
+
+```typescript
+// ✅ CARA YANG BETUL — polling via visibilitychange (pattern sedia ada dalam NotificationContext)
+useEffect(() => {
+  const handleVisibility = () => {
+    if (document.visibilityState === 'visible') fetchLatestData();
+  };
+  document.addEventListener('visibilitychange', handleVisibility);
+  return () => document.removeEventListener('visibilitychange', handleVisibility);
+}, []);
+```
+
+**Pengecualian yang dibenarkan:** Realtime boleh digunakan untuk ciri chat atau voting masa nyata, TETAPI mesti:
+1. Di-subscribe hanya apabila pengguna berada di halaman berkenaan
+2. Di-unsubscribe apabila komponen unmount (`return () => channel.unsubscribe()`)
+3. Tidak diletakkan dalam komponen Layout/Sidebar/global provider
+
+---
+
+### 15.4 Peraturan Migration Database
+
+#### ✅ SENTIASA tulis migration baharu — JANGAN edit migration lama
+
+Setiap migration adalah rekod sejarah database. Edit migration lama akan menyebabkan drift antara development dan production.
+
+#### ✅ Template jadual baharu — RLS WAJIB
+
+```sql
+CREATE TABLE public.my_new_table (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- WAJIB aktifkan RLS
+ALTER TABLE public.my_new_table ENABLE ROW LEVEL SECURITY;
+
+-- WAJIB ada sekurang-kurangnya satu policy dengan (SELECT auth.uid())
+CREATE POLICY "my_new_table_select" ON public.my_new_table
+  FOR SELECT USING (user_id = (SELECT auth.uid()));
+
+-- WAJIB index untuk setiap FK column
+CREATE INDEX idx_my_new_table_user_id ON public.my_new_table(user_id);
+```
+
+---
+
+### 15.5 Peraturan Notifikasi
+
+Policy INSERT pada `notifications` mengizinkan:
+
+| Siapa | Boleh insert untuk siapa |
+|---|---|
+| Mana-mana `authenticated` user | Diri sendiri sahaja (`user_id = auth.uid()`) |
+| `JPP`, `SUPER_ADMIN_JPP`, `CLUB_PRESIDENT`, `CLUB_MT` | Pengguna lain |
+| `authenticated` user | Role-broadcast (`user_id IS NULL`, `target_role IS NOT NULL`) |
+
+```typescript
+// ✅ BETUL — student insert notifikasi untuk diri sendiri
+await supabase.from('notifications').insert({
+  user_id: currentUser.id,  // ← MESTI sama dengan auth.uid()
+  title: 'QR Scan Berjaya',
+  type: 'SUCCESS'
+});
+
+// ❌ SALAH — student cuba insert untuk orang lain (akan GAGAL dengan RLS error)
+await supabase.from('notifications').insert({
+  user_id: someOtherUserId,  // ← RLS akan BLOCK ini
+  ...
+});
+```
+
+---
+
+### 15.6 Senarai Semak Prestasi — Untuk Setiap Feature Baru
+
+Sebelum deploy feature baharu, semak senarai ini:
+
+```
+Database:
+  [ ] Semua RLS policy guna (SELECT auth.uid()) bukan auth.uid() terus
+  [ ] Tiada policy pendua/bertindih untuk operasi yang sama pada jadual yang sama
+  [ ] Setiap FK column ada index
+  [ ] Setiap jadual baharu ada RLS diaktifkan + sekurang-kurangnya satu policy
+  [ ] Migration dinamakan dengan deskriptif (bukan 'fix.sql' atau 'update.sql')
+
+Query Frontend:
+  [ ] Fetch selari guna Promise.all (bukan sequential await)
+  [ ] Tiada N+1 query pattern
+  [ ] select() hanya column yang diperlukan (bukan select('*') untuk jadual besar)
+  [ ] Data semi-statik dicache dengan QueryCache + TTL bersesuaian
+
+Realtime:
+  [ ] Tiada Realtime subscription baru dalam komponen global/layout/sidebar
+  [ ] Semua subscription ada cleanup (return () => channel.unsubscribe())
+  [ ] Pertimbangkan polling via visibilitychange sebagai alternatif
+
+Notifikasi:
+  [ ] INSERT notification untuk orang lain hanya dalam komponen JPP/admin
+  [ ] Student hanya insert notification untuk diri sendiri (user_id = auth.uid())
+```
+
+---
+
+*Dikemas kini: April 2026 — Selepas audit prestasi Musim Orientasi.*
+
+---
+
+## 16. Modul PolyMart — Marketplace Pelajar
+
+> Route prefix: `/polymart/*` | Layout: `src/pages/polymart/PolyMartLayout.tsx`
+
+PolyMart adalah marketplace dalam-app untuk pelajar POLISAS menjual dan membeli produk/perkhidmatan sesama sendiri.
+
+### 16.1 Jadual Database
+
+| Jadual | Fungsi |
+|---|---|
+| `polymart_ads` | Iklan/listing produk oleh vendor |
+| `polymart_orders` | Pesanan pembeli (status: `PENDING`→`CONFIRMED`→`READY`→`COMPLETED`/`CANCELLED`) |
+| `polymart_reports` | Laporan aduan terhadap iklan |
+| `polymart_reviews` | Ulasan pembeli selepas transaksi selesai |
+
+### 16.2 Routes
+
+| Route | Komponen | Akses |
+|---|---|---|
+| `/polymart` | `PolyMartHome` | Semua (termasuk pelawat tanpa login) |
+| `/polymart/produk/:id` | `PolyMartProductDetail` | Semua |
+| `/polymart/pesanan-saya` | `PolyMartMyOrders` | Authenticated |
+| `/polymart/vendor` | `PolyMartVendorDashboard` | Vendor (ada perniagaan aktif) |
+| `/polymart/admin` | `PolyMartAdminPanel` | `hasKeusahawananAccess` atau `isSuperAdmin` |
+
+### 16.3 RBAC PolyMart
+
+| Peranan | Akses |
+|---|---|
+| Pelawat (tidak login) | Boleh browse dan lihat produk sahaja |
+| Pelajar biasa | Boleh beli, buat pesanan, tulis review |
+| Vendor (owner/ahli perniagaan aktif) | Boleh list produk, urus pesanan masuk |
+| `hasKeusahawananAccess` / `isSuperAdmin` | Akses admin panel (moderasi, urus laporan) |
+
+### 16.4 Konteks Dalaman
+
+`PolyMartLayout.tsx` mengeksport konteks dalaman `usePolymart()` yang mengandungi:
+- `activeCategory` — penapis kategori aktif
+- `searchQuery` — query carian
+- `isVendor` — sama ada pengguna adalah vendor
+- `pendingVendorCount` — bilangan pesanan masuk yang belum diproses
+- `myActiveOrdersCount` — bilangan pesanan aktif pembeli
+
+### 16.5 Realtime (Pengecualian Dibenarkan)
+
+PolyMartLayout **menggunakan Realtime** tetapi HANYA untuk vendor yang sedang aktif:
+```typescript
+// Hanya subscribe jika pengguna adalah vendor
+if (!user || !isVendor) return;
+const sub = supabase.channel('polymart_vendor_orders_live')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'polymart_orders' }, refetchCounts)
+  .subscribe();
+return () => { supabase.removeChannel(sub); }; // cleanup ada
+```
+Pembeli biasa menggunakan fetch-on-mount tanpa Realtime.
+
+### 16.6 Kategori Produk
+
+`Makanan`, `Minuman`, `Aksesori`, `Perkhidmatan`, `Pakaian`, `Elektronik`, `Umum`
+
+---
+
+## 17. Modul E-Akademik — Pengurusan Akademik Pelajar
+
+> Route prefix: `/akademik/*` | Layout: `src/pages/akademik/AkademikLayout.tsx`
+
+E-Akademik adalah modul khusus untuk pengurusan rekod akademik, pencapaian, dan dokumen peribadi pelajar.
+
+### 17.1 Jadual Database
+
+| Jadual | Fungsi |
+|---|---|
+| `akademik_cgpa_records` | Rekod CGPA semester pelajar |
+| `akademik_pencapaian` | Sijil dan pencapaian akademik |
+| `akademik_sijil_categories` | Kategori sijil (konfigurasi) |
+| `akademik_merit_config` | Konfigurasi poin merit untuk aktiviti akademik |
+| `akademik_files` | Fail peribadi pelajar (RLS: owner sahaja) |
+| `akademik_folders` | Folder peribadi pelajar (RLS: creator sahaja) |
+| `akademik_qr_tokens` | Token QR yang dijana untuk scan kehadiran |
+| `akademik_qr_scans` | Log scan QR oleh pelajar |
+| `akademik_unlock_requests` | Permintaan buka kunci rekod akademik |
+
+### 17.2 Routes
+
+| Route | Komponen | Fungsi |
+|---|---|---|
+| `/akademik` | `AkademikDashboard` | Dashboard ringkasan |
+| `/akademik/pencapaian` | `AkademikPencapaian` | Sijil & pencapaian |
+| `/akademik/merit` | `AkademikMeritPage` | Poin merit akademik |
+| `/akademik/qr` | `AkademikQrPage` | Jana & urus QR token |
+| `/akademik/qr/:token` | `AkademikQrScan` | Scan QR (public, no auth required) |
+| `/akademik/cgpa` | `AkademikCgpa` | Rekod CGPA |
+| `/akademik/folder` | `AkademikFolderPage` | Storan dokumen peribadi |
+| `/akademik/leaderboard` | `AkademikLeaderboard` | Papan mata merit |
+
+### 17.3 Sistem Folder Peribadi
+
+`akademik_files` dan `akademik_folders` adalah **peribadi sepenuhnya** — RLS memastikan pelajar hanya boleh akses folder/fail mereka sendiri. Policy menggunakan `(SELECT auth.uid())` pattern (telah dioptimumkan April 2026).
+
+### 17.4 RBAC E-Akademik
+
+| Peranan | Akses |
+|---|---|
+| Semua pelajar | Dashboard, CGPA, pencapaian, folder peribadi sendiri |
+| Exco Akademik (`jpp_unit = 'AKADEMIK'`) | Urus merit config, jana QR token |
+| `SUPER_ADMIN_JPP` | Akses penuh + unlock requests |
+
+---
+
+## 18. Modul SUPSAS — Sukan & Pertandingan
+
+> Route prefix: `/supsas/*` | Context: `SupsasContext` | Layout: `src/pages/supsas/SupsasLayout.tsx`
+
+SUPSAS (Sukan Universiti POLISAS) adalah sistem pengurusan pertandingan sukan antara kontingen jabatan.
+
+### 18.1 Jadual Database
+
+| Jadual | Fungsi |
+|---|---|
+| `supsas_editions` | Edisi pertandingan (satu aktif pada satu masa) |
+| `supsas_sports` | Senarai sukan dalam edisi (format: `knockout`/`round_robin`/`group_knockout`) |
+| `supsas_kontingen` | Pasukan/jabatan yang menyertai |
+| `supsas_teams` | Kumpulan dalam sukan (satu kontingen boleh ada beberapa kumpulan) |
+| `supsas_fixtures` | Jadual perlawanan (ada bracket fields untuk knockout) |
+| `supsas_results` | Keputusan perlawanan |
+| `supsas_participants` | Peserta individu |
+
+### 18.2 Routes
+
+| Route | Akses |
+|---|---|
+| `/supsas` | Landing page — semua |
+| `/supsas/scoreboard` | Papan mata — semua |
+| `/supsas/jadual` | Jadual perlawanan — semua |
+| `/supsas/sukan` | Senarai sukan — semua |
+| `/supsas/bracket/:sportId` | Bracket sukan — semua |
+| `/supsas/sejarah` | Sejarah edisi lepas — semua |
+| `/supsas/admin/*` | Panel admin — Exco SRK / Super Admin |
+| `/supsas/ketua` | Dashboard ketua kontingen — ketua kontingen sahaja |
+
+### 18.3 SupsasContext — Cara Guna
+
+```typescript
+import { useSupsas } from '@/contexts/SupsasContext';
+
+const { edition, kontingen, sports, fixtures, medalTally, isLive, isLoading } = useSupsas();
+```
+
+**PENTING:** SupsasContext menggunakan **visibility-based polling** untuk pengguna biasa. Realtime HANYA diaktifkan untuk admin panel:
+```typescript
+const { enableRealtime, disableRealtime } = useSupsas();
+// SupsasAdminLayout memanggil enableRealtime() pada mount
+// dan disableRealtime() pada unmount
+```
+
+### 18.4 RBAC SUPSAS
+
+| Peranan | Akses |
+|---|---|
+| Semua (termasuk awam) | View scoreboard, jadual, bracket |
+| Ketua Kontingen | Dashboard ketua, urus team sendiri |
+| Exco SRK (`jpp_unit = 'SRK'`) | Admin panel penuh |
+| `SUPER_ADMIN_JPP` | Akses penuh |
+
+---
+
+## 19. Modul Karnival — Sistem Undian & Booth
+
+> Route prefix: `/karnival/*` | Context: `KarnivalContext` | Layout: `src/pages/karnival/KarnivalLayout.tsx`
+
+Karnival adalah sistem pengurusan booth dan undian untuk Karnival tahunan POLISAS.
+
+### 19.1 Jadual Database
+
+| Jadual | Fungsi |
+|---|---|
+| `karnival_editions` | Edisi karnival (satu aktif pada satu masa) |
+| `karnival_categories` | Kategori pertandingan/penilaian booth |
+| `karnival_booths` | Booth yang menyertai karnival |
+| `karnival_votes_v2` | Rekod undi (satu pelajar satu undi per kategori) |
+
+### 19.2 Routes
+
+| Route | Komponen | Akses |
+|---|---|---|
+| `/karnival` | `KarnivalLandingPage` | Semua |
+| `/karnival/undi` | `KarnivalVotePage` | Authenticated |
+| `/karnival/scoreboard` | `KarnivalScoreboard` | Semua |
+| `/karnival/admin` | `KarnivalAdminDashboard` | JPP/SuperAdmin |
+| `/karnival/admin/edition` | `KarnivalAdminEdition` | JPP/SuperAdmin |
+| `/karnival/admin/categories` | `KarnivalAdminCategories` | JPP/SuperAdmin |
+| `/karnival/admin/booths` | `KarnivalAdminBooths` | JPP/SuperAdmin |
+| `/karnival/admin/results` | `KarnivalAdminResults` | JPP/SuperAdmin |
+
+### 19.3 KarnivalContext
+
+```typescript
+import { useKarnival } from '@/contexts/KarnivalContext';
+// Menyediakan state undian, semakan sama ada pengguna sudah mengundi,
+// dan data edisi karnival aktif
+```
+
+---
+
+## 20. Modul E-Kebajikan — Sistem Tiket Aduan
+
+> Route prefix: `/kebajikan/*` | Layout: `src/pages/kebajikan/` (tiada layout berasingan — guna AppLayout)
+
+E-Kebajikan adalah sistem pengurusan aduan dan kebajikan pelajar dengan aliran tiket dua-arah.
+
+### 20.1 Jadual Database
+
+| Jadual | Fungsi |
+|---|---|
+| `kebajikan_tickets` | Tiket aduan pelajar |
+| `kebajikan_ticket_comments` | Komen/chat dalam tiket (antara pelajar & exco) |
+| `kebajikan_ticket_status_log` | Log perubahan status tiket |
+| `kebajikan_escalation_actions` | Tindakan eskalasi (hantar ke jabatan luar) |
+| `kebajikan_pics` | Preset PIC (Person-In-Charge) per jabatan/kemudahan |
+| `kebajikan_settings` | Tetapan modul (SLA, kategori) |
+| `kebajikan_staff_assignments` | Penugasan exco kepada tiket |
+| `kebajikan_tags` | Tag/label untuk mengkategorikan tiket |
+| `kebajikan_notifications` | Notifikasi khusus kebajikan |
+
+### 20.2 Routes
+
+| Route | Komponen | Akses |
+|---|---|---|
+| `/kebajikan/buat-aduan` | `KebajikanSubmitPage` | Pelajar (buat tiket baru) |
+| `/kebajikan/aduan-saya` | `KebajikanMyTickets` | Pelajar (lihat tiket sendiri) |
+| `/kebajikan/aduan/:id` | `KebajikanStudentChat` | Pelajar (chat dalam tiket) |
+| `/kebajikan/statistik` | `KebajikanStatsPage` | Semua authenticated |
+| `/kebajikan` | `KebajikanDashboard` | Exco Kebajikan |
+| `/kebajikan/tiket` | `KebajikanTicketsPage` | Exco Kebajikan (semua tiket) |
+| `/kebajikan/tiket/:id` | `KebajikanTicketDetail` | Exco Kebajikan (urus tiket) |
+| `/kebajikan/laporan` | `KebajikanReportPage` | Exco Kebajikan |
+| `/kebajikan/staff` | `KebajikanStaffPage` | Exco Kebajikan (urus penugasan) |
+| `/kebajikan/tetapan` | `KebajikanSettingsPage` | Exco Kebajikan / Super Admin |
+
+### 20.3 Aliran Tiket Aduan
+
+```
+Pelajar buat aduan           → status: "OPEN"
+      ↓
+Exco terima & assign         → status: "IN_PROGRESS"
+      ↓
+Chat dua-hala (KebajikanStudentChat / KebajikanTicketDetail)
+      ↓
+[Selesai]  → status: "RESOLVED"
+[Eskalasi] → status: "ESCALATED" + escalation_actions diisi
+[Tutup]    → status: "CLOSED"
+```
+
+### 20.4 RBAC E-Kebajikan
+
+| Peranan | Akses |
+|---|---|
+| Semua pelajar | Buat aduan, lihat tiket sendiri, chat dalam tiket sendiri |
+| Exco Kebajikan (`jpp_unit = 'KEBAJIKAN'`) | Lihat & urus semua tiket, assign staff, eskalasi |
+| `SUPER_ADMIN_JPP` | Akses penuh termasuk settings & laporan |
+
+---
+
+*Dikemas kini: April 2026 — Kemaskini besar: tambah dokumentasi PolyMart, E-Akademik, SUPSAS, Karnival, E-Kebajikan; betul URL Supabase; betul rujukan JppAdminPage.*

@@ -1,11 +1,14 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl =
-  import.meta.env.VITE_SUPABASE_URL ||
-  'https://api.cipher-node.org';
-const supabaseAnonKey =
-  import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc3NzM2MzAyMCwiZXhwIjo0OTMzMDM2NjIwLCJyb2xlIjoiYW5vbiJ9.EhvKo74pWR9CmMBN9Dggr_inV4YbA2MhEamc7MOnZh4';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    '[FATAL] VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY mesti dikonfigurasi dalam env vars. ' +
+    'Jangan hardcode credentials dalam source code.'
+  );
+}
 
 // ── No-op lock implementation ──────────────────────────────────────────────
 // Supabase JS v2 uses the browser Web Locks API to serialize token refreshes
