@@ -170,8 +170,8 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
         !canAccess && "opacity-60 grayscale-[0.8] cursor-not-allowed",
         isEventMode 
           ? cn(
-              "bg-black/20 border-white/10",
-              karnivalActive ? "hover:border-violet-500/40 hover:bg-violet-500/10 hover:shadow-[0_8px_40px_rgba(139,92,246,0.15)]" : "hover:border-amber-500/40 hover:bg-amber-500/10 hover:shadow-[0_8px_40px_rgba(245,158,11,0.15)]"
+              karnivalActive ? "bg-black/40 backdrop-blur-xl border-violet-500/20" : "bg-black/20 border-white/10",
+              karnivalActive ? "hover:border-transparent hover:bg-violet-950/30 hover:shadow-[inset_0_0_30px_rgba(192,132,252,0.15),0_10px_50px_rgba(192,132,252,0.25)]" : "hover:border-amber-500/40 hover:bg-amber-500/10 hover:shadow-[0_8px_40px_rgba(245,158,11,0.15)]"
             )
           : "bg-white/80 dark:bg-slate-900/40 border-slate-200/50 dark:border-white/5 hover:bg-white dark:hover:bg-slate-900/80 hover:-translate-y-1"
       )}
@@ -181,15 +181,28 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
       } as React.CSSProperties : {}}
     >
       {/* Accent Line - Top */}
-      <div 
-        className="absolute top-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-        style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }}
-      />
+      {!karnivalActive && (
+        <div 
+          className="absolute top-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }}
+        />
+      )}
       
+      {/* Animated Conic Gradient Border (Karnival Mode) */}
+      {karnivalActive && (
+        <div 
+          className="absolute inset-0 pointer-events-none rounded-[2rem] p-[1.5px] opacity-0 group-hover:opacity-100 transition-opacity duration-500" 
+          style={{ WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)', WebkitMaskComposite: 'xor', maskComposite: 'exclude' }}
+        >
+          <div className="absolute inset-[-50%] w-[200%] h-[200%] animate-[spin_4s_linear_infinite]"
+               style={{ background: `conic-gradient(from 0deg, transparent 60%, #c084fc 80%, #f472b6 90%, transparent 100%)` }} />
+        </div>
+      )}
+
       {/* Very Subtle Hover Gradient Background */}
       <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
-        style={{ background: `radial-gradient(circle at 100% 0%, ${hexToRgba(color, 0.05)}, transparent 50%)` }}
+        className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
+        style={{ background: `radial-gradient(circle at 100% 0%, ${hexToRgba(karnivalActive ? '#c084fc' : color, 0.08)}, transparent 60%)` }}
       />
 
       <div className="relative z-10 space-y-6">

@@ -186,15 +186,15 @@ export function LaunchVideo() {
       setTimeout(() => { setPhase(10); setModuleIdx(0); }, 12000), // E-Kebajikan starts directly from the warp flash
       setTimeout(() => doWipe(1), 24000),     // E-Keusahawanan
       setTimeout(() => doWipe(2), 36000),     // E-Akademik
-      setTimeout(() => doWipe(3), 48000),     // PolyMart
-      setTimeout(() => doWipe(4), 60000),     // Sistem Kelab
-      setTimeout(() => doWipe(5), 72000),     // Karnival & SUPSAS
-      setTimeout(() => setPhase(15), 84000),  // Product Reveal
-      setTimeout(() => setPhase(16), 88000),  // Modul Text
-      setTimeout(() => setPhase(17), 92000),  // Fly Away
-      setTimeout(() => setPhase(18), 94000),  // The Numbers
-      setTimeout(() => setPhase(19), 100000), // Final Logo
-      setTimeout(() => setPhase(20), 105000), // Outro
+      setTimeout(() => doWipe(3), 54000),     // PolyMart (+6s extended duration for E-Akademik)
+      setTimeout(() => doWipe(4), 66000),     // Sistem Kelab
+      setTimeout(() => doWipe(5), 78000),     // Karnival & SUPSAS
+      setTimeout(() => setPhase(15), 90000),  // Product Reveal
+      setTimeout(() => setPhase(16), 94000),  // Modul Text
+      setTimeout(() => setPhase(17), 98000),  // Fly Away
+      setTimeout(() => setPhase(18), 100000), // The Numbers
+      setTimeout(() => setPhase(19), 106000), // Final Logo
+      setTimeout(() => setPhase(20), 111000), // Outro
     ];
     return () => tl.forEach(clearTimeout);
   }, []);
@@ -954,13 +954,20 @@ function KebajikanScene({ mod }: SceneProps) {
                     <div className="absolute inset-0" style={{ backgroundImage: `radial-gradient(circle at center, ${gc}10 0%, transparent 70%)` }} />
                     <div className="absolute bottom-[-5vw] w-[30vw] h-[10vw] rounded-full bg-teal-500/20 blur-[40px]" />
 
+                    {/* Laser Scanner Line */}
+                    <motion.div 
+                       animate={{ top: ['-10%', '110%'] }} 
+                       transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                       className="absolute left-0 right-0 h-[2px] bg-teal-400 shadow-[0_0_20px_#2dd4bf] z-10"
+                    />
+
                     {/* 3D Map */}
                     <AnimatePresence>
                       {act >= 2 && (
                         <motion.div 
                           initial={{ opacity: 0, rotateX: 60, rotateZ: 45, scale: 0.6, y: '5vw' }}
                           animate={act >= 4 
-                            ? { opacity: 1, rotateX: 65, rotateZ: 30, scale: 1.2, y: '2vw' }
+                            ? { opacity: 1, rotateX: 55, rotateZ: 25, scale: 1.4, y: '2vw', x: '0vw' } // Zoom into center
                             : { opacity: 1, rotateX: 60, rotateZ: 45, scale: 0.9, y: 0 }
                           }
                           transition={{ duration: 1.5, type: 'spring', bounce: 0.1 }}
@@ -969,23 +976,47 @@ function KebajikanScene({ mod }: SceneProps) {
                             transformStyle: 'preserve-3d',
                             backgroundImage: `linear-gradient(${gc}40 1px, transparent 1px), linear-gradient(90deg, ${gc}40 1px, transparent 1px)`, 
                             backgroundSize: '2.5vw 2.5vw',
-                            boxShadow: `inset 0 0 50px rgba(0,0,0,0.8), 0 0 30px ${gc}20`
+                            boxShadow: act >= 4 ? `inset 0 0 50px rgba(239,68,68,0.3), 0 0 30px rgba(239,68,68,0.2)` : `inset 0 0 50px rgba(0,0,0,0.8), 0 0 30px ${gc}20`,
+                            transition: 'box-shadow 0.5s'
                           }}
                         >
-                           <div className="absolute top-[5vw] left-[5vw] w-[5vw] h-[8vw] border border-teal-400/50 bg-teal-900/40 shadow-[0_0_20px_rgba(20,184,166,0.2)]" />
-                           <div className="absolute top-[15vw] left-[15vw] w-[8vw] h-[6vw] border border-teal-400/50 bg-teal-900/40 shadow-[0_0_20px_rgba(20,184,166,0.2)]" />
+                           {/* Decorative Map Nodes */}
+                           <div className="absolute top-[3vw] left-[14vw] w-[6vw] h-[8vw] border border-teal-400/50 bg-teal-900/40 shadow-[0_0_20px_rgba(20,184,166,0.2)] flex items-center justify-center">
+                             <span className="text-[0.6vw] text-teal-400 font-mono opacity-50 font-bold" style={{ transform: 'rotateZ(-45deg)' }}>BLOK A</span>
+                           </div>
+                           <div className="absolute top-[15vw] left-[4vw] w-[8vw] h-[6vw] border border-teal-400/50 bg-teal-900/40 shadow-[0_0_20px_rgba(20,184,166,0.2)] flex items-center justify-center">
+                             <span className="text-[0.6vw] text-teal-400 font-mono opacity-50 font-bold" style={{ transform: 'rotateZ(-45deg)' }}>BLOK B</span>
+                           </div>
                            
-                           {/* Target Area */}
-                           <div className="absolute top-[18vw] left-[5vw] w-[5vw] h-[5vw] border border-red-500/60 bg-red-900/40 flex items-center justify-center">
-                              {act >= 3 && (
-                                <motion.div 
-                                  initial={{ scale: 0, opacity: 0 }}
-                                  animate={{ scale: [0, 3], opacity: [1, 0] }}
-                                  transition={{ duration: 1.5, repeat: Infinity, ease: 'easeOut' }}
-                                  className="absolute w-[2vw] h-[2vw] rounded-full border-[0.2vw] border-red-500"
-                                />
+                           {/* Target Area (Blok C - Centered) */}
+                           <div className={`absolute top-[10vw] left-[10vw] w-[5vw] h-[5vw] flex items-center justify-center ${act >= 4 ? 'border-2 border-red-500/80 bg-red-900/60' : 'border border-teal-400/50 bg-teal-900/40'}`} style={{ transition: 'all 0.5s', transformStyle: 'preserve-3d' }}>
+                              {act >= 4 && (
+                                <>
+                                  {/* Massive Ripple Effect */}
+                                  <motion.div 
+                                    initial={{ scale: 0, opacity: 1 }}
+                                    animate={{ scale: [0, 5], opacity: [1, 0] }}
+                                    transition={{ duration: 1.5, repeat: Infinity, ease: 'easeOut' }}
+                                    className="absolute w-[2vw] h-[2vw] rounded-full border-[0.3vw] border-red-500 shadow-[0_0_20px_#ef4444]"
+                                  />
+                                  <div className="absolute w-[1vw] h-[1vw] bg-red-500 rounded-full shadow-[0_0_20px_red,0_0_40px_red]" />
+                                  
+                                  {/* 3D Drop Pin */}
+                                  <motion.div
+                                    initial={{ z: 300, opacity: 0 }}
+                                    animate={{ z: 0, opacity: 1 }}
+                                    transition={{ type: 'spring', bounce: 0.6, duration: 1 }}
+                                    className="absolute flex flex-col items-center"
+                                    style={{ transform: 'translateZ(2vw) rotateX(-90deg) rotateY(-25deg)', transformOrigin: 'bottom center' }}
+                                  >
+                                    <div className="bg-red-600 text-white font-black px-[1.5vw] py-[0.5vw] rounded-[0.5vw] border-2 border-red-400 shadow-[0_20px_40px_rgba(239,68,68,0.6)] whitespace-nowrap text-[1.2vw] flex items-center gap-[0.5vw]">
+                                      <span className="animate-pulse">🚨</span> ADUAN BARU
+                                    </div>
+                                    <div className="w-[0.2vw] h-[5vw] bg-gradient-to-b from-red-500 to-transparent" />
+                                  </motion.div>
+                                </>
                               )}
-                              {act >= 3 && <div className="w-[0.8vw] h-[0.8vw] bg-red-500 rounded-full shadow-[0_0_15px_red]" />}
+                              {act < 4 && <span className="text-[0.6vw] text-teal-400 font-mono opacity-50 font-bold" style={{ transform: 'rotateZ(-45deg)' }}>BLOK C</span>}
                            </div>
                         </motion.div>
                       )}
@@ -1041,16 +1072,6 @@ function KebajikanScene({ mod }: SceneProps) {
         )}
       </AnimatePresence>
 
-      {/* ─── RESOLUTION FLASH ─── */}
-      <AnimatePresence>
-        {act === 6 && (
-          <motion.div key="res-flash" initial={{opacity:0, scale:0}} animate={{opacity:[0,1,0], scale:[0.5, 3, 6]}} exit={{opacity:0}}
-            transition={{duration:1.2, ease:"easeOut"}} className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center"
-          >
-            <div className="w-[20vw] h-[20vw] bg-teal-400 rounded-full blur-[100px] mix-blend-screen" />
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <ModuleOverlay show={act>=7} num="Modul 01" name="E-Kebajikan" tagline={mod.tagline} gc={gc} pos="bottom-[8%] left-[4%]" />
       <FloatAiChip show={act>=6} message="Sistem Pemetaan Resolusi Aduan mempercepatkan tindakan penyelesaian fasiliti." />
@@ -1336,46 +1357,54 @@ function KeusahawananScene({ mod }: SceneProps) {
 }
 
 // ─── Scene 03: E-Akademik — "3D Holographic Student ID & Merit Rings" ───────────────────────
+// ─── Scene 03: E-Akademik — "3D AR QR Scanner & Integrated Dashboard" ───────────────────────
 function AkademikScene({ mod }: SceneProps) {
   const [act, setAct] = useState(0);
+  const [merit, setMerit] = useState(40);
   const [cgpa, setCgpa] = useState(0);
-  const [merit, setMerit] = useState(0);
-  
+  const gc = mod.gc; // #3b82f6 (Blue)
+  const gold = '#fbbf24';
+
   useEffect(() => {
     const ts = [
-      setTimeout(() => setAct(1), 500),   // Phase 1: Holographic ID Card Drops In
-      setTimeout(() => setAct(2), 2500),  // Phase 2: Rings Expand & CGPA Counter Starts
-      setTimeout(() => setAct(3), 4000),  // Phase 3: Vertical Data Cascades
-      setTimeout(() => setAct(4), 5500),  // Phase 4: Merit Value Spikes (+5)
-      setTimeout(() => setAct(5), 7500),  // Phase 5: Resolution Flash
-      setTimeout(() => setAct(6), 8500),  // Phase 6: Module Overlay
+      setTimeout(() => setAct(1), 800),   // Phase 1: QR Code Materializes
+      setTimeout(() => setAct(2), 2500),  // Phase 2: Scanner Phone slides in
+      setTimeout(() => setAct(3), 4500),  // Phase 3: Laser Sweep
+      setTimeout(() => setAct(4), 6500),  // Phase 4: Scan Success & Merit Wallet appears
+      setTimeout(() => setAct(5), 7500),  // Phase 5: Particles flow, Merit ticks up
+      setTimeout(() => setAct(6), 10500), // Phase 6: Camera pull-back, Dashboard Reveal
+      setTimeout(() => setAct(7), 14500), // Phase 7: Resolution Flash
+      setTimeout(() => setAct(8), 16000), // Phase 8: Module Overlay
     ];
     return () => ts.forEach(clearTimeout);
   }, []);
 
+  // Merit animation
   useEffect(() => {
-    if (act < 2) return;
+    if (act < 5) return;
+    let cur = 40; const target = 45;
+    const iv = setInterval(() => { 
+      cur += 1;
+      setMerit(cur); 
+      if (cur >= target) clearInterval(iv); 
+    }, 100);
+    return () => clearInterval(iv);
+  }, [act]);
+
+  // CGPA animation (during dashboard reveal)
+  useEffect(() => {
+    if (act < 6) return;
     let cur = 0; const target = 3.84;
     const iv = setInterval(() => { 
       cur = Math.min(cur + 0.15, target);
       setCgpa(parseFloat(cur.toFixed(2))); 
       if (cur >= target) clearInterval(iv); 
-    }, 40);
+    }, 30);
     return () => clearInterval(iv);
   }, [act]);
 
-  useEffect(() => {
-    if (act < 4) return;
-    let cur = 40; const target = 45;
-    const iv = setInterval(() => { 
-      cur = Math.min(cur + 1, target);
-      setMerit(cur); 
-      if (cur >= target) clearInterval(iv); 
-    }, 80);
-    return () => clearInterval(iv);
-  }, [act]);
-
-  const gc = mod.gc; // #3b82f6 (Blue)
+  // Generate random grid data for the QR code
+  const qrGrid = Array.from({ length: 49 }, () => Math.random() > 0.4);
 
   return (
     <CinematicEnvelope gc={gc}>
@@ -1389,136 +1418,273 @@ function AkademikScene({ mod }: SceneProps) {
           style={{ background: `radial-gradient(circle, ${gc}15 0%, transparent 60%)` }}
         />
         <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.85) 100%)` }} />
-        {/* Subtle grid base */}
-        <div className="absolute bottom-0 w-full h-[40vh]" style={{ backgroundImage: `linear-gradient(transparent 0%, ${gc}10 100%)`, transform: 'perspective(1000px) rotateX(60deg)' }}>
-           <div className="w-full h-full border-t border-blue-500/20" style={{ backgroundImage: 'linear-gradient(90deg, rgba(59,130,246,0.1) 1px, transparent 1px), linear-gradient(rgba(59,130,246,0.1) 1px, transparent 1px)', backgroundSize: '4vw 4vw' }} />
+        
+        {/* Animated Digital Grid Base */}
+        <div className="absolute bottom-[-10vh] w-[150vw] h-[60vh]" style={{ transform: 'perspective(1000px) rotateX(75deg)' }}>
+           <motion.div 
+             animate={{ z: [0, 50] }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+             className="w-full h-[200%] border-t border-blue-500/20" style={{ backgroundImage: 'linear-gradient(0deg, rgba(59,130,246,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.2) 1px, transparent 1px)', backgroundSize: '4vw 4vw' }} 
+           />
         </div>
       </div>
 
-      <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none" style={{ perspective: '1500px' }}>
+      <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none" style={{ perspective: '2000px', transformStyle: 'preserve-3d' }}>
         
-        {/* 1. HOLOGRAPHIC ID CARD (Center) */}
-        <AnimatePresence>
-          {act >= 1 && (
-            <motion.div 
-              initial={{ scale: 0, rotateY: 90, rotateX: 60, y: -200, opacity: 0 }}
-              animate={ act >= 2 ? { scale: 1.1, rotateY: 0, rotateX: 10, y: '-2vw', opacity: 1 } : { scale: 0.8, rotateY: 20, rotateX: 45, y: 0, opacity: 1 } }
-              transition={{ type: 'spring', bounce: 0.4, duration: 2 }}
-              className="relative w-[18vw] h-[28vw] rounded-[1.5vw] overflow-hidden shadow-[0_0_80px_rgba(59,130,246,0.4)] flex flex-col p-[2vw] border-[0.2vw] border-blue-400/50 bg-black/40 backdrop-blur-md z-30"
-              style={{ transformStyle: 'preserve-3d' }}
-            >
-               {/* Hologram sweep effect */}
-               <motion.div animate={{ y: ['-100%', '200%'] }} transition={{ duration: 3, repeat: Infinity, ease: 'linear' }} className="absolute inset-0 w-full h-[50%] bg-gradient-to-b from-transparent via-blue-400/20 to-transparent mix-blend-screen" />
-               
-               {/* ID Content */}
-               <div className="w-[6vw] h-[6vw] rounded-full bg-blue-500/20 border border-blue-400/50 mb-[2vw] flex items-center justify-center">
-                  <div className="w-[5vw] h-[5vw] rounded-full bg-blue-500/40 animate-pulse blur-sm" />
-               </div>
-               <div className="h-[1vw] w-3/4 bg-white/80 rounded-full mb-[0.8vw]" />
-               <div className="h-[0.8vw] w-1/2 bg-blue-400/60 rounded-full mb-[2vw]" />
+        {/* Main Camera / Container */}
+        <motion.div
+          animate={
+            act >= 6 
+              ? { scale: 0.8, rotateY: 10, rotateX: 5, x: '-2vw', y: '2vw' } // Phase 6: Less zoom out, slight shift
+              : act >= 4
+              ? { scale: 1.1, rotateY: -10, rotateX: -5, x: '-10vw' } // Phase 4: Shift left for wallet
+              : { scale: 1, rotateY: 0, rotateX: 0, x: 0 } // Phase 1-3: Centered focus
+          }
+          transition={{ duration: 2.5, ease: [0.25, 1, 0.5, 1] }}
+          className="relative flex items-center justify-center"
+          style={{ transformStyle: 'preserve-3d' }}
+        >
 
-               <div className="flex-1 flex flex-col justify-end gap-[1vw]">
-                 <div className="w-full bg-blue-900/40 rounded-[0.8vw] p-[1vw] border border-blue-500/30">
-                    <p className="text-[0.7vw] text-blue-300 uppercase tracking-widest mb-[0.2vw]">CGPA Semasa</p>
-                    <p className="text-[3vw] font-black text-white leading-none font-mono drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]">{cgpa.toFixed(2)}</p>
-                 </div>
-               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* 2. MERIT RINGS (Expand outward) */}
-        <AnimatePresence>
-          {act >= 2 && (
-            <>
-              {/* Inner Ring (Semester) */}
+          {/* 1. MASSIVE QR CODE */}
+          <AnimatePresence>
+            {act >= 1 && (
               <motion.div 
-                initial={{ scale: 0.5, opacity: 0, rotateX: 70 }}
-                animate={{ scale: 1.5, opacity: 1, rotateX: 75, rotateZ: 360 }}
-                transition={{ scale: { type: 'spring', bounce: 0.5, duration: 2 }, rotateZ: { duration: 20, repeat: Infinity, ease: 'linear' } }}
-                className="absolute w-[30vw] h-[30vw] rounded-full border-[0.3vw] border-dashed border-blue-400/50 shadow-[0_0_30px_rgba(59,130,246,0.3)] z-20"
-              />
-              
-              {/* Outer Ring (Merit Focus) */}
-              <motion.div 
-                initial={{ scale: 0.5, opacity: 0, rotateX: 70 }}
-                animate={{ scale: 2.5, opacity: 1, rotateX: 75, rotateZ: -360 }}
-                transition={{ scale: { type: 'spring', bounce: 0.5, duration: 2, delay: 0.2 }, rotateZ: { duration: 30, repeat: Infinity, ease: 'linear' } }}
-                className="absolute w-[30vw] h-[30vw] rounded-full border-[0.1vw] border-yellow-400/60 shadow-[0_0_40px_rgba(234,179,8,0.3),inset_0_0_20px_rgba(234,179,8,0.2)] z-10 flex items-center justify-center"
+                initial={{ scale: 0, opacity: 0, rotateY: 90 }}
+                animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+                transition={{ type: 'spring', bounce: 0.4, duration: 2 }}
+                className="relative w-[20vw] h-[20vw] bg-black/60 backdrop-blur-xl border-2 shadow-[0_0_80px_rgba(59,130,246,0.3)] rounded-[1vw] overflow-hidden flex items-center justify-center p-[2vw]"
+                style={{ 
+                  borderColor: act >= 4 ? gold : `${gc}80`,
+                  boxShadow: act >= 4 ? `0 0 100px ${gold}80` : `0 0 80px ${gc}80`,
+                  transformStyle: 'preserve-3d',
+                  transition: 'border-color 0.5s, box-shadow 0.5s'
+                }}
               >
-                 {/* Orbiting Merit Node */}
-                 <div className="absolute top-[-1vw] left-1/2 -translate-x-1/2 w-[2vw] h-[2vw] bg-yellow-400 rounded-full shadow-[0_0_20px_rgba(234,179,8,1)] flex items-center justify-center">
-                    <div className="w-[1vw] h-[1vw] bg-white rounded-full animate-pulse" />
-                 </div>
-                 {/* Orbiting Label */}
-                 <div className="absolute bottom-[-2vw] left-1/2 -translate-x-1/2 text-[1vw] font-bold text-yellow-400 tracking-widest uppercase drop-shadow-[0_0_10px_rgba(234,179,8,1)]">
-                   PENGESANAN MERIT
-                 </div>
+                {/* QR Grid Generation */}
+                <div className="grid grid-cols-7 grid-rows-7 gap-[0.2vw] w-full h-full">
+                  {qrGrid.map((isActive, i) => (
+                    <motion.div 
+                      key={i}
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={isActive ? { opacity: 1, scale: 1 } : { opacity: 0.1, scale: 0.5 }}
+                      transition={{ delay: 1 + Math.random() * 0.5, duration: 0.5 }}
+                      className={`rounded-[0.2vw] ${act >= 4 ? 'bg-yellow-400' : 'bg-blue-400'}`}
+                      style={{ transition: 'background-color 0.5s' }}
+                    />
+                  ))}
+                </div>
+
+                {/* Focus Target Corners */}
+                <div className={`absolute top-[1vw] left-[1vw] w-[2vw] h-[2vw] border-t-4 border-l-4 rounded-tl-[0.5vw] ${act >= 4 ? 'border-yellow-400' : 'border-blue-400'}`} style={{ transition: 'border-color 0.5s' }} />
+                <div className={`absolute top-[1vw] right-[1vw] w-[2vw] h-[2vw] border-t-4 border-r-4 rounded-tr-[0.5vw] ${act >= 4 ? 'border-yellow-400' : 'border-blue-400'}`} style={{ transition: 'border-color 0.5s' }} />
+                <div className={`absolute bottom-[1vw] left-[1vw] w-[2vw] h-[2vw] border-b-4 border-l-4 rounded-bl-[0.5vw] ${act >= 4 ? 'border-yellow-400' : 'border-blue-400'}`} style={{ transition: 'border-color 0.5s' }} />
+                <div className={`absolute bottom-[1vw] right-[1vw] w-[2vw] h-[2vw] border-b-4 border-r-4 rounded-br-[0.5vw] ${act >= 4 ? 'border-yellow-400' : 'border-blue-400'}`} style={{ transition: 'border-color 0.5s' }} />
+
+                {/* Laser Scanner Sweep */}
+                {act >= 3 && act < 5 && (
+                  <motion.div 
+                    initial={{ top: '-10%', opacity: 0 }}
+                    animate={{ top: '110%', opacity: [0, 1, 1, 0] }}
+                    transition={{ duration: 1.5, ease: 'linear' }}
+                    className="absolute left-0 right-0 h-[1vw] bg-white mix-blend-screen shadow-[0_0_30px_#fff,0_0_60px_#dc2626]"
+                  />
+                )}
               </motion.div>
-            </>
-          )}
-        </AnimatePresence>
+            )}
+          </AnimatePresence>
 
-        {/* 3. DATA CASCADES (Vertical streams) */}
-        <AnimatePresence>
-          {act >= 3 && (
-             <div className="absolute inset-0 flex justify-between px-[10vw] pointer-events-none z-10">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="relative w-[4vw] h-full overflow-hidden opacity-40">
-                     <motion.div 
-                       initial={{ y: '-100%' }} animate={{ y: '200%' }}
-                       transition={{ duration: 2 + (i % 3), repeat: Infinity, ease: 'linear', delay: i * 0.4 }}
-                       className="w-full text-blue-500 font-mono text-[0.6vw] leading-none text-center break-all"
-                       style={{ textShadow: '0 0 10px rgba(59,130,246,0.8)' }}
-                     >
-                        101010010110<br/>010111001010<br/>ACT-LOG-094<br/>SYS-OK-200<br/>101010010110
-                     </motion.div>
+          {/* 2. SCANNER PHONE */}
+          <AnimatePresence>
+            {act >= 2 && act < 6 && (
+              <motion.div
+                initial={{ x: '30vw', y: '10vw', z: 150, rotateY: -60, rotateZ: -20, opacity: 0 }}
+                animate={
+                  act >= 4 
+                    ? { x: '5vw', y: '15vw', z: 150, rotateY: -30, rotateZ: -10, opacity: 0 } // Move away after scan
+                    : { x: '8vw', y: '5vw', z: 150, rotateY: -30, rotateZ: -10, opacity: 1 }
+                }
+                transition={{ duration: 1.5, type: 'spring' }}
+                className="absolute w-[12vw] h-[24vw] rounded-[2vw] border-[0.3vw] border-white/20 bg-black/80 backdrop-blur-xl shadow-[0_30px_60px_rgba(0,0,0,0.8)] z-40 overflow-hidden"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                {/* Phone screen UI */}
+                <div className="absolute inset-0 flex flex-col items-center p-[1vw]">
+                  <div className="w-[4vw] h-[0.5vw] bg-white/20 rounded-full mt-[0.5vw] mb-[2vw]" />
+                  <div className="w-[8vw] h-[8vw] border-[0.2vw] border-white/30 rounded-[1vw] flex items-center justify-center">
+                    <div className="w-[1vw] h-[1vw] border-t-2 border-l-2 border-green-400 absolute top-[0.5vw] left-[0.5vw]" />
+                    <div className="w-[1vw] h-[1vw] border-b-2 border-r-2 border-green-400 absolute bottom-[0.5vw] right-[0.5vw]" />
+                    <p className="text-[0.6vw] text-green-400 font-mono">SCANNING...</p>
                   </div>
+                  <div className="flex-1" />
+                  <div className="w-[3vw] h-[3vw] rounded-full border-2 border-white/50 flex items-center justify-center mb-[1vw]">
+                    <div className="w-[2vw] h-[2vw] bg-white rounded-full" />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* 4. MERIT WALLET */}
+          <AnimatePresence>
+            {act >= 4 && (
+              <motion.div
+                initial={{ opacity: 0, x: '20vw', scale: 0.5, rotateY: 45 }}
+                animate={
+                  act >= 6 
+                    ? { opacity: 1, x: '24vw', y: '-10vw', scale: 1.1, rotateY: -15 } // Shift in Phase 6
+                    : { opacity: 1, x: '20vw', scale: 1, rotateY: -15 }
+                }
+                transition={{ type: 'spring', bounce: 0.4, duration: 2 }}
+                className="absolute bg-gradient-to-br from-yellow-500/20 to-orange-600/20 backdrop-blur-xl border border-yellow-400/50 rounded-[1.5vw] p-[2.5vw] shadow-[0_30px_60px_rgba(234,179,8,0.3)] flex flex-col items-center justify-center z-40"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                {/* Glowing Background */}
+                <div className="absolute inset-0 rounded-[1.5vw] overflow-hidden mix-blend-screen pointer-events-none">
+                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: 'linear' }} className="w-[200%] h-[200%] absolute top-[-50%] left-[-50%] bg-[conic-gradient(from_0deg,transparent_0_340deg,rgba(255,255,255,0.4)_360deg)]" />
+                </div>
+
+                <div className="flex items-center gap-[1vw] mb-[1vw] relative z-10">
+                  <div className="w-[3vw] h-[3vw] rounded-full bg-yellow-400/20 flex items-center justify-center border border-yellow-400/50">
+                    <span className="text-[1.5vw]">⭐</span>
+                  </div>
+                  <p className="text-[1.2vw] text-yellow-300 tracking-[0.2em] uppercase font-bold">Dompet Merit</p>
+                </div>
+                
+                <p className="text-[6vw] font-black leading-none text-yellow-400 drop-shadow-[0_0_20px_rgba(234,179,8,0.8)] font-mono relative z-10">
+                  {merit}
+                </p>
+
+                {/* +5 Pop-up */}
+                <AnimatePresence>
+                  {act >= 5 && act < 7 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20, scale: 0.5 }}
+                      animate={{ opacity: 1, y: -40, scale: 1.2 }}
+                      exit={{ opacity: 0, scale: 2 }}
+                      transition={{ type: 'spring', bounce: 0.6 }}
+                      className="absolute top-[-2vw] right-[-2vw] bg-white text-yellow-600 font-black px-[1.5vw] py-[0.8vw] rounded-full text-[1.2vw] shadow-[0_10px_30px_rgba(255,255,255,0.8)] border-2 border-yellow-200 z-50 flex items-center gap-[0.5vw]"
+                    >
+                      <span>🎉</span> +5 GRANTED
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* 5. PARTICLE INFUSION EFFECT (From QR to Wallet) */}
+          <AnimatePresence>
+            {act >= 4 && act < 6 && (
+              <div className="absolute inset-0 pointer-events-none z-30">
+                {[...Array(15)].map((_, i) => (
+                  <motion.div
+                    key={`p-${i}`}
+                    initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                    animate={{ 
+                      x: ['0vw', '10vw', '20vw'], 
+                      y: ['0vw', Math.random() * -10 + 'vw', '0vw'], 
+                      scale: [0, 1.5, 0], 
+                      opacity: [0, 1, 0] 
+                    }}
+                    transition={{ duration: 1.2, delay: Math.random() * 0.5, ease: "easeInOut" }}
+                    className="absolute w-[1vw] h-[1vw] bg-yellow-400 rounded-full blur-[4px] shadow-[0_0_20px_#facc15]"
+                  />
                 ))}
-             </div>
-          )}
-        </AnimatePresence>
+              </div>
+            )}
+          </AnimatePresence>
 
-        {/* 4. MERIT VALUE UPDATE UI */}
-        <AnimatePresence>
-          {act >= 4 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0, x: 200 }}
-              animate={{ opacity: 1, scale: 1, x: '25vw', y: '-5vw' }}
-              transition={{ type: 'spring', bounce: 0.5 }}
-              className="absolute bg-yellow-500/10 backdrop-blur-xl border-[0.2vw] border-yellow-400/50 rounded-[1vw] p-[2vw] shadow-[0_30px_60px_rgba(234,179,8,0.3)] flex flex-col items-center justify-center z-40"
-            >
-               <p className="text-[0.9vw] text-yellow-300 tracking-[0.3em] uppercase font-black">Jumlah Merit</p>
-               <p className="text-[5vw] font-black leading-none mt-[0.5vw] text-yellow-400 drop-shadow-[0_0_20px_rgba(234,179,8,0.8)] font-mono">
-                 {merit}
-               </p>
-               <motion.div
-                 initial={{ opacity: 0, y: 10 }}
-                 animate={{ opacity: [0, 1, 1, 0], y: [-10, -30, -35, -40], scale: [0.8, 1.2, 1, 0.8] }}
-                 transition={{ duration: 2.5, ease: "easeOut" }}
-                 className="absolute top-[-2vw] bg-white text-yellow-600 font-black px-[1vw] py-[0.4vw] rounded-full text-[1vw] shadow-[0_10px_20px_rgba(255,255,255,0.5)] border border-yellow-200"
-               >
-                 +5 DITAMBAH
-               </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          {/* 6. ECOSYSTEM REVEAL (HPNM Tracker, Private Vault, Activity Feed) */}
+          <AnimatePresence>
+            {act >= 6 && (
+              <>
+                {/* HPNM Tracker */}
+                <motion.div
+                  initial={{ opacity: 0, x: '-10vw', y: '10vw', rotateY: 45, scale: 0.5 }}
+                  animate={{ opacity: 1, x: '-22vw', y: '-2vw', rotateY: 15, scale: 1.1 }}
+                  transition={{ type: 'spring', bounce: 0.4, delay: 0.2 }}
+                  className="absolute bg-blue-900/30 backdrop-blur-xl border border-blue-400/30 rounded-[1.5vw] p-[2vw] flex flex-col items-center z-20 shadow-[0_20px_50px_rgba(59,130,246,0.2)]"
+                >
+                  <p className="text-[1vw] text-blue-300 uppercase tracking-widest font-bold mb-[1.5vw]">Tracker HPNM</p>
+                  
+                  {/* Circular Progress */}
+                  <div className="relative w-[12vw] h-[12vw] flex items-center justify-center">
+                    <svg className="w-full h-full -rotate-90">
+                      <circle cx="50%" cy="50%" r="45%" stroke="rgba(255,255,255,0.1)" strokeWidth="1vw" fill="none" />
+                      <motion.circle 
+                        cx="50%" cy="50%" r="45%" 
+                        stroke="#60a5fa" strokeWidth="1vw" fill="none" 
+                        strokeLinecap="round"
+                        initial={{ strokeDasharray: "0 1000" }}
+                        animate={{ strokeDasharray: `${(cgpa / 4.0) * 280} 1000` }}
+                        transition={{ duration: 2, ease: "easeOut" }}
+                        style={{ filter: 'drop-shadow(0 0 10px rgba(96,165,250,0.8))' }}
+                      />
+                    </svg>
+                    <div className="absolute flex flex-col items-center">
+                      <p className="text-[3vw] font-black text-white leading-none font-mono">{cgpa.toFixed(2)}</p>
+                      <p className="text-[0.8vw] text-blue-200">/ 4.00</p>
+                    </div>
+                  </div>
+                </motion.div>
 
+                {/* E-Akademik Private Vault */}
+                <motion.div
+                  initial={{ opacity: 0, x: '30vw', y: '0vw', rotateY: 30, scale: 0.5 }}
+                  animate={{ opacity: 1, x: '26vw', y: '12vw', rotateY: -15, scale: 1.1 }}
+                  transition={{ type: 'spring', bounce: 0.4, delay: 0.4 }}
+                  className="absolute bg-indigo-900/30 backdrop-blur-xl border border-indigo-400/30 rounded-[1.5vw] p-[1.5vw] flex flex-col w-[20vw] z-20 shadow-[0_20px_50px_rgba(99,102,241,0.2)]"
+                >
+                  <div className="flex items-center gap-[1vw] mb-[1.5vw] border-b border-indigo-500/30 pb-[1vw]">
+                    <div className="w-[3vw] h-[3vw] bg-indigo-500/20 rounded-[0.5vw] flex items-center justify-center border border-indigo-400/50">
+                      <span className="text-[1.5vw]">🔐</span>
+                    </div>
+                    <div>
+                      <p className="text-[1vw] text-white font-bold leading-tight">Private Vault</p>
+                      <p className="text-[0.7vw] text-indigo-300 font-mono">End-to-End Encrypted</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-[0.8vw]">
+                    {['Slip Peperiksaan S4', 'Transkrip S3', 'Surat Tawaran'].map((doc, i) => (
+                      <div key={i} className="flex items-center gap-[0.8vw] p-[0.8vw] bg-black/40 rounded-[0.5vw] border border-white/5">
+                        <div className="w-[1.5vw] h-[1.5vw] bg-indigo-500 rounded-sm flex items-center justify-center"><span className="text-[0.8vw] text-white">📄</span></div>
+                        <p className="text-[0.8vw] text-white/80 font-mono">{doc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+
+                {/* Activity Feed */}
+                <motion.div
+                  initial={{ opacity: 0, x: '-10vw', y: '15vw', rotateY: 30, scale: 0.5 }}
+                  animate={{ opacity: 1, x: '-16vw', y: '18vw', rotateY: 10, scale: 1 }}
+                  transition={{ type: 'spring', bounce: 0.4, delay: 0.6 }}
+                  className="absolute bg-black/60 backdrop-blur-xl border border-white/10 rounded-[1vw] p-[1.5vw] flex flex-col w-[22vw] z-20"
+                >
+                  <p className="text-[0.8vw] text-white/50 uppercase tracking-widest font-bold mb-[1vw]">Log Sistem</p>
+                  <div className="flex flex-col gap-[0.8vw]">
+                    {[
+                      { t: '10:42 AM', m: 'Merit ditambah (+5)', c: 'text-yellow-400' },
+                      { t: '09:15 AM', m: 'Kehadiran K-KEM 101 Direkod', c: 'text-green-400' },
+                      { t: 'Semalam', m: 'Transkrip S3 dimuat turun', c: 'text-blue-400' },
+                    ].map((log, i) => (
+                      <div key={i} className="flex items-center gap-[1vw]">
+                        <p className="text-[0.7vw] text-white/30 font-mono">{log.t}</p>
+                        <div className={`w-[0.4vw] h-[0.4vw] rounded-full ${log.c.replace('text-', 'bg-')}`} />
+                        <p className={`text-[0.8vw] ${log.c} font-mono`}>{log.m}</p>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+
+        </motion.div>
       </div>
 
-      {/* ─── PHASE 5: RESOLUTION FLASH ─── */}
-      <AnimatePresence>
-        {act === 5 && (
-          <motion.div key="res-flash" initial={{opacity:0, scale:0}} animate={{opacity:[0,1,0], scale:[0.5, 3, 6]}} exit={{opacity:0}}
-            transition={{duration:1.2, ease:"easeOut"}} className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center"
-          >
-            <div className="w-[20vw] h-[20vw] bg-blue-400 rounded-full blur-[100px] mix-blend-screen" />
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      <ModuleOverlay show={act>=6} num="Modul 03" name="E-Akademik" tagline={mod.tagline} gc={gc} pos="bottom-[8%] left-[4%]" />
-      <FloatAiChip show={act>=5} message="Aliran data merit direkod secara holistik untuk penilaian bersepadu." />
+      <ModuleOverlay show={act>=8} num="Modul 03" name="E-Akademik" tagline={mod.tagline} gc={gc} pos="bottom-[8%] left-[4%]" />
+      <FloatAiChip show={act>=8} message="Sistem E-Akademik menawarkan integrasi rekod holistik dan bilik kebal peribadi pelajar." />
     </CinematicEnvelope>
   );
 }
@@ -1981,8 +2147,8 @@ function KelabScene({ mod }: SceneProps) {
   return (
     <CinematicEnvelope gc={fire}>
       <motion.div 
-        animate={act >= 4 ? { scale: 0.6, rotateY: -30, rotateX: 10, y: '-2vw' } : { scale: 1, rotateY: 0, rotateX: 0, y: 0 }}
-        transition={{ duration: 2, ease: [0.25, 1, 0.5, 1] }}
+        animate={act >= 4 ? { scale: 0.9, rotateY: -20, rotateX: 5, y: '-1vw', x: '5vw' } : { scale: 1.1, rotateY: 0, rotateX: 0, y: 0 }}
+        transition={{ duration: 2.5, ease: [0.25, 1, 0.5, 1] }}
         className="absolute inset-0 flex items-center justify-center overflow-hidden" 
         style={{ perspective: '2000px', transformStyle: 'preserve-3d' }}
       >
@@ -2045,8 +2211,8 @@ function KelabScene({ mod }: SceneProps) {
           {act >= 2 && (
             <>
               <motion.div 
-                initial={{ x: '-20vw', opacity: 0 }} 
-                animate={{ x: '-32vw', opacity: 1 }} 
+                initial={{ x: '-10vw', opacity: 0 }} 
+                animate={{ x: '-24vw', opacity: 1 }} 
                 transition={{ type: 'spring', stiffness: 100 }}
                 className="absolute w-[18vw] h-[30vw] flex flex-col gap-[1vw] z-20"
               >
@@ -2077,8 +2243,8 @@ function KelabScene({ mod }: SceneProps) {
               </motion.div>
 
               <motion.div 
-                initial={{ x: '20vw', opacity: 0 }} 
-                animate={{ x: '32vw', opacity: 1 }} 
+                initial={{ x: '10vw', opacity: 0 }} 
+                animate={{ x: '24vw', opacity: 1 }} 
                 transition={{ type: 'spring', stiffness: 100 }}
                 className="absolute w-[16vw] h-[16vw] bg-gradient-to-br from-yellow-500/10 to-red-600/20 border border-yellow-500/30 rounded-[1vw] backdrop-blur-xl flex items-center justify-center flex-col z-20 shadow-[0_0_50px_rgba(251,191,36,0.2)]"
               >
@@ -2099,7 +2265,7 @@ function KelabScene({ mod }: SceneProps) {
           )}
         </AnimatePresence>
 
-        <ModuleOverlay show={act >= 5} num="Modul 05" name="Sistem Kelab" tagline={mod.tagline} gc={gold} pos="bottom-[10%] left-[30%]" />
+        <ModuleOverlay show={act >= 5} num="Modul 05" name="Sistem Kelab" tagline={mod.tagline} gc={gold} pos="bottom-[8%] left-[4%]" />
       </motion.div>
     </CinematicEnvelope>
   );

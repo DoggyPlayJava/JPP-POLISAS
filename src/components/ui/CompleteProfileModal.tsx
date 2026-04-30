@@ -95,6 +95,14 @@ export function CompleteProfileModal() {
   );
 
   const isProfileComplete = hasMatric && hasDept && hasPhone && hasCohort;
+
+  // PENTING: Jangan tunjuk modal jika pengguna belum log masuk atau profil belum dimuatkan.
+  // Ini mengelak modal "Lengkapkan Profil" daripada berkelip apabila token refresh gagal
+  // (HTTP 400) dan Supabase fire SIGNED_OUT — dalam kes itu profile=null dan semua
+  // semakan hasX di atas akan false, menyebabkan modal terpapar seketika sebelum
+  // ProtectedRoute redirect ke /login.
+  if (!user || !profile) return null;
+
   if (isProfileComplete) return null;
 
   // ── Scenario flags ───────────────────────────────────────────────────────
