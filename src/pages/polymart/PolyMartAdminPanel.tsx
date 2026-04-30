@@ -44,7 +44,7 @@ interface Report {
     business_id: string;
     keusahawanan_businesses: { name: string } | null;
   } | null;
-  reporter: { full_name: string; matric_no: string } | null;
+  reporter: { id: string; full_name: string; matric_no: string } | null;
 }
 
 // ── Report Card ────────────────────────────────────────────────────────────────
@@ -74,8 +74,8 @@ function ReportCard({ report, onAction }: { report: Report; onAction: () => void
       }).eq('product_id', product.id),
     ]);
     // Notify reporter
-    if (report.reporter) {
-      await sendNotificationToUser(report.reporter.matric_no as any, {
+    if (report.reporter?.id) {
+      await sendNotificationToUser(report.reporter.id, {
         title: '✅ Laporan Diambil Tindakan',
         message: `Produk "${product.name}" telah dikeluarkan dari PolyMart.`,
         type: 'polymart_report_actioned', module: 'POLYMART',
@@ -512,7 +512,7 @@ export function PolyMartAdminPanel({ hideHeader = false }: { hideHeader?: boolea
       supabase.from('polymart_reports').select(`
         *, business_products!product_id(id, name, image_url, category, price, business_id,
           keusahawanan_businesses!business_id(name)),
-        reporter:profiles!reporter_id(full_name, matric_no)
+        reporter:profiles!reporter_id(id, full_name, matric_no)
       `).eq('status', 'OPEN').order('created_at', { ascending: false }),
 
       Promise.all([

@@ -91,9 +91,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (profileRes.error) {
         console.error('[AuthContext] fetchProfile error:', profileRes.error.message);
         
-        // Auto-logout jika token JWT tidak sah (Berlaku selepas migrasi pelayan)
+        // Auto-logout HANYA jika token JWT/sesi benar-benar tidak sah.
+        // PENTING: Jangan guna 'key' sahaja — PostgREST boleh kembalikan mesej yang
+        // mengandungi 'key' dalam situasi biasa (cth: "duplicate key", "foreign key").
+        // Semak frasa khusus JWT/auth sahaja untuk elak false-positive.
         const errMsg = profileRes.error.message?.toLowerCase() || '';
-        if (errMsg.includes('key') || errMsg.includes('jwt') || errMsg.includes('unauthorized')) {
+        const errCode = (profileRes.error as any)?.code?.toLowerCase() || '';
+        const errStatus = (profileRes.error as any)?.status ?? 0;
+        const isGenuineAuthError =
+          errMsg.includes('jwt expired') ||
+          errMsg.includes('jwt invalid') ||
+          errMsg.includes('invalid jwt') ||
+          errMsg.includes('token is expired') ||
+          errMsg.includes('invalid token') ||
+          errMsg.includes('not authenticated') ||
+          errMsg.includes('authentication required') ||
+          errCode === 'pgrst301' || // JWT expired (PostgREST error code)
+          errStatus === 401;        // HTTP 401 Unauthorized
+        if (isGenuineAuthError) {
           console.warn('Token sesi tidak sah dikesan. Memaksa log keluar pengguna...');
           await supabase.auth.signOut();
           localStorage.removeItem('jpp-polisas-auth'); // Buang token lama secara paksa
