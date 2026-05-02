@@ -2,7 +2,7 @@
 # Connects to the PERMANENT Kong forwarder on port 18000 (never changes)
 # Run this whenever the MCP connection breaks
 
-$SSH_HOST = "root@192.168.0.20"
+$SSH_HOST = "root@100.78.70.23"
 $REMOTE_PORT = 18000   # Fixed port - socat systemd service on server
 $LOCAL_PORT = 8080
 

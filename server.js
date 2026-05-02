@@ -1092,6 +1092,306 @@ app.post('/api/resend-verification', authFlowLimiter, async (req, res) => {
     }
 });
 
+
+// ==========================================
+// KLK — Kediaman Luar Kampus Endpoints
+// ==========================================
+
+// Shared field map — case-insensitive normalization
+const KLK_FIELD_MAP = {
+    'nama pelajar':             'nama_pelajar',
+    'nama':                     'nama_pelajar',
+    'no matriks':               'no_matrik',
+    'no. matriks':              'no_matrik',
+    'no matrik':                'no_matrik',
+    'matrik':                   'no_matrik',
+    'no telefon':               'no_telefon',
+    'no. telefon':              'no_telefon',
+    'telefon':                  'no_telefon',
+    'phone':                    'no_telefon',
+    'jabatan':                  'jabatan',
+    'program':                  'jabatan',
+    'alamat kediaman':          'alamat_kediaman',
+    'alamat':                   'alamat_kediaman',
+    'kawasan kediaman':         'kawasan_kediaman',
+    'kawasan':                  'kawasan_kediaman',
+    'cadangan/penambahbaikan':  'cadangan',
+    'cadangan':                 'cadangan',
+    'penambahbaikan':           'cadangan',
+};
+
+function klkGetAcademicYear() {
+    const now = new Date();
+    const y = now.getFullYear();
+    return now.getMonth() >= 6 ? `${y}/${y + 1}` : `${y - 1}/${y}`;
+}
+
+// Rate limiter khusus untuk webhook (lebih longgar — dari Google Apps Script)
+const klkWebhookLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 60,
+    message: { error: 'Webhook rate limit exceeded.' },
+});
+
+// ── KLK Endpoint 1: Google Form Webhook ─────────────────────────────────────
+// POST /api/klk-webhook
+// Dipanggil oleh Google Apps Script setiap kali ada form submission
+app.post('/api/klk-webhook', klkWebhookLimiter, async (req, res) => {
+    try {
+        if (!supabaseAdmin) throw new Error('Supabase Admin tidak diinisialisasi.');
+
+        // 1. Verify KLK-specific webhook secret
+        const secret = req.headers['x-webhook-secret'];
+        const expectedSecret = process.env.KLK_WEBHOOK_SECRET;
+        if (!expectedSecret) {
+            console.error('[klk-webhook] KLK_WEBHOOK_SECRET tidak dikonfigurasi.');
+            return res.status(503).json({ error: 'Webhook tidak tersedia: server tidak dikonfigurasi.' });
+        }
+        if (secret !== expectedSecret) {
+            return res.status(401).json({ error: 'Unauthorized: Secret tidak sah.' });
+        }
+
+        // 2. Map fields dari Google Form payload
+        const raw = req.body;
+        const record = {
+            source: 'GOOGLE_FORM',
+            tinggal_luar: true,
+            extra_data: {},
+            academic_year: klkGetAcademicYear(),
+        };
+        const unknownFields = {};
+
+        for (const [key, value] of Object.entries(raw)) {
+            const normalized = key.toLowerCase().trim();
+            // Skip metadata fields
+            if (['timestamp', 'email address', 'email', 'cap masa'].includes(normalized)) continue;
+            
+            const dbCol = KLK_FIELD_MAP[normalized];
+            if (dbCol) {
+                record[dbCol] = String(value || '').trim();
+            } else {
+                unknownFields[key] = value;
+            }
+        }
+
+        record.extra_data = unknownFields;
+
+        // 3. Normalize & validate
+        if (!record.nama_pelajar) {
+            return res.status(400).json({ error: 'Nama pelajar diperlukan.' });
+        }
+        if (record.no_matrik) record.no_matrik = record.no_matrik.toUpperCase().trim();
+        if (record.nama_pelajar) record.nama_pelajar = record.nama_pelajar.toUpperCase().trim();
+
+        // 4. Try link user_id dari profiles table
+        if (record.no_matrik) {
+            const { data: profile } = await supabaseAdmin
+                .from('profiles')
+                .select('id, intake_year, intake_period, programme_code')
+                .ilike('matric_no', record.no_matrik)
+                .maybeSingle();
+
+            if (profile) {
+                record.user_id = profile.id;
+                // Boleh calculate semester dari profile jika perlu
+            }
+        }
+
+        // 5. Insert ke DB (service_role bypass RLS)
+        const { data: inserted, error: insertErr } = await supabaseAdmin
+            .from('klk_student_residency')
+            .upsert(record, {
+                onConflict: 'user_id,academic_year,semester',
+                ignoreDuplicates: false,
+            })
+            .select('id')
+            .single();
+
+        if (insertErr) {
+            console.error('[klk-webhook] Insert error:', insertErr.message);
+            return res.status(500).json({ error: insertErr.message });
+        }
+
+        // 6. Log sync
+        await supabaseAdmin.from('klk_sync_log').insert({
+            source: 'GOOGLE_FORM',
+            total_rows: 1,
+            success: 1,
+            failed: 0,
+        });
+
+        // 7. Alert Exco KLS jika ada field baru tidak dikenali
+        const unknownKeys = Object.keys(unknownFields);
+        if (unknownKeys.length > 0) {
+            const list = unknownKeys.join(', ');
+            console.warn(`[klk-webhook] Field tidak dikenali dikesan: ${list}`);
+            
+            // Notify dalam-app ke semua Exco KLS + SUPER_ADMIN
+            const { data: excos } = await supabaseAdmin
+                .from('profiles')
+                .select('id')
+                .or('role.eq.SUPER_ADMIN_JPP,and(role.eq.JPP,jpp_unit.eq.KLS)');
+
+            if (excos?.length) {
+                const notifs = excos.map(e => ({
+                    user_id: e.id,
+                    title: '⚠️ KLK: Field Baru Dari Google Form',
+                    body: `Submission Google Form mengandungi field tidak dikenali: ${list}. Data disimpan dalam extra_data. Sila semak Tab Form Builder dalam Tetapan KLK.`,
+                    type: 'WARNING',
+                    link: '/klk/tetapan',
+                }));
+                await supabaseAdmin.from('notifications').insert(notifs);
+            }
+        }
+
+        console.log(`[klk-webhook] Submission berjaya: ${record.no_matrik || 'unknown'}`);
+        return res.status(200).json({ success: true, id: inserted?.id });
+
+    } catch (err) {
+        console.error('[klk-webhook] Unexpected error:', err.message);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+// ── KLK Endpoint 2: CSV Import ───────────────────────────────────────────────
+// POST /api/klk-csv-import  (multipart/form-data, field name: 'csv')
+// Untuk import data lama dari Google Sheets / Google Form export
+app.post('/api/klk-csv-import', requireAuth, upload.single('csv'), async (req, res) => {
+    try {
+        if (!supabaseAdmin) throw new Error('Supabase Admin tidak diinisialisasi.');
+
+        // RBAC: Hanya Exco KLS + SUPER_ADMIN
+        const { data: callerProfile } = await supabaseAdmin
+            .from('profiles')
+            .select('role, jpp_unit')
+            .eq('id', req.user.id)
+            .single();
+
+        const isAuthorized = callerProfile?.role === 'SUPER_ADMIN_JPP' ||
+            (callerProfile?.role === 'JPP' && callerProfile?.jpp_unit === 'KLS');
+
+        if (!isAuthorized) {
+            return res.status(403).json({ error: 'Akses tidak dibenarkan. Hanya Exco KLS sahaja.' });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ error: 'Fail CSV diperlukan.' });
+        }
+
+        // Validate file type
+        if (!req.file.originalname.toLowerCase().endsWith('.csv')) {
+            return res.status(400).json({ error: 'Hanya fail .csv dibenarkan.' });
+        }
+
+        const csvText = req.file.buffer.toString('utf8');
+        const academicYear = klkGetAcademicYear();
+
+        // Parse CSV manually (tanpa papaparse — gunakan built-in parsing)
+        const lines = csvText.split(/\r?\n/).filter(l => l.trim());
+        if (lines.length < 2) {
+            return res.status(400).json({ error: 'Fail CSV kosong atau tidak mengandungi data.' });
+        }
+
+        // Parse header baris pertama (case-insensitive)
+        const rawHeaders = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
+        const headers = rawHeaders.map(h => h.toLowerCase());
+
+        const results = { inserted: 0, updated: 0, failed: 0, errors: [] };
+        const batch = [];
+
+        for (let i = 1; i < lines.length; i++) {
+            try {
+                // Handle quoted CSV values
+                const values = lines[i].match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g)
+                    ?.map(v => v.replace(/^"|"$/g, '').trim()) ?? lines[i].split(',');
+
+                if (values.length < 2) continue;
+
+                const row = {};
+                headers.forEach((h, idx) => { row[h] = values[idx] ?? ''; });
+
+                const record = {
+                    source: 'CSV_IMPORT',
+                    tinggal_luar: true,
+                    extra_data: {},
+                    academic_year: academicYear,
+                };
+
+                // Map fields
+                for (const [key, value] of Object.entries(row)) {
+                    const dbCol = KLK_FIELD_MAP[key];
+                    if (dbCol) {
+                        record[dbCol] = String(value || '').trim();
+                    } else if (!['timestamp', 'email', 'email address', 'cap masa'].includes(key)) {
+                        record.extra_data[key] = value;
+                    }
+                }
+
+                if (!record.nama_pelajar) {
+                    results.failed++;
+                    results.errors.push(`Baris ${i + 1}: nama_pelajar kosong`);
+                    continue;
+                }
+
+                if (record.no_matrik) record.no_matrik = record.no_matrik.toUpperCase().trim();
+                if (record.nama_pelajar) record.nama_pelajar = record.nama_pelajar.toUpperCase().trim();
+
+                // Try link user_id
+                if (record.no_matrik) {
+                    const { data: p } = await supabaseAdmin
+                        .from('profiles').select('id').ilike('matric_no', record.no_matrik).maybeSingle();
+                    if (p) record.user_id = p.id;
+                }
+
+                batch.push(record);
+            } catch (rowErr) {
+                results.failed++;
+                results.errors.push(`Baris ${i + 1}: ${rowErr.message}`);
+            }
+        }
+
+        // Batch insert (chunks of 50 untuk elak timeout)
+        const CHUNK_SIZE = 50;
+        for (let i = 0; i < batch.length; i += CHUNK_SIZE) {
+            const chunk = batch.slice(i, i + CHUNK_SIZE);
+            const { data: inserted, error: insertErr } = await supabaseAdmin
+                .from('klk_student_residency')
+                .upsert(chunk, { onConflict: 'user_id,academic_year,semester', ignoreDuplicates: false })
+                .select('id');
+
+            if (insertErr) {
+                console.error(`[klk-csv-import] Chunk ${i} error:`, insertErr.message);
+                results.failed += chunk.length;
+                results.errors.push(`Chunk ${Math.floor(i / CHUNK_SIZE) + 1}: ${insertErr.message}`);
+            } else {
+                results.inserted += inserted?.length ?? 0;
+            }
+        }
+
+        // Log sync
+        await supabaseAdmin.from('klk_sync_log').insert({
+            source: 'CSV_IMPORT',
+            total_rows: batch.length + results.failed,
+            success: results.inserted,
+            failed: results.failed,
+            error_log: results.errors.length > 0 ? results.errors : null,
+            synced_by: req.user.id,
+        });
+
+        console.log(`[klk-csv-import] Selesai: ${results.inserted} berjaya, ${results.failed} gagal`);
+        return res.status(200).json({
+            success: true,
+            inserted: results.inserted,
+            failed: results.failed,
+            errors: results.errors.slice(0, 10), // maksimum 10 error dalam response
+        });
+
+    } catch (err) {
+        console.error('[klk-csv-import] Unexpected error:', err.message);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
 // ==========================================
 // Serve Static Frontend (Vite Build)
 // ==========================================

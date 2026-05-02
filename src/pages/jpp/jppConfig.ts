@@ -92,7 +92,7 @@ export const UNIT_CFG: Record<string, UnitConfig> = {
     label: 'Exco Kediaman Luar Kampus',
     icon: MapPin,
     color: '#60A5FA',
-    moduleLink: '/exco/kls/aktiviti',
+    moduleLink: '/klk',  // Dashboard khusus KLK (bukan generic exco template)
     isActive: true,
   },
   KOLAB: {

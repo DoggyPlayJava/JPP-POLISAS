@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
-  User, Bell, Shield, CreditCard, Mail, Lock, Camera, Check, Award, Globe, Loader2, FileText, Activity, HelpCircle, MessageSquare, Headphones, ExternalLink, Sparkles, Phone, ArrowLeft, Moon
+  User, Bell, Shield, CreditCard, Mail, Lock, Camera, Check, Award, Globe, Loader2, FileText, Activity, HelpCircle, MessageSquare, Headphones, ExternalLink, Sparkles, Phone, ArrowLeft, Moon, MapPin, Home, Building2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -19,7 +19,253 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { sendEmail } from '@/lib/email';
+import { getSemesterInfo } from '@/types';
 import { toast } from 'react-hot-toast';
+import { useKlkDynamicFields } from '@/hooks/useKlkDynamicFields';
+import { KlkDynamicFieldRenderer } from '@/components/klk/KlkDynamicFieldRenderer';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KediamanSettingsSection — Tab kediaman dalam SettingsPage
+// ─────────────────────────────────────────────────────────────────────────────────
+function getCurrentAcademicYear() {
+  const now = new Date(); const y = now.getFullYear();
+  return now.getMonth() >= 6 ? `${y}/${y + 1}` : `${y - 1}/${y}`;
+}
+
+function KediamanSettingsSection() {
+  const { user, profile } = useAuth();
+  const [step, setStep] = React.useState<'loading'|'choice'|'form'|'done'>('loading');
+  const [existing, setExisting] = React.useState<any>(null);
+  const [saving, setSaving] = React.useState(false);
+  const [alamat, setAlamat] = React.useState('');
+  const [kawasan, setKawasan] = React.useState('');
+  const [kawasanCustom, setKawasanCustom] = React.useState('');
+  const [cadangan, setCadangan] = React.useState('');
+  const [extraData, setExtraData] = React.useState<Record<string, string>>({});
+
+  // Dynamic fields — fetch from DB
+  const isLuarForm = step === 'form';
+  const { fields: dynamicFields, kawasanList } = useKlkDynamicFields(isLuarForm);
+
+  const academicYear = getCurrentAcademicYear();
+  const semInfo = profile?.intake_year
+    ? getSemesterInfo(profile.intake_year, profile.intake_period as 1|2, profile.programme_code === 'FTV')
+    : { semester: 0 };
+
+  // Cek semester layak (Sem 2+)
+  const isEligible = semInfo.semester >= 2;
+
+  React.useEffect(() => {
+    if (!user || !isEligible) { setStep('choice'); return; }
+    void (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('klk_student_residency').select('*')
+          .eq('user_id', user.id).eq('academic_year', academicYear).eq('semester', semInfo.semester)
+          .maybeSingle();
+        if (error?.code === '42P01') { setStep('choice'); return; }
+        if (data) {
+          setExisting(data);
+          setAlamat(data.alamat_kediaman ?? '');
+          setKawasan(data.kawasan_kediaman ?? '');
+          setKawasanCustom(data.kawasan_custom ?? '');
+          setCadangan(data.cadangan ?? '');
+          setStep(data.tinggal_luar ? 'form' : 'done');
+        } else { setStep('choice'); }
+      } catch { setStep('choice'); }
+    })();
+  }, [user, isEligible, academicYear, semInfo.semester]);
+
+  const save = async (tinggalLuar: boolean, extra: Record<string, any> = {}) => {
+    if (!user || !profile) return;
+    setSaving(true);
+    try {
+      const payload = {
+        user_id: user.id, academic_year: academicYear, semester: semInfo.semester,
+        tinggal_luar: tinggalLuar, nama_pelajar: profile.full_name,
+        no_matrik: profile.matric_no?.toUpperCase() ?? '', no_telefon: profile.phone ?? null,
+        jabatan: profile.department ?? null, source: 'WEBAPP', ...extra,
+      };
+      if (existing) {
+        await supabase.from('klk_student_residency').update(payload).eq('id', existing.id);
+      } else {
+        await supabase.from('klk_student_residency').insert(payload);
+      }
+      toast.success('Status kediaman berjaya disimpan!');
+      setStep('done');
+    } catch { toast.error('Gagal simpan. Cuba lagi.'); }
+    finally { setSaving(false); }
+  };
+
+  const handleSubmitLuar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!alamat.trim()) { toast.error('Sila isi alamat.'); return; }
+    if (!kawasan) { toast.error('Sila pilih kawasan.'); return; }
+    if (kawasan === 'LAIN_LAIN' && !kawasanCustom.trim()) { toast.error('Sila nyatakan kawasan.'); return; }
+    // Validate required dynamic fields
+    for (const f of dynamicFields) {
+      if (f.is_required && !extraData[f.field_key]?.trim()) {
+        toast.error(`Sila isi: ${f.label}`); return;
+      }
+    }
+    await save(true, {
+      alamat_kediaman: alamat.trim(), kawasan_kediaman: kawasan,
+      kawasan_custom: kawasan === 'LAIN_LAIN' ? kawasanCustom.trim() : null,
+      cadangan: cadangan.trim() || null,
+      extra_data: Object.keys(extraData).length > 0 ? extraData : {},
+    });
+  };
+
+  if (!isEligible) {
+    return (
+      <Card className="border-none shadow-xl rounded-[2.5rem] bg-card overflow-hidden border border-border/40">
+        <div className="p-8 text-center space-y-3">
+          <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center mx-auto">
+            <MapPin className="w-7 h-7 text-blue-400" />
+          </div>
+          <p className="font-black text-foreground">Belum Perlu Deklarasi</p>
+          <p className="text-xs text-muted-foreground">Status kediaman hanya diperlukan mulai Semester 2 dan ke atas.</p>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border-none shadow-xl rounded-[2.5rem] bg-card overflow-hidden border border-border/40">
+      <div className="p-6 sm:p-8 border-b border-border/40 bg-muted/10 flex items-center gap-4">
+        <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+          <MapPin className="w-5 h-5 text-blue-400" />
+        </div>
+        <div>
+          <h3 className="text-xl font-black tracking-tight">Status Kediaman</h3>
+          <p className="text-xs text-muted-foreground font-medium mt-0.5">
+            Semester {semInfo.semester} · Tahun Akademik {academicYear}
+            {existing && <span className="ml-2 text-emerald-500">✓ Sudah dikemaskini</span>}
+          </p>
+        </div>
+      </div>
+
+      <div className="p-6 sm:p-8">
+        {step === 'loading' && (
+          <div className="py-8 flex items-center justify-center gap-2 text-muted-foreground text-xs">
+            <Loader2 className="w-4 h-4 animate-spin" /> Memuatkan...
+          </div>
+        )}
+
+        {step === 'choice' && (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground font-medium mb-6">Di mana anda tinggal semester ini?</p>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => save(false)}
+                disabled={saving}
+                className="flex flex-col items-center gap-3 p-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 transition-all"
+              >
+                <Building2 className="w-8 h-8 text-emerald-400" />
+                <div className="text-center">
+                  <p className="font-black text-emerald-700 dark:text-emerald-300 text-sm">Dalam KAMSIS</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Tinggal di asrama</p>
+                </div>
+              </button>
+              <button
+                onClick={() => setStep('form')}
+                className="flex flex-col items-center gap-3 p-6 rounded-2xl border border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 transition-all"
+              >
+                <Home className="w-8 h-8 text-blue-400" />
+                <div className="text-center">
+                  <p className="font-black text-blue-700 dark:text-blue-300 text-sm">Luar Kampus</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Sewa / Rumah sendiri</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 'form' && (
+          <form onSubmit={handleSubmitLuar} className="space-y-5">
+            <div className="space-y-1.5">
+              <Label className="text-sm font-bold">Alamat Kediaman <span className="text-red-500">*</span></Label>
+              <textarea
+                value={alamat} onChange={e => setAlamat(e.target.value)} required rows={2}
+                placeholder="No. 12, Jalan Semambu 1..."
+                className="w-full px-4 py-3 rounded-xl bg-background border border-border/50 text-sm font-medium resize-none focus-visible:ring-2 focus-visible:ring-primary/50 outline-none"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-bold">Kawasan Kediaman <span className="text-red-500">*</span></Label>
+              <select
+                value={kawasan} onChange={e => setKawasan(e.target.value)} required
+                className="w-full h-11 px-4 rounded-xl bg-background border border-border/50 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none"
+              >
+                <option value="" disabled>-- Pilih kawasan --</option>
+                {kawasanList.map(k => <option key={k} value={k}>{k}</option>)}
+                <option value="LAIN_LAIN">Lain-lain</option>
+              </select>
+            </div>
+            {kawasan === 'LAIN_LAIN' && (
+              <div className="space-y-1.5">
+                <Label className="text-sm font-bold">Nyatakan Kawasan <span className="text-red-500">*</span></Label>
+                <input
+                  type="text" value={kawasanCustom} onChange={e => setKawasanCustom(e.target.value)} required
+                  placeholder="Nama kawasan..."
+                  className="w-full h-11 px-4 rounded-xl bg-background border border-border/50 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+            )}
+            <div className="space-y-1.5">
+              <Label className="text-sm font-bold">Cadangan <span className="text-muted-foreground font-medium">(Pilihan)</span></Label>
+              <textarea
+                value={cadangan} onChange={e => setCadangan(e.target.value)} rows={2}
+                placeholder="Cadangan kepada Exco KLK..."
+                className="w-full px-4 py-3 rounded-xl bg-background border border-border/50 text-sm font-medium resize-none focus-visible:ring-2 focus-visible:ring-primary/50 outline-none"
+              />
+            </div>
+
+            {/* Soalan Dinamik */}
+            {dynamicFields.length > 0 && (
+              <div className="space-y-4 pt-1 border-t border-border/30">
+                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Soalan Tambahan</p>
+                <KlkDynamicFieldRenderer
+                  fields={dynamicFields}
+                  values={extraData}
+                  onChange={(key, val) => setExtraData(prev => ({ ...prev, [key]: val }))}
+                  inputClass="bg-background border-border/50"
+                />
+              </div>
+            )}
+            <div className="flex gap-3">
+              <Button type="button" variant="outline" onClick={() => setStep('choice')} className="flex-1 h-11 rounded-xl font-bold text-xs">
+                Kembali
+              </Button>
+              <Button type="submit" disabled={saving} className="flex-1 h-11 rounded-xl font-bold text-xs bg-primary text-primary-foreground">
+                {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Menyimpan...</> : existing ? 'Kemaskini' : 'Hantar'}
+              </Button>
+            </div>
+          </form>
+        )}
+
+        {step === 'done' && (
+          <div className="py-6 text-center space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto">
+              <Check className="w-7 h-7 text-emerald-500" />
+            </div>
+            <div>
+              <p className="font-black text-foreground">Status Kediaman Direkodkan</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {existing?.tinggal_luar
+                  ? `Luar Kampus · ${existing.kawasan_kediaman === 'LAIN_LAIN' ? existing.kawasan_custom : existing.kawasan_kediaman}`
+                  : 'Dalam KAMSIS (Asrama)'}
+              </p>
+            </div>
+            <Button variant="outline" onClick={() => setStep(existing?.tinggal_luar ? 'form' : 'choice')} className="h-9 px-6 rounded-xl font-bold text-xs">
+              Kemaskini Semula
+            </Button>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
 
 export function SettingsPage() {
   const { user, profile, refetchProfile, effectiveRole } = useAuth();
@@ -275,6 +521,7 @@ export function SettingsPage() {
             <TabsList className="flex flex-col h-auto bg-transparent p-0 gap-1 space-y-1">
               {[
                 { value: 'general', icon: User, label: 'Profil Awam', desc: 'Kemaskini maklumat asas' },
+                { value: 'kediaman', icon: MapPin, label: 'Status Kediaman', desc: 'Deklarasi lokasi semester ini' },
                 { value: 'notifications', icon: Bell, label: 'Pemberitahuan', desc: 'Urus notifikasi pop-up' },
                 { value: 'security', icon: Shield, label: 'Keselamatan', desc: 'Kata laluan & log masuk' },
                 { value: 'billing', icon: CreditCard, label: 'Langganan', desc: 'Pelan & pembayaran (Nexus)' },
@@ -430,6 +677,13 @@ export function SettingsPage() {
                   </div>
                 </Card>
 
+              </motion.div>
+            </TabsContent>
+
+            {/* --- TAB KEDIAMAN --- */}
+            <TabsContent value="kediaman" className="space-y-8 focus-visible:ring-0 mt-0 pt-1">
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }}>
+                <KediamanSettingsSection />
               </motion.div>
             </TabsContent>
 

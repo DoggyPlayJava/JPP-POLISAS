@@ -123,6 +123,14 @@ const KebajikanReportPage = lazy(() => import('./pages/kebajikan/KebajikanReport
 const KebajikanStaffPage = lazy(() => import('./pages/kebajikan/KebajikanStaffPage').then(m => ({ default: m.KebajikanStaffPage })));
 const KebajikanSettingsPage = lazy(() => import('./pages/kebajikan/KebajikanSettingsPage').then(m => ({ default: m.KebajikanSettingsPage })));
 
+// ── E-Kediaman Luar Kampus (KLK) ──
+const KlkDashboard = lazy(() => import('./pages/klk/KlkDashboard').then(m => ({ default: m.KlkDashboard })));
+const KlkPublicStats = lazy(() => import('./pages/klk/KlkPublicStats').then(m => ({ default: m.KlkPublicStats })));
+const KlkResidencyFormPage = lazy(() => import('./pages/klk/KlkResidencyFormPage').then(m => ({ default: m.KlkResidencyFormPage })));
+const KlkSettingsPage = lazy(() => import('./pages/klk/KlkSettingsPage').then(m => ({ default: m.KlkSettingsPage })));
+const KlkLayout = lazy(() => import('./pages/klk/KlkLayout').then(m => ({ default: m.KlkLayout })));
+import { KlkResidencyModal } from '@/components/klk/KlkResidencyModal';
+
 const JppUsersPage = lazy(() => import('./pages/jpp/JppUsersPage').then(m => ({ default: m.JppUsersPage })));
 // ── Program Attendance (QR Check-in) ──
 const ProgramAttendPage = lazy(() => import('@/pages/ProgramAttendPage').then(m => ({ default: m.ProgramAttendPage })));
@@ -162,6 +170,7 @@ function RequireApproval({ children }: { children: React.ReactNode }) {
     <>
       <CompleteProfileModal />
       <GlobalAnnouncementModal />
+      <KlkResidencyModal />
       {children}
     </>
   );
@@ -194,6 +203,7 @@ function AppRoutes() {
       <Route path="/promo" element={<PromoPage />} />
       <Route path="/launch" element={<LaunchVideo />} />
       <Route path="/kebajikan/statistik" element={<KebajikanStatsPage />} />
+      <Route path="/klk/statistik" element={<KlkPublicStats />} />
       {/* QR Program Attendance — standalone, redirect ke login diuruskan dalam page itu sendiri */}
       <Route path="/program/attend/:token" element={<ProgramAttendPage />} />
 
@@ -294,6 +304,17 @@ function AppRoutes() {
           <Route path="/akademik/cgpa"         element={<AkademikCgpa />} />
           <Route path="/akademik/folder"       element={<AkademikFolderPage />} />
           <Route path="/akademik/leaderboard"  element={<AkademikLeaderboard />} />
+        </Route>
+      </Route>
+
+      {/* ── E-Kediaman Luar Kampus (KLK) ── */}
+      <Route element={<ProtectedRoute />}>
+        {/* Standalone form pelajar — tanpa sidebar */}
+        <Route path="/klk/form" element={<RequireApproval><KlkResidencyFormPage /></RequireApproval>} />
+        {/* Dashboard + Tetapan — guna KlkLayout dengan sidebar sendiri */}
+        <Route element={<RequireApproval><KlkLayout /></RequireApproval>}>
+          <Route path="/klk"         element={<KlkDashboard />} />
+          <Route path="/klk/tetapan" element={<KlkSettingsPage />} />
         </Route>
       </Route>
 

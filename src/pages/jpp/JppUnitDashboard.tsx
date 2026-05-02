@@ -17,9 +17,10 @@ import { KkUnitDashboard }           from './units/KkUnitDashboard';
 import { ExcoGenericDashboard }      from './units/ExcoGenericDashboard';
 import { KebajikanUnitDashboard }    from './units/KebajikanUnitDashboard';
 import { SrkUnitDashboard }          from './units/SrkUnitDashboard';
+import { KlsUnitDashboard }          from './units/KlsUnitDashboard';
 
 // ── Units that have a full dedicated dashboard component ─────────────────────
-const FULL_DASHBOARD_UNITS = new Set(['KPP', 'KEUSAHAWANAN', 'AKADEMIK', 'KK', 'KEBAJIKAN', 'SRK']);
+const FULL_DASHBOARD_UNITS = new Set(['KPP', 'KEUSAHAWANAN', 'AKADEMIK', 'KK', 'KEBAJIKAN', 'SRK', 'KLS']);
 
 
 
@@ -294,6 +295,7 @@ export function JppUnitDashboard() {
                 {upperCode === 'KK'           && <KkUnitDashboard />}
                 {upperCode === 'KEBAJIKAN'    && <KebajikanUnitDashboard />}
                 {upperCode === 'SRK'          && <SrkUnitDashboard />}
+                {upperCode === 'KLS'          && <KlsUnitDashboard />}
               </div>
             ) : (
               /* ── Exco Generic Dashboard untuk semua unit aktif lain ─── */
