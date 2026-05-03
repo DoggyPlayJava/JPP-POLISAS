@@ -15,6 +15,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+app.set('trust proxy', true); // Membaca IP sebenar student dari Cloudflare/Traefik
 const port = process.env.PORT || 8000;
 
 // ==========================================
@@ -50,11 +51,13 @@ app.use(cors({
 }));
 
 // ==========================================
-// Global Rate Limiter — protects ALL endpoints
+// LAPISAN 1: Global IP Rate Limiter
+// Melindungi SEMUA endpoint dari DDoS & bot flood
+// Nilai tinggi kerana limit sebenar dibuat di lapisan 2
 // ==========================================
 const globalRateLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 300, // 300 requests per 15 min per IP
+    windowMs: 15 * 60 * 1000, // 15 minit
+    max: 1000, // 1000 req per 15 min per IP (catch DDoS, bukan pelajar biasa)
     message: { error: 'Terlalu banyak permintaan daripada IP ini. Sila cuba lagi selepas 15 minit.' },
     standardHeaders: true,
     legacyHeaders: false,
@@ -126,34 +129,64 @@ const requireWebhookSecret = (req, res, next) => {
 };
 
 // ==========================================
-// Rate Limiters for unauthenticated endpoints
+// LAPISAN 2A: IP-Based Limiters
+// Untuk endpoint TANPA LOGIN sahaja (reset-password, signup)
+// Bot tidak ada JWT, jadi kena tapis di sini
 // ==========================================
 const authFlowLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 5, // 5 requests per hour per IP
+    windowMs: 60 * 60 * 1000, // 1 jam
+    max: 5, // 5 percubaan per jam per IP — mencukupi untuk guna sebenar
     message: { error: "Terlalu banyak percubaan. Sila cuba lagi selepas 1 jam." },
     standardHeaders: true,
     legacyHeaders: false,
 });
 
-const emailSendLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // 10 emails per 15 min per IP
-    message: { error: "Terlalu banyak emel dihantar. Sila cuba lagi selepas 15 minit." },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
+// ==========================================
+// LAPISAN 2B: User-ID-Based Limiters
+// Untuk endpoint PERLUKAN LOGIN — adil untuk semua pelajar
+// termasuk yang kongsi WiFi kampus (NAT IP yang sama)
+// Bots tidak boleh sampai sini tanpa JWT yang sah
+// ==========================================
 
-// ==========================================
-// Middleware: AI Rate Limiter (IP Based)
-// ==========================================
-const aiRateLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 50, // Limit each IP to 50 requests per window
-    message: { error: "Terlalu banyak permintaan AI daripada IP ini. Sila cuba lagi selepas 15 minit." },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
+/**
+ * Factory function untuk cipta rate limiter berdasarkan User ID (bukan IP)
+ * @param {number} maxRequests - Maksimum request per window
+ * @param {number} windowMinutes - Saiz window dalam minit
+ * @param {string} errorMessage - Mesej ralat Bahasa Melayu
+ */
+function createUserRateLimiter(maxRequests, windowMinutes, errorMessage) {
+    return rateLimit({
+        windowMs: windowMinutes * 60 * 1000,
+        max: maxRequests,
+        // Guna user ID sebagai kunci — lebih adil untuk WiFi kampus
+        // Fallback ke IP jika user ID tiada (seharusnya tidak berlaku pada endpoint requireAuth)
+        keyGenerator: (req) => req.user?.id || req.ip,
+        message: { error: errorMessage },
+        standardHeaders: true,
+        legacyHeaders: false,
+    });
+}
+
+// Limit untuk hantar emel — 15 emel per 15 min per pengguna
+const emailSendLimiter = createUserRateLimiter(
+    15,
+    15,
+    'Terlalu banyak emel dihantar. Sila cuba lagi selepas 15 minit.'
+);
+
+// Limit untuk AI assistant — 50 req per 15 min per pengguna
+const aiRateLimiter = createUserRateLimiter(
+    50,
+    15,
+    'Terlalu banyak permintaan AI. Sila cuba lagi selepas 15 minit.'
+);
+
+// Limit untuk anomaly notify — 10 req per 15 min per pengguna
+const anomalyNotifyLimiter = createUserRateLimiter(
+    10,
+    15,
+    'Terlalu banyak amaran anomali. Sila cuba lagi selepas 15 minit.'
+);
 
 // ==========================================
 // 1. AI Assistant Endpoint
@@ -645,7 +678,7 @@ app.post('/api/send-push-notification', requireAuth, async (req, res) => {
 // ==========================================
 // 7. Notify Anomaly Endpoint
 // ==========================================
-app.post('/api/notify-anomaly', requireAuth, emailSendLimiter, async (req, res) => {
+app.post('/api/notify-anomaly', requireAuth, anomalyNotifyLimiter, async (req, res) => {
     try {
         const { alerts, sentAt } = req.body;
         
