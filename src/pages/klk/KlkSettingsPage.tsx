@@ -434,12 +434,35 @@ export function KlkSettingsPage() {
                       onClick={async () => {
                         const target = migrateTarget[item.kawasan_custom];
                         if (!target) return;
-                        // Jika Exco pilih "Simpan sebagai baharu", tambah kawasan baru dulu
+                        // Jika Exco pilih "Simpan sebagai baharu":
+                        // 1) Tambah kawasan baru ke klk_kawasan
+                        // 2) Migrate semua rekod LAIN_LAIN ke kawasan baru
                         if (target === '__KEEP__') {
-                          const { error: insErr } = await supabase.from('klk_kawasan').insert({ name: item.kawasan_custom.toUpperCase() });
-                          if (insErr) { toast.error('Gagal tambah kawasan baru.'); return; }
-                          toast.success(`Kawasan "${item.kawasan_custom}" ditambah! Sila isi koordinat.`);
-                          fetchSettings();
+                          setMigrating(item.kawasan_custom);
+                          try {
+                            const newName = item.kawasan_custom.trim().toUpperCase();
+                            // Step 1: Insert kawasan baru (ignore conflict jika dah ada)
+                            const { error: insErr } = await supabase
+                              .from('klk_kawasan')
+                              .insert({ name: newName })
+                              .select();
+                            if (insErr && insErr.code !== '23505') {
+                              throw new Error('Gagal tambah kawasan: ' + insErr.message);
+                            }
+                            // Step 2: Migrate rekod pelajar ke kawasan baru
+                            const { data: migData, error: migErr } = await supabase.rpc('migrate_klk_lain_lain', {
+                              p_kawasan_custom_value: item.kawasan_custom,
+                              p_target_kawasan: newName,
+                            });
+                            if (migErr || !migData?.success) throw new Error(migData?.error ?? migErr?.message);
+                            toast.success(`Kawasan "${newName}" ditambah & ${migData.updated} rekod dipindah. Sila isi koordinat.`);
+                            // Buang dari list
+                            setLainLainList(prev => prev.filter(x => x.kawasan_custom !== item.kawasan_custom));
+                            setMigrateTarget(prev => { const n = { ...prev }; delete n[item.kawasan_custom]; return n; });
+                            fetchSettings(); // refresh kawasan list untuk paparan koordinat
+                          } catch (e: any) {
+                            toast.error(e.message ?? 'Gagal simpan kawasan baharu.');
+                          } finally { setMigrating(null); }
                           return;
                         }
                         setMigrating(item.kawasan_custom);

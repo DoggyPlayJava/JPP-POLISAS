@@ -23,6 +23,7 @@ import { getSemesterInfo } from '@/types';
 import { toast } from 'react-hot-toast';
 import { useKlkDynamicFields } from '@/hooks/useKlkDynamicFields';
 import { KlkDynamicFieldRenderer } from '@/components/klk/KlkDynamicFieldRenderer';
+import { KawasanSearchSelect } from '@/components/klk/KawasanSearchSelect';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // KediamanSettingsSection — Tab kediaman dalam SettingsPage
@@ -52,7 +53,7 @@ function KediamanSettingsSection() {
     ? getSemesterInfo(profile.intake_year, profile.intake_period as 1|2, profile.programme_code === 'FTV')
     : { semester: 0 };
 
-  // Cek semester layak (Sem 2+)
+  // Cek semester layak (Sem 2 dan ke atas — BUKAN hanya Sem 2, tapi KECUALI Sem 1)
   const isEligible = semInfo.semester >= 2;
 
   React.useEffect(() => {
@@ -193,14 +194,12 @@ function KediamanSettingsSection() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-sm font-bold">Kawasan Kediaman <span className="text-red-500">*</span></Label>
-              <select
-                value={kawasan} onChange={e => setKawasan(e.target.value)} required
-                className="w-full h-11 px-4 rounded-xl bg-background border border-border/50 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none"
-              >
-                <option value="" disabled>-- Pilih kawasan --</option>
-                {kawasanList.map(k => <option key={k} value={k}>{k}</option>)}
-                <option value="LAIN_LAIN">Lain-lain</option>
-              </select>
+              <KawasanSearchSelect
+                value={kawasan}
+                onChange={setKawasan}
+                kawasanList={kawasanList}
+                required
+              />
             </div>
             {kawasan === 'LAIN_LAIN' && (
               <div className="space-y-1.5">

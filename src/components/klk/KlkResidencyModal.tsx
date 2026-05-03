@@ -1,6 +1,6 @@
 // ============================================================
 // KlkResidencyModal — Modal Deklarasi Status Kediaman
-// Muncul untuk pelajar Sem 2+ yang belum declare kediaman
+// Muncul untuk pelajar Sem 2 dan ke atas (KECUALI Sem 1) yang belum declare kediaman
 // Pattern ikut ForcePhoneUpdateModal.tsx
 // ============================================================
 import React, { useState, useEffect, useCallback } from 'react';
@@ -14,6 +14,7 @@ import { getSemesterInfo } from '@/types';
 import { useNavigate } from 'react-router-dom';
 import { useKlkDynamicFields } from '@/hooks/useKlkDynamicFields';
 import { KlkDynamicFieldRenderer } from '@/components/klk/KlkDynamicFieldRenderer';
+import { KawasanSearchSelect } from '@/components/klk/KawasanSearchSelect';
 
 const KLS_COLOR = '#60A5FA';
 
@@ -46,9 +47,10 @@ export function KlkResidencyModal() {
   const checkShouldShow = useCallback(async () => {
     if (!profile || !user) { setChecking(false); return; }
 
-    // Hanya untuk pelajar biasa (bukan JPP/admin)
+    // Dikecualikan: SUPER_ADMIN_JPP dan STAFF sahaja
+    // JPP biasa tetap diwajibkan isi seperti pelajar lain
     const role = profile.role;
-    if (role === 'JPP' || role === 'SUPER_ADMIN_JPP' || role === 'STAFF') {
+    if (role === 'SUPER_ADMIN_JPP' || role === 'STAFF') {
       setChecking(false); return;
     }
 
@@ -331,18 +333,13 @@ export function KlkResidencyModal() {
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                           Kawasan Kediaman <span className="text-red-400">*</span>
                         </label>
-                        <select
+                        <KawasanSearchSelect
                           value={kawasan}
-                          onChange={e => setKawasan(e.target.value)}
+                          onChange={setKawasan}
+                          kawasanList={kawasanList}
+                          inputClass="bg-slate-800/60 border-white/[0.08] text-white"
                           required
-                          className="w-full h-11 px-4 rounded-xl bg-slate-800/60 border border-white/[0.08] text-white text-sm font-medium focus:outline-none focus:border-blue-500/50 appearance-none"
-                        >
-                          <option value="" disabled>-- Pilih kawasan --</option>
-                          {kawasanList.map(k => (
-                            <option key={k} value={k}>{k}</option>
-                          ))}
-                          <option value="LAIN_LAIN">Lain-lain</option>
-                        </select>
+                        />
                       </div>
 
                       {/* Kawasan Custom */}

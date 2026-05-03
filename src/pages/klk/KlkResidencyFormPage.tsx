@@ -13,6 +13,7 @@ import { getSemesterInfo, JABATAN_LIST } from '@/types';
 import { useNavigate } from 'react-router-dom';
 import { useKlkDynamicFields } from '@/hooks/useKlkDynamicFields';
 import { KlkDynamicFieldRenderer } from '@/components/klk/KlkDynamicFieldRenderer';
+import { KawasanSearchSelect } from '@/components/klk/KawasanSearchSelect';
 
 function getCurrentAcademicYear(): string {
   const now = new Date();
@@ -280,14 +281,13 @@ export function KlkResidencyFormPage() {
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                       Kawasan Kediaman <span className="text-red-400">*</span>
                     </label>
-                    <select
-                      value={kawasan} onChange={e => setKawasan(e.target.value)} required
-                      className="w-full h-11 px-4 rounded-xl bg-slate-800/60 border border-white/[0.08] text-white text-sm font-medium focus:outline-none focus:border-blue-500/50 transition-all appearance-none"
-                    >
-                      <option value="" disabled>-- Pilih kawasan --</option>
-                      {kawasanList.map(k => <option key={k} value={k}>{k}</option>)}
-                      <option value="LAIN_LAIN">Lain-lain</option>
-                    </select>
+                    <KawasanSearchSelect
+                      value={kawasan}
+                      onChange={setKawasan}
+                      kawasanList={kawasanList}
+                      inputClass="bg-slate-800/60 border-white/[0.08] text-white"
+                      required
+                    />
                   </div>
 
                   {kawasan === 'LAIN_LAIN' && (
