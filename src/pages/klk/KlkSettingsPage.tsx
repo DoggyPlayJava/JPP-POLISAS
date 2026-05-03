@@ -78,6 +78,10 @@ export function KlkSettingsPage() {
   });
   const [addingField, setAddingField] = useState(false);
   const csvRef = useRef<HTMLInputElement>(null);
+  // Migrate Lain-lain state
+  const [lainLainList, setLainLainList] = useState<{ kawasan_custom: string; count: number }[]>([]);
+  const [migrateTarget, setMigrateTarget] = useState<Record<string, string>>({}); // kawasan_custom → target
+  const [migrating, setMigrating] = useState<string | null>(null);
 
   // RBAC
   const isKlsExco = profile?.role === 'JPP' && profile?.jpp_unit === 'KLS';
@@ -105,6 +109,9 @@ export function KlkSettingsPage() {
       if (logsRes.data) setSyncLogs(logsRes.data);
       if (settingsRes.data?.value) setThresholds(settingsRes.data.value as any);
       if (fieldsRes.data) setFormFields(fieldsRes.data);
+      // Fetch lain-lain summary
+      const { data: lainData } = await supabase.rpc('get_klk_lain_lain_summary');
+      if (lainData) setLainLainList(lainData as any);
     } catch (e) { console.error('[KlkSettings]', e); }
     finally { setLoading(false); }
   };
@@ -208,11 +215,17 @@ export function KlkSettingsPage() {
           { id: 'csv', label: 'Import CSV', icon: Upload },
         ].map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
+            className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
               activeTab === tab.id ? 'bg-blue-500/20 text-blue-300' : 'text-slate-500 hover:text-slate-300'
             }`}>
             <tab.icon className="w-3.5 h-3.5" />
             {tab.label}
+            {/* Badge merah — kawasan tidak dikenali */}
+            {tab.id === 'kawasan' && lainLainList.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-[8px] font-black text-slate-950 flex items-center justify-center animate-pulse">
+                {lainLainList.length}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -365,7 +378,99 @@ export function KlkSettingsPage() {
             )}
           </div>
 
-          {/* Nota cara dapat koordinat */}
+          {/* Panel: Migrate Lain-lain → Kawasan Rasmi — sentiasa visible */}
+          <div className={`rounded-2xl border overflow-hidden ${
+            lainLainList.length > 0
+              ? 'border-amber-500/30 bg-amber-500/[0.04]'
+              : 'border-white/[0.05] bg-white/[0.02]'
+          }`}>
+            <div className={`flex items-center justify-between px-5 py-4 border-b ${
+              lainLainList.length > 0 ? 'border-amber-500/15' : 'border-white/[0.04]'
+            }`}>
+              <div>
+                <h2 className={`font-black text-sm ${
+                  lainLainList.length > 0 ? 'text-amber-300' : 'text-slate-400'
+                }`}>
+                  {lainLainList.length > 0
+                    ? `⚠️ ${lainLainList.length} Kawasan Tidak Dikenali`
+                    : '✅ Semua Kawasan Dikenali'}
+                </h2>
+                <p className="text-[10px] text-slate-500 mt-0.5">
+                  {lainLainList.length > 0
+                    ? 'Pelajar memilih "Lain-lain" — migrate ke kawasan rasmi supaya muncul dalam peta.'
+                    : 'Tiada entri "Lain-lain" yang perlu di-migrate buat masa ini.'}
+                </p>
+              </div>
+              <button onClick={async () => {
+                const { data } = await supabase.rpc('get_klk_lain_lain_summary');
+                if (data) setLainLainList(data as any);
+                toast.success('Disemak semula.');
+              }} className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors flex-shrink-0">
+                <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+            </div>
+
+            {lainLainList.length > 0 ? (
+              <div className="divide-y divide-white/[0.03]">
+                {lainLainList.map(item => (
+                  <div key={item.kawasan_custom} className="flex items-center gap-3 px-5 py-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-black text-amber-200 truncate">{item.kawasan_custom}</p>
+                      <p className="text-[10px] text-slate-500">{item.count} pelajar</p>
+                    </div>
+                    <select
+                      value={migrateTarget[item.kawasan_custom] ?? ''}
+                      onChange={e => setMigrateTarget(prev => ({ ...prev, [item.kawasan_custom]: e.target.value }))}
+                      className="h-8 px-3 rounded-xl bg-slate-800 border border-white/10 text-white text-xs flex-shrink-0 min-w-[160px]"
+                    >
+                      <option value="">-- Pilih kawasan rasmi --</option>
+                      {kawasanList.filter(k => k.is_active).map(k => (
+                        <option key={k.id} value={k.name}>{k.name}</option>
+                      ))}
+                      <option value="__KEEP__">Simpan sebagai baharu</option>
+                    </select>
+                    <button
+                      disabled={!migrateTarget[item.kawasan_custom] || migrating === item.kawasan_custom}
+                      onClick={async () => {
+                        const target = migrateTarget[item.kawasan_custom];
+                        if (!target) return;
+                        // Jika Exco pilih "Simpan sebagai baharu", tambah kawasan baru dulu
+                        if (target === '__KEEP__') {
+                          const { error: insErr } = await supabase.from('klk_kawasan').insert({ name: item.kawasan_custom.toUpperCase() });
+                          if (insErr) { toast.error('Gagal tambah kawasan baru.'); return; }
+                          toast.success(`Kawasan "${item.kawasan_custom}" ditambah! Sila isi koordinat.`);
+                          fetchSettings();
+                          return;
+                        }
+                        setMigrating(item.kawasan_custom);
+                        try {
+                          const { data, error } = await supabase.rpc('migrate_klk_lain_lain', {
+                            p_kawasan_custom_value: item.kawasan_custom,
+                            p_target_kawasan: target,
+                          });
+                          if (error || !data?.success) throw new Error(data?.error ?? error?.message);
+                          toast.success(`${data.updated} rekod "${item.kawasan_custom}" → "${target}"`);
+                          setLainLainList(prev => prev.filter(x => x.kawasan_custom !== item.kawasan_custom));
+                          setMigrateTarget(prev => { const n = { ...prev }; delete n[item.kawasan_custom]; return n; });
+                        } catch (e: any) {
+                          toast.error(e.message ?? 'Gagal migrate.');
+                        } finally { setMigrating(null); }
+                      }}
+                      className="h-8 px-3 rounded-xl bg-blue-500/15 border border-blue-500/25 text-blue-300 text-[10px] font-black hover:bg-blue-500/25 transition-colors disabled:opacity-40 flex-shrink-0"
+                    >
+                      {migrating === item.kawasan_custom ? 'Migrating...' : 'Migrate'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="px-5 py-6 text-center">
+                <p className="text-[11px] text-slate-600">
+                  Apabila pelajar memasukkan kawasan yang tidak tersenarai, ia akan muncul di sini untuk Exco semak dan migrate.
+                </p>
+              </div>
+            )}
+          </div>
           <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Cara Dapatkan Koordinat</p>
             <ol className="space-y-1 text-[11px] text-slate-400">

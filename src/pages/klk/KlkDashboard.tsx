@@ -265,6 +265,7 @@ export function KlkDashboard() {
   const [searchQ, setSearchQ] = useState('');
   const [filterKawasan, setFilterKawasan] = useState('');
   const [editRecord, setEditRecord] = useState<any | null>(null);  // rekod yang sedang diedit
+  const [lainLainCount, setLainLainCount] = useState(0);
 
   const academicYear = getCurrentAcademicYear();
   const name = profile?.full_name?.split(' ')[0] ?? 'Exco';
@@ -304,7 +305,7 @@ export function KlkDashboard() {
       setDbReady(true);
 
       // Fetch semua data untuk academic year semasa
-      const [residencyRes, kawasanRes] = await Promise.all([
+      const [residencyRes, kawasanRes, lainRes] = await Promise.all([
         supabase
           .from('klk_student_residency')
           .select('id, tinggal_luar, kawasan_kediaman, jabatan, source, created_at, nama_pelajar, no_matrik, no_telefon, kawasan_custom')
@@ -314,7 +315,10 @@ export function KlkDashboard() {
           .from('klk_kawasan')
           .select('name, latitude, longitude')
           .eq('is_active', true),
+        supabase.rpc('get_klk_lain_lain_summary'),
       ]);
+
+      if (lainRes.data) setLainLainCount((lainRes.data as any[]).length);
 
       const allData = residencyRes.data ?? [];
       const kawasanCoords: Record<string, { lat: number; lng: number }> = {};
@@ -450,6 +454,28 @@ export function KlkDashboard() {
               Jadual <code className="font-mono bg-amber-500/10 px-1 rounded">klk_student_residency</code> belum wujud. Migration perlu dijalankan dahulu. Form pelajar sudah boleh digunakan — data akan disimpan bila DB sedia.
             </p>
           </div>
+        </motion.div>
+      )}
+
+      {/* Lain-lain Warning Banner */}
+      {!loading && dbReady && lainLainCount > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+          className="mb-6 rounded-2xl p-4 border border-amber-500/25 bg-amber-500/5 flex items-center gap-4 cursor-pointer hover:bg-amber-500/10 transition-colors"
+          onClick={() => navigate('/klk/tetapan?tab=kawasan')}
+        >
+          <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center flex-shrink-0">
+            <AlertTriangle className="w-4 h-4 text-amber-400" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-black text-amber-300">
+              {lainLainCount} kawasan tidak dikenali perlu dimigrate
+            </p>
+            <p className="text-[10px] text-slate-500 mt-0.5">
+              Pelajar memasukkan kawasan yang tidak tersenarai — klik untuk migrate dalam Tetapan KLK.
+            </p>
+          </div>
+          <ArrowUpRight className="w-4 h-4 text-amber-400 flex-shrink-0" />
         </motion.div>
       )}
 
