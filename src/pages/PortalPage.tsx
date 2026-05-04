@@ -8,17 +8,20 @@ import { toast } from 'react-hot-toast';
 import { cn, getMalaysianNickname } from '@/lib/utils';
 import { PortalSidebar } from '@/components/layout/PortalSidebar';
 import { useKarnivalStatus } from '@/contexts/KarnivalContext';
+import { Badge } from '@/components/ui/badge';
 
 // Extracted Components
 import { ExcoCard } from '@/components/portal/ExcoCard';
 import { KarnivalEffects } from '@/components/portal/KarnivalEffects';
 import { SupsasEffects } from '@/components/portal/SupsasEffects';
+import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import { KarnivalMegaBanner } from '@/components/portal/KarnivalMegaBanner';
 import { SupsasMegaBanner } from '@/components/portal/SupsasMegaBanner';
 import { QuickActions } from '@/components/portal/QuickActions';
 import { PortalNavbar } from '@/components/portal/PortalNavbar';
 import { PortalFooter } from '@/components/portal/PortalFooter';
 import { PortalSkeleton } from '@/components/portal/PortalSkeleton';
+import { KamsisAppealModal } from '@/components/kamsis/KamsisAppealModal';
 
 export function PortalPage() {
   const { profile, isSuperAdmin, hasKebajikanAccess } = useAuth();
@@ -42,6 +45,49 @@ export function PortalPage() {
   const [supsasEdition, setSupsasEdition] = useState<{
     name: string; start_date: string | null; end_date: string | null; is_active: boolean;
   } | null>(null);
+
+  // KAMSIS Application Status
+  const [kamsisStatus, setKamsisStatus] = useState<string | null>(null);
+  const [kamsisExtraData, setKamsisExtraData] = useState<any>(null);
+  const [kamsisToggles, setKamsisToggles] = useState<Record<string, boolean>>({});
+  const [showAppealModal, setShowAppealModal] = useState(false);
+
+  const { activeSession, semesterString } = useAcademicSession();
+
+  const fetchKamsisStatus = useCallback(async () => {
+    if (!profile?.id) return;
+    
+    const [appRes, toggleRes] = await Promise.all([
+      supabase.from('kamsis_applications')
+        .select('status, extra_data')
+        .eq('user_id', profile.id)
+        .eq('session', activeSession)
+        .eq('semester', semesterString)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase.from('system_settings')
+        .select('key, value')
+        .like('key', 'kamsis_%')
+    ]);
+
+    if (appRes.data) {
+      setKamsisStatus(appRes.data.status);
+      setKamsisExtraData(appRes.data.extra_data);
+    }
+
+    if (toggleRes.data) {
+      const map: Record<string, boolean> = {};
+      toggleRes.data.forEach(d => {
+        map[d.key] = typeof d.value === 'string' ? d.value === 'true' : !!d.value;
+      });
+      setKamsisToggles(map);
+    }
+  }, [profile?.id, activeSession, semesterString]);
+
+  useEffect(() => {
+    fetchKamsisStatus();
+  }, [fetchKamsisStatus]);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -268,6 +314,76 @@ export function PortalPage() {
               )}
             </AnimatePresence>
 
+            {/* ── KAMSIS STATUS BANNER ── */}
+            <AnimatePresence>
+              {kamsisStatus && kamsisStatus !== 'OPT_OUT' && (() => {
+                const isAppeal = !!kamsisExtraData?.appeal_reason || kamsisStatus === 'APPEALING' || kamsisStatus === 'APPEAL_REJECTED';
+                const isResultOpen = kamsisToggles['kamsis_result_open'];
+                const isAppealResultOpen = kamsisToggles['kamsis_appeal_result_open'];
+                const isAppealOpen = kamsisToggles['kamsis_appeal_open'];
+
+                let displayStatus = kamsisStatus;
+
+                if (!isAppeal) {
+                  // Normal phase
+                  if (!isResultOpen) displayStatus = 'PENDING';
+                } else {
+                  // Appeal phase
+                  if (!isAppealResultOpen) displayStatus = 'APPEALING';
+                }
+
+                const canAppeal = kamsisStatus === 'REJECTED' && isResultOpen && isAppealOpen && !isAppeal;
+
+                return (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={cn(
+                    "p-5 rounded-3xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm w-full backdrop-blur-md text-left mt-4",
+                    displayStatus === 'APPROVED' ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400" :
+                    (displayStatus === 'REJECTED' || displayStatus === 'APPEAL_REJECTED') ? "bg-rose-500/10 border-rose-500/20 text-rose-700 dark:text-rose-400" :
+                    "bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400"
+                  )}>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-white/50 dark:bg-black/20 flex items-center justify-center shrink-0 shadow-sm">
+                        <LucideIcons.Building2 className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="font-black text-sm uppercase tracking-widest mb-0.5">Status Permohonan Asrama (KAMSIS)</h3>
+                        <p className="text-xs font-bold opacity-80 leading-relaxed max-w-[250px] sm:max-w-none">
+                          {displayStatus === 'APPROVED' ? 'Tahniah! Permohonan asrama anda telah DILULUSKAN.' :
+                           displayStatus === 'REJECTED' ? 'Dukacita dimaklumkan permohonan asrama anda DITOLAK.' :
+                           displayStatus === 'APPEAL_REJECTED' ? 'Dukacita dimaklumkan rayuan asrama anda DITOLAK.' :
+                           displayStatus === 'APPEALING' ? 'Rayuan anda sedang dalam proses semakan pihak pengurusan.' :
+                           'Permohonan anda sedang dalam proses semakan pihak pengurusan.'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                      <Badge className={cn(
+                        "border-none px-4 py-2 font-black uppercase tracking-widest text-[10px] w-full sm:w-auto justify-center shadow-md shrink-0",
+                        displayStatus === 'APPROVED' ? "bg-emerald-500 text-white" :
+                        (displayStatus === 'REJECTED' || displayStatus === 'APPEAL_REJECTED') ? "bg-rose-500 text-white" :
+                        "bg-amber-500 text-white"
+                      )}>
+                        {displayStatus === 'APPROVED' ? 'LULUS' : 
+                         displayStatus === 'REJECTED' ? 'TOLAK' : 
+                         displayStatus === 'APPEAL_REJECTED' ? 'RAYUAN DITOLAK' : 
+                         displayStatus === 'APPEALING' ? 'RAYUAN DIPROSES' : 
+                         'MENUNGGU KELULUSAN'}
+                      </Badge>
+
+                      {canAppeal && (
+                        <button
+                          onClick={() => setShowAppealModal(true)}
+                          className="w-full sm:w-auto px-4 py-2 rounded-full bg-slate-800 dark:bg-white text-white dark:text-slate-900 text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-md shrink-0"
+                        >
+                          Buat Rayuan
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })()}
+            </AnimatePresence>
+
             {/* Quick Actions */}
             <QuickActions
               isSuperAdmin={isSuperAdmin}
@@ -335,6 +451,21 @@ export function PortalPage() {
       )}
 
       <PortalFooter />
+
+      {/* Appeal Modal */}
+      <AnimatePresence>
+        {showAppealModal && profile && (
+          <KamsisAppealModal
+            userId={profile.id}
+            onClose={() => setShowAppealModal(false)}
+            onSuccess={() => {
+              setShowAppealModal(false);
+              fetchKamsisStatus();
+            }}
+          />
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

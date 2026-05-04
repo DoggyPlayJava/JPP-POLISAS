@@ -10,18 +10,14 @@ import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 
+import { getKlkAcademicYear } from '@/utils/klkUtils';
+
 // Lazy load map
 const KlkHotspotMap = lazy(() => import('@/components/klk/KlkHotspotMap').then(m => ({ default: m.KlkHotspotMap })));
 
 const KLS_COLOR = '#60A5FA';
 const KAMSIS_COLOR = '#22C55E';
 const ACCENT_COLOR = '#818CF8';
-
-function getCurrentAcademicYear() {
-  const now = new Date();
-  const y = now.getFullYear();
-  return now.getMonth() >= 6 ? `${y}/${y + 1}` : `${y - 1}/${y}`;
-}
 
 const CATEGORY_COLORS = ['#60A5FA', '#818CF8', '#A78BFA', '#F472B6', '#FB923C', '#FBBF24', '#34D399'];
 
@@ -31,7 +27,7 @@ export function KlkPublicStats() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const academicYear = getCurrentAcademicYear();
+  const academicYear = getKlkAcademicYear();
 
   const fetchStats = useCallback(async () => {
     setLoading(true);

@@ -18,6 +18,7 @@ import { hexToRgba } from '@/lib/utils';
 import { ExcoGenericDashboard } from './ExcoGenericDashboard';
 import { QrMeritManager } from '@/pages/akademik/AkademikQrScan';
 import { MeritRasmiReviewPanel } from '@/components/program/MeritRasmiReviewPanel';
+import { KamsisKlkStatsWidget } from './KamsisKlkStatsWidget';
 
 const KK_COLOR = '#E879F9';
 
@@ -390,6 +391,10 @@ export function KkUnitDashboard() {
             {hasKediamanAccess && <AsramaBanner />}
 
             {/* Generic dashboard (aktiviti, laporan, tindakan pantas) */}
+            <div className="pt-2">
+              <KamsisKlkStatsWidget themeColor={KK_COLOR} />
+            </div>
+
             <ExcoGenericDashboard
               excoUnit="KK"
               themeColor={KK_COLOR}

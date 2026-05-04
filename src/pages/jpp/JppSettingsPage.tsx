@@ -7,6 +7,7 @@ import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { hexToRgba, cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 import { JppStructureSettings } from './JppStructureSettings';
+import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 
 const MONTH_NAMES = ['', 'Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
 
@@ -18,6 +19,7 @@ export function JppSettingsPage() {
     const [intake1Month, setIntake1Month] = useState(7);
     const [intake2Month, setIntake2Month] = useState(1);
     const [savingIntake, setSavingIntake] = useState(false);
+    
 
     const [settings, setSettings] = useState<Record<string, any>>({
         staff_registration_code: '',
@@ -75,7 +77,7 @@ export function JppSettingsPage() {
                 let val = item.value;
                 if (val === 'true') val = true;
                 if (val === 'false') val = false;
-                if (typeof val === 'string' && val.startsWith('"') && val.endsWith('"')) { val = val.slice(1, -1); }
+                if (val === 'string' && val.startsWith('"') && val.endsWith('"')) { val = val.slice(1, -1); }
                 s[item.key] = val;
                 if (item.key === 'intake_1_month') setIntake1Month(Number(val) || 7);
                 if (item.key === 'intake_2_month') setIntake2Month(Number(val) || 1);

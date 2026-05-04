@@ -9,14 +9,11 @@ import { motion } from 'framer-motion';
 import { Home, Building2, MapPin, Database, ArrowRight, Wifi, Upload, AlertTriangle, BarChart3 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { KamsisKlkStatsWidget } from './KamsisKlkStatsWidget';
+
+import { getKlkAcademicYear } from '@/utils/klkUtils';
 
 const KLS_COLOR = '#60A5FA';
-
-function getCurrentAcademicYear(): string {
-  const now = new Date();
-  const y = now.getFullYear();
-  return now.getMonth() >= 6 ? `${y}/${y + 1}` : `${y - 1}/${y}`;
-}
 
 export function KlsUnitDashboard() {
   const navigate = useNavigate();
@@ -24,7 +21,7 @@ export function KlsUnitDashboard() {
   const [stats, setStats] = useState({ luar: 0, kamsis: 0, topKawasan: '' });
   const [dbReady, setDbReady] = useState(false);
   const [loading, setLoading] = useState(true);
-  const academicYear = getCurrentAcademicYear();
+  const academicYear = getKlkAcademicYear();
 
   useEffect(() => {
     if (!user) return;
@@ -33,7 +30,8 @@ export function KlsUnitDashboard() {
         const { data, error } = await supabase
           .from('klk_student_residency')
           .select('tinggal_luar, kawasan_kediaman')
-          .eq('academic_year', academicYear);
+          .eq('academic_year', academicYear)
+          .eq('is_expired', false);
 
         if (error?.code === '42P01') { setDbReady(false); setLoading(false); return; }
 
@@ -87,6 +85,9 @@ export function KlsUnitDashboard() {
           </motion.div>
         ))}
       </div>
+
+      {/* Advanced Stats */}
+      <KamsisKlkStatsWidget themeColor={KLS_COLOR} />
 
       {/* Quick links */}
       <div className="grid grid-cols-2 gap-3">

@@ -21,6 +21,7 @@ import { toast } from 'react-hot-toast';
 const KlkHotspotMap = lazy(() =>
   import('@/components/klk/KlkHotspotMap').then(m => ({ default: m.KlkHotspotMap }))
 );
+import { getKlkAcademicYear, getKlkYearOptions } from '@/utils/klkUtils';
 
 const KLS_COLOR = '#60A5FA';
 
@@ -39,12 +40,6 @@ function getGreeting() {
   if (h < 15) return 'tengah hari';
   if (h < 19) return 'petang';
   return 'malam';
-}
-
-function getCurrentAcademicYear() {
-  const now = new Date();
-  const y = now.getFullYear();
-  return now.getMonth() >= 6 ? `${y}/${y + 1}` : `${y - 1}/${y}`;
 }
 
 // MOCK DATA — digunakan semasa DB belum ready
@@ -267,7 +262,8 @@ export function KlkDashboard() {
   const [editRecord, setEditRecord] = useState<any | null>(null);  // rekod yang sedang diedit
   const [lainLainCount, setLainLainCount] = useState(0);
 
-  const academicYear = getCurrentAcademicYear();
+  const [selectedYear, setSelectedYear] = useState(getKlkAcademicYear());
+  const academicYear = selectedYear;
   const name = profile?.full_name?.split(' ')[0] ?? 'Exco';
 
   // ── RBAC Check ─────────────────────────────────────────────
@@ -310,6 +306,7 @@ export function KlkDashboard() {
           .from('klk_student_residency')
           .select('id, tinggal_luar, kawasan_kediaman, jabatan, source, created_at, nama_pelajar, no_matrik, no_telefon, kawasan_custom')
           .eq('academic_year', academicYear)
+          .eq('is_expired', false)
           .order('created_at', { ascending: false }),
         supabase
           .from('klk_kawasan')
@@ -438,9 +435,20 @@ export function KlkDashboard() {
           className="text-3xl font-black text-slate-50 mb-1 tracking-tight">
           Selamat {getGreeting()}, {name}! 👋
         </motion.h1>
-        <p className="text-sm text-slate-400 font-medium">
-          Dashboard Kediaman Luar Kampus — Tahun Akademik <strong className="text-slate-300">{academicYear}</strong>
-        </p>
+        <div className="flex items-center gap-3 flex-wrap mt-1">
+          <p className="text-sm text-slate-400 font-medium">
+            Dashboard Kediaman Luar Kampus — Tahun Akademik
+          </p>
+          <select
+            value={selectedYear}
+            onChange={e => setSelectedYear(e.target.value)}
+            className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-2.5 py-1 text-xs font-black text-blue-300 cursor-pointer hover:bg-blue-500/20 transition-colors"
+          >
+            {getKlkYearOptions().map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* DB Not Ready Banner */}

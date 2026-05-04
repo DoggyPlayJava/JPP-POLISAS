@@ -24,14 +24,11 @@ import { toast } from 'react-hot-toast';
 import { useKlkDynamicFields } from '@/hooks/useKlkDynamicFields';
 import { KlkDynamicFieldRenderer } from '@/components/klk/KlkDynamicFieldRenderer';
 import { KawasanSearchSelect } from '@/components/klk/KawasanSearchSelect';
+import { getKlkAcademicYear } from '@/utils/klkUtils';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // KediamanSettingsSection — Tab kediaman dalam SettingsPage
 // ─────────────────────────────────────────────────────────────────────────────────
-function getCurrentAcademicYear() {
-  const now = new Date(); const y = now.getFullYear();
-  return now.getMonth() >= 6 ? `${y}/${y + 1}` : `${y - 1}/${y}`;
-}
 
 function KediamanSettingsSection() {
   const { user, profile } = useAuth();
@@ -48,7 +45,7 @@ function KediamanSettingsSection() {
   const isLuarForm = step === 'form';
   const { fields: dynamicFields, kawasanList } = useKlkDynamicFields(isLuarForm);
 
-  const academicYear = getCurrentAcademicYear();
+  const academicYear = getKlkAcademicYear();
   const semInfo = profile?.intake_year
     ? getSemesterInfo(profile.intake_year, profile.intake_period as 1|2, profile.programme_code === 'FTV')
     : { semester: 0 };
@@ -63,6 +60,7 @@ function KediamanSettingsSection() {
         const { data, error } = await supabase
           .from('klk_student_residency').select('*')
           .eq('user_id', user.id).eq('academic_year', academicYear).eq('semester', semInfo.semester)
+          .eq('is_expired', false)
           .maybeSingle();
         if (error?.code === '42P01') { setStep('choice'); return; }
         if (data) {

@@ -14,12 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { useKlkDynamicFields } from '@/hooks/useKlkDynamicFields';
 import { KlkDynamicFieldRenderer } from '@/components/klk/KlkDynamicFieldRenderer';
 import { KawasanSearchSelect } from '@/components/klk/KawasanSearchSelect';
-
-function getCurrentAcademicYear(): string {
-  const now = new Date();
-  const y = now.getFullYear();
-  return now.getMonth() >= 6 ? `${y}/${y + 1}` : `${y - 1}/${y}`;
-}
+import { getKlkAcademicYear } from '@/utils/klkUtils';
 
 export function KlkResidencyFormPage() {
   const { profile, user } = useAuth();
@@ -38,8 +33,7 @@ export function KlkResidencyFormPage() {
   // Dynamic fields from DB
   const isLuarStep = step === 'form';
   const { fields: dynamicFields, kawasanList } = useKlkDynamicFields(isLuarStep);
-
-  const academicYear = getCurrentAcademicYear();
+  const academicYear = getKlkAcademicYear();
   const semInfo = profile?.intake_year
     ? getSemesterInfo(profile.intake_year, profile.intake_period as 1 | 2, profile.programme_code === 'FTV')
     : { semester: 0, level: 'Junior' as const };

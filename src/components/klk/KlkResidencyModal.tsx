@@ -15,14 +15,9 @@ import { useNavigate } from 'react-router-dom';
 import { useKlkDynamicFields } from '@/hooks/useKlkDynamicFields';
 import { KlkDynamicFieldRenderer } from '@/components/klk/KlkDynamicFieldRenderer';
 import { KawasanSearchSelect } from '@/components/klk/KawasanSearchSelect';
+import { getKlkAcademicYear } from '@/utils/klkUtils';
 
 const KLS_COLOR = '#60A5FA';
-
-function getCurrentAcademicYear(): string {
-  const now = new Date();
-  const y = now.getFullYear();
-  return now.getMonth() >= 6 ? `${y}/${y + 1}` : `${y - 1}/${y}`;
-}
 
 export function KlkResidencyModal() {
   const { profile, user } = useAuth();
@@ -31,6 +26,7 @@ export function KlkResidencyModal() {
   const [step, setStep] = useState<'choice' | 'form' | 'done'>('choice');
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
+  const academicYear = getKlkAcademicYear();
 
   // Form state
   const [alamat, setAlamat] = useState('');
@@ -70,13 +66,13 @@ export function KlkResidencyModal() {
 
     // Semak jika dah ada rekod untuk semester/tahun semasa
     try {
-      const academicYear = getCurrentAcademicYear();
       const { data, error } = await supabase
         .from('klk_student_residency')
-        .select('id')
+        .select('id, updated_at, is_expired')
         .eq('user_id', user.id)
         .eq('academic_year', academicYear)
         .eq('semester', semester)
+        .eq('is_expired', false)
         .maybeSingle();
 
       // Jika table belum wujud (DB belum migrate), jangan tunjuk modal
@@ -84,12 +80,29 @@ export function KlkResidencyModal() {
         setChecking(false); return;
       }
 
-      if (!data) setShow(true); // Belum ada rekod — tunjuk modal
+      if (data) {
+        // Auto-expiry: Pelajar Sem 5+ yang tak update dalam 30 hari
+        if (semester >= 5) {
+          const lastUpdate = new Date(data.updated_at);
+          const daysSince = (Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
+          if (daysSince > 30) {
+            // Arkibkan rekod lama, tunjuk modal semula
+            await supabase.from('klk_student_residency')
+              .update({ is_expired: true, expired_at: new Date().toISOString() })
+              .eq('id', data.id);
+            setShow(true);
+            setChecking(false); return;
+          }
+        }
+        // Rekod masih sah — tak perlu tunjuk modal
+      } else {
+        setShow(true); // Belum ada rekod — tunjuk modal
+      }
     } catch {
       // Fail gracefully — jangan block user
     }
     setChecking(false);
-  }, [profile, user]);
+  }, [profile, user, academicYear]);
 
   useEffect(() => { checkShouldShow(); }, [checkShouldShow]);
 
@@ -105,7 +118,6 @@ export function KlkResidencyModal() {
         profile.intake_period as 1 | 2,
         profile.programme_code === 'FTV',
       );
-      const academicYear = getCurrentAcademicYear();
 
       // Soalan SEMUA (applies_to === 'SEMUA') perlu dijawab walaupun KAMSIS
       const kamsisExtra = { ...extraData };
@@ -156,7 +168,6 @@ export function KlkResidencyModal() {
         profile.intake_period as 1 | 2,
         profile.programme_code === 'FTV',
       );
-      const academicYear = getCurrentAcademicYear();
 
       const { error } = await supabase.from('klk_student_residency').insert({
         user_id: user.id,
