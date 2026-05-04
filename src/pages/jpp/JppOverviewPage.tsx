@@ -140,23 +140,24 @@ export function JppOverviewPage() {
 
   const chartData = useMemo(() => {
     const days = timeRange === '7d' ? 7 : 30;
-    const startDate = subDays(new Date(), days - 1);
-    
-    // Initialize map
+
+    // Helper: format a Date as "MMM dd" in UTC to match how Supabase stores timestamps
+    const fmtUTC = (d: Date) =>
+      d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', timeZone: 'UTC' })
+       .replace(',', '');
+
+    // Build map with UTC-based keys so they align with the stored timestamps
     const dateMap = new Map<string, number>();
     for (let i = 0; i < days; i++) {
-      const d = format(subDays(new Date(), days - 1 - i), 'MMM dd');
-      dateMap.set(d, 0);
+      const d = subDays(new Date(), days - 1 - i);
+      dateMap.set(fmtUTC(d), 0);
     }
 
     rawProfiles.forEach(p => {
       if (!p.created_at) return;
-      const d = parseISO(p.created_at);
-      if (isAfter(d, startDate) || format(d, 'MMM dd') === format(startDate, 'MMM dd')) {
-        const key = format(d, 'MMM dd');
-        if (dateMap.has(key)) {
-          dateMap.set(key, dateMap.get(key)! + 1);
-        }
+      const key = fmtUTC(new Date(p.created_at));
+      if (dateMap.has(key)) {
+        dateMap.set(key, dateMap.get(key)! + 1);
       }
     });
 
