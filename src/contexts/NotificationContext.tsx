@@ -4,11 +4,13 @@ import { useAuth } from './AuthContext';
 import { useNotificationStore } from '@/store/useNotificationStore';
 import type { AppNotification } from '@/lib/notifications';
 
-// (polling dihapuskan — guna Realtime Supabase sahaja)
+// ─── Lightweight Polling interval (ms) ───────────────────────────────────────
+const POLL_INTERVAL_MS = 60_000; // 60 saat
 
 /**
- * Headless Component that sets up Supabase Realtime listeners
- * and pushes the new data into Zustand.
+ * Headless Component that manages notification synchronization.
+ * Uses lightweight polling (count-based) every 60s to detect new notifications.
+ * Only fetches full data when unread count changes — saves bandwidth.
  */
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated } = useAuth();
@@ -16,7 +18,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   // Link to Zustand
   const { setNotifs, setIsLoading, addNotif, updateNotif } = useNotificationStore();
   
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const lastUnreadCountRef = useRef<number>(-1);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchNotifs = useCallback(async () => {
     if (!user?.id) return;
@@ -29,34 +32,52 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       
     if (data) {
       setNotifs(data as AppNotification[]);
+      // Update cached count
+      lastUnreadCountRef.current = data.filter(n => !n.is_read).length;
     }
   }, [user?.id, setNotifs]);
+
+  // ─── Lightweight polling: hanya semak count unread ──────────────────────────
+  const pollUnreadCount = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const { count, error } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+
+      if (error || count === null) return;
+
+      // Jika count berubah, fetch penuh
+      if (count !== lastUnreadCountRef.current) {
+        lastUnreadCountRef.current = count;
+        await fetchNotifs();
+      }
+    } catch {
+      // Silent fail — jangan crash polling
+    }
+  }, [user?.id, fetchNotifs]);
 
   // Initial Fetch on auth
   useEffect(() => {
     if (!isAuthenticated || !user?.id) {
       setNotifs([]);
+      lastUnreadCountRef.current = -1;
       return;
     }
     setIsLoading(true);
     fetchNotifs().finally(() => setIsLoading(false));
   }, [isAuthenticated, user?.id, fetchNotifs, setNotifs, setIsLoading]);
 
-  // Setup Realtime REMOVED to save 1,500 connections!
-  const subscribeRealtime = useCallback(() => {
-    // Instead of realtime, rely on the visibilitychange / focus events below
-  }, [user?.id, addNotif, updateNotif]);
-
-
-
+  // ─── Setup polling + visibility listeners ──────────────────────────────────
   useEffect(() => {
     if (!isAuthenticated || !user?.id) return;
 
-    // Subscribe sekali sahaja bila user authenticate
-    subscribeRealtime();
+    // Start lightweight polling every 60s
+    pollingRef.current = setInterval(pollUnreadCount, POLL_INTERVAL_MS);
 
-    // ─── Hanya re-fetch data bila tab jadi visible semula ─────────────────────
-    // TIDAK recreate channel — channel Realtime masih hidup walaupun tab ditutup
+    // Also re-fetch immediately when tab becomes visible
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         fetchNotifs();
@@ -71,17 +92,15 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('pageshow', handlePageShow);
 
-    // ─── DIHAPUS: window 'focus' — terlalu sensitif, fire setiap klik ─────────
-
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('pageshow', handlePageShow);
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
       }
     };
-  }, [isAuthenticated, user?.id, subscribeRealtime, fetchNotifs]);
+  }, [isAuthenticated, user?.id, pollUnreadCount, fetchNotifs]);
 
   // Render children normally, no context provider wrapper
   return <>{children}</>;

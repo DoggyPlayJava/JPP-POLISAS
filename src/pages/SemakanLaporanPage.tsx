@@ -26,6 +26,7 @@ import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import PemantauanTakwimTab from '@/components/takwim/PemantauanTakwimTab';
 import { AiReviewModal } from '@/components/ai/AiReviewModal';
+import { sendNotificationToUser } from '@/lib/notifications';
 
 // --- Types & Constants ---
 type ProgramStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'CONFIRMED' | 'PENDING_POSTMORTEM' | 'COMPLETED' | 'REQUEST_UNLOCK';
@@ -244,17 +245,17 @@ export function SemakanLaporanPage() {
       return;
     }
 
-    // 2. Suntik Notifikasi ke Database (Hanya jika ada content)
-    if (notificationTitle) {
-      await supabase.from('notifications').insert([{
-        user_id: actionDialog.data.user_id,
-        title: notificationTitle,
-        message: notificationContent,
-        type: actionDialog.type === 'UNLOCK' ? 'UNLOCK_APPROVED' : 'STATUS_UPDATE',
-        module: 'EKPP',
-        link: '/laporan',
-        is_read: false
-      }]);
+    // 2. Suntik Notifikasi ke Database + Push (melalui helper standard)
+    if (notificationTitle && actionDialog.data.user_id) {
+      try {
+        await sendNotificationToUser(actionDialog.data.user_id, {
+          title: notificationTitle,
+          message: notificationContent,
+          type: actionDialog.type === 'UNLOCK' ? 'UNLOCK_APPROVED' : 'STATUS_UPDATE',
+          module: 'EKPP',
+          link: '/laporan',
+        });
+      } catch {} // Jangan block bisnes logic
     }
 
     toast.success("Tindakan Berjaya!", { id: toastId });
@@ -351,15 +352,15 @@ export function SemakanLaporanPage() {
       }
       
       if (r.submitted_by) {
-        await supabase.from('notifications').insert([{
-           user_id: r.submitted_by,
-           title: notificationTitle,
-           message: notificationContent,
-           type: 'STATUS_UPDATE',
-           module: 'EKPP',
-           link: '/laporan',
-           is_read: false
-        }]);
+        try {
+          await sendNotificationToUser(r.submitted_by, {
+            title: notificationTitle,
+            message: notificationContent,
+            type: 'STATUS_UPDATE',
+            module: 'EKPP',
+            link: '/laporan',
+          });
+        } catch {} // Jangan block bisnes logic
       }
       
       loadData(); 

@@ -6,7 +6,7 @@
 import { supabase } from './supabase';
 import { API_BASE_URL } from './utils';
 
-export type NotificationModule = 'EKPP' | 'KEBAJIKAN' | 'AKADEMIK' | 'KEUSAHAWANAN' | 'JPP' | 'SYSTEM' | 'POLYMART';
+export type NotificationModule = 'EKPP' | 'KEBAJIKAN' | 'AKADEMIK' | 'KEUSAHAWANAN' | 'JPP' | 'SYSTEM' | 'POLYMART' | 'KAMSIS' | 'KLK';
 
 export interface NotificationPayload {
   title: string;
@@ -52,12 +52,15 @@ async function firePush(user_id: string, payload: NotificationPayload): Promise<
       subs.map(sub =>
         fetch(`${API_BASE_URL}/api/send-push-notification`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
           body: JSON.stringify({
             subscription: { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
             title: payload.title,
             body:  payload.message,
-            data:  { link: payload.link, module: payload.module, type: payload.type },
+            data:  { url: payload.link || '/portal', link: payload.link, module: payload.module, type: payload.type },
           })
         }).catch(err => console.error("Error pushing:", err))
       )

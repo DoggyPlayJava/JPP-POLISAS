@@ -13,6 +13,7 @@ import { getSemesterInfo } from '@/types';
 import { toast } from 'react-hot-toast';
 import { KamsisSettingsModal } from '@/components/kamsis/KamsisSettingsModal';
 import { useAcademicSession } from '@/contexts/AcademicSessionContext';
+import { sendNotificationToUser } from '@/lib/notifications';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -338,6 +339,28 @@ export function JppAsramaPage() {
       await supabase.from('kamsis_applications').update({ status })
         .eq('user_id', student.id).eq('session', activeSession).eq('semester', semesterString);
       toast.success(`Status dikemaskini kepada ${status}`);
+
+      // ── Notifikasi kepada pelajar ──
+      try {
+        const titleMap: Record<string, string> = {
+          APPROVED: '✅ Permohonan Asrama Diluluskan',
+          REJECTED: '❌ Permohonan Asrama Ditolak',
+          APPEAL_REJECTED: '❌ Rayuan Asrama Ditolak',
+        };
+        const msgMap: Record<string, string> = {
+          APPROVED: `Tahniah! Permohonan asrama anda untuk sesi ${activeSession} telah diluluskan.`,
+          REJECTED: `Permohonan asrama anda untuk sesi ${activeSession} tidak berjaya. Anda boleh membuat rayuan jika tetingkap rayuan dibuka.`,
+          APPEAL_REJECTED: `Rayuan permohonan asrama anda untuk sesi ${activeSession} tidak berjaya. Sila hubungi pihak pengurusan untuk maklumat lanjut.`,
+        };
+        await sendNotificationToUser(student.id, {
+          title: titleMap[status],
+          message: msgMap[status],
+          type: 'KAMSIS_STATUS',
+          module: 'KAMSIS',
+          link: '/dashboard',
+        });
+      } catch {} // Jangan block bisnes logic
+
       await fetchAll();
     } catch {
       toast.error('Gagal kemaskini status.');

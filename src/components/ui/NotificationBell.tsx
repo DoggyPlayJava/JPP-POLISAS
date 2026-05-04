@@ -20,6 +20,8 @@ const MODULE_FALLBACK: Record<NotificationModule, string> = {
   JPP:          '/portal',
   SYSTEM:       '/dashboard',
   POLYMART:     '/polymart',
+  KAMSIS:       '/dashboard',
+  KLK:          '/klk',
 };
 
 function getNotifLink(notif: AppNotification): string | null {
@@ -36,6 +38,8 @@ const MODULE_CONFIG: Record<NotificationModule, { label: string; color: string; 
   JPP:          { label: 'JPP HQ',       color: '#8b1a1a', bg: 'rgba(139,26,26,0.12)',    dot: '#ef4444' },
   SYSTEM:       { label: 'Sistem',       color: '#94a3b8', bg: 'rgba(148,163,184,0.10)', dot: '#94a3b8' },
   POLYMART:     { label: 'PolyMart',     color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b' },
+  KAMSIS:       { label: 'i-KAMSIS',     color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)',   dot: '#8B5CF6' },
+  KLK:          { label: 'KLK',          color: '#14b8a6', bg: 'rgba(20,184,166,0.12)',   dot: '#14b8a6' },
 };
 
 function ModuleBadge({ module }: { module: NotificationModule }) {

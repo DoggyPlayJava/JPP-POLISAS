@@ -22,6 +22,7 @@ import { PortalNavbar } from '@/components/portal/PortalNavbar';
 import { PortalFooter } from '@/components/portal/PortalFooter';
 import { PortalSkeleton } from '@/components/portal/PortalSkeleton';
 import { KamsisAppealModal } from '@/components/kamsis/KamsisAppealModal';
+import { PushPermissionModal } from '@/components/ui/PushPermissionModal';
 
 export function PortalPage() {
   const { profile, isSuperAdmin, hasKebajikanAccess } = useAuth();
@@ -465,6 +466,9 @@ export function PortalPage() {
           />
         )}
       </AnimatePresence>
+
+      {/* Push Notification Aggressive Prompt */}
+      <PushPermissionModal />
 
     </div>
   );

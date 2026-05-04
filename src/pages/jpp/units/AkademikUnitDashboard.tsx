@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { hexToRgba } from '@/lib/utils';
+import { sendNotificationToUser } from '@/lib/notifications';
 import {
   Trophy, Users, Star, CheckCircle, XCircle, Clock,
   Settings, LayoutDashboard, QrCode, AlertCircle, Loader2,
@@ -237,6 +238,20 @@ function PencapaianReviewPanel() {
       }
 
       toast.success(status === 'DISAHKAN' ? `✅ Disahkan! +${merit} merit diberikan.` : 'Pencapaian ditolak.');
+
+      // ── Notifikasi kepada pelajar ──
+      try {
+        await sendNotificationToUser(item.user_id, {
+          title: status === 'DISAHKAN' ? '✅ Pencapaian Disahkan' : '❌ Pencapaian Ditolak',
+          message: status === 'DISAHKAN'
+            ? `Pencapaian "${item.nama_pencapaian}" telah disahkan! +${merit} merit diberikan.`
+            : `Pencapaian "${item.nama_pencapaian}" ditolak.${reason ? ' Sebab: ' + reason : ''}`,
+          type: 'MERIT_REVIEW',
+          module: 'AKADEMIK',
+          link: '/akademik/pencapaian',
+        });
+      } catch {} // Jangan block bisnes logic
+
       load();
     } catch (e: any) {
       console.error('[handleVerify] error:', e);
@@ -427,6 +442,20 @@ function UnlockRequestsPanel() {
       toast.success(decision === 'DILULUSKAN'
         ? '✅ Diluluskan! Pelajar mempunyai 48 jam untuk edit/padam.'
         : '❌ Permohonan ditolak.');
+
+      // ── Notifikasi kepada pelajar ──
+      try {
+        await sendNotificationToUser(req.user_id, {
+          title: decision === 'DILULUSKAN' ? '🔓 Permohonan Buka Kunci Diluluskan' : '⛔ Permohonan Buka Kunci Ditolak',
+          message: decision === 'DILULUSKAN'
+            ? `Permohonan buka kunci untuk "${req.pencapaian?.nama_pencapaian}" diluluskan. Anda ada 48 jam untuk mengedit.`
+            : `Permohonan buka kunci untuk "${req.pencapaian?.nama_pencapaian}" ditolak.${note ? ' Sebab: ' + note : ''}`,
+          type: 'UNLOCK_DECISION',
+          module: 'AKADEMIK',
+          link: '/akademik/pencapaian',
+        });
+      } catch {}
+
       load();
     } catch (e: any) {
       toast.error(e.message || 'Ralat.');
@@ -473,6 +502,18 @@ function UnlockRequestsPanel() {
       }).eq('id', req.id);
 
       toast.success(`Markah dikemaskini ke ${newMerit}!`);
+
+      // ── Notifikasi kepada pelajar ──
+      try {
+        await sendNotificationToUser(req.user_id, {
+          title: '📝 Markah Merit Dikemaskini',
+          message: `Markah merit untuk "${req.pencapaian?.nama_pencapaian}" telah dikemaskini kepada ${newMerit} mata.`,
+          type: 'MERIT_ADJUSTED',
+          module: 'AKADEMIK',
+          link: '/akademik/pencapaian',
+        });
+      } catch {}
+
       load();
     } catch (e: any) {
       toast.error('Gagal kemaskini markah: ' + e.message);
