@@ -10,7 +10,7 @@ import { Bell, BellRing, X, Smartphone, Zap, Shield, ChevronRight, Loader2 } fro
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 export function PushPermissionModal() {
-  const { isSupported, permission, isSubscribed, requestPermission } = usePushNotifications();
+  const { isSupported, permission, isSubscribed, pushServiceError, requestPermission } = usePushNotifications();
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<'granted' | 'denied' | null>(null);
@@ -20,6 +20,10 @@ export function PushPermissionModal() {
     if (!isSupported) return;                    // Browser tak support
     if (permission === 'granted' && isSubscribed) return; // Dah subscribe ✓
     if (permission === 'denied') return;         // User dah block — tak boleh buat apa
+    if (pushServiceError) return;                // Push service down (FCM blocked) — jangan ganggu user
+
+    // Tunggu isSubscribed selesai loading (null = belum tahu)
+    if (isSubscribed === null) return;
 
     // Semak snooze 24 jam
     const snoozedAt = localStorage.getItem('push_prompt_snoozed');
@@ -31,7 +35,7 @@ export function PushPermissionModal() {
     // Delay 2s supaya page load dulu
     const timer = setTimeout(() => setShow(true), 2000);
     return () => clearTimeout(timer);
-  }, [isSupported, permission, isSubscribed]);
+  }, [isSupported, permission, isSubscribed, pushServiceError]);
 
   const handleEnable = useCallback(async () => {
     setLoading(true);

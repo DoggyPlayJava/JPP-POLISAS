@@ -1,7 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { SpeedInsights } from '@vercel/speed-insights/react';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute, PublicRoute } from '@/components/RouteGuards';
@@ -421,7 +420,6 @@ function App() {
                           },
                         }}
                       />
-                      <SpeedInsights />
                     </KarnivalProvider>
                   </JppConfigProvider>
                 </AiSettingsProvider>
