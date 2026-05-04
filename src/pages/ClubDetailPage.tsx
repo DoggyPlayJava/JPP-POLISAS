@@ -155,7 +155,7 @@ export function ClubDetailPage() {
           <div className="text-center md:text-left space-y-6 pt-4">
             <div className="flex flex-wrap justify-center md:justify-start gap-3">
               <Badge className="bg-white/20 text-inherit border-none uppercase tracking-[0.2em] text-[10px] font-black px-6 py-2 backdrop-blur-md rounded-full">{club.category}</Badge>
-              <Badge className="bg-black/20 text-inherit border-none text-[10px] font-black uppercase tracking-widest px-6 py-2 rounded-full">Sesi 2025/2026</Badge>
+              <Badge className="bg-black/20 text-inherit border-none text-[10px] font-black uppercase tracking-widest px-6 py-2 rounded-full">Sesi {(() => { const now = new Date(); const y = now.getFullYear(); const m = now.getMonth(); return m >= 5 ? `${y}/${y+1}` : `${y-1}/${y}`; })()}</Badge>
             </div>
             <h1 className="text-6xl md:text-9xl font-black tracking-tighter leading-[0.8] mb-4" style={{ color: headerTextColor }}>
               {club.name}
@@ -179,7 +179,7 @@ export function ClubDetailPage() {
         <StatItem label="Jumlah Ahli Aktif" val={committee.length} icon={Users} color="text-primary" />
         <StatItem label="Aktiviti Berdaftar" val={activities.length} icon={Activity} color="text-emerald-500" />
         <StatItem label="Barisan MT/Exco" val={mtMembers.length + excoMembers.length} icon={ShieldCheck} color="text-blue-500" />
-        <StatItem label="Ranking Kelab" val="#4" icon={Award} color="text-amber-500" />
+        <StatItem label="Ranking Kelab" val="—" icon={Award} color="text-amber-500" />
       </div>
 
       {/* ── GRID ORGANISASI ── */}

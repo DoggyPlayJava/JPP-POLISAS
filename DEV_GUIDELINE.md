@@ -1144,22 +1144,26 @@ Modul KLK (Kediaman Luar Kampus) digunakan untuk memantau status kediaman pelaja
 
 ### 21.2 Ciri-ciri Utama
 
-1. **Deklarasi Semesterly (Wajib)**
-   - Setiap pelajar **Sem 2 dan ke atas** (termasuk JPP) wajib mendeklarasikan status kediaman mereka pada setiap permulaan semester.
-   - Pengecualian wajib: Pelajar Semester 1, `SUPER_ADMIN_JPP`, dan `STAFF`.
-   - Pop-up deklarasi (`KlkResidencyModal`) muncul secara automatik selepas log masuk jika data semester semasa belum diisi.
+1. **Pengasingan Sesi (Decoupling dari KAMSIS)**
+   - KLK **tidak lagi** bergantung pada sesi akademik global KAMSIS (yang diuruskan di Papan Rujukan Asrama).
+   - Tahun akademik KLK dikira secara automatik berdasarkan tarikh semasa (`getKlkAcademicYear` dalam `klkUtils.ts`). Data KLK dihimpunkan mengikut tahun, bukan semester.
+   - Papan pemuka KLK mempunyai pemilih tahun (dropdown) berasingan untuk melihat data historik tanpa menjejaskan modul lain.
 
-2. **Form Builder & Hybrid Data**
+2. **Deklarasi & Auto-Luput (Auto-Expiry)**
+   - Setiap pelajar **Sem 2 dan ke atas** wajib mendeklarasikan status kediaman. Pengecualian: Pelajar Semester 1, `SUPER_ADMIN_JPP`, dan `STAFF`.
+   - **Auto-Expiry Sem 5+:** Pelajar yang berada di Semester 5 ke atas wajib mengemaskini status mereka **setiap 30 hari** (atau setiap semester baru). Jika rekod lebih dari 30 hari, ia diarkibkan (`is_expired = true`) dan pelajar akan diminta mengisi semula form.
+
+3. **Form Builder & Hybrid Data**
    - Soalan dinamik diuruskan oleh Exco di `/klk/tetapan`.
-   - Jawapan pelajar untuk soalan dinamik ini disimpan dalam lajur `extra_data` (`JSONB`) di dalam `klk_student_residency`.
+   - Jawapan pelajar disimpan dalam lajur `extra_data` (`JSONB`) di dalam `klk_student_residency`.
 
-3. **Pengurusan Kawasan "Lain-lain"**
-   - Jika pelajar memilih "Lain-lain" (`LAIN_LAIN`) pada dropdown kawasan (`KawasanSearchSelect`), mereka boleh memasukkan kawasan sendiri.
-   - Sistem menyediakan notifikasi dan UI khas di tetapan (`get_klk_lain_lain_summary`) untuk Exco memantau dan memigrasikan data "Lain-lain" ini menjadi kawasan rasmi (`migrate_klk_lain_lain` RPC).
+4. **Pengurusan Kawasan "Lain-lain"**
+   - Pelajar yang memilih "Lain-lain" (`LAIN_LAIN`) boleh memasukkan nama kawasan secara manual (`kawasan_custom`).
+   - Sistem menyediakan UI khusus (`get_klk_lain_lain_summary`) untuk Exco memantau dan memigrasikan data "Lain-lain" ini menjadi kawasan rasmi (`migrate_klk_lain_lain` RPC).
 
-4. **Public Statistics (Boleh diakses Awam / QR)**
-   - Akses: `/klk/statistik` (berbeza dari admin statistik)
-   - Menggunakan RPC `SECURITY DEFINER` (`get_klk_public_stats`) untuk mendapatkan agregat data tanpa mendedahkan maklumat sensitif individu, selaras dengan polisi RLS.
+5. **Public Statistics (Akses Awam / QR)**
+   - Akses: `/klk/statistik` (berbeza dari admin statistik).
+   - Menggunakan RPC `SECURITY DEFINER` (`get_klk_public_stats`) untuk membekalkan agregat data tanpa mendedahkan identiti.
 
 ### 21.3 RBAC KLK
 
@@ -1172,4 +1176,12 @@ Modul KLK (Kediaman Luar Kampus) digunakan untuk memantau status kediaman pelaja
 
 ---
 
-*Dikemas kini: Mei 2026 — Tambahan Modul KLK dengan Public Stats, Form Builder hibrid, dan pengurusan data kawasan "Lain-lain".*
+## 22. Pengurusan Sesi KAMSIS (Papan Rujukan Asrama)
+
+Berbeza dengan KLK yang automatik, sesi permohonan KAMSIS kini diuruskan **secara terus** oleh Exco Kediaman di `JppAsramaPage.tsx` (Papan Rujukan Asrama) melalui input "Sesi" dan dropdown "Semester" pada header. 
+
+Pengasingan kawalan ini membolehkan Exco KAMSIS mengurus sesi pengambilan mereka sendiri tanpa mengubah tetapan modul JPP lain secara global.
+
+---
+
+*Dikemas kini: Mei 2026 — Decoupling KLK dari global session, pelaksanaan Auto-Expiry Sem 5+, dan kawalan sesi KAMSIS inline.*

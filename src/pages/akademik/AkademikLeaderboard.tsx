@@ -39,7 +39,7 @@ function RankBadge({ rank }: { rank: number }) {
 }
 
 // ─── Leaderboard tabs ─────────────────────────────────────────
-type LeaderTab = 'OVERALL' | 'AKADEMIK' | 'QR' | 'CGPA';
+type LeaderTab = 'OVERALL' | 'AKADEMIK' | 'QR' | 'KELAB' | 'CGPA';
 
 interface LeaderEntry {
   id: string;
@@ -96,8 +96,9 @@ export function AkademikLeaderboard() {
         const idx = (data || []).findIndex(e => e.id === profile?.id);
         setMyRank(idx !== -1 ? idx + 1 : null);
       } else {
-        // AKADEMIK or QR: sum merit_transactions by source
-        const source = tab === 'AKADEMIK' ? 'AKADEMIK' : 'QR_SCAN';
+        // AKADEMIK, QR, or KELAB: sum merit_transactions by source
+        const sourceMap: Record<string, string> = { AKADEMIK: 'AKADEMIK', QR: 'QR_SCAN', KELAB: 'KELAB' };
+        const source = sourceMap[tab];
         const { data } = await supabase
           .from('merit_transactions')
           .select('user_id, points, profiles(id, full_name, department, avatar_url)')
@@ -169,6 +170,7 @@ export function AkademikLeaderboard() {
           { id: 'OVERALL',  label: 'Keseluruhan', icon: Trophy },
           { id: 'AKADEMIK', label: 'Pencapaian',  icon: Award },
           { id: 'QR',       label: 'QR Merit',    icon: Star },
+          { id: 'KELAB',    label: 'Merit Kelab',  icon: Users },
           { id: 'CGPA',     label: 'HPNM',        icon: BarChart3 },
         ] as const).map(({ id, label, icon: Icon }) => (
           <button

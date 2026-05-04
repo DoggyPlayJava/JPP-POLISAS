@@ -137,7 +137,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
   const emptyForm = {
     title: '', description: '', status: 'perancangan', priority: 'sederhana',
     start_date: '', end_date: '', venue: '', tindakan: '', imageUrls: [],
-    qr_enabled: false, qr_open_at: '', qr_close_at: '', merit_kelab: 0,
+    qr_enabled: false, qr_open_at: '', qr_close_at: '', merit_kelab: 0, merit_eakademik: 0,
   };
   const [form, setForm] = useState(emptyForm);
 
@@ -178,6 +178,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
       qr_open_at: act.qr_open_at ? act.qr_open_at.replace('Z','').substring(0,16) : '',
       qr_close_at: act.qr_close_at ? act.qr_close_at.replace('Z','').substring(0,16) : '',
       merit_kelab: act.merit_kelab || 0,
+      merit_eakademik: act.merit_eakademik || 0,
     });
     setDialogOpen(true);
   };
@@ -249,6 +250,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
         qr_open_at: form.qr_open_at ? new Date(form.qr_open_at).toISOString() : null,
         qr_close_at: form.qr_close_at ? new Date(form.qr_close_at).toISOString() : null,
         merit_kelab: Number(form.merit_kelab) || 0,
+        merit_eakademik: Number(form.merit_eakademik) || 0,
       };
 
       if (editTarget) {
@@ -262,6 +264,34 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
       }
       queryCache.invalidate('dashboard_');
       setDialogOpen(false);
+
+      // Auto-submit merit rasmi application if merit_eakademik > 0 and status = selesai
+      if (Number(form.merit_eakademik) > 0 && form.status === 'selesai') {
+        const actId = editTarget?.id;
+        if (actId) {
+          // Check if application already exists
+          const { data: existing } = await supabase
+            .from('merit_program_applications')
+            .select('id')
+            .eq('program_id', actId)
+            .eq('program_type', 'aktiviti')
+            .maybeSingle();
+          
+          if (!existing) {
+            await supabase.from('merit_program_applications').insert({
+              program_id: actId,
+              program_type: 'aktiviti',
+              program_title: form.title.trim(),
+              applied_by: user?.id,
+              merit_value: Number(form.merit_eakademik),
+              justification: form.description.trim() || null,
+              status: 'pending',
+            });
+            toast.success('📋 Permohonan Merit Rasmi dihantar untuk kelulusan!', { duration: 5000 });
+          }
+        }
+      }
+
       load();
     } catch (err: any) {
       toast.error(err.message || 'Gagal menyimpan.');
@@ -587,19 +617,35 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
                   </div>
                 )}
 
-                {/* Merit Kelab */}
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5">
-                    <Trophy className="w-3 h-3 text-amber-500" />
-                    Merit Kelab (0 = tiada merit)
-                  </Label>
-                  <Input
-                    type="number" min={0} max={50}
-                    value={form.merit_kelab}
-                    onChange={e => setForm({ ...form, merit_kelab: Number(e.target.value) })}
-                    placeholder="Cth: 5"
-                    className="h-10 rounded-xl bg-muted/40 border-border/60 font-bold"
-                  />
+                {/* Merit Grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5">
+                      <Trophy className="w-3 h-3 text-amber-500" />
+                      Merit Kelab (auto)
+                    </Label>
+                    <Input
+                      type="number" min={0} max={50}
+                      value={form.merit_kelab}
+                      onChange={e => setForm({ ...form, merit_kelab: Number(e.target.value) })}
+                      placeholder="0"
+                      className="h-10 rounded-xl bg-muted/40 border-border/60 font-bold"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1.5">
+                      <Trophy className="w-3 h-3 text-emerald-500" />
+                      Merit Rasmi (perlu kelulusan)
+                    </Label>
+                    <Input
+                      type="number" min={0} max={100}
+                      value={form.merit_eakademik}
+                      onChange={e => setForm({ ...form, merit_eakademik: Number(e.target.value) })}
+                      placeholder="0"
+                      className="h-10 rounded-xl bg-muted/40 border-border/60 font-bold"
+                    />
+                    <p className="text-[9px] text-muted-foreground/60">Akademik akan vouch, Kediaman luluskan</p>
+                  </div>
                 </div>
               </div>
 
@@ -728,7 +774,7 @@ function ActivityKelabCard({ act, currentUserId, effectiveRole, onEdit, onDelete
           </div>
 
           {/* QR BADGE + MERIT */}
-          {(act.qr_enabled || act.merit_kelab > 0) && (
+          {(act.qr_enabled || act.merit_kelab > 0 || act.merit_eakademik > 0) && (
             <div className="flex items-center gap-2 flex-wrap">
               {act.qr_enabled && (
                 <button
@@ -742,7 +788,13 @@ function ActivityKelabCard({ act, currentUserId, effectiveRole, onEdit, onDelete
               {act.merit_kelab > 0 && (
                 <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[9px] font-black uppercase tracking-widest text-amber-600">
                   <Trophy size={9} />
-                  +{act.merit_kelab} Merit
+                  +{act.merit_kelab} Kelab
+                </span>
+              )}
+              {act.merit_eakademik > 0 && (
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest text-emerald-700">
+                  <Trophy size={9} />
+                  +{act.merit_eakademik} Rasmi
                 </span>
               )}
             </div>

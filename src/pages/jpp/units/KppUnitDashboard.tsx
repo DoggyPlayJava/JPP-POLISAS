@@ -23,6 +23,7 @@ import { ALL_CLUBS } from '@/types';
 import { subDays, startOfMonth } from 'date-fns';
 import { cn, hexToRgba } from '@/lib/utils';
 import { UNIT_CFG } from '../jppConfig';
+import { MeritRasmiReviewPanel } from '@/components/program/MeritRasmiReviewPanel';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface KppActivity {
@@ -207,7 +208,7 @@ export function KppUnitDashboard() {
   const { isSuperAdmin, profile } = useAuth();
   const navigate = useNavigate();
 
-  type KppSubTab = 'ringkasan' | 'rekod' | 'kelab' | 'tetapan';
+  type KppSubTab = 'ringkasan' | 'rekod' | 'kelab' | 'merit-rasmi' | 'tetapan';
   const [kppSubTab, setKppSubTab] = useState<KppSubTab>('ringkasan');
   const [rekodView, setRekodView] = useState<'aktiviti' | 'laporan'>('aktiviti');
   const [kppClubFilter, setKppClubFilter] = useState('ALL');
@@ -416,6 +417,7 @@ export function KppUnitDashboard() {
           { id: 'ringkasan', label: 'Ringkasan' },
           { id: 'rekod',     label: 'Rekod & Laporan' },
           { id: 'kelab',     label: 'Direktori Kelab' },
+          { id: 'merit-rasmi', label: 'Merit Rasmi' },
           { id: 'tetapan',   label: 'Tetapan KPP' },
         ] as { id: KppSubTab; label: string }[]).map(t => (
           <SubTabBtn key={t.id} id={t.id} label={t.label} active={kppSubTab === t.id} onClick={() => setKppSubTab(t.id)} />
@@ -682,6 +684,16 @@ export function KppUnitDashboard() {
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+      {/* ══════════════════════════════════════════════
+          SUB-TAB: MERIT RASMI
+      ══════════════════════════════════════════════ */}
+      {kppSubTab === 'merit-rasmi' && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="rounded-[2rem] border p-6 bg-card border-border/50">
+            <MeritRasmiReviewPanel reviewerUnit="KPP" themeColor={KPP_COLOR} />
           </div>
         </div>
       )}

@@ -1355,7 +1355,13 @@ export type Database = {
           image_urls: string[] | null
           is_archived: boolean | null
           location: string | null
+          merit_eakademik: number | null
+          merit_kelab: number | null
           priority: string | null
+          qr_close_at: string | null
+          qr_enabled: boolean | null
+          qr_open_at: string | null
+          qr_token: string | null
           start_date: string | null
           status: string | null
           tindakan: string | null
@@ -1373,7 +1379,13 @@ export type Database = {
           image_urls?: string[] | null
           is_archived?: boolean | null
           location?: string | null
+          merit_eakademik?: number | null
+          merit_kelab?: number | null
           priority?: string | null
+          qr_close_at?: string | null
+          qr_enabled?: boolean | null
+          qr_open_at?: string | null
+          qr_token?: string | null
           start_date?: string | null
           status?: string | null
           tindakan?: string | null
@@ -1391,7 +1403,13 @@ export type Database = {
           image_urls?: string[] | null
           is_archived?: boolean | null
           location?: string | null
+          merit_eakademik?: number | null
+          merit_kelab?: number | null
           priority?: string | null
+          qr_close_at?: string | null
+          qr_enabled?: boolean | null
+          qr_open_at?: string | null
+          qr_token?: string | null
           start_date?: string | null
           status?: string | null
           tindakan?: string | null

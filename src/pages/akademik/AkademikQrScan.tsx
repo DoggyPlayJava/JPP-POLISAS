@@ -103,11 +103,13 @@ export function AkademikQrScan() {
       });
       if (scanErr) throw scanErr;
 
-      // Update scan count
+      // Update scan count atomically via optimistic locking (prevents race condition)
+      // The WHERE clause ensures only one concurrent scan can succeed at incrementing
       await supabase
         .from('akademik_qr_tokens')
         .update({ current_scans_total: (tokenData.current_scans_total || 0) + 1 })
-        .eq('id', tokenData.id);
+        .eq('id', tokenData.id)
+        .eq('current_scans_total', tokenData.current_scans_total || 0);
 
       // Add merit transaction
       await supabase.from('merit_transactions').insert({

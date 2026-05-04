@@ -4,12 +4,12 @@
  *
  * Aliran:
  *   Kelab submit → pending
- *   → Akademik: vouch / not_vouch   (supporter role)
+ *   → KPP: vouch / not_vouch   (supporter role)
  *   → Kediaman: fully_approved / rejected  (kuasa mutlak)
  *   → Trigger auto-credit merit_eakademik kepada semua attendees
  *
  * Props:
- *   reviewerUnit  — 'AKADEMIK' | 'KEDIAMAN'
+ *   reviewerUnit  — 'KPP' | 'KEDIAMAN'
  *   themeColor    — hex warna panel
  */
 
@@ -37,9 +37,9 @@ interface Application {
   merit_value: number;
   justification: string | null;
   status: string;
-  akademik_reviewer_id: string | null;
-  akademik_reviewed_at: string | null;
-  akademik_vouch_notes: string | null;
+  kpp_reviewer_id: string | null;
+  kpp_reviewed_at: string | null;
+  kpp_vouch_notes: string | null;
   kediaman_reviewer_id: string | null;
   kediaman_reviewed_at: string | null;
   kediaman_notes: string | null;
@@ -50,15 +50,15 @@ interface Application {
 }
 
 interface Props {
-  reviewerUnit: 'AKADEMIK' | 'KEDIAMAN';
+  reviewerUnit: 'KPP' | 'KEDIAMAN';
   themeColor: string;
 }
 
 // ─── Status helpers ────────────────────────────────────────────────────────────
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
   pending:             { label: 'Menunggu',          color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-  akademik_vouched:    { label: 'Akademik Vouched',  color: '#6366f1', bg: 'rgba(99,102,241,0.1)' },
-  akademik_not_vouched:{ label: 'Tidak Divouched',   color: '#f43f5e', bg: 'rgba(244,63,94,0.1)'  },
+  kpp_vouched:         { label: 'KPP Vouched',       color: '#6366f1', bg: 'rgba(99,102,241,0.1)' },
+  kpp_not_vouched:     { label: 'KPP Tidak Vouch',   color: '#f43f5e', bg: 'rgba(244,63,94,0.1)'  },
   fully_approved:      { label: 'Diluluskan',        color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
   rejected:            { label: 'Ditolak',           color: '#ef4444', bg: 'rgba(239,68,68,0.1)'  },
 };
@@ -73,9 +73,9 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
   const [noteInput, setNoteInput] = useState<Record<string, string>>({});
 
   // Which statuses to show depends on reviewer unit
-  const pendingStatuses = reviewerUnit === 'AKADEMIK'
+  const pendingStatuses = reviewerUnit === 'KPP'
     ? ['pending']
-    : ['akademik_vouched', 'akademik_not_vouched', 'pending'];
+    : ['kpp_vouched', 'kpp_not_vouched', 'pending'];
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -114,18 +114,18 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
 
   // ─── Actions ────────────────────────────────────────────────────────────────
 
-  const handleAkademikVouch = async (app: Application, vouched: boolean) => {
+  const handleKppVouch = async (app: Application, vouched: boolean) => {
     if (saving) return;
     setSaving(app.id);
-    const newStatus = vouched ? 'akademik_vouched' : 'akademik_not_vouched';
+    const newStatus = vouched ? 'kpp_vouched' : 'kpp_not_vouched';
     const note = noteInput[app.id] || '';
 
     try {
       const { error } = await supabase.from('merit_program_applications').update({
         status: newStatus,
-        akademik_reviewer_id: user?.id,
-        akademik_reviewed_at: new Date().toISOString(),
-        akademik_vouch_notes: note || null,
+        kpp_reviewer_id: user?.id,
+        kpp_reviewed_at: new Date().toISOString(),
+        kpp_vouch_notes: note || null,
       }).eq('id', app.id);
       if (error) throw error;
 
@@ -133,8 +133,8 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
       await supabase.from('merit_review_log').insert({
         application_id: app.id,
         reviewer_id: user?.id,
-        reviewer_unit: 'AKADEMIK',
-        action: vouched ? 'vouched' : 'not_vouched',
+        reviewer_unit: 'KPP',
+        action: vouched ? 'kpp_vouched' : 'kpp_not_vouched',
         notes: note || null,
       });
 
@@ -184,22 +184,27 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
           .eq('merit_rasmi_credited', false);
 
         if (attendees && attendees.length > 0) {
-          // Credit each attendee
-          for (const att of attendees) {
-            await supabase.rpc('increment_merit_by_source', {
-              p_user_id: att.user_id,
-              p_points: app.merit_value,
-              p_source: 'PROGRAM_RASMI',
-            });
-            await supabase.from('merit_transactions').insert({
-              user_id: att.user_id,
-              points: app.merit_value,
-              reason: `Merit Rasmi: ${app.program_title}`,
-              source: 'PROGRAM_RASMI',
-              reference_id: app.program_id,
-              actor_name: profile?.full_name || 'Exco Kediaman',
-            });
-          }
+          // Batch insert merit_transactions for all attendees
+          const txRows = attendees.map(att => ({
+            user_id: att.user_id,
+            points: app.merit_value,
+            reason: `Merit Rasmi: ${app.program_title}`,
+            source: 'PROGRAM_RASMI',
+            reference_id: app.program_id,
+            actor_name: profile?.full_name || 'Exco Kediaman',
+          }));
+          const { error: txErr } = await supabase.from('merit_transactions').insert(txRows);
+          if (txErr) console.error('Batch merit_transactions error:', txErr.message);
+
+          // Increment merit via RPC for each attendee (correct parameter names)
+          await Promise.all(attendees.map(att =>
+            supabase.rpc('increment_merit_by_source', {
+              p_uid: att.user_id,
+              p_delta: app.merit_value,
+              p_src: 'PROGRAM_RASMI',
+            })
+          ));
+
           // Mark credited
           await supabase.from('program_attendees')
             .update({ merit_rasmi_credited: true })
@@ -227,7 +232,7 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
   // ─── Filtered lists ──────────────────────────────────────────────────────────
   const pending  = apps.filter(a => pendingStatuses.includes(a.status));
   const resolved = apps.filter(a => {
-    if (reviewerUnit === 'AKADEMIK') return ['akademik_vouched','akademik_not_vouched'].includes(a.status);
+    if (reviewerUnit === 'KPP') return ['kpp_vouched','kpp_not_vouched'].includes(a.status);
     return ['fully_approved','rejected'].includes(a.status);
   });
 
@@ -243,7 +248,7 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: themeColor }}>
-            {reviewerUnit === 'AKADEMIK' ? 'Exco Akademik — Voucher' : 'Exco Kediaman — Kuasa Mutlak'}
+            {reviewerUnit === 'KPP' ? 'Exco KPP — Voucher' : 'Exco Kediaman — Kuasa Mutlak'}
           </p>
           <h3 className="text-xl font-black text-white mt-0.5">Permohonan Merit Rasmi</h3>
         </div>
@@ -260,8 +265,8 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
       <div className="rounded-2xl p-4 flex items-start gap-3" style={{ background: hexToRgba(themeColor, 0.06), border: `1px solid ${hexToRgba(themeColor, 0.2)}` }}>
         <Info size={14} style={{ color: themeColor }} className="shrink-0 mt-0.5" />
         <p className="text-[10px] text-white/50 leading-relaxed">
-          {reviewerUnit === 'AKADEMIK'
-            ? 'Sebagai Exco Akademik, anda berperanan sebagai Supporter (Voucher). Vouch bermakna anda menyokong permohonan ini untuk dipertimbangkan oleh Exco Kediaman. Kuasa mutlak kelulusan adalah pada Exco Kediaman.'
+          {reviewerUnit === 'KPP'
+            ? 'Sebagai Exco KPP, anda berperanan sebagai Supporter (Voucher). Vouch bermakna anda menyokong permohonan ini untuk dipertimbangkan oleh Exco Kediaman. Kuasa mutlak kelulusan adalah pada Exco Kediaman.'
             : 'Sebagai Exco Kediaman, anda mempunyai kuasa mutlak untuk meluluskan atau menolak permohonan merit rasmi. Merit akan dikreditkan secara automatik kepada semua peserta yang hadir sebaik sahaja anda meluluskan.'
           }
         </p>
@@ -287,7 +292,7 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
                   noteValue={noteInput[app.id] || ''}
                   onToggle={() => setExpanded(expanded === app.id ? null : app.id)}
                   onNoteChange={(v) => setNoteInput(prev => ({ ...prev, [app.id]: v }))}
-                  onAkademikVouch={handleAkademikVouch}
+                  onAkademikVouch={handleKppVouch}
                   onKediamanDecide={handleKediamanDecide}
                   formatDT={formatDT}
                 />
@@ -312,9 +317,9 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
 // ─── Application Card (actionable) ───────────────────────────────────────────
 function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, onToggle, onNoteChange, onAkademikVouch, onKediamanDecide, formatDT }: any) {
   const cfg = STATUS_CFG[app.status] || STATUS_CFG.pending;
-  const canAct = reviewerUnit === 'AKADEMIK'
+  const canAct = reviewerUnit === 'KPP'
     ? app.status === 'pending'
-    : ['akademik_vouched', 'akademik_not_vouched', 'pending'].includes(app.status);
+    : ['kpp_vouched', 'kpp_not_vouched', 'pending'].includes(app.status);
 
   return (
     <motion.div
@@ -375,13 +380,13 @@ function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, o
                 </div>
               )}
 
-              {/* Akademik vouch status (for Kediaman view) */}
+              {/* KPP vouch status (for Kediaman view) */}
               {reviewerUnit === 'KEDIAMAN' && (
-                <div className="p-3 rounded-2xl" style={{ background: app.status === 'akademik_vouched' ? 'rgba(99,102,241,0.08)' : 'rgba(244,63,94,0.06)', border: `1px solid ${app.status === 'akademik_vouched' ? 'rgba(99,102,241,0.2)' : 'rgba(244,63,94,0.15)'}` }}>
-                  <p className="text-[9px] font-black uppercase mb-1" style={{ color: app.status === 'akademik_vouched' ? '#6366f1' : '#f43f5e' }}>
-                    {app.status === 'akademik_vouched' ? '✅ Disokong oleh Akademik' : app.status === 'pending' ? '⏳ Belum disemak Akademik' : '❌ Tidak disokong Akademik'}
+                <div className="p-3 rounded-2xl" style={{ background: app.status === 'kpp_vouched' ? 'rgba(99,102,241,0.08)' : 'rgba(244,63,94,0.06)', border: `1px solid ${app.status === 'kpp_vouched' ? 'rgba(99,102,241,0.2)' : 'rgba(244,63,94,0.15)'}` }}>
+                  <p className="text-[9px] font-black uppercase mb-1" style={{ color: app.status === 'kpp_vouched' ? '#6366f1' : '#f43f5e' }}>
+                    {app.status === 'kpp_vouched' ? '✅ Disokong oleh KPP' : app.status === 'pending' ? '⏳ Belum disemak KPP' : '❌ Tidak disokong KPP'}
                   </p>
-                  {app.akademik_vouch_notes && <p className="text-[10px] text-white/50">{app.akademik_vouch_notes}</p>}
+                  {app.kpp_vouch_notes && <p className="text-[10px] text-white/50">{app.kpp_vouch_notes}</p>}
                 </div>
               )}
 
@@ -390,7 +395,7 @@ function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, o
                 <textarea
                   value={noteValue}
                   onChange={e => onNoteChange(e.target.value)}
-                  placeholder={reviewerUnit === 'AKADEMIK' ? 'Nota vouch (pilihan)...' : 'Nota keputusan (pilihan)...'}
+                  placeholder={reviewerUnit === 'KPP' ? 'Nota vouch (pilihan)...' : 'Nota keputusan (pilihan)...'}
                   rows={2}
                   className="w-full px-3 py-2.5 rounded-2xl text-[11px] font-medium outline-none resize-none bg-white/[0.04] border border-white/10 text-white placeholder:text-white/25 focus:border-white/25 transition-all"
                 />
@@ -399,7 +404,7 @@ function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, o
               {/* Action buttons */}
               {canAct && (
                 <div className="flex gap-2">
-                  {reviewerUnit === 'AKADEMIK' ? (
+                  {reviewerUnit === 'KPP' ? (
                     <>
                       <button
                         onClick={() => onAkademikVouch(app, true)}
@@ -464,7 +469,7 @@ function AppCardHistory({ app, reviewerUnit, formatDT }: any) {
         <p className="text-[11px] font-black text-white/70 truncate">{app.program_title}</p>
         <p className="text-[9px] text-white/30">
           +{app.merit_value} merit ·{' '}
-          {reviewerUnit === 'AKADEMIK' && app.akademik_reviewed_at ? formatDT(app.akademik_reviewed_at) : ''}
+          {reviewerUnit === 'KPP' && app.kpp_reviewed_at ? formatDT(app.kpp_reviewed_at) : ''}
           {reviewerUnit === 'KEDIAMAN' && app.kediaman_reviewed_at ? formatDT(app.kediaman_reviewed_at) : ''}
         </p>
       </div>
