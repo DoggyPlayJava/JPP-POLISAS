@@ -39,20 +39,21 @@ registerRoute(
 self.addEventListener('push', (event: PushEvent) => {
   if (!event.data) return;
 
-  let data: { title?: string; body?: string; url?: string; icon?: string } = {};
+  let payload: { title?: string; body?: string; data?: { url?: string }; icon?: string; badge?: string } = {};
   try {
-    data = event.data.json();
+    payload = event.data.json();
   } catch {
-    data = { title: event.data.text() };
+    payload = { title: event.data.text() };
   }
 
-  const title = data.title ?? 'Notifikasi JPP';
+  const title = payload.title ?? 'Notifikasi JPP';
+  const targetUrl = payload.data?.url ?? '/portal';
   const options: NotificationOptions = {
-    body: data.body ?? 'Anda mempunyai satu notifikasi baru.',
-    icon: data.icon ?? '/jpp-logo.png',
-    badge: '/jpp-logo.png',
+    body: payload.body ?? 'Anda mempunyai satu notifikasi baru.',
+    icon: payload.icon ?? '/jpp-logo.png',
+    badge: payload.badge ?? '/jpp-logo.png',
     vibrate: [200, 100, 200],
-    data: { url: data.url ?? '/portal' },
+    data: { url: targetUrl },
     requireInteraction: false,
   };
 

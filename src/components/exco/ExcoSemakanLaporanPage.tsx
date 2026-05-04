@@ -21,6 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
+import { sendNotificationToUser } from '@/lib/notifications';
 import { cn } from '@/lib/utils';
 import { JPP_MT_POSITIONS } from '@/types';
 import { UNIT_CFG } from '@/pages/jpp/jppConfig';
@@ -144,19 +145,20 @@ export function ExcoSemakanLaporanPage() {
         .eq('id', actionDialog.report.id);
       if (updateError) throw updateError;
 
-      // Hantar notifikasi kepada penghantar laporan
-      await supabase.from('notifications').insert({
-        user_id:  actionDialog.report.submitted_by,
-        type:     actionDialog.type === 'Diluluskan' ? 'REPORT_APPROVED' : 'REPORT_REJECTED',
-        title:    actionDialog.type === 'Diluluskan'
-          ? `Laporan ${excoLabel} Diluluskan`
-          : `Laporan ${excoLabel} Ditolak`,
-        message: actionDialog.type === 'Diluluskan'
-          ? `Laporan anda bertajuk "${actionDialog.report.file_name}" telah diluluskan oleh MT.`
-          : `Laporan "${actionDialog.report.file_name}" telah ditolak. Nota: ${remarks}`,
-        reference_id: actionDialog.report.id,
-        is_read:      false,
-      });
+      // Hantar notifikasi kepada penghantar laporan (In-App + Push)
+      try {
+        await sendNotificationToUser(actionDialog.report.submitted_by, {
+          type:     actionDialog.type === 'Diluluskan' ? 'REPORT_APPROVED' : 'REPORT_REJECTED',
+          title:    actionDialog.type === 'Diluluskan'
+            ? `Laporan ${excoLabel} Diluluskan`
+            : `Laporan ${excoLabel} Ditolak`,
+          message: actionDialog.type === 'Diluluskan'
+            ? `Laporan anda bertajuk "${actionDialog.report.file_name}" telah diluluskan oleh MT.`
+            : `Laporan "${actionDialog.report.file_name}" telah ditolak. Nota: ${remarks}`,
+          module: 'EKPP',
+          link: `/exco/${excoUnit.toLowerCase()}/laporan`,
+        });
+      } catch {}
 
       toast.success(
         actionDialog.type === 'Diluluskan'

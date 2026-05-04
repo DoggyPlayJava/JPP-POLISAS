@@ -12,6 +12,7 @@ import {
   Tag, Ticket, BadgePercent, Plus, Calendar, ShieldAlert
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { sendNotificationToUser } from '@/lib/notifications';
 import { type BusinessPromotion, type PosDiscountType } from '@/types';
 import { BusinessJadual, SesiBusiness } from './BusinessShiftModule';
 
@@ -233,6 +234,15 @@ export function UrusPerniagaanPage() {
       return;
     }
     await pos.writeLog(businessId!, 'STAFF_APPROVED', `${userName} telah diluluskan sebagai ahli perniagaan.`, { user_id: userId, user_name: userName });
+    try {
+      await sendNotificationToUser(userId, {
+        title: '🎉 Permohonan Diterima!',
+        message: `Anda telah diluluskan sebagai ahli perniagaan "${businessData?.name}". Selamat datang!`,
+        type: 'STATUS_UPDATE',
+        module: 'KEUSAHAWANAN',
+        link: '/keusahawanan',
+      });
+    } catch {}
     toast.success(`${userName} diluluskan!`);
     fetchData();
   };
@@ -243,6 +253,15 @@ export function UrusPerniagaanPage() {
       toast.error('Gagal menolak: ' + error.message);
       return;
     }
+    try {
+      await sendNotificationToUser(userId, {
+        title: 'Permohonan Ditolak',
+        message: `Permohonan anda untuk menyertai perniagaan "${businessData?.name}" telah ditolak oleh pemilik.`,
+        type: 'STATUS_UPDATE',
+        module: 'KEUSAHAWANAN',
+        link: '/keusahawanan',
+      });
+    } catch {}
     toast.success('Permohonan ditolak.');
     fetchData();
   };
@@ -255,6 +274,15 @@ export function UrusPerniagaanPage() {
       return;
     }
     await pos.writeLog(businessId!, 'STAFF_REMOVED', `${userName} telah dibuang dari perniagaan.`, { user_id: userId, user_name: userName });
+    try {
+      await sendNotificationToUser(userId, {
+        title: 'Keahlian Perniagaan Ditarik Balik',
+        message: `Keahlian anda dalam perniagaan "${businessData?.name}" telah ditarik balik oleh pemilik.`,
+        type: 'STATUS_UPDATE',
+        module: 'KEUSAHAWANAN',
+        link: '/keusahawanan',
+      });
+    } catch {}
     toast.success(`${userName} dibuang.`);
     fetchData();
   };

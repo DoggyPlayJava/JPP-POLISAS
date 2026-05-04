@@ -28,7 +28,7 @@ export function PortalPage() {
   const { profile, isSuperAdmin, hasKebajikanAccess } = useAuth();
   const karnivalStatus = useKarnivalStatus();
   const karnivalActive = !!karnivalStatus?.isActive;
-  
+
   const [settings, setSettings] = useState<ExcoColorSetting[]>([]);
   const [isLoadingSettings, setIsLoadingSettings] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -57,7 +57,7 @@ export function PortalPage() {
 
   const fetchKamsisStatus = useCallback(async () => {
     if (!profile?.id) return;
-    
+
     const [appRes, toggleRes] = await Promise.all([
       supabase.from('kamsis_applications')
         .select('status, extra_data')
@@ -172,10 +172,10 @@ export function PortalPage() {
         .eq('publish_to_polymart', true)
         .eq('is_available', true)
         .eq('keusahawanan_businesses.status', 'ACTIVE');
-        
+
       const listingsCount = products?.length ?? 0;
       const uniqueBusinesses = new Set(products?.map(p => p.business_id)).size;
-      
+
       setPolyMartStats({ listings: listingsCount, businesses: uniqueBusinesses });
     };
     loadPolyMart();
@@ -261,146 +261,146 @@ export function PortalPage() {
       {isLoadingSettings ? (
         <PortalSkeleton />
       ) : (
-      <main className="relative z-10 pt-32 md:pt-40 pb-20 px-4 md:px-8 max-w-7xl mx-auto flex-1">
-        {/* Title Section */}
-        <div className="flex flex-col items-center text-center mb-16 md:mb-24 space-y-6 md:space-y-8">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/[0.03] dark:bg-white/5 border border-black/5 dark:border-white/10 shadow-lg backdrop-blur-md"
-          >
-            <LucideIcons.Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 dark:text-white/50">
-              EKOSISTEM DIGITAL V26.0
-            </span>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="space-y-4"
-          >
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1] max-w-4xl mx-auto text-transparent bg-clip-text bg-gradient-to-b from-slate-900 to-slate-600 dark:from-white dark:to-white/60">
-              {supsasActive && !karnivalActive ? 'Semangat Sukan,' : 
-                (() => {
-                  const hour = new Date().getHours();
-                  if (hour >= 5 && hour < 12) return 'Selamat Pagi,';
-                  if (hour >= 12 && hour < 19) return 'Selamat Petang,';
-                  if (hour >= 19 && hour < 24) return 'Selamat Malam,';
-                  return 'Masih berjaga,';
-                })()
-              } <br />
-              <span className={supsasActive && !karnivalActive ? 'text-amber-400' : karnivalActive ? 'text-violet-400' : 'text-emerald-500 dark:text-emerald-400'}>
-                {displayName}
+        <main className="relative z-10 pt-32 md:pt-40 pb-20 px-4 md:px-8 max-w-7xl mx-auto flex-1">
+          {/* Title Section */}
+          <div className="flex flex-col items-center text-center mb-16 md:mb-24 space-y-6 md:space-y-8">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/[0.03] dark:bg-white/5 border border-black/5 dark:border-white/10 shadow-lg backdrop-blur-md"
+            >
+              <LucideIcons.Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+              <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 dark:text-white/50">
+                EKOSISTEM DIGITAL V26.5
               </span>
-            </h1>
-            <p className="text-sm md:text-lg text-slate-500 dark:text-white/50 font-medium max-w-2xl mx-auto leading-relaxed px-4">
-              {supsasActive && !karnivalActive
-                ? <>Sokong pasukan anda. Pantau keputusan sukan secara langsung. <br className="hidden md:block" />Bawa semangat ke padang! 🏅</>
-                : <>Platform bersepadu untuk pengurusan kelab, perniagaan, dan aktiviti JPP Polisas. <br className="hidden md:block" />Bawa kepimpinan anda ke tahap seterusnya.</>
-              }
-            </p>
+            </motion.div>
 
-            {/* ── Event Banners ── */}
-            <AnimatePresence>
-              {supsasActive && !karnivalActive && (
-                <SupsasMegaBanner supsasEdition={supsasEdition} />
-              )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-              {karnivalActive && (
-                <KarnivalMegaBanner karnivalStatus={karnivalStatus} />
-              )}
-            </AnimatePresence>
-
-            {/* ── KAMSIS STATUS BANNER ── */}
-            <AnimatePresence>
-              {kamsisStatus && kamsisStatus !== 'OPT_OUT' && (() => {
-                const isAppeal = !!kamsisExtraData?.appeal_reason || kamsisStatus === 'APPEALING' || kamsisStatus === 'APPEAL_REJECTED';
-                const isResultOpen = kamsisToggles['kamsis_result_open'];
-                const isAppealResultOpen = kamsisToggles['kamsis_appeal_result_open'];
-                const isAppealOpen = kamsisToggles['kamsis_appeal_open'];
-
-                let displayStatus = kamsisStatus;
-
-                if (!isAppeal) {
-                  // Normal phase
-                  if (!isResultOpen) displayStatus = 'PENDING';
-                } else {
-                  // Appeal phase
-                  if (!isAppealResultOpen) displayStatus = 'APPEALING';
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="space-y-4"
+            >
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1] max-w-4xl mx-auto text-transparent bg-clip-text bg-gradient-to-b from-slate-900 to-slate-600 dark:from-white dark:to-white/60">
+                {supsasActive && !karnivalActive ? 'Semangat Sukan,' :
+                  (() => {
+                    const hour = new Date().getHours();
+                    if (hour >= 5 && hour < 12) return 'Selamat Pagi,';
+                    if (hour >= 12 && hour < 19) return 'Selamat Petang,';
+                    if (hour >= 19 && hour < 24) return 'Selamat Malam,';
+                    return 'Masih berjaga,';
+                  })()
+                } <br />
+                <span className={supsasActive && !karnivalActive ? 'text-amber-400' : karnivalActive ? 'text-violet-400' : 'text-emerald-500 dark:text-emerald-400'}>
+                  {displayName}
+                </span>
+              </h1>
+              <p className="text-sm md:text-lg text-slate-500 dark:text-white/50 font-medium max-w-2xl mx-auto leading-relaxed px-4">
+                {supsasActive && !karnivalActive
+                  ? <>Sokong pasukan anda. Pantau keputusan sukan secara langsung. <br className="hidden md:block" />Bawa semangat ke padang! 🏅</>
+                  : <>Platform bersepadu untuk pengurusan kelab, perniagaan, dan aktiviti JPP Polisas. <br className="hidden md:block" />Bawa kepimpinan anda ke tahap seterusnya.</>
                 }
+              </p>
 
-                const canAppeal = kamsisStatus === 'REJECTED' && isResultOpen && isAppealOpen && !isAppeal;
+              {/* ── Event Banners ── */}
+              <AnimatePresence>
+                {supsasActive && !karnivalActive && (
+                  <SupsasMegaBanner supsasEdition={supsasEdition} />
+                )}
+              </AnimatePresence>
 
-                return (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={cn(
-                    "p-5 rounded-3xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm w-full backdrop-blur-md text-left mt-4",
-                    displayStatus === 'APPROVED' ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400" :
-                    (displayStatus === 'REJECTED' || displayStatus === 'APPEAL_REJECTED') ? "bg-rose-500/10 border-rose-500/20 text-rose-700 dark:text-rose-400" :
-                    "bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400"
-                  )}>
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-white/50 dark:bg-black/20 flex items-center justify-center shrink-0 shadow-sm">
-                        <LucideIcons.Building2 className="w-6 h-6" />
+              <AnimatePresence>
+                {karnivalActive && (
+                  <KarnivalMegaBanner karnivalStatus={karnivalStatus} />
+                )}
+              </AnimatePresence>
+
+              {/* ── KAMSIS STATUS BANNER ── */}
+              <AnimatePresence>
+                {kamsisStatus && kamsisStatus !== 'OPT_OUT' && (() => {
+                  const isAppeal = !!kamsisExtraData?.appeal_reason || kamsisStatus === 'APPEALING' || kamsisStatus === 'APPEAL_REJECTED';
+                  const isResultOpen = kamsisToggles['kamsis_result_open'];
+                  const isAppealResultOpen = kamsisToggles['kamsis_appeal_result_open'];
+                  const isAppealOpen = kamsisToggles['kamsis_appeal_open'];
+
+                  let displayStatus = kamsisStatus;
+
+                  if (!isAppeal) {
+                    // Normal phase
+                    if (!isResultOpen) displayStatus = 'PENDING';
+                  } else {
+                    // Appeal phase
+                    if (!isAppealResultOpen) displayStatus = 'APPEALING';
+                  }
+
+                  const canAppeal = kamsisStatus === 'REJECTED' && isResultOpen && isAppealOpen && !isAppeal;
+
+                  return (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={cn(
+                      "p-5 rounded-3xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm w-full backdrop-blur-md text-left mt-4",
+                      displayStatus === 'APPROVED' ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400" :
+                        (displayStatus === 'REJECTED' || displayStatus === 'APPEAL_REJECTED') ? "bg-rose-500/10 border-rose-500/20 text-rose-700 dark:text-rose-400" :
+                          "bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400"
+                    )}>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-white/50 dark:bg-black/20 flex items-center justify-center shrink-0 shadow-sm">
+                          <LucideIcons.Building2 className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="font-black text-sm uppercase tracking-widest mb-0.5">Status Permohonan Asrama (KAMSIS)</h3>
+                          <p className="text-xs font-bold opacity-80 leading-relaxed max-w-[250px] sm:max-w-none">
+                            {displayStatus === 'APPROVED' ? 'Tahniah! Permohonan asrama anda telah DILULUSKAN.' :
+                              displayStatus === 'REJECTED' ? 'Dukacita dimaklumkan permohonan asrama anda DITOLAK.' :
+                                displayStatus === 'APPEAL_REJECTED' ? 'Dukacita dimaklumkan rayuan asrama anda DITOLAK.' :
+                                  displayStatus === 'APPEALING' ? 'Rayuan anda sedang dalam proses semakan pihak pengurusan.' :
+                                    'Permohonan anda sedang dalam proses semakan pihak pengurusan.'}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-black text-sm uppercase tracking-widest mb-0.5">Status Permohonan Asrama (KAMSIS)</h3>
-                        <p className="text-xs font-bold opacity-80 leading-relaxed max-w-[250px] sm:max-w-none">
-                          {displayStatus === 'APPROVED' ? 'Tahniah! Permohonan asrama anda telah DILULUSKAN.' :
-                           displayStatus === 'REJECTED' ? 'Dukacita dimaklumkan permohonan asrama anda DITOLAK.' :
-                           displayStatus === 'APPEAL_REJECTED' ? 'Dukacita dimaklumkan rayuan asrama anda DITOLAK.' :
-                           displayStatus === 'APPEALING' ? 'Rayuan anda sedang dalam proses semakan pihak pengurusan.' :
-                           'Permohonan anda sedang dalam proses semakan pihak pengurusan.'}
-                        </p>
+                      <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                        <Badge className={cn(
+                          "border-none px-4 py-2 font-black uppercase tracking-widest text-[10px] w-full sm:w-auto justify-center shadow-md shrink-0",
+                          displayStatus === 'APPROVED' ? "bg-emerald-500 text-white" :
+                            (displayStatus === 'REJECTED' || displayStatus === 'APPEAL_REJECTED') ? "bg-rose-500 text-white" :
+                              "bg-amber-500 text-white"
+                        )}>
+                          {displayStatus === 'APPROVED' ? 'LULUS' :
+                            displayStatus === 'REJECTED' ? 'TOLAK' :
+                              displayStatus === 'APPEAL_REJECTED' ? 'RAYUAN DITOLAK' :
+                                displayStatus === 'APPEALING' ? 'RAYUAN DIPROSES' :
+                                  'MENUNGGU KELULUSAN'}
+                        </Badge>
+
+                        {canAppeal && (
+                          <button
+                            onClick={() => setShowAppealModal(true)}
+                            className="w-full sm:w-auto px-4 py-2 rounded-full bg-slate-800 dark:bg-white text-white dark:text-slate-900 text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-md shrink-0"
+                          >
+                            Buat Rayuan
+                          </button>
+                        )}
                       </div>
-                    </div>
-                    <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                      <Badge className={cn(
-                        "border-none px-4 py-2 font-black uppercase tracking-widest text-[10px] w-full sm:w-auto justify-center shadow-md shrink-0",
-                        displayStatus === 'APPROVED' ? "bg-emerald-500 text-white" :
-                        (displayStatus === 'REJECTED' || displayStatus === 'APPEAL_REJECTED') ? "bg-rose-500 text-white" :
-                        "bg-amber-500 text-white"
-                      )}>
-                        {displayStatus === 'APPROVED' ? 'LULUS' : 
-                         displayStatus === 'REJECTED' ? 'TOLAK' : 
-                         displayStatus === 'APPEAL_REJECTED' ? 'RAYUAN DITOLAK' : 
-                         displayStatus === 'APPEALING' ? 'RAYUAN DIPROSES' : 
-                         'MENUNGGU KELULUSAN'}
-                      </Badge>
+                    </motion.div>
+                  );
+                })()}
+              </AnimatePresence>
 
-                      {canAppeal && (
-                        <button
-                          onClick={() => setShowAppealModal(true)}
-                          className="w-full sm:w-auto px-4 py-2 rounded-full bg-slate-800 dark:bg-white text-white dark:text-slate-900 text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-md shrink-0"
-                        >
-                          Buat Rayuan
-                        </button>
-                      )}
-                    </div>
-                  </motion.div>
-                );
-              })()}
-            </AnimatePresence>
+              {/* Quick Actions */}
+              <QuickActions
+                isSuperAdmin={isSuperAdmin}
+                isModuleEnabled={isModuleEnabled}
+                polyMartStats={polyMartStats}
+                hasKebajikanAccess={hasKebajikanAccess}
+                kbStats={kbStats}
+                isJPPMode={isJPPMode}
+              />
 
-            {/* Quick Actions */}
-            <QuickActions
-              isSuperAdmin={isSuperAdmin}
-              isModuleEnabled={isModuleEnabled}
-              polyMartStats={polyMartStats}
-              hasKebajikanAccess={hasKebajikanAccess}
-              kbStats={kbStats}
-              isJPPMode={isJPPMode}
-            />
+            </motion.div>
+          </div>
 
-          </motion.div>
-        </div>
-
-        {/* Modules Grid */}
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 lg:gap-10">
+          {/* Modules Grid */}
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 lg:gap-10">
               {EXCO_MODULES.map((mod, i) => {
                 let badgeText;
                 let notificationCount;
@@ -433,22 +433,22 @@ export function PortalPage() {
                 );
               })}
             </div>
-        </div>
+          </div>
 
-        {/* Global Admin Status Line */}
-        {isSuperAdmin && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="mt-20 flex flex-wrap justify-center items-center gap-x-12 gap-y-6 opacity-40 hover:opacity-100 transition-opacity duration-500"
-          >
-            <AdminStatusIndicator color="bg-emerald-400" label="Sistem Operasi (Live)" />
-            <AdminStatusIndicator color="bg-amber-400" label="Pratonton Pentadbir" />
-            <AdminStatusIndicator color="bg-black/20 dark:bg-white/20" label="Dalam Pembangunan" />
-          </motion.div>
-        )}
-      </main>
+          {/* Global Admin Status Line */}
+          {isSuperAdmin && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+              className="mt-20 flex flex-wrap justify-center items-center gap-x-12 gap-y-6 opacity-40 hover:opacity-100 transition-opacity duration-500"
+            >
+              <AdminStatusIndicator color="bg-emerald-400" label="Sistem Operasi (Live)" />
+              <AdminStatusIndicator color="bg-amber-400" label="Pratonton Pentadbir" />
+              <AdminStatusIndicator color="bg-black/20 dark:bg-white/20" label="Dalam Pembangunan" />
+            </motion.div>
+          )}
+        </main>
       )}
 
       <PortalFooter />

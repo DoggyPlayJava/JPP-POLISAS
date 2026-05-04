@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { KeusahawananBusiness, KeusahawananCategory, StudentBusinessMembership } from '@/types';
 import toast from 'react-hot-toast';
+import { sendNotificationToUser } from '@/lib/notifications';
 
 export function useBusinessData() {
   const { user } = useAuth();
@@ -98,14 +99,16 @@ export function useBusinessData() {
         
       if (memError) throw memError;
 
-      // 3. Trigger Notification
-      await supabase.from('notifications').insert([{
-        user_id: user.id,
-        title: 'Permohonan Perniagaan Dihantar',
-        message: 'Permohonan untuk menubuhkan perniagaan anda telah direkodkan. Sistem / pentadbir akan menetapkan tarikh temuduga.',
-        type: 'SYSTEM',
-        is_read: false
-      }]);
+      // 3. Trigger Notification (In-App + Push)
+      try {
+        await sendNotificationToUser(user.id, {
+          title: 'Permohonan Perniagaan Dihantar',
+          message: 'Permohonan untuk menubuhkan perniagaan anda telah direkodkan. Sistem / pentadbir akan menetapkan tarikh temuduga.',
+          type: 'SYSTEM',
+          module: 'KEUSAHAWANAN',
+          link: '/keusahawanan',
+        });
+      } catch {}
 
       await fetchInitialData();
       return { success: true };
@@ -138,13 +141,15 @@ export function useBusinessData() {
 
           if (businessRes.data && profileRes.data) {
              const phoneInfo = profileRes.data.phone_number ? `No Tel: ${profileRes.data.phone_number}` : 'Tiada No Tel didaftarkan.';
-             await supabase.from('notifications').insert({
-               user_id: businessRes.data.owner_id,
-               title: 'Rayuan Semula (Appeal)',
-               message: `Pelajar ${profileRes.data.full_name} membuat rayuan semula untuk menyertai ${businessRes.data.name}. Sila semak di menu Urus Perniagaan. ${phoneInfo}`,
-               type: 'SYSTEM',
-               is_read: false,
-             });
+             try {
+               await sendNotificationToUser(businessRes.data.owner_id, {
+                 title: 'Rayuan Semula (Appeal)',
+                 message: `Pelajar ${profileRes.data.full_name} membuat rayuan semula untuk menyertai ${businessRes.data.name}. Sila semak di menu Urus Perniagaan. ${phoneInfo}`,
+                 type: 'SYSTEM',
+                 module: 'KEUSAHAWANAN',
+                 link: '/keusahawanan',
+               });
+             } catch {}
           }
 
           toast.success('Rayuan telah dihantar. Pemilik perniagaan telah dimaklumkan.');

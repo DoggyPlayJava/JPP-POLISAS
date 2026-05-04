@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
+import { sendNotificationToUser } from '@/lib/notifications';
 import {
   Store, CheckCircle, XCircle, Clock, Eye, RefreshCw,
   Building2, TrendingUp, Filter, Users, ShieldCheck, UserPlus, Trash2, Logs, LayoutGrid
@@ -330,16 +331,16 @@ export function KeusahawananAdminPanel() {
         .eq('user_id', b.owner_id);
       if (memError) throw memError;
 
-      // Notify owner
-      await supabase.from('notifications').insert({
-        user_id: b.owner_id,
-        title: '🎉 Perniagaan Anda Diluluskan!',
-        message: `Tahniah! Perniagaan "${b.name}" telah diluluskan oleh JPP. Anda kini boleh mengakses sistem POS dan mula beroperasi.`,
-        type: 'STATUS_UPDATE',
-        module: 'KEUSAHAWANAN',
-        link: '/keusahawanan',
-        is_read: false,
-      });
+      // Notify owner (In-App + Push)
+      try {
+        await sendNotificationToUser(b.owner_id, {
+          title: '🎉 Perniagaan Anda Diluluskan!',
+          message: `Tahniah! Perniagaan "${b.name}" telah diluluskan oleh JPP. Anda kini boleh mengakses sistem POS dan mula beroperasi.`,
+          type: 'STATUS_UPDATE',
+          module: 'KEUSAHAWANAN',
+          link: '/keusahawanan',
+        });
+      } catch {}
 
       // Audit log
       await supabase.from('keusahawanan_logs').insert({
@@ -366,15 +367,15 @@ export function KeusahawananAdminPanel() {
         .eq('id', b.id);
       if (error) throw error;
 
-      await supabase.from('notifications').insert({
-        user_id: b.owner_id,
-        title: '❌ Permohonan Perniagaan Ditolak',
-        message: `Perniagaan "${b.name}" telah ditolak${reason ? `. Sebab: ${reason}` : '. Sila hubungi JPP untuk maklumat lanjut.'}`,
-        type: 'STATUS_UPDATE',
-        module: 'KEUSAHAWANAN',
-        link: '/keusahawanan',
-        is_read: false,
-      });
+      try {
+        await sendNotificationToUser(b.owner_id, {
+          title: '❌ Permohonan Perniagaan Ditolak',
+          message: `Perniagaan "${b.name}" telah ditolak${reason ? `. Sebab: ${reason}` : '. Sila hubungi JPP untuk maklumat lanjut.'}`,
+          type: 'STATUS_UPDATE',
+          module: 'KEUSAHAWANAN',
+          link: '/keusahawanan',
+        });
+      } catch {}
 
       await supabase.from('keusahawanan_logs').insert({
         action_type: 'BUSINESS_REJECTED',

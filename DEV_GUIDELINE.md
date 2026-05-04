@@ -506,7 +506,58 @@ unit       TEXT   -- kod unit, cth: 'KEBAJIKAN'
 
 ---
 
-## 14. Sistem Kohort Pelajar POLISAS ⭐
+## 14. Sistem Notifikasi & Push Architecture 🔔
+
+> Ditambah: Mei 2026
+
+Sistem notifikasi direka untuk menyokong penyampaian maklumat secara **Real-time (tanpa WebSocket overhead)** dan menyokong **Multi-Device Push Notifications** untuk pengalaman pelajar yang lancar (iOS & Android).
+
+### 14.1 Falsafah Senibina
+- **Tiada Supabase Realtime**: Supabase Realtime memakan kos sambungan (connection cost) yang tinggi untuk 1,500 pelajar serentak. Sistem kini menggunakan **Lightweight Polling (60 saat)** di `NotificationContext.tsx` yang hanya melakukan `COUNT(*)` untuk menjimatkan *bandwidth*.
+- **Multi-Device Push**: Seorang pengguna boleh melanggan notifikasi dari pelbagai peranti serentak (contoh: Laptop + iPhone). Setiap langganan direkodkan secara berasingan dalam jadual `push_subscriptions`. Apabila notifikasi dihantar, ia memancar (fan-out) ke **semua** peranti pengguna tersebut.
+- **Aggressive Prompt**: Model UX menggunakan "Aggressive Prompt" (`PushPermissionModal.tsx`) di halaman `PortalPage`. Jika pengguna belum melanggan, modal skrin penuh akan muncul. Jika ditolak (snooze), ia hanya ditangguhkan selama **24 jam** dan akan muncul semula esok.
+
+### 14.2 API Penghantaran Standard
+
+**JANGAN** gunakan `supabase.from('notifications').insert()` secara terus di dalam komponen untuk logik perniagaan yang melibatkan pengguna akhir, kerana ia **TIDAK** akan memicu *push notification*.
+
+**✅ CARA YANG BETUL:** Gunakan utiliti standard `sendNotificationToUser`.
+
+```typescript
+import { sendNotificationToUser } from '@/lib/notifications';
+
+// 1. Lakukan operasi database/perniagaan anda
+await supabase.from('kamsis_applications').update({ status: 'APPROVED' }).eq('id', appId);
+
+// 2. Hantar notifikasi (In-App + Push akan diuruskan secara automatik)
+try {
+  await sendNotificationToUser(studentId, {
+    title: '✅ Permohonan Asrama Diluluskan',
+    message: 'Tahniah! Permohonan asrama anda telah diluluskan.',
+    type: 'KAMSIS_STATUS',
+    module: 'KAMSIS', // Lihat jenis NotificationModule yang dibenarkan
+    link: '/dashboard', // URL destinasi apabila pengguna klik notifikasi
+  });
+} catch (e) {
+  // Biarkan kosong. JANGAN block aliran perniagaan jika notifikasi gagal
+}
+```
+
+### 14.3 Mekanisme Push Notification Server
+
+1. Frontend memanggil `sendNotificationToUser()`.
+2. Fungsi tersebut menyimpan rekod ke dalam jadual `notifications` (In-App).
+3. Secara *background* (tidak-menyekat), utiliti memanggil `firePush()` yang membuat permintaan POST ke `/api/send-push-notification` pada pelayan Node.js / Express kita.
+4. Express menggunakan modul `web-push` bersama kunci VAPID (`.env`) untuk menolak mesej ke pelayan Apple/Google Push.
+
+### 14.4 Menambah Modul Notifikasi Baharu
+Jika anda menambah sistem exco baharu dan memerlukan ikon/warna lencana (badge) yang khusus:
+1. Tambah jenis baharu dalam `NotificationModule` di `src/lib/notifications.ts`.
+2. Daftar warna lalai, pautan, dan ikon di dalam `MODULE_CONFIG` dan `MODULE_FALLBACK` dalam `src/components/ui/NotificationBell.tsx`.
+
+---
+
+## 15. Sistem Kohort Pelajar POLISAS ⭐
 
 > Ditambah: April 2026
 
@@ -624,7 +675,7 @@ Apabila mana-mana `SUPER_ADMIN_JPP` atau `ADMIN` log masuk ke `/jpp/settings`, s
 
 ---
 
-## 15. Database-Friendly Development ⚠️ WAJIB BACA (Untuk AI Agent & Developer)
+## 16. Database-Friendly Development ⚠️ WAJIB BACA (Untuk AI Agent & Developer)
 
 > **Latar belakang:** Sistem ini perlu menanggung 1,500 pendaftaran serentak semasa Musim Orientasi. Bahagian ini mengandungi peraturan mandatori yang telah dipersetujui selepas audit prestasi mendalam (April 2026). Setiap peraturan di sini mempunyai sebab teknikal yang konkrit — **jangan abaikannya**.
 

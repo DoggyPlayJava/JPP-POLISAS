@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
+import { sendNotificationToUser } from '@/lib/notifications';
 import {
   Users, Activity, FileText, Building2, CalendarRange,
   Search, CheckCheck, X, RefreshCw,
@@ -397,7 +398,15 @@ export function KppUnitDashboard() {
       const clubName = ALL_CLUBS.find(c => c.id === clubId)?.name || 'Kelab tersebut';
       const notifTitle = status === 'APPROVED' ? 'Permohonan Diluluskan' : 'Permohonan Ditolak';
       const notifMsg = status === 'APPROVED' ? `Tahniah! Permohonan anda untuk menyertai ${clubName} telah diluluskan.` : `Dukacita dimaklumkan permohonan anda untuk menyertai ${clubName} telah ditolak.`;
-      await supabase.from('notifications').insert({ user_id: userId, title: notifTitle, message: notifMsg, type: 'SYSTEM', is_read: false });
+      try {
+        await sendNotificationToUser(userId, {
+          title: notifTitle,
+          message: notifMsg,
+          type: 'SYSTEM',
+          module: 'EKPP',
+          link: '/dashboard',
+        });
+      } catch {}
 
       toast.success(status === 'APPROVED' ? 'Permohonan diluluskan!' : 'Permohonan ditolak.');
       fetchRingkasanData();

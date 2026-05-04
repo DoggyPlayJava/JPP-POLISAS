@@ -20,6 +20,7 @@ import { MeritAssigner } from '@/components/ui/MeritAssigner';
 import { ClubMember, ROLE_LABELS, ROLE_COLORS, ALL_CLUBS, UserRole } from '@/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
+import { sendNotificationToUser } from '@/lib/notifications';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -222,14 +223,15 @@ export function AhliPage() {
               ? `Dukacita dimaklumkan permohonan anda untuk menyertai ${clubName} telah ditolak.` 
               : `Keahlian anda dalam ${clubName} telah disingkirkan/ditarik balik.${kickReason ? ` Sebab: ${kickReason}` : ''}`);
 
-      const { error: notifErr } = await supabase.from('notifications').insert({
-          user_id: userId,
+      try {
+        await sendNotificationToUser(userId, {
           title: notifTitle,
           message: notifMsg,
           type: 'SYSTEM',
-          is_read: false
-      });
-      if (notifErr) console.error("Gagal hantar notifikasi pengguna:", notifErr);
+          module: 'EKPP',
+          link: '/dashboard',
+        });
+      } catch {}
 
       toast.success(status === 'APPROVED' ? 'Tindakan berjaya!' : 'Ahli/Permohonan telah disingkirkan.');
       setKickingMember(null);
