@@ -1127,4 +1127,49 @@ Chat dua-hala (KebajikanStudentChat / KebajikanTicketDetail)
 
 ---
 
-*Dikemas kini: April 2026 — Kemaskini besar: tambah dokumentasi PolyMart, E-Akademik, SUPSAS, Karnival, E-Kebajikan; betul URL Supabase; betul rujukan JppAdminPage.*
+## 21. Modul Kediaman Luar Kampus (KLK)
+
+> Route prefix: `/klk/*` | Layout: `src/pages/klk/` (sebahagian guna AppLayout)
+
+Modul KLK (Kediaman Luar Kampus) digunakan untuk memantau status kediaman pelajar, mengumpul data statistik, dan menyediakan "form builder" dinamik untuk maklumat tambahan yang dikehendaki oleh pihak asrama atau exco.
+
+### 21.1 Jadual Database Utama
+
+| Jadual | Fungsi |
+|---|---|
+| `klk_student_residency` | Data kediaman setiap pelajar (disimpan per-semester) |
+| `klk_dynamic_fields` | Soalan dinamik "form builder" (cth: "Sebab tinggal luar", "Sewa bulanan") |
+| `klk_kawasan` | Senarai rasmi kawasan kediaman luar kampus |
+| `klk_settings` | Tetapan modul (termasuk is_active) |
+
+### 21.2 Ciri-ciri Utama
+
+1. **Deklarasi Semesterly (Wajib)**
+   - Setiap pelajar **Sem 2 dan ke atas** (termasuk JPP) wajib mendeklarasikan status kediaman mereka pada setiap permulaan semester.
+   - Pengecualian wajib: Pelajar Semester 1, `SUPER_ADMIN_JPP`, dan `STAFF`.
+   - Pop-up deklarasi (`KlkResidencyModal`) muncul secara automatik selepas log masuk jika data semester semasa belum diisi.
+
+2. **Form Builder & Hybrid Data**
+   - Soalan dinamik diuruskan oleh Exco di `/klk/tetapan`.
+   - Jawapan pelajar untuk soalan dinamik ini disimpan dalam lajur `extra_data` (`JSONB`) di dalam `klk_student_residency`.
+
+3. **Pengurusan Kawasan "Lain-lain"**
+   - Jika pelajar memilih "Lain-lain" (`LAIN_LAIN`) pada dropdown kawasan (`KawasanSearchSelect`), mereka boleh memasukkan kawasan sendiri.
+   - Sistem menyediakan notifikasi dan UI khas di tetapan (`get_klk_lain_lain_summary`) untuk Exco memantau dan memigrasikan data "Lain-lain" ini menjadi kawasan rasmi (`migrate_klk_lain_lain` RPC).
+
+4. **Public Statistics (Boleh diakses Awam / QR)**
+   - Akses: `/klk/statistik` (berbeza dari admin statistik)
+   - Menggunakan RPC `SECURITY DEFINER` (`get_klk_public_stats`) untuk mendapatkan agregat data tanpa mendedahkan maklumat sensitif individu, selaras dengan polisi RLS.
+
+### 21.3 RBAC KLK
+
+| Peranan | Akses |
+|---|---|
+| Pelajar (Sem 2 & ke atas) | Deklarasi kediaman, akses form via Settings |
+| JPP Biasa (Sem 2 & ke atas) | Deklarasi kediaman (diwajibkan) |
+| Exco KLS (`jpp_unit = 'KLS'`) | Admin panel penuh (Dashboard, Pengurusan Kawasan, Form Builder) |
+| `SUPER_ADMIN_JPP` | Akses admin penuh |
+
+---
+
+*Dikemas kini: Mei 2026 — Tambahan Modul KLK dengan Public Stats, Form Builder hibrid, dan pengurusan data kawasan "Lain-lain".*

@@ -162,6 +162,15 @@ export function LoginPage() {
 
     setIsLoading(true);
     try {
+      // Periksa jika emel sudah wujud untuk mengelakkan isu "fake success" dari Supabase (terutamanya bagi kes login Google)
+      const { data: emailExists, error: checkError } = await supabase.rpc('check_email_registered', { p_email: email.trim().toLowerCase() });
+      
+      if (!checkError && emailExists) {
+        toast.error('Emel ini telah didaftarkan. Sila cuba Log Masuk, atau gunakan "Teruskan dengan Google" jika anda pernah menggunakannya sebelum ini.');
+        setIsLoading(false);
+        return;
+      }
+
       const isLeader = registerMode === 'leader';
       const isStaff = registerMode === 'staff';
       const isAdvisor = isStaff && staffRole === 'CLUB_ADVISOR';
