@@ -40,7 +40,7 @@ export function KlkResidencyFormPage() {
 
   const jabatanLabel = JABATAN_LIST.find(j => j.value === profile?.department)?.label ?? profile?.department ?? '—';
 
-  // Semak rekod sedia ada
+  // Semak rekod sedia ada / lama
   useEffect(() => {
     if (!user || !profile?.intake_year) return;
     void (async () => {
@@ -49,16 +49,26 @@ export function KlkResidencyFormPage() {
           .from('klk_student_residency')
           .select('*')
           .eq('user_id', user.id)
-          .eq('academic_year', academicYear)
-          .eq('semester', semInfo.semester)
+          .order('created_at', { ascending: false })
+          .limit(1)
           .maybeSingle();
+
         if (data) {
-          setExistingRecord(data);
+          const isCurrentSemester = data.academic_year === academicYear && data.semester === semInfo.semester;
+          
+          // Jika ia rekod semasa dan belum expire, kita boleh kemaskini rekod tersebut
+          if (isCurrentSemester && !data.is_expired) {
+            setExistingRecord(data);
+          }
+          
+          // Pra-isi maklumat jika sebelum ini pernah duduk luar kampus
           setAlamat(data.alamat_kediaman ?? '');
           setKawasan(data.kawasan_kediaman ?? '');
           setKawasanCustom(data.kawasan_custom ?? '');
           setCadangan(data.cadangan ?? '');
-          if (data.tinggal_luar) setStep('form');
+          if (data.extra_data) setExtraData(data.extra_data);
+          
+          // Pilihan step dikekalkan pada 'choice' supaya pelajar buat pilihan manual
         }
       } catch {
         // Fail gracefully if table doesn't exist yet

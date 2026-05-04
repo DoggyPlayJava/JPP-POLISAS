@@ -1,5 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RefreshCcw, Home } from 'lucide-react';
+import { AlertTriangle, RefreshCcw, Home, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
@@ -82,6 +82,22 @@ export class ErrorBoundary extends Component<Props, State> {
                   >
                     <Home size={14} className="mr-2" /> Kembali ke Laman Utama
                   </Button>
+                </div>
+
+                {/* Helpline JPP — supaya pengguna boleh hubungi bila hadapi masalah */}
+                <div className="w-full p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-1.5">
+                  <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
+                    Masalah berulang? Hubungi kami untuk bantuan:
+                  </p>
+                  <a
+                    href="https://wa.me/601139413699?text=Salam%20JPP%2C%20saya%20mengalami%20ralat%20pada%20sistem%20(Error%20Boundary).%20Mohon%20bantuan."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-md hover:shadow-lg"
+                  >
+                    <Phone size={14} />
+                    Hubungi Helpline JPP
+                  </a>
                 </div>
 
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30">

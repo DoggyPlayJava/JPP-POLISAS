@@ -225,19 +225,23 @@ export function CompleteProfileModal() {
 
     setLoading(true);
     try {
+      if (!user?.id) { toast.error('Sesi anda telah tamat. Sila log masuk semula.'); setLoading(false); return; }
+
       const isLeader  = registerMode === 'leader';
       const isStaff   = registerMode === 'staff';
       const isAdvisor = isStaff && staffRole === 'CLUB_ADVISOR';
       const academikClubId = isStaff ? null : getAkademikClubId(jabatan as JabatanValue);
       const roleToAssign   = isStaff ? staffRole : (isLeader ? leaderRole : 'CLUB_MEMBER');
       const initialStatus  = (isLeader || isAdvisor) ? 'PENDING' : 'APPROVED';
+      // PENTING: Sentiasa gunakan nama yang dimasukkan pengguna. Jika kosong, guna
+      // nama dari profil Google. Jangan hantar undefined supaya DB tak reject.
       const nameToSave     = isStaff
         ? (fullName.trim().toUpperCase() || profile?.full_name || '')
-        : fullName.trim().toUpperCase();
+        : (fullName.trim().toUpperCase() || profile?.full_name?.toUpperCase() || '');
 
       // 1. Update profile
       const { error: profileError } = await supabase.from('profiles').update({
-        full_name:        nameToSave || undefined,
+        full_name:        nameToSave,
         matric_no:        matricNo.trim(),
         phone:            phone.trim(),
         club_id:          academikClubId,
@@ -250,30 +254,37 @@ export function CompleteProfileModal() {
           intake_period:    intakePeriod || null,
           semester_override: showSemOverride && semOverride ? Number(semOverride) : null,
         }),
-      }).eq('id', user?.id);
+      }).eq('id', user.id);
       if (profileError) throw profileError;
 
       // 2. Academic club membership
       if (!isStaff && academikClubId) {
         const isLeadingAcademic = isLeader && leaderClubId === academikClubId;
-        await supabase.from('student_club_memberships').insert({
-          user_id: user!.id,
+        const { error: memberErr } = await supabase.from('student_club_memberships').insert({
+          user_id: user.id,
           club_id: academikClubId,
           role: isLeadingAcademic ? leaderRole : 'CLUB_MEMBER',
           account_status: isLeadingAcademic ? 'PENDING' : initialStatus,
           is_primary: true,
         });
+        // Abaikan duplicate key error (pengguna sudah ada keahlian)
+        if (memberErr && !memberErr.message?.includes('duplicate')) {
+          console.warn('[CompleteProfile] Club membership insert error:', memberErr.message);
+        }
       }
 
       // 3. Target leadership/advisor club
       if ((isLeader && leaderClubId !== academikClubId) || isAdvisor) {
-        await supabase.from('student_club_memberships').insert({
-          user_id: user!.id,
+        const { error: leaderErr } = await supabase.from('student_club_memberships').insert({
+          user_id: user.id,
           club_id: leaderClubId,
           role: roleToAssign,
           account_status: 'PENDING',
           is_primary: !academikClubId,
         });
+        if (leaderErr && !leaderErr.message?.includes('duplicate')) {
+          console.warn('[CompleteProfile] Leader membership insert error:', leaderErr.message);
+        }
       }
 
       // 4. Notify admins for new leader/advisor
@@ -293,11 +304,22 @@ export function CompleteProfileModal() {
         }
       }
 
-      await refetchProfile();
+      // 5. Refetch profile — wrap dalam try-catch sendiri supaya kegagalan refetch
+      //    tidak menyebabkan crash (Error Boundary). Reload tetap akan berlaku.
+      try {
+        await refetchProfile();
+      } catch (refetchErr) {
+        console.warn('[CompleteProfile] refetchProfile failed (akan reload):', refetchErr);
+      }
       toast.success(isStaff ? 'Profil Staf Berjaya Disimpan!' : 'Profil Pelajar Berjaya Disimpan!');
       setTimeout(() => window.location.reload(), 1000);
     } catch (err: any) {
-      toast.error(err.message || 'Ralat menyimpan profil.');
+      console.error('[CompleteProfile] Submit error:', err);
+      toast.error(
+        (err.message || 'Ralat menyimpan profil.') +
+        '\n\nJika masalah berterusan, sila hubungi Helpline JPP melalui WhatsApp.',
+        { duration: 8000 }
+      );
     } finally {
       setLoading(false);
     }

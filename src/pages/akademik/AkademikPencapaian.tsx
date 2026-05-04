@@ -557,6 +557,12 @@ export function AkademikPencapaian() {
                       <p className="text-[10px] text-rose-400/80 font-medium">{p.rejection_reason}</p>
                     </div>
                   )}
+                  {p.status === 'DISAHKAN' && p.merit_override !== null && p.merit_override < p.merit_auto && p.rejection_reason && (
+                    <div className="flex items-start gap-2 mt-2 p-2 rounded-xl bg-amber-500/10 border border-amber-500/15">
+                      <AlertCircle className="w-3 h-3 text-amber-400 shrink-0 mt-0.5" />
+                      <p className="text-[10px] text-amber-400/80 font-medium">Sebab Pengurangan: {p.rejection_reason}</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-col items-end gap-2 shrink-0">
@@ -565,7 +571,16 @@ export function AkademikPencapaian() {
                     {sc.label}
                   </span>
                   {p.status === 'DISAHKAN' && (
-                    <span className="text-[9px] font-black" style={{ color: THEME }}>+{merit} merit</span>
+                    <div className="flex flex-col items-end">
+                      {p.merit_override !== null && p.merit_override !== p.merit_auto ? (
+                        <>
+                          <span className="text-[8px] font-bold text-white/30 line-through">+{p.merit_auto} asal</span>
+                          <span className="text-[10px] font-black" style={{ color: THEME }}>+{p.merit_override} merit</span>
+                        </>
+                      ) : (
+                        <span className="text-[9px] font-black" style={{ color: THEME }}>+{merit} merit</span>
+                      )}
+                    </div>
                   )}
                   {p.drive_view_url && (
                     <a
@@ -637,13 +652,14 @@ export function AkademikPencapaian() {
                       );
                     }
                     // No request yet
+                    const isReduced = p.merit_override !== null && p.merit_override < p.merit_auto;
                     return (
                       <button
                         onClick={() => { setUnlockTarget(p); setUnlockReason(''); }}
                         className="flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest text-white/20 hover:text-amber-400 hover:bg-amber-500/10 transition-all border border-white/[0.06] hover:border-amber-500/20"
-                        title="Minta buka kunci"
+                        title={isReduced ? "Rayuan Markah / Buka Kunci" : "Minta buka kunci"}
                       >
-                        <UnlockKeyhole className="w-2.5 h-2.5" /> Buka Kunci
+                        <UnlockKeyhole className="w-2.5 h-2.5" /> {isReduced ? 'Rayuan Markah' : 'Buka Kunci'}
                       </button>
                     );
                   })()}

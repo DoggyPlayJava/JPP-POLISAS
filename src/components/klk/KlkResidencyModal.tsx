@@ -64,15 +64,14 @@ export function KlkResidencyModal() {
     // Hanya tanya mulai Sem 2
     if (semester < 2) { setChecking(false); return; }
 
-    // Semak jika dah ada rekod untuk semester/tahun semasa
+    // Semak jika dah ada rekod untuk semester/tahun semasa atau rekod lama
     try {
       const { data, error } = await supabase
         .from('klk_student_residency')
-        .select('id, updated_at, is_expired')
+        .select('id, academic_year, semester, updated_at, is_expired, tinggal_luar, alamat_kediaman, kawasan_kediaman, kawasan_custom, cadangan, extra_data')
         .eq('user_id', user.id)
-        .eq('academic_year', academicYear)
-        .eq('semester', semester)
-        .eq('is_expired', false)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       // Jika table belum wujud (DB belum migrate), jangan tunjuk modal
@@ -80,21 +79,39 @@ export function KlkResidencyModal() {
         setChecking(false); return;
       }
 
+      const prefillData = (d: any) => {
+        setAlamat(d.alamat_kediaman ?? '');
+        setKawasan(d.kawasan_kediaman ?? '');
+        setKawasanCustom(d.kawasan_custom ?? '');
+        setCadangan(d.cadangan ?? '');
+        if (d.extra_data) setExtraData(d.extra_data);
+      };
+
       if (data) {
-        // Auto-expiry: Pelajar Sem 5+ yang tak update dalam 30 hari
-        if (semester >= 5) {
-          const lastUpdate = new Date(data.updated_at);
-          const daysSince = (Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
-          if (daysSince > 30) {
-            // Arkibkan rekod lama, tunjuk modal semula
-            await supabase.from('klk_student_residency')
-              .update({ is_expired: true, expired_at: new Date().toISOString() })
-              .eq('id', data.id);
-            setShow(true);
-            setChecking(false); return;
+        const isCurrentSemester = data.academic_year === academicYear && data.semester === semester;
+
+        if (isCurrentSemester && !data.is_expired) {
+          // Auto-expiry: Pelajar Sem 5+ yang tak update dalam 30 hari
+          if (semester >= 5) {
+            const lastUpdate = new Date(data.updated_at);
+            const daysSince = (Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
+            if (daysSince > 30) {
+              // Arkibkan rekod lama, tunjuk modal semula
+              await supabase.from('klk_student_residency')
+                .update({ is_expired: true, expired_at: new Date().toISOString() })
+                .eq('id', data.id);
+              
+              prefillData(data); // Pra-isi dengan rekod yang baru diarkib
+              setShow(true);
+              setChecking(false); return;
+            }
           }
+          // Rekod masih sah — tak perlu tunjuk modal
+        } else {
+          // Rekod lama atau sudah expired — perlukan deklarasi baharu
+          prefillData(data);
+          setShow(true);
         }
-        // Rekod masih sah — tak perlu tunjuk modal
       } else {
         setShow(true); // Belum ada rekod — tunjuk modal
       }

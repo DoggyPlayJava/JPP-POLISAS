@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
-    Camera, Palette, Users, Save, Trash2, RefreshCcw,
-    ShieldCheck, UserCog, Trophy, TrendingUp
+    Camera, Palette, Users, Save, Trash2, RefreshCcw, RotateCcw,
+    ShieldCheck, UserCog, Trophy, TrendingUp, AlertTriangle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,10 +18,11 @@ import {
 } from '@/components/ui/select';
 
 export function UrusKelabPage() {
-    const { profile, refreshClubs, isPresident, selectedClubId } = useAuth();
+    const { profile, refreshClubs, isPresident, selectedClubId, isKppExco, isSuperAdmin } = useAuth();
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [resetting, setResetting] = useState(false);
+    const [resettingKohort, setResettingKohort] = useState(false);
 
     const [clubData, setClubData] = useState<any>(null);
     const [committee, setCommittee] = useState<any[]>([]);
@@ -118,6 +119,58 @@ export function UrusKelabPage() {
             toast.error("Gagal meriset merit: " + err.message);
         } finally {
             setResetting(false);
+        }
+    };
+
+    // ── FUNGSI RESET KOHORT (KPP Exco Sahaja) ──
+    const handleResetKohort = async () => {
+        const clubName = clubData?.name || 'kelab ini';
+        const confirm1 = window.confirm(
+            `⚠️ AMARAN: Anda akan mereset SEMUA jawatan MT & Presiden bagi "${clubName}" kembali kepada Ahli Biasa.\n\nData keahlian kelab tetap kekal. Hanya peranan kepimpinan yang ditukar.\n\nTeruskan?`
+        );
+        if (!confirm1) return;
+
+        const confirm2 = window.confirm(
+            `🔴 PENGESAHAN TERAKHIR\n\nTindakan ini TIDAK BOLEH dibatalkan.\nSemua MT dan Presiden bagi "${clubName}" akan diturunkan kepada CLUB_MEMBER.\n\nAdakah anda PASTI?`
+        );
+        if (!confirm2) return;
+
+        setResettingKohort(true);
+        try {
+            // 1. Tukar semua CLUB_MT & CLUB_PRESIDENT → CLUB_MEMBER untuk kelab ini sahaja
+            const { error: roleErr } = await supabase
+                .from('student_club_memberships')
+                .update({ role: 'CLUB_MEMBER' })
+                .eq('club_id', selectedClubId)
+                .eq('account_status', 'APPROVED')
+                .in('role', ['CLUB_PRESIDENT', 'CLUB_MT']);
+            if (roleErr) throw roleErr;
+
+            // 2. Clear president_id pada clubs table
+            const { error: clubErr } = await supabase
+                .from('clubs')
+                .update({ president_id: null })
+                .eq('id', selectedClubId);
+            if (clubErr) throw clubErr;
+
+            // 3. Padam data club_committee (jawatan override)
+            const { error: commErr } = await supabase
+                .from('club_committee')
+                .delete()
+                .eq('club_id', selectedClubId);
+            if (commErr) throw commErr;
+
+            toast.success(`Kohort berjaya direset untuk ${clubName}! Semua MT & Presiden kini menjadi Ahli Biasa.`);
+            await createLog(
+                selectedClubId, profile?.id, profile?.full_name,
+                'RESET_KOHORT',
+                `Exco KPP mereset kohort kepimpinan (MT & Presiden → Ahli Biasa) bagi ${clubName}.`
+            );
+            fetchData();
+        } catch (err: any) {
+            toast.error('Gagal mereset kohort: ' + err.message);
+        } finally {
+            setResettingKohort(false);
         }
     };
 
@@ -273,6 +326,34 @@ export function UrusKelabPage() {
                                         Tetapan Semula Tahunan <Trophy className="w-3 h-3 opacity-50" />
                                     </Button>
                                 </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* ── RESET KOHORT (KPP Exco / SuperAdmin sahaja) ── */}
+                    {(isKppExco || isSuperAdmin) && (
+                        <Card className="bento-card border-none bg-card shadow-sm overflow-hidden">
+                            <CardHeader className="border-b border-dashed bg-orange-500/5">
+                                <CardTitle className="text-[10px] font-black flex items-center gap-2 uppercase tracking-[0.2em] text-orange-600">
+                                    <RotateCcw className={cn("w-4 h-4", resettingKohort && "animate-spin")} /> Reset Kohort Kelab
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6 space-y-4">
+                                <div className="flex items-start gap-3 p-3 bg-orange-500/10 rounded-xl border border-orange-500/20">
+                                    <AlertTriangle className="w-4 h-4 text-orange-600 shrink-0 mt-0.5" />
+                                    <p className="text-[11px] text-orange-700 dark:text-orange-400 font-medium leading-relaxed">
+                                        Tukar <strong>semua MT & Presiden</strong> kelab ini kembali kepada <strong>Ahli Biasa</strong>. Data keahlian tetap kekal — hanya peranan kepimpinan yang direset.
+                                    </p>
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    disabled={resettingKohort}
+                                    onClick={handleResetKohort}
+                                    className="w-full justify-between h-11 rounded-[1rem] text-[10px] font-black uppercase bg-orange-600 text-white hover:bg-orange-700 border-none transition-all shadow-xl shadow-orange-600/20"
+                                >
+                                    {resettingKohort ? 'Sedang Mereset...' : 'Reset Kohort'}
+                                    <RotateCcw className="w-3.5 h-3.5 opacity-60" />
+                                </Button>
                             </CardContent>
                         </Card>
                     )}

@@ -140,6 +140,7 @@ function PencapaianReviewPanel() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter]   = useState<'MENUNGGU' | 'SEMUA'>('MENUNGGU');
   const [reviewing, setReviewing] = useState<string | null>(null);
+  const [customMerits, setCustomMerits] = useState<Record<string, number>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -209,6 +210,7 @@ function PencapaianReviewPanel() {
         status,
         verified_at: new Date().toISOString(),
         rejection_reason: reason || null,
+        ...(status === 'DISAHKAN' ? { merit_override: merit } : {}),
       }).eq('id', id);
       if (updateErr) throw new Error(`Kemaskini status gagal: ${updateErr.message}`);
 
@@ -275,7 +277,10 @@ function PencapaianReviewPanel() {
           {items.map(item => {
             const cat = item.akademik_sijil_categories;
             const profile = item.profiles;
-            const merit = item.merit_override ?? item.merit_auto;
+            const defaultMerit = item.merit_auto ?? 0;
+            const merit = item.status === 'MENUNGGU' 
+              ? (customMerits[item.id] ?? defaultMerit) 
+              : (item.merit_override ?? defaultMerit);
             return (
               <div key={item.id} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-3">
                 <div className="flex items-start gap-3">
@@ -303,26 +308,56 @@ function PencapaianReviewPanel() {
                 </div>
 
                 {item.status === 'MENUNGGU' && (
-                  <div className="flex gap-2 pt-1 border-t border-white/[0.04]">
-                    <button
-                      onClick={() => handleVerify(item.id, 'DISAHKAN', merit)}
-                      disabled={reviewing === item.id}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/25 disabled:opacity-50 transition-all"
-                    >
-                      {reviewing === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
-                      Sahkan (+{merit} merit)
-                    </button>
-                    <button
-                      onClick={() => {
-                        const reason = prompt(`Sebab penolakan untuk "${item.nama_pencapaian}":`);
-                        if (reason !== null) handleVerify(item.id, 'DITOLAK', 0, reason);
-                      }}
-                      disabled={reviewing === item.id}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider bg-rose-500/15 border border-rose-500/25 text-rose-400 hover:bg-rose-500/25 disabled:opacity-50 transition-all"
-                    >
-                      <XCircle className="w-3.5 h-3.5" />
-                      Tolak
-                    </button>
+                  <div className="pt-3 border-t border-white/[0.04] space-y-3">
+                    <div className="flex items-center gap-3 bg-white/[0.02] p-2 rounded-xl border border-white/[0.04]">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-white/40 shrink-0">Markah Merit (Max {defaultMerit})</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max={defaultMerit}
+                        value={customMerits[item.id] ?? defaultMerit}
+                        onChange={e => {
+                          let val = parseInt(e.target.value);
+                          if (isNaN(val)) val = 0;
+                          if (val > defaultMerit) val = defaultMerit;
+                          if (val < 0) val = 0;
+                          setCustomMerits(prev => ({ ...prev, [item.id]: val }));
+                        }}
+                        className="w-16 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2 py-1 text-sm text-center text-white font-black outline-none focus:border-white/20 transition-all"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          if (merit < defaultMerit) {
+                            const reason = prompt(`Sila nyatakan sebab pengurangan markah merit untuk "${item.nama_pencapaian}":`);
+                            if (!reason || !reason.trim()) {
+                              toast.error('Sebab pengurangan wajib diisi!');
+                              return;
+                            }
+                            handleVerify(item.id, 'DISAHKAN', merit, reason.trim());
+                          } else {
+                            handleVerify(item.id, 'DISAHKAN', merit);
+                          }
+                        }}
+                        disabled={reviewing === item.id}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/25 disabled:opacity-50 transition-all"
+                      >
+                        {reviewing === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+                        Sahkan (+{merit} merit)
+                      </button>
+                      <button
+                        onClick={() => {
+                          const reason = prompt(`Sebab penolakan untuk "${item.nama_pencapaian}":`);
+                          if (reason !== null) handleVerify(item.id, 'DITOLAK', 0, reason);
+                        }}
+                        disabled={reviewing === item.id}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider bg-rose-500/15 border border-rose-500/25 text-rose-400 hover:bg-rose-500/25 disabled:opacity-50 transition-all"
+                      >
+                        <XCircle className="w-3.5 h-3.5" />
+                        Tolak
+                      </button>
+                    </div>
                   </div>
                 )}
                 {item.status !== 'MENUNGGU' && (
@@ -362,7 +397,7 @@ function UnlockRequestsPanel() {
       const pencIds  = [...new Set(reqs.map(r => r.pencapaian_id))];
       const userIds  = [...new Set(reqs.map(r => r.user_id))];
       const [pencRes, profRes] = await Promise.all([
-        supabase.from('akademik_pencapaian').select('id, nama_pencapaian, jenis, peringkat').in('id', pencIds),
+        supabase.from('akademik_pencapaian').select('id, nama_pencapaian, jenis, peringkat, merit_override, merit_auto').in('id', pencIds),
         supabase.from('profiles').select('id, full_name, department').in('id', userIds),
       ]);
       const pencMap = Object.fromEntries((pencRes.data || []).map(p => [p.id, p]));
@@ -398,6 +433,52 @@ function UnlockRequestsPanel() {
     } finally { setActing(null); }
   };
 
+  const handleEditMerit = async (req: any, newMerit: number) => {
+    setActing(req.id);
+    try {
+      const oldMerit = req.pencapaian.merit_override ?? req.pencapaian.merit_auto ?? 0;
+      const difference = newMerit - oldMerit;
+
+      const { error: pencErr } = await supabase.from('akademik_pencapaian').update({
+        merit_override: newMerit,
+        rejection_reason: null, // Clear reduction reason since it's adjusted
+      }).eq('id', req.pencapaian_id);
+      if (pencErr) throw pencErr;
+
+      if (difference !== 0) {
+        const { error: txErr } = await supabase.from('merit_transactions').insert({
+          user_id:      req.user_id,
+          club_id:      null,
+          points:       difference,
+          reason:       `Pelarasan Rayuan: ${req.pencapaian.nama_pencapaian}`,
+          actor_name:   'Exco Akademik',
+          source:       'AKADEMIK',
+          reference_id: req.pencapaian_id,
+        });
+        if (txErr) throw new Error(`Insert merit_transactions gagal: ${txErr.message}`);
+        const { error: rpcErr } = await supabase.rpc('increment_merit_by_source', {
+          p_uid:   req.user_id,
+          p_delta: difference,
+          p_src:   'AKADEMIK',
+        });
+        if (rpcErr) throw new Error(`RPC increment_merit_by_source gagal: ${rpcErr.message}`);
+      }
+
+      await supabase.from('akademik_unlock_requests').update({
+        status: 'DILULUSKAN',
+        reviewed_by: (await supabase.auth.getUser()).data.user?.id,
+        reviewed_at: new Date().toISOString(),
+        reviewer_note: `Rayuan markah diluluskan. Markah dikemaskini ke ${newMerit}.`,
+        unlocked_until: null,
+      }).eq('id', req.id);
+
+      toast.success(`Markah dikemaskini ke ${newMerit}!`);
+      load();
+    } catch (e: any) {
+      toast.error('Gagal kemaskini markah: ' + e.message);
+    } finally { setActing(null); }
+  };
+
   const pending = requests.filter(r => r.status === 'MENUNGGU');
   const done    = requests.filter(r => r.status !== 'MENUNGGU');
 
@@ -430,7 +511,28 @@ function UnlockRequestsPanel() {
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black uppercase bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/25 disabled:opacity-50 transition-all"
           >
             {acting === req.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
-            Luluskan (48 jam)
+            Buka Kunci
+          </button>
+          <button
+            onClick={() => {
+              const oldMerit = req.pencapaian.merit_override ?? req.pencapaian.merit_auto ?? 0;
+              const maxMerit = req.pencapaian.merit_auto ?? 0;
+              const newMeritStr = prompt(`Pencapaian: ${req.pencapaian.nama_pencapaian}\nMarkah sedia ada: ${oldMerit}\nHad maksimum: ${maxMerit}\nMasukkan markah baharu:`);
+              if (newMeritStr !== null) {
+                const newMerit = parseInt(newMeritStr);
+                if (isNaN(newMerit) || newMerit < 0) {
+                  toast.error('Markah tidak sah.');
+                } else if (newMerit > maxMerit) {
+                  toast.error(`Markah tidak boleh melebihi had maksimum (${maxMerit}).`);
+                } else {
+                  handleEditMerit(req, newMerit);
+                }
+              }
+            }}
+            disabled={acting === req.id}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black uppercase bg-amber-500/15 border border-amber-500/25 text-amber-400 hover:bg-amber-500/25 disabled:opacity-50 transition-all"
+          >
+            <Star className="w-3.5 h-3.5" /> Edit Markah
           </button>
           <button
             onClick={() => {
