@@ -142,6 +142,7 @@ const JppAsramaPage = lazy(() => import('./pages/jpp/JppAsramaPage').then(m => (
 import { CompleteProfileModal } from '@/components/ui/CompleteProfileModal';
 import { GlobalAnnouncementModal } from '@/components/GlobalAnnouncementModal';
 import { KamsisApplicationModal } from '@/components/kamsis/KamsisApplicationModal';
+import { PushPermissionModal } from '@/components/ui/PushPermissionModal';
 
 function RequireApproval({ children }: { children: React.ReactNode }) {
   const { profile, isLoading } = useAuth();
@@ -172,6 +173,7 @@ function RequireApproval({ children }: { children: React.ReactNode }) {
       <GlobalAnnouncementModal />
       <KlkResidencyModal />
       <KamsisApplicationModal />
+      <PushPermissionModal />
       {children}
     </>
   );

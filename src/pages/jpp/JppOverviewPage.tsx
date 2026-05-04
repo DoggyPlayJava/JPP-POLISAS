@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
   Users, Flag, BarChart3, FileText, Loader2,
-  Store, ShoppingBag, Heart, Trophy, Shield, CalendarDays
+  Store, ShoppingBag, Heart, Trophy, Shield, CalendarDays, BellRing
 } from 'lucide-react';
 import { hexToRgba } from '@/lib/utils';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
@@ -26,6 +26,7 @@ interface SystemStats {
   totalProducts: number;
   totalTickets: number;
   totalSports: number;
+  pushSubscribers: number;
 }
 
 // ── Stat block ────────────────────────────────────────────────────────────────
@@ -85,7 +86,7 @@ export function JppOverviewPage() {
       setLoading(true);
       const [
         jppRes, studRes, allClubRes, actClubRes, actRes, repRes,
-        bizRes, prodRes, tickRes, sportRes, ticketStatusRes
+        bizRes, prodRes, tickRes, sportRes, ticketStatusRes, pushSubsRes
       ] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'JPP'),
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
@@ -98,7 +99,11 @@ export function JppOverviewPage() {
         supabase.from('kebajikan_tickets').select('id', { count: 'exact', head: true }),
         supabase.from('supsas_sports').select('id', { count: 'exact', head: true }),
         supabase.from('kebajikan_tickets').select('status'),
+        supabase.from('push_subscriptions').select('user_id'),
       ]);
+
+      // Count unique users with push subscriptions
+      const uniquePushUsers = new Set((pushSubsRes.data || []).map((s: any) => s.user_id)).size;
 
       setStats({
         totalJpp:        jppRes.count ?? 0,
@@ -111,6 +116,7 @@ export function JppOverviewPage() {
         totalProducts:   prodRes.count ?? 0,
         totalTickets:    tickRes.count ?? 0,
         totalSports:     sportRes.count ?? 0,
+        pushSubscribers: uniquePushUsers,
       });
 
       if (ticketStatusRes.data) {
@@ -218,7 +224,7 @@ export function JppOverviewPage() {
           <>
             {/* ── Main Stats Grid ─── */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <BigStatCard label="Ahli JPP"         value={stats?.totalJpp ?? 0}        icon={Shield}    color={themeColor} delay={0.05} />
+              <BigStatCard label="Push Subscribers" value={stats?.pushSubscribers ?? 0}  icon={BellRing}  color={themeColor} delay={0.05} sub={`daripada ${stats?.totalStudents ?? 0} pelajar`} />
               <BigStatCard label="Pelajar Berdaftar" value={stats?.totalStudents ?? 0}   icon={Users}     color="#60A5FA"    delay={0.10} />
               <BigStatCard label="Jumlah Kelab"      value={stats?.totalClubs ?? 0}      icon={Flag}      color="#4ADE80" delay={0.15} />
               <BigStatCard label="Bisnes"            value={stats?.totalBusinesses ?? 0} icon={Store}     color="#F59E0B"    delay={0.20} />
