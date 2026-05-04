@@ -79,38 +79,30 @@ export function JppOverviewPage() {
       .then(({ data }) => { if (data?.color) setThemeColor(data.color); });
   }, []);
 
-  // Fetch system stats
+  // Fetch system stats — simple one-time fetch on mount
   useEffect(() => {
     const fetchStats = async () => {
       setLoading(true);
       const [
-        jppRes, studRes, allClubRes, actClubRes, actRes, repRes, 
+        jppRes, studRes, allClubRes, actClubRes, actRes, repRes,
         bizRes, prodRes, tickRes, sportRes, profRes, ticketStatusRes
       ] = await Promise.all([
-        // Total JPP members
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'JPP'),
-        // Total registered students
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
-        // Total clubs
         supabase.from('clubs').select('id', { count: 'exact', head: true }),
-        // Active clubs
         supabase.from('clubs').select('id', { count: 'exact', head: true }).eq('is_active', true),
-        // Total activities
         supabase.from('club_activities').select('id', { count: 'exact', head: true }),
-        // Total reports
         supabase.from('club_reports').select('id', { count: 'exact', head: true }),
-        // Additional modules
         supabase.from('keusahawanan_businesses').select('id', { count: 'exact', head: true }),
         supabase.from('business_products').select('id', { count: 'exact', head: true }),
         supabase.from('kebajikan_tickets').select('id', { count: 'exact', head: true }),
         supabase.from('supsas_sports').select('id', { count: 'exact', head: true }),
-        // Raw Profiles for chart
+        // Raw profiles for chart — last 31 days only
         supabase.from('profiles')
           .select('created_at')
           .gte('created_at', subDays(new Date(), 31).toISOString())
           .limit(10000),
-        // Kebajikan for pie chart
-        supabase.from('kebajikan_tickets').select('status')
+        supabase.from('kebajikan_tickets').select('status'),
       ]);
 
       setStats({
@@ -126,25 +118,23 @@ export function JppOverviewPage() {
         totalSports:     sportRes.count ?? 0,
       });
 
-      if (profRes.data) {
-        setRawProfiles(profRes.data);
-      }
+      if (profRes.data) setRawProfiles(profRes.data);
 
       if (ticketStatusRes.data) {
-        let open = 0;
-        let resolved = 0;
+        let open = 0, resolved = 0;
         ticketStatusRes.data.forEach(t => {
           if (t.status === 'RESOLVED' || t.status === 'CLOSED') resolved++;
           else if (t.status !== 'CANCELLED') open++;
         });
         setTicketStats([
-          { name: 'Terbuka', value: open, color: '#EF4444' }, // Red
-          { name: 'Selesai', value: resolved, color: '#10B981' } // Green
+          { name: 'Terbuka', value: open, color: '#EF4444' },
+          { name: 'Selesai', value: resolved, color: '#10B981' },
         ]);
       }
 
       setLoading(false);
     };
+
     fetchStats();
   }, []);
 
@@ -254,7 +244,10 @@ export function JppOverviewPage() {
                       Trend Pendaftaran Pelajar
                     </h2>
                     <p className="text-2xl font-black text-white">
-                      {chartData.reduce((acc, curr) => acc + curr.count, 0)} <span className="text-xs text-white/30 font-medium">baru mendaftar</span>
+                      {stats?.totalStudents ?? 0} <span className="text-xs text-white/30 font-medium">jumlah pelajar</span>
+                    </p>
+                    <p className="text-[11px] text-white/25 font-medium mt-0.5">
+                      {chartData.reduce((acc, curr) => acc + curr.count, 0)} baru mendaftar dalam {timeRange === '7d' ? '7' : '30'} hari
                     </p>
                   </div>
                   <div className="flex items-center bg-white/5 rounded-xl p-1 shrink-0">
