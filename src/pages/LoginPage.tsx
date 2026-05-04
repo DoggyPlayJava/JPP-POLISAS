@@ -85,7 +85,17 @@ export function LoginPage() {
         toast.success('Pautan tetapan semula telah dihantar ke emel anda.');
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        if (error) {
+          if (error.message === 'Invalid login credentials') {
+            const { data: providers } = await supabase.rpc('get_auth_providers', { p_email: email.trim().toLowerCase() });
+            if (providers && providers.includes('google') && !providers.includes('email')) {
+              toast.error('Akaun ini menggunakan Google. Sila tekan butang "Teruskan dengan Google" di bawah untuk log masuk.', { duration: 6000 });
+              setIsLoading(false);
+              return;
+            }
+          }
+          throw error;
+        }
         toast.success('Log masuk berjaya. Selamat kembali.');
       }
     } catch (error: any) {
