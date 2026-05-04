@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -12,7 +12,7 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
 } from 'recharts';
-import { format, subDays, isAfter, parseISO } from 'date-fns';
+
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface SystemStats {
@@ -70,7 +70,7 @@ export function JppOverviewPage() {
 
   // Chart states
   const [timeRange, setTimeRange] = useState<'7d' | '30d'>('30d');
-  const [rawProfiles, setRawProfiles] = useState<{ created_at: string }[]>([]);
+  const [chartData, setChartData] = useState<{ date: string; count: number }[]>([]);
   const [ticketStats, setTicketStats] = useState<{ name: string; value: number; color: string }[]>([]);
 
   // Fetch theme color
@@ -85,7 +85,7 @@ export function JppOverviewPage() {
       setLoading(true);
       const [
         jppRes, studRes, allClubRes, actClubRes, actRes, repRes,
-        bizRes, prodRes, tickRes, sportRes, profRes, ticketStatusRes
+        bizRes, prodRes, tickRes, sportRes, ticketStatusRes
       ] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'JPP'),
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
@@ -97,11 +97,6 @@ export function JppOverviewPage() {
         supabase.from('business_products').select('id', { count: 'exact', head: true }),
         supabase.from('kebajikan_tickets').select('id', { count: 'exact', head: true }),
         supabase.from('supsas_sports').select('id', { count: 'exact', head: true }),
-        // Raw profiles for chart — last 31 days only
-        supabase.from('profiles')
-          .select('created_at')
-          .gte('created_at', subDays(new Date(), 31).toISOString())
-          .limit(10000),
         supabase.from('kebajikan_tickets').select('status'),
       ]);
 
@@ -117,8 +112,6 @@ export function JppOverviewPage() {
         totalTickets:    tickRes.count ?? 0,
         totalSports:     sportRes.count ?? 0,
       });
-
-      if (profRes.data) setRawProfiles(profRes.data);
 
       if (ticketStatusRes.data) {
         let open = 0, resolved = 0;
@@ -138,31 +131,37 @@ export function JppOverviewPage() {
     fetchStats();
   }, []);
 
-  const chartData = useMemo(() => {
+  // Fetch chart data from RPC (server-side grouping, Malaysia timezone)
+  useEffect(() => {
     const days = timeRange === '7d' ? 7 : 30;
 
-    // Helper: format a Date as "MMM dd" in UTC to match how Supabase stores timestamps
-    const fmtUTC = (d: Date) =>
-      d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', timeZone: 'UTC' })
-       .replace(',', '');
-
-    // Build map with UTC-based keys so they align with the stored timestamps
-    const dateMap = new Map<string, number>();
-    for (let i = 0; i < days; i++) {
-      const d = subDays(new Date(), days - 1 - i);
-      dateMap.set(fmtUTC(d), 0);
-    }
-
-    rawProfiles.forEach(p => {
-      if (!p.created_at) return;
-      const key = fmtUTC(new Date(p.created_at));
-      if (dateMap.has(key)) {
-        dateMap.set(key, dateMap.get(key)! + 1);
+    // Build empty date slots for the selected range
+    const buildEmptySlots = () => {
+      const slots: { date: string; count: number }[] = [];
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        // Format as "Mon DD" matching what the RPC returns (e.g. "May 04")
+        slots.push({
+          date: d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', timeZone: 'Asia/Kuala_Lumpur' }),
+          count: 0,
+        });
       }
-    });
+      return slots;
+    };
 
-    return Array.from(dateMap.entries()).map(([date, count]) => ({ date, count }));
-  }, [rawProfiles, timeRange]);
+    supabase.rpc('get_registration_trend', { days_back: days })
+      .then(({ data }) => {
+        const slots = buildEmptySlots();
+        if (data) {
+          const map = new Map((data as { reg_date: string; reg_count: number }[]).map(r => [r.reg_date, Number(r.reg_count)]));
+          slots.forEach(s => {
+            if (map.has(s.date)) s.count = map.get(s.date)!;
+          });
+        }
+        setChartData(slots);
+      });
+  }, [timeRange]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
