@@ -105,7 +105,10 @@ export function JppOverviewPage() {
         supabase.from('kebajikan_tickets').select('id', { count: 'exact', head: true }),
         supabase.from('supsas_sports').select('id', { count: 'exact', head: true }),
         // Raw Profiles for chart
-        supabase.from('profiles').select('created_at'),
+        supabase.from('profiles')
+          .select('created_at')
+          .gte('created_at', subDays(new Date(), 31).toISOString())
+          .limit(10000),
         // Kebajikan for pie chart
         supabase.from('kebajikan_tickets').select('status')
       ]);
