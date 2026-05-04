@@ -745,6 +745,27 @@ const { data } = await supabase.from('profiles').select('*');
 const { data } = await supabase.from('profiles').select('id, full_name, email, role, club_id');
 ```
 
+#### ✅ Guna Optimistic Locking untuk mengelak Race Conditions (Update Berkuantiti)
+
+Apabila mengemaskini nilai yang bergantung kepada bacaan sebelumnya (contoh: increment `scans_total` atau baki tiket), **JANGAN** guna pattern "Read-then-Write" yang berasingan. Ia akan gagal apabila diakses oleh ramai pengguna serentak.
+
+```typescript
+// ❌ SALAH — Race condition! (Pengguna A dan B baca nilai 5 serentak, dua-dua update jadi 6)
+const { data } = await supabase.from('tokens').select('count').single();
+await supabase.from('tokens').update({ count: data.count + 1 });
+
+// ✅ BETUL — Optimistic Locking pada peringkat database
+const { error } = await supabase
+  .from('tokens')
+  .update({ count: currentCount + 1 })
+  .eq('id', tokenId)
+  .eq('count', currentCount); // ← UPDATE hanya jika nilai belum diubah oleh orang lain!
+
+if (error || /* tidak jumpa row */) {
+  // Cuba semula (retry) atau papar ralat
+}
+```
+
 ---
 
 ### 15.3 Peraturan Realtime & WebSocket — PENTING
@@ -1185,3 +1206,41 @@ Pengasingan kawalan ini membolehkan Exco KAMSIS mengurus sesi pengambilan mereka
 ---
 
 *Dikemas kini: Mei 2026 — Decoupling KLK dari global session, pelaksanaan Auto-Expiry Sem 5+, dan kawalan sesi KAMSIS inline.*
+
+---
+
+## 23. Pengurusan "Merit Rasmi" (Sistem Vouch Dual-Review) ⭐
+
+> Ditambah: Mei 2026
+
+Permohonan "Merit Rasmi" membenarkan kelab memberi merit kehadiran kepada peserta yang hadir aktiviti. Tanggungjawab semakan ("vouching") kini diuruskan oleh **Exco KPP**, bukan lagi Exco Akademik.
+
+### 23.1 Aliran Kerja (Dual-Review)
+
+Keputusan mutlak permohonan merit ini adalah di bawah bidang kuasa **Exco Kediaman** memandangkan markah merit mempengaruhi kelayakan asrama. Aliran baharu:
+
+```
+1. Kelab Submit → Status: 'pending'
+      ↓
+2. Exco KPP (Vouch) → Status: 'kpp_vouched' atau 'kpp_not_vouched'
+   (Sebagai Supporter/Penyemak Pertama - Menyemak kesahihan aktiviti)
+      ↓
+3. Exco Kediaman (Lulus) → Status: 'fully_approved' atau 'rejected'
+   (Kuasa Mutlak - Meluluskan dan auto-kredit merit kepada peserta)
+```
+
+### 23.2 Komponen Panel Review
+
+Sistem ini dikendalikan oleh komponen universal `MeritRasmiReviewPanel.tsx`. 
+- **KPP Dashboard (`KppUnitDashboard.tsx`)** memanggil komponen ini dengan `reviewerUnit="KPP"`.
+- **Kediaman Dashboard (`KkUnitDashboard.tsx`)** memanggil komponen ini dengan `reviewerUnit="KEDIAMAN"`.
+
+### 23.3 Database Table & Log
+
+| Jadual | Keterangan |
+|---|---|
+| `merit_program_applications` | Menyimpan permohonan dengan lajur status, `kpp_reviewer_id`, dan `kediaman_reviewer_id`. |
+| `merit_review_log` | Merekod sejarah semakan (KPP vouch / Kediaman lulus). |
+| `merit_transactions` | Menyimpan transaksi markah merit yang berjaya dimasukkan kepada peserta (`p_src='KELAB'`). |
+
+> **Perhatian Developer:** Fungsi pengiraan (`increment_merit_by_source`) dipanggil secara *Promise.all* batch untuk mengelakkan *sequential blocking* apabila meluluskan kehadiran beramai-ramai.

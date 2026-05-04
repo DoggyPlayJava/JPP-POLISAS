@@ -24,7 +24,7 @@ function MeritConfigPanel() {
   const { isSuperAdmin } = useAuth();
 
   const JENIS    = ['ANUGERAH', 'SIJIL', 'PERTANDINGAN'];
-  const PERINGKAT = ['ANTARABANGSA', 'KEBANGSAAN', 'NEGERI', 'DAERAH', 'DALAMAN'];
+  const PERINGKAT = ['ANTARABANGSA', 'KEBANGSAAN', 'NEGERI', 'DAERAH'];
 
   useEffect(() => {
     supabase.from('akademik_merit_config').select('*').then(({ data }) => {

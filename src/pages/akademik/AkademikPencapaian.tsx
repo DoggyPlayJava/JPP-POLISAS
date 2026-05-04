@@ -15,7 +15,7 @@ import { ms } from 'date-fns/locale';
 const THEME = '#818CF8';
 
 const JENIS_OPTIONS  = ['ANUGERAH', 'SIJIL', 'PERTANDINGAN'];
-const PERINGKAT_OPTIONS = ['ANTARABANGSA', 'KEBANGSAAN', 'NEGERI', 'DAERAH', 'DALAMAN'];
+const PERINGKAT_OPTIONS = ['ANTARABANGSA', 'KEBANGSAAN', 'NEGERI', 'DAERAH'];
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
   MENUNGGU: { label: 'Menunggu', color: '#F59E0B', bg: '#F59E0B18', icon: Clock },
