@@ -13,6 +13,14 @@ import {
 import { cn } from '@/lib/utils';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { NotificationBell } from '@/components/ui/NotificationBell';
+import { QrCodeFab } from '@/components/jpp/QrCodeFab';
+
+const AKADEMIK_UNIT_LINKS = [
+  { label: 'Dashboard Akademik', path: '/akademik' },
+  { label: 'Pencapaian Pelajar', path: '/akademik/pencapaian' },
+  { label: 'Leaderboard Merit Akademik', path: '/akademik/leaderboard' },
+  { label: 'Scan QR Merit', path: '/akademik/qr' },
+];
 
 const NAV_ITEMS = [
   { path: '/akademik',            label: 'Dashboard',    icon: LayoutDashboard },
@@ -131,6 +139,9 @@ export function AkademikLayout() {
         
         {/* Global Floating AI Chat for Akademik */}
         <FloatingAiChat />
+
+        {/* QR Code FAB — untuk Exco Akademik jana QR */}
+        <QrCodeFab unitLinks={AKADEMIK_UNIT_LINKS} accentColor="#818CF8" />
       </div>
     </div>
   );
