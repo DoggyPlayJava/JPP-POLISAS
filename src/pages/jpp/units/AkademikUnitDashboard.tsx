@@ -235,6 +235,16 @@ function PencapaianReviewPanel() {
           p_src:   'AKADEMIK',
         });
         if (rpcErr) throw new Error(`RPC increment_merit_by_source gagal: ${rpcErr.message}`);
+
+        // ── Auto-sort document to personal folder ──
+        try {
+          if (item.drive_view_url) {
+            await supabase.rpc('auto_sort_pencapaian_file', { p_pencapaian_id: id });
+          }
+        } catch (sortErr) {
+          console.warn('[auto-sort] failed to sort certificate:', sortErr);
+          // Non-blocking error, allow verification to succeed
+        }
       }
 
       toast.success(status === 'DISAHKAN' ? `✅ Disahkan! +${merit} merit diberikan.` : 'Pencapaian ditolak.');
