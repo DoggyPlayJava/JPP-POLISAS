@@ -141,7 +141,7 @@ export function LaporanPage() {
           message: `${clubName} telah menghantar dokumen: ${reportType}. Sila semak di Semakan Laporan.`,
           type: 'INFO',
           module: 'KPP',
-          link: '/jpp/unit-kpp'
+          link: '/semakan-laporan'
         });
       } catch (err) {
         console.error('Notification error:', err);
@@ -302,7 +302,7 @@ export function LaporanPage() {
           message: `${clubName} telah menjana laporan bulan ${monthLabel}. Sila semak di Semakan Laporan.`,
           type: 'INFO',
           module: 'KPP',
-          link: '/jpp/unit-kpp'
+          link: '/semakan-laporan'
         });
       } catch (err) {
         console.error('Notification error:', err);

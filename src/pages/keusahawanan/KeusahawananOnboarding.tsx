@@ -49,7 +49,7 @@ export function KeusahawananOnboarding() {
           message: `Satu permohonan perniagaan baru (${bName}) telah didaftarkan. Sila semak dan jadualkan temuduga.`,
           type: 'INFO',
           module: 'KEUSAHAWANAN',
-          link: '/keusahawanan/admin'
+          link: '/keusahawanan/dashboard'
         });
       } catch (e) {
         console.error("Gagal menghantar notifikasi push", e);

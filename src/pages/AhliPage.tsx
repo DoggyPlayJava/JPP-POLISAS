@@ -229,7 +229,7 @@ export function AhliPage() {
           message: notifMsg,
           type: 'SYSTEM',
           module: 'EKPP',
-          link: '/dashboard',
+          link: '/kelab',
         });
       } catch {}
 

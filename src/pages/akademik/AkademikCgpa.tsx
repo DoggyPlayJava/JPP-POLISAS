@@ -307,7 +307,7 @@ export function AkademikCgpa() {
           message: `Pelajar telah memuat naik rekod HPNM baru (${hpnm.toFixed(2)}).`,
           type: 'DOCUMENT_UPLOAD',
           module: 'AKADEMIK',
-          link: '/akademik/semakan'
+          link: '/akademik/cgpa'
         });
       } catch (e) {
         console.error("Gagal menghantar notifikasi push", e);

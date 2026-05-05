@@ -993,7 +993,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
               message: `Draf program baru telah ditambah: ${form.title}.`,
               type: 'DOCUMENT_UPLOAD',
               module: 'KPP',
-              link: '/kpp/kelab/takwim'
+              link: '/aktiviti'
             });
           } catch (e) {
             console.error("Gagal menghantar notifikasi push", e);

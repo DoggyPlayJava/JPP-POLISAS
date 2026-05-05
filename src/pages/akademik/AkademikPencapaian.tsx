@@ -83,7 +83,7 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
           message: `Pelajar telah memuat naik sijil/pencapaian baru untuk disahkan: ${form.nama_pencapaian}.`,
           type: 'DOCUMENT_UPLOAD',
           module: 'AKADEMIK',
-          link: '/akademik/semakan'
+          link: '/akademik/pencapaian'
         });
       } catch (e) {
         console.error("Gagal menghantar notifikasi push", e);

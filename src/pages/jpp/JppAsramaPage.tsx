@@ -357,7 +357,7 @@ export function JppAsramaPage() {
           message: msgMap[status],
           type: 'KAMSIS_STATUS',
           module: 'KAMSIS',
-          link: '/dashboard',
+          link: '/portal',
         });
       } catch {} // Jangan block bisnes logic
 

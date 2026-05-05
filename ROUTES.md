@@ -41,19 +41,25 @@ Setiap exco baharu yang ditambah **MESTI** menggunakan prefix dengan ID exco mer
 
 **Format:** `/<exco-id>/<nama-route>`
 
-| Prefix | Exco | Status |
+| Prefix | Exco / Modul | Status |
 |---|---|---|
-| `/kebajikan/*` | e-Kebajikan | 🔜 Akan Datang |
-| `/keusahawanan/*` | e-Keusahawanan | 🔜 Akan Datang |
+| `/jpp/*` | JPP HQ (Induk) | ✅ Aktif |
+| `/akademik/*` | e-Akademik | ✅ Aktif |
+| `/kebajikan/*` | e-Kebajikan | ✅ Aktif |
+| `/keusahawanan/*` | e-Keusahawanan | ✅ Aktif |
+| `/klk/*` | e-KLK (Kediaman Luar Kampus) | ✅ Aktif |
+| `/polymart/*` | PolyMart | ✅ Aktif |
+| `/karnival/*` | Sistem Karnival JPP | ✅ Aktif |
 | `/sukan/*` | e-Sukan | 🔜 Akan Datang |
 
-**Contoh route baharu:**
+**Contoh route exco / modul tambahan:**
 ```
-/kebajikan/dashboard
-/kebajikan/program
-/kebajikan/permohonan
-/keusahawanan/dashboard
-/keusahawanan/geran
+/jpp                    (Dashboard JPP HQ)
+/semakan-laporan        (Dashboard Semakan Laporan KPP)
+/akademik/pencapaian    (Akademik: Pencapaian pelajar)
+/akademik/cgpa          (Akademik: Muat naik rekod HPNM)
+/klk/form               (Borang Kediaman Luar Kampus)
+/keusahawanan/dashboard (Dashboard Exco Keusahawanan)
 ```
 
 ---

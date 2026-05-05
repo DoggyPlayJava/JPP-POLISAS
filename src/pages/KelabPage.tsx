@@ -144,7 +144,7 @@ export function KelabPage() {
             message: `Terdapat permohonan keahlian baru untuk kelab ${confirmClub.name}. Sila semak di panel Exco KPP.`,
             type: 'KPP_MEMBERSHIP_REQUEST',
             module: 'KPP',
-            link: '/jpp/dashboard'
+            link: '/jpp'
           });
         } catch (e) {
           console.error("Gagal hantar push notification:", e);
