@@ -42,18 +42,18 @@ function LoadingScreen() {
         transition={{ delay: 0.8, duration: 0.8 }}
         className="flex flex-col items-center gap-2 z-10"
       >
-        <h1 className="text-base md:text-lg font-black uppercase tracking-[0.4em] text-white/90 drop-shadow-md text-center pl-1">
+        <h1 className="text-base md:text-lg font-black uppercase tracking-[0.4em] text-black/80 dark:text-white/90 drop-shadow-md text-center pl-1">
           JPP Digital Portal
         </h1>
         
         <div className="flex flex-col items-center gap-1.5 mt-1">
-          <div className="flex items-center gap-2 text-[10px] md:text-xs font-black uppercase tracking-[0.25em] text-white/50">
+          <div className="flex items-center gap-2 text-[10px] md:text-xs font-black uppercase tracking-[0.25em] text-black/50 dark:text-white/50">
             <span>A Digital Experience By</span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-orange-400 drop-shadow-sm font-black">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-orange-500 dark:from-purple-400 dark:to-orange-400 drop-shadow-sm font-black">
               JPP Haziq
             </span>
           </div>
-          <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/30 text-center max-w-[350px] leading-relaxed">
+          <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-black/30 dark:text-white/30 text-center max-w-[350px] leading-relaxed">
             & Exco Kelab, Persatuan Dan Perpaduan
           </p>
         </div>

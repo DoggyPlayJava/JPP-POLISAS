@@ -1295,3 +1295,71 @@ Sistem ini dikendalikan oleh komponen universal `MeritRasmiReviewPanel.tsx`.
 | `merit_transactions` | Menyimpan transaksi markah merit yang berjaya dimasukkan kepada peserta (`p_src='KELAB'`). |
 
 > **Perhatian Developer:** Fungsi pengiraan (`increment_merit_by_source`) dipanggil secara *Promise.all* batch untuk mengelakkan *sequential blocking* apabila meluluskan kehadiran beramai-ramai.
+
+---
+
+## 24. Prestasi & Optimasasi Kelajuan (Performance Optimization) 🚀
+
+> Ditambah: Mei 2026
+
+Untuk memastikan portal JPP-POLISAS lancar pada peranti "low-end" (contoh: telefon bajet) dan rangkaian perlahan, patuhi prinsip-prinsip berikut:
+
+### 24.1 Larangan Wildcard Import (`lucide-react`)
+**JANGAN sesekali** menggunakan wildcard import untuk ikon kerana ia akan memasukkan *keseluruhan 540KB library ikon* ke dalam bundle utama.
+
+```typescript
+// ❌ SALAH (Menyebabkan bundle JS gergasi)
+import * as LucideIcons from 'lucide-react';
+const Icon = LucideIcons['Trophy'];
+
+// ✅ BETUL (Jika nama ikon statik)
+import { Trophy, Clock } from 'lucide-react';
+const Icon = Trophy;
+
+// ✅ BETUL (Jika nama ikon dinamik dari DB)
+import { DynamicIcon } from '@/components/ui/DynamicIcon';
+<DynamicIcon name={sport.icon} className="w-5 h-5" />
+```
+*Gunakan `<DynamicIcon>` untuk ikon yang namanya dipanggil secara dinamik (cth: dari database). Ia akan lazy-load library `lucide-react` secara pintar.*
+
+### 24.2 Pemisahan Bundle Manual (Chunk Splitting)
+Konfigurasi `vite.config.ts` telah disetkan dengan `manualChunks` bagi library besar seperti `vendor-react`, `vendor-supabase`, `vendor-radix`, dll. Ini memastikan fail JS dimuat turun secara serentak (parallel) dan dikompres/di-cache secara bebas. Jangan ubah tetapan ini melainkan ada penambahan library gergasi baharu.
+
+### 24.3 Lazy Loading Modul & Modal
+Disebabkan JPP mempunyai modul exco yang banyak, elakkan *eager loading*.
+
+```typescript
+// ❌ SALAH
+import { KamsisApplicationModal } from '@/components/kamsis/KamsisApplicationModal';
+
+// ✅ BETUL (Lazy-load dalam App.tsx)
+const KamsisApplicationModal = lazy(() => import('@/components/kamsis/KamsisApplicationModal').then(m => ({ default: m.KamsisApplicationModal })));
+```
+Semua layout exco dan *global modals* telah ditukar ke `React.lazy()`. Modal global juga diletakkan di dalam `requestIdleCallback` (di `RequireApproval` komponen) supaya ia hanya dirender **selepas** halaman utama portal selesai di-"paint".
+
+### 24.4 Throttling Event Scroll
+**JANGAN** panggil logik UI yang berat di dalam `window.addEventListener('scroll')` tanpa throttling, kerana ia akan menyebabkan "jank" (tersangkut) pada peranti murah. Gunakan `requestAnimationFrame` dan `passive: true`.
+
+```typescript
+// ✅ BETUL (Contoh Throttling Scroll)
+useEffect(() => {
+  let ticking = false;
+  const onScroll = () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 20);
+        ticking = false;
+      });
+      ticking = true;
+    }
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  return () => window.removeEventListener('scroll', onScroll);
+}, []);
+```
+
+### 24.5 Page Transition (Framer Motion)
+Elakkan menggunakan `<AnimatePresence mode="wait">` untuk *page routing transition* keseluruhan halaman (seperti dalam `AppLayout.tsx`). `mode="wait"` menghalang rendering komponen baharu sehingga animasi komponen lama tamat, menyebabkan tanggapan "lagging". Gunakan animasi `opacity` pantas (0.15s) dengan `willChange: 'opacity'` untuk "GPU hardware acceleration".
+
+### 24.6 Promise.all untuk API Fetch
+Semasa memuatkan Dashboard/Portal, satukan pengambilan data secara "Parallel". Rujuk peraturan 15.2 (Query Frontend). Elakkan N+1 loading dan siri sequential `useEffect` yang mengakibatkan "Waterfall loading".
