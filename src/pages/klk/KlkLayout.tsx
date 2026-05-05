@@ -1,17 +1,18 @@
-// ============================================================
-// KlkLayout — Layout wrapper untuk modul Kediaman Luar Kampus
-// Route: /klk/* (Dashboard + Tetapan)
-// Pattern sama seperti KebajikanLayout.tsx
-// ============================================================
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { KlkSidebar } from './KlkSidebar';
-import { Menu } from 'lucide-react';
+import { Menu, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
-import { MapPin } from 'lucide-react';
+import { QrCodeFab } from '@/components/jpp/QrCodeFab';
+
+const KLK_UNIT_LINKS = [
+  { label: 'Borang Deklarasi Kediaman', path: '/klk' },
+  { label: 'Dashboard Exco KLS', path: '/klk/dashboard' },
+  { label: 'Statistik Kediaman Luar Kampus', path: '/klk/statistik' },
+];
 
 export function KlkLayout() {
   const { isLoading, profile, isSuperAdmin } = useAuth();
@@ -88,6 +89,9 @@ export function KlkLayout() {
         </div>
 
         <FloatingAiChat />
+
+        {/* QR Code FAB — untuk Exco KLS jana QR */}
+        <QrCodeFab unitLinks={KLK_UNIT_LINKS} />
       </main>
     </div>
   );

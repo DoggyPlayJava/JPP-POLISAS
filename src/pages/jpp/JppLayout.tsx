@@ -6,6 +6,15 @@ import { JppSidebar } from './JppSidebar';
 import { Menu, X } from 'lucide-react';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
+import { QrCodeFab } from '@/components/jpp/QrCodeFab';
+
+const JPP_UNIT_LINKS = [
+  { label: 'Dashboard JPP HQ', path: '/jpp' },
+  { label: 'Senarai Ahli JPP', path: '/jpp/ahli' },
+  { label: 'Pengumuman JPP', path: '/jpp/pengumuman' },
+  { label: 'Takwim JPP', path: '/jpp/takwim' },
+  { label: 'NEXUS (Tugasan)', path: '/jpp/nexus' },
+];
 
 export function JppLayout() {
   const { isJppMember, isSuperAdmin, isLoading, hasKediamanAccess } = useAuth();
@@ -105,6 +114,9 @@ export function JppLayout() {
 
         {/* Global Floating AI Chat for JPP HQ */}
         <FloatingAiChat />
+
+        {/* QR Code FAB — untuk semua ahli JPP jana QR berjenama */}
+        <QrCodeFab unitLinks={JPP_UNIT_LINKS} />
       </div>
     </div>
   );

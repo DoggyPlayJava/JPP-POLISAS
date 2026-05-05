@@ -318,7 +318,7 @@ export function JppSettingsPage() {
                             <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-white/40">Penjana QR Link</h3>
                         </div>
                         <div className="p-6 rounded-[2rem] bg-gradient-to-br from-emerald-900/10 to-emerald-900/5 border border-emerald-500/20 hover:from-emerald-900/20 transition-all">
-                            <QrLinkManager />
+                            <QrLinkManager showHeader={false} />
                         </div>
                     </motion.div>
                 )}

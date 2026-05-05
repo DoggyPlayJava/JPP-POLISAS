@@ -10,6 +10,15 @@ import { cn } from '@/lib/utils';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { EXCO_MODULES } from '@/config/excoModules';
 import { ExcoIcon } from '@/components/ui/ExcoIcon';
+import { QrCodeFab } from '@/components/jpp/QrCodeFab';
+
+const KPP_UNIT_LINKS = [
+  { label: 'Senarai Program / Aktiviti', path: '/aktiviti' },
+  { label: 'Senarai Kelab', path: '/kelab' },
+  { label: 'Leaderboard Merit', path: '/leaderboard' },
+  { label: 'Dashboard KPP', path: '/dashboard' },
+  { label: 'Jadual Perjumpaan Kelab', path: '/takwim' },
+];
 
 // Detect exco aktif dari pathname (sama logik dengan Sidebar.tsx)
 const EKPP_ROUTES = [
@@ -125,6 +134,9 @@ export function AppLayout() {
 
         {/* Global Floating AI Chat */}
         <FloatingAiChat />
+
+        {/* QR Code FAB — untuk Exco KPP jana QR */}
+        <QrCodeFab unitLinks={KPP_UNIT_LINKS} />
       </div>
     </div>
   );

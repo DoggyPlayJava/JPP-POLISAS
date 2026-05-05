@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import type { QrUnitLink } from './QrCodeFab';
 
-// ── Senarai halaman biasa yang selalu digunakan oleh Exco untuk QR ──
-const QUICK_LINKS = [
+// ── Senarai halaman umum (Exco semua unit boleh guna) ──
+const GENERAL_LINKS: QrUnitLink[] = [
   { label: 'Portal Utama', path: '/portal' },
   { label: 'PolyMart Marketplace', path: '/polymart' },
   { label: 'Daftar Aduan Kebajikan', path: '/kebajikan/buat-aduan' },
@@ -21,12 +22,24 @@ const QUICK_LINKS = [
   { label: 'e-KLK (Kediaman Luar Kampus)', path: '/klk' },
 ];
 
-export function QrLinkManager() {
+interface QrLinkManagerProps {
+  /** Link unit-spesifik — akan dipapar dahulu dalam senarai (atas) */
+  unitLinks?: QrUnitLink[];
+  /** Sembunyikan header title — guna bila di dalam QrCodeFab yang dah ada header sendiri */
+  showHeader?: boolean;
+}
+
+export function QrLinkManager({ unitLinks, showHeader = true }: QrLinkManagerProps) {
   const [customPath, setCustomPath] = useState('');
   const [selectedQuick, setSelectedQuick] = useState('');
   const [showQuickList, setShowQuickList] = useState(false);
   const [copied, setCopied] = useState(false);
   const qrRef = useRef<SVGSVGElement>(null);
+
+  // Gabungkan: unit links dahulu, kemudian general (tanpa duplikat)
+  const unitPaths = new Set((unitLinks || []).map(l => l.path));
+  const filteredGeneral = GENERAL_LINKS.filter(l => !unitPaths.has(l.path));
+  const hasUnitLinks = (unitLinks?.length ?? 0) > 0;
 
   // Resolve URL penuh dari path
   const basePath = selectedQuick || customPath.trim();
@@ -76,27 +89,32 @@ export function QrLinkManager() {
     img.src = svgUrl;
   }, [fullUrl]);
 
-  const selectQuick = (path: string, label: string) => {
+  const selectQuick = (path: string) => {
     setSelectedQuick(path);
     setCustomPath('');
     setShowQuickList(false);
   };
 
-  const currentLabel = QUICK_LINKS.find(q => q.path === selectedQuick)?.label;
+  // Cari label dari mana-mana senarai
+  const allLinks = [...(unitLinks || []), ...filteredGeneral];
+  const currentLabel = allLinks.find(q => q.path === selectedQuick)?.label;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-2">
-        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-          <QrCode className="w-4 h-4 text-primary" />
+      {/* Header — sembunyikan bila dalam FAB (FAB ada header sendiri) */}
+      {showHeader && (
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+            <QrCode className="w-4 h-4 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-black text-sm uppercase tracking-widest">Penjana QR Code</h3>
+            <p className="text-[11px] text-muted-foreground font-medium">
+              Jana QR dengan logo JPP untuk dikongsi kepada pelajar.
+            </p>
+          </div>
         </div>
-        <div>
-          <h3 className="font-black text-sm uppercase tracking-widest">Penjana QR Code</h3>
-          <p className="text-[11px] text-muted-foreground font-medium">
-            Jana QR dengan logo JPP untuk dikongsi kepada pelajar.
-          </p>
-        </div>
-      </div>
+      )}
 
       {/* Quick Links Dropdown */}
       <div className="space-y-1.5">
@@ -124,15 +142,42 @@ export function QrLinkManager() {
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
-                className="absolute top-full mt-1 w-full z-50 bg-card border border-border/60 rounded-2xl shadow-2xl overflow-hidden"
+                className="absolute top-full mt-1 w-full z-50 bg-card border border-border/60 rounded-2xl shadow-2xl overflow-hidden max-h-72 overflow-y-auto"
               >
-                {QUICK_LINKS.map(q => (
+                {/* Unit-specific links (atas) */}
+                {hasUnitLinks && (
+                  <>
+                    <div className="px-4 pt-3 pb-1">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-primary/60">Modul Ini</p>
+                    </div>
+                    {(unitLinks || []).map(q => (
+                      <button
+                        key={q.path}
+                        type="button"
+                        onClick={() => selectQuick(q.path)}
+                        className={cn(
+                          'w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-muted/60 transition-colors flex items-center justify-between',
+                          selectedQuick === q.path && 'bg-primary/8 text-primary font-black'
+                        )}
+                      >
+                        <span>{q.label}</span>
+                        <span className="text-[10px] text-muted-foreground font-mono">{q.path}</span>
+                      </button>
+                    ))}
+                    <div className="mx-4 my-2 border-t border-border/40" />
+                    <div className="px-4 pb-1">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">Umum</p>
+                    </div>
+                  </>
+                )}
+                {/* General links (bawah) */}
+                {filteredGeneral.map(q => (
                   <button
                     key={q.path}
                     type="button"
-                    onClick={() => selectQuick(q.path, q.label)}
+                    onClick={() => selectQuick(q.path)}
                     className={cn(
-                      'w-full text-left px-4 py-3 text-sm font-medium hover:bg-muted/60 transition-colors flex items-center justify-between',
+                      'w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-muted/60 transition-colors flex items-center justify-between',
                       selectedQuick === q.path && 'bg-primary/8 text-primary font-black'
                     )}
                   >

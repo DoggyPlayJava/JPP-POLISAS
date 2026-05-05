@@ -18,11 +18,18 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
+import { QrCodeFab } from '@/components/jpp/QrCodeFab';
 import {
   BusinessSwitcherProvider,
   useBusinessSwitcher,
 } from '@/contexts/BusinessSwitcherContext';
 
+const KEUSAHAWANAN_UNIT_LINKS = [
+  { label: 'Dashboard Perniagaan', path: '/keusahawanan' },
+  { label: 'PolyMart Marketplace', path: '/polymart' },
+  { label: 'Program Keusahawanan', path: '/keusahawanan/program' },
+  { label: 'Urus Produk / Perkhidmatan', path: '/keusahawanan/produk' },
+];
 const MODULE_ID = 'keusahawanan';
 const DEFAULT_COLOR = '#1B5E20';
 
@@ -485,6 +492,9 @@ function LayoutInner({
 
           {/* Global Floating AI Chat for Keusahawanan */}
           <FloatingAiChat />
+
+          {/* QR Code FAB — untuk Exco Keusahawanan jana QR */}
+          <QrCodeFab unitLinks={KEUSAHAWANAN_UNIT_LINKS} />
         </div>
       </div>
     </ExcoThemeProvider>

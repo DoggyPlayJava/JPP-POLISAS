@@ -6,6 +6,13 @@ import { Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
+import { QrCodeFab } from '@/components/jpp/QrCodeFab';
+
+const KEBAJIKAN_UNIT_LINKS = [
+  { label: 'Hantar Aduan Kebajikan', path: '/kebajikan/buat-aduan' },
+  { label: 'Statistik Kebajikan', path: '/kebajikan/statistik' },
+  { label: 'Semak Status Tiket', path: '/kebajikan/tiket' },
+];
 
 export function KebajikanLayout() {
   const { isLoading, hasKebajikanAccess, hasKebajikanKKAccess } = useAuth();
@@ -78,6 +85,9 @@ export function KebajikanLayout() {
           <Outlet />
         </div>
         <FloatingAiChat />
+
+        {/* QR Code FAB — untuk Exco Kebajikan */}
+        <QrCodeFab unitLinks={KEBAJIKAN_UNIT_LINKS} />
       </main>
     </div>
   );
