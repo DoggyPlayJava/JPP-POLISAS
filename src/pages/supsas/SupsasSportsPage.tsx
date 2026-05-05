@@ -4,7 +4,7 @@ import { Trophy, Users, Filter, Search, LayoutGrid } from 'lucide-react';
 import { useSupsas } from '@/contexts/SupsasContext';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import * as LucideIcons from 'lucide-react';
+import { DynamicIcon } from '@/components/ui/DynamicIcon';
 
 const GENDER_LABEL: Record<string, string> = { male: 'Lelaki', female: 'Wanita', mixed: 'Campur' };
 const FORMAT_LABEL: Record<string, string> = { knockout: 'Sistem Gugur', round_robin: 'Liga', group_knockout: 'Kumpulan + Gugur' };
@@ -81,7 +81,6 @@ export function SupsasSportsPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
               {filtered.map((sport, i) => {
-                const IconComponent = (LucideIcons as any)[sport.icon] || LucideIcons.Trophy;
                 return (
                   <motion.div
                     key={sport.id}
@@ -92,7 +91,7 @@ export function SupsasSportsPage() {
                   >
                     {/* Icon */}
                     <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
-                      <IconComponent className="w-7 h-7 text-amber-400" />
+                      <DynamicIcon name={sport.icon} fallback="Trophy" className="w-7 h-7 text-amber-400" />
                     </div>
 
                     {/* Name */}

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import * as LucideIcons from 'lucide-react';
+import { Lock, Palette, PowerOff, Power, ArrowRight } from 'lucide-react';
+import { DynamicIcon } from '@/components/ui/DynamicIcon';
 import { toast } from 'react-hot-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -135,7 +136,7 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
 
   const canAccess = isEnabled || isSuperAdmin;
   const isPreviewMode = !isEnabled && isSuperAdmin;
-  const IconComponent = (LucideIcons as any)[module.icon] || LucideIcons.LayoutDashboard;
+  // DynamicIcon handles lazy-loading the icon by name
   const isEventMode = karnivalActive || supsasActive;
 
   const handleClick = () => {
@@ -220,7 +221,9 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
                 {notificationCount}
               </div>
             )}
-            <IconComponent 
+            <DynamicIcon 
+              name={module.icon}
+              fallback="LayoutDashboard"
               className="w-6 h-6 transition-colors duration-500" 
               style={{ color: canAccess ? color : 'currentColor' }} 
             />
@@ -250,7 +253,7 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
                 ) : isPreviewMode ? (
                   <span className="flex items-center gap-1">Pratonton</span>
                 ) : (
-                  <span className="flex items-center gap-1"><LucideIcons.Lock className="w-2.5 h-2.5" /> Kunci</span>
+                  <span className="flex items-center gap-1"><Lock className="w-2.5 h-2.5" /> Kunci</span>
                 )}
               </div>
             </div>
@@ -263,7 +266,7 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
                       "p-1.5 rounded-lg border transition-all",
                       isEventMode ? "border-white/10 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white" : "border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white"
                     )}>
-                      <LucideIcons.Palette className="w-3.5 h-3.5" />
+                      <Palette className="w-3.5 h-3.5" />
                     </button>
                   </PopoverTrigger>
                   <PopoverContent
@@ -290,7 +293,7 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
                         : isEnabled ? "border-rose-200 bg-rose-50 text-rose-500 hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-500/20" : "border-emerald-200 bg-emerald-50 text-emerald-500 hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/20"
                     )}
                   >
-                    {isEnabled ? <LucideIcons.PowerOff className="w-3.5 h-3.5" /> : <LucideIcons.Power className="w-3.5 h-3.5" />}
+                    {isEnabled ? <PowerOff className="w-3.5 h-3.5" /> : <Power className="w-3.5 h-3.5" />}
                   </button>
                 )}
               </div>
@@ -326,7 +329,7 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
           <span className="group-hover:text-[var(--hover-color)] transition-colors">
             {canAccess ? "Masuk Portal" : "Bakal Tiba"}
           </span>
-          <LucideIcons.ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1 group-hover:text-[var(--hover-color)]" />
+          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1 group-hover:text-[var(--hover-color)]" />
         </div>
 
         <div className={cn(

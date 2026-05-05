@@ -6,9 +6,11 @@ import {
   Settings, 
   LogOut, 
   Crown, 
-  ChevronRight
+  ChevronRight,
+  X,
+  LayoutGrid
 } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
+import { DynamicIcon } from '@/components/ui/DynamicIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { EXCO_MODULES, getExcoColor } from '@/config/excoModules';
 import { cn, getMalaysianNickname, hexToRgba } from '@/lib/utils';
@@ -95,7 +97,7 @@ export function PortalSidebar({ isOpen, onClose, onOpen, settings = [] }: Portal
                 </div>
               </div>
               <Button variant="ghost" size="icon" onClick={onClose} className="lg:hidden rounded-full">
-                <LucideIcons.X className="w-5 h-5" />
+                <X className="w-5 h-5" />
               </Button>
             </div>
 
@@ -112,7 +114,7 @@ export function PortalSidebar({ isOpen, onClose, onOpen, settings = [] }: Portal
                     <p className="text-sm font-black text-slate-800 dark:text-white truncate">{displayName}</p>
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 truncate mt-0.5">{profile?.matric_no}</p>
                   </div>
-                  <LucideIcons.ChevronRight className="w-4 h-4 text-slate-300 dark:text-white/20 group-hover:translate-x-1 transition-transform" />
+                  <ChevronRight className="w-4 h-4 text-slate-300 dark:text-white/20 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
             </div>
@@ -122,8 +124,8 @@ export function PortalSidebar({ isOpen, onClose, onOpen, settings = [] }: Portal
               {/* Primary Nav */}
               <div className="space-y-1">
                 <p className="px-4 text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/20 mb-3">Utama</p>
-                <SidebarLink icon={LucideIcons.Home} label="Laman Utama" to="/portal" onClick={onClose} />
-                <SidebarLink icon={LucideIcons.Settings} label="Tetapan Profil" to="/tetapan" onClick={onClose} />
+                <SidebarLink icon={Home} label="Laman Utama" to="/portal" onClick={onClose} />
+                <SidebarLink icon={Settings} label="Tetapan Profil" to="/tetapan" onClick={onClose} />
               </div>
 
               {/* JPP HQ Shortcut */}
@@ -136,7 +138,7 @@ export function PortalSidebar({ isOpen, onClose, onOpen, settings = [] }: Portal
                     className="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 group"
                   >
                     <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                      <LucideIcons.Crown className="w-4 h-4" />
+                      <Crown className="w-4 h-4" />
                     </div>
                     <span className="text-[11px] font-black uppercase tracking-widest">JPP HQ Portal</span>
                     <Badge className="ml-auto bg-amber-500/20 text-amber-500 text-[8px] border-none font-black h-5">EXCLUSIVE</Badge>
@@ -149,7 +151,10 @@ export function PortalSidebar({ isOpen, onClose, onOpen, settings = [] }: Portal
                 <p className="px-4 text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/20 mb-3">Modul Pantas</p>
                 <div className="grid grid-cols-2 gap-2 px-2 pb-4">
                   {EXCO_MODULES.map((mod) => {
-                    const IconComp = (LucideIcons as any)[mod.icon] || LucideIcons.LayoutGrid;
+                    const IconComp = (() => {
+                      // Lazy icon resolution via DynamicIcon
+                      return (props: any) => <DynamicIcon name={mod.icon} fallback="LayoutGrid" {...props} />;
+                    })();
                     return (
                       <button
                         key={mod.id}

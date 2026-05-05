@@ -56,4 +56,32 @@ export default defineConfig({
       }
     }
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-motion': ['framer-motion'],
+          'vendor-radix': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-tooltip',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-select',
+            '@radix-ui/react-slot',
+            '@radix-ui/react-label',
+            '@radix-ui/react-switch',
+            '@radix-ui/react-avatar',
+            '@radix-ui/react-progress',
+            '@radix-ui/react-scroll-area',
+          ],
+          'vendor-recharts': ['recharts'],
+          'vendor-utils': ['date-fns', 'zod', 'zustand', 'clsx', 'class-variance-authority'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
+  },
 });

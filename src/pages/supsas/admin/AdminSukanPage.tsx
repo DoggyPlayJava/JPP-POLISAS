@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useSupsas, SupsasSport } from '@/contexts/SupsasContext';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
-import * as LucideIcons from 'lucide-react';
+import { DynamicIcon } from '@/components/ui/DynamicIcon';
 import { AdminBracketPanel } from './components/AdminBracketPanel';
 
 const SPORT_ICONS = ['Trophy', 'Volleyball', 'Dumbbell', 'Bike', 'Waves', 'Target', 'Footprints', 'Sword', 'Shield', 'Zap', 'Activity', 'Flame'];
@@ -20,7 +20,7 @@ function IconPicker({ value, onChange }: { value: string; onChange: (v: string) 
   return (
     <div className="flex flex-wrap gap-2">
       {SPORT_ICONS.map((icon) => {
-        const Ic = (LucideIcons as any)[icon] || LucideIcons.Trophy;
+        const Ic = (props: any) => <DynamicIcon name={icon} fallback="Trophy" {...props} />;
         return (
           <button
             key={icon}
@@ -197,7 +197,7 @@ export function AdminSukanPage() {
       {/* Sports list */}
       <div className="space-y-3">
         {sports.map((sport, i) => {
-          const Ic = (LucideIcons as any)[sport.icon] || LucideIcons.Trophy;
+          const Ic = (props: any) => <DynamicIcon name={sport.icon} fallback="Trophy" {...props} />;
           const sportFixtures = fixtures.filter(f => f.sport_id === sport.id);
           const groupFixtures  = sportFixtures.filter(f => f.group_name != null);
           const qfFixtures      = sportFixtures.filter(f => f.bracket_round === 3); // Suku Akhir

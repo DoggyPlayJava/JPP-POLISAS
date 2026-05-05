@@ -115,18 +115,16 @@ export function AppLayout() {
         <Header onOpenSearch={() => setIsSearchOpen(true)} />
 
         <main className="flex-1 overflow-y-auto bg-background scrollbar-hide">
-          <AnimatePresence mode="wait">
-            <motion.div
+          <motion.div
               key={location.pathname}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
               className="h-full"
+              style={{ willChange: 'opacity' }}
             >
               <Outlet />
             </motion.div>
-          </AnimatePresence>
         </main>
 
         {/* Global Command Palette */}

@@ -1,10 +1,12 @@
-import { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect, useState, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute, PublicRoute } from '@/components/RouteGuards';
-import { AppLayout } from '@/components/layout/AppLayout';
+
+// Layout components — lazy-loaded since they're only needed per section
+const AppLayout = lazy(() => import('@/components/layout/AppLayout').then(m => ({ default: m.AppLayout })));
 
 // Ceraikan (Lazy Load) semua halaman untuk mengurangkan saiz awal
 const LoginPage = lazy(() => import('@/pages/LoginPage').then(m => ({ default: m.LoginPage })));
@@ -40,7 +42,7 @@ const NexusPage = lazy(() => import('./pages/NexusPage').then(m => ({ default: m
 const PortalPage = lazy(() => import('./pages/PortalPage').then(m => ({ default: m.PortalPage })));
 const NotifikasiPage = lazy(() => import('./pages/NotifikasiPage').then(m => ({ default: m.NotifikasiPage })));
 // ── JPP HQ Portal ──
-import { JppLayout } from './pages/jpp/JppLayout';
+const JppLayout = lazy(() => import('./pages/jpp/JppLayout').then(m => ({ default: m.JppLayout })));
 const JppHomePage = lazy(() => import('./pages/jpp/JppHomePage').then(m => ({ default: m.JppHomePage })));
 const JppMembersPage = lazy(() => import('./pages/jpp/JppMembersPage').then(m => ({ default: m.JppMembersPage })));
 const JppOverviewPage = lazy(() => import('./pages/jpp/JppOverviewPage').then(m => ({ default: m.JppOverviewPage })));
@@ -53,7 +55,7 @@ const ExcoLaporanWrapper = lazy(() => import('./pages/jpp/ExcoWrappers').then(m 
 const ExcoSemakanLaporanPage = lazy(() => import('./components/exco/ExcoSemakanLaporanPage').then(m => ({ default: m.ExcoSemakanLaporanPage })));
 
 // ── e-Keusahawanan ──
-import { KeusahawananLayout } from './pages/keusahawanan/KeusahawananLayout';
+const KeusahawananLayout = lazy(() => import('./pages/keusahawanan/KeusahawananLayout').then(m => ({ default: m.KeusahawananLayout })));
 const KeusahawananDashboard = lazy(() => import('./pages/keusahawanan/KeusahawananDashboard').then(m => ({ default: m.KeusahawananDashboard })));
 const KeusahawananProgram = lazy(() => import('./pages/keusahawanan/KeusahawananProgram').then(m => ({ default: m.KeusahawananProgram })));
 const KeusahawananIdea = lazy(() => import('./pages/keusahawanan/KeusahawananPlaceholders').then(m => ({ default: m.KeusahawananIdea })));
@@ -67,7 +69,7 @@ const PosStatsPage = lazy(() => import('./pages/keusahawanan/pos/PosStatsPage').
 const PosHistoryPage = lazy(() => import('./pages/keusahawanan/pos/PosHistoryPage').then(m => ({ default: m.PosHistoryPage })));
 
 // ── PolyMart Marketplace ──
-import { PolyMartLayout } from './pages/polymart/PolyMartLayout';
+const PolyMartLayout = lazy(() => import('./pages/polymart/PolyMartLayout').then(m => ({ default: m.PolyMartLayout })));
 const PolyMartHome = lazy(() => import('./pages/polymart/PolyMartHome').then(m => ({ default: m.PolyMartHome })));
 const PolyMartProductDetail = lazy(() => import('./pages/polymart/PolyMartProductDetail').then(m => ({ default: m.PolyMartProductDetail })));
 const PolyMartMyOrders = lazy(() => import('./pages/polymart/PolyMartMyOrders').then(m => ({ default: m.PolyMartMyOrders })));
@@ -75,7 +77,7 @@ const PolyMartVendorDashboard = lazy(() => import('./pages/polymart/PolyMartVend
 const PolyMartAdminPanel = lazy(() => import('./pages/polymart/PolyMartAdminPanel').then(m => ({ default: m.PolyMartAdminPanel })));
 
 // ── e-Akademik ──
-import { AkademikLayout } from './pages/akademik/AkademikLayout';
+const AkademikLayout = lazy(() => import('./pages/akademik/AkademikLayout').then(m => ({ default: m.AkademikLayout })));
 const AkademikDashboard = lazy(() => import('./pages/akademik/AkademikDashboard').then(m => ({ default: m.AkademikDashboard })));
 const AkademikPencapaian = lazy(() => import('./pages/akademik/AkademikPencapaian').then(m => ({ default: m.AkademikPencapaian })));
 const AkademikMeritPage = lazy(() => import('./pages/akademik/AkademikMeritPage').then(m => ({ default: m.AkademikMeritPage })));
@@ -87,9 +89,9 @@ const AkademikLeaderboard = lazy(() => import('./pages/akademik/AkademikLeaderbo
 
 // ── SUPSAS ──
 import { SupsasProvider } from './contexts/SupsasContext';
-import { SupsasLayout } from './pages/supsas/SupsasLayout';
-import { SupsasAdminLayout } from './pages/supsas/admin/SupsasAdminLayout';
-import { KetuaLayout } from './pages/supsas/ketua/KetuaLayout';
+const SupsasLayout = lazy(() => import('./pages/supsas/SupsasLayout').then(m => ({ default: m.SupsasLayout })));
+const SupsasAdminLayout = lazy(() => import('./pages/supsas/admin/SupsasAdminLayout').then(m => ({ default: m.SupsasAdminLayout })));
+const KetuaLayout = lazy(() => import('./pages/supsas/ketua/KetuaLayout').then(m => ({ default: m.KetuaLayout })));
 const SupsasLandingPage = lazy(() => import('./pages/supsas/SupsasLandingPage').then(m => ({ default: m.SupsasLandingPage })));
 const SupsasScoreboardPage = lazy(() => import('./pages/supsas/SupsasScoreboardPage').then(m => ({ default: m.SupsasScoreboardPage })));
 const SupsasSportsPage = lazy(() => import('./pages/supsas/SupsasSportsPage').then(m => ({ default: m.SupsasSportsPage })));
@@ -104,13 +106,13 @@ const KetuaDashboard = lazy(() => import('./pages/supsas/ketua/KetuaDashboard').
 const BracketPage = lazy(() => import('./pages/supsas/BracketPage').then(m => ({ default: m.BracketPage })));
 const SupsasHistoryPage = lazy(() => import('./pages/supsas/SupsasHistoryPage').then(m => ({ default: m.SupsasHistoryPage })));
 
-// ── Karnival JPP v2 (Layouts — import terus seperti SUPSAS) ──
+// ── Karnival JPP v2 (Layouts — lazy loaded) ──
 import { KarnivalProvider } from './contexts/KarnivalContext';
-import { KarnivalLayout } from './pages/karnival/KarnivalLayout';
-import { KarnivalAdminLayout } from './pages/karnival/admin/KarnivalAdminLayout';
+const KarnivalLayout = lazy(() => import('./pages/karnival/KarnivalLayout').then(m => ({ default: m.KarnivalLayout })));
+const KarnivalAdminLayout = lazy(() => import('./pages/karnival/admin/KarnivalAdminLayout').then(m => ({ default: m.KarnivalAdminLayout })));
 
 // ── E-Kebajikan ──
-import { KebajikanLayout } from './pages/kebajikan/KebajikanLayout';
+const KebajikanLayout = lazy(() => import('./pages/kebajikan/KebajikanLayout').then(m => ({ default: m.KebajikanLayout })));
 const KebajikanStatsPage = lazy(() => import('./pages/kebajikan/KebajikanPublicStats').then(m => ({ default: m.KebajikanStatsPage })));
 const KebajikanSubmitPage = lazy(() => import('./pages/kebajikan/KebajikanSubmitPage').then(m => ({ default: m.KebajikanSubmitPage })));
 const KebajikanMyTickets = lazy(() => import('./pages/kebajikan/KebajikanMyTickets').then(m => ({ default: m.KebajikanMyTickets })));
@@ -128,7 +130,7 @@ const KlkPublicStats = lazy(() => import('./pages/klk/KlkPublicStats').then(m =>
 const KlkResidencyFormPage = lazy(() => import('./pages/klk/KlkResidencyFormPage').then(m => ({ default: m.KlkResidencyFormPage })));
 const KlkSettingsPage = lazy(() => import('./pages/klk/KlkSettingsPage').then(m => ({ default: m.KlkSettingsPage })));
 const KlkLayout = lazy(() => import('./pages/klk/KlkLayout').then(m => ({ default: m.KlkLayout })));
-import { KlkResidencyModal } from '@/components/klk/KlkResidencyModal';
+
 
 const JppUsersPage = lazy(() => import('./pages/jpp/JppUsersPage').then(m => ({ default: m.JppUsersPage })));
 // ── Program Attendance (QR Check-in) ──
@@ -139,10 +141,12 @@ const JppSettingsPage = lazy(() => import('./pages/jpp/JppSettingsPage').then(m 
 const JppNexusPage = lazy(() => import('./pages/jpp/JppNexusPage').then(m => ({ default: m.JppNexusPage })));
 const JppAsramaPage = lazy(() => import('./pages/jpp/JppAsramaPage').then(m => ({ default: m.JppAsramaPage })));
 
-import { CompleteProfileModal } from '@/components/ui/CompleteProfileModal';
-import { GlobalAnnouncementModal } from '@/components/GlobalAnnouncementModal';
-import { KamsisApplicationModal } from '@/components/kamsis/KamsisApplicationModal';
-import { PushPermissionModal } from '@/components/ui/PushPermissionModal';
+// ── Global Modals (lazy-loaded, deferred after paint) ──
+const CompleteProfileModal = lazy(() => import('@/components/ui/CompleteProfileModal').then(m => ({ default: m.CompleteProfileModal })));
+const GlobalAnnouncementModal = lazy(() => import('@/components/GlobalAnnouncementModal').then(m => ({ default: m.GlobalAnnouncementModal })));
+const KamsisApplicationModal = lazy(() => import('@/components/kamsis/KamsisApplicationModal').then(m => ({ default: m.KamsisApplicationModal })));
+const PushPermissionModal = lazy(() => import('@/components/ui/PushPermissionModal').then(m => ({ default: m.PushPermissionModal })));
+const KlkResidencyModal = lazy(() => import('@/components/klk/KlkResidencyModal').then(m => ({ default: m.KlkResidencyModal })));
 
 function RequireApproval({ children }: { children: React.ReactNode }) {
   const { profile, isLoading } = useAuth();
@@ -166,14 +170,32 @@ function RequireApproval({ children }: { children: React.ReactNode }) {
     return <PendingPage />;
   }
 
+  // Defer modal mounting until after main content has painted
+  const [modalsReady, setModalsReady] = useState(false);
+  useEffect(() => {
+    const cb = typeof window.requestIdleCallback === 'function'
+      ? window.requestIdleCallback
+      : (fn: () => void) => setTimeout(fn, 200);
+    const id = cb(() => setModalsReady(true));
+    return () => {
+      if (typeof window.cancelIdleCallback === 'function') {
+        window.cancelIdleCallback(id as number);
+      }
+    };
+  }, []);
+
   // C. Lepaskan log masuk jika sah, tetapi wajibkan maklumat profil jika kosong
   return (
     <>
-      <CompleteProfileModal />
-      <GlobalAnnouncementModal />
-      <KlkResidencyModal />
-      <KamsisApplicationModal />
-      <PushPermissionModal />
+      {modalsReady && (
+        <Suspense fallback={null}>
+          <CompleteProfileModal />
+          <GlobalAnnouncementModal />
+          <KlkResidencyModal />
+          <KamsisApplicationModal />
+          <PushPermissionModal />
+        </Suspense>
+      )}
       {children}
     </>
   );

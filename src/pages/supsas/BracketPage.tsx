@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Trophy, MapPin, LayoutGrid, List } from 'lucide-react';
 import { useSupsas } from '@/contexts/SupsasContext';
 import { GroupStandingsTable, KnockoutBracket } from './components/KnockoutBracket';
-import * as LucideIcons from 'lucide-react';
+import { DynamicIcon } from '@/components/ui/DynamicIcon';
 import { cn } from '@/lib/utils';
 
 type Tab = 'kumpulan' | 'bracket' | 'jadual';
@@ -45,7 +45,7 @@ export function BracketPage() {
   const liveCount = sportFixtures.filter(f => f.status === 'live').length;
   const doneCount = sportFixtures.filter(f => f.status === 'completed').length;
 
-  const SportIcon = sport ? ((LucideIcons as any)[sport.icon] || LucideIcons.Trophy) : LucideIcons.Trophy;
+  const SportIconComponent = (props: any) => sport ? <DynamicIcon name={sport.icon} fallback="Trophy" {...props} /> : <Trophy {...props} />;
 
   const TABS: Array<{ id: Tab; label: string; icon: React.ReactNode }> = [
     { id: 'kumpulan', label: 'Kumpulan', icon: <LayoutGrid className="w-3.5 h-3.5" /> },
@@ -75,7 +75,7 @@ export function BracketPage() {
       {/* Sport header */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-4">
         <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
-          <SportIcon className="w-7 h-7 text-amber-400" />
+          <SportIconComponent className="w-7 h-7 text-amber-400" />
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">

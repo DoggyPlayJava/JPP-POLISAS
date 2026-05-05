@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, animate } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import * as LucideIcons from 'lucide-react';
+import { Clock, QrCode, Trophy } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { triggerHaptic } from '@/lib/utils';
 
@@ -173,7 +173,7 @@ export function KarnivalMegaBanner({ karnivalStatus }: KarnivalMegaBannerProps) 
           </div>
           {karnivalStatus?.endDate && !karnivalCountdown.expired && (
             <div className="inline-flex items-center gap-1 px-5 py-2.5 rounded-2xl" style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.2)' }}>
-              <LucideIcons.Clock className="w-3.5 h-3.5 text-violet-400 mr-1" />
+              <Clock className="w-3.5 h-3.5 text-violet-400 mr-1" />
               <span className="text-xs text-white/60 font-medium">Undi ditutup dalam</span>
               {[{ v: karnivalCountdown.h, l: 'j' }, { v: karnivalCountdown.m, l: 'm' }, { v: karnivalCountdown.s, l: 's' }].map(({ v, l }) => (
                 <span key={l} className="flex items-baseline gap-0.5"><span className="text-lg font-black text-white tabular-nums">{String(v).padStart(2, '0')}</span><span className="text-[10px] text-white/40 font-bold">{l}</span></span>
@@ -193,14 +193,14 @@ export function KarnivalMegaBanner({ karnivalStatus }: KarnivalMegaBannerProps) 
               className="group flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest relative overflow-hidden"
               style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)', boxShadow: '0 8px 30px rgba(139,92,246,0.4)', color: 'white' }}>
               <div className="absolute inset-0 bg-white/20 translate-x-[-100%] skew-x-[-20deg] group-hover:animate-[shimmer-sweep_1.5s_infinite]" />
-              <LucideIcons.QrCode className="w-4 h-4 relative z-10" /> <span className="relative z-10">Undi Booth Sekarang</span>
+              <QrCode className="w-4 h-4 relative z-10" /> <span className="relative z-10">Undi Booth Sekarang</span>
             </motion.button>
             <motion.button onClick={e => { e.stopPropagation(); triggerHaptic('light'); navigate('/karnival/scoreboard'); }}
               whileHover={{ scale: 1.05, backgroundColor: 'rgba(139,92,246,0.2)' }}
               whileTap={{ scale: 0.95 }}
               className="flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest relative"
               style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.3)', color: '#c084fc' }}>
-              <LucideIcons.Trophy className="w-4 h-4" /> Papan Markah
+              <Trophy className="w-4 h-4" /> Papan Markah
             </motion.button>
           </div>
         </div>

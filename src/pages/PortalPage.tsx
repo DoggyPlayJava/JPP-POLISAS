@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { EXCO_MODULES, getExcoColor, ExcoColorSetting } from '@/config/excoModules';
-import * as LucideIcons from 'lucide-react';
+
+import { Sparkles, Building2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { cn, getMalaysianNickname } from '@/lib/utils';
 import { PortalSidebar } from '@/components/layout/PortalSidebar';
@@ -90,8 +91,17 @@ export function PortalPage() {
   }, [fetchKamsisStatus]);
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setIsScrolled(window.scrollY > 20);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -138,22 +148,70 @@ export function PortalPage() {
     }
   }, []);
 
-  const fetchSettings = useCallback(async () => {
+  // ── Unified parallel data fetch (eliminates network waterfall) ──
+  const fetchAllPortalData = useCallback(async () => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     try {
-      const { data, error } = await supabase
-        .from('portal_settings')
-        .select('exco_module, color, is_enabled')
-        .abortSignal(controller.signal);
+      const [settingsRes, kbOpenRes, kbResolvedRes, kbRatingRes, polymartRes] = await Promise.all([
+        // 1. Portal settings
+        supabase.from('portal_settings')
+          .select('exco_module, color, is_enabled')
+          .abortSignal(controller.signal),
+        // 2. Kebajikan — open tickets
+        supabase.from('kebajikan_tickets')
+          .select('id', { count: 'exact', head: true })
+          .not('status', 'in', '(RESOLVED,CLOSED,CANCELLED)'),
+        // 3. Kebajikan — resolved tickets
+        supabase.from('kebajikan_tickets')
+          .select('id', { count: 'exact', head: true })
+          .in('status', ['RESOLVED', 'CLOSED']),
+        // 4. Kebajikan — ratings
+        supabase.from('kebajikan_tickets')
+          .select('rating')
+          .not('rating', 'is', null),
+        // 5. PolyMart stats
+        supabase.from('business_products')
+          .select('business_id, keusahawanan_businesses!inner(status)')
+          .eq('publish_to_polymart', true)
+          .eq('is_available', true)
+          .eq('keusahawanan_businesses.status', 'ACTIVE'),
+      ]);
 
-      if (data) setSettings(data as ExcoColorSetting[]);
+      // Process settings
+      if (settingsRes.data) {
+        const settingsData = settingsRes.data as ExcoColorSetting[];
+        setSettings(settingsData);
+
+        // SUPSAS edition — only fetch if supsas module is enabled
+        const supsasSetting = settingsData.find(s => s.exco_module === 'supsas');
+        const supsasOn = supsasSetting ? supsasSetting.is_enabled : false;
+        if (supsasOn) {
+          supabase.from('supsas_editions')
+            .select('name, start_date, end_date, is_active')
+            .order('edition_year', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+            .then(({ data }) => { if (data) setSupsasEdition(data as any); });
+        }
+      }
+
+      // Process kebajikan stats
+      const ratings = (kbRatingRes.data || []).map((r: any) => r.rating as number);
+      const avg = ratings.length ? ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length : null;
+      setKbStats({ open: kbOpenRes.count ?? 0, resolved: kbResolvedRes.count ?? 0, rating: avg });
+
+      // Process PolyMart stats
+      const listingsCount = polymartRes.data?.length ?? 0;
+      const uniqueBusinesses = new Set(polymartRes.data?.map(p => p.business_id)).size;
+      setPolyMartStats({ listings: listingsCount, businesses: uniqueBusinesses });
+
     } catch (e: any) {
       if (e.name === 'AbortError') {
-        console.warn('⚠️ Supabase slow response (Timeout 5s). Using defaults.');
+        console.warn('⚠️ Portal data fetch timed out (5s). Using defaults.');
       } else {
-        console.error('Portal settings fetch error:', e);
+        console.error('Portal data fetch error:', e);
       }
     } finally {
       clearTimeout(timeoutId);
@@ -161,52 +219,7 @@ export function PortalPage() {
     }
   }, []);
 
-  useEffect(() => { fetchSettings(); }, [fetchSettings]);
-
-  // Fetch live kebajikan stats
-  useEffect(() => {
-    const load = async () => {
-      const [openRes, resolvedRes, ratingRes] = await Promise.all([
-        supabase.from('kebajikan_tickets').select('id', { count: 'exact', head: true }).not('status', 'in', '(RESOLVED,CLOSED,CANCELLED)'),
-        supabase.from('kebajikan_tickets').select('id', { count: 'exact', head: true }).in('status', ['RESOLVED', 'CLOSED']),
-        supabase.from('kebajikan_tickets').select('rating').not('rating', 'is', null),
-      ]);
-      const ratings = (ratingRes.data || []).map((r: any) => r.rating as number);
-      const avg = ratings.length ? ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length : null;
-      setKbStats({ open: openRes.count ?? 0, resolved: resolvedRes.count ?? 0, rating: avg });
-    };
-    load();
-  }, []);
-
-  // Fetch PolyMart live stats
-  useEffect(() => {
-    const loadPolyMart = async () => {
-      const { data: products } = await supabase
-        .from('business_products')
-        .select('business_id, keusahawanan_businesses!inner(status)')
-        .eq('publish_to_polymart', true)
-        .eq('is_available', true)
-        .eq('keusahawanan_businesses.status', 'ACTIVE');
-
-      const listingsCount = products?.length ?? 0;
-      const uniqueBusinesses = new Set(products?.map(p => p.business_id)).size;
-
-      setPolyMartStats({ listings: listingsCount, businesses: uniqueBusinesses });
-    };
-    loadPolyMart();
-  }, []);
-
-  // Fetch SUPSAS edition bila toggle ON
-  useEffect(() => {
-    if (!isModuleEnabled('supsas')) return;
-    supabase.from('supsas_editions')
-      .select('name, start_date, end_date, is_active')
-      .order('edition_year', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => { if (data) setSupsasEdition(data as any); });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings]);
+  useEffect(() => { fetchAllPortalData(); }, [fetchAllPortalData]);
 
   const isModuleEnabled = (moduleId: string): boolean => {
     const s = settings.find(s => s.exco_module === moduleId);
@@ -284,7 +297,7 @@ export function PortalPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/[0.03] dark:bg-white/5 border border-black/5 dark:border-white/10 shadow-lg backdrop-blur-md"
             >
-              <LucideIcons.Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
               <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 dark:text-white/50">
                 EKOSISTEM DIGITAL V26.5.2
               </span>
@@ -359,7 +372,7 @@ export function PortalPage() {
                     )}>
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-2xl bg-white/50 dark:bg-black/20 flex items-center justify-center shrink-0 shadow-sm">
-                          <LucideIcons.Building2 className="w-6 h-6" />
+                          <Building2 className="w-6 h-6" />
                         </div>
                         <div>
                           <h3 className="font-black text-sm uppercase tracking-widest mb-0.5">Status Permohonan Asrama (KAMSIS)</h3>

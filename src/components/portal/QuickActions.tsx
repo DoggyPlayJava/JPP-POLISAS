@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import * as LucideIcons from 'lucide-react';
+import { HeartHandshake, MessageSquarePlus, ArrowRight, ShoppingBag, QrCode, Crown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
@@ -54,7 +54,7 @@ export function QuickActions({
           
           <div className="p-6 relative z-10 flex-1">
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform" style={{ background: 'rgba(45,212,191,0.15)', border: '1px solid rgba(45,212,191,0.3)' }}>
-              <LucideIcons.HeartHandshake className="w-6 h-6" style={{ color: '#2DD4BF' }} />
+              <HeartHandshake className="w-6 h-6" style={{ color: '#2DD4BF' }} />
             </div>
             <h3 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white leading-tight tracking-tight">E-Kebajikan<br/>Live Stats</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 tracking-wide">Pusat Urusan & Resolusi Tiket</p>
@@ -93,18 +93,18 @@ export function QuickActions({
           )}
         >
           <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-            <LucideIcons.MessageSquarePlus className="w-24 h-24 text-teal-500" />
+            <MessageSquarePlus className="w-24 h-24 text-teal-500" />
           </div>
           <div>
             <div className="w-12 h-12 rounded-2xl bg-teal-500/10 dark:bg-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0 shadow-inner mb-4 group-hover:scale-110 transition-transform">
-              <LucideIcons.MessageSquarePlus className="w-6 h-6" />
+              <MessageSquarePlus className="w-6 h-6" />
             </div>
             <h3 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white leading-tight tracking-tight">Suarakan<br/>Aduan Anda</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 max-w-[200px] leading-relaxed">Salurkan masalah atau cadangan anda terus ke Exco Kebajikan JPP.</p>
           </div>
           <div className="mt-8 flex items-center gap-2 text-teal-600 dark:text-teal-400 text-sm font-bold uppercase tracking-widest">
             <span>Buat Aduan</span>
-            <LucideIcons.ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </div>
         </button>
       )}
@@ -130,7 +130,7 @@ export function QuickActions({
           <div className="absolute inset-0 bg-gradient-to-r from-amber-400/0 via-amber-400/15 to-amber-400/0 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out" />
           
           <div className="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center shrink-0 shadow-inner relative overflow-hidden group-hover:scale-110 transition-transform">
-            <LucideIcons.ShoppingBag className="w-7 h-7 text-amber-600 dark:text-amber-400" />
+            <ShoppingBag className="w-7 h-7 text-amber-600 dark:text-amber-400" />
           </div>
           
           <div className="flex flex-col flex-1 min-w-0">
@@ -144,7 +144,7 @@ export function QuickActions({
           </div>
 
           <div className="hidden sm:flex w-10 h-10 rounded-full bg-amber-500/10 dark:bg-amber-500/15 items-center justify-center flex-shrink-0">
-            <LucideIcons.ArrowRight className="w-4 h-4 text-amber-600 dark:text-amber-400 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="w-4 h-4 text-amber-600 dark:text-amber-400 group-hover:translate-x-1 transition-transform" />
           </div>
         </button>
       ) : null}
@@ -174,7 +174,7 @@ export function QuickActions({
           "rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform relative z-10 border border-emerald-500/20 shrink-0",
           isJPPMode ? "w-12 h-12 mb-4" : "w-14 h-14"
         )}>
-          <LucideIcons.QrCode className={isJPPMode ? "w-6 h-6" : "w-7 h-7"} />
+          <QrCode className={isJPPMode ? "w-6 h-6" : "w-7 h-7"} />
         </div>
         <div className="relative z-10 flex-1">
           <h3 className={cn(
@@ -188,7 +188,7 @@ export function QuickActions({
         </div>
         {!isJPPMode && (
           <div className="hidden sm:flex w-10 h-10 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 items-center justify-center flex-shrink-0 relative z-10">
-            <LucideIcons.ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform" />
           </div>
         )}
       </button>
@@ -201,7 +201,7 @@ export function QuickActions({
         >
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 to-indigo-900/40 dark:from-indigo-500/0 dark:to-indigo-500/10" />
           <div className="w-12 h-12 rounded-2xl bg-white/20 dark:bg-indigo-500/30 flex items-center justify-center text-white dark:text-indigo-300 mb-4 group-hover:scale-110 transition-transform relative z-10">
-            <LucideIcons.Crown className="w-6 h-6" />
+            <Crown className="w-6 h-6" />
           </div>
           <div className="relative z-10">
             <h3 className="text-base font-black leading-tight text-white dark:text-indigo-100">JPP HQ</h3>

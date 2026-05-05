@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import * as LucideIcons from 'lucide-react';
+import { Clock, BarChart3, CalendarDays, Trophy } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { triggerHaptic } from '@/lib/utils';
 
@@ -168,7 +168,7 @@ export function SupsasMegaBanner({ supsasEdition }: SupsasMegaBannerProps) {
 
           {supsasEdition?.start_date && !supsasCountdown.expired && (
             <div className="inline-flex items-center gap-1 px-5 py-2.5 rounded-2xl" style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.2)' }}>
-              <LucideIcons.Clock className="w-3.5 h-3.5 text-amber-400 mr-1" />
+              <Clock className="w-3.5 h-3.5 text-amber-400 mr-1" />
               <span className="text-xs text-white/60 font-medium">Bermula dalam</span>
               {[{ v: supsasCountdown.days, l: 'h' }, { v: supsasCountdown.hours, l: 'j' }, { v: supsasCountdown.mins, l: 'm' }, { v: supsasCountdown.secs, l: 's' }].map(({ v, l }) => (
                 <span key={l} className="flex items-baseline gap-0.5">
@@ -189,17 +189,17 @@ export function SupsasMegaBanner({ supsasEdition }: SupsasMegaBannerProps) {
             <button onClick={e => { e.stopPropagation(); triggerHaptic('medium'); navigate('/supsas/scoreboard'); }}
               className="flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95 relative"
               style={{ background: 'linear-gradient(135deg, #b45309, #f59e0b)', boxShadow: '0 8px 30px rgba(245,158,11,0.35)', color: '#000' }}>
-              <LucideIcons.BarChart3 className="w-4 h-4" /> Papan Markah
+              <BarChart3 className="w-4 h-4" /> Papan Markah
             </button>
             <button onClick={e => { e.stopPropagation(); triggerHaptic('light'); navigate('/supsas/jadual'); }}
               className="flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95 relative"
               style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)', color: '#fbbf24' }}>
-              <LucideIcons.CalendarDays className="w-4 h-4" /> Jadual
+              <CalendarDays className="w-4 h-4" /> Jadual
             </button>
             <button onClick={e => { e.stopPropagation(); triggerHaptic('light'); navigate('/supsas'); }}
               className="flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95 relative"
               style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}>
-              <LucideIcons.Trophy className="w-4 h-4" /> Laman SUPSAS
+              <Trophy className="w-4 h-4" /> Laman SUPSAS
             </button>
           </div>
         </div>
