@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate, Outlet, useNavigate } from 'react-router-dom';
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { sanitizeRedirect } from '@/utils/sanitizeRedirect';
 import { AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -49,8 +50,15 @@ function LoadingScreen() {
 
 export function ProtectedRoute() {
   const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
   if (isLoading) return <LoadingScreen />;
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAuthenticated) {
+    // Simpan URL asal supaya user boleh diredirect semula selepas log masuk.
+    // Ini adalah kunci untuk QR link fallback — tanpa ini, user akan selalu
+    // dihantar ke /portal walaupun mereka scan QR ke halaman tertentu.
+    const destination = location.pathname + location.search;
+    return <Navigate to={`/login?redirect=${encodeURIComponent(destination)}`} replace />;
+  }
   return <Outlet />;
 }
 
@@ -67,8 +75,20 @@ export function PublicRoute() {
   useEffect(() => {
     if (isLoading || !isAuthenticated) return;
 
-    const savedRedirect = sessionStorage.getItem('post_login_redirect');
+    const savedRedirect = sanitizeRedirect(sessionStorage.getItem('post_login_redirect'));
+    const isNewRegister = localStorage.getItem('is_new_register') === 'true';
+
     if (savedRedirect) {
+      // Jika user BARU register, jangan ikut redirect langsung — hantar ke /portal dulu.
+      // Set flag supaya PortalPage boleh papar toast "Sila scan QR sekali lagi!"
+      if (isNewRegister) {
+        sessionStorage.removeItem('post_login_redirect');
+        sessionStorage.setItem('qr_redirect_missed', '1');
+        localStorage.removeItem('is_new_register');
+        navigate('/portal', { replace: true });
+        return;
+      }
+      // User sedia ada (bukan baru register) — terus redirect ke destinasi QR
       sessionStorage.removeItem('post_login_redirect');
       navigate(savedRedirect, { replace: true });
       return;

@@ -122,6 +122,22 @@ export function PortalPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings, supsasEdition?.name]);
 
+  // ── QR Redirect Miss: tunjuk toast "Sila scan QR sekali lagi!" ──
+  // Berlaku bila user BARU register & ada QR redirect yang tidak dapat diikut
+  // (kerana account baru perlu ke /portal dulu). Flag diset oleh PublicRoute.
+  useEffect(() => {
+    const missedQr = sessionStorage.getItem('qr_redirect_missed');
+    if (missedQr) {
+      sessionStorage.removeItem('qr_redirect_missed');
+      setTimeout(() => {
+        toast('🔗 Sila scan QR sekali lagi untuk meneruskan ke destinasi asal anda!', {
+          duration: 8000,
+          icon: '📲',
+        });
+      }, 1500); // Delay sikit supaya portal dah fully loaded
+    }
+  }, []);
+
   const fetchSettings = useCallback(async () => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);

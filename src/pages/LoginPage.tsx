@@ -7,9 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'react-hot-toast';
-import { Mail, Lock, ArrowRight, User, Hash, Building2, ChevronLeft, ChevronDown, Sparkles, Crown } from 'lucide-react';
+import { Mail, Lock, ArrowRight, User, Hash, Building2, ChevronLeft, ChevronDown, Sparkles, Crown, Link2 } from 'lucide-react';
 import { UserRole, JABATAN_LIST, JabatanValue, ALL_CLUBS, ROLE_LABELS, getAkademikClubId } from '@/types';
 import { cn } from '@/lib/utils';
+import { sanitizeRedirect } from '@/utils/sanitizeRedirect';
 
 // Roles yang boleh self-register (Presiden dan MT perlu pilih kelab)
 const LEADER_ROLES: UserRole[] = ['CLUB_PRESIDENT', 'CLUB_MT'];
@@ -33,6 +34,7 @@ export function LoginPage() {
   const [emailSentOnce, setEmailSentOnce] = useState(false);
   const [showManualRegister, setShowManualRegister] = useState(false);
   const [traditionalRegistrationEnabled, setTraditionalRegistrationEnabled] = useState(true);
+  const [hasQrRedirect, setHasQrRedirect] = useState(false);
 
   // Register flow state
   const [step, setStep] = useState<Step>(1);
@@ -54,8 +56,12 @@ export function LoginPage() {
   // Ini penting untuk elak race condition — kita perlu simpan SEBELUM signInWithPassword
   // dipanggil kerana Supabase notify onAuthStateChange sebelum Promise kita resolve semula.
   useEffect(() => {
-    const redirectTo = new URLSearchParams(window.location.search).get('redirect');
-    if (redirectTo) sessionStorage.setItem('post_login_redirect', redirectTo);
+    const rawRedirect = new URLSearchParams(window.location.search).get('redirect');
+    const redirectTo = sanitizeRedirect(rawRedirect);
+    if (redirectTo) {
+      sessionStorage.setItem('post_login_redirect', redirectTo);
+      setHasQrRedirect(true);
+    }
 
     // Dapatkan tetapan pendaftaran tradisional
     supabase.from('system_settings').select('value').eq('key', 'traditional_registration_enabled').maybeSingle()
@@ -340,6 +346,22 @@ export function LoginPage() {
                     ? 'Pilih jabatan atau peranan anda dalam kelab.'
                     : 'Log masuk ke akaun anda untuk meneruskan.'}
             </p>
+            {/* Banner QR redirect — tunjuk bila user tiba dari QR link */}
+            <AnimatePresence>
+              {hasQrRedirect && !isSignUp && !isForgotPassword && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  className="mt-4 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-primary/8 border border-primary/20"
+                >
+                  <Link2 className="w-4 h-4 text-primary shrink-0" />
+                  <p className="text-[11px] font-bold text-primary leading-snug">
+                    Log masuk untuk meneruskan ke destinasi dalam QR anda.
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
             {isSignUp && (
               <div className="flex items-center gap-2 pt-4">
                 <div className={cn("w-10 h-1.5 rounded-full transition-colors", step >= 1 ? "bg-primary" : "bg-muted")} />

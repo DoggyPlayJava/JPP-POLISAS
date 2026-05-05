@@ -2,17 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { Settings as SettingsIcon, ShieldCheck, KeyRound, Calendar } from 'lucide-react';
+import { Settings as SettingsIcon, ShieldCheck, KeyRound, Calendar, QrCode } from 'lucide-react';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { hexToRgba, cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 import { JppStructureSettings } from './JppStructureSettings';
 import { useAcademicSession } from '@/contexts/AcademicSessionContext';
+import { QrLinkManager } from '@/components/jpp/QrLinkManager';
 
 const MONTH_NAMES = ['', 'Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
 
 export function JppSettingsPage() {
-    const { isSuperAdmin, profile } = useAuth();
+    const { isSuperAdmin, profile, isJppMember } = useAuth();
     const isYDP = profile?.jpp_position === 'YANG_DIPERTUA' || profile?.jpp_position === 'YDP' || isSuperAdmin;
     const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
     const [loading, setLoading] = useState(true);
@@ -305,6 +306,19 @@ export function JppSettingsPage() {
                             <p className="text-[10px] text-amber-500/60 font-medium border-t border-amber-500/10 pt-4">
                                 ⚠ Ubah nilai ini SEBELUM pengambilan baharu bermula. Sistem akan menghantar notifikasi kepada pentadbir secara automatik sebulan sebelum tarikh yang ditetapkan.
                             </p>
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* ── Penjana QR Code — Semua ahli JPP boleh guna ── */}
+                {isJppMember && (
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="space-y-6">
+                        <div className="flex items-center gap-3 px-2">
+                            <QrCode className="w-5 h-5 text-emerald-500" />
+                            <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-white/40">Penjana QR Link</h3>
+                        </div>
+                        <div className="p-6 rounded-[2rem] bg-gradient-to-br from-emerald-900/10 to-emerald-900/5 border border-emerald-500/20 hover:from-emerald-900/20 transition-all">
+                            <QrLinkManager />
                         </div>
                     </motion.div>
                 )}

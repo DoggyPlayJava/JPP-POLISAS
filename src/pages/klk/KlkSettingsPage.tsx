@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import {
   Settings, MapPin, Upload, Wifi, Eye, EyeOff,
   Trash2, Edit3, Plus, Check, X, ArrowLeft,
-  AlertTriangle, RefreshCw, Download, Send,
+  AlertTriangle, RefreshCw, Download, Send, Merge, ChevronRight,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -82,6 +82,12 @@ export function KlkSettingsPage() {
   const [lainLainList, setLainLainList] = useState<{ kawasan_custom: string; count: number }[]>([]);
   const [migrateTarget, setMigrateTarget] = useState<Record<string, string>>({}); // kawasan_custom → target
   const [migrating, setMigrating] = useState<string | null>(null);
+  // Merge Kawasan state
+  const [mergeMode, setMergeMode] = useState(false);
+  const [mergeSources, setMergeSources] = useState<string[]>([]); // nama kawasan sumber yang ditick
+  const [mergeTarget, setMergeTarget] = useState(''); // nama kawasan sasaran
+  const [mergePreviewCount, setMergePreviewCount] = useState<number | null>(null);
+  const [merging, setMerging] = useState(false);
 
   // RBAC
   const isKlsExco = profile?.role === 'JPP' && profile?.jpp_unit === 'KLS';
@@ -171,6 +177,59 @@ export function KlkSettingsPage() {
     toast.success('Kawasan dikemaskini.');
   };
 
+  // Fetch preview count bila source/target berubah
+  React.useEffect(() => {
+    if (mergeSources.length === 0) { setMergePreviewCount(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { count } = await supabase
+        .from('klk_student_residency')
+        .select('id', { count: 'exact', head: true })
+        .in('kawasan_kediaman', mergeSources);
+      if (!cancelled) setMergePreviewCount(count ?? 0);
+    })();
+    return () => { cancelled = true; };
+  }, [mergeSources]);
+
+  const handleMerge = async () => {
+    if (mergeSources.length === 0) { toast.error('Pilih sekurang-kurangnya satu kawasan sumber.'); return; }
+    if (!mergeTarget) { toast.error('Pilih kawasan sasaran.'); return; }
+    const preview = mergePreviewCount ?? 0;
+    const srcLabel = mergeSources.join(', ');
+    if (!window.confirm(
+      `Merge ${mergeSources.length} kawasan (${srcLabel}) → "${mergeTarget}"?\n\n` +
+      `${preview} rekod pelajar akan dikemas kini.\n` +
+      `Kawasan sumber akan dinyahaktifkan (tidak dipadam).\n\n` +
+      `Tindakan ini TIDAK boleh dibatalkan.`
+    )) return;
+
+    setMerging(true);
+    try {
+      const { data, error } = await supabase.rpc('merge_klk_kawasan', {
+        p_source_names: mergeSources,
+        p_target_name: mergeTarget,
+      });
+      if (error || !data?.success) throw new Error(data?.error ?? error?.message);
+      toast.success(`Berjaya! ${data.updated} rekod dipindah ke "${mergeTarget}". ${mergeSources.length} kawasan dinyahaktifkan.`);
+      // Reset merge state
+      setMergeMode(false);
+      setMergeSources([]);
+      setMergeTarget('');
+      setMergePreviewCount(null);
+      fetchSettings();
+    } catch (e: any) {
+      toast.error(e.message ?? 'Gagal merge kawasan.');
+    } finally {
+      setMerging(false);
+    }
+  };
+
+  const toggleMergeSource = (name: string) => {
+    setMergeSources(prev =>
+      prev.includes(name) ? prev.filter(s => s !== name) : [...prev, name]
+    );
+  };
+
   if (!hasAccess) {
     return (
       <div className="p-8 text-center">
@@ -240,10 +299,28 @@ export function KlkSettingsPage() {
                 <p className="text-[10px] text-slate-500">{kawasanList.filter(k => k.is_active).length} kawasan aktif</p>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => setShowAddKawasan(v => !v)}
-                  className="flex items-center gap-1.5 h-8 px-3 rounded-xl bg-blue-500/15 text-blue-300 text-[10px] font-black hover:bg-blue-500/25 transition-colors">
-                  <Plus className="w-3.5 h-3.5" /> Tambah
+                <button
+                  onClick={() => {
+                    setMergeMode(v => {
+                      if (v) { setMergeSources([]); setMergeTarget(''); setMergePreviewCount(null); }
+                      return !v;
+                    });
+                    setShowAddKawasan(false);
+                  }}
+                  className={`flex items-center gap-1.5 h-8 px-3 rounded-xl text-[10px] font-black transition-colors ${
+                    mergeMode
+                      ? 'bg-purple-500/25 text-purple-300 ring-1 ring-purple-500/40'
+                      : 'bg-purple-500/10 text-purple-400 hover:bg-purple-500/20'
+                  }`}>
+                  <Merge className="w-3.5 h-3.5" />
+                  {mergeMode ? 'Batal Merge' : 'Merge'}
                 </button>
+                {!mergeMode && (
+                  <button onClick={() => setShowAddKawasan(v => !v)}
+                    className="flex items-center gap-1.5 h-8 px-3 rounded-xl bg-blue-500/15 text-blue-300 text-[10px] font-black hover:bg-blue-500/25 transition-colors">
+                    <Plus className="w-3.5 h-3.5" /> Tambah
+                  </button>
+                )}
                 <button onClick={fetchSettings} className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
                   <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
                 </button>
@@ -298,85 +375,241 @@ export function KlkSettingsPage() {
               </div>
             ) : (
               <div className="divide-y divide-white/[0.03]">
-                {kawasanList.map(k => (
-                  <div key={k.id} className="flex items-center gap-4 px-5 py-3">
-                    {editingKawasan === k.id ? (
-                      // Edit mode
-                      <div className="flex-1 grid grid-cols-3 gap-2">
-                        <input
-                          defaultValue={k.name}
-                          onChange={e => setEditValues(prev => ({ ...prev, name: e.target.value }))}
-                          className="col-span-1 h-8 px-3 rounded-lg bg-slate-800 border border-white/10 text-white text-xs"
-                        />
-                        <input
-                          type="number" step="0.0001" defaultValue={k.latitude ?? ''}
-                          placeholder="Lat"
-                          onChange={e => setEditValues(prev => ({ ...prev, latitude: parseFloat(e.target.value) }))}
-                          className="h-8 px-3 rounded-lg bg-slate-800 border border-white/10 text-white text-xs"
-                        />
-                        <input
-                          type="number" step="0.0001" defaultValue={k.longitude ?? ''}
-                          placeholder="Lng"
-                          onChange={e => setEditValues(prev => ({ ...prev, longitude: parseFloat(e.target.value) }))}
-                          className="h-8 px-3 rounded-lg bg-slate-800 border border-white/10 text-white text-xs"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex-1 flex items-center gap-3 min-w-0">
-                        <span className={`text-sm font-black truncate ${k.is_active ? 'text-slate-200' : 'text-slate-500 line-through'}`}>
-                          {k.name}
-                        </span>
-                        {k.latitude && k.longitude && (
-                          <span className="text-[9px] font-mono text-slate-600 flex-shrink-0">
-                            {k.latitude.toFixed(4)}, {k.longitude.toFixed(4)}
+                {kawasanList.map(k => {
+                  const isMergeSource = mergeSources.includes(k.name);
+                  const isMergeTarget = mergeTarget === k.name;
+                  return (
+                    <div
+                      key={k.id}
+                      className={`flex items-center gap-4 px-5 py-3 transition-colors ${
+                        mergeMode && isMergeSource ? 'bg-purple-500/10' :
+                        mergeMode && isMergeTarget ? 'bg-blue-500/10' : ''
+                      }`}
+                    >
+                      {/* Merge mode: checkbox sebagai sumber */}
+                      {mergeMode && (
+                        <button
+                          onClick={() => toggleMergeSource(k.name)}
+                          disabled={isMergeTarget}
+                          className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border transition-all ${
+                            isMergeSource
+                              ? 'bg-purple-500 border-purple-400'
+                              : isMergeTarget
+                              ? 'bg-blue-500/20 border-blue-500/30 cursor-not-allowed'
+                              : 'bg-white/5 border-white/10 hover:border-purple-400/50'
+                          }`}
+                        >
+                          {isMergeSource && <Check className="w-3 h-3 text-white" />}
+                          {isMergeTarget && <ChevronRight className="w-3 h-3 text-blue-400" />}
+                        </button>
+                      )}
+
+                      {editingKawasan === k.id && !mergeMode ? (
+                        // Edit mode
+                        <div className="flex-1 grid grid-cols-3 gap-2">
+                          <input
+                            defaultValue={k.name}
+                            onChange={e => setEditValues(prev => ({ ...prev, name: e.target.value }))}
+                            className="col-span-1 h-8 px-3 rounded-lg bg-slate-800 border border-white/10 text-white text-xs"
+                          />
+                          <input
+                            type="number" step="0.0001" defaultValue={k.latitude ?? ''}
+                            placeholder="Lat"
+                            onChange={e => setEditValues(prev => ({ ...prev, latitude: parseFloat(e.target.value) }))}
+                            className="h-8 px-3 rounded-lg bg-slate-800 border border-white/10 text-white text-xs"
+                          />
+                          <input
+                            type="number" step="0.0001" defaultValue={k.longitude ?? ''}
+                            placeholder="Lng"
+                            onChange={e => setEditValues(prev => ({ ...prev, longitude: parseFloat(e.target.value) }))}
+                            className="h-8 px-3 rounded-lg bg-slate-800 border border-white/10 text-white text-xs"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex-1 flex items-center gap-3 min-w-0">
+                          <span className={`text-sm font-black truncate ${
+                            isMergeSource ? 'text-purple-300' :
+                            isMergeTarget ? 'text-blue-300' :
+                            k.is_active ? 'text-slate-200' : 'text-slate-500 line-through'
+                          }`}>
+                            {k.name}
                           </span>
+                          {!k.is_active && !mergeMode && (
+                            <span className="text-[9px] font-black uppercase text-slate-600 bg-white/5 px-1.5 py-0.5 rounded">Tidak aktif</span>
+                          )}
+                          {k.latitude && k.longitude && (
+                            <span className="text-[9px] font-mono text-slate-600 flex-shrink-0">
+                              {k.latitude.toFixed(4)}, {k.longitude.toFixed(4)}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {mergeMode ? (
+                          // Dalam merge mode — hanya tunjuk butang "Jadikan Sasaran"
+                          <button
+                            onClick={() => setMergeTarget(prev => prev === k.name ? '' : k.name)}
+                            disabled={mergeSources.includes(k.name)}
+                            className={`h-7 px-3 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all disabled:opacity-30 ${
+                              isMergeTarget
+                                ? 'bg-blue-500/30 text-blue-200 ring-1 ring-blue-400/40'
+                                : 'bg-white/5 text-slate-400 hover:bg-blue-500/15 hover:text-blue-300'
+                            }`}
+                          >
+                            {isMergeTarget ? '✓ Sasaran' : 'Sasaran'}
+                          </button>
+                        ) : editingKawasan === k.id ? (
+                          <>
+                            <button onClick={() => saveEdit(k.id)} className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center hover:bg-emerald-500/25">
+                              <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            </button>
+                            <button onClick={() => setEditingKawasan(null)} className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10">
+                              <X className="w-3.5 h-3.5 text-slate-400" />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => { setEditingKawasan(k.id); setEditValues({}); }}
+                              className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
+                              <Edit3 className="w-3.5 h-3.5 text-slate-400" />
+                            </button>
+                            <button
+                              onClick={() => toggleKawasan(k.id, k.is_active)}
+                              className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${k.is_active ? 'bg-blue-500/15 hover:bg-blue-500/25' : 'bg-white/5 hover:bg-white/10'}`}>
+                              {k.is_active
+                                ? <Eye className="w-3.5 h-3.5 text-blue-400" />
+                                : <EyeOff className="w-3.5 h-3.5 text-slate-500" />}
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (!window.confirm(`Padam kawasan "${k.name}"? Tindakan ini tidak boleh dibatalkan.`)) return;
+                                const { error } = await supabase.from('klk_kawasan').delete().eq('id', k.id);
+                                if (error) { toast.error('Gagal padam.'); return; }
+                                setKawasanList(prev => prev.filter(x => x.id !== k.id));
+                                toast.success('Kawasan dipadamkan.');
+                              }}
+                              className="w-7 h-7 rounded-lg bg-red-500/10 flex items-center justify-center hover:bg-red-500/25 transition-colors">
+                              <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                            </button>
+                          </>
                         )}
                       </div>
-                    )}
-
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {editingKawasan === k.id ? (
-                        <>
-                          <button onClick={() => saveEdit(k.id)} className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center hover:bg-emerald-500/25">
-                            <Check className="w-3.5 h-3.5 text-emerald-400" />
-                          </button>
-                          <button onClick={() => setEditingKawasan(null)} className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10">
-                            <X className="w-3.5 h-3.5 text-slate-400" />
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => { setEditingKawasan(k.id); setEditValues({}); }}
-                            className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
-                            <Edit3 className="w-3.5 h-3.5 text-slate-400" />
-                          </button>
-                          <button
-                            onClick={() => toggleKawasan(k.id, k.is_active)}
-                            className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${k.is_active ? 'bg-blue-500/15 hover:bg-blue-500/25' : 'bg-white/5 hover:bg-white/10'}`}>
-                            {k.is_active
-                              ? <Eye className="w-3.5 h-3.5 text-blue-400" />
-                              : <EyeOff className="w-3.5 h-3.5 text-slate-500" />}
-                          </button>
-                          <button
-                            onClick={async () => {
-                              if (!window.confirm(`Padam kawasan "${k.name}"? Tindakan ini tidak boleh dibatalkan.`)) return;
-                              const { error } = await supabase.from('klk_kawasan').delete().eq('id', k.id);
-                              if (error) { toast.error('Gagal padam.'); return; }
-                              setKawasanList(prev => prev.filter(x => x.id !== k.id));
-                              toast.success('Kawasan dipadamkan.');
-                            }}
-                            className="w-7 h-7 rounded-lg bg-red-500/10 flex items-center justify-center hover:bg-red-500/25 transition-colors">
-                            <Trash2 className="w-3.5 h-3.5 text-red-400" />
-                          </button>
-                        </>
-                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
+
+          {/* ── Panel: Merge Kawasan — muncul bila mergeMode aktif ── */}
+          {mergeMode && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl border border-purple-500/25 bg-purple-500/[0.04] overflow-hidden"
+            >
+              <div className="flex items-center gap-3 px-5 py-4 border-b border-purple-500/15">
+                <Merge className="w-4 h-4 text-purple-400 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <h2 className="font-black text-sm text-purple-200">Merge Kawasan</h2>
+                  <p className="text-[10px] text-slate-500 mt-0.5">
+                    Tick kawasan sumber (akan dinyahaktifkan) → pilih "Sasaran" (kawasan kekal)
+                  </p>
+                </div>
+              </div>
+
+              <div className="px-5 py-4 space-y-4">
+                {/* Status: sumber */}
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-[9px] font-black text-purple-300">{mergeSources.length}</span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-purple-400">Kawasan Sumber (akan dinyahaktifkan)</p>
+                    {mergeSources.length === 0 ? (
+                      <p className="text-xs text-slate-600 mt-0.5">Tick kawasan dalam senarai di atas</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5 mt-1.5">
+                        {mergeSources.map(s => (
+                          <span key={s} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-purple-500/15 text-purple-300 text-[10px] font-black">
+                            {s}
+                            <button onClick={() => toggleMergeSource(s)} className="hover:text-red-400 transition-colors">
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Anak panah */}
+                <div className="flex items-center gap-2 pl-2">
+                  <div className="h-px flex-1 bg-white/10" />
+                  <span className="text-slate-600 text-xs">→</span>
+                  <div className="h-px flex-1 bg-white/10" />
+                </div>
+
+                {/* Status: sasaran */}
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded bg-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <ChevronRight className="w-3 h-3 text-blue-400" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-blue-400">Kawasan Sasaran (kekal aktif)</p>
+                    {mergeTarget ? (
+                      <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-lg bg-blue-500/15 text-blue-300 text-[10px] font-black">
+                        {mergeTarget}
+                        <button onClick={() => setMergeTarget('')} className="hover:text-red-400 transition-colors">
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </span>
+                    ) : (
+                      <p className="text-xs text-slate-600 mt-0.5">Klik "Sasaran" pada kawasan dalam senarai</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Preview count */}
+                {mergeSources.length > 0 && mergePreviewCount !== null && (
+                  <div className="rounded-xl bg-white/5 border border-white/[0.06] px-4 py-3">
+                    <p className="text-xs text-slate-300">
+                      <span className="font-black text-white">{mergePreviewCount}</span> rekod pelajar
+                      {mergeTarget ? (
+                        <> akan dipindah ke <span className="font-black text-blue-300">{mergeTarget}</span></>
+                      ) : ' akan terjejas'}.
+                    </p>
+                    <p className="text-[10px] text-slate-600 mt-0.5">
+                      Rekod semua semester termasuk histori akan dikemas kini.
+                    </p>
+                  </div>
+                )}
+
+                {/* Butang eksekusi */}
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={handleMerge}
+                    disabled={merging || mergeSources.length === 0 || !mergeTarget}
+                    className="flex items-center gap-2 h-9 px-5 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-200 text-[11px] font-black hover:bg-purple-500/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {merging ? (
+                      <><RefreshCw className="w-3.5 h-3.5 animate-spin" />Merging...</>
+                    ) : (
+                      <><Merge className="w-3.5 h-3.5" />Eksekusi Merge</>  
+                    )}
+                  </button>
+                  <button
+                    onClick={() => { setMergeMode(false); setMergeSources([]); setMergeTarget(''); setMergePreviewCount(null); }}
+                    className="h-9 px-4 rounded-xl bg-white/5 text-slate-400 text-[11px] font-black hover:bg-white/10 transition-colors"
+                  >
+                    Batal
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {/* Panel: Migrate Lain-lain → Kawasan Rasmi — sentiasa visible */}
           <div className={`rounded-2xl border overflow-hidden ${
