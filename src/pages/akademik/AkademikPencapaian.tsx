@@ -74,6 +74,21 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
 
       if (error) throw error;
       toast.success('Pencapaian berjaya dihantar! Menunggu pengesahan exco.');
+      
+      // --- Trigger Push Notification ---
+      try {
+        const { sendNotificationToAkademikExco } = await import('@/lib/notifications');
+        await sendNotificationToAkademikExco({
+          title: 'Permohonan Merit Baru',
+          message: `Pelajar telah memuat naik sijil/pencapaian baru untuk disahkan: ${form.nama_pencapaian}.`,
+          type: 'DOCUMENT_UPLOAD',
+          module: 'AKADEMIK',
+          link: '/akademik/semakan'
+        });
+      } catch (e) {
+        console.error("Gagal menghantar notifikasi push", e);
+      }
+      
       onSuccess();
       onClose();
     } catch (e: any) {

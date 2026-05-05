@@ -252,3 +252,134 @@ export async function sendNotificationToBusinessVendor(
     console.error('[sendNotificationToBusinessVendor] Unexpected error:', err);
   }
 }
+
+// ─── Broadcast Global Announcement ─────────────────────────────────────────────
+export async function broadcastAnnouncement(
+  payload: NotificationPayload,
+  targetRoles: string[] = []
+): Promise<void> {
+  try {
+    let query = supabase.from('profiles').select('id');
+    
+    // Jika targetRoles diberikan dan bukan kosong, filter ikut role
+    // Jika tiada (atau kosong), hantar kepada semua pengguna
+    if (targetRoles.length > 0) {
+      query = query.in('role', targetRoles);
+    }
+    
+    const { data: users } = await query;
+    if (!users?.length) return;
+    
+    const userIds = users.map(u => u.id);
+    const rows = userIds.map(user_id => ({
+      user_id,
+      ...payload,
+      is_read: false,
+    }));
+    
+    // Batch insert untuk prestasi (Supabase API auto-batch jika besar)
+    const { error } = await supabase.from('notifications').insert(rows);
+    if (error) { console.error('[broadcastAnnouncement] Error:', error.message); return; }
+    
+    // Fire push to all users async
+    userIds.forEach(uid => firePush(uid, payload).catch(() => {}));
+  } catch (err) {
+    console.error('[broadcastAnnouncement] Unexpected error:', err);
+  }
+}
+
+// ─── Broadcast ke Exco Akademik ──────────────────────────────────────────────
+export async function sendNotificationToAkademikExco(
+  payload: NotificationPayload
+): Promise<void> {
+  try {
+    const [excoByUnit, mtAssigned, superAdmins] = await Promise.all([
+      supabase.from('profiles').select('id').eq('role', 'JPP').eq('jpp_unit', 'AKADEMIK'),
+      supabase.from('jpp_mt_assignments').select('mt_user_id').eq('unit', 'AKADEMIK'),
+      supabase.from('profiles').select('id').eq('role', 'SUPER_ADMIN_JPP'),
+    ]);
+    const userIds = new Set<string>();
+    excoByUnit.data?.forEach(p => userIds.add(p.id));
+    mtAssigned.data?.forEach(m => userIds.add(m.mt_user_id));
+    superAdmins.data?.forEach(a => userIds.add(a.id));
+    
+    if (userIds.size === 0) return;
+    
+    const rows = Array.from(userIds).map(user_id => ({ user_id, ...payload, is_read: false }));
+    const { error } = await supabase.from('notifications').insert(rows);
+    if (error) return;
+    Array.from(userIds).forEach(uid => firePush(uid, payload).catch(() => {}));
+  } catch (err) {}
+}
+
+// ─── Broadcast ke Exco KPP ───────────────────────────────────────────────────
+export async function sendNotificationToKppExco(
+  payload: NotificationPayload
+): Promise<void> {
+  try {
+    const [excoByUnit, mtAssigned, superAdmins] = await Promise.all([
+      supabase.from('profiles').select('id').eq('role', 'JPP').eq('jpp_unit', 'KPP'),
+      supabase.from('jpp_mt_assignments').select('mt_user_id').eq('unit', 'KPP'),
+      supabase.from('profiles').select('id').eq('role', 'SUPER_ADMIN_JPP'),
+    ]);
+    const userIds = new Set<string>();
+    excoByUnit.data?.forEach(p => userIds.add(p.id));
+    mtAssigned.data?.forEach(m => userIds.add(m.mt_user_id));
+    superAdmins.data?.forEach(a => userIds.add(a.id));
+    
+    if (userIds.size === 0) return;
+    
+    const rows = Array.from(userIds).map(user_id => ({ user_id, ...payload, is_read: false }));
+    const { error } = await supabase.from('notifications').insert(rows);
+    if (error) return;
+    Array.from(userIds).forEach(uid => firePush(uid, payload).catch(() => {}));
+  } catch (err) {}
+}
+
+// ─── Broadcast ke Exco Kamsis/Kediaman ───────────────────────────────────────
+export async function sendNotificationToKamsisAdmin(
+  payload: NotificationPayload
+): Promise<void> {
+  try {
+    const [excoByUnit, mtAssigned, superAdmins] = await Promise.all([
+      supabase.from('profiles').select('id').eq('role', 'JPP').eq('jpp_unit', 'KEDIAMAN'),
+      supabase.from('jpp_mt_assignments').select('mt_user_id').eq('unit', 'KEDIAMAN'),
+      supabase.from('profiles').select('id').eq('role', 'SUPER_ADMIN_JPP'),
+    ]);
+    const userIds = new Set<string>();
+    excoByUnit.data?.forEach(p => userIds.add(p.id));
+    mtAssigned.data?.forEach(m => userIds.add(m.mt_user_id));
+    superAdmins.data?.forEach(a => userIds.add(a.id));
+    
+    if (userIds.size === 0) return;
+    
+    const rows = Array.from(userIds).map(user_id => ({ user_id, ...payload, is_read: false }));
+    const { error } = await supabase.from('notifications').insert(rows);
+    if (error) return;
+    Array.from(userIds).forEach(uid => firePush(uid, payload).catch(() => {}));
+  } catch (err) {}
+}
+
+// ─── Broadcast ke MT Kelab Tertentu ─────────────────────────────────────────
+export async function sendNotificationToClubMT(
+  club_id: string,
+  payload: NotificationPayload
+): Promise<void> {
+  try {
+    const { data: mtMembers } = await supabase
+      .from('student_club_memberships')
+      .select('user_id')
+      .eq('club_id', club_id)
+      .in('role', ['CLUB_PRESIDENT', 'CLUB_MT'])
+      .eq('status', 'ACTIVE');
+      
+    if (!mtMembers?.length) return;
+    
+    const userIds = mtMembers.map(m => m.user_id);
+    const rows = userIds.map(user_id => ({ user_id, ...payload, is_read: false }));
+    
+    const { error } = await supabase.from('notifications').insert(rows);
+    if (error) return;
+    userIds.forEach(uid => firePush(uid, payload).catch(() => {}));
+  } catch (err) {}
+}

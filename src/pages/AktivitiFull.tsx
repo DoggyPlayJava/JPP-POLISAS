@@ -981,6 +981,23 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
         : await supabase.from('programs').insert([payload]);
       if (!res.error) {
         toast.success('Program disimpan.');
+        
+        // --- Trigger Push Notification ---
+        if (!editTarget) {
+          try {
+            const { sendNotificationToKppExco } = await import('@/lib/notifications');
+            await sendNotificationToKppExco({
+              title: 'Kertas Kerja Baru (Takwim)',
+              message: `Draf program baru telah ditambah: ${form.title}.`,
+              type: 'DOCUMENT_UPLOAD',
+              module: 'KPP',
+              link: '/kpp/kelab/takwim'
+            });
+          } catch (e) {
+            console.error("Gagal menghantar notifikasi push", e);
+          }
+        }
+        
         queryCache.invalidate('dashboard_');
         setDialogOpen(false);
         load();

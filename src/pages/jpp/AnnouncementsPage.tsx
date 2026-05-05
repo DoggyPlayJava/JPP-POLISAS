@@ -134,6 +134,24 @@ export default function AnnouncementsPage() {
 
         if (dbError) throw dbError;
         toast.success('Hebahan berjaya dicipta!');
+
+        // --- Trigger Push Notification ---
+        try {
+          const { broadcastAnnouncement } = await import('@/lib/notifications');
+          const targetRoles = target === 'ALL' ? [] : 
+                              target === 'STUDENT' ? ['CLUB_MEMBER', 'CLUB_MT', 'CLUB_PRESIDENT', 'JPP'] : 
+                              target === 'STAFF' ? ['STAFF', 'CLUB_ADVISOR', 'SUPER_ADMIN_JPP'] : [];
+          
+          await broadcastAnnouncement({
+            title: 'Notis Baru JPP',
+            message: title,
+            type: 'ANNOUNCEMENT',
+            module: 'JPP',
+            link: '/portal' // Or any relevant link
+          }, targetRoles);
+        } catch (e) {
+          console.error("Gagal menghantar notifikasi push", e);
+        }
       }
 
       setShowCreate(false);

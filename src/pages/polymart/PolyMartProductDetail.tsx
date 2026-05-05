@@ -132,16 +132,20 @@ function OrderModal({
         throw error;
       }
 
-      // Notify vendor
-      await sendNotificationToBusinessVendor(product.business_id, {
-        title: '🛍️ Pesanan Baharu!',
-        message: `${profile?.full_name ?? 'Pelajar'} menempah ${qty}x ${product.name}`,
-        type: 'polymart_order_new',
-        module: 'POLYMART',
-        link: `/polymart/vendor`,
-        reference_id: order.id,
-        actor_name: profile?.full_name,
-      });
+      // Notify vendor (fire-and-forget — jangan gagalkan pesanan jika push error)
+      try {
+        await sendNotificationToBusinessVendor(product.business_id, {
+          title: '🛍️ Pesanan Baharu!',
+          message: `${profile?.full_name ?? 'Pelajar'} menempah ${qty}x ${product.name}`,
+          type: 'polymart_order_new',
+          module: 'POLYMART',
+          link: `/polymart/vendor`,
+          reference_id: order.id,
+          actor_name: profile?.full_name,
+        });
+      } catch (e) {
+        console.error('Push notification gagal:', e);
+      }
 
       toast.success('Pesanan berjaya dihantar!', {
         icon: '🎉',

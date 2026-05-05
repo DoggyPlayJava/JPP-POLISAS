@@ -177,6 +177,27 @@ export function useBusinessData() {
         throw error;
       };
 
+      // Notify Business Owner
+      try {
+        const [profRes, busRes] = await Promise.all([
+          supabase.from('profiles').select('full_name, phone_number').eq('id', user.id).single(),
+          supabase.from('keusahawanan_businesses').select('owner_id, name').eq('id', businessId).single()
+        ]);
+        
+        if (busRes.data && profRes.data) {
+           const phoneInfo = profRes.data.phone_number ? `No Tel: ${profRes.data.phone_number}` : 'Tiada No Tel didaftarkan.';
+           await sendNotificationToUser(busRes.data.owner_id, {
+             title: 'Permohonan Keahlian Baharu',
+             message: `Pelajar ${profRes.data.full_name} memohon untuk menyertai ${busRes.data.name}. Sila semak di menu Urus Perniagaan. ${phoneInfo}`,
+             type: 'INFO',
+             module: 'KEUSAHAWANAN',
+             link: '/keusahawanan/admin'
+           });
+        }
+      } catch (err) {
+        console.error('Failed to notify owner:', err);
+      }
+
       toast.success('Permohonan menyertai perniagaan telah dihantar.');
       await fetchInitialData();
     } catch (err: any) {

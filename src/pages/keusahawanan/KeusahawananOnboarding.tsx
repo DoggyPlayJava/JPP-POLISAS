@@ -41,7 +41,20 @@ export function KeusahawananOnboarding() {
     const res = await createBusiness(bName, bDesc, bCat);
     setSubmitting(false);
     if (!res.error) {
-       setView('SELECT');
+      // --- Trigger Push Notification ---
+      try {
+        const { sendNotificationToKeusahawananExco } = await import('@/lib/notifications');
+        await sendNotificationToKeusahawananExco({
+          title: 'Permohonan Perniagaan Baru',
+          message: `Satu permohonan perniagaan baru (${bName}) telah didaftarkan. Sila semak dan jadualkan temuduga.`,
+          type: 'INFO',
+          module: 'KEUSAHAWANAN',
+          link: '/keusahawanan/admin'
+        });
+      } catch (e) {
+        console.error("Gagal menghantar notifikasi push", e);
+      }
+      setView('SELECT');
     }
   };
 

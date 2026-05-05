@@ -298,6 +298,21 @@ export function AkademikCgpa() {
       if (error) throw error;
 
       toast.success('Rekod HPNM berjaya disimpan!');
+      
+      // --- Trigger Push Notification ---
+      try {
+        const { sendNotificationToAkademikExco } = await import('@/lib/notifications');
+        await sendNotificationToAkademikExco({
+          title: 'Muat Naik HPNM Baru',
+          message: `Pelajar telah memuat naik rekod HPNM baru (${hpnm.toFixed(2)}).`,
+          type: 'DOCUMENT_UPLOAD',
+          module: 'AKADEMIK',
+          link: '/akademik/semakan'
+        });
+      } catch (e) {
+        console.error("Gagal menghantar notifikasi push", e);
+      }
+      
       setDraftMode('NONE');
       setFHpnm(''); setFPnm(''); setFSem(''); setFTahun('');
       setScanOk(null); setPendingFile(null);

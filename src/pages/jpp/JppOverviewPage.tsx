@@ -12,6 +12,8 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
 } from 'recharts';
+import { Smartphone, Monitor, Trash2, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -31,17 +33,20 @@ interface SystemStats {
 
 // ── Stat block ────────────────────────────────────────────────────────────────
 function BigStatCard({
-  label, value, icon: Icon, color, sub, delay,
+  label, value, icon: Icon, color, sub, delay, onClick
 }: {
   label: string; value: number | string; icon: React.ElementType;
-  color: string; sub?: string; delay: number;
+  color: string; sub?: string; delay: number; onClick?: () => void;
 }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-5 hover:bg-white/[0.05] transition-all"
+      onClick={onClick}
+      className={`rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-5 transition-all ${
+        onClick ? 'cursor-pointer hover:bg-white/[0.08] hover:scale-[1.02] active:scale-[0.98]' : 'hover:bg-white/[0.05]'
+      }`}
     >
       <div className="flex items-start justify-between mb-4">
         <div
@@ -61,6 +66,147 @@ function BigStatCard({
   );
 }
 
+// ── Push Subscribers Modal ──────────────────────────────────────────────────────
+function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const { isSuperAdmin } = useAuth();
+  const [subs, setSubs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchSubs = async () => {
+    setLoading(true);
+    // Step 1: Fetch all push subscriptions
+    const { data: rawSubs } = await supabase
+      .from('push_subscriptions')
+      .select('id, user_id, device_hint, created_at')
+      .order('created_at', { ascending: false });
+
+    if (!rawSubs?.length) { setSubs([]); setLoading(false); return; }
+
+    // Step 2: Fetch profiles for all unique user_ids (FK points to auth.users, not profiles, so join won't work)
+    const uniqueUserIds = [...new Set(rawSubs.map(s => s.user_id))];
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, full_name, matric_no, role')
+      .in('id', uniqueUserIds);
+
+    const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+
+    // Step 3: Merge
+    const merged = rawSubs.map(s => ({
+      ...s,
+      profiles: profileMap.get(s.user_id) || null,
+    }));
+    setSubs(merged);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (isOpen) fetchSubs();
+  }, [isOpen]);
+
+  const handleRevoke = async (subId: string) => {
+    if (!window.confirm("Adakah anda pasti untuk batalkan langganan peranti ini?")) return;
+    try {
+      const { error } = await supabase.from('push_subscriptions').delete().eq('id', subId);
+      if (error) throw error;
+      toast.success("Langganan berjaya dibuang.");
+      fetchSubs();
+    } catch (e: any) {
+      toast.error(e.message || "Gagal membuang langganan.");
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        className="relative w-full max-w-2xl max-h-[85vh] bg-[#0a0a0f] border border-white/10 rounded-3xl overflow-hidden flex flex-col shadow-2xl"
+      >
+        <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+              <BellRing className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-white leading-tight">Senarai Langganan Notifikasi</h2>
+              <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">{subs.length} peranti aktif</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6">
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-6 h-6 animate-spin text-white/20" />
+            </div>
+          ) : subs.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-white/30 text-sm">Tiada langganan buat masa ini.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {subs.map((s) => {
+                const p = s.profiles;
+                const isMobile = s.device_hint?.toLowerCase().includes('ios') || s.device_hint?.toLowerCase().includes('android');
+                const DeviceIcon = isMobile ? Smartphone : Monitor;
+                
+                return (
+                  <div key={s.id} className="p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center gap-4 hover:bg-white/[0.08] transition-colors">
+                    <div className="w-12 h-12 shrink-0 rounded-2xl bg-black/30 border border-white/10 flex items-center justify-center relative">
+                      <DeviceIcon className="w-5 h-5 text-white/50" />
+                      {s.device_hint && (
+                        <div className="absolute -bottom-1 text-[8px] font-black px-1.5 py-0.5 rounded-md bg-[#0a0a0f] border border-white/20 text-white uppercase truncate max-w-[40px]">
+                          {s.device_hint}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-white truncate">{p?.full_name || 'Pengguna Tidak Diketahui'}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] text-white/40">{p?.matric_no}</span>
+                        <span className="w-1 h-1 rounded-full bg-white/20" />
+                        <span className="text-[10px] text-emerald-400 font-bold">{p?.role}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 shrink-0">
+                      <div className="text-right hidden sm:block">
+                        <p className="text-[10px] text-white/30">Dilanggan pada</p>
+                        <p className="text-xs text-white/60 font-medium">
+                          {new Date(s.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </p>
+                      </div>
+
+                      {isSuperAdmin && (
+                        <button 
+                          onClick={() => handleRevoke(s.id)}
+                          className="w-10 h-10 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 flex items-center justify-center transition-colors border border-rose-500/20"
+                          title="Buang langganan ini"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 export function JppOverviewPage() {
   const { isSuperAdmin } = useAuth();
@@ -68,6 +214,7 @@ export function JppOverviewPage() {
   const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
   const [stats, setStats]           = useState<SystemStats | null>(null);
   const [loading, setLoading]       = useState(true);
+  const [showSubsModal, setShowSubsModal] = useState(false);
 
   // Chart states
   const [timeRange, setTimeRange] = useState<'7d' | '30d'>('30d');
@@ -102,8 +249,8 @@ export function JppOverviewPage() {
         supabase.from('push_subscriptions').select('user_id'),
       ]);
 
-      // Count unique users with push subscriptions
-      const uniquePushUsers = new Set((pushSubsRes.data || []).map((s: any) => s.user_id)).size;
+      // Count total push subscriptions (per device, matches modal count)
+      const totalPushSubs = (pushSubsRes.data || []).length;
 
       setStats({
         totalJpp:        jppRes.count ?? 0,
@@ -116,7 +263,7 @@ export function JppOverviewPage() {
         totalProducts:   prodRes.count ?? 0,
         totalTickets:    tickRes.count ?? 0,
         totalSports:     sportRes.count ?? 0,
-        pushSubscribers: uniquePushUsers,
+        pushSubscribers: totalPushSubs,
       });
 
       if (ticketStatusRes.data) {
@@ -224,7 +371,15 @@ export function JppOverviewPage() {
           <>
             {/* ── Main Stats Grid ─── */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <BigStatCard label="Push Subscribers" value={stats?.pushSubscribers ?? 0}  icon={BellRing}  color={themeColor} delay={0.05} sub={`daripada ${stats?.totalStudents ?? 0} pelajar`} />
+              <BigStatCard 
+                label="Push Subscribers" 
+                value={stats?.pushSubscribers ?? 0}  
+                icon={BellRing}  
+                color={themeColor} 
+                delay={0.05} 
+                sub={`daripada ${stats?.totalStudents ?? 0} pelajar`}
+                onClick={() => setShowSubsModal(true)} 
+              />
               <BigStatCard label="Pelajar Berdaftar" value={stats?.totalStudents ?? 0}   icon={Users}     color="#60A5FA"    delay={0.10} />
               <BigStatCard label="Jumlah Kelab"      value={stats?.totalClubs ?? 0}      icon={Flag}      color="#4ADE80" delay={0.15} />
               <BigStatCard label="Bisnes"            value={stats?.totalBusinesses ?? 0} icon={Store}     color="#F59E0B"    delay={0.20} />
@@ -384,6 +539,8 @@ export function JppOverviewPage() {
           </>
         )}
       </div>
+
+      <PushSubscribersModal isOpen={showSubsModal} onClose={() => setShowSubsModal(false)} />
     </div>
   );
 }

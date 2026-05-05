@@ -135,6 +135,20 @@ export function KelabPage() {
           const { error: notifErr } = await supabase.from('notifications').insert(notifs);
           if (notifErr) console.error("Gagal hantar notifikasi:", notifErr);
         }
+      } else {
+        // NOTIFY KPP EXCO FOR MEMBER PENDING APPROVAL
+        try {
+          const { sendNotificationToKppExco } = await import('@/lib/notifications');
+          await sendNotificationToKppExco({
+            title: 'Permohonan Kelab Baru',
+            message: `Terdapat permohonan keahlian baru untuk kelab ${confirmClub.name}. Sila semak di panel Exco KPP.`,
+            type: 'KPP_MEMBERSHIP_REQUEST',
+            module: 'KPP',
+            link: '/jpp/dashboard'
+          });
+        } catch (e) {
+          console.error("Gagal hantar push notification:", e);
+        }
       }
 
       toast.success(`Permohonan sebagai ${ROLE_LABELS[applyRole]} untuk ${confirmClub.name} telah dihantar! Tunggu kelulusan.`);

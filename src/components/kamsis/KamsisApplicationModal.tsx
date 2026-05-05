@@ -118,6 +118,20 @@ export function KamsisApplicationModal() {
 
       if (error && error.code !== '42P01') throw error;
 
+      // --- Trigger Push Notification ---
+      try {
+        const { sendNotificationToKamsisAdmin } = await import('@/lib/notifications');
+        await sendNotificationToKamsisAdmin({
+          title: 'Permohonan Asrama Baru',
+          message: `Pelajar ${profile?.full_name || ''} telah menghantar permohonan asrama.`,
+          type: 'INFO',
+          module: 'KAMSIS',
+          link: '/kamsis/senarai-permohonan'
+        });
+      } catch (e) {
+        console.error("Gagal menghantar notifikasi push", e);
+      }
+
       setStep('done');
       toast.success('Permohonan asrama berjaya dihantar!');
       setTimeout(() => setShow(false), 2000);

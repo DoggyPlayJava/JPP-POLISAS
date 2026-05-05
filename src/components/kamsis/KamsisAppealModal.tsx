@@ -52,6 +52,20 @@ export function KamsisAppealModal({ onClose, userId, onSuccess }: KamsisAppealMo
 
       if (error) throw error;
 
+      // --- Trigger Push Notification ---
+      try {
+        const { sendNotificationToKamsisAdmin } = await import('@/lib/notifications');
+        await sendNotificationToKamsisAdmin({
+          title: 'Rayuan Asrama Baru',
+          message: `Pelajar telah menghantar rayuan asrama baru.`,
+          type: 'INFO',
+          module: 'KAMSIS',
+          link: '/kamsis/senarai-permohonan'
+        });
+      } catch (e) {
+        console.error("Gagal menghantar notifikasi push", e);
+      }
+
       toast.success('Rayuan berjaya dihantar!');
       onSuccess();
     } catch (err: any) {

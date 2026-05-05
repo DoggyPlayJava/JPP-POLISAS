@@ -132,6 +132,21 @@ export function LaporanPage() {
         is_archived: false,
       });
       if (dbError) throw dbError;
+
+      // Notify KPP Exco
+      try {
+        const { sendNotificationToKppExco } = await import('@/lib/notifications');
+        await sendNotificationToKppExco({
+          title: 'Laporan Kelab Baharu',
+          message: `${clubName} telah menghantar dokumen: ${reportType}. Sila semak di Semakan Laporan.`,
+          type: 'INFO',
+          module: 'KPP',
+          link: '/jpp/unit-kpp'
+        });
+      } catch (err) {
+        console.error('Notification error:', err);
+      }
+
       toast.success('Berjaya dihantar!');
       setFile(null); loadReports();
     } catch (err: any) { toast.error(err.message); } finally { setSubmitting(false); setProgress(0); }
@@ -278,6 +293,20 @@ export function LaporanPage() {
       });
 
       if (dbError) throw dbError;
+
+      // Notify KPP Exco
+      try {
+        const { sendNotificationToKppExco } = await import('@/lib/notifications');
+        await sendNotificationToKppExco({
+          title: 'Laporan Auto-Jana Baharu',
+          message: `${clubName} telah menjana laporan bulan ${monthLabel}. Sila semak di Semakan Laporan.`,
+          type: 'INFO',
+          module: 'KPP',
+          link: '/jpp/unit-kpp'
+        });
+      } catch (err) {
+        console.error('Notification error:', err);
+      }
 
       toast.success('Laporan berjaya dijana!');
       loadReports();

@@ -11,7 +11,7 @@ self.addEventListener('push', function (event) {
     const options = {
       body: data.body || 'Anda mempunyai satu notifikasi baru.',
       icon: '/jpp-logo.png',
-      badge: '/masked-icon.svg',
+      badge: '/favicon.png',
       vibrate: [200, 100, 200],
       data: data.url || '/portal' // Arahkan ke /portal bila ditekan
     };
