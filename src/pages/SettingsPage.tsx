@@ -317,14 +317,18 @@ export function SettingsPage() {
         return;
       }
 
+      // Compress avatar before upload
+      const { compressImage } = await import('@/lib/imageCompression');
+      const compressedFile = await compressImage(file);
+
       // Proses muat naik
-      const fileExt = file.name.split('.').pop();
+      const fileExt = compressedFile.name.split('.').pop();
       // Format laluan fail: "user_id/avatar-timestamp.ext"
       const filePath = `${user.id}/avatar-${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, compressedFile, { upsert: true });
 
       if (uploadError) throw uploadError;
 

@@ -669,8 +669,12 @@ export function PosProductPage() {
     if (!e.target.files?.[0] || !businessId) return;
     setUploading(true);
     const file = e.target.files[0];
-    const path = `${businessId}/${Date.now()}.${file.name.split('.').pop()}`;
-    const { error } = await supabase.storage.from('keusahawanan-products').upload(path, file);
+    
+    const { compressImage } = await import('@/lib/imageCompression');
+    const compressedFile = await compressImage(file);
+    
+    const path = `${businessId}/${Date.now()}.${compressedFile.name.split('.').pop()}`;
+    const { error } = await supabase.storage.from('keusahawanan-products').upload(path, compressedFile, { contentType: compressedFile.type });
     if (error) { toast.error('Gagal muat naik: ' + error.message); setUploading(false); return; }
     const { data: { publicUrl } } = supabase.storage.from('keusahawanan-products').getPublicUrl(path);
     setForm(f => ({ ...f, image_url: publicUrl }));

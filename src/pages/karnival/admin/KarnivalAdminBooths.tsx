@@ -64,9 +64,12 @@ export function KarnivalAdminBooths() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const ext  = file.name.split('.').pop();
+    const { compressImage } = await import('@/lib/imageCompression');
+    const compressedFile = await compressImage(file);
+    
+    const ext  = compressedFile.name.split('.').pop();
     const path = `booth-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from('karnival-booths').upload(path, file, { upsert: true });
+    const { error } = await supabase.storage.from('karnival-booths').upload(path, compressedFile, { upsert: true, contentType: compressedFile.type });
     if (error) { toast.error('Upload gagal: ' + error.message); }
     else {
       const { data: urlData } = supabase.storage.from('karnival-booths').getPublicUrl(path);

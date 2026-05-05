@@ -205,9 +205,13 @@ export function UrusPerniagaanPage() {
       setUploading(true);
       if (!e.target.files || e.target.files.length === 0 || !businessId) return;
       const file = e.target.files[0];
-      const path = `logos/${businessId}/${Date.now()}.${file.name.split('.').pop()}`;
       
-      const { error } = await supabase.storage.from('keusahawanan-products').upload(path, file, { upsert: true });
+      const { compressImage } = await import('@/lib/imageCompression');
+      const compressedFile = await compressImage(file);
+      
+      const path = `logos/${businessId}/${Date.now()}.${compressedFile.name.split('.').pop()}`;
+      
+      const { error } = await supabase.storage.from('keusahawanan-products').upload(path, compressedFile, { upsert: true, contentType: compressedFile.type });
       if (error) throw error;
       
       const { data: { publicUrl } } = supabase.storage.from('keusahawanan-products').getPublicUrl(path);

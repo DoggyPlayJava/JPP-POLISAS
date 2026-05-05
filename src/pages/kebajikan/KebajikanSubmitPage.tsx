@@ -134,10 +134,17 @@ export function KebajikanSubmitPage() {
   // Upload images
   const uploadImages = async (): Promise<string[]> => {
     if (!images.length) return [];
+    
+    // Import dynamically to avoid top-level await issues if any, or just import at top. 
+    // Actually, I should just import it at the top of the file, but since I'm doing a block replacement, 
+    // I can just import it here to be safe and avoid multiple replaces.
+    const { compressImage } = await import('@/lib/imageCompression');
+    
     const urls: string[] = [];
     for (const img of images) {
-      const path = `${user?.id ?? 'anon'}/${Date.now()}-${img.name}`;
-      const { error } = await supabase.storage.from('kebajikan-images').upload(path, img, { contentType: img.type });
+      const compressedImg = await compressImage(img);
+      const path = `${user?.id ?? 'anon'}/${Date.now()}-${compressedImg.name}`;
+      const { error } = await supabase.storage.from('kebajikan-images').upload(path, compressedImg, { contentType: compressedImg.type });
       if (!error) {
         const { data } = supabase.storage.from('kebajikan-images').getPublicUrl(path);
         urls.push(data.publicUrl);

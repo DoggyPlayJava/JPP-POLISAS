@@ -41,13 +41,16 @@ export function TaskDetailModal({ task, isOpen, onClose, onRefresh }: any) {
         setUploading(true);
         try {
             // 1. Upload Fail ke Supabase Storage
-            const fileExt = file.name.split('.').pop();
+            const { compressImage } = await import('@/lib/imageCompression');
+            const fileToUpload = file.type.startsWith('image/') ? await compressImage(file) : file;
+
+            const fileExt = fileToUpload.name.split('.').pop();
             const fileName = `${task.id}-${crypto.randomUUID()}.${fileExt}`;
             const filePath = `task-proofs/${fileName}`; // Subfolder dalam bucket 'reports'
 
             const { error: uploadError } = await supabase.storage
                 .from('reports') // Guna bucket 'reports' yang sedia ada
-                .upload(filePath, file);
+                .upload(filePath, fileToUpload, { contentType: fileToUpload.type });
 
             if (uploadError) throw uploadError;
 

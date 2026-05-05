@@ -328,11 +328,14 @@ function VendorAdsTab() {
     }
     setSaving(true);
     try {
-      const fileExt = imageFile.name.split('.').pop();
+      const { compressImage } = await import('@/lib/imageCompression');
+      const compressedFile = await compressImage(imageFile);
+      
+      const fileExt = compressedFile.name.split('.').pop();
       const fileName = `${Date.now()}-${window.crypto.randomUUID()}.${fileExt}`;
       const { error: uploadErr } = await supabase.storage
         .from('polymart-ads')
-        .upload(fileName, imageFile);
+        .upload(fileName, compressedFile, { contentType: compressedFile.type });
       
       if (uploadErr) throw uploadErr;
       const { data: { publicUrl } } = supabase.storage.from('polymart-ads').getPublicUrl(fileName);

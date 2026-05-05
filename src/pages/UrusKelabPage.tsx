@@ -226,9 +226,13 @@ export function UrusKelabPage() {
             setUploading(true);
             if (!event.target.files || event.target.files.length === 0) return;
             const file = event.target.files[0];
-            const filePath = `${clubData.id}/logo-${Date.now()}.${file.name.split('.').pop()}`;
+            
+            const { compressImage } = await import('@/lib/imageCompression');
+            const compressedFile = await compressImage(file);
 
-            await supabase.storage.from('club-logos').upload(filePath, file);
+            const filePath = `${clubData.id}/logo-${Date.now()}.${compressedFile.name.split('.').pop()}`;
+
+            await supabase.storage.from('club-logos').upload(filePath, compressedFile);
             const { data: { publicUrl } } = supabase.storage.from('club-logos').getPublicUrl(filePath);
 
             await supabase.from('clubs').update({ logo_url: publicUrl }).eq('id', clubData.id);

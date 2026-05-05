@@ -9,7 +9,19 @@ import { fileURLToPath } from 'url';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 
+import cron from 'node-cron';
+import runCleanup from './scripts/storage-cleanup.js';
+
 dotenv.config();
+
+// ==========================================
+// BACKGROUND CRON JOBS
+// ==========================================
+// Run storage cleanup every day at 02:00 AM
+cron.schedule('0 2 * * *', () => {
+    console.log('[CRON] Starting daily storage cleanup job...');
+    runCleanup();
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

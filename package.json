@@ -18,7 +18,8 @@
     "check:css-classes": "node scripts/check-css-classes.js",
     "lint": "bun run lint:types && bun run lint:js && bun run lint:css && bun run check:css-vars && bun run check:css-classes",
     "test": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "cleanup:storage": "node scripts/storage-cleanup.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
@@ -77,6 +78,7 @@
     "@vercel/speed-insights": "^2.0.0",
     "@vitejs/plugin-react": "^5.1.2",
     "autoprefixer": "10.4.16",
+    "browser-image-compression": "^2.0.2",
     "buffer": "^6.0.3",
     "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
@@ -104,6 +106,7 @@
     "marked": "^17.0.6",
     "multer": "^2.1.1",
     "next-themes": "^0.4.6",
+    "node-cron": "^4.2.1",
     "pdfjs-dist": "^5.6.205",
     "postcss": "^8.5.12",
     "qrcode": "^1.5.4",

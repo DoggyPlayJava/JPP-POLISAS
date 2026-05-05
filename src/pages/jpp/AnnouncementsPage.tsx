@@ -87,9 +87,12 @@ export default function AnnouncementsPage() {
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${Date.now()}_${window.crypto.randomUUID()}.${fileExt}`;
         
+        const { compressImage } = await import('@/lib/imageCompression');
+        const compressedFile = await compressImage(imageFile);
+
         const { error: uploadError } = await supabase.storage
           .from('announcements')
-          .upload(fileName, imageFile);
+          .upload(fileName, compressedFile, { contentType: compressedFile.type });
           
         if (uploadError) throw uploadError;
         

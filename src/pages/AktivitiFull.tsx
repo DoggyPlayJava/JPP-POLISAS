@@ -919,7 +919,9 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
         if (!file.type.startsWith('image/')) continue;
         const fileName = `bukti_${selectedClubId}_${Date.now()}_${i}.png`;
         const filePath = `program_docs/${fileName}`;
-        await supabase.storage.from('reports').upload(filePath, file);
+        const { compressImage } = await import('@/lib/imageCompression');
+        const compressedFile = await compressImage(file);
+        await supabase.storage.from('reports').upload(filePath, compressedFile, { contentType: compressedFile.type });
         const { data: { publicUrl } } = supabase.storage.from('reports').getPublicUrl(filePath);
         urls.push(publicUrl);
       }
