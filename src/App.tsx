@@ -75,6 +75,7 @@ const PolyMartProductDetail = lazy(() => import('./pages/polymart/PolyMartProduc
 const PolyMartMyOrders = lazy(() => import('./pages/polymart/PolyMartMyOrders').then(m => ({ default: m.PolyMartMyOrders })));
 const PolyMartVendorDashboard = lazy(() => import('./pages/polymart/PolyMartVendorDashboard').then(m => ({ default: m.PolyMartVendorDashboard })));
 const PolyMartAdminPanel = lazy(() => import('./pages/polymart/PolyMartAdminPanel').then(m => ({ default: m.PolyMartAdminPanel })));
+const PolyMartCartPage = lazy(() => import('./pages/polymart/PolyMartCartPage').then(m => ({ default: m.PolyMartCartPage })));
 
 // ── e-Akademik ──
 const AkademikLayout = lazy(() => import('./pages/akademik/AkademikLayout').then(m => ({ default: m.AkademikLayout })));
@@ -312,6 +313,7 @@ function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<RequireApproval><PolyMartLayout /></RequireApproval>}>
           <Route path="/polymart/pesanan-saya"  element={<PolyMartMyOrders />} />
+          <Route path="/polymart/troli"         element={<PolyMartCartPage />} />
           <Route path="/polymart/vendor"        element={<PolyMartVendorDashboard />} />
           <Route path="/polymart/admin"         element={<PolyMartAdminPanel />} />
         </Route>

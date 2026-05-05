@@ -1363,3 +1363,27 @@ Elakkan menggunakan `<AnimatePresence mode="wait">` untuk *page routing transiti
 
 ### 24.6 Promise.all untuk API Fetch
 Semasa memuatkan Dashboard/Portal, satukan pengambilan data secara "Parallel". Rujuk peraturan 15.2 (Query Frontend). Elakkan N+1 loading dan siri sequential `useEffect` yang mengakibatkan "Waterfall loading".
+
+---
+
+## 25. Konsep Draft: Sistem PolyRider (Campus Delivery) 🛵
+
+> Ditambah: Mei 2026 (Draft/Perancangan)
+
+PolyRider adalah sistem penghantaran berkonsepkan *gig-economy* dalaman kampus. Ia direka untuk menyokong ekosistem **PolyMart** dan **e-Keusahawanan** dengan memberi peluang kepada pelajar menjana pendapatan sampingan melalui perkhidmatan *runner* (penghantaran makanan/barangan ke KAMSIS atau asrama luar).
+
+### 25.1 Aliran Proses (Cadangan)
+
+1. **Pembeli (Buyer):** Semasa *checkout* di PolyMart, pembeli memilih "Penghantaran (PolyRider)". Pembeli dikenakan caj penghantaran (cth: RM 1.00 - RM 2.00).
+2. **Ping & Terima (Broadcasting):** Pesanan masuk ke dalam pangkalan data dengan status penghantaran `WAITING_RIDER`. Sistem menghantar *Push Notification* (atau menerusi Realtime Channel) kepada semua pelajar yang mendaftar sebagai PolyRider aktif.
+3. **Penerimaan (Acceptance):** PolyRider pertama yang menekan "Terima Pesanan" akan di-"assign" kepada pesanan tersebut.
+4. **Pengambilan (Pickup):** PolyRider pergi ke lokasi kedai/vendor, menunjukkan kod pesanan, dan mengambil barang. Status pesanan ditukar ke `OUT_FOR_DELIVERY`.
+5. **Penghantaran Berjaya (Completed):** PolyRider menyerahkan barang kepada pembeli. Pembeli/Rider mengesahkan penerimaan (mungkin melalui pengimbasan Kod QR). Wang upah diberikan kepada Rider.
+
+### 25.2 Cabaran & Keperluan Teknikal
+
+- **Pemantauan Lokasi (Geolokasi):** Adakah kita perlukan *live tracking*? Secara minimum, kita hanya perlukan status *timestamp* (Telah Diambil, Sedang Dihantar, Tiba di Lokasi).
+- **Pembayaran Upah:** Jika transaksi dilakukan secara tunai (COD), bagaimana pembahagian harga produk (untuk vendor) dan caj penghantaran (untuk rider) diuruskan secara praktikal? Integrasi tanpa tunai (Cashless) mungkin diperlukan bagi menyelesaikan masalah serahan wang tunai.
+- **Keselamatan & Kredibiliti:** Hanya pelajar yang mendaftar (ada Matrik sah) dan "disahkan" oleh JPP boleh menjadi PolyRider untuk mengelak kehilangan barang.
+
+---

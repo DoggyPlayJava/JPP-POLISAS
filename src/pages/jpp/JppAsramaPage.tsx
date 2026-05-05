@@ -92,7 +92,7 @@ function ToggleBtn({ label, status, loading, onToggle }: { label: string; status
       onClick={onToggle}
       disabled={loading}
       className={cn(
-        "flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm",
+        "flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm whitespace-nowrap",
         status ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20" : "bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
       )}
     >
@@ -535,7 +535,7 @@ export function JppAsramaPage() {
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-4">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide md:pb-0 md:overflow-visible md:flex-wrap">
             <ToggleBtn label="Permohonan Kamsis" status={sysSettings.kamsis_application_open} loading={togglingKey==='kamsis_application_open'} onToggle={() => toggleSetting('kamsis_application_open')} />
             <ToggleBtn label="Keputusan Pemohon" status={sysSettings.kamsis_result_open} loading={togglingKey==='kamsis_result_open'} onToggle={() => toggleSetting('kamsis_result_open')} />
             <ToggleBtn label="Permohonan Rayuan" status={sysSettings.kamsis_appeal_open} loading={togglingKey==='kamsis_appeal_open'} onToggle={() => toggleSetting('kamsis_appeal_open')} />
@@ -720,7 +720,94 @@ export function JppAsramaPage() {
           </div>
         </motion.div>
 
-        {/* Card view omitted for brevity but could be reconstructed similar to desktop logic */}
+        {/* ── Mobile List (Cards) ─────────────────────────────────── */}
+        <div className="md:hidden space-y-3">
+          {filtered.map((s, i) => (
+            <div key={s.id} className={cn(
+              "bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/60 dark:border-slate-800/60 flex flex-col gap-3",
+              s.isRecommended && "bg-violet-50/40 dark:bg-violet-900/10 border-violet-200/50 dark:border-violet-800/50"
+            )}>
+               <div className="flex justify-between items-start gap-2">
+                 <div>
+                   <p className="font-bold text-slate-800 dark:text-slate-100 leading-tight">{s.full_name}</p>
+                   <p className="text-[10px] text-slate-500 mt-0.5">{s.matric_no} • {s.programme_code}</p>
+                 </div>
+                 <div className="text-right flex-shrink-0">
+                   <p className="text-[10px] font-bold text-slate-400">HPNM</p>
+                   <p className="font-black text-emerald-600 dark:text-emerald-400">{s.latest_hpnm?.toFixed(2) ?? '—'}</p>
+                 </div>
+               </div>
+
+               <div className="flex gap-4 border-y border-slate-100 dark:border-slate-800/50 py-3">
+                 <div className="flex-1">
+                   <p className="text-[10px] font-bold text-slate-400">Pencapaian</p>
+                   <p className="font-black text-sky-600 dark:text-sky-400">{s.merit_pencapaian > 0 ? s.merit_pencapaian : '—'}</p>
+                 </div>
+                 <div className="flex-1">
+                   <p className="text-[10px] font-bold text-slate-400">Aktiviti</p>
+                   <p className="font-black text-amber-600 dark:text-amber-400">{s.merit_aktiviti > 0 ? s.merit_aktiviti : '—'}</p>
+                 </div>
+                 <div className="flex-1 text-right">
+                   <p className="text-[10px] font-bold text-slate-400">Kohort</p>
+                   <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{getCohortLabel(s, intakeConfig)}</p>
+                 </div>
+               </div>
+
+               <div className="flex items-center justify-between">
+                  <div>
+                    {(activeTab === 'pemohon' || activeTab === 'rayuan') ? (
+                       s.kamsis_status === 'PENDING' ? (
+                          isSuperAdmin ? (
+                             <div className="flex items-center gap-2">
+                               <button onClick={() => updateStatus(s, 'APPROVED')} className="px-3 py-1.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-lg text-[10px] font-black uppercase transition-colors">Lulus</button>
+                               <button onClick={() => updateStatus(s, 'REJECTED')} className="px-3 py-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg text-[10px] font-black uppercase transition-colors">Tolak</button>
+                             </div>
+                          ) : (
+                             <span className="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-400 text-[10px] font-black uppercase">Menunggu Kelulusan</span>
+                          )
+                       ) : s.kamsis_status === 'APPEALING' ? (
+                          isSuperAdmin ? (
+                             <div className="flex items-center gap-2">
+                               <button onClick={() => updateStatus(s, 'APPROVED')} className="px-3 py-1.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-lg text-[10px] font-black uppercase transition-colors">Terima</button>
+                               <button onClick={() => updateStatus(s, 'APPEAL_REJECTED')} className="px-3 py-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg text-[10px] font-black uppercase transition-colors">Tolak</button>
+                             </div>
+                          ) : (
+                             <span className="px-2.5 py-1 rounded-md bg-amber-500/15 text-amber-500 text-[10px] font-black uppercase">Rayuan Diproses</span>
+                          )
+                       ) : (
+                          <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase ${s.kamsis_status === 'APPROVED' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-rose-500/15 text-rose-500'}`}>
+                            {s.kamsis_status === 'APPEAL_REJECTED' ? 'RAYUAN DITOLAK' : s.kamsis_status}
+                          </span>
+                       )
+                    ) : (
+                       s.klk_status === 'LUAR' ? (
+                          <span className="px-2.5 py-1 bg-slate-500/15 text-slate-400 text-[10px] font-black rounded-md uppercase">Luar Kampus</span>
+                       ) : s.klk_status === 'DALAM' ? (
+                          <span className="px-2.5 py-1 bg-violet-500/15 text-violet-400 text-[10px] font-black rounded-md uppercase">Asrama</span>
+                       ) : (
+                          <span className="px-2.5 py-1 bg-amber-500/15 text-amber-500 text-[10px] font-black rounded-md uppercase">Belum Jawab</span>
+                       )
+                    )}
+                  </div>
+
+                  <button onClick={() => toggleRecommend(s)} disabled={recLoading === s.id} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90 ${s.isRecommended ? 'bg-violet-500/15 text-violet-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-300'}`}>
+                    {recLoading === s.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Star className={`w-4 h-4 ${s.isRecommended ? 'fill-violet-500' : ''}`} />}
+                  </button>
+               </div>
+               
+               {(activeTab === 'pemohon' || activeTab === 'rayuan') && s.kamsis_extra_data && Object.keys(s.kamsis_extra_data).length > 0 && (
+                  <div className="pt-3 mt-1 border-t border-slate-100 dark:border-slate-800/50 text-[10px] text-slate-500 font-mono">
+                     {Object.entries(s.kamsis_extra_data).map(([k, v]) => <div key={k}><span className="font-bold text-slate-400">{k}:</span> {String(v)}</div>)}
+                  </div>
+               )}
+            </div>
+          ))}
+          {filtered.length === 0 && (
+            <div className="text-center py-8 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800/60">
+              <p className="text-sm font-bold text-slate-500">Tiada rekod pelajar.</p>
+            </div>
+          )}
+        </div>
 
       </div>
     </div>

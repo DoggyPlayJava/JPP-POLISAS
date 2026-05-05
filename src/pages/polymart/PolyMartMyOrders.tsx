@@ -78,7 +78,25 @@ function ReviewModal({ order, onClose }: { order: Order; onClose: (submitted: bo
       rating,
       comment: comment.trim() || null,
     });
-    if (!error) { toast.success('Terima kasih atas ulasan anda! ⭐'); onClose(true); }
+    if (!error) { 
+      toast.success('Terima kasih atas ulasan anda! ⭐'); 
+      
+      // Award merit (Exco Kediaman boleh adjust nilai di pangkalan data kelak)
+      const { error: meritErr } = await supabase.rpc('increment_merit_by_source', {
+        p_user_id: user.id,
+        p_amount: 1,
+        p_source: `Ulasan PolyMart: ${order.business_products.name.slice(0, 30)}`,
+        p_type: 'RESIDENTIAL'
+      });
+      
+      if (!meritErr) {
+        toast.success('+1 Merit Kediaman! 🎉', {
+          style: { background: '#f59e0b', color: '#fff', fontWeight: 900 }
+        });
+      }
+      
+      onClose(true); 
+    }
     else toast.error('Gagal hantar ulasan');
     setSubmitting(false);
   };
@@ -96,6 +114,13 @@ function ReviewModal({ order, onClose }: { order: Order; onClose: (submitted: bo
           </button>
         </div>
         <p className="text-sm font-bold text-muted-foreground">{order.business_products?.name}</p>
+
+        <div className="bg-amber-50 border border-amber-200/60 rounded-xl p-2.5 text-center">
+          <p className="text-[11px] font-black text-amber-700">🎁 Ganjaran Ulasan</p>
+          <p className="text-[10px] font-bold text-amber-600/80 mt-0.5 leading-tight">
+            Tinggalkan ulasan bergambar / jujur untuk menerima automatik +1 Merit Kediaman.
+          </p>
+        </div>
 
         {/* Star picker */}
         <div className="flex items-center justify-center gap-2 py-3">

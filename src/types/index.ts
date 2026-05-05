@@ -529,6 +529,16 @@ export interface BusinessProduct {
   created_at:            string;
 }
 
+export interface PolymartCartItem {
+  id:          string;
+  buyer_id:    string;
+  product_id:  string;
+  quantity:    number;
+  created_at:  string;
+  // Joined
+  product?:    BusinessProduct;
+}
+
 export interface BusinessTransactionItem {
   product_id:  string;
   name:        string;

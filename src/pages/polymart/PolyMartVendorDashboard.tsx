@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -459,6 +460,7 @@ function VendorAdsTab() {
 export function PolyMartVendorDashboard() {
   const { user } = useAuth();
   const { refetchCounts } = usePolymart();
+  const navigate = useNavigate();
 
   const [orders,   setOrders]   = useState<VendorOrder[]>([]);
   const [loading,  setLoading]  = useState(true);
@@ -533,9 +535,18 @@ export function PolyMartVendorDashboard() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-xl font-black text-foreground">Dashboard Peniaga</h1>
-        <p className="text-xs text-muted-foreground/60">Urus pesanan PolyMart anda</p>
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-black text-foreground">Dashboard Peniaga</h1>
+          <p className="text-xs text-muted-foreground/60">Urus pesanan PolyMart anda</p>
+        </div>
+        <button 
+          onClick={() => navigate('/keusahawanan/pos/stats')}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-black text-white transition-all hover:scale-105 active:scale-95 shadow-lg"
+          style={{ background: PM_GRADIENT }}>
+          <TrendingUp className="w-3.5 h-3.5" />
+          Lihat Analitik
+        </button>
       </motion.div>
 
       {/* Stats */}

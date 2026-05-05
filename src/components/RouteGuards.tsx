@@ -87,9 +87,20 @@ export function ProtectedRoute() {
   const [minDelayPassed, setMinDelayPassed] = useState(false);
 
   useEffect(() => {
-    // Artificial 3-second delay for the loading screen (as requested by creator)
-    const timer = setTimeout(() => setMinDelayPassed(true), 3000);
-    return () => clearTimeout(timer);
+    // Semak jika user dah tengok splash screen dalam sesi/PWA boot kali ni
+    const hasSeenSplash = sessionStorage.getItem('hz_splash_seen');
+    
+    if (hasSeenSplash) {
+      // Jika dah tengok (contoh: tengah navigate dari PolyMart), skip delay terus!
+      setMinDelayPassed(true);
+    } else {
+      // Jika ini cold boot PWA / tab baru, tunjuk splash screen 3 saat
+      const timer = setTimeout(() => {
+        setMinDelayPassed(true);
+        sessionStorage.setItem('hz_splash_seen', 'true');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   if (isLoading || !minDelayPassed) return <LoadingScreen />;
@@ -109,9 +120,20 @@ export function PublicRoute() {
   const [minDelayPassed, setMinDelayPassed] = useState(false);
 
   useEffect(() => {
-    // Artificial 3-second delay for the loading screen (as requested by creator)
-    const timer = setTimeout(() => setMinDelayPassed(true), 3000);
-    return () => clearTimeout(timer);
+    // Semak jika user dah tengok splash screen dalam sesi/PWA boot kali ni
+    const hasSeenSplash = sessionStorage.getItem('hz_splash_seen');
+    
+    if (hasSeenSplash) {
+      // Jika dah tengok (contoh: klik PolyMart), skip delay terus!
+      setMinDelayPassed(true);
+    } else {
+      // Jika ini cold boot PWA / tab baru, tunjuk splash screen 3 saat
+      const timer = setTimeout(() => {
+        setMinDelayPassed(true);
+        sessionStorage.setItem('hz_splash_seen', 'true');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   // ── Logik redirect selepas log masuk ──────────────────────────────────────

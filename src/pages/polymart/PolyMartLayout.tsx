@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
   ArrowLeft, ShoppingBag, Search, Package, LayoutGrid,
-  Shield, Home, SlidersHorizontal, X, LogIn,
+  Shield, Home, SlidersHorizontal, X, LogIn, ShoppingCart,
 } from 'lucide-react';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
@@ -40,12 +40,13 @@ interface PolymartCtx {
   isVendor: boolean;
   pendingVendorCount: number;
   myActiveOrdersCount: number;
+  cartCount: number;
   refetchCounts: () => void;
 }
 const PolymartContext = createContext<PolymartCtx>({
   activeCategory: 'all', setActiveCategory: () => {},
   searchQuery: '', setSearchQuery: () => {},
-  isVendor: false, pendingVendorCount: 0, myActiveOrdersCount: 0, refetchCounts: () => {},
+  isVendor: false, pendingVendorCount: 0, myActiveOrdersCount: 0, cartCount: 0, refetchCounts: () => {},
 });
 export const usePolymart = () => useContext(PolymartContext);
 
@@ -62,6 +63,7 @@ export function PolyMartLayout() {
   const [isVendor,          setIsVendor]           = useState(false);
   const [pendingVendorCount,setPendingVendorCount] = useState(0);
   const [myActiveOrdersCount, setMyActiveOrdersCount] = useState(0);
+  const [cartCount, setCartCount] = useState(0);
 
   const isHome    = location.pathname === '/polymart' || location.pathname === '/polymart/';
   const isOrders  = location.pathname.includes('/pesanan-saya');
@@ -70,13 +72,16 @@ export function PolyMartLayout() {
 
   const refetchCounts = async () => {
     if (!user) return;
-    const [buyerRes, vendorRes, bizRes] = await Promise.all([
+    const [buyerRes, vendorRes, bizRes, cartRes] = await Promise.all([
       supabase.from('polymart_orders').select('id', { count: 'exact', head: true })
         .eq('buyer_id', user.id).in('status', ['PENDING', 'CONFIRMED', 'READY']),
       supabase.from('keusahawanan_businesses').select('id').eq('owner_id', user.id).eq('status', 'ACTIVE'),
       supabase.from('student_business_memberships').select('business_id').eq('user_id', user.id).eq('status', 'ACTIVE'),
+      supabase.from('polymart_cart_items').select('id', { count: 'exact', head: true })
+        .eq('buyer_id', user.id)
     ]);
     setMyActiveOrdersCount(buyerRes.count ?? 0);
+    setCartCount(cartRes.count ?? 0);
 
     const bizIds = [
       ...(vendorRes.data?.map(b => b.id) ?? []),
@@ -109,7 +114,7 @@ export function PolyMartLayout() {
   return (
     <PolymartContext.Provider value={{
       activeCategory, setActiveCategory, searchQuery, setSearchQuery,
-      isVendor, pendingVendorCount, myActiveOrdersCount, refetchCounts,
+      isVendor, pendingVendorCount, myActiveOrdersCount, cartCount, refetchCounts,
     }}>
       <div className="min-h-screen bg-background">
 
@@ -175,6 +180,17 @@ export function PolyMartLayout() {
                 <div className="flex items-center gap-0.5 shrink-0">
                   {user ? (
                     <>
+                      <button onClick={() => navigate('/polymart/troli')}
+                        className="relative w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/60 transition-colors">
+                        <ShoppingCart className="w-[18px] h-[18px] text-muted-foreground" />
+                        {cartCount > 0 && (
+                          <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full text-white text-[7px] font-black flex items-center justify-center"
+                            style={{ background: PM_ACCENT }}>
+                            {cartCount > 9 ? '9+' : cartCount}
+                          </span>
+                        )}
+                      </button>
+
                       <button onClick={() => navigate('/polymart/pesanan-saya')}
                         className="relative w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/60 transition-colors">
                         <Package className="w-[18px] h-[18px] text-muted-foreground" />
@@ -309,7 +325,7 @@ export function PolyMartLayout() {
 
         {/* ── Mobile Bottom Nav ───────────────────────────────────────── */}
         <nav className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-background/92 backdrop-blur-xl border-t border-border/50 safe-area-pb">
-          <div className="grid grid-cols-4 h-16">
+          <div className="grid grid-cols-5 h-16">
             {[
               { 
                 icon: Home,        
@@ -324,6 +340,13 @@ export function PolyMartLayout() {
                 active: showMobileSearch,     
                 badge: 0, 
                 action: () => setShowMobileSearch(true)
+              },
+              { 
+                icon: ShoppingCart,     
+                label: 'Troli', 
+                active: location.pathname.includes('/polymart/troli'),  
+                badge: cartCount,
+                action: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/troli')}`) : navigate('/polymart/troli') 
               },
               { 
                 icon: Package,     

@@ -18,6 +18,20 @@ export function PortalFooter() {
             &copy; {new Date().getFullYear()} Jawatankuasa Perwakilan Pelajar <br />
             Politeknik Sultan Haji Ahmad Shah
           </p>
+
+          {/* Developer Signature - Sangat subtle, tak overshadow JPP */}
+          <div className="pt-8 flex justify-center">
+            <div className="flex items-center opacity-30 hover:opacity-100 transition-all duration-500 cursor-default group/hz">
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-800 dark:text-white mt-1">
+                Engineered By
+              </span>
+              <img 
+                src="/HZ.png?v=2" 
+                alt="HZ" 
+                className="w-16 sm:w-20 h-auto object-contain grayscale opacity-80 group-hover/hz:grayscale-0 group-hover/hz:opacity-100 transition-all duration-500 drop-shadow-sm -ml-1" 
+              />
+            </div>
+          </div>
         </div>
       </footer>
       <FloatingAiChat />

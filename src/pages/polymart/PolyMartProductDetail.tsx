@@ -3,12 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, PM_GLOW, CATEGORY_EMOJI } from './PolyMartLayout';
+import { usePolymart, PM_ACCENT, PM_LIGHT, PM_GRADIENT, PM_GLOW, CATEGORY_EMOJI } from './PolyMartLayout';
 import { sendNotificationToBusinessVendor, sendNotificationToUser } from '@/lib/notifications';
 import toast from 'react-hot-toast';
 import {
   ArrowLeft, Star, Store, Clock, Package, Phone, MessageCircle,
-  Minus, Plus, CheckCircle, AlertCircle, User, ChevronDown, ShoppingBag,
+  Minus, Plus, CheckCircle, AlertCircle, User, ChevronDown, ShoppingBag, ShoppingCart,
 } from 'lucide-react';
 
 interface Product {
@@ -273,6 +273,7 @@ export function PolyMartProductDetail() {
   const { user } = useAuth();
 
   const [product,   setProduct]   = useState<Product | null>(null);
+  const { refetchCounts } = usePolymart();
   const [reviews,   setReviews]   = useState<Review[]>([]);
   const [loading,   setLoading]   = useState(true);
   const [showOrder, setShowOrder] = useState(false);
@@ -319,6 +320,23 @@ export function PolyMartProductDetail() {
       setReported(true);
       setShowReport(false);
       toast.success('Laporan dihantar. Terima kasih!');
+    }
+  };
+
+  const addToCart = async () => {
+    if (!user) {
+      navigate(`/login?redirect=${encodeURIComponent(`/polymart/produk/${id}`)}`);
+      return;
+    }
+    const { error } = await supabase.from('polymart_cart_items').upsert(
+      { buyer_id: user.id, product_id: id, quantity: 1 },
+      { onConflict: 'buyer_id, product_id' }
+    );
+    if (error) {
+      toast.error('Gagal tambah ke troli');
+    } else {
+      toast.success('Ditambah ke troli!', { icon: '🛒', style: { borderRadius: '16px', fontWeight: 700 } });
+      refetchCounts();
     }
   };
 
@@ -450,19 +468,28 @@ export function PolyMartProductDetail() {
           </motion.div>
         ) : (
           <>
-            <button
-              onClick={() => {
-                if (!user) {
-                  navigate(`/login?redirect=${encodeURIComponent(`/polymart/produk/${id}`)}`);
-                  return;
-                }
-                setShowOrder(true);
-              }}
-              disabled={isOut}
-              className="w-full h-14 rounded-2xl text-white font-black text-base transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-              style={{ background: isOut ? 'hsl(var(--muted))' : PM_GRADIENT, boxShadow: isOut ? 'none' : `0 8px 24px ${PM_GLOW}` }}>
-              {isOut ? '😔 Stok Habis' : '🛍️ Tempah Sekarang'}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={addToCart}
+                disabled={isOut}
+                className="flex-1 h-14 rounded-2xl font-black text-[13px] sm:text-sm transition-all hover:bg-muted/50 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed border-2 border-border/60"
+                style={{ color: isOut ? 'hsl(var(--muted-foreground))' : PM_ACCENT }}>
+                🛒 Tambah Troli
+              </button>
+              <button
+                onClick={() => {
+                  if (!user) {
+                    navigate(`/login?redirect=${encodeURIComponent(`/polymart/produk/${id}`)}`);
+                    return;
+                  }
+                  setShowOrder(true);
+                }}
+                disabled={isOut}
+                className="flex-1 h-14 rounded-2xl text-white font-black text-[13px] sm:text-sm transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                style={{ background: isOut ? 'hsl(var(--muted))' : PM_GRADIENT, boxShadow: isOut ? 'none' : `0 8px 24px ${PM_GLOW}` }}>
+                {isOut ? '😔 Stok Habis' : '🛍️ Tempah Sekarang'}
+              </button>
+            </div>
             {/* Guest nudge */}
             {!user && !isOut && (
               <p className="text-center text-[10px] text-muted-foreground/50 -mt-1">
