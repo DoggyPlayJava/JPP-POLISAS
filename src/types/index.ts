@@ -2,6 +2,11 @@
 // JPP POLISAS — Core Types (matches Supabase DB schema)
 // ============================================================
 
+declare global {
+  const __APP_VERSION__: string;
+  const __GIT_HASH__: string;
+}
+
 export type UserRole = 'SUPER_ADMIN_JPP' | 'JPP' | 'CLUB_ADVISOR' | 'CLUB_PRESIDENT' | 'CLUB_MT' | 'CLUB_MEMBER' | 'STAFF';
 // SUPER_ADMIN_JPP = Pentadbir Mutlak (akses penuh ke semua sistem)
 // JPP             = Ahli Jawatankuasa Perwakilan Pelajar (akses modul exco berkenaan)

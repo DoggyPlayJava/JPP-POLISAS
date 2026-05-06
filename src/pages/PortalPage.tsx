@@ -299,7 +299,7 @@ export function PortalPage() {
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
               <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 dark:text-white/50">
-                EKOSISTEM DIGITAL V26.5.3
+                EKOSISTEM DIGITAL V{__APP_VERSION__}
               </span>
             </motion.div>
 

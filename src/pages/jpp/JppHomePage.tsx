@@ -281,6 +281,15 @@ export function JppHomePage() {
               <span>{posLabel}</span>
               {jppUnit && <span className="opacity-60">· {jppUnit}</span>}
             </div>
+
+            {/* Git Hash Badge */}
+            <div
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-widest bg-amber-500/10 border-amber-500/20 text-amber-500"
+              title="Current Build Hash"
+            >
+              <div className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+              <span>Build {__GIT_HASH__}</span>
+            </div>
           </div>
 
           {/* Greeting */}
