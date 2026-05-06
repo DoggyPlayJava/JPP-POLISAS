@@ -7,6 +7,7 @@ import { uploadPdfToDrive } from '@/lib/driveUpload';
 import {
   BookOpen, Upload, AlertCircle, CheckCircle, Loader2,
   FileText, Sparkles, Trash2, TrendingUp, TrendingDown, Minus,
+  XCircle, MessageCircle,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import {
@@ -57,11 +58,16 @@ function CustomTooltip({ active, payload, label }: any) {
 // ─── Lazy-load pdfjs ─────────────────────────────────────────
 async function extractCgpaFromPdf(file: File) {
   const pdfjsLib = await import('pdfjs-dist');
-  // Guna worker lokal dari /public — elak CDN fetch error
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
   const buffer = await file.arrayBuffer();
-  const pdf    = await pdfjsLib.getDocument({ data: buffer }).promise;
+
+  // Timeout guard — 10s max
+  const pdfPromise = pdfjsLib.getDocument({ data: buffer }).promise;
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('PDF terlalu lama untuk dibaca (timeout).')), 10000)
+  );
+  const pdf = await Promise.race([pdfPromise, timeout]);
 
   let fullText = '';
   for (let i = 1; i <= Math.min(pdf.numPages, 5); i++) {
@@ -70,61 +76,34 @@ async function extractCgpaFromPdf(file: File) {
     fullText += content.items.map((item: any) => item.str).join(' ') + '\n';
   }
 
-  const text = fullText.replace(/\s+/g, ' ').toUpperCase();
+  // Empty text guard — PDF mungkin scan/gambar
+  if (fullText.trim().length < 20) {
+    console.warn('[cgpa-scan] PDF text terlalu pendek, mungkin scan/gambar:', fullText);
+    return { hpnm: null, pnm: null, semester: null, tahun: null, rawText: fullText, scanFailed: true };
+  }
 
+  // ── Normalize: fix split decimals ("3 . 77" → "3.77") ──────
+  let text = fullText.replace(/\s+/g, ' ').toUpperCase();
+  text = text.replace(/(\d)\s+\.\s*(\d)/g, '$1.$2');
+  text = text.replace(/(\d)\.\s+(\d)/g, '$1.$2');
 
-  // ── Strategy 1: Semester dalam perkataan Melayu (POLISAS SULTAN HAJI AHMAD SHAH) ──
+  console.log('[cgpa-scan] Normalized text (first 800):', text.substring(0, 800));
+
+  // ── Semester detection ─────────────────────────────────────
   const semWordMap: Record<string, number> = {
     'SATU': 1, 'DUA': 2, 'TIGA': 3, 'EMPAT': 4,
     'LIMA': 5, 'ENAM': 6, 'TUJUH': 7, 'LAPAN': 8, 'SEMBILAN': 9,
-    'ONE': 1, 'TWO': 2, 'THREE': 3, 'FOUR': 4, 'FIVE': 5, 'SIX': 6,
   };
 
-  // ── HPNM patterns ─────────────────────────────────────────────
-  const hpnmPatterns = [
-    /HPNM\s*[:\-=]?\s*(\d\.\d{2})/,
-    /H\.P\.N\.M\.?\s*[:\-=]?\s*(\d\.\d{2})/,
-    /PURATA\s+NILAI\s+MATA\s+KUMULATIF\s*[:\-]?\s*(\d\.\d{2})/,
-    /CGPA\s*[:\-=]?\s*(\d\.\d{2,4})/,
-    /CUMULATIVE\s*GPA\s*[:\-=]?\s*(\d\.\d{2})/,
-    /KEPUTUSAN\s+KUMULATIF[^\d]*(\d\.\d{2})/,
-    /(?:HPNM|CGPA|KUMULATIF)[^\d]{0,30}(\d\.[0-9]{2,4})/,
-    // POLISAS format: HPNM value appears after NULL or end of grade table as standalone "X.XX"
-    // Look for pattern: "NILA I X.XX" or "NILAM X.XX" at end of doc
-    /NILA I?\s+([0-2]\.\d{2}|[34]\.\d{2})\s+(\d\.\d{2})/,
-  ];
-
-  // ── PNM patterns ──────────────────────────────────────────────
-  const pnmPatterns = [
-    /PNM\s*[:\-=]?\s*(\d\.\d{2})/,
-    /P\.N\.M\.?\s*[:\-=]?\s*(\d\.\d{2})/,
-    /PURATA\s+NILAI\s+MATA\s*[:\-]?\s*(\d\.\d{2})/,
-    /GPA\s+SEMESTER\s*[:\-=]?\s*(\d\.\d{2})/,
-    /(?:^|[^A-Z])GPA\s*[:\-=]?\s*(\d\.\d{2})/,
-    /(?:PNM|GPA\s+SEM)[^\d]{0,20}(\d\.[0-9]{2,4})/,
-  ];
-
-  // ── Semester patterns (digit first, then Malay words, then SESI) ──
   let semester: number | null = null;
-
-  // Try digit pattern
-  const semDigitPatterns = [
-    /SEMESTER\s*[:\-]?\s*([1-9])/,
-    /SEM(?:ESTER)?\s*[:\-]?\s*([1-9])/,
-    /SEM\.?\s*([1-9])\b/,
-  ];
-  for (const p of semDigitPatterns) {
+  for (const p of [/SEMESTER\s*[:\-]?\s*([1-9])/, /SEM(?:ESTER)?\s*[:\-]?\s*([1-9])/, /SEM\.?\s*([1-9])\b/]) {
     const m = text.match(p);
     if (m) { semester = parseInt(m[1]); break; }
   }
-
-  // Try Malay word pattern: "SEMESTER : SATU"
   if (!semester) {
-    const semWordMatch = text.match(/SEMESTER\s*[:\-]?\s*(SATU|DUA|TIGA|EMPAT|LIMA|ENAM|TUJUH|LAPAN|SEMBILAN|ONE|TWO|THREE|FOUR|FIVE|SIX)/);
+    const semWordMatch = text.match(/SEMESTER\s*[:\-]?\s*(SATU|DUA|TIGA|EMPAT|LIMA|ENAM|TUJUH|LAPAN|SEMBILAN)/);
     if (semWordMatch) semester = semWordMap[semWordMatch[1]] ?? null;
   }
-
-  // Try SESI pattern: "SESI I :" = sem 1, "SESI II :" = sem 2
   if (!semester) {
     const sesiMatch = text.match(/SESI\s+(I{1,3}|IV|V?I{0,3})\s*[:\s]/);
     if (sesiMatch) {
@@ -133,66 +112,74 @@ async function extractCgpaFromPdf(file: File) {
     }
   }
 
-  // ── Tahun/Akademik session ────────────────────────────────────
-  const tahunPatterns = [
-    /SESI\s+[IVX]+\s*[:\-]?\s*(\d{4}\s*\/\s*\d{4})/,    // SESI I : 2025/2026
-    /SESI\s*(\d{4}\s*\/\s*\d{4})/,
-    /(\d{4}\s*\/\s*\d{4})/,
-    /(\d{4}-\d{4})/,
-    /TAHUN\s+(\d{4})/,
-  ];
-
-  let hpnm: number | null = null;
-  for (const p of hpnmPatterns) {
-    const m = text.match(p);
-    if (m) {
-      // "NILA I X.XX Y.YY" — second capture = hpnm if two values
-      const raw = p.source.includes('NILA I') ? m[2] ?? m[1] : m[1];
-      const val = parseFloat(raw);
-      if (val >= 0 && val <= 4.0) { hpnm = val; break; }
-    }
-  }
-
-  // POLISAS last-resort: scan ALL decimal numbers 0.00-4.00 near end of doc
-  // The last valid GPA-range decimal that appears twice (PNM + HPNM) is typical
-  if (!hpnm) {
-    const tail = text.slice(-800); // last 800 chars of doc
-    const allDecimals = [...tail.matchAll(/\b([0-4]\.\d{2})\b/g)]
-      .map(m => parseFloat(m[1]))
-      .filter(v => v >= 0 && v <= 4.0);
-    if (allDecimals.length >= 2) {
-      // Last two valid decimals: first = PNM (current sem), last = HPNM (cumulative)
-      hpnm = allDecimals[allDecimals.length - 1];
-    } else if (allDecimals.length === 1) {
-      hpnm = allDecimals[0];
-    }
-  }
-
-  let pnm: number | null = null;
-  for (const p of pnmPatterns) {
-    const m = text.match(p);
-    if (m) {
-      const val = parseFloat(m[1]);
-      if (val >= 0 && val <= 4.0 && val !== hpnm) { pnm = val; break; }
-    }
-  }
-
-  // PNM last-resort: second-to-last decimal in tail
-  if (!pnm && hpnm) {
-    const tail = text.slice(-800);
-    const allDecimals = [...tail.matchAll(/\b([0-4]\.\d{2})\b/g)]
-      .map(m => parseFloat(m[1]))
-      .filter(v => v >= 0 && v <= 4.0 && v !== hpnm);
-    if (allDecimals.length > 0) pnm = allDecimals[allDecimals.length - 1];
-  }
-
+  // ── Tahun ──────────────────────────────────────────────────
   let tahun: string | null = null;
-  for (const p of tahunPatterns) {
+  for (const p of [/SESI\s+[IVX]+\s*[:\-]?\s*(\d{4}\s*\/\s*\d{4})/, /SESI\s*(\d{4}\s*\/\s*\d{4})/, /(\d{4}\s*\/\s*\d{4})/, /(\d{4}-\d{4})/]) {
     const m = text.match(p);
     if (m) { tahun = m[1].replace(/\s/g, ''); break; }
   }
 
-  return { hpnm, pnm, semester, tahun, rawText: text.substring(0, 600) };
+  // ── Extract KEPUTUSAN zone (after grade table) ─────────────
+  const keputusanIdx = text.indexOf('KEPUTUSAN');
+  const keputusanZone = keputusanIdx >= 0 ? text.slice(keputusanIdx) : '';
+
+  console.log('[cgpa-scan] Keputusan zone:', keputusanZone.substring(0, 300));
+
+  // ── PASS 1: High confidence — labeled patterns on full text ──
+  let hpnm: number | null = null;
+  let pnm: number | null = null;
+
+  const hpnmPatterns = [
+    /HPNM\s*[:\-=]?\s*(\d\.\d{2})/,
+    /H\.?P\.?N\.?M\.?\s*[:\-=]?\s*(\d\.\d{2})/,
+    /CGPA\s*[:\-=]?\s*(\d\.\d{2,4})/,
+    /PURATA\s+NILAI\s+MATA\s+KUMULATIF\s*[:\-]?\s*(\d\.\d{2})/,
+    /CUMULATIVE\s*GPA\s*[:\-=]?\s*(\d\.\d{2})/,
+  ];
+  const pnmPatterns = [
+    /PNM\s*[:\-=]?\s*(\d\.\d{2})/,
+    /P\.?N\.?M\.?\s*[:\-=]?\s*(\d\.\d{2})/,
+    /GPA\s+SEMESTER\s*[:\-=]?\s*(\d\.\d{2})/,
+  ];
+
+  for (const p of hpnmPatterns) {
+    const m = text.match(p);
+    if (m) { const v = parseFloat(m[1]); if (v >= 0 && v <= 4.0) { hpnm = v; break; } }
+  }
+  for (const p of pnmPatterns) {
+    const m = text.match(p);
+    if (m) { const v = parseFloat(m[1]); if (v >= 0 && v <= 4.0) { pnm = v; break; } }
+  }
+
+  // ── PASS 2: Medium confidence — scan KEPUTUSAN zone only ───
+  if ((!hpnm || !pnm) && keputusanZone) {
+    // Look for "PNM : X.XX" and "HPNM : X.XX" specifically in keputusan zone
+    if (!pnm) {
+      const pm = keputusanZone.match(/PNM\s*[:\-=]?\s*(\d\.\d{2})/);
+      if (pm) { const v = parseFloat(pm[1]); if (v >= 0 && v <= 4.0) pnm = v; }
+    }
+    if (!hpnm) {
+      const hm = keputusanZone.match(/HPNM\s*[:\-=]?\s*(\d\.\d{2})/);
+      if (hm) { const v = parseFloat(hm[1]); if (v >= 0 && v <= 4.0) hpnm = v; }
+    }
+    // Fallback: find all decimals in keputusan zone (excludes grade table!)
+    if (!hpnm || !pnm) {
+      const decimals = [...keputusanZone.matchAll(/\b([0-4]\.\d{2})\b/g)]
+        .map(m => parseFloat(m[1]))
+        .filter(v => v >= 0 && v <= 4.0);
+      // POLISAS format: "PNM : X.XX   HPNM : X.XX" — first = PNM, second = HPNM
+      if (decimals.length >= 2) {
+        if (!pnm) pnm = decimals[0];
+        if (!hpnm) hpnm = decimals[1];
+      } else if (decimals.length === 1 && !hpnm) {
+        hpnm = decimals[0];
+      }
+    }
+  }
+
+  console.log('[cgpa-scan] Result:', { hpnm, pnm, semester, tahun });
+
+  return { hpnm, pnm, semester, tahun, rawText: text.substring(0, 600), scanFailed: false };
 }
 
 // ─── Main CGPA Page ───────────────────────────────────────────
@@ -234,6 +221,15 @@ export function AkademikCgpa() {
     setPendingFile(file);
     try {
       const result = await extractCgpaFromPdf(file);
+
+      // PDF was image/scan — total failure
+      if (result.scanFailed) {
+        setScanOk(false);
+        setDraftMode('SCAN');
+        toast.error('PDF tidak boleh dibaca — mungkin gambar/scan.', { duration: 4000 });
+        return;
+      }
+
       setFHpnm(result.hpnm?.toString() || '');
       setFPnm(result.pnm?.toString()   || '');
       setFSem(result.semester?.toString() || '');
@@ -243,12 +239,11 @@ export function AkademikCgpa() {
       if (result.hpnm) {
         toast.success(`HPNM ${result.hpnm.toFixed(2)} berjaya dikesan!`);
       } else {
-        // Show what text was detected to help user
-        const preview = result.rawText?.substring(0, 120).trim();
         console.log('[cgpa-scan] Raw text preview:', result.rawText);
-        toast('HPNM tidak dikesan automatik — sila isi manual.\nTeks PDF berjaya dibaca (semak console).', { icon: 'ℹ️', duration: 4000 });
+        toast('HPNM tidak dikesan — sila isi manual atau hubungi JPP.', { icon: '⚠️', duration: 4000 });
       }
     } catch (e: any) {
+      console.error('[cgpa-scan] PDF error:', e);
       toast.error(`Gagal baca PDF: ${e.message}`);
       setScanOk(false);
       setDraftMode('SCAN');
@@ -560,9 +555,27 @@ export function AkademikCgpa() {
                   <p className="text-xs font-black text-emerald-300">HPNM berjaya dikesan daripada PDF. Semak dan sahkan di bawah.</p>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/25">
-                  <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
-                  <p className="text-xs font-black text-amber-300">HPNM tidak dapat dikesan — sila isi manual di bawah.</p>
+                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 space-y-2.5">
+                  <div className="flex items-center gap-2">
+                    <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                    <p className="text-xs font-black text-rose-300">Gagal dimuatnaik — format PDF tidak dikenali.</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href="https://wa.me/601139413699?text=Salam%2C%20saya%20ada%20masalah%20muat%20naik%20slip%20HPNM%20di%20portal%20JPP."
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-black text-emerald-300 hover:bg-emerald-500/25 transition-all uppercase tracking-widest"
+                    >
+                      <MessageCircle className="w-3 h-3" /> Hubungi JPP
+                    </a>
+                    <button
+                      onClick={() => setDraftMode('MANUAL')}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-[10px] font-black text-white/40 hover:text-white/60 transition-all uppercase tracking-widest"
+                    >
+                      <Sparkles className="w-3 h-3" /> Isi Manual
+                    </button>
+                  </div>
                 </div>
               )
             )}
