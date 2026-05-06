@@ -55,14 +55,27 @@ function CustomTooltip({ active, payload, label }: any) {
   );
 }
 
+// ─── Read file as ArrayBuffer (iOS-safe) ─────────────────────
+function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as ArrayBuffer);
+    reader.onerror = () => reject(new Error('Gagal membaca fail.'));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
 // ─── Lazy-load pdfjs ─────────────────────────────────────────
 async function extractCgpaFromPdf(file: File) {
   const pdfjsLib = await import('pdfjs-dist');
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
-  const buffer = await file.arrayBuffer();
+  const buffer = await readFileAsArrayBuffer(file);
 
-  // Timeout guard — 15s max (mobile slower)
+  // Try without worker first on iOS (more reliable), with worker on desktop
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
   const loadPdf = async (useWorker: boolean) => {
     const opts: any = { data: buffer };
     if (!useWorker) opts.disableWorker = true;
@@ -73,13 +86,17 @@ async function extractCgpaFromPdf(file: File) {
     return Promise.race([promise, timeout]);
   };
 
-  // Try with worker first, fallback to no-worker (fixes mobile issues)
   let pdf: any;
-  try {
-    pdf = await loadPdf(true);
-  } catch (workerErr) {
-    console.warn('[cgpa-scan] Worker failed, retrying without worker:', workerErr);
+  if (isIOS) {
+    // iOS: always use no-worker (worker .mjs often fails on WebKit)
     pdf = await loadPdf(false);
+  } else {
+    try {
+      pdf = await loadPdf(true);
+    } catch (workerErr) {
+      console.warn('[cgpa-scan] Worker failed, retrying without worker:', workerErr);
+      pdf = await loadPdf(false);
+    }
   }
 
   let fullText = '';
@@ -261,9 +278,10 @@ export function AkademikCgpa() {
       }
     } catch (e: any) {
       console.error('[cgpa-scan] PDF error:', e);
-      toast.error(`Gagal baca PDF: ${e.message}`);
+      // On iOS/mobile: pdfjs might crash — gracefully fall to manual mode with file kept
       setScanOk(false);
       setDraftMode('SCAN');
+      toast('PDF diterima tetapi tidak dapat dianalisis automatik.\nSila isi HPNM secara manual di bawah.', { icon: '📝', duration: 5000 });
     } finally {
       setScanning(false);
     }
@@ -529,8 +547,13 @@ export function AkademikCgpa() {
           id="cgpa-pdf-upload"
           type="file"
           accept="*/*"
-          className="hidden"
-          onChange={e => { e.target.files?.[0] && handleFile(e.target.files[0]); e.target.value = ''; }}
+          style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
+          onChange={e => {
+            const f = e.target.files?.[0];
+            if (f) handleFile(f);
+            // Reset AFTER processing — iOS cancels selection if reset too early
+            setTimeout(() => { if (fileRef.current) fileRef.current.value = ''; }, 500);
+          }}
         />
 
         {!inDraft ? (
