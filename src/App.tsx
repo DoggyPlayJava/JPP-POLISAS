@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useState, useCallback } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
@@ -421,11 +421,27 @@ import { AcademicSessionProvider } from './contexts/AcademicSessionContext';
 import { PwaUpdater } from '@/components/PwaUpdater';
 import { InstallAppPrompt } from '@/components/pwa/InstallAppPrompt';
 
+function GlobalRedirector() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const redirectPath = params.get('redirect');
+    if (redirectPath) {
+      navigate(redirectPath, { replace: true });
+    }
+  }, [location.search, navigate]);
+
+  return null;
+}
+
 function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider>
         <BrowserRouter>
+          <GlobalRedirector />
           <AuthProvider>
             <AcademicSessionProvider>
               <NotificationProvider>
