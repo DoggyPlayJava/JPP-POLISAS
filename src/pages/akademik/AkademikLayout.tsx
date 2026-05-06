@@ -43,6 +43,23 @@ export function AkademikLayout() {
   const isActive = (path: string) =>
     path === '/akademik' ? location.pathname === '/akademik' : location.pathname.startsWith(path);
 
+  // Auto close sidebar on mobile when location changes
+  React.useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
+
+  // Lock body scroll apabila sidebar terbuka di mobile
+  React.useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [sidebarOpen]);
+
   return (
     <div className="min-h-screen bg-slate-950 text-white font-sans overflow-x-hidden">
 

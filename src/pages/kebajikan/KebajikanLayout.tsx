@@ -24,6 +24,18 @@ export function KebajikanLayout() {
     setSidebarOpen(false);
   }, [location.pathname]);
 
+  // Lock body scroll apabila sidebar terbuka di mobile
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [sidebarOpen]);
+
   if (isLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-background">
