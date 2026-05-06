@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
   Users, Crown, Search, Pencil, Shield,
-  Loader2, UserCheck, CheckSquare, Square, Plus, X
+  Loader2, UserCheck, CheckSquare, Square, Plus, X, Trash, AlertTriangle
 } from 'lucide-react';
 import { cn, hexToRgba, getContrastText } from '@/lib/utils';
 import { JPP_MT_POSITIONS } from '@/types';
@@ -32,11 +32,13 @@ function MemberCard({
   canEdit,
   themeColor,
   onUpdate,
+  onRemove,
 }: {
   member: JppMember;
   canEdit: boolean;
   themeColor: string;
   onUpdate: (id: string, patch: Partial<JppMember>) => void;
+  onRemove: (id: string) => void;
 }) {
   const { positionLabels, unitLabels, unitConfig, unitOrder } = useJppConfig();
   const [editing, setEditing]           = useState(false);
@@ -261,6 +263,18 @@ function MemberCard({
                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Simpan'}
               </button>
               <button
+                onClick={() => {
+                  if (confirm(`Adakah anda pasti ingin membuang ${member.full_name} dari JPP?`)) {
+                    onRemove(member.id);
+                  }
+                }}
+                disabled={saving}
+                className="flex-shrink-0 flex items-center justify-center px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-all text-xs font-bold"
+                title="Buang Ahli"
+              >
+                <Trash className="w-3.5 h-3.5" />
+              </button>
+              <button
                 onClick={() => setEditing(false)}
                 className="flex-1 flex items-center justify-center py-1.5 rounded-xl bg-white/10 text-white/50 hover:bg-white/15 hover:text-white transition-all text-xs font-bold"
               >
@@ -277,10 +291,11 @@ function MemberCard({
 // ── Group Section ─────────────────────────────────────────────────────────────
 function GroupSection({
   title, members, canEdit, themeColor,
-  onUpdate,
+  onUpdate, onRemove
 }: {
   title: string; members: JppMember[]; canEdit: boolean;
   themeColor: string; onUpdate: (id: string, patch: Partial<JppMember>) => void;
+  onRemove: (id: string) => void;
 }) {
   if (members.length === 0) return null;
 
@@ -302,6 +317,7 @@ function GroupSection({
             canEdit={canEdit}
             themeColor={themeColor}
             onUpdate={onUpdate}
+            onRemove={onRemove}
           />
         ))}
       </div>
@@ -577,6 +593,93 @@ function AddMemberModal({
   );
 }
 
+// ── Reset Kohort Modal ────────────────────────────────────────────────────────
+function ResetKohortModal({
+  isOpen,
+  onClose,
+  onConfirm
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  const [confirmText, setConfirmText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Reset text bila buka/tutup
+  useEffect(() => {
+    if (isOpen) setConfirmText('');
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleConfirm = async () => {
+    if (confirmText !== 'RESET KOHORT') return;
+    setIsSubmitting(true);
+    await onConfirm();
+    setIsSubmitting(false);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-sm bg-[#0a0a0f] border border-rose-500/30 shadow-2xl shadow-rose-500/10 rounded-[2rem] p-6 relative flex flex-col"
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/50 transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-rose-500/10 border border-rose-500/20">
+            <AlertTriangle className="w-5 h-5 text-rose-400" />
+          </div>
+          <div>
+            <h3 className="text-lg font-black text-white">Reset Kohort JPP</h3>
+            <p className="text-[10px] text-rose-400/80 uppercase tracking-widest font-bold">Tindakan tidak boleh dipulihkan</p>
+          </div>
+        </div>
+
+        <p className="text-sm text-white/70 mb-4 leading-relaxed">
+          Tindakan ini akan <b>melucutkan peranan JPP</b> daripada kesemua ahli sedia ada dan mengosongkan semua jawatan serta unit. 
+          Lakukan ini hanya jika anda ingin melantik kohort/barisan ahli yang baharu.
+        </p>
+
+        <div className="space-y-3 mb-6">
+          <label className="text-[10px] font-black uppercase tracking-widest text-white/50 block">
+            Sila taip <span className="text-rose-400 bg-rose-400/10 px-1 rounded">RESET KOHORT</span> untuk mengesahkan:
+          </label>
+          <input
+            type="text"
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            placeholder="RESET KOHORT"
+            className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 text-white placeholder-white/20 focus:outline-none focus:border-rose-500/50 font-mono text-center tracking-widest uppercase transition-all"
+          />
+        </div>
+
+        <button
+          onClick={handleConfirm}
+          disabled={confirmText !== 'RESET KOHORT' || isSubmitting}
+          className={cn(
+            "w-full py-3.5 rounded-[1rem] text-[11px] font-black uppercase tracking-widest transition-all shadow-xl",
+            confirmText !== 'RESET KOHORT' || isSubmitting
+              ? "bg-white/5 text-white/20 border border-white/5 cursor-not-allowed"
+              : "bg-rose-500 text-white hover:bg-rose-400 shadow-rose-500/20 hover:scale-[1.02]"
+          )}
+        >
+          {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Sahkan & Reset'}
+        </button>
+      </motion.div>
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 export function JppMembersPage() {
   const { user, profile, isSuperAdmin } = useAuth();
@@ -587,6 +690,7 @@ export function JppMembersPage() {
   const [loading, setLoading]       = useState(true);
   const [search, setSearch]         = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
 
   const jppPosition = profile?.jpp_position as string | undefined;
   const isYDP = jppPosition === 'YDP' || jppPosition === 'YANG_DIPERTUA' || isSuperAdmin;
@@ -599,21 +703,46 @@ export function JppMembersPage() {
   }, []);
 
   // Fetch members
-  useEffect(() => {
+  const fetchMembers = useCallback(async () => {
     setLoading(true);
-    supabase.from('profiles')
+    const { data } = await supabase
+      .from('profiles')
       .select('id, full_name, email, avatar_url, jpp_position, jpp_unit')
       .eq('role', 'JPP')
-      .order('full_name')
-      .then(({ data }) => {
-        setMembers((data ?? []) as JppMember[]);
-        setLoading(false);
-      });
+      .order('full_name');
+    setMembers((data ?? []) as JppMember[]);
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    fetchMembers();
+  }, [fetchMembers]);
 
   const handleUpdate = useCallback((id: string, patch: Partial<JppMember>) => {
     setMembers(prev => prev.map(m => m.id === id ? { ...m, ...patch } : m));
   }, []);
+
+  const handleRemove = useCallback(async (id: string) => {
+    try {
+      const { error } = await supabase.rpc('remove_jpp_member', { p_target_id: id });
+      if (error) throw error;
+      setMembers(prev => prev.filter(m => m.id !== id));
+      toast.success('Ahli berjaya dibuang dari JPP.');
+    } catch (err: any) {
+      toast.error('Gagal membuang ahli: ' + err.message);
+    }
+  }, []);
+
+  const handleResetKohort = useCallback(async () => {
+    try {
+      const { error } = await supabase.rpc('reset_jpp_cohort');
+      if (error) throw error;
+      toast.success('Berjaya reset kohort JPP. Semua ahli telah dikeluarkan.');
+      fetchMembers(); // Refresh senarai ahli
+    } catch (err: any) {
+      toast.error('Gagal mereset kohort: ' + err.message);
+    }
+  }, [fetchMembers]);
 
   // Filter by search
   const filtered = members.filter(m =>
@@ -671,6 +800,15 @@ export function JppMembersPage() {
                   Mod Edit Aktif — Anda boleh ubah jawatan & unit ahli
                 </span>
               </div>
+              <button
+                onClick={() => setShowResetModal(true)}
+                className="flex flex-shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 transition-all w-fit group"
+              >
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-400 group-hover:scale-110 transition-transform" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-rose-400">
+                  Reset Kohort
+                </span>
+              </button>
               <button
                 onClick={() => setShowAddModal(true)}
                 className="flex flex-shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all w-fit group"
@@ -750,6 +888,7 @@ export function JppMembersPage() {
               canEdit={canEdit}
               themeColor={themeColor}
               onUpdate={handleUpdate}
+              onRemove={handleRemove}
             />
 
             {/* Loop through all unit groups combined but separated by title */}
@@ -764,6 +903,7 @@ export function JppMembersPage() {
                   canEdit={canEdit}
                   themeColor={themeColor}
                   onUpdate={handleUpdate}
+                  onRemove={handleRemove}
                 />
               );
             })}
@@ -774,6 +914,7 @@ export function JppMembersPage() {
               canEdit={canEdit}
               themeColor="#f43f5e" 
               onUpdate={handleUpdate}
+              onRemove={handleRemove}
             />
           </div>
         )}
@@ -792,6 +933,12 @@ export function JppMembersPage() {
             return [...prev, newMember].sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
           });
         }}
+      />
+
+      <ResetKohortModal
+        isOpen={showResetModal}
+        onClose={() => setShowResetModal(false)}
+        onConfirm={handleResetKohort}
       />
     </div>
   );
