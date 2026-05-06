@@ -426,12 +426,17 @@ function GlobalRedirector() {
   const location = useLocation();
 
   useEffect(() => {
+    // HANYA jalankan redirect jika pengguna berada di muka depan (/)
+    // Jika tidak, ia akan bertembung dengan sistem login (yang juga guna ?redirect=)
+    // dan menyebabkan infinite loop (flickering).
+    if (location.pathname !== '/') return;
+
     const params = new URLSearchParams(location.search);
     const redirectPath = params.get('redirect');
     if (redirectPath) {
       navigate(redirectPath, { replace: true });
     }
-  }, [location.search, navigate]);
+  }, [location.search, location.pathname, navigate]);
 
   return null;
 }
