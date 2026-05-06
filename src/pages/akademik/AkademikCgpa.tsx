@@ -253,35 +253,64 @@ export function AkademikCgpa() {
     setScanning(true);
     setScanOk(null);
     setPendingFile(file);
-    try {
-      const result = await extractCgpaFromPdf(file);
 
-      // PDF was image/scan — total failure
-      if (result.scanFailed) {
-        setScanOk(false);
-        setDraftMode('SCAN');
-        toast.error('PDF tidak boleh dibaca — mungkin gambar/scan.', { duration: 4000 });
-        return;
+    try {
+      let result: any = null;
+
+      // ── Strategy A: Server-side parsing (works on ALL devices incl. iOS) ──
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          const formData = new FormData();
+          formData.append('file', file);
+          const resp = await fetch('/api/parse-cgpa-pdf', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${session.access_token}` },
+            body: formData,
+          });
+          if (resp.ok) {
+            result = await resp.json();
+            console.log('[cgpa-scan] Server-side result:', result);
+          }
+        }
+      } catch (serverErr) {
+        console.warn('[cgpa-scan] Server parse failed, trying client-side:', serverErr);
       }
 
-      setFHpnm(result.hpnm?.toString() || '');
-      setFPnm(result.pnm?.toString()   || '');
-      setFSem(result.semester?.toString() || '');
-      setFTahun(result.tahun || '');
-      setScanOk(!!result.hpnm);
-      setDraftMode('SCAN');
-      if (result.hpnm) {
-        toast.success(`HPNM ${result.hpnm.toFixed(2)} berjaya dikesan!`);
+      // ── Strategy B: Client-side pdfjs (fallback for offline/dev) ──
+      if (!result) {
+        try {
+          result = await extractCgpaFromPdf(file);
+          console.log('[cgpa-scan] Client-side result:', result);
+        } catch (clientErr) {
+          console.warn('[cgpa-scan] Client-side parse also failed:', clientErr);
+        }
+      }
+
+      // ── Apply result ──
+      if (result && !result.scanFailed) {
+        setFHpnm(result.hpnm?.toString() || '');
+        setFPnm(result.pnm?.toString()   || '');
+        setFSem(result.semester?.toString() || '');
+        setFTahun(result.tahun || '');
+        setScanOk(!!result.hpnm);
+        setDraftMode('SCAN');
+        if (result.hpnm) {
+          toast.success(`HPNM ${Number(result.hpnm).toFixed(2)} berjaya dikesan!`);
+        } else {
+          toast('HPNM tidak dikesan — sila isi manual atau hubungi JPP.', { icon: '⚠️', duration: 4000 });
+        }
       } else {
-        console.log('[cgpa-scan] Raw text preview:', result.rawText);
-        toast('HPNM tidak dikesan — sila isi manual atau hubungi JPP.', { icon: '⚠️', duration: 4000 });
+        // Both strategies failed
+        setScanOk(false);
+        setDraftMode('SCAN');
+        toast('PDF diterima tetapi tidak dapat dianalisis.\nSila isi HPNM secara manual di bawah.', { icon: '📝', duration: 5000 });
       }
     } catch (e: any) {
       console.error('[cgpa-scan] PDF error:', e);
-      // On iOS/mobile: pdfjs might crash — gracefully fall to manual mode with file kept
       setScanOk(false);
       setDraftMode('SCAN');
-      toast('PDF diterima tetapi tidak dapat dianalisis automatik.\nSila isi HPNM secara manual di bawah.', { icon: '📝', duration: 5000 });
+      toast('PDF diterima tetapi tidak dapat dianalisis.\nSila isi HPNM secara manual di bawah.', { icon: '📝', duration: 5000 });
     } finally {
       setScanning(false);
     }

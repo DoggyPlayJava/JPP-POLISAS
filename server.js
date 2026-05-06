@@ -654,6 +654,106 @@ app.post('/api/upload-to-drive', requireAuth, upload.single('file'), async (req,
 });
 
 // ==========================================
+// 5B. Parse CGPA from PDF (Server-Side)
+// iOS WebKit cannot run pdfjs-dist client-side — this
+// endpoint does the extraction on the server instead.
+// ==========================================
+app.post('/api/parse-cgpa-pdf', requireAuth, upload.single('file'), async (req, res) => {
+    try {
+        const file = req.file;
+        if (!file) {
+            return res.status(400).json({ error: "Fail PDF tidak ditemui." });
+        }
+
+        // Accept PDF by mime OR extension (mobile browsers unreliable)
+        const isPdf = file.mimetype === 'application/pdf' ||
+            file.originalname?.toLowerCase().endsWith('.pdf');
+        if (!isPdf) {
+            return res.status(400).json({ error: "Hanya fail PDF sahaja." });
+        }
+
+        // Dynamic import pdfjs-dist (ESM)
+        const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
+
+        const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(file.buffer) }).promise;
+
+        let fullText = '';
+        for (let i = 1; i <= Math.min(pdf.numPages, 5); i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            fullText += content.items.map(item => item.str).join(' ') + '\n';
+        }
+
+        if (fullText.trim().length < 20) {
+            return res.status(200).json({ hpnm: null, pnm: null, semester: null, tahun: null, scanFailed: true });
+        }
+
+        // Normalize split decimals
+        let text = fullText.replace(/\s+/g, ' ').toUpperCase();
+        text = text.replace(/(\d)\s+\.\s*(\d)/g, '$1.$2');
+        text = text.replace(/(\d)\.\s+(\d)/g, '$1.$2');
+
+        console.log('[parse-cgpa-pdf] Normalized (first 500):', text.substring(0, 500));
+
+        // Semester detection
+        const semWordMap = { 'SATU': 1, 'DUA': 2, 'TIGA': 3, 'EMPAT': 4, 'LIMA': 5, 'ENAM': 6, 'TUJUH': 7, 'LAPAN': 8, 'SEMBILAN': 9 };
+        let semester = null;
+        for (const p of [/SEMESTER\s*[:\-]?\s*([1-9])/, /SEM(?:ESTER)?\s*[:\-]?\s*([1-9])/, /SEM\.?\s*([1-9])\b/]) {
+            const m = text.match(p);
+            if (m) { semester = parseInt(m[1]); break; }
+        }
+        if (!semester) {
+            const sw = text.match(/SEMESTER\s*[:\-]?\s*(SATU|DUA|TIGA|EMPAT|LIMA|ENAM|TUJUH|LAPAN|SEMBILAN)/);
+            if (sw) semester = semWordMap[sw[1]] ?? null;
+        }
+        if (!semester) {
+            const sm = text.match(/SESI\s+(I{1,3}|IV|V?I{0,3})\s*[:\s]/);
+            if (sm) {
+                const roman = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6 };
+                semester = roman[sm[1].trim()] ?? null;
+            }
+        }
+
+        // Tahun
+        let tahun = null;
+        for (const p of [/SESI\s+[IVX]+\s*[:\-]?\s*(\d{4}\s*\/\s*\d{4})/, /SESI\s*(\d{4}\s*\/\s*\d{4})/, /(\d{4}\s*\/\s*\d{4})/, /(\d{4}-\d{4})/]) {
+            const m = text.match(p);
+            if (m) { tahun = m[1].replace(/\s/g, ''); break; }
+        }
+
+        // KEPUTUSAN zone
+        const keputusanIdx = text.indexOf('KEPUTUSAN');
+        const keputusanZone = keputusanIdx >= 0 ? text.slice(keputusanIdx) : '';
+
+        // Pass 1: Labeled patterns
+        let hpnm = null, pnm = null;
+        const hpnmPats = [/HPNM\s*[:\-=]?\s*(\d\.\d{2})/, /H\.?P\.?N\.?M\.?\s*[:\-=]?\s*(\d\.\d{2})/, /CGPA\s*[:\-=]?\s*(\d\.\d{2,4})/];
+        const pnmPats = [/PNM\s*[:\-=]?\s*(\d\.\d{2})/, /P\.?N\.?M\.?\s*[:\-=]?\s*(\d\.\d{2})/, /GPA\s+SEMESTER\s*[:\-=]?\s*(\d\.\d{2})/];
+
+        for (const p of hpnmPats) { const m = text.match(p); if (m) { const v = parseFloat(m[1]); if (v >= 0 && v <= 4.0) { hpnm = v; break; } } }
+        for (const p of pnmPats) { const m = text.match(p); if (m) { const v = parseFloat(m[1]); if (v >= 0 && v <= 4.0) { pnm = v; break; } } }
+
+        // Pass 2: KEPUTUSAN zone
+        if ((!hpnm || !pnm) && keputusanZone) {
+            if (!pnm) { const pm = keputusanZone.match(/PNM\s*[:\-=]?\s*(\d\.\d{2})/); if (pm) { const v = parseFloat(pm[1]); if (v >= 0 && v <= 4.0) pnm = v; } }
+            if (!hpnm) { const hm = keputusanZone.match(/HPNM\s*[:\-=]?\s*(\d\.\d{2})/); if (hm) { const v = parseFloat(hm[1]); if (v >= 0 && v <= 4.0) hpnm = v; } }
+            if (!hpnm || !pnm) {
+                const decimals = [...keputusanZone.matchAll(/\b([0-4]\.\d{2})\b/g)].map(m => parseFloat(m[1])).filter(v => v >= 0 && v <= 4.0);
+                if (decimals.length >= 2) { if (!pnm) pnm = decimals[0]; if (!hpnm) hpnm = decimals[1]; }
+                else if (decimals.length === 1 && !hpnm) hpnm = decimals[0];
+            }
+        }
+
+        console.log('[parse-cgpa-pdf] Result:', { hpnm, pnm, semester, tahun });
+        return res.status(200).json({ hpnm, pnm, semester, tahun, scanFailed: false });
+
+    } catch (error) {
+        console.error("[parse-cgpa-pdf] Error:", error.message);
+        return res.status(500).json({ error: error.message, hpnm: null, pnm: null, semester: null, tahun: null, scanFailed: true });
+    }
+});
+
+// ==========================================
 // 6. Web Push Notification Endpoint
 // ==========================================
 app.post('/api/send-push-notification', requireAuth, async (req, res) => {
