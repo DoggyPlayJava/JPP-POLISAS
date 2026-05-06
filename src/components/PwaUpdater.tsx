@@ -34,9 +34,10 @@ export function PwaUpdater() {
 
   useEffect(() => {
     if (needRefresh) {
-      // Paksa auto-update jika pengguna berada di muka depan (/)
+      // Paksa auto-update jika pengguna berada di muka depan (/) atau di Portal (/portal)
       // Supaya isu cache Service Worker lama boleh diselesaikan tanpa interaksi pelajar.
-      if (location.pathname === '/') {
+      // Selamat di-reload kerana tiada borang kritikal di halaman-halaman ini.
+      if (location.pathname === '/' || location.pathname === '/portal') {
         updateServiceWorker(true);
         return;
       }
