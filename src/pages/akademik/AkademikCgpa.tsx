@@ -62,12 +62,25 @@ async function extractCgpaFromPdf(file: File) {
 
   const buffer = await file.arrayBuffer();
 
-  // Timeout guard — 10s max
-  const pdfPromise = pdfjsLib.getDocument({ data: buffer }).promise;
-  const timeout = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error('PDF terlalu lama untuk dibaca (timeout).')), 10000)
-  );
-  const pdf = await Promise.race([pdfPromise, timeout]);
+  // Timeout guard — 15s max (mobile slower)
+  const loadPdf = async (useWorker: boolean) => {
+    const opts: any = { data: buffer };
+    if (!useWorker) opts.disableWorker = true;
+    const promise = pdfjsLib.getDocument(opts).promise;
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('PDF terlalu lama untuk dibaca (timeout).')), 15000)
+    );
+    return Promise.race([promise, timeout]);
+  };
+
+  // Try with worker first, fallback to no-worker (fixes mobile issues)
+  let pdf: any;
+  try {
+    pdf = await loadPdf(true);
+  } catch (workerErr) {
+    console.warn('[cgpa-scan] Worker failed, retrying without worker:', workerErr);
+    pdf = await loadPdf(false);
+  }
 
   let fullText = '';
   for (let i = 1; i <= Math.min(pdf.numPages, 5); i++) {
@@ -215,7 +228,11 @@ export function AkademikCgpa() {
   useEffect(() => { load(); }, [load]);
 
   const handleFile = async (file: File) => {
-    if (file.type !== 'application/pdf') { toast.error('PDF sahaja.'); return; }
+    // Mobile browsers sometimes report empty or wrong MIME type — fallback to extension check
+    const isPdf = file.type === 'application/pdf' ||
+      file.type === '' ||
+      file.name?.toLowerCase().endsWith('.pdf');
+    if (!isPdf) { toast.error('PDF sahaja.'); return; }
     setScanning(true);
     setScanOk(null);
     setPendingFile(file);
@@ -510,7 +527,7 @@ export function AkademikCgpa() {
         <input
           ref={fileRef}
           type="file"
-          accept="application/pdf"
+          accept="application/pdf,.pdf"
           className="hidden"
           onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])}
         />
