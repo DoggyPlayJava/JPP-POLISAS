@@ -2,8 +2,10 @@ import React, { useEffect } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { toast } from 'react-hot-toast';
 import { RefreshCw } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 export function PwaUpdater() {
+  const location = useLocation();
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
@@ -32,6 +34,13 @@ export function PwaUpdater() {
 
   useEffect(() => {
     if (needRefresh) {
+      // Paksa auto-update jika pengguna berada di muka depan (/)
+      // Supaya isu cache Service Worker lama boleh diselesaikan tanpa interaksi pelajar.
+      if (location.pathname === '/') {
+        updateServiceWorker(true);
+        return;
+      }
+
       toast(
         (t) => (
           <div className="flex flex-col gap-3">

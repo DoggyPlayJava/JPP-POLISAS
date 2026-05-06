@@ -460,7 +460,7 @@ const Hero = () => {
         >
           <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-500 animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite] shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
           <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-white/80">
-            Sistem Operasi Institusi v2.0
+            Sistem Operasi Institusi v{__APP_VERSION__}
           </span>
         </motion.div>
 
