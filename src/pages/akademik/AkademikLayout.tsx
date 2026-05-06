@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import {
   GraduationCap, LayoutDashboard, Trophy, FileText,
   BarChart3, QrCode, ArrowLeft, Menu, X, ChevronRight,
-  Star, BookOpen, Building2, LogOut, Crown
+  Star, BookOpen, Building2, LogOut, Crown, CalendarDays
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
@@ -20,6 +20,7 @@ const AKADEMIK_UNIT_LINKS = [
   { label: 'Pencapaian Pelajar', path: '/akademik/pencapaian' },
   { label: 'Leaderboard Merit Akademik', path: '/akademik/leaderboard' },
   { label: 'Scan QR Merit', path: '/akademik/qr' },
+  { label: 'Takwim Akademik', path: '/akademik/takwim' },
 ];
 
 const NAV_ITEMS = [
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { path: '/akademik/merit',      label: 'Merit Saya',   icon: Star },
   { path: '/akademik/folder',     label: 'Dokumen',      icon: FileText },
   { path: '/akademik/leaderboard',label: 'Leaderboard',  icon: BarChart3 },
+  { path: '/akademik/takwim',     label: 'Takwim',       icon: CalendarDays },
   { path: '/akademik/qr',         label: 'Scan QR',      icon: QrCode },
 ];
 

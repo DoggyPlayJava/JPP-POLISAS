@@ -87,6 +87,7 @@ const AkademikQrScan = lazy(() => import('./pages/akademik/AkademikQrScan').then
 const AkademikCgpa = lazy(() => import('./pages/akademik/AkademikCgpa').then(m => ({ default: m.AkademikCgpa })));
 const AkademikFolderPage = lazy(() => import('./pages/akademik/AkademikFolderPage').then(m => ({ default: m.AkademikFolderPage })));
 const AkademikLeaderboard = lazy(() => import('./pages/akademik/AkademikLeaderboard').then(m => ({ default: m.AkademikLeaderboard })));
+const AkademikTakwimPage = lazy(() => import('./pages/akademik/AkademikTakwimPage').then(m => ({ default: m.AkademikTakwimPage })));
 
 // ── SUPSAS ──
 import { SupsasProvider } from './contexts/SupsasContext';
@@ -331,6 +332,7 @@ function AppRoutes() {
           <Route path="/akademik/cgpa"         element={<AkademikCgpa />} />
           <Route path="/akademik/folder"       element={<AkademikFolderPage />} />
           <Route path="/akademik/leaderboard"  element={<AkademikLeaderboard />} />
+          <Route path="/akademik/takwim"       element={<AkademikTakwimPage />} />
         </Route>
       </Route>
 

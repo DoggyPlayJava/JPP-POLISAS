@@ -10,7 +10,13 @@ import { StaleWhileRevalidate, CacheFirst, NetworkFirst } from 'workbox-strategi
 declare const self: ServiceWorkerGlobalScope;
 
 clientsClaim();
-self.skipWaiting();
+
+// Dengarkan arahan SKIP_WAITING daripada komponen PwaUpdater (butang Muat Semula)
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
 
 // ── Precache all app assets (injected by Vite PWA plugin) ────────────────────
 cleanupOutdatedCaches();

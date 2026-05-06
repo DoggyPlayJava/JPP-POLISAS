@@ -25,6 +25,17 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
+
+    // Auto-recovery untuk isu Vite Chunk Load Error (selepas kemas kini sistem)
+    const isChunkLoadError = 
+      error.name === 'ChunkLoadError' || 
+      error.message.includes('Failed to fetch dynamically imported module') ||
+      error.message.includes('Importing a module script failed');
+
+    if (isChunkLoadError) {
+      // Refresh secara automatik untuk dapatkan versi terbaharu
+      window.location.reload();
+    }
   }
 
   private handleReset = () => {
