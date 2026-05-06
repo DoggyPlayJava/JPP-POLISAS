@@ -50,6 +50,18 @@ export function AppLayout() {
     setIsSidebarOpen(false);
   }, [location.pathname]);
 
+  // Lock body scroll apabila sidebar terbuka di mobile
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isSidebarOpen]);
+
   return (
     <div className="flex h-screen bg-background overflow-hidden selection:bg-primary selection:text-white">
 

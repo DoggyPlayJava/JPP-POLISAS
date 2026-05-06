@@ -53,6 +53,18 @@ export function PortalSidebar({ isOpen, onClose, onOpen, settings = [] }: Portal
     };
   }, []);
 
+  // Lock body scroll apabila sidebar terbuka di mobile
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   return (
     <>
       {/* ── 1. HOVER TRIGGER ZONE (DESKTOP) ── */}
