@@ -32,8 +32,8 @@ export function PushPermissionModal() {
       if (elapsed < 24 * 60 * 60 * 1000) return; // Masih dalam tempoh snooze
     }
 
-    // Delay 0.8s supaya page load dulu
-    const timer = setTimeout(() => setShow(true), 800);
+    // Delay 0.4s supaya page load dulu
+    const timer = setTimeout(() => setShow(true), 400);
     return () => clearTimeout(timer);
   }, [isSupported, permission, isSubscribed, pushServiceError]);
 
