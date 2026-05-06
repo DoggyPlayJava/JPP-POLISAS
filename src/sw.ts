@@ -3,8 +3,8 @@
 
 import { clientsClaim } from 'workbox-core';
 import { ExpirationPlugin } from 'workbox-expiration';
-import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
-import { registerRoute } from 'workbox-routing';
+import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from 'workbox-precaching';
+import { registerRoute, NavigationRoute } from 'workbox-routing';
 import { StaleWhileRevalidate, CacheFirst, NetworkFirst } from 'workbox-strategies';
 
 declare const self: ServiceWorkerGlobalScope;
@@ -24,11 +24,16 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 // ── Cache strategies ──────────────────────────────────────────────────────────
 
-// HTML pages — NetworkFirst so updates come through
-registerRoute(
-  ({ request }) => request.mode === 'navigate',
-  new NetworkFirst({ cacheName: 'pages-cache', networkTimeoutSeconds: 3 })
-);
+// HTML pages — SPA Navigation Fallback (Returns precached index.html)
+try {
+  registerRoute(
+    new NavigationRoute(createHandlerBoundToURL('index.html'), {
+      denylist: [/^\/api\//], // Do not intercept API calls
+    })
+  );
+} catch (e) {
+  console.warn('NavigationRoute setup failed:', e);
+}
 
 // Images — CacheFirst
 registerRoute(

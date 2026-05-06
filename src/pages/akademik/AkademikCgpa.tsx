@@ -526,18 +526,19 @@ export function AkademikCgpa() {
 
         <input
           ref={fileRef}
+          id="cgpa-pdf-upload"
           type="file"
-          accept="application/pdf,.pdf"
+          accept="*/*"
           className="hidden"
-          onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])}
+          onChange={e => { e.target.files?.[0] && handleFile(e.target.files[0]); e.target.value = ''; }}
         />
 
         {!inDraft ? (
           <div className="space-y-3">
-            <button
-              onClick={() => fileRef.current?.click()}
-              disabled={scanning}
-              className="w-full py-8 rounded-2xl border-2 border-dashed border-white/[0.08] hover:border-white/[0.15] text-white/30 hover:text-white/50 transition-all disabled:opacity-50 flex flex-col items-center gap-3"
+            {/* Use <label> instead of <button onClick={.click()}> — iOS Safari blocks programmatic file input clicks */}
+            <label
+              htmlFor={scanning ? undefined : "cgpa-pdf-upload"}
+              className={`w-full py-8 rounded-2xl border-2 border-dashed border-white/[0.08] hover:border-white/[0.15] text-white/30 hover:text-white/50 transition-all flex flex-col items-center gap-3 cursor-pointer ${scanning ? 'opacity-50 pointer-events-none' : ''}`}
             >
               {scanning ? (
                 <>
@@ -553,7 +554,7 @@ export function AkademikCgpa() {
                   </div>
                 </>
               )}
-            </button>
+            </label>
             <button
               onClick={() => setDraftMode('MANUAL')}
               className="flex items-center gap-1.5 mx-auto text-[10px] font-black text-white/25 hover:text-white/50 transition-colors uppercase tracking-widest"

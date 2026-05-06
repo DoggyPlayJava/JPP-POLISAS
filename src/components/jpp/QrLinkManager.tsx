@@ -78,13 +78,31 @@ export function QrLinkManager({ unitLinks, showHeader = true }: QrLinkManagerPro
       ctx.drawImage(img, 0, 0, size, size);
       URL.revokeObjectURL(svgUrl);
 
-      // Download
-      const pngUrl = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.href = pngUrl;
-      link.download = `jpp-qr-${Date.now()}.png`;
-      link.click();
-      toast.success('QR Code berjaya dimuat turun!');
+      // Draw logo manually because SVGs drawn to canvas block external image links
+      const logoImg = new Image();
+      logoImg.onload = () => {
+        const logoSize = Math.round((48 / 220) * size);
+        const xy = (size - logoSize) / 2;
+        ctx.drawImage(logoImg, xy, xy, logoSize, logoSize);
+        
+        // Download
+        const pngUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = pngUrl;
+        link.download = `jpp-qr-${Date.now()}.png`;
+        link.click();
+        toast.success('QR Code berjaya dimuat turun!');
+      };
+      logoImg.onerror = () => {
+        // Fallback without logo
+        const pngUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = pngUrl;
+        link.download = `jpp-qr-${Date.now()}.png`;
+        link.click();
+        toast.success('QR Code berjaya dimuat turun (tanpa logo)!');
+      };
+      logoImg.src = '/jpp-logo.png';
     };
     img.src = svgUrl;
   }, [fullUrl]);
