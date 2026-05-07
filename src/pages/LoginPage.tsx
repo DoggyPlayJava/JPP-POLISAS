@@ -180,7 +180,7 @@ export function LoginPage() {
     try {
       // Periksa jika emel sudah wujud untuk mengelakkan isu "fake success" dari Supabase (terutamanya bagi kes login Google)
       const { data: emailExists, error: checkError } = await supabase.rpc('check_email_registered', { p_email: email.trim().toLowerCase() });
-      
+
       if (!checkError && emailExists) {
         toast.error('Emel ini telah didaftarkan. Sila cuba Log Masuk, atau gunakan "Teruskan dengan Google" jika anda pernah menggunakannya sebelum ini.');
         setIsLoading(false);
@@ -259,10 +259,10 @@ export function LoginPage() {
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/10 rounded-full blur-[100px] -ml-[300px] -mb-[300px] pointer-events-none" />
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
           style={{ backgroundImage: 'radial-gradient(circle, hsl(var(--primary)) 1px, transparent 0)', backgroundSize: '32px 32px' }} />
-        
+
         <div className="relative z-10 flex items-center gap-4">
           <div className="w-16 h-16 rounded-[1.5rem] bg-primary flex items-center justify-center shadow-xl glow-accent overflow-hidden">
-            <img src="/jpp-logo.png" alt="JPP Logo" className="w-10 h-10 object-contain" />
+            <img src="/jpp-app-icon.png" alt="JPP Logo" className="w-full h-full object-cover" />
           </div>
           <div>
             <h1 className="text-2xl font-black tracking-tighter text-foreground">JPP POLISAS</h1>
@@ -277,9 +277,9 @@ export function LoginPage() {
               <span className="text-[11px] font-black text-primary uppercase tracking-widest">Sistem Pintar Bersepadu</span>
             </div>
             <h2 className="text-5xl font-black tracking-tighter leading-[1.1] mb-6">
-              Membentuk<br/>
+              Membentuk<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
-                Kepimpinan<br/>Masa Hadapan
+                Kepimpinan<br />Masa Hadapan
               </span>
             </h2>
             <p className="text-muted-foreground font-medium text-lg max-w-md leading-relaxed">
@@ -318,7 +318,7 @@ export function LoginPage() {
           {/* Mobile Logo (Only visible on small screens) */}
           <div className="flex lg:hidden flex-col items-center mb-10 space-y-3">
             <div className="w-20 h-20 rounded-[2rem] bg-primary flex items-center justify-center shadow-2xl glow-accent overflow-hidden">
-              <img src="/jpp-logo.png" alt="JPP Logo" className="w-14 h-14 object-contain" />
+              <img src="/jpp-app-icon.png" alt="JPP Logo" className="w-full h-full object-cover" />
             </div>
             <div className="text-center">
               <h1 className="text-3xl font-black tracking-tighter text-foreground">JPP Digital Portal</h1>
@@ -439,28 +439,44 @@ export function LoginPage() {
                     onSubmit={(e) => { e.preventDefault(); if (!fullName.trim() || !email || !password || !matricNo.trim() || !phone.trim()) { toast.error('Sila lengkapkan semua maklumat.'); return; } setStep(2); }}>
 
                     {/* Toggle: Pelajar atau Staf */}
-                    <div className="grid grid-cols-2 gap-1.5 p-1.5 bg-muted/40 rounded-xl mb-4">
-                      <button type="button" onClick={() => { setRegisterMode(registerMode === 'leader' ? 'leader' : 'student'); setShowManualRegister(false); }}
-                        className={cn("flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
-                          (registerMode === 'student' || registerMode === 'leader') ? "bg-card shadow-md text-foreground" : "text-muted-foreground hover:text-foreground")}>
-                        <Sparkles className="w-3.5 h-3.5" /> Pelajar
-                      </button>
-                      <button type="button" onClick={() => { setRegisterMode('staff'); setShowManualRegister(true); }}
-                        className={cn("flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
-                          registerMode === 'staff' ? "bg-card shadow-md text-emerald-600" : "text-muted-foreground hover:text-emerald-600")}>
-                        <Building2 className="w-3.5 h-3.5" /> Staf
-                      </button>
+                    <div className="space-y-2.5 mb-6">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 flex justify-center">
+                        Langkah 1: Pilih Jenis Akaun
+                      </Label>
+                      <div className="grid grid-cols-2 gap-1.5 p-1.5 bg-muted/40 rounded-xl">
+                        <button type="button" onClick={() => { setRegisterMode(registerMode === 'leader' ? 'leader' : 'student'); setShowManualRegister(false); }}
+                          className={cn("flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                            (registerMode === 'student' || registerMode === 'leader') ? "bg-card shadow-md text-foreground ring-1 ring-border/50" : "text-muted-foreground hover:text-foreground")}>
+                          <Sparkles className={cn("w-3.5 h-3.5 transition-colors", (registerMode === 'student' || registerMode === 'leader') ? "text-primary" : "")} />
+                          Pelajar
+                        </button>
+                        <button type="button" onClick={() => { setRegisterMode('staff'); setShowManualRegister(true); }}
+                          className={cn("flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                            registerMode === 'staff' ? "bg-card shadow-md text-emerald-600 ring-1 ring-emerald-500/20" : "text-muted-foreground hover:text-emerald-600")}>
+                          <Building2 className="w-3.5 h-3.5" />
+                          Staf
+                        </button>
+                      </div>
                     </div>
 
                     {registerMode !== 'staff' && (
-                      <div className="space-y-4 mb-2">
-                        {/* Google Register Button */}
-                        <Button type="button" onClick={handleGoogleLogin} 
-                          className="w-full h-12 rounded-xl border border-border/60 bg-card hover:bg-muted/50 text-foreground font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 transition-colors shadow-sm">
-                          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5 bg-white rounded-full p-0.5" />
-                          Daftar bersama Google
-                        </Button>
-                        
+                      <div className="space-y-5 mb-2">
+                        {/* Google Register Button with Explanation */}
+                        <div className="p-4 rounded-2xl border border-primary/20 bg-primary/5 space-y-3.5 relative overflow-hidden">
+                          <div className="absolute -right-6 -top-6 w-24 h-24 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
+                          <div className="text-center space-y-1 relative z-10">
+                            <p className="text-[12px] font-bold text-foreground">Pengesahan Automatik Siswa</p>
+                            <p className="text-[11px] text-muted-foreground leading-relaxed px-2">
+                              Gunakan e-mel peribadi <span className="font-semibold text-foreground">@gmail.com</span> anda untuk pendaftaran pantas. Klik butang Daftar Bersama Google dibawah!
+                            </p>
+                          </div>
+                          <Button type="button" onClick={handleGoogleLogin}
+                            className="w-full h-12 rounded-xl border border-border/60 bg-white hover:bg-gray-50 text-black font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all shadow-sm relative z-10 active:scale-[0.98]">
+                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5 bg-white rounded-full p-0.5" />
+                            Daftar bersama Google
+                          </Button>
+                        </div>
+
                         <div className="relative pt-2">
                           <div className="absolute inset-0 flex items-center">
                             <div className="w-full border-t border-border/60"></div>
@@ -496,7 +512,7 @@ export function LoginPage() {
                             <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Nama Penuh</Label>
                             <div className="relative group">
                               <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
-                              <Input placeholder="NAMA PENUH SEPERTI DALAM IC" required value={fullName}
+                              <Input placeholder="CTH: MUHAMMAD BIN AHMAD ALI" required value={fullName}
                                 onChange={e => setFullName(e.target.value.toUpperCase())}
                                 className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-medium uppercase" />
                             </div>
@@ -509,13 +525,13 @@ export function LoginPage() {
                             </Label>
                             <div className="relative group">
                               <Hash className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
-                              <Input 
-                                placeholder={registerMode === 'staff' ? "CTH: S123456" : "CTH: 02DKM1234"} 
-                                required 
+                              <Input
+                                placeholder={registerMode === 'staff' ? "CTH: S123456" : "CTH: 02DKM1234"}
+                                required
                                 pattern={registerMode === 'staff' ? undefined : "^02.*"}
-                                value={matricNo} 
+                                value={matricNo}
                                 onChange={e => setMatricNo(e.target.value.toUpperCase())}
-                                className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-medium uppercase" 
+                                className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-medium uppercase"
                               />
                             </div>
                           </div>
@@ -742,7 +758,7 @@ export function LoginPage() {
                   <span className="relative z-10">{isLoading ? 'Memproses...' : isForgotPassword ? 'Hantar Pautan' : 'Log Masuk'}</span>
                   {!isLoading && <ArrowRight className="ml-2 h-4 w-4 relative z-10 transition-transform group-hover:translate-x-1" />}
                 </Button>
-                
+
                 {!isForgotPassword && (
                   <div className="pt-2 space-y-4">
                     <div className="relative">
@@ -753,9 +769,9 @@ export function LoginPage() {
                         <span className="bg-card/80 backdrop-blur-2xl px-2 text-muted-foreground/60">ATAU</span>
                       </div>
                     </div>
-                    
-                    <Button type="button" onClick={handleGoogleLogin} 
-                      className="w-full h-12 rounded-xl border border-border/60 bg-card hover:bg-muted/50 text-foreground font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 transition-colors shadow-sm">
+
+                    <Button type="button" onClick={handleGoogleLogin}
+                      className="w-full h-12 rounded-xl border border-border/60 bg-white hover:bg-gray-50 text-black font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all shadow-sm active:scale-[0.98]">
                       <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5 bg-white rounded-full p-0.5" />
                       Teruskan dengan Google
                     </Button>

@@ -50,22 +50,28 @@ registerRoute(
 self.addEventListener('push', (event: PushEvent) => {
   if (!event.data) return;
 
-  let payload: { title?: string; body?: string; data?: { url?: string }; icon?: string; badge?: string } = {};
+  let payload: any = {};
   try {
     payload = event.data.json();
   } catch {
     payload = { title: event.data.text() };
   }
 
-  const title = payload.title ?? 'Notifikasi JPP';
+  const title = payload.title ?? 'Notifikasi Sistem';
   const targetUrl = payload.data?.url ?? '/portal';
+  
   const options: NotificationOptions = {
     body: payload.body ?? 'Anda mempunyai satu notifikasi baru.',
-    icon: payload.icon ?? '/jpp-logo.png',
-    badge: payload.badge ?? '/jpp-logo.png',
-    vibrate: [200, 100, 200],
-    data: { url: targetUrl },
-    requireInteraction: false,
+    icon: payload.icon ?? '/jpp-app-icon.png',
+    // Android memerlukan icon monokrom lutsinar untuk badge, kita guna jpp-logo sementara belum ada khas
+    badge: payload.badge ?? '/jpp-app-icon.png',
+    image: payload.image, // Gambar banner besar
+    vibrate: [200, 100, 200, 100, 200], // Premium vibration pattern
+    data: { url: targetUrl, ...payload.data },
+    requireInteraction: true, // Biar user dismiss sendiri
+    actions: payload.actions, // Butang aksi di bawah
+    tag: payload.tag ?? 'jpp-notification', // Kumpulan notifikasi supaya tak spam
+    renotify: payload.renotify ?? true, // Bunyi semula jika tag sama
   };
 
   event.waitUntil(self.registration.showNotification(title, options));
@@ -74,7 +80,19 @@ self.addEventListener('push', (event: PushEvent) => {
 // ── Notification click handler ────────────────────────────────────────────────
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close();
-  const targetUrl = event.notification?.data?.url ?? '/portal';
+
+  // Jika user tekan butang "Tutup" (contoh id: 'close-action')
+  if (event.action === 'close-action') {
+    return;
+  }
+
+  // Jika ada action khusus URL (contoh id: 'open-action')
+  let targetUrl = event.notification?.data?.url ?? '/portal';
+  
+  // Custom logic jika action perlukan laluan (route) berbeza
+  if (event.action && event.notification?.data?.[event.action]) {
+    targetUrl = event.notification.data[event.action];
+  }
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {

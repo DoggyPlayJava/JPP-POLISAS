@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { JPP_MT_POSITIONS } from '@/types';
+import { DayDetailSheet } from '@/components/takwim/DayDetailSheet';
 
 // ── Logo URLs ──
 const LOGO_POLISAS_URL = '/polisas-logo.jpg';
@@ -81,6 +82,7 @@ export function JppTakwimPage() {
   const [bulkMode, setBulkMode] = useState(false);
   const [calMonth, setCalMonth] = useState(new Date());
   const [logoPolisas, setLogoPolisas] = useState('');
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
   // ── Warna Rasmi (persisted) ──
   const [themeColor, setThemeColor] = useState('#1e3a5f');
@@ -306,9 +308,20 @@ export function JppTakwimPage() {
         ) : viewMode === 'table' ? (
           <TakwimTable items={items} rbac={rbac} onEdit={openEdit} onDelete={handleDelete} bulkSelected={bulkSelected} onBulkToggle={setBulkSelected} />
         ) : (
-          <TakwimCalendar items={items} month={calMonth} onPrev={() => setCalMonth(m => subMonths(m, 1))} onNext={() => setCalMonth(m => addMonths(m, 1))} />
+          <TakwimCalendar items={items} month={calMonth} onPrev={() => setCalMonth(m => subMonths(m, 1))} onNext={() => setCalMonth(m => addMonths(m, 1))} onDayClick={setSelectedDay} />
         )}
       </div>
+
+      {/* Day Detail Popup */}
+      <DayDetailSheet
+        day={selectedDay}
+        events={selectedDay ? items.filter(i => {
+          const s = parseISO(i.tarikh_mula);
+          const e = i.tarikh_tamat ? parseISO(i.tarikh_tamat) : s;
+          return selectedDay >= s && selectedDay <= e;
+        }) : []}
+        onClose={() => setSelectedDay(null)}
+      />
 
       {/* ── CRUD Dialog ── */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -485,7 +498,7 @@ function TakwimTable({ items, rbac, onEdit, onDelete, bulkSelected, onBulkToggle
 }
 
 // ── Calendar View ──
-function TakwimCalendar({ items, month, onPrev, onNext }: { items: TakwimItem[]; month: Date; onPrev: () => void; onNext: () => void }) {
+function TakwimCalendar({ items, month, onPrev, onNext, onDayClick }: { items: TakwimItem[]; month: Date; onPrev: () => void; onNext: () => void; onDayClick: (day: Date) => void }) {
   const days = eachDayOfInterval({ start: startOfMonth(month), end: endOfMonth(month) });
   const startDay = getDay(startOfMonth(month));
   const getEvents = (day: Date) => items.filter(i => { const s = parseISO(i.tarikh_mula); const e = i.tarikh_tamat ? parseISO(i.tarikh_tamat) : s; return day >= s && day <= e; });
@@ -505,8 +518,17 @@ function TakwimCalendar({ items, month, onPrev, onNext }: { items: TakwimItem[];
         {days.map(day => {
           const evts = getEvents(day);
           const isToday = isSameDay(day, new Date());
+          const hasEvents = evts.length > 0;
           return (
-            <div key={day.toISOString()} className={cn('p-1.5 min-h-[80px] border-b border-r border-white/[0.03] transition-colors', isToday && 'bg-indigo-500/5')}>
+            <div
+              key={day.toISOString()}
+              onClick={() => onDayClick(day)}
+              className={cn(
+                'p-1.5 min-h-[80px] border-b border-r border-white/[0.03] transition-colors cursor-pointer select-none',
+                isToday && 'bg-indigo-500/5',
+                hasEvents ? 'hover:bg-white/[0.04] active:bg-white/[0.07]' : 'hover:bg-white/[0.02]'
+              )}
+            >
               <span className={cn('text-[10px] font-black', isToday ? 'text-indigo-400 bg-indigo-500/20 w-6 h-6 rounded-full flex items-center justify-center' : 'text-white/40')}>
                 {format(day, 'd')}
               </span>
@@ -515,7 +537,9 @@ function TakwimCalendar({ items, month, onPrev, onNext }: { items: TakwimItem[];
                   const c = e.warna_custom || TAKWIM_JENIS[e.jenis]?.color || '#94A3B8';
                   return <div key={e.id} className="text-[8px] font-bold px-1.5 py-0.5 rounded truncate" style={{ background: hexToRgba(c, 0.15), color: c }}>{e.tajuk}</div>;
                 })}
-                {evts.length > 3 && <div className="text-[8px] font-bold text-white/30 px-1">+{evts.length - 3}</div>}
+                {evts.length > 3 && (
+                  <div className="text-[8px] font-black text-white/40 px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.06)' }}>+{evts.length - 3} lagi</div>
+                )}
               </div>
             </div>
           );

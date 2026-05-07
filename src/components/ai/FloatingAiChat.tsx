@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, X, FileLineChart, Send, ShieldAlert,
@@ -719,7 +720,7 @@ export function FloatingAiChat() {
   ];
 
   // ── Render ───────────────────────────────────────────────────────────────
-  return (
+  const content = (
     <div className={`fixed bottom-6 right-4 md:right-6 z-[120] transition-all duration-300 ease-in-out ${bottomMarginClass}`}>
       {/* ── FAB trigger ── */}
       <motion.button
@@ -1030,4 +1031,6 @@ export function FloatingAiChat() {
       </AnimatePresence>
     </div>
   );
+
+  return createPortal(content, document.body);
 }

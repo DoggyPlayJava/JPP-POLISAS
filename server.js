@@ -775,8 +775,12 @@ app.post('/api/send-push-notification', requireAuth, async (req, res) => {
             title: title,
             body: body,
             data: data,
-            icon: '/icon-192-maskable.png',
-            badge: '/icon-192-maskable.png'
+            icon: req.body.icon || '/icon-192-maskable.png',
+            badge: req.body.badge || '/icon-192-maskable.png', // Terbaik jika guna icon monokrom lutsinar khas
+            image: req.body.image, // URL gambar banner besar (opsional)
+            actions: req.body.actions, // Array objek {action, title, icon} (opsional)
+            tag: req.body.tag || 'jpp-notification', // Kumpulan notifikasi lalai
+            renotify: req.body.renotify !== undefined ? req.body.renotify : true
         });
 
         const result = await webpush.sendNotification(subscription, payload);

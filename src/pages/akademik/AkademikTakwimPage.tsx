@@ -10,6 +10,7 @@ import { CalendarDays, Filter, Table, LayoutGrid, ChevronLeft, ChevronRight, Loa
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ALL_CLUBS } from '@/types';
+import { DayDetailSheet } from '@/components/takwim/DayDetailSheet';
 
 export function AkademikTakwimPage() {
   const { profile, userClubIds } = useAuth();
@@ -19,6 +20,7 @@ export function AkademikTakwimPage() {
   const [calMonth, setCalMonth] = useState(new Date());
   const [sesiToggle, setSesiToggle] = useState<'I' | 'II' | 'ALL'>('ALL');
   const [selectedClubFilter, setSelectedClubFilter] = useState('ALL'); // 'ALL' or specific club_id
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
   // Resolve effective club IDs for "Kelab Saya"
   const effectiveClubIds = useMemo(() => {
@@ -128,15 +130,26 @@ export function AkademikTakwimPage() {
       {loading ? (
         <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-white/30" /></div>
       ) : viewMode === 'calendar' ? (
-        <StudentCalendar items={filteredItems} month={calMonth} onPrev={() => setCalMonth(m => subMonths(m, 1))} onNext={() => setCalMonth(m => addMonths(m, 1))} />
+        <StudentCalendar items={filteredItems} month={calMonth} onPrev={() => setCalMonth(m => subMonths(m, 1))} onNext={() => setCalMonth(m => addMonths(m, 1))} onDayClick={setSelectedDay} />
       ) : (
         <StudentTable items={filteredItems} />
       )}
+
+      {/* ── Day Detail Popup ── */}
+      <DayDetailSheet
+        day={selectedDay}
+        events={selectedDay ? filteredItems.filter(i => {
+          const s = parseISO(i.tarikh_mula);
+          const e = i.tarikh_tamat ? parseISO(i.tarikh_tamat) : s;
+          return selectedDay >= s && selectedDay <= e;
+        }) : []}
+        onClose={() => setSelectedDay(null)}
+      />
     </div>
   );
 }
 
-function StudentCalendar({ items, month, onPrev, onNext }: { items: TakwimItem[]; month: Date; onPrev: () => void; onNext: () => void }) {
+function StudentCalendar({ items, month, onPrev, onNext, onDayClick }: { items: TakwimItem[]; month: Date; onPrev: () => void; onNext: () => void; onDayClick: (day: Date) => void }) {
   const days = eachDayOfInterval({ start: startOfMonth(month), end: endOfMonth(month) });
   const startDay = getDay(startOfMonth(month));
   const getEvents = (day: Date) => items.filter(i => { const s = parseISO(i.tarikh_mula); const e = i.tarikh_tamat ? parseISO(i.tarikh_tamat) : s; return day >= s && day <= e; });
@@ -156,8 +169,17 @@ function StudentCalendar({ items, month, onPrev, onNext }: { items: TakwimItem[]
         {days.map(day => {
           const evts = getEvents(day);
           const isToday = isSameDay(day, new Date());
+          const hasEvents = evts.length > 0;
           return (
-            <div key={day.toISOString()} className={cn('p-1.5 min-h-[80px] border-b border-r border-white/[0.03]', isToday && 'bg-indigo-500/5')}>
+            <div
+              key={day.toISOString()}
+              onClick={() => onDayClick(day)}
+              className={cn(
+                'p-1.5 min-h-[80px] border-b border-r border-white/[0.03] transition-colors cursor-pointer select-none',
+                isToday && 'bg-indigo-500/5',
+                hasEvents ? 'hover:bg-white/[0.04] active:bg-white/[0.07]' : 'hover:bg-white/[0.02]'
+              )}
+            >
               <span className={cn('text-[10px] font-black inline-flex items-center justify-center', isToday ? 'text-indigo-400 bg-indigo-500/20 w-6 h-6 rounded-full' : 'text-white/40')}>
                 {format(day, 'd')}
               </span>
@@ -166,7 +188,9 @@ function StudentCalendar({ items, month, onPrev, onNext }: { items: TakwimItem[]
                   const c = e.warna_custom || TAKWIM_JENIS[e.jenis]?.color || '#94A3B8';
                   return <div key={e.id} className="text-[8px] font-bold px-1.5 py-0.5 rounded truncate" style={{ background: hexToRgba(c, 0.15), color: c }}>{e.tajuk}</div>;
                 })}
-                {evts.length > 3 && <div className="text-[8px] font-bold text-white/30 px-1">+{evts.length - 3}</div>}
+                {evts.length > 3 && (
+                  <div className="text-[8px] font-black text-white/40 px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.06)' }}>+{evts.length - 3} lagi</div>
+                )}
               </div>
             </div>
           );
