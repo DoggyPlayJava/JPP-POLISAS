@@ -44,6 +44,7 @@ app.use(helmet({
 const ALLOWED_ORIGINS = [
     'https://jpp.cipher-node.org',
     'https://www.jpp.cipher-node.org',
+    'http://localhost:3000',
     'http://localhost:5173',
     'http://localhost:8000',
 ];

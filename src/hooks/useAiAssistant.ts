@@ -98,6 +98,15 @@ export interface ChatContext {
     pendingIncomingOrders?: number;
     systemNote?: string;
   };
+  takwimInfo?: {
+    upcomingEvents?: string;    // formatted list of upcoming takwim entries (limit 10)
+    pastEvents?: string;        // last 5 events before today for historical context
+    upcomingCuti?: string;      // formatted list of upcoming cuti umum
+    totalUpcoming?: number;
+    accessScope?: string;       // what the user can see: 'JPP_FULL' | 'STUDENT'
+    clubPrograms?: string;      // upcoming programs from the user's registered club(s)
+    clubProgramsName?: string;  // name(s) of the club(s) for context
+  };
 }
 
 interface AiRequestParams {
@@ -694,6 +703,24 @@ Sila pandu pengguna langkah demi langkah dengan cara yang sangat santai, jelas d
         context?.jppHqInfo ? `\n[Maklumat HQ JPP]\nLaporan Menunggu Kelulusan: ${context.jppHqInfo.totalPendingReports || 0}\nMerit Menunggu Kelulusan (Tuntutan): ${context.jppHqInfo.totalMeritPending || 0}` : '',
         context?.kebajikanInfo ? `\n[Data E-Kebajikan]\nPeranan: ${context.kebajikanInfo.role}\n${context.kebajikanInfo.role === 'PELAJAR' ? `Tiket Aktif Saya: ${context.kebajikanInfo.activeTicketsCount || 0}\nTiket Terkini:\n${context.kebajikanInfo.recentTickets || 'Tiada'}` : `Tiket Urgent/Baharu: ${context.kebajikanInfo.urgentTicketsUnresolved || 0}\nTiket Ditugaskan Kepada Saya: ${context.kebajikanInfo.assignedToMe || 0}`}` : '',
         context?.polymartInfo ? `\n[Data PolyMart]\nPeranan: ${context.polymartInfo.userType}\nPembelian Aktif: ${context.polymartInfo.activePurchases || 0}\nPesanan Terdekat:\n${context.polymartInfo.recentPurchases}\nPesanan Kedai (Masuk): ${context.polymartInfo.pendingIncomingOrders || 0}\nNota Platform: ${context.polymartInfo.systemNote}` : '',
+        context?.takwimInfo ? `\n[TAKWIM POLISAS BERPUSAT — Data Langsung]
+Skop Akses Pengguna: ${context.takwimInfo.accessScope === 'JPP_FULL' ? 'JPP (Penuh — termasuk Kelab Kediaman)' : 'Pelajar Biasa (Umum — tanpa Kelab Kediaman)'}
+Jumlah Event Akan Datang: ${context.takwimInfo.totalUpcoming || 0}
+${context.takwimInfo.upcomingEvents ? `\nAktiviti & Takwim Akan Datang:\n${context.takwimInfo.upcomingEvents}` : ''}
+${context.takwimInfo.upcomingCuti ? `\nCuti Umum & Perayaan Akan Datang:\n${context.takwimInfo.upcomingCuti}` : ''}
+${context.takwimInfo.pastEvents ? `\nAktiviti Terkini Yang Lepas (Rujukan):\n${context.takwimInfo.pastEvents}` : ''}
+${context.takwimInfo.clubPrograms ? `\n[Program Kelab Berdaftar — ${context.takwimInfo.clubProgramsName || 'Kelab Anda'}]\n${context.takwimInfo.clubPrograms}` : ''}` : '',
+        '',
+        '== MOD PAKAR TAKWIM POLISAS ==',
+        'Jika pengguna bertanya tentang takwim, jadual, cuti, atau aktiviti akan datang:',
+        '1. Jawab berdasarkan [TAKWIM POLISAS BERPUSAT] yang anda terima di atas. JANGAN reka tarikh atau aktiviti.',
+        '2. Jika tiada data takwim dalam konteks, maklumkan: "Saya tidak mempunyai data takwim yang dimuat. Sila semak halaman Takwim untuk maklumat terkini."',
+        '3. JENIS TAKWIM: AKADEMIK = Kalendar Akademik (kuliah, peperiksaan, pendaftaran), CUTI_UMUM = Cuti Rasmi/Perayaan, JPP/KPP/SRK/KEBAJIKAN/KEUSAHAWANAN/MULTIMEDIA/KLS/KOLAB/KK = Unit-unit Exco JPP, KELAB = Program Kelab Rasmi, KELAB_KEDIAMAN = Kelab Kediaman (hanya JPP boleh lihat).',
+        '4. Contoh soalan yang anda WAJIB boleh jawab: "Bila cuti semester?", "Ada apa minggu depan?", "Bilakah peperiksaan akhir?", "Berapa minggu kuliah sebelum cuti?", "Bila program kelab saya seterusnya?"',
+        '5. Kira bilangan minggu jika pengguna tanya — gunakan data bil_minggu jika ada, atau hitung dari tarikh.',
+        '6. PRIVASI KELAB: Data [Program Kelab Berdaftar] HANYA untuk kelab yang pengguna ini telah mendaftar. JANGAN sekali-kali dedahkan program kelab lain yang pengguna bukan ahlinya.',
+        '7. PRIVASI JPP: Jika pengguna bukan JPP, JANGAN dedahkan maklumat KELAB_KEDIAMAN walaupun ia terdapat dalam data.',
+        '8. KONTEKS SEJARAH: Jika pengguna bertanya tentang sesuatu yang sudah berlaku ("minggu lepas", "bila cuti yang baru lepas?"), gunakan [Aktiviti Terkini Yang Lepas] sebagai rujukan.',
         '',
         '== ARAHAN INTERAKSI PINTAR & CROSS-NAVIGATION (PENTING) ==',
         '1. Jika pengguna bertanya soalan yang memerlukan data spesifik yang TIADA dalam senarai [PENGETAHUAN SEMASA], maklumkan mereka bahawa anda hanya mempunyai data terhad di modul ini demi penjimatan sistem (konsep lazy-fetching).',

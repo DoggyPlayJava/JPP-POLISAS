@@ -180,10 +180,11 @@ export function FloatingAiChat() {
     ];
     if (p.startsWith('/akademik')) return ["Berapa jumlah merit saya?", "Kira purata skor (CGPA) saya.", "Bagaimana nak mohon folder khas?"];
     if (p.startsWith('/keusahawanan')) return ["Adakah saya bertugas lusa?", "Bantu saya rancang jualan POS.", "Siapa pengurus perniagaan ni?"];
-    if (p.startsWith('/jpp')) return ["Semak bilangan laporan kelab tertunggak.", "Ada permohonan merit baru tak?", "Siapa MT bertugas minggu depan?"];
+    if (p.startsWith('/jpp')) return ["Semak bilangan laporan kelab tertunggak.", "Ada permohonan merit baru tak?", "Ada apa dalam takwim JPP minggu depan?"];
     if (p.startsWith('/kebajikan')) return ["Apa status aduan saya?", "Bagaimana nak lapor kerosakan fasiliti?", "Berapa aduan belum diselesaikan?"];
     if (p.startsWith('/polymart')) return ["Di mana pesanan makanan saya?", "Macam mana nak bayar pesanan?", "Ada diskaun tak hari ini?"];
-    return ["Bila aktiviti kelab terdekat?", "Siapakah Jawatankuasa pimpinan?", "Bantu drafkan kertas kerja laporan."];
+    if (p.startsWith('/aktiviti') || p.startsWith('/kelab')) return ["Bila program kelab saya seterusnya?", "Ada apa dalam takwim minggu depan?", "Berapa lama lagi sebelum cuti?"];
+    return ["Bila cuti semester seterusnya?", "Ada apa dalam takwim minggu depan?", "Bantu drafkan kertas kerja laporan."];
   }, [location.pathname, hasKebajikanAccess]);
 
   useEffect(() => {
@@ -464,6 +465,125 @@ export function FloatingAiChat() {
                pendingIncomingOrders: pendingVendorOrders,
                systemNote: 'PolyMart ialah platform Request-to-Order PERCUMA. Pelanggan memohon beli produk kawan kampus, vendor mengesahkannya. Pembayaran TIDAK DIBUAT secara online dalam sistem (hanya COD manual atau Cash/QR semasa berjumpa).'
              };
+          }
+          // ─ 3. GLOBAL: TAKWIM BERPUSAT (access-scoped) ────────
+          try {
+            const today = new Date().toISOString().split('T')[0];
+            const isJPP = profile.role === 'JPP' || profile.role === 'SUPER_ADMIN_JPP';
+            const accessScope = isJPP ? 'JPP_FULL' : 'STUDENT';
+
+            // ── 3A. Upcoming takwim (limit 10 for token efficiency) ──
+            let takwimQuery = supabase
+              .from('takwim_pusat')
+              .select('tajuk, jenis, tarikh_mula, tarikh_tamat, catatan, bil_minggu, kelab_kediaman_label')
+              .gte('tarikh_mula', today)
+              .order('tarikh_mula', { ascending: true })
+              .limit(10);
+
+            // Access-scoping: students cannot see KELAB_KEDIAMAN entries
+            if (!isJPP) {
+              takwimQuery = takwimQuery.neq('jenis', 'KELAB_KEDIAMAN');
+            }
+
+            // ── 3B. Past events (last 5 before today) for historical queries ──
+            let pastQuery = supabase
+              .from('takwim_pusat')
+              .select('tajuk, jenis, tarikh_mula, tarikh_tamat, catatan, bil_minggu')
+              .lt('tarikh_mula', today)
+              .order('tarikh_mula', { ascending: false })
+              .limit(5);
+
+            if (!isJPP) {
+              pastQuery = pastQuery.neq('jenis', 'KELAB_KEDIAMAN');
+            }
+
+            const [{ data: takwimRows }, { data: pastRows }] = await Promise.all([
+              takwimQuery,
+              pastQuery,
+            ]);
+
+            const formatRow = (t: any, showKelabLabel = true) => {
+              const dateStr = t.tarikh_tamat && t.tarikh_tamat !== t.tarikh_mula
+                ? `${t.tarikh_mula} ~ ${t.tarikh_tamat}`
+                : t.tarikh_mula;
+              const minggu = t.bil_minggu ? ` (Minggu ${t.bil_minggu})` : '';
+              const catatan = t.catatan ? ` — ${t.catatan}` : '';
+              const kelabLabel = showKelabLabel && t.kelab_kediaman_label ? ` [${t.kelab_kediaman_label}]` : '';
+              return `- ${t.tajuk} (${t.jenis}${kelabLabel}) — ${dateStr}${minggu}${catatan}`;
+            };
+
+            if ((takwimRows && takwimRows.length > 0) || (pastRows && pastRows.length > 0)) {
+              const events: string[] = [];
+              const cuti: string[] = [];
+
+              takwimRows?.forEach((t: any) => {
+                if (t.jenis === 'CUTI_UMUM') {
+                  const dateStr = t.tarikh_tamat && t.tarikh_tamat !== t.tarikh_mula
+                    ? `${t.tarikh_mula} ~ ${t.tarikh_tamat}`
+                    : t.tarikh_mula;
+                  cuti.push(`- ${t.tajuk} — ${dateStr}${t.catatan ? ' — ' + t.catatan : ''}`);
+                } else {
+                  events.push(formatRow(t));
+                }
+              });
+
+              const pastFormatted = pastRows
+                ?.filter((t: any) => t.jenis !== 'CUTI_UMUM')
+                .map((t: any) => formatRow(t))
+                .join('\n');
+
+              ctx.takwimInfo = {
+                upcomingEvents: events.length > 0 ? events.join('\n') : undefined,
+                pastEvents: pastFormatted || undefined,
+                upcomingCuti: cuti.length > 0 ? cuti.join('\n') : undefined,
+                totalUpcoming: takwimRows?.length || 0,
+                accessScope,
+              };
+            }
+
+            // ── 3C. Club-specific programs (only for registered members) ──
+            // Fetch all clubs the user is a member of (active)
+            const { data: memberships } = await supabase
+              .from('student_club_memberships')
+              .select('club_id, clubs(name)')
+              .eq('user_id', profile.id)
+              .eq('account_status', 'ACTIVE');
+
+            if (memberships && memberships.length > 0) {
+              const clubIds = memberships.map((m: any) => m.club_id);
+              const clubNames = memberships.map((m: any) => (m.clubs as any)?.name || m.club_id).join(', ');
+
+              const { data: clubProgs } = await supabase
+                .from('programs')
+                .select('nama_program, tarikh_mula, tarikh_tamat, location, status, club_id')
+                .in('club_id', clubIds)
+                .gte('tarikh_mula', today)
+                .not('status', 'eq', 'COMPLETED')
+                .not('status', 'eq', 'CANCELLED')
+                .order('tarikh_mula', { ascending: true })
+                .limit(8);
+
+              if (clubProgs && clubProgs.length > 0) {
+                const formatted = clubProgs.map((p: any) => {
+                  const dateStr = p.tarikh_tamat && p.tarikh_tamat !== p.tarikh_mula
+                    ? `${p.tarikh_mula} ~ ${p.tarikh_tamat}`
+                    : p.tarikh_mula;
+                  const loc = p.location ? ` @ ${p.location}` : '';
+                  // Find which club this program belongs to
+                  const memberClub = memberships.find((m: any) => m.club_id === p.club_id);
+                  const clubLabel = memberClub ? ` [${(memberClub.clubs as any)?.name || p.club_id}]` : '';
+                  return `- ${p.nama_program}${clubLabel} — ${dateStr}${loc} (${p.status})`;
+                }).join('\n');
+
+                ctx.takwimInfo = {
+                  ...ctx.takwimInfo,
+                  clubPrograms: formatted,
+                  clubProgramsName: clubNames,
+                };
+              }
+            }
+          } catch (takwimErr) {
+            console.warn('Takwim context fetch failed:', takwimErr);
           }
 
           setChatContext(ctx);
