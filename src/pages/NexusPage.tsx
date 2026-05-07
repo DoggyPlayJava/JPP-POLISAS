@@ -164,7 +164,7 @@ export function NexusPage() {
 
   useEffect(() => {
     const loadLogo = async () => {
-      for (const path of ['/polisas-logo.png', '/jpp-logo.png']) {
+      for (const path of ['/polisas-logo.jpg', '/jpp-logo.png']) {
         try {
           const res = await fetch(path);
           if (!res.ok) continue;

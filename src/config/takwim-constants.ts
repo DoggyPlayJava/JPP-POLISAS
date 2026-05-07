@@ -3,7 +3,7 @@
 // ============================================================
 import {
   BookOpen, Crown, Landmark, CalendarDays, Lightbulb,
-  HeartHandshake, Trophy, Radio, MapPin, Handshake, Moon, Tag,
+  HeartHandshake, Trophy, Radio, MapPin, Handshake, Moon, Tag, Building2,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -127,6 +127,14 @@ export const TAKWIM_JENIS: Record<string, TakwimJenisConfig> = {
     bgColor: 'rgba(16,185,129,0.12)',
     icon: Landmark,
   },
+  KELAB_KEDIAMAN: {
+    label: 'Kelab Kediaman',
+    shortLabel: 'Kediaman',
+    color: '#E879F9',
+    bgColor: 'rgba(232,121,249,0.12)',
+    icon: Building2,
+    excoModule: 'KK',
+  },
 };
 
 // ── Filter Options ───────────────────────────────────────────
@@ -149,6 +157,22 @@ export const TAKWIM_FILTER_OPTIONS: TakwimFilterOption[] = [
   { value: 'KLS',          label: 'Kediaman Luar' },
   { value: 'KOLAB',        label: 'Kolaborasi' },
   { value: 'KK',           label: 'Kediaman & Ker.' },
+  { value: 'KELAB_KEDIAMAN', label: 'Kelab Kediaman' },
+];
+
+/** Simplified filter for student-facing view — no per-unit JPP breakdown */
+export const STUDENT_FILTER_OPTIONS: TakwimFilterOption[] = [
+  { value: 'KESELURUHAN',  label: 'Keseluruhan' },
+  { value: 'KELAB_SAYA',   label: 'Kelab Saya' },
+  { value: 'AKADEMIK',     label: 'Akademik Sahaja' },
+  { value: 'JPP_ALL',      label: 'JPP (Keseluruhan)' },
+  { value: 'CUTI_UMUM',    label: 'Cuti Umum' },
+];
+
+/** JPP unit jenis codes — used for JPP_ALL aggregate filter */
+export const JPP_UNIT_JENIS = [
+  'JPP', 'KPP', 'KEUSAHAWANAN', 'KEBAJIKAN', 'SRK',
+  'AKADEMIK_EXCO', 'MULTIMEDIA', 'KLS', 'KOLAB', 'KK',
 ];
 
 // ── Sesi Options ─────────────────────────────────────────────
@@ -180,4 +204,6 @@ export interface TakwimItem {
   /** For program entries */
   status?: string | null;
   club_name?: string | null;
+  /** For kelab kediaman entries */
+  kelab_kediaman_label?: string | null;
 }

@@ -41,53 +41,18 @@ const s = StyleSheet.create({
     opacity: 0.06,
     objectFit: 'contain',
   },
-  // ── HEADER: 3 logos in a row ──
-  // POLISAS(70) = JPP(70) → sejajar | KPT(80) tinggi sedikit (ada teks bawah lambang)
-  logoRow: {
-    flexDirection: 'row',
+  // ── LOGO: POLISAS centered ──
+  logoWrap: {
     alignItems: 'center',
-    marginBottom: 10,
+    justifyContent: 'center',
+    marginBottom: 6,
   },
-  // Kiri: POLISAS — rapat ke kanan (ke arah KPT)
-  logoColLeft: {
-    flex: 1,
-    alignItems: 'flex-end',
-    paddingRight: 40,
-  },
-  // Tengah: KPT
-  logoColCenter: {
-    alignItems: 'center',
-  },
-  // Kanan: JPP — rapat ke KIRI (bermula terus selepas KPT, bukan ke hujung kanan)
-  logoColRight: {
-    flex: 1,
-    alignItems: 'flex-start',  // ← flex-start = logo bermula dari tepi KPT, bukan tepi kanan
-    paddingLeft: 8,
-  },
-  // POLISAS — tinggi 70
-  logoLeft: {
-    width: 145,
-    height: 70,
-    objectFit: 'contain',
-  },
-  // KPT — tinggi 80 (lambang + teks "JABATAN..." di bawah)
-  logoCenter: {
-    width: 190,
-    height: 100,
-    objectFit: 'contain',
-  },
-  // JPP — lebar kerana logo "JPP | teks" horizontal, SAMA tinggi dengan POLISAS
-  logoRight: {
-    width: 230,
-    height: 130,
-    objectFit: 'contain',
-    marginTop: 20,   // ← turunkan JPP logo sikit
-  },
+  logo: { width: 260, height: 100, objectFit: 'contain' },
   // ── TITLE ──
   titleWrap: {
     textAlign: 'center',
-    marginBottom: 10,
-    marginTop: 4,
+    marginBottom: 8,
+    marginTop: 2,
   },
   titleMain: {
     fontFamily: 'Helvetica-Bold',
@@ -146,10 +111,8 @@ const s = StyleSheet.create({
 interface TakwimJPPPDFTemplateProps {
   data: any[];
   themeColor: string;
-  session: string;        // e.g. "2025/2026"
-  logoPolisas?: string;   // base64 data URL
-  logoKpt?: string;       // base64 data URL
-  logoJpp?: string;       // base64 data URL
+  session: string;
+  logoPolisas?: string;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -157,7 +120,7 @@ interface TakwimJPPPDFTemplateProps {
 // ══════════════════════════════════════════════════════════════
 export default function TakwimJPPPDFTemplate({
   data, themeColor, session,
-  logoPolisas, logoKpt, logoJpp,
+  logoPolisas,
 }: TakwimJPPPDFTemplateProps) {
   const textColor = getContrastColor(themeColor);
   let bilCounter = 0;
@@ -167,34 +130,15 @@ export default function TakwimJPPPDFTemplate({
       <Page size="A4" style={s.page} orientation="landscape">
 
         {/* ── WATERMARK ── */}
-        {logoJpp && (
+        {logoPolisas && (
           <View fixed style={s.watermarkWrap}>
-            <Image src={logoJpp} style={s.watermark} />
+            <Image src={logoPolisas} style={s.watermark} />
           </View>
         )}
 
-        {/* ── LOGOS — 3 equal columns, each centered ── */}
-        <View style={s.logoRow}>
-          {/* Left col: POLISAS — aligned RIGHT toward center */}
-          <View style={s.logoColLeft}>
-            {logoPolisas
-              ? <Image src={logoPolisas} style={s.logoLeft} />
-              : <Text style={{ fontSize: 7, color: '#999' }}>POLISAS</Text>}
-          </View>
-
-          {/* Center col: KPT */}
-          <View style={s.logoColCenter}>
-            {logoKpt
-              ? <Image src={logoKpt} style={s.logoCenter} />
-              : <Text style={{ fontSize: 7, color: '#999' }}>KPT</Text>}
-          </View>
-
-          {/* Right col: JPP — aligned LEFT toward center */}
-          <View style={s.logoColRight}>
-            {logoJpp
-              ? <Image src={logoJpp} style={s.logoRight} />
-              : <Text style={{ fontSize: 7, color: '#999' }}>JPP</Text>}
-          </View>
+        {/* ── LOGO POLISAS — centered, page 1 only ── */}
+        <View style={s.logoWrap}>
+          {logoPolisas && <Image src={logoPolisas} style={s.logo} />}
         </View>
 
         {/* ── TITLE — BLACK ── */}
@@ -227,7 +171,7 @@ export default function TakwimJPPPDFTemplate({
             if (isHoliday) {
               const label = `${formatDateDMY(item.tarikh_mula)}   ${(item.nama_cuti || item.nama_program || '').toUpperCase()}`;
               return (
-                <View key={item.id} style={[s.row, { backgroundColor: themeColor }]}>
+                <View key={item.id} style={[s.row, { backgroundColor: themeColor }]} wrap={false}>
                   <View style={{
                     width: '100%',
                     borderBottomWidth: 1,
@@ -257,7 +201,7 @@ export default function TakwimJPPPDFTemplate({
             const tarikhP = formatDateDMY(item.tarikh_mula);
 
             return (
-              <View key={item.id} style={s.row}>
+              <View key={item.id} style={s.row} wrap={false} minPresenceAhead={20}>
                 <DataCell w={COL.BIL} text={`${bilCounter}.`} center bold />
                 <DataCell w={COL.PROGRAM} text={(item.nama_program || '').toUpperCase()} />
                 <DataCell w={COL.TARIKH_C} text={tarikhC} center />

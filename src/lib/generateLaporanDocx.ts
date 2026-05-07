@@ -419,7 +419,7 @@ export async function generateLaporanDocx(opts: LaporanDocxOptions): Promise<voi
 
   // ── Muat turun logo ─────────────────────────────────────────────────────────
   const [polisasBuf, clubBuf] = await Promise.all([
-    fetchBuf('/polisas-logo.png'),
+    fetchBuf('/polisas-logo.jpg'),
     resolveImg(clubLogoUrl),
   ]);
 

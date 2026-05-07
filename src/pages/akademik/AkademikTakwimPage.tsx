@@ -2,24 +2,44 @@ import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTakwimPusat } from '@/hooks/useTakwimPusat';
-import { TAKWIM_JENIS, TAKWIM_FILTER_OPTIONS, SESI_OPTIONS, INSTITUSI_LABEL, type TakwimItem } from '@/config/takwim-constants';
+import { TAKWIM_JENIS, STUDENT_FILTER_OPTIONS, SESI_OPTIONS, INSTITUSI_LABEL, type TakwimItem } from '@/config/takwim-constants';
 import { cn, hexToRgba } from '@/lib/utils';
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay, addMonths, subMonths } from 'date-fns';
 import { ms } from 'date-fns/locale';
-import { CalendarDays, Filter, Table, LayoutGrid, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { CalendarDays, Filter, Table, LayoutGrid, ChevronLeft, ChevronRight, Loader2, Users } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { ALL_CLUBS } from '@/types';
 
 export function AkademikTakwimPage() {
-  const { profile } = useAuth();
+  const { profile, userClubIds } = useAuth();
   const [filter, setFilter] = useState('KESELURUHAN');
   const [sesi, setSesi] = useState('2026/2027');
   const [viewMode, setViewMode] = useState<'calendar' | 'table'>('calendar');
   const [calMonth, setCalMonth] = useState(new Date());
   const [sesiToggle, setSesiToggle] = useState<'I' | 'II' | 'ALL'>('ALL');
+  const [selectedClubFilter, setSelectedClubFilter] = useState('ALL'); // 'ALL' or specific club_id
 
-  const clubId = profile?.club_id as string | undefined;
-  const { items, loading, stats } = useTakwimPusat({ filter: filter === 'KELAB_SAYA' ? 'KELAB_SAYA' : filter, sesi, clubId });
+  // Resolve effective club IDs for "Kelab Saya"
+  const effectiveClubIds = useMemo(() => {
+    if (selectedClubFilter !== 'ALL') return [selectedClubFilter];
+    return userClubIds;
+  }, [selectedClubFilter, userClubIds]);
+
+  // Build list of user's clubs for sub-picker
+  const myClubs = useMemo(() =>
+    userClubIds.map(id => {
+      const club = ALL_CLUBS.find(c => c.id === id);
+      return { id, name: club?.name || id };
+    }).sort((a, b) => a.name.localeCompare(b.name)),
+  [userClubIds]);
+
+  const { items, loading, stats } = useTakwimPusat({
+    filter: filter === 'KELAB_SAYA' ? 'KELAB_SAYA' : filter,
+    sesi,
+    clubIds: effectiveClubIds,
+    excludeJenis: ['KELAB_KEDIAMAN'],
+  });
 
   // Sesi auto-split: filter items by semester dates
   const filteredItems = useMemo(() => {
@@ -48,12 +68,26 @@ export function AkademikTakwimPage() {
 
       {/* ── Controls ── */}
       <div className="flex flex-wrap items-center gap-3">
-        <Select value={filter} onValueChange={setFilter}>
+        <Select value={filter} onValueChange={v => { setFilter(v); if (v !== 'KELAB_SAYA') setSelectedClubFilter('ALL'); }}>
           <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white/5 border-white/10 text-xs font-bold text-white">
             <Filter className="w-3 h-3 mr-2 text-white/40" /><SelectValue />
           </SelectTrigger>
-          <SelectContent>{TAKWIM_FILTER_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+          <SelectContent>{STUDENT_FILTER_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
         </Select>
+
+        {/* Club sub-picker — only visible when "Kelab Saya" is selected */}
+        {filter === 'KELAB_SAYA' && myClubs.length > 0 && (
+          <Select value={selectedClubFilter} onValueChange={setSelectedClubFilter}>
+            <SelectTrigger className="w-[200px] h-10 rounded-xl bg-emerald-500/5 border-emerald-500/15 text-xs font-bold text-emerald-400">
+              <Users className="w-3 h-3 mr-2 text-emerald-400/50" /><SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua Kelab Saya ({myClubs.length})</SelectItem>
+              {myClubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
+
         <Select value={sesi} onValueChange={setSesi}>
           <SelectTrigger className="w-[150px] h-10 rounded-xl bg-white/5 border-white/10 text-xs font-bold text-white"><SelectValue /></SelectTrigger>
           <SelectContent>{SESI_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>

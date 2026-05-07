@@ -20,9 +20,7 @@ import { getContrastColor, formatDateDMY, formatDateRange, DEFAULT_JPP_COLOR } f
 import { toast } from 'react-hot-toast';
 
 // ── Logo URLs ──
-const LOGO_POLISAS_URL = 'https://api.cipher-node.org/storage/v1/object/public/reports/LOGO%20POLISAS.jpeg';
-const LOGO_KPT_URL     = 'https://api.cipher-node.org/storage/v1/object/public/reports/Logo%20Kementerian.jpeg';
-const LOGO_JPP_URL     = 'https://api.cipher-node.org/storage/v1/object/public/reports/LOGO%20JPP.jpg';
+const LOGO_POLISAS_URL = '/polisas-logo.jpg';
 
 // ── Session options ──
 const SESSION_OPTIONS = [
@@ -63,10 +61,8 @@ export default function PemantauanTakwimTab() {
   // Session/year
   const [session, setSession] = useState('2025/2026');
 
-  // Logos (base64)
+  // Logo (base64)
   const [logoPolisas, setLogoPolisas] = useState('');
-  const [logoKpt, setLogoKpt]         = useState('');
-  const [logoJpp, setLogoJpp]         = useState('');
   const [logosLoaded, setLogosLoaded] = useState(false);
 
   // Holiday dialog
@@ -75,16 +71,13 @@ export default function PemantauanTakwimTab() {
   const [newDate, setNewDate]   = useState('');
   const [savingH, setSavingH]   = useState(false);
 
-  // ── Load logos ──
+  // ── Load logo ──
   useEffect(() => {
     setLogosLoaded(false);
-    Promise.all([toBase64(LOGO_POLISAS_URL), toBase64(LOGO_KPT_URL), toBase64(LOGO_JPP_URL)])
-      .then(([p, k, j]) => {
-        setLogoPolisas(p);
-        setLogoKpt(k);
-        setLogoJpp(j);
-        setLogosLoaded(true);
-      });
+    toBase64(LOGO_POLISAS_URL).then((p) => {
+      setLogoPolisas(p);
+      setLogosLoaded(true);
+    });
   }, []);
 
   // ── Load DB data ──
@@ -240,8 +233,6 @@ export default function PemantauanTakwimTab() {
                   themeColor={themeColor}
                   session={session}
                   logoPolisas={logoPolisas}
-                  logoKpt={logoKpt}
-                  logoJpp={logoJpp}
                 />
               }
               fileName={`Takwim_Rasmi_JPP_POLISAS_${session.replace('/', '-')}.pdf`}

@@ -13,8 +13,9 @@ import { PDFDownloadLink } from '@react-pdf/renderer';
 import TakwimPusatPDFTemplate from '@/components/reports/TakwimPusatPDFTemplate';
 import {
   CalendarDays, Plus, Filter, Download, ChevronLeft, ChevronRight,
-  Pencil, Trash2, X, Table, LayoutGrid, Bell, Loader2, Upload, Check,
+  Pencil, Trash2, X, Table, LayoutGrid, Bell, Loader2, Upload, Check, Palette,
 } from 'lucide-react';
+import { getContrastColor } from '@/lib/color-utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,9 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { JPP_MT_POSITIONS } from '@/types';
 
 // ── Logo URLs ──
-const LOGO_POLISAS_URL = 'https://api.cipher-node.org/storage/v1/object/public/reports/LOGO%20POLISAS.jpeg';
-const LOGO_KPT_URL     = 'https://api.cipher-node.org/storage/v1/object/public/reports/Logo%20Kementerian.jpeg';
-const LOGO_JPP_URL     = 'https://api.cipher-node.org/storage/v1/object/public/reports/LOGO%20JPP.jpg';
+const LOGO_POLISAS_URL = '/polisas-logo.jpg';
 async function toBase64(url: string): Promise<string> {
   try { const r = await fetch(url, { cache: 'force-cache' }); if (!r.ok) throw 0; const b = await r.blob(); return new Promise((res, rej) => { const rd = new FileReader(); rd.onloadend = () => res(rd.result as string); rd.onerror = rej; rd.readAsDataURL(b); }); }
   catch { return ''; }
@@ -81,16 +80,46 @@ export function JppTakwimPage() {
   const [editTarget, setEditTarget] = useState<TakwimItem | null>(null);
   const [bulkMode, setBulkMode] = useState(false);
   const [calMonth, setCalMonth] = useState(new Date());
-  const [logos, setLogos] = useState<{ polisas: string; kpt: string; jpp: string }>({ polisas: '', kpt: '', jpp: '' });
+  const [logoPolisas, setLogoPolisas] = useState('');
 
-  useEffect(() => { Promise.all([toBase64(LOGO_POLISAS_URL), toBase64(LOGO_KPT_URL), toBase64(LOGO_JPP_URL)]).then(([p, k, j]) => setLogos({ polisas: p, kpt: k, jpp: j })); }, []);
+  // ── Warna Rasmi (persisted) ──
+  const [themeColor, setThemeColor] = useState('#1e3a5f');
+  const [colorInput, setColorInput] = useState('#1e3a5f');
+  const [savingColor, setSavingColor] = useState(false);
+  const textOnTheme = getContrastColor(themeColor);
+
+  useEffect(() => {
+    toBase64(LOGO_POLISAS_URL).then(setLogoPolisas);
+    // Load saved theme color
+    supabase.from('system_settings').select('value').eq('key', 'jpp_theme_color').single()
+      .then(({ data }) => {
+        if (data?.value) {
+          let c = data.value;
+          if (typeof c !== 'string') c = JSON.stringify(c);
+          c = c.replace(/^"|"$/g, '');
+          if (/^#[0-9A-Fa-f]{6}$/.test(c)) { setThemeColor(c); setColorInput(c); }
+        }
+      });
+  }, []);
+
+  const handleSaveColor = async () => {
+    if (!/^#[0-9A-Fa-f]{6}$/.test(colorInput)) { toast.error('Format warna tidak sah.'); return; }
+    setSavingColor(true);
+    try {
+      const { error } = await supabase.from('system_settings').update({ value: JSON.stringify(colorInput) }).eq('key', 'jpp_theme_color');
+      if (error) { await supabase.from('system_settings').insert({ key: 'jpp_theme_color', value: JSON.stringify(colorInput) }); }
+      setThemeColor(colorInput);
+      toast.success('Warna rasmi JPP berjaya dikemaskini!');
+    } catch { toast.error('Gagal menyimpan warna.'); }
+    finally { setSavingColor(false); }
+  };
 
   const filterLabel = TAKWIM_FILTER_OPTIONS.find(o => o.value === filter)?.label || 'Keseluruhan';
 
   const { items, loading, refresh, stats } = useTakwimPusat({ filter, sesi });
   const rbac = useRbac();
 
-  const emptyForm = { jenis: '', tajuk: '', catatan: '', tarikh_mula: '', tarikh_tamat: '', bil_minggu: '', aktiviti: '' };
+  const emptyForm = { jenis: '', tajuk: '', catatan: '', tarikh_mula: '', tarikh_tamat: '', bil_minggu: '', aktiviti: '', warna_custom: '', kelab_kediaman_label: '' };
   const [form, setForm] = useState<any>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
@@ -99,7 +128,7 @@ export function JppTakwimPage() {
   const openCreate = () => { setEditTarget(null); setForm({ ...emptyForm, jenis: rbac.allowedJenis[0] || '' }); setDialogOpen(true); };
   const openEdit = (item: TakwimItem) => {
     setEditTarget(item);
-    setForm({ jenis: item.jenis, tajuk: item.tajuk, catatan: item.catatan || '', tarikh_mula: item.tarikh_mula, tarikh_tamat: item.tarikh_tamat || '', bil_minggu: item.bil_minggu || '', aktiviti: item.aktiviti || '' });
+    setForm({ jenis: item.jenis, tajuk: item.tajuk, catatan: item.catatan || '', tarikh_mula: item.tarikh_mula, tarikh_tamat: item.tarikh_tamat || '', bil_minggu: item.bil_minggu || '', aktiviti: item.aktiviti || '', warna_custom: item.warna_custom || '', kelab_kediaman_label: item.kelab_kediaman_label || '' });
     setDialogOpen(true);
   };
 
@@ -113,6 +142,8 @@ export function JppTakwimPage() {
       aktiviti: form.aktiviti || null, sesi,
       exco_module: TAKWIM_JENIS[form.jenis]?.excoModule || null,
       created_by: rbac.userId,
+      warna_custom: form.warna_custom || null,
+      kelab_kediaman_label: form.jenis === 'KELAB_KEDIAMAN' ? (form.kelab_kediaman_label || null) : null,
     };
     try {
       const res = editTarget
@@ -171,6 +202,24 @@ export function JppTakwimPage() {
           </div>
         </motion.div>
 
+        {/* ── Warna Rasmi Panel (YDP / Super Admin only) ── */}
+        {rbac.isYDP && (
+          <div className="flex items-center gap-4 bg-card p-5 rounded-[2rem] border border-border shadow-sm">
+            <Palette className="w-5 h-5 text-muted-foreground shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Warna Rasmi JPP</p>
+              <p className="text-[10px] text-muted-foreground">Digunakan pada header jadual, baris cuti & PDF takwim.</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <input type="color" value={colorInput} onChange={e => setColorInput(e.target.value)} className="w-11 h-11 rounded-xl border-2 border-border cursor-pointer" />
+              <div className="hidden sm:flex h-11 px-3 rounded-xl items-center font-black text-[10px] uppercase tracking-widest shadow-sm" style={{ backgroundColor: colorInput, color: getContrastColor(colorInput) }}>{colorInput}</div>
+              <Button onClick={handleSaveColor} disabled={savingColor || colorInput === themeColor} variant="outline" size="sm" className="rounded-xl h-11 px-4 font-black text-xs">
+                {savingColor ? '...' : 'Simpan'}
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* ── Controls ── */}
         <div className="flex flex-wrap items-center gap-3">
           <Select value={filter} onValueChange={setFilter}>
@@ -201,7 +250,7 @@ export function JppTakwimPage() {
             )}
             {items.length > 0 && (
               <PDFDownloadLink
-                document={<TakwimPusatPDFTemplate data={items} themeColor="#1e3a5f" session={sesi} filterLabel={filterLabel} logoPolisas={logos.polisas} logoKpt={logos.kpt} logoJpp={logos.jpp} />}
+                document={<TakwimPusatPDFTemplate data={items} themeColor={themeColor} session={sesi} filterLabel={filterLabel} logoPolisas={logoPolisas} />}
                 fileName={`Takwim_POLISAS_${sesi.replace('/', '-')}_${filterLabel}.pdf`}
               >
                 {({ loading: pdfLoading }) => (
@@ -304,6 +353,26 @@ export function JppTakwimPage() {
                   <Input value={form.aktiviti} onChange={e => setForm({ ...form, aktiviti: e.target.value })} className="h-12 rounded-xl bg-white/5 border-white/10 text-white font-bold" />
                 </div>
               </div>
+              {/* Kelab Kediaman Label */}
+              {form.jenis === 'KELAB_KEDIAMAN' && (
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Nama Kelab Kediaman</Label>
+                  <Input value={form.kelab_kediaman_label} onChange={e => setForm({ ...form, kelab_kediaman_label: e.target.value })} className="h-12 rounded-xl bg-white/5 border-white/10 text-white font-bold" placeholder="cth: JPPI, AG, IS..." />
+                </div>
+              )}
+              {/* Color Picker */}
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Warna Custom (Pilihan)</Label>
+                <div className="flex items-center gap-3">
+                  <input type="color" value={form.warna_custom || TAKWIM_JENIS[form.jenis]?.color || '#94A3B8'} onChange={e => setForm({ ...form, warna_custom: e.target.value })} className="w-12 h-12 rounded-xl border-2 border-white/10 cursor-pointer bg-transparent" />
+                  <div className="flex-1">
+                    <Input value={form.warna_custom} onChange={e => setForm({ ...form, warna_custom: e.target.value })} className="h-12 rounded-xl bg-white/5 border-white/10 text-white font-mono font-bold" placeholder={TAKWIM_JENIS[form.jenis]?.color || '#94A3B8'} />
+                  </div>
+                  {form.warna_custom && (
+                    <button onClick={() => setForm({ ...form, warna_custom: '' })} className="text-[10px] font-bold text-white/30 hover:text-white/60">Reset</button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
           <DialogFooter className="p-6 bg-white/[0.02] border-t border-white/5 gap-3">
@@ -390,6 +459,7 @@ function TakwimTable({ items, rbac, onEdit, onDelete, bulkSelected, onBulkToggle
                   <td className="px-4 py-3">
                     <p className="text-xs font-black text-white/90 leading-tight">{item.tajuk}</p>
                     {item.club_name && <p className="text-[10px] text-white/30 mt-0.5">{item.club_name}</p>}
+                    {item.kelab_kediaman_label && <p className="text-[10px] text-fuchsia-400/60 mt-0.5">🏠 {item.kelab_kediaman_label}</p>}
                   </td>
                   <td className="px-4 py-3 text-[11px] font-bold text-white/60 whitespace-nowrap">
                     {fmtDate(item.tarikh_mula)}{item.tarikh_tamat && item.tarikh_tamat !== item.tarikh_mula ? ` — ${fmtDate(item.tarikh_tamat)}` : ''}

@@ -5,12 +5,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { TakwimItem } from '@/config/takwim-constants';
+import { JPP_UNIT_JENIS } from '@/config/takwim-constants';
 import { ALL_CLUBS } from '@/types';
 
 interface UseTakwimPusatOptions {
-  filter?: string;       // 'KESELURUHAN' | 'AKADEMIK' | 'JPP' | 'KELAB_SAYA' | unit code
+  filter?: string;       // 'KESELURUHAN' | 'AKADEMIK' | 'JPP_ALL' | 'KELAB_SAYA' | 'KELAB' | unit code
   sesi?: string;         // '2026/2027'
-  clubId?: string;       // For "Kelab Saya" filter
+  clubId?: string;       // Single club (backward compat — fallback)
+  clubIds?: string[];    // Multi-club for "Kelab Saya" filter
+  excludeJenis?: string[]; // Hide specific jenis from results (e.g. ['KELAB_KEDIAMAN'] for students)
   enabled?: boolean;     // Disable auto-fetch
 }
 
@@ -23,12 +26,15 @@ interface UseTakwimPusatReturn {
 }
 
 export function useTakwimPusat(options: UseTakwimPusatOptions = {}): UseTakwimPusatReturn {
-  const { filter = 'KESELURUHAN', sesi, clubId, enabled = true } = options;
+  const { filter = 'KESELURUHAN', sesi, clubId, clubIds, excludeJenis, enabled = true } = options;
 
   const [items, setItems] = useState<TakwimItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<Record<string, number>>({});
+
+  // Resolve effective club IDs list
+  const effectiveClubIds = clubIds?.length ? clubIds : (clubId ? [clubId] : []);
 
   const fetchData = useCallback(async () => {
     if (!enabled) return;
@@ -45,8 +51,16 @@ export function useTakwimPusat(options: UseTakwimPusatOptions = {}): UseTakwimPu
       if (sesi) tpQuery = tpQuery.eq('sesi', sesi);
 
       // Apply jenis filter for specific types
-      if (filter !== 'KESELURUHAN' && filter !== 'KELAB_SAYA') {
+      if (filter === 'JPP_ALL') {
+        // Aggregate: all JPP unit types
+        tpQuery = tpQuery.in('jenis', JPP_UNIT_JENIS);
+      } else if (filter !== 'KESELURUHAN' && filter !== 'KELAB_SAYA' && filter !== 'KELAB') {
         tpQuery = tpQuery.eq('jenis', filter);
+      }
+
+      // Exclude specific jenis (e.g. KELAB_KEDIAMAN for student view)
+      if (excludeJenis?.length) {
+        tpQuery = tpQuery.not('jenis', 'in', `(${excludeJenis.join(',')})`);
       }
 
       // ── 2. Fetch programs (kelab rasmi) — status bukan DRAFT ──
@@ -57,9 +71,9 @@ export function useTakwimPusat(options: UseTakwimPusatOptions = {}): UseTakwimPu
         .eq('is_archived', false)
         .order('tarikh_mula', { ascending: true });
 
-      // For "Kelab Saya" filter
-      if (filter === 'KELAB_SAYA' && clubId) {
-        progQuery = progQuery.eq('club_id', clubId);
+      // For "Kelab Saya" filter — multi-club support
+      if (filter === 'KELAB_SAYA' && effectiveClubIds.length > 0) {
+        progQuery = progQuery.in('club_id', effectiveClubIds);
       }
 
       // ── 3. Fetch takwim_holidays (cuti umum) ──
@@ -68,17 +82,15 @@ export function useTakwimPusat(options: UseTakwimPusatOptions = {}): UseTakwimPu
         .select('*')
         .order('tarikh_mula', { ascending: true });
 
+      // Determine which queries to actually run
+      const shouldFetchPrograms = filter === 'KESELURUHAN' || filter === 'KELAB_SAYA' || filter === 'KELAB' || filter === 'KPP';
+      const shouldFetchHolidays = filter === 'KESELURUHAN' || filter === 'CUTI_UMUM';
+
       // Execute all queries in parallel
       const [tpRes, progRes, holRes] = await Promise.all([
         tpQuery,
-        // Skip programs if filtering to a specific jenis (non-kelab)
-        (filter !== 'KESELURUHAN' && filter !== 'KELAB_SAYA' && filter !== 'KPP')
-          ? Promise.resolve({ data: [], error: null })
-          : progQuery,
-        // Skip holidays unless showing keseluruhan or cuti_umum
-        (filter !== 'KESELURUHAN' && filter !== 'CUTI_UMUM')
-          ? Promise.resolve({ data: [], error: null })
-          : holidayQuery,
+        shouldFetchPrograms ? progQuery : Promise.resolve({ data: [], error: null }),
+        shouldFetchHolidays ? holidayQuery : Promise.resolve({ data: [], error: null }),
       ]);
 
       if (tpRes.error) throw tpRes.error;
@@ -100,6 +112,7 @@ export function useTakwimPusat(options: UseTakwimPusatOptions = {}): UseTakwimPu
         sesi: tp.sesi,
         exco_module: tp.exco_module,
         created_by: tp.created_by,
+        kelab_kediaman_label: tp.kelab_kediaman_label,
       }));
 
       const programItems: TakwimItem[] = (progRes.data || []).map((p: any) => ({
@@ -143,7 +156,8 @@ export function useTakwimPusat(options: UseTakwimPusatOptions = {}): UseTakwimPu
     } finally {
       setLoading(false);
     }
-  }, [filter, sesi, clubId, enabled]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, sesi, clubId, JSON.stringify(clubIds), enabled]);
 
   useEffect(() => {
     fetchData();

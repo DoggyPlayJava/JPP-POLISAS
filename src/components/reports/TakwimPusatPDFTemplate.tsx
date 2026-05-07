@@ -14,7 +14,7 @@ const COL = {
   CATATAN: '30%',
 };
 
-// ── Styles (matching TakwimJPPPDFTemplate) ──
+// ── Styles ──
 const s = StyleSheet.create({
   page: {
     paddingTop: 20,
@@ -32,18 +32,25 @@ const s = StyleSheet.create({
     zIndex: -1,
   },
   watermark: { width: 380, height: 380, opacity: 0.06, objectFit: 'contain' },
-  logoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  logoColLeft: { flex: 1, alignItems: 'flex-end', paddingRight: 40 },
-  logoColCenter: { alignItems: 'center' },
-  logoColRight: { flex: 1, alignItems: 'flex-start', paddingLeft: 8 },
-  logoLeft: { width: 145, height: 70, objectFit: 'contain' },
-  logoCenter: { width: 190, height: 100, objectFit: 'contain' },
-  logoRight: { width: 230, height: 130, objectFit: 'contain', marginTop: 20 },
-  titleWrap: { textAlign: 'center', marginBottom: 10, marginTop: 4 },
+
+  // ── LOGO: POLISAS centered ──
+  logoWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  logo: { width: 260, height: 100, objectFit: 'contain' },
+
+  // ── TITLE ──
+  titleWrap: { textAlign: 'center', marginBottom: 8 },
   titleMain: { fontFamily: 'Helvetica-Bold', fontSize: 12, color: '#000000', marginBottom: 2 },
   titleSub: { fontFamily: 'Helvetica-Bold', fontSize: 10, color: '#000000' },
+
+  // ── TABLE ──
   table: { borderWidth: 1, borderColor: '#000', borderStyle: 'solid', marginBottom: 30 },
   row: { flexDirection: 'row' },
+
+  // ── SIGNATURE ──
   footer: { paddingHorizontal: 30 },
   sigBlock: { flexDirection: 'column', alignItems: 'flex-start', width: 260 },
   sigLabel: { fontFamily: 'Helvetica', fontSize: 9, marginBottom: 55 },
@@ -59,14 +66,12 @@ interface TakwimPusatPDFTemplateProps {
   session: string;
   filterLabel: string;
   logoPolisas?: string;
-  logoKpt?: string;
-  logoJpp?: string;
 }
 
 // ── Component ──
 export default function TakwimPusatPDFTemplate({
   data, themeColor, session, filterLabel,
-  logoPolisas, logoKpt, logoJpp,
+  logoPolisas,
 }: TakwimPusatPDFTemplateProps) {
   const textColor = getContrastColor(themeColor);
   let bilCounter = 0;
@@ -75,27 +80,19 @@ export default function TakwimPusatPDFTemplate({
     <Document>
       <Page size="A4" style={s.page} orientation="landscape">
 
-        {/* Watermark */}
-        {logoJpp && (
+        {/* Watermark — repeats on every page */}
+        {logoPolisas && (
           <View fixed style={s.watermarkWrap}>
-            <Image src={logoJpp} style={s.watermark} />
+            <Image src={logoPolisas} style={s.watermark} />
           </View>
         )}
 
-        {/* Logos */}
-        <View style={s.logoRow}>
-          <View style={s.logoColLeft}>
-            {logoPolisas ? <Image src={logoPolisas} style={s.logoLeft} /> : <Text style={{ fontSize: 7, color: '#999' }}>POLISAS</Text>}
-          </View>
-          <View style={s.logoColCenter}>
-            {logoKpt ? <Image src={logoKpt} style={s.logoCenter} /> : <Text style={{ fontSize: 7, color: '#999' }}>KPT</Text>}
-          </View>
-          <View style={s.logoColRight}>
-            {logoJpp ? <Image src={logoJpp} style={s.logoRight} /> : <Text style={{ fontSize: 7, color: '#999' }}>JPP</Text>}
-          </View>
+        {/* ── LOGO POLISAS — centered, page 1 only ── */}
+        <View style={s.logoWrap}>
+          {logoPolisas && <Image src={logoPolisas} style={s.logo} />}
         </View>
 
-        {/* Title */}
+        {/* Title — page 1 only (no fixed) */}
         <View style={s.titleWrap}>
           <Text style={s.titleMain}>
             TAKWIM POLISAS BERPUSAT — {filterLabel.toUpperCase()} SESI {session}
@@ -106,7 +103,7 @@ export default function TakwimPusatPDFTemplate({
 
         {/* Table */}
         <View style={s.table}>
-          {/* Header */}
+          {/* Table header — fixed on every page so table stays readable */}
           <View style={[s.row, { backgroundColor: themeColor }]} fixed>
             <HeaderCell w={COL.BIL} label="BIL" color={textColor} />
             <HeaderCell w={COL.JENIS} label="JENIS" color={textColor} />
@@ -116,14 +113,14 @@ export default function TakwimPusatPDFTemplate({
             <HeaderCell w={COL.CATATAN} label="CATATAN" color={textColor} isLast />
           </View>
 
-          {/* Data rows */}
+          {/* Data rows — wrap={false} prevents mid-row page splits */}
           {data.map((item) => {
             const isHoliday = item.type === 'holiday' || item.jenis === 'CUTI_UMUM';
 
             if (isHoliday) {
               const label = `${formatDateDMY(item.tarikh_mula)}   ${item.tajuk.toUpperCase()}`;
               return (
-                <View key={`${item.type}-${item.id}`} style={[s.row, { backgroundColor: themeColor }]}>
+                <View key={`${item.type}-${item.id}`} style={[s.row, { backgroundColor: themeColor }]} wrap={false}>
                   <View style={{
                     width: '100%', borderBottomWidth: 1, borderBottomColor: '#000',
                     paddingVertical: 5, paddingHorizontal: 8,
@@ -146,7 +143,7 @@ export default function TakwimPusatPDFTemplate({
             const catatan = [item.catatan, item.club_name, item.status && item.status !== 'CONFIRMED' ? `[${item.status}]` : ''].filter(Boolean).join(' · ');
 
             return (
-              <View key={`${item.type}-${item.id}`} style={s.row}>
+              <View key={`${item.type}-${item.id}`} style={s.row} wrap={false} minPresenceAhead={20}>
                 <DataCell w={COL.BIL} text={`${bilCounter}.`} center bold />
                 <DataCell w={COL.JENIS} text={jenisLabel.toUpperCase()} center />
                 <DataCell w={COL.TAJUK} text={item.tajuk.toUpperCase()} />
