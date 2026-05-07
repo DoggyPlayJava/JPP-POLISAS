@@ -145,7 +145,7 @@ export function DayDetailSheet({ day, events, onClose }: DayDetailSheetProps) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200]"
+            className="fixed inset-0 bg-black/70 z-[200]"
           />
 
           {/* Panel
@@ -160,13 +160,12 @@ export function DayDetailSheet({ day, events, onClose }: DayDetailSheetProps) {
             exit={variants.exit}
             transition={springCfg}
             onClick={(e) => e.stopPropagation()}
-            style={{ height: 'fit-content' }}
             className={[
               'fixed z-[201] bg-[#0f1117] border border-white/10 shadow-2xl flex flex-col',
-              // Mobile
-              'bottom-0 left-0 right-0 rounded-t-3xl max-h-[82vh]',
-              // Desktop override — inset-0 + m-auto = centered, no translate
-              'md:inset-0 md:bottom-0 md:left-0 md:right-0',
+              // Mobile: anchored to bottom, full width, explicit height for flex-1 children
+              'bottom-0 left-0 right-0 rounded-t-3xl h-[75vh]',
+              // Desktop: inset-0 + m-auto centres without needing CSS translate
+              'md:inset-0 md:bottom-0 md:left-0 md:right-0 md:h-auto',
               'md:m-auto md:w-[480px] md:max-h-[75vh]',
               'md:rounded-3xl',
             ].join(' ')}
