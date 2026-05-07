@@ -497,7 +497,7 @@ export function KebajikanTicketDetail() {
               <div className="mt-6 flex gap-3 flex-wrap">
                 {ticket.image_urls.map((url, i) => (
                   <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block relative group rounded-2xl overflow-hidden shadow-lg border border-white/10">
-                    <img src={url} className="w-24 h-24 object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <img src={url} className="w-24 h-24 object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" decoding="async" />
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <ArrowUpRight className="w-6 h-6 text-white" />
                     </div>

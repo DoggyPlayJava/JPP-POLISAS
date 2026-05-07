@@ -149,7 +149,7 @@ export function KarnivalAdminResults() {
                 {/* Booth image */}
                 {booth.image_url ? (
                   <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
-                    <img src={booth.image_url} alt={booth.booth_name} className="w-full h-full object-cover" />
+                    <img src={booth.image_url} alt={booth.booth_name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   </div>
                 ) : (
                   <div className="w-12 h-12 rounded-xl bg-violet-600/10 flex items-center justify-center flex-shrink-0">

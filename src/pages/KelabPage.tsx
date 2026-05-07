@@ -266,7 +266,7 @@ export function KelabPage() {
                 <div className="absolute right-0 top-0 bottom-0 w-1/4 bg-gradient-to-l from-amber-500/5 to-transparent pointer-events-none" />
                 <div className="w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow overflow-hidden"
                   style={{ backgroundColor: club.theme_color || '#0f172a' }}>
-                  {club.logo_url ? <img src={club.logo_url} className="w-full h-full object-cover" alt={club.short_name} /> : club.short_name?.slice(0, 2).toUpperCase()}
+                  {club.logo_url ? <img src={club.logo_url} loading="lazy" decoding="async" className="w-full h-full object-cover" alt={club.short_name} /> : club.short_name?.slice(0, 2).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-black text-foreground group-hover:text-primary transition-colors">{club.name}</p>
@@ -365,7 +365,7 @@ export function KelabPage() {
                           <div className="relative w-full h-full rounded-[1.25rem] flex items-center justify-center text-white font-black text-2xl shadow-sm transition-transform duration-500 group-hover:scale-105 overflow-hidden border border-white/10"
                             style={{ backgroundColor: club.theme_color || '#0f172a' }}>
                             {club.logo_url
-                              ? <img src={club.logo_url} className="w-full h-full object-cover" alt={club.short_name} />
+                              ? <img src={club.logo_url} loading="lazy" decoding="async" className="w-full h-full object-cover" alt={club.short_name} />
                               : club.short_name?.slice(0, 2).toUpperCase() || 'K'}
                           </div>
                         </div>
@@ -479,7 +479,7 @@ export function KelabPage() {
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow overflow-hidden"
                   style={{ backgroundColor: confirmClub.theme_color || '#0f172a' }}>
                   {confirmClub.logo_url
-                    ? <img src={confirmClub.logo_url} className="w-full h-full object-cover" alt={confirmClub.short_name} />
+                    ? <img src={confirmClub.logo_url} loading="lazy" decoding="async" className="w-full h-full object-cover" alt={confirmClub.short_name} />
                     : confirmClub.short_name?.slice(0, 2).toUpperCase()}
                 </div>
                 <div>

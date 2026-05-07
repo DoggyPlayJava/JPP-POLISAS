@@ -793,7 +793,7 @@ export function PosProductPage() {
                 {/* Image */}
                 <div className="aspect-video bg-muted/30 relative overflow-hidden">
                   {p.image_url
-                    ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" decoding="async" />
                     : <div className="w-full h-full flex items-center justify-center"><Package className="w-10 h-10 text-muted-foreground/20" /></div>
                   }
                   {!p.is_available && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><span className="text-[10px] font-black uppercase text-white tracking-widest">Tidak Aktif</span></div>}
@@ -882,7 +882,7 @@ export function PosProductPage() {
                   <div className="relative group">
                     <div className="aspect-video bg-muted/30 rounded-2xl overflow-hidden border border-border flex items-center justify-center">
                       {form.image_url
-                        ? <img src={form.image_url} alt="preview" className="w-full h-full object-cover" />
+                        ? <img src={form.image_url} alt="preview" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                         : <Package className="w-12 h-12 text-muted-foreground/20" />
                       }
                       <label className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-2xl gap-2">

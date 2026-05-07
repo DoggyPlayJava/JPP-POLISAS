@@ -253,7 +253,7 @@ function OrderCard({ order, onReview }: { order: Order; onReview: (o: Order) => 
         {/* Product image */}
         <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0" style={{ background: PM_LIGHT }}>
           {order.business_products?.image_url
-            ? <img src={order.business_products.image_url} alt="" className="w-full h-full object-cover" />
+            ? <img src={order.business_products.image_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
             : <div className="w-full h-full flex items-center justify-center text-2xl">{emoji}</div>
           }
         </div>

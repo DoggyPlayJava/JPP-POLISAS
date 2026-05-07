@@ -60,7 +60,7 @@ function ProductCard({ product, onAdd, color }: { product: BusinessProduct; onAd
       {/* Product image or placeholder */}
       <div className="aspect-square bg-muted/30 relative overflow-hidden">
         {product.image_url ? (
-          <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" decoding="async" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-3xl bg-gradient-to-br from-muted/20 to-muted/50">
             <Package className="w-10 h-10 text-muted-foreground/20" />

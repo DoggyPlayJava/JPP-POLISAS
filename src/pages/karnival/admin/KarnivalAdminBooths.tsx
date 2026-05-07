@@ -326,7 +326,7 @@ export function KarnivalAdminBooths() {
                 {/* Image header */}
                 {booth.image_url ? (
                   <div className="h-28 overflow-hidden">
-                    <img src={booth.image_url} alt={booth.kelab_name} className="w-full h-full object-cover" />
+                    <img src={booth.image_url} alt={booth.kelab_name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   </div>
                 ) : (
                   <div className="h-16 bg-gradient-to-br from-violet-900/20 to-purple-900/10 flex items-center justify-center">

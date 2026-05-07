@@ -208,7 +208,7 @@ export function PolyMartCartPage() {
                 <div className="p-3 bg-muted/30 border-b border-border/40 flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 bg-muted flex items-center justify-center">
                     {business?.logo_url ? (
-                      <img src={business.logo_url} alt="" className="w-full h-full object-cover" />
+                      <img src={business.logo_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     ) : (
                       <Store className="w-4 h-4 text-muted-foreground" />
                     )}
@@ -228,7 +228,7 @@ export function PolyMartCartPage() {
                         {/* Img */}
                         <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0" style={{ background: PM_LIGHT }}>
                           {item.product.image_url ? (
-                            <img src={item.product.image_url} alt="" className="w-full h-full object-cover" />
+                            <img src={item.product.image_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-2xl">{emoji}</div>
                           )}

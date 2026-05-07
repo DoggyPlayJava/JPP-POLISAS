@@ -149,7 +149,8 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
       .select('*, creator:profiles!user_id(full_name)')
       .eq('club_id', selectedClubId)
       .eq('is_archived', false)
-      .order('start_date', { ascending: false });
+      .order('start_date', { ascending: false })
+      .limit(100);
     if (!error) setActivities(data || []);
     setLoading(false);
   }, [selectedClubId]);

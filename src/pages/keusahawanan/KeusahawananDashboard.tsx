@@ -748,7 +748,7 @@ export function KeusahawananDashboard() {
                   <div key={item.id} className="flex items-center gap-4 p-3 rounded-2xl bg-muted/30 border border-border/30">
                     <div className="w-12 h-12 rounded-xl bg-background border border-border/50 flex items-center justify-center text-2xl overflow-hidden">
                       {item.image_url ? (
-                        <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                        <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                       ) : (
                         <span>📦</span>
                       )}

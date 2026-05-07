@@ -74,6 +74,8 @@ function ProductCard({ product, index }: { product: PolyProduct; index: number }
           <img
             src={product.image_url}
             alt={product.name}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
@@ -146,7 +148,7 @@ function BusinessCard({ biz }: { biz: PolyBusiness }) {
       <div className="w-14 h-14 rounded-2xl border-2 border-border/50 group-hover:border-amber-500/40 transition-colors overflow-hidden relative"
         style={{ background: PM_LIGHT }}>
         {biz.logo_url
-          ? <img src={biz.logo_url} alt={biz.name} className="w-full h-full object-cover" />
+          ? <img src={biz.logo_url} alt={biz.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
           : <div className="w-full h-full flex items-center justify-center"><Store className="w-6 h-6" style={{ color: PM_ACCENT }} /></div>
         }
       </div>
@@ -185,7 +187,7 @@ function InFeedAdCard({ ad }: { ad: PolyAd }) {
       </div>
       
       <div className="relative aspect-square w-full">
-        <img src={ad.image_url} alt={ad.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        <img src={ad.image_url} alt={ad.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
         <div className="absolute bottom-2 left-2 right-2">
           <p className="text-[12px] font-black text-white leading-tight drop-shadow-md">{ad.title}</p>
@@ -287,7 +289,7 @@ function HeroBanner({ totalProducts, totalVendors, ads }: { totalProducts: numbe
           {activeAds.map(ad => (
             <div key={ad.id} className="relative w-full shrink-0 cursor-pointer" onClick={() => handleAdClick(ad)}>
               <div className="flex items-center justify-center w-full aspect-[2.5/1] sm:aspect-[3/1] md:aspect-[4/1] overflow-hidden rounded-3xl bg-muted/30 border border-border/50">
-                <img src={ad.image_url} alt={ad.title} className="w-full h-full object-cover shrink-0 hover:scale-[1.02] transition-transform duration-500" />
+                <img src={ad.image_url} alt={ad.title} loading="lazy" decoding="async" className="w-full h-full object-cover shrink-0 hover:scale-[1.02] transition-transform duration-500" />
               </div>
               <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 shadow-xl">
                 <p className="text-[8px] font-black text-white uppercase tracking-widest">{ad.type === 'EXTERNAL' ? 'Penaja' : 'Iklan'}</p>
@@ -349,13 +351,15 @@ export function PolyMartHome() {
           `)
           .eq('publish_to_polymart', true)
           .eq('is_available', true)
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false })
+          .limit(50),
         
         supabase
           .from('polymart_ads')
           .select('*')
           .eq('status', 'ACTIVE')
           .order('created_at', { ascending: false })
+          .limit(10)
       ]);
 
       const prods = prodsRes.data;

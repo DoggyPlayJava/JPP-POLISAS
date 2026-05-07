@@ -103,7 +103,7 @@ function ReportCard({ report, onAction }: { report: Report; onAction: () => void
         <div className="flex gap-3">
           <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0" style={{ background: PM_LIGHT }}>
             {product?.image_url
-              ? <img src={product.image_url} alt="" className="w-full h-full object-cover" />
+              ? <img src={product.image_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
               : <div className="w-full h-full flex items-center justify-center text-xl">{emoji}</div>
             }
           </div>
@@ -355,7 +355,7 @@ function AdsManagerTab() {
             <div key={ad.id} className="flex flex-col sm:flex-row gap-3 p-3 rounded-2xl border border-border/50 bg-card">
               {/* Banner visual */}
               <div className="w-full sm:w-40 aspect-[2.5/1] rounded-xl overflow-hidden bg-muted/40 shrink-0 relative">
-                <img src={ad.image_url} alt="" className="w-full h-full object-cover" />
+                <img src={ad.image_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 <div className={`absolute top-1.5 right-1.5 px-2 py-0.5 rounded-full text-[8px] font-black uppercase text-white ${
                   ad.status === 'ACTIVE' ? 'bg-emerald-500' : ad.status === 'DRAFT' ? 'bg-amber-500' : 'bg-slate-500'
                 }`}>

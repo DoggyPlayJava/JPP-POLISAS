@@ -152,7 +152,7 @@ function VendorOrderCard({ order, onUpdate }: { order: VendorOrder; onUpdate: ()
         <div className="flex gap-3">
           <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0" style={{ background: PM_LIGHT }}>
             {order.business_products?.image_url
-              ? <img src={order.business_products.image_url} alt="" className="w-full h-full object-cover" />
+              ? <img src={order.business_products.image_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
               : <div className="w-full h-full flex items-center justify-center text-xl">{emoji}</div>
             }
           </div>
@@ -388,7 +388,7 @@ function VendorAdsTab() {
         <div className="grid gap-3">
           {ads.map(ad => (
             <div key={ad.id} className="flex gap-4 p-3 rounded-2xl border border-border/50 bg-card">
-              <img src={ad.image_url} className="w-24 h-16 object-cover rounded-xl bg-muted shrink-0 border border-border/50" alt="" />
+              <img src={ad.image_url} className="w-24 h-16 object-cover rounded-xl bg-muted shrink-0 border border-border/50" alt="" loading="lazy" decoding="async" />
               <div>
                 <p className="text-sm font-black text-foreground">{ad.title}</p>
                 <div className="flex items-center gap-2 mt-1">

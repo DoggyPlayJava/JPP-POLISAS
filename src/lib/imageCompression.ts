@@ -5,9 +5,10 @@ export const compressImage = async (imageFile: File): Promise<File> => {
   console.log(`originalFile size ${imageFile.size / 1024 / 1024} MB`);
 
   const options = {
-    maxSizeMB: 1, // Max size 1MB
-    maxWidthOrHeight: 1920, // Max width/height 1920px
+    maxSizeMB: 0.5, // Max size 500KB (optimised for web/mobile)
+    maxWidthOrHeight: 1080, // Max width/height 1080px
     useWebWorker: true,
+    initialQuality: 0.8, // Good balance of quality and size
   };
 
   try {

@@ -199,7 +199,7 @@ export function KarnivalVotePage() {
         <div className="rounded-3xl overflow-hidden border border-white/[0.08] bg-white/[0.03]">
           {booth.image_url ? (
             <div className="h-48 overflow-hidden">
-              <img src={booth.image_url} alt={booth.kelab_name} className="w-full h-full object-cover" />
+              <img src={booth.image_url} alt={booth.kelab_name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
             </div>
           ) : (
             <div className="h-36 bg-gradient-to-br from-violet-900/50 via-purple-900/30 to-[#0d0d1a] flex items-center justify-center">

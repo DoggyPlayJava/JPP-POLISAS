@@ -181,7 +181,7 @@ function OrderModal({
             <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0"
               style={{ background: PM_LIGHT }}>
               {product.image_url
-                ? <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                ? <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 : <div className="w-full h-full flex items-center justify-center text-2xl">{CATEGORY_EMOJI[product.category] ?? '📦'}</div>
               }
             </div>
@@ -368,7 +368,7 @@ export function PolyMartProductDetail() {
           className="relative aspect-[4/3] rounded-3xl overflow-hidden"
           style={{ background: `linear-gradient(135deg, ${PM_LIGHT}, rgba(249,115,22,0.08))` }}>
           {product.image_url
-            ? <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+            ? <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
             : <div className="w-full h-full flex items-center justify-center text-[100px]">{emoji}</div>
           }
           {isOut && (
@@ -433,7 +433,7 @@ export function PolyMartProductDetail() {
             className="flex items-center gap-3 p-3 rounded-2xl border border-border/40 bg-muted/20">
             <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0" style={{ background: PM_LIGHT }}>
               {business.logo_url
-                ? <img src={business.logo_url} alt={business.name} className="w-full h-full object-cover" />
+                ? <img src={business.logo_url} alt={business.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 : <div className="w-full h-full flex items-center justify-center"><Store className="w-5 h-5" style={{ color: PM_ACCENT }} /></div>
               }
             </div>

@@ -406,7 +406,7 @@ export function KarnivalScoreboard() {
                               {booth.image_url ? (
                                 <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden mx-auto mb-3"
                                   style={{ boxShadow: `0 0 0 2px ${medal.border}` }}>
-                                  <img src={booth.image_url} alt={booth.booth_name} className="w-full h-full object-cover" />
+                                  <img src={booth.image_url} alt={booth.booth_name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                                 </div>
                               ) : (
                                 <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl mx-auto mb-3 flex items-center justify-center"
@@ -484,7 +484,7 @@ export function KarnivalScoreboard() {
                               <span className="text-sm font-black text-white/20 w-6 text-center flex-shrink-0">{rank}</span>
                               {booth.image_url ? (
                                 <img src={booth.image_url} alt={booth.booth_name}
-                                  className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
+                                  className="w-10 h-10 rounded-xl object-cover flex-shrink-0" loading="lazy" decoding="async" />
                               ) : (
                                 <div className="w-10 h-10 rounded-xl bg-violet-600/10 flex items-center justify-center flex-shrink-0">
                                   <span className="text-lg">🏪</span>
