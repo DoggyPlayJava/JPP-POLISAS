@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CalendarDays, Clock, BookOpen, Tag } from 'lucide-react';
@@ -18,6 +18,20 @@ function fmtDate(d: string) {
   catch { return d; }
 }
 
+/** Returns true when viewport ≥ 768px (md breakpoint) */
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= 768 : false
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)');
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+  return isDesktop;
+}
+
 function EventCard({ item }: { item: TakwimItem }) {
   const cfg = TAKWIM_JENIS[item.jenis];
   const color = item.warna_custom || cfg?.color || '#94A3B8';
@@ -28,9 +42,7 @@ function EventCard({ item }: { item: TakwimItem }) {
     : fmtDate(item.tarikh_mula);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
+    <div
       className="rounded-2xl border p-4 space-y-3"
       style={{
         background: hexToRgba(color, 0.06),
@@ -57,7 +69,7 @@ function EventCard({ item }: { item: TakwimItem }) {
       {/* Title */}
       <p className="text-sm font-black text-white/90 leading-snug">{item.tajuk}</p>
 
-      {/* Aktiviti (sub-title) */}
+      {/* Aktiviti sub-title */}
       {item.aktiviti && item.aktiviti !== item.tajuk && (
         <p className="text-[11px] text-white/50 leading-relaxed flex items-start gap-1.5">
           <BookOpen size={11} className="shrink-0 mt-0.5 text-white/30" />
@@ -95,57 +107,76 @@ function EventCard({ item }: { item: TakwimItem }) {
           📝 {item.catatan}
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }
 
 export function DayDetailSheet({ day, events, onClose }: DayDetailSheetProps) {
   const isOpen = !!day;
+  const isDesktop = useIsDesktop();
   const dayLabel = day ? format(day, 'EEEE, d MMMM yyyy', { locale: ms }) : '';
+
+  // ── Animation variants ─────────────────────────────────────────────────────
+  // Mobile  → y-slide from bottom (natural for bottom sheet)
+  // Desktop → scale+opacity only — avoids Framer Motion's inline transform
+  //           conflicting with CSS `translate-x/y` centering classes
+  const mobileVariants = {
+    initial: { y: '100%', opacity: 0 },
+    animate: { y: 0, opacity: 1 },
+    exit:    { y: '100%', opacity: 0 },
+  };
+  const desktopVariants = {
+    initial: { scale: 0.94, opacity: 0 },
+    animate: { scale: 1,    opacity: 1 },
+    exit:    { scale: 0.94, opacity: 0 },
+  };
+  const variants  = isDesktop ? desktopVariants : mobileVariants;
+  const springCfg = { type: 'spring' as const, damping: 26, stiffness: 300 };
 
   const content = (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* ── Backdrop ── */}
+          {/* Backdrop */}
           <motion.div
             key="backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.18 }}
             onClick={onClose}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200]"
           />
 
-          {/* ── Sheet (bottom on mobile, centered modal on desktop) ── */}
+          {/* Panel
+            ─ Mobile:  bottom-0 + left-0/right-0 = full-width bottom sheet
+            ─ Desktop: inset-0 + m-auto = centred block — NO CSS translate needed,
+                       so Framer Motion's scale transform doesn't conflict
+          */}
           <motion.div
             key="sheet"
-            // Mobile: slide up from bottom
-            // Desktop: scale in from center (handled via CSS classes)
-            initial={{ y: '100%', opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: '100%', opacity: 0 }}
-            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="
-              fixed z-[201] bg-[#0f1117] border border-white/10 shadow-2xl
-              /* Mobile: anchored to bottom, full width */
-              bottom-0 left-0 right-0 rounded-t-3xl max-h-[82vh]
-              /* Desktop: centered modal */
-              md:bottom-auto md:left-1/2 md:top-1/2
-              md:-translate-x-1/2 md:-translate-y-1/2
-              md:w-[480px] md:max-h-[75vh]
-              md:rounded-3xl
-              flex flex-col
-            "
+            initial={variants.initial}
+            animate={variants.animate}
+            exit={variants.exit}
+            transition={springCfg}
             onClick={(e) => e.stopPropagation()}
+            style={{ height: 'fit-content' }}
+            className={[
+              'fixed z-[201] bg-[#0f1117] border border-white/10 shadow-2xl flex flex-col',
+              // Mobile
+              'bottom-0 left-0 right-0 rounded-t-3xl max-h-[82vh]',
+              // Desktop override — inset-0 + m-auto = centered, no translate
+              'md:inset-0 md:bottom-0 md:left-0 md:right-0',
+              'md:m-auto md:w-[480px] md:max-h-[75vh]',
+              'md:rounded-3xl',
+            ].join(' ')}
           >
-            {/* ── Handle (mobile pill) ── */}
+            {/* Mobile drag handle */}
             <div className="flex justify-center pt-3 pb-1 md:hidden">
               <div className="w-10 h-1 rounded-full bg-white/15" />
             </div>
 
-            {/* ── Header ── */}
+            {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.15em] text-white/30 mb-0.5">
@@ -161,7 +192,7 @@ export function DayDetailSheet({ day, events, onClose }: DayDetailSheetProps) {
               </button>
             </div>
 
-            {/* ── Event list ── */}
+            {/* Event list */}
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 scrollbar-hide">
               {events.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -173,7 +204,7 @@ export function DayDetailSheet({ day, events, onClose }: DayDetailSheetProps) {
                 events.map((item, i) => (
                   <motion.div
                     key={item.id}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.04 }}
                   >
@@ -181,7 +212,6 @@ export function DayDetailSheet({ day, events, onClose }: DayDetailSheetProps) {
                   </motion.div>
                 ))
               )}
-              {/* Bottom safe-area padding for mobile */}
               <div className="h-4" />
             </div>
           </motion.div>

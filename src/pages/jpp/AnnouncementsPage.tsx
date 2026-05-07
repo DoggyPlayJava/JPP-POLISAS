@@ -21,6 +21,7 @@ export default function AnnouncementsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [broadcastingId, setBroadcastingId] = useState<string | null>(null);
 
   // Viewing responses state
   const [viewingResponsesFor, setViewingResponsesFor] = useState<SystemAnnouncement | null>(null);
@@ -225,6 +226,39 @@ export default function AnnouncementsPage() {
     setImagePreview(null);
     setUseFormBuilder(false);
     setFormFields([]);
+  };
+
+  const handleManualBroadcast = async (announcement: SystemAnnouncement) => {
+    if (!window.confirm('Adakah anda pasti untuk menghantar Notifikasi Push ini kepada semua pengguna bersasar? Tindakan ini tidak boleh ditarik balik.')) return;
+    
+    setBroadcastingId(announcement.id);
+    toast.loading('Menghantar Notifikasi Push...', { id: 'broadcast_push' });
+    
+    try {
+      const { broadcastAnnouncement } = await import('@/lib/notifications');
+      const targetRoles = announcement.target_audience === 'ALL' ? [] : 
+                          announcement.target_audience === 'STUDENT' ? ['CLUB_MEMBER', 'CLUB_MT', 'CLUB_PRESIDENT', 'JPP'] : 
+                          announcement.target_audience === 'STAFF' ? ['STAFF', 'CLUB_ADVISOR', 'SUPER_ADMIN_JPP'] : [];
+      
+      const briefMessage = announcement.content_body.length > 120 
+        ? announcement.content_body.substring(0, 120) + '...' 
+        : announcement.content_body;
+        
+      await broadcastAnnouncement({
+        title: announcement.title,
+        message: briefMessage,
+        type: 'ANNOUNCEMENT',
+        module: 'JPP',
+        link: '/portal'
+      }, targetRoles);
+      
+      toast.success('Hebahan Push Berjaya Dihantar!', { id: 'broadcast_push' });
+    } catch (err: any) {
+      console.error(err);
+      toast.error('Gagal menghantar hebahan', { id: 'broadcast_push' });
+    } finally {
+      setBroadcastingId(null);
+    }
   };
 
   const addFormField = () => {
@@ -502,6 +536,17 @@ export default function AnnouncementsPage() {
                      <Label className="text-xs font-bold uppercase text-muted-foreground">Status Aktif</Label>
                      <Switch checked={a.is_active} onCheckedChange={() => toggleActive(a.id, a.is_active)} className="data-[state=checked]:bg-emerald-500" />
                    </div>
+                   <Button 
+                     onClick={() => handleManualBroadcast(a)} 
+                     disabled={!a.is_active || broadcastingId === a.id}
+                     className="h-10 rounded-xl w-full bg-primary hover:bg-primary/90 text-white text-xs font-bold shadow-md shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                   >
+                     {broadcastingId === a.id ? (
+                       <><Activity size={14} className="mr-2 animate-spin" /> Menghantar...</>
+                     ) : (
+                       <><Megaphone size={14} className="mr-2" /> Hebah Notifikasi</>
+                     )}
+                   </Button>
                    <Button variant="outline" onClick={() => handleEdit(a)} className="h-10 rounded-xl w-full border-border/50 text-xs font-bold"><Plus size={14} className="mr-2"/> Sunting Notis</Button>
                    <Button variant="outline" onClick={() => handleViewResponses(a)} className="h-10 rounded-xl w-full border-border/50 text-xs font-bold text-muted-foreground"><Users size={14} className="mr-2"/> Lihat Respon Pelajar</Button>
                    <Button variant="ghost" onClick={() => handleDelete(a.id, a.image_url)} className="h-10 rounded-xl w-full text-xs font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"><Trash2 size={14} className="mr-2"/> Padam Notis</Button>
