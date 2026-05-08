@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { HeartHandshake, MessageSquarePlus, ArrowRight, ShoppingBag, QrCode, Crown } from 'lucide-react';
+import { HeartHandshake, MessageSquarePlus, ArrowRight, ShoppingBag, QrCode, Crown, CalendarDays } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
@@ -159,48 +159,48 @@ export function QuickActions({
           navigate('/akademik/qr');
         }}
         className={cn(
-          "group relative p-5 sm:p-6 rounded-[2rem] text-left overflow-hidden transition-all duration-500",
+          "col-span-1 md:col-span-1 group relative p-5 sm:p-6 rounded-[2rem] flex flex-col justify-between text-left overflow-hidden transition-all duration-500",
           "bg-white dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200/50 dark:border-white/10",
-          isJPPMode 
-            ? "col-span-1 md:col-span-1 flex flex-col justify-between" 
-            : "col-span-2 md:col-span-2 flex flex-row items-center gap-4",
           (!isModuleEnabled('akademik') && !isSuperAdmin)
             ? "opacity-60 grayscale-[0.8] cursor-not-allowed"
             : "hover:scale-[1.02] active:scale-[0.98] shadow-sm hover:shadow-[0_20px_50px_-12px_rgba(16,185,129,0.25)] dark:hover:shadow-[0_20px_50px_-12px_rgba(16,185,129,0.15)]"
         )}
       >
         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className={cn(
-          "rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform relative z-10 border border-emerald-500/20 shrink-0",
-          isJPPMode ? "w-12 h-12 mb-4" : "w-14 h-14"
-        )}>
-          <QrCode className={isJPPMode ? "w-6 h-6" : "w-7 h-7"} />
+        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform relative z-10 shrink-0 mb-4">
+          <QrCode className="w-6 h-6" />
         </div>
         <div className="relative z-10 flex-1">
-          <h3 className={cn(
-            "font-black leading-tight text-slate-800 dark:text-white tracking-tight",
-            isJPPMode ? "text-base" : "text-lg"
-          )}>Scan QR</h3>
-          <p className={cn(
-            "text-slate-500 dark:text-slate-400 mt-1",
-            isJPPMode ? "text-[10px]" : "text-[11px] font-medium tracking-wide"
-          )}>Kumpul Merit</p>
+          <h3 className="text-base font-black leading-tight text-slate-800 dark:text-white tracking-tight">Scan QR</h3>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 tracking-wide">Kumpul Merit</p>
         </div>
-        {!isJPPMode && (
-          <div className="hidden sm:flex w-10 h-10 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 items-center justify-center flex-shrink-0 relative z-10">
-            <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform" />
-          </div>
-        )}
       </button>
 
-      {/* ── BENTO 4: JPP HQ (Small Square) ── */}
+      {/* ── BENTO 4: Takwim Rasmi (For Students) ── */}
+      {!isJPPMode && (
+        <button
+          onClick={() => navigate('/akademik/takwim')}
+          className="col-span-1 md:col-span-1 group relative flex flex-col justify-between p-5 sm:p-6 rounded-[2rem] bg-white dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 text-left overflow-hidden transition-all duration-500 hover:scale-[1.02] active:scale-[0.98] shadow-sm hover:shadow-[0_20px_50px_-12px_rgba(14,165,233,0.25)] dark:hover:shadow-[0_20px_50px_-12px_rgba(14,165,233,0.15)]"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 dark:bg-sky-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <div className="w-12 h-12 rounded-2xl bg-sky-500/10 dark:bg-sky-500/20 border border-sky-500/20 flex items-center justify-center text-sky-600 dark:text-sky-400 mb-4 group-hover:scale-110 transition-transform relative z-10 shrink-0">
+            <CalendarDays className="w-6 h-6" />
+          </div>
+          <div className="relative z-10">
+            <h3 className="text-base font-black leading-tight text-slate-800 dark:text-white tracking-tight">Takwim</h3>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 tracking-wide">Kalendar Rasmi</p>
+          </div>
+        </button>
+      )}
+
+      {/* ── BENTO 4: JPP HQ (For JPP/Admins) ── */}
       {isJPPMode && (
         <button
           onClick={() => navigate('/jpp')}
           className="col-span-1 md:col-span-1 group relative flex flex-col justify-between p-5 sm:p-6 rounded-[2rem] bg-indigo-600 dark:bg-indigo-500/20 text-white text-left overflow-hidden border border-indigo-500/30 dark:border-indigo-500/30 transition-all duration-500 hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[0_20px_50px_-12px_rgba(79,70,229,0.4)]"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 to-indigo-900/40 dark:from-indigo-500/0 dark:to-indigo-500/10" />
-          <div className="w-12 h-12 rounded-2xl bg-white/20 dark:bg-indigo-500/30 flex items-center justify-center text-white dark:text-indigo-300 mb-4 group-hover:scale-110 transition-transform relative z-10">
+          <div className="w-12 h-12 rounded-2xl bg-white/20 dark:bg-indigo-500/30 flex items-center justify-center text-white dark:text-indigo-300 mb-4 group-hover:scale-110 transition-transform relative z-10 shrink-0">
             <Crown className="w-6 h-6" />
           </div>
           <div className="relative z-10">
