@@ -23,6 +23,7 @@ import {
   BusinessSwitcherProvider,
   useBusinessSwitcher,
 } from '@/contexts/BusinessSwitcherContext';
+import { BottomNav } from '@/components/layout/BottomNav';
 
 const KEUSAHAWANAN_UNIT_LINKS = [
   { label: 'Dashboard Perniagaan', path: '/keusahawanan' },
@@ -487,7 +488,7 @@ function LayoutInner({
           {/* Pages */}
           {/* PENTING: Jangan guna y/x transforms di sini — ia akan merosakkan
               position:fixed modal di semua sub-pages (stacking context bug) */}
-          <main className="flex-1 overflow-y-auto bg-background scrollbar-hide pb-20 md:pb-0 relative">
+          <main className="flex-1 overflow-y-auto bg-background scrollbar-hide pb-24 md:pb-0 relative">
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}
@@ -507,6 +508,8 @@ function LayoutInner({
 
           {/* QR Code FAB — untuk Exco Keusahawanan jana QR */}
           <QrCodeFab unitLinks={KEUSAHAWANAN_UNIT_LINKS} />
+          
+          <BottomNav onOpenSidebar={() => setIsSidebarOpen(true)} />
         </div>
       </div>
     </ExcoThemeProvider>

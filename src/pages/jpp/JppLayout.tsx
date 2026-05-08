@@ -7,6 +7,7 @@ import { Menu, X } from 'lucide-react';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { QrCodeFab } from '@/components/jpp/QrCodeFab';
+import { BottomNav } from '@/components/layout/BottomNav';
 
 const JPP_UNIT_LINKS = [
   { label: 'Dashboard JPP HQ', path: '/jpp' },
@@ -109,7 +110,7 @@ export function JppLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto scrollbar-hide">
+        <main className="flex-1 overflow-y-auto scrollbar-hide pb-24 md:pb-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -129,6 +130,9 @@ export function JppLayout() {
 
         {/* QR Code FAB — untuk semua ahli JPP jana QR berjenama */}
         <QrCodeFab unitLinks={JPP_UNIT_LINKS} />
+
+        {/* Floating Mobile Navigation Dock */}
+        <BottomNav onOpenSidebar={() => setIsMobileOpen(true)} />
       </div>
     </div>
   );

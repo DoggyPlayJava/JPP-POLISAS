@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { QrCodeFab } from '@/components/jpp/QrCodeFab';
+import { BottomNav } from '@/components/layout/BottomNav';
 
 const AKADEMIK_UNIT_LINKS = [
   { label: 'Dashboard Akademik', path: '/akademik' },
@@ -152,7 +153,7 @@ export function AkademikLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-6xl mx-auto w-full">
+        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-6xl mx-auto w-full pb-24 md:pb-8">
           <Outlet />
         </main>
         
@@ -161,6 +162,7 @@ export function AkademikLayout() {
 
         {/* QR Code FAB — untuk Exco Akademik jana QR */}
         <QrCodeFab unitLinks={AKADEMIK_UNIT_LINKS} accentColor="#818CF8" />
+        <BottomNav onOpenSidebar={() => setSidebarOpen(true)} />
       </div>
     </div>
   );

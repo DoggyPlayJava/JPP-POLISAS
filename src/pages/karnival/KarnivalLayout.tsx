@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useKarnival } from '@/contexts/KarnivalContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { RefreshCw, Trophy, Home, BarChart3, Menu, X, Shield, ArrowLeft } from 'lucide-react';
+import { BottomNav } from '@/components/layout/BottomNav';
+import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 export function KarnivalLayout() {
   const { edition, isActive, lastUpdated, refetch, isLoading } = useKarnival();
@@ -177,10 +179,13 @@ export function KarnivalLayout() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="pb-24 md:pb-0"
         >
           <Outlet />
         </motion.div>
       </AnimatePresence>
+      <BottomNav onOpenSidebar={() => setMobileOpen(true)} />
+      <FloatingAiChat />
     </div>
   );
 }

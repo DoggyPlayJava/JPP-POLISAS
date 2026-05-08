@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { QrCodeFab } from '@/components/jpp/QrCodeFab';
+import { BottomNav } from '@/components/layout/BottomNav';
 
 const KEBAJIKAN_UNIT_LINKS = [
   { label: 'Hantar Aduan Kebajikan', path: '/kebajikan/buat-aduan' },
@@ -93,13 +94,14 @@ export function KebajikanLayout() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pb-24 md:pb-0">
           <Outlet />
         </div>
         <FloatingAiChat />
 
         {/* QR Code FAB — untuk Exco Kebajikan */}
         <QrCodeFab unitLinks={KEBAJIKAN_UNIT_LINKS} />
+        <BottomNav onOpenSidebar={() => setSidebarOpen(true)} />
       </main>
     </div>
   );

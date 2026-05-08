@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,9 +24,12 @@ import { PortalNavbar } from '@/components/portal/PortalNavbar';
 import { PortalFooter } from '@/components/portal/PortalFooter';
 import { PortalSkeleton } from '@/components/portal/PortalSkeleton';
 import { KamsisAppealModal } from '@/components/kamsis/KamsisAppealModal';
+import { BottomNav } from '@/components/layout/BottomNav';
+import { LayoutDashboard, GraduationCap, ShieldAlert as ShieldIcon } from 'lucide-react';
 
 export function PortalPage() {
   const { profile, isSuperAdmin, hasKebajikanAccess } = useAuth();
+  const navigate = useNavigate();
   const karnivalStatus = useKarnivalStatus();
   const karnivalActive = !!karnivalStatus?.isActive;
 
@@ -289,7 +293,7 @@ export function PortalPage() {
       {isLoadingSettings ? (
         <PortalSkeleton />
       ) : (
-        <main className="relative z-10 pt-32 md:pt-40 pb-20 px-4 md:px-8 max-w-7xl mx-auto flex-1">
+        <main className="relative z-10 pt-32 md:pt-40 pb-28 md:pb-20 px-4 md:px-8 max-w-7xl mx-auto flex-1">
           {/* Title Section */}
           <div className="flex flex-col items-center text-center mb-16 md:mb-24 space-y-6 md:space-y-8">
             <motion.div
@@ -494,6 +498,8 @@ export function PortalPage() {
           />
         )}
       </AnimatePresence>
+
+      <BottomNav onOpenSidebar={() => setIsSidebarOpen(true)} />
 
     </div>
   );

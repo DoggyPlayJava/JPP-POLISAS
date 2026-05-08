@@ -25,6 +25,7 @@ import { useKlkDynamicFields } from '@/hooks/useKlkDynamicFields';
 import { KlkDynamicFieldRenderer } from '@/components/klk/KlkDynamicFieldRenderer';
 import { KawasanSearchSelect } from '@/components/klk/KawasanSearchSelect';
 import { getKlkAcademicYear } from '@/utils/klkUtils';
+import { BottomNav } from '@/components/layout/BottomNav';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // KediamanSettingsSection — Tab kediaman dalam SettingsPage
@@ -486,7 +487,8 @@ export function SettingsPage() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="page-container relative space-y-10 pb-20 pt-8 z-0">
+    <>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="page-container relative space-y-10 pb-32 pt-8 z-0">
       
       {/* Latar Belakang Dekoratif Premium */}
       <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)]">
@@ -989,5 +991,7 @@ export function SettingsPage() {
       </AnimatePresence>
 
     </motion.div>
+    <BottomNav />
+    </>
   );
 }

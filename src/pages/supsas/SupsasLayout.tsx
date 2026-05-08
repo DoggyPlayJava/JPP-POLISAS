@@ -5,6 +5,8 @@ import { Trophy, BarChart3, Calendar, Users, Settings, Menu, X, ArrowLeft, Shiel
 import { cn } from '@/lib/utils';
 import { useSupsas } from '@/contexts/SupsasContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { BottomNav } from '@/components/layout/BottomNav';
+import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 const NAV_ITEMS = [
   { label: 'Laman Utama',  path: '/supsas',            icon: Trophy },
@@ -306,9 +308,13 @@ export function SupsasLayout() {
             </motion.p>
           </div>
         ) : (
-          <Outlet />
+          <div className="pb-24 md:pb-0">
+            <Outlet />
+          </div>
         )}
       </main>
+      <BottomNav onOpenSidebar={() => setMobileOpen(true)} />
+      <FloatingAiChat />
     </div>
   );
 }

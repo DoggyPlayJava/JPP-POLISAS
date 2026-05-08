@@ -1,100 +1,177 @@
-import React from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutGrid, Trophy, Users, Settings, Home, LayoutDashboard, Flag, CalendarDays, ShieldCheck, ChevronLeft } from 'lucide-react';
+import React, { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { 
+  Menu, Bell, User, Plus, X, Search, Sparkles, QrCode, 
+  Ticket, Home, Megaphone, CalendarRange, Flag, 
+  Store, ShieldAlert, Building2, HeartHandshake, Landmark, Lightbulb, Crown
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { getSemesterInfo } from '@/types';
 
-const EKPP_ROUTES = [
-  '/dashboard', '/kelab', '/sertai-kelab', '/aktiviti', '/ahli',
-  '/tetapan', '/carian', '/laporan', '/urus-kelab', '/semakan-laporan',
-  '/leaderboard', '/logs', '/karnival', '/nexus',
-];
-
-function detectActiveExco(pathname: string): string | null {
-  if (EKPP_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) return 'ekpp';
-  if (pathname.startsWith('/kebajikan')) return 'kebajikan';
-  if (pathname.startsWith('/keusahawanan')) return 'keusahawanan';
-  if (pathname.startsWith('/sukan')) return 'sukan';
-  return null;
+export interface NavLinkData {
+  icon: any;
+  label: string;
+  onClick: () => void;
+  isActive?: boolean;
+  badge?: number;
 }
 
-export function BottomNav() {
-  const { isSuperAdmin } = useAuth();
-  const location = useLocation();
+interface BottomNavProps {
+  onOpenSidebar?: () => void;
+  onOpenSearch?: () => void;
+  customLinks?: {
+    left: NavLinkData[];
+    right: NavLinkData[];
+  };
+}
+
+export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks }: BottomNavProps) {
+  const [isActionsOpen, setIsActionsOpen] = useState(false);
+  const { isSuperAdmin, isJppMember, profile } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const activeExco = detectActiveExco(location.pathname);
+  const semInfo = profile?.intake_year
+    ? getSemesterInfo(profile.intake_year, profile.intake_period as 1 | 2, profile.programme_code === 'FTV')
+    : { semester: 0 };
+  const isKlkEligible = semInfo.semester >= 2;
 
-  // Nav e-KPP — ahli biasa
-  const ekppItems = [
-    { to: '/dashboard', icon: LayoutDashboard, label: 'Utama' },
-    { to: '/kelab',     icon: Flag,            label: 'Kelab' },
-    { to: '/aktiviti',  icon: CalendarDays,    label: 'Aktiviti' },
-    { to: '/ahli',      icon: Users,           label: 'Ahli' },
-    { to: '/tetapan',   icon: Settings,        label: 'Tetapan' },
+  const handleQuickAction = (path: string | (() => void)) => {
+    setIsActionsOpen(false);
+    if (typeof path === 'string') {
+      navigate(path);
+    } else {
+      path();
+    }
+  };
+
+  // Tutup bila scroll / navigasi
+  React.useEffect(() => {
+    setIsActionsOpen(false);
+  }, [location.pathname]);
+
+  const leftLinks = customLinks?.left || [
+    { icon: Menu, label: 'Menu', onClick: onOpenSidebar || (() => {}) },
+    { icon: Home, label: 'Utama', onClick: () => navigate('/portal'), isActive: location.pathname === '/portal' }
   ];
 
-  // Nav e-KPP — Super Admin JPP
-  const adminItems = [
-    { to: '/jpp',               icon: Home,         label: 'Pusat' },
-    { to: '/kelab',             icon: LayoutGrid,   label: 'Kelab' },
-    { to: '/semakan-laporan',   icon: ShieldCheck,  label: 'Semakan' },
-    { to: '/tetapan',           icon: Settings,     label: 'Tetapan' },
+  const rightLinks = customLinks?.right || [
+    { icon: QrCode, label: 'QR Merit', onClick: () => navigate('/akademik/qr'), isActive: location.pathname === '/akademik/qr' },
+    { icon: User, label: 'Profil', onClick: () => navigate('/tetapan'), isActive: location.pathname === '/tetapan' }
   ];
-
-  // Pilih nav mengikut exco & role
-  let items = activeExco === 'ekpp'
-    ? (isSuperAdmin ? adminItems : ekppItems)
-    : ekppItems; // Default fallback
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-background/90 backdrop-blur-3xl border-t border-border/50 dark:border-t-white/10 pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.12)] transform-gpu translate-z-0 will-change-transform">
-      {/* Butang balik ke Portal (sentiasa ada di mobile) */}
-      <div className="flex items-center justify-center py-1.5 border-b border-white/5">
-        <button
-          onClick={() => navigate('/portal')}
-          className="flex items-center gap-1.5 text-white/25 hover:text-white/60 transition-colors"
-        >
-          <ChevronLeft className="w-3 h-3" />
-          <span className="text-[9px] font-black uppercase tracking-[0.2em]">Portal JPP</span>
-        </button>
-      </div>
-
-      {/* Nav items */}
-      <div className="px-6 pt-3 pb-3 flex justify-between items-center">
-        {items.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) => cn(
-              'flex flex-col items-center gap-1.5 transition-all duration-300 relative pb-1',
-              isActive ? 'text-primary scale-110' : 'text-muted-foreground/60 hover:text-foreground'
-            )}
-          >
-            {({ isActive }) => (
-              <>
-                <div className={cn(
-                  'relative p-1.5 rounded-xl transition-all duration-500',
-                  isActive ? 'bg-primary/10 shadow-[0_0_20px_rgba(139,26,26,0.15)]' : ''
-                )}>
-                  <item.icon size={19} strokeWidth={isActive ? 3 : 2} className={cn(
-                    'transition-all',
-                    isActive ? 'drop-shadow-[0_0_8px_rgba(139,26,26,0.5)]' : ''
-                  )} />
-                </div>
-                <span className={cn(
-                  'text-[9px] font-black uppercase tracking-widest transition-all',
-                  isActive ? 'opacity-100' : 'opacity-40'
-                )}>{item.label}</span>
-
-                {isActive && (
-                  <div className="absolute -bottom-1 w-1 h-1 bg-primary rounded-full shadow-[0_0_10px_2px_rgba(139,26,26,0.8)] animate-pulse" />
+    <>
+      {/* 1. Backdrop & Quick Actions Menu */}
+      <AnimatePresence>
+        {isActionsOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsActionsOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] md:hidden"
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 100, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 100, scale: 0.9 }}
+              className="fixed bottom-28 left-4 right-4 z-[111] bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-xl md:hidden"
+            >
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/40 mb-4 text-center">Tindakan Pantas</h3>
+              <div className="grid grid-cols-4 gap-y-6 gap-x-2">
+                <QuickActionButton icon={CalendarRange} label="Takwim" color="bg-blue-500" onClick={() => handleQuickAction('/jpp/takwim')} />
+                <QuickActionButton icon={HeartHandshake} label="Aduan" color="bg-teal-500" onClick={() => handleQuickAction('/kebajikan/buat-aduan')} />
+                <QuickActionButton icon={Store} label="PolyMart" color="bg-emerald-500" onClick={() => handleQuickAction('/polymart')} />
+                <QuickActionButton icon={Landmark} label="Kelab" color="bg-red-400" onClick={() => handleQuickAction('/kelab')} />
+                
+                <QuickActionButton icon={Lightbulb} label="Bisnes" color="bg-green-400" onClick={() => handleQuickAction('/keusahawanan')} />
+                {isKlkEligible && (
+                  <QuickActionButton icon={Building2} label="Kediaman" color="bg-orange-500" onClick={() => handleQuickAction('/klk/form')} />
                 )}
-              </>
-            )}
-          </NavLink>
-        ))}
+                
+                {(isSuperAdmin || isJppMember) && (
+                  <QuickActionButton icon={Crown} label="JPP HQ" color="bg-indigo-500" onClick={() => handleQuickAction('/jpp')} />
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* 2. Floating Bottom Nav Dock */}
+      <div className="md:hidden fixed bottom-6 left-4 right-4 z-[112] pb-safe transform-gpu">
+        {/* Changed blur to md to optimize for low end devices */}
+        <div className="bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.5)] rounded-full px-2 py-2 flex items-center justify-between relative">
+          
+          {/* Left Buttons */}
+          <div className="flex items-center justify-around flex-1 pr-8">
+            {leftLinks.map((link, i) => (
+              <NavIconButton key={i} {...link} />
+            ))}
+          </div>
+
+          {/* Center Circular FAB */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <button
+              onClick={() => setIsActionsOpen(!isActionsOpen)}
+              className={cn(
+                "w-14 h-14 rounded-full flex items-center justify-center shadow-lg ring-4 ring-white/90 dark:ring-zinc-950/90 transition-all duration-300 active:scale-95",
+                isActionsOpen 
+                  ? "bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-white rotate-45 scale-90" 
+                  : "bg-gradient-to-tr from-rose-600 to-rose-400 text-white hover:shadow-rose-500/30 scale-105"
+              )}
+            >
+              <Plus className="w-6 h-6" strokeWidth={2.5} />
+            </button>
+          </div>
+
+          {/* Right Buttons */}
+          <div className="flex items-center justify-around flex-1 pl-8">
+            {rightLinks.map((link, i) => (
+              <NavIconButton key={i} {...link} />
+            ))}
+          </div>
+
+        </div>
       </div>
-    </div>
+    </>
+  );
+}
+
+// Komponen Pembantu
+function QuickActionButton({ icon: Icon, label, color, onClick }: { icon: any, label: string, color: string, onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="flex flex-col items-center gap-2 group">
+      <div className={cn("w-12 h-12 rounded-[1rem] flex items-center justify-center text-white shadow-md transition-transform duration-200 active:scale-90", color)}>
+        <Icon className="w-5 h-5" />
+      </div>
+      <span className="text-[8px] font-black uppercase tracking-wider text-slate-500 dark:text-white/60 text-center leading-tight max-w-[60px]">{label}</span>
+    </button>
+  );
+}
+
+function NavIconButton({ icon: Icon, label, isActive, onClick, badge }: NavLinkData) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex flex-col items-center justify-center gap-1 w-12 h-12 rounded-full transition-all duration-200 active:scale-90 relative",
+        isActive ? "text-rose-500 dark:text-rose-400" : "text-slate-400 hover:text-slate-700 dark:text-white/50 dark:hover:text-white/90"
+      )}
+    >
+      <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
+      {isActive && (
+        <span className="absolute bottom-1 w-1 h-1 bg-rose-400 rounded-full shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
+      )}
+      {(badge ?? 0) > 0 && (
+        <span className="absolute top-1 right-1.5 w-3.5 h-3.5 rounded-full bg-rose-500 text-white text-[7px] font-black flex items-center justify-center shadow-md border border-zinc-950">
+          {(badge ?? 0) > 9 ? '9+' : badge}
+        </span>
+      )}
+    </button>
   );
 }

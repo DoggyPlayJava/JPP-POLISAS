@@ -78,6 +78,7 @@ export function FloatingAiChat() {
   // Hint bubble state
   const [hintIndex, setHintIndex] = useState(0);
   const [showHint, setShowHint] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const { profile, isSuperAdmin, isAdvisor, isPresident, isMT, selectedClubId, hasKebajikanAccess } = useAuth();
   const { callAi, sendChatMessage, sendKebajikanExcoMessage, isLoading: isActionLoading, isChatLoading, retryCount } = useAiAssistant();
@@ -138,6 +139,22 @@ export function FloatingAiChat() {
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 60);
     }
   }, [messages, isChatLoading, isOpen]);
+
+  // ── Scroll detection for auto-hide ───────────────────────────────────────
+  useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setIsScrolled(window.scrollY > 40);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // ── Auto-grow textarea ───────────────────────────────────────────────────
   useEffect(() => {
@@ -721,11 +738,17 @@ export function FloatingAiChat() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   const content = (
-    <div className={`fixed bottom-6 right-4 md:right-6 z-[120] transition-all duration-300 ease-in-out ${bottomMarginClass}`}>
+    <div className={`fixed max-md:bottom-28 bottom-6 right-4 md:right-6 z-[120] transition-all duration-300 ease-in-out ${bottomMarginClass}`}>
       {/* ── FAB trigger ── */}
       <motion.button
         id="nexus-chat-fab"
-        whileHover={{ scale: 1.05 }}
+        initial={false}
+        animate={{ 
+          scale: !isOpen && isScrolled ? 0.85 : 1, 
+          opacity: !isOpen && isScrolled ? 0.6 : 1,
+          x: !isOpen && isScrolled ? 10 : 0
+        }}
+        whileHover={{ scale: 1.05, opacity: 1, x: 0 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen((prev) => !prev)}
         className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center shadow-xl shadow-indigo-500/30 text-white relative overflow-hidden group"
@@ -756,11 +779,11 @@ export function FloatingAiChat() {
           >
             {/* Desktop Version */}
             <div className="relative">
-              <div className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[11px] font-medium py-2 px-3.5 rounded-2xl rounded-tr-sm shadow-xl shadow-indigo-600/20 backdrop-blur-md border border-white/10 flex items-center gap-2">
-                <Sparkles size={12} className="text-indigo-200 shrink-0" />
+              <div className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[9px] font-medium py-1.5 px-3 rounded-2xl rounded-tr-sm shadow-xl shadow-indigo-600/20 backdrop-blur-md border border-white/10 flex items-center gap-2">
+                <Sparkles size={10} className="text-indigo-200 shrink-0" />
                 <span className="leading-tight line-clamp-2">"{getHints()[hintIndex]}"</span>
               </div>
-              <div className="absolute top-1/2 -right-1.5 -translate-y-1/2 w-3 h-3 bg-violet-600 rotate-45 rounded-sm z-[-1]" />
+              <div className="absolute top-1/2 -right-1.5 -translate-y-1/2 w-2.5 h-2.5 bg-violet-600 rotate-45 rounded-sm z-[-1]" />
             </div>
           </motion.div>
         )}
@@ -777,11 +800,11 @@ export function FloatingAiChat() {
           >
             {/* Mobile Version (Compact & Top) */}
             <div className="relative">
-              <div className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[10px] sm:text-[11px] font-medium py-1.5 px-3 rounded-xl rounded-br-sm shadow-lg shadow-indigo-600/20 backdrop-blur-md border border-white/10 flex items-center gap-1.5">
-                <Sparkles size={10} className="text-indigo-200 shrink-0" />
+              <div className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[8px] sm:text-[9px] font-medium py-1 px-2.5 rounded-xl rounded-br-sm shadow-lg shadow-indigo-600/20 backdrop-blur-md border border-white/10 flex items-center gap-1.5">
+                <Sparkles size={8} className="text-indigo-200 shrink-0" />
                 <span className="leading-tight line-clamp-1 truncate w-full">"{getHints()[hintIndex]}"</span>
               </div>
-              <div className="absolute -bottom-1 right-3 w-2.5 h-2.5 bg-violet-600 rotate-45 rounded-sm z-[-1]" />
+              <div className="absolute -bottom-1 right-3 w-2 h-2 bg-violet-600 rotate-45 rounded-sm z-[-1]" />
             </div>
           </motion.div>
         )}

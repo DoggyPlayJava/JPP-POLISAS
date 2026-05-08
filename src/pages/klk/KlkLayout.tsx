@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { QrCodeFab } from '@/components/jpp/QrCodeFab';
+import { BottomNav } from '@/components/layout/BottomNav';
 
 const KLK_UNIT_LINKS = [
   { label: 'Borang Deklarasi Kediaman', path: '/klk' },
@@ -96,7 +97,7 @@ export function KlkLayout() {
         </div>
 
         {/* Page content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pb-24 md:pb-0">
           <Outlet />
         </div>
 
@@ -104,6 +105,7 @@ export function KlkLayout() {
 
         {/* QR Code FAB — untuk Exco KLS jana QR */}
         <QrCodeFab unitLinks={KLK_UNIT_LINKS} />
+        <BottomNav onOpenSidebar={() => setSidebarOpen(true)} />
       </main>
     </div>
   );

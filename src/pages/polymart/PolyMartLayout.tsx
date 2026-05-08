@@ -8,6 +8,7 @@ import {
   Shield, Home, SlidersHorizontal, X, LogIn, ShoppingCart,
 } from 'lucide-react';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
+import { BottomNav } from '@/components/layout/BottomNav';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 export const PM_ACCENT   = '#f59e0b';
@@ -259,7 +260,7 @@ export function PolyMartLayout() {
         </header>
 
         {/* Main content */}
-        <main className="max-w-5xl mx-auto w-full px-3 sm:px-5 py-4 pb-24 sm:pb-8">
+        <main className="max-w-5xl mx-auto w-full px-3 sm:px-5 py-4 pb-28 sm:pb-8">
           <Outlet />
         </main>
 
@@ -323,74 +324,19 @@ export function PolyMartLayout() {
           )}
         </AnimatePresence>
 
-        {/* ── Mobile Bottom Nav ───────────────────────────────────────── */}
-        <nav className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-background/92 backdrop-blur-xl border-t border-border/50 safe-area-pb">
-          <div className="grid grid-cols-5 h-16">
-            {[
-              { 
-                icon: Home,        
-                label: 'Utama',   
-                active: isHome,    
-                badge: 0, 
-                action: () => navigate('/polymart') 
-              },
-              { 
-                icon: Search,      
-                label: 'Cari',    
-                active: showMobileSearch,     
-                badge: 0, 
-                action: () => setShowMobileSearch(true)
-              },
-              { 
-                icon: ShoppingCart,     
-                label: 'Troli', 
-                active: location.pathname.includes('/polymart/troli'),  
-                badge: cartCount,
-                action: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/troli')}`) : navigate('/polymart/troli') 
-              },
-              { 
-                icon: Package,     
-                label: 'Pesanan', 
-                active: isOrders,  
-                badge: myActiveOrdersCount,
-                action: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/pesanan-saya')}`) : navigate('/polymart/pesanan-saya') 
-              },
-              { 
-                icon: isVendor ? LayoutGrid : SlidersHorizontal,
-                label: isVendor ? 'Kedai' : 'Filter',
-                active: isVendorP,
-                badge: isVendor ? pendingVendorCount : 0,
-                action: () => {
-                  if (isVendor) {
-                    navigate('/polymart/vendor');
-                  } else {
-                    setShowMobileSearch(true);
-                  }
-                }
-              },
-            ].map((item, i) => (
-              <button key={i}
-                onClick={item.action}
-                className="flex flex-col items-center justify-center gap-1 relative transition-colors">
-                {/* Active indicator */}
-                {item.active && <div className="absolute top-0 inset-x-4 h-0.5 rounded-b-full" style={{ background: PM_GRADIENT }} />}
-                <div className="relative">
-                  <item.icon className="w-5 h-5 transition-colors"
-                    style={{ color: item.active ? PM_ACCENT : 'hsl(var(--muted-foreground))' }} />
-                  {(item.badge ?? 0) > 0 && (
-                    <span className="absolute -top-1 -right-1.5 w-3.5 h-3.5 rounded-full bg-rose-500 text-white text-[7px] font-black flex items-center justify-center shadow-md">
-                      {(item.badge ?? 0) > 9 ? '9+' : item.badge}
-                    </span>
-                  )}
-                </div>
-                <span className="text-[9px] font-bold transition-colors"
-                  style={{ color: item.active ? PM_ACCENT : 'hsl(var(--muted-foreground))' }}>
-                  {item.label}
-                </span>
-              </button>
-            ))}
-          </div>
-        </nav>
+        {/* ── Mobile Bottom Nav (Global Standardized) ── */}
+        <BottomNav 
+          customLinks={{
+            left: [
+              { icon: Home, label: 'Utama', onClick: () => navigate('/polymart'), isActive: isHome },
+              { icon: Search, label: 'Cari', onClick: () => setShowMobileSearch(true), isActive: showMobileSearch }
+            ],
+            right: [
+              { icon: ShoppingCart, label: 'Troli', onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/troli')}`) : navigate('/polymart/troli'), isActive: location.pathname.includes('/polymart/troli'), badge: cartCount },
+              { icon: Package, label: 'Pesanan', onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/pesanan-saya')}`) : navigate('/polymart/pesanan-saya'), isActive: isOrders, badge: myActiveOrdersCount }
+            ]
+          }}
+        />
         
         {/* Global Floating AI Chat */}
         <FloatingAiChat />

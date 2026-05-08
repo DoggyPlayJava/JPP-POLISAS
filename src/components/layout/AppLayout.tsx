@@ -11,6 +11,7 @@ import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { EXCO_MODULES } from '@/config/excoModules';
 import { ExcoIcon } from '@/components/ui/ExcoIcon';
 import { QrCodeFab } from '@/components/jpp/QrCodeFab';
+import { BottomNav } from './BottomNav';
 
 const KPP_UNIT_LINKS = [
   { label: 'Senarai Program / Aktiviti', path: '/aktiviti' },
@@ -126,7 +127,7 @@ export function AppLayout() {
         {/* Header Asal (Carian, Profile dll) */}
         <Header onOpenSearch={() => setIsSearchOpen(true)} />
 
-        <main className="flex-1 overflow-y-auto bg-background scrollbar-hide">
+        <main className="flex-1 overflow-y-auto bg-background scrollbar-hide pb-24 md:pb-0">
           <motion.div
               key={location.pathname}
               initial={{ opacity: 0 }}
@@ -147,6 +148,12 @@ export function AppLayout() {
 
         {/* QR Code FAB — untuk Exco KPP jana QR */}
         <QrCodeFab unitLinks={KPP_UNIT_LINKS} />
+
+        {/* Floating Mobile Navigation Dock */}
+        <BottomNav 
+          onOpenSidebar={() => setIsSidebarOpen(true)}
+          onOpenSearch={() => setIsSearchOpen(true)}
+        />
       </div>
     </div>
   );
