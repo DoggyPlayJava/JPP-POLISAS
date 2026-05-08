@@ -68,7 +68,7 @@ export function KlkResidencyModal() {
     try {
       const { data, error } = await supabase
         .from('klk_student_residency')
-        .select('id, academic_year, semester, updated_at, is_expired, tinggal_luar, alamat_kediaman, kawasan_kediaman, kawasan_custom, cadangan, extra_data')
+        .select('id, academic_year, semester, created_at, submitted_at, is_expired, tinggal_luar, alamat_kediaman, kawasan_kediaman, kawasan_custom, cadangan, extra_data')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -93,7 +93,7 @@ export function KlkResidencyModal() {
         if (isCurrentSemester && !data.is_expired) {
           // Auto-expiry: Pelajar Sem 5+ yang tak update dalam 30 hari
           if (semester >= 5) {
-            const lastUpdate = new Date(data.updated_at);
+            const lastUpdate = new Date(data.created_at || data.submitted_at || Date.now());
             const daysSince = (Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
             if (daysSince > 30) {
               // Arkibkan rekod lama, tunjuk modal semula
