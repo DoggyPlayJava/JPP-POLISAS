@@ -74,14 +74,14 @@ export function AppLayout() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsSidebarOpen(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] md:hidden"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[130] md:hidden"
           />
         )}
       </AnimatePresence>
 
       {/* ── 2. SIDEBAR (RESPONSIVE) ── */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-[110] w-72 transform transition-transform duration-300 ease-in-out bg-sidebar",
+        "fixed inset-y-0 left-0 z-[140] w-72 transform transition-transform duration-300 ease-in-out bg-sidebar",
         "md:relative md:translate-x-0 md:flex-shrink-0",
         isSidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
       )}>
@@ -127,7 +127,7 @@ export function AppLayout() {
         {/* Header Asal (Carian, Profile dll) */}
         <Header onOpenSearch={() => setIsSearchOpen(true)} />
 
-        <main className="flex-1 overflow-y-auto bg-background scrollbar-hide pb-24 md:pb-0">
+        <main id="main-scroll-container" className="flex-1 overflow-y-auto bg-background scrollbar-hide pb-24 md:pb-0">
           <motion.div
               key={location.pathname}
               initial={{ opacity: 0 }}

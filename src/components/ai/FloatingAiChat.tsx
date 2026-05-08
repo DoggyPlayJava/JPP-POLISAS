@@ -143,17 +143,38 @@ export function FloatingAiChat() {
   // ── Scroll detection for auto-hide ───────────────────────────────────────
   useEffect(() => {
     let ticking = false;
-    const handleScroll = () => {
+    const handleScroll = (e: Event) => {
+      // Ignore scroll events from inside the chat window
+      if (e.target instanceof Element && e.target.closest('#nexus-chat-container')) {
+        return;
+      }
+
       if (!ticking) {
         requestAnimationFrame(() => {
-          setIsScrolled(window.scrollY > 40);
+          let scrollY = window.scrollY;
+          
+          // If the scroll target is an element, use its scrollTop
+          // Only consider it a main scroll if it's a reasonably large container
+          if (e.target instanceof HTMLElement) {
+             if (e.target.clientHeight > window.innerHeight * 0.4) {
+                scrollY = e.target.scrollTop;
+             }
+          }
+          
+          setIsScrolled(scrollY > 40);
           ticking = false;
         });
         ticking = true;
       }
     };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    
+    // Use capture phase to catch scroll events on any element
+    window.addEventListener('scroll', handleScroll, { capture: true, passive: true });
+    
+    // Run once to set initial state if needed
+    setIsScrolled(window.scrollY > 40);
+    
+    return () => window.removeEventListener('scroll', handleScroll, { capture: true });
   }, []);
 
   // ── Auto-grow textarea ───────────────────────────────────────────────────
@@ -738,7 +759,7 @@ export function FloatingAiChat() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   const content = (
-    <div className={`fixed max-md:bottom-28 bottom-6 right-4 md:right-6 z-[120] transition-all duration-300 ease-in-out ${bottomMarginClass}`}>
+    <div id="nexus-chat-container" className={`fixed max-md:bottom-28 bottom-6 right-4 md:right-6 z-[120] transition-all duration-300 ease-in-out ${bottomMarginClass}`}>
       {/* ── FAB trigger ── */}
       <motion.button
         id="nexus-chat-fab"

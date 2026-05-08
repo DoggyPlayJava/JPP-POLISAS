@@ -88,7 +88,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks }: BottomNa
                 <QuickActionButton icon={Store} label="PolyMart" color="bg-emerald-500" onClick={() => handleQuickAction('/polymart')} />
                 <QuickActionButton icon={Landmark} label="Kelab" color="bg-red-400" onClick={() => handleQuickAction('/kelab')} />
                 
-                <QuickActionButton icon={Lightbulb} label="Bisnes" color="bg-green-400" onClick={() => handleQuickAction('/keusahawanan')} />
+                <QuickActionButton icon={Lightbulb} label="Bisnes" color="bg-green-400" onClick={() => handleQuickAction('/keusahawanan/dashboard')} />
                 {isKlkEligible && (
                   <QuickActionButton icon={Building2} label="Kediaman" color="bg-orange-500" onClick={() => handleQuickAction('/klk/form')} />
                 )}
