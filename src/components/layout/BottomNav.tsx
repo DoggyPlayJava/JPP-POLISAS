@@ -83,7 +83,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks }: BottomNa
             >
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/40 mb-4 text-center">Tindakan Pantas</h3>
               <div className="grid grid-cols-4 gap-y-6 gap-x-2">
-                <QuickActionButton icon={CalendarRange} label="Takwim" color="bg-blue-500" onClick={() => handleQuickAction('/jpp/takwim')} />
+                <QuickActionButton icon={CalendarRange} label="Takwim" color="bg-blue-500" onClick={() => handleQuickAction('/akademik/takwim')} />
                 <QuickActionButton icon={HeartHandshake} label="Aduan" color="bg-teal-500" onClick={() => handleQuickAction('/kebajikan/buat-aduan')} />
                 <QuickActionButton icon={Store} label="PolyMart" color="bg-emerald-500" onClick={() => handleQuickAction('/polymart')} />
                 <QuickActionButton icon={Landmark} label="Kelab" color="bg-red-400" onClick={() => handleQuickAction('/kelab')} />
@@ -103,7 +103,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks }: BottomNa
       </AnimatePresence>
 
       {/* 2. Floating Bottom Nav Dock */}
-      <div className="md:hidden fixed bottom-6 left-4 right-4 z-[112] pb-safe transform-gpu">
+      <div className="md:hidden fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[360px] z-[112] transform-gpu">
         {/* Changed blur to md to optimize for low end devices */}
         <div className="bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.5)] rounded-full px-2 py-2 flex items-center justify-between relative">
           

@@ -298,15 +298,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const urlType = hashParams.get('type');
     const isRecoveryUrl = urlType === 'recovery';
 
-    // ⏱️ SAFETY TIMEOUT: Paksa loading screen hilang selepas 6 saat
-    // Ini mengelak pengguna stuck di loading screen selama-lamanya jika
-    // Supabase lambat atau ada network hiccup.
+    // ⏱️ SAFETY TIMEOUT: Paksa loading screen hilang selepas 4 saat
+    // Dikurangkan dari 6s → 4s supaya pengguna tak stuck lama di loading screen.
+    // Ini juga mengelak kes di mana Supabase lambat response atau ada network hiccup.
+    let safetyTimerFired = false;
     const safetyTimer = setTimeout(() => {
-      if (isMounted) {
+      if (isMounted && !safetyTimerFired) {
+        safetyTimerFired = true;
         console.warn('[AuthContext] Safety timeout triggered — forcing isLoading=false');
         setIsLoading(false);
       }
-    }, 6000);
+    }, 4000);
 
     const initialize = async () => {
       try {
@@ -347,6 +349,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         if (!isMounted) return;
+
+        // ✅ Bila onAuthStateChange fire, batalkan safety timer — auth dah siap
+        safetyTimerFired = true;
+        clearTimeout(safetyTimer);
 
         // 🔑 Jika ini event pemulihan kata laluan, redirect ke halaman reset
         // JANGAN treat sebagai log masuk biasa

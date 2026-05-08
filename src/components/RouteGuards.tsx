@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { sanitizeRedirect } from '@/utils/sanitizeRedirect';
@@ -84,7 +84,10 @@ function LoadingScreen() {
 export function ProtectedRoute() {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [minDelayPassed, setMinDelayPassed] = useState(false);
+  // Hard timeout — kalau loading masih true selepas 8 saat, paksa ke /login
+  const hardTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     // Semak jika user dah tengok splash screen dalam sesi/PWA boot kali ni
@@ -102,6 +105,24 @@ export function ProtectedRoute() {
       return () => clearTimeout(timer);
     }
   }, []);
+
+  // Hard timeout: jika loading stuck selama 8s, paksa redirect ke /login
+  useEffect(() => {
+    if (isLoading) {
+      hardTimeoutRef.current = setTimeout(() => {
+        console.warn('[ProtectedRoute] Hard timeout — loading stuck, redirecting to /login');
+        navigate('/login', { replace: true });
+      }, 8000);
+    } else {
+      if (hardTimeoutRef.current) {
+        clearTimeout(hardTimeoutRef.current);
+        hardTimeoutRef.current = null;
+      }
+    }
+    return () => {
+      if (hardTimeoutRef.current) clearTimeout(hardTimeoutRef.current);
+    };
+  }, [isLoading, navigate]);
 
   if (isLoading || !minDelayPassed) return <LoadingScreen />;
   if (!isAuthenticated) {

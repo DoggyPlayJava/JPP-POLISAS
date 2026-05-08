@@ -1,7 +1,7 @@
 # JPP-POLISAS — Panduan Pembangunan (Dev Guideline)
 
 > **Baca dokumen ini terlebih dahulu sebelum membuat sebarang perubahan.**
-> Dikemas kini: April 2026
+> Dikemas kini: Mei 2026
 
 ---
 
@@ -237,6 +237,12 @@ Ringkasan:
 3. Buat folder `src/pages/<nama-exco>/`
 4. Update `ROUTES.md`
 5. Baca bahagian 6 dalam `JPP_RBAC_SYSTEM.md` untuk RBAC
+
+### Global Bottom Navigation (Mobile)
+> Sistem kini menggunakan navigasi berpusat `<BottomNav />` untuk mobile view (menggantikan sidebar lama).
+- Komponen: `src/components/layout/BottomNav.tsx`
+- Penggunaan: Sentiasa diletakkan di dalam `AppLayout.tsx` (untuk modul KPP/Keusahawanan/Admin) atau diletakkan secara manual di halaman root seperti `PortalPage.tsx` dan `SettingsPage.tsx`.
+- Tindakan Pantas (Quick Actions): Menampilkan pintasan modul. Logik tapisan (RBAC) wujud secara terus di dalamnya (cth: `isKlkEligible` untuk Kediaman, `isJppMember` untuk JPP HQ).
 
 ---
 
@@ -683,6 +689,9 @@ Apabila mana-mana `SUPER_ADMIN_JPP` atau `ADMIN` log masuk ke `/jpp/settings`, s
 
 ### 15.1 Peraturan RLS Policy — KRITIKAL
 
+> [!CAUTION]
+> **Insiden Sebenar — Mei 2026:** CPU database naik ke 99.84% dan terpaksa di-restart. Punca utama: policies `takwim_pusat` menggunakan `auth.uid()` terus (bukan `SELECT auth.uid()`), ditambah dengan 6 duplicate policies pada `klk_student_residency`. Semua telah diperbaiki — **jangan ulang pattern yang sama**.
+
 #### ✅ SELALU guna `(SELECT auth.uid())` — BUKAN `auth.uid()` terus
 
 ```sql
@@ -920,10 +929,12 @@ Query Frontend:
   [ ] select() hanya column yang diperlukan (bukan select('*') untuk jadual besar)
   [ ] Data semi-statik dicache dengan QueryCache + TTL bersesuaian
 
-Realtime:
+Realtime & Connections:
   [ ] Tiada Realtime subscription baru dalam komponen global/layout/sidebar
   [ ] Semua subscription ada cleanup (return () => channel.unsubscribe())
   [ ] Pertimbangkan polling via visibilitychange sebagai alternatif
+  [ ] Semua useEffect yang fetch data ada cleanup / isMounted guard
+  [ ] Tiada infinite loop fetch (dependency array useEffect betul)
 
 Notifikasi:
   [ ] INSERT notification untuk orang lain hanya dalam komponen JPP/admin
@@ -932,7 +943,83 @@ Notifikasi:
 
 ---
 
-*Dikemas kini: April 2026 — Selepas audit prestasi Musim Orientasi.*
+### 15.7 Diagnosis CPU Spike Database — Panduan Insiden
+
+> [!NOTE]
+> Bahagian ini ditulis berdasarkan **insiden sebenar Mei 2026** di mana CPU Supabase mencecah 99.84% dan perlu di-restart.
+
+#### Tanda-tanda ada masalah
+
+| Simptom | Kemungkinan Punca |
+|---|---|
+| CPU database > 80% secara berterusan | RLS `auth.uid()` tanpa `SELECT`, duplicate policies, atau query tanpa index |
+| SWAP usage tinggi (> 80%) | Banyak connection terbuka serentak / connection leak |
+| App jadi lambat tapi tiada error | Connection pool penuh — query beratur menunggu |
+| App okay selepas restart DB | Connection buildup — ada leak dalam kod frontend |
+| CPU spike bila banyak user login | Realtime subscription dalam komponen global (bukan per-page) |
+
+#### Cara audit bila CPU tinggi (guna Supabase MCP)
+
+```sql
+-- 1. Semak query yang sedang berjalan (ada stuck query?)
+SELECT pid, now() - query_start AS duration, query, state, wait_event
+FROM pg_stat_activity
+WHERE state != 'idle' AND query_start IS NOT NULL
+ORDER BY duration DESC LIMIT 20;
+
+-- 2. Semak dead tuples (perlu VACUUM?)
+SELECT relname, n_dead_tup, n_live_tup,
+  ROUND(100.0 * n_dead_tup / NULLIF(n_live_tup + n_dead_tup, 0), 2) AS dead_pct,
+  last_autovacuum
+FROM pg_stat_user_tables
+WHERE n_dead_tup > 100
+ORDER BY n_dead_tup DESC LIMIT 15;
+
+-- 3. Semak policy duplikat
+SELECT tablename, cmd, COUNT(*) as policy_count, STRING_AGG(policyname, ', ') as policies
+FROM pg_policies
+WHERE schemaname = 'public' AND permissive = 'PERMISSIVE'
+GROUP BY tablename, cmd
+HAVING COUNT(*) > 1
+ORDER BY policy_count DESC;
+```
+
+Atau gunakan **Supabase MCP** terus:
+```
+get_logs(service: 'postgres')         ← Semak error & fatal messages
+get_advisors(type: 'performance')     ← Auto-detect RLS & index issues
+```
+
+#### Punca biasa & cara fix
+
+| Punca | Cara Fix |
+|---|---|
+| `auth.uid()` dalam RLS tanpa `SELECT` | Tukar ke `(SELECT auth.uid())` — lihat §15.1 |
+| Duplicate permissive policies | Merge jadi satu policy dengan `OR` — lihat §15.1 |
+| Realtime subscription dalam komponen global | Pindahkan ke page-level, tambah cleanup |
+| `useEffect` tanpa cleanup / infinite loop | Pastikan dependency array betul, tambah `isMounted` guard |
+| Connection leak (SWAP tinggi) | Cari komponen yang subscribe tapi tak unsubscribe |
+| Post-restart CPU spike | Normal — Postgres buat WAL recovery + buffer warmup. Tunggu 5–10 minit |
+
+#### Bila CPU spike berlaku SEBELUM restart tapi OKAY selepas restart
+
+Ini tanda **connection buildup** bukan query performance. Punca biasa:
+1. `useEffect` yang buat subscription tapi tak ada `return () => unsubscribe()`
+2. Realtime channel yang dibuka berkali-kali tanpa tutup yang lama
+3. `fetch` dalam infinite render loop
+
+Cara cari:
+```typescript
+// ✅ Pastikan SETIAP subscription ada cleanup
+useEffect(() => {
+  const channel = supabase.channel('my_channel').subscribe();
+  return () => { supabase.removeChannel(channel); }; // ← WAJIB ADA INI
+}, []);
+```
+
+---
+
+*Dikemas kini: Mei 2026 — Selepas audit prestasi Musim Orientasi + insiden CPU Mei 2026.*
 
 ---
 
@@ -1385,5 +1472,181 @@ PolyRider adalah sistem penghantaran berkonsepkan *gig-economy* dalaman kampus. 
 - **Pemantauan Lokasi (Geolokasi):** Adakah kita perlukan *live tracking*? Secara minimum, kita hanya perlukan status *timestamp* (Telah Diambil, Sedang Dihantar, Tiba di Lokasi).
 - **Pembayaran Upah:** Jika transaksi dilakukan secara tunai (COD), bagaimana pembahagian harga produk (untuk vendor) dan caj penghantaran (untuk rider) diuruskan secara praktikal? Integrasi tanpa tunai (Cashless) mungkin diperlukan bagi menyelesaikan masalah serahan wang tunai.
 - **Keselamatan & Kredibiliti:** Hanya pelajar yang mendaftar (ada Matrik sah) dan "disahkan" oleh JPP boleh menjadi PolyRider untuk mengelak kehilangan barang.
+
+---
+
+## 26. Sistem Auth Loading & PWA Auto-Update — ⚠️ JANGAN ROSAK INI LAGI
+
+> [!CAUTION]
+> **Isu berulang — Mei 2026 (kali ke-2 difix):** Loading screen stuck bila buka website / navigate balik ke app. Bug ini muncul semula selepas refactor kerana developer tidak faham senibina tiga-lapisan yang sengaja dibina. **Baca seluruh bahagian ini sebelum sentuh `AuthContext.tsx`, `RouteGuards.tsx`, atau `PwaUpdater.tsx`.**
+
+---
+
+### 26.1 Punca Loading Stuck — Diagnosis
+
+Isu loading stuck berlaku apabila mana-mana satu syarat ini gagal:
+
+| Fail | Simptom | Punca |
+|---|---|---|
+| `AuthContext.tsx` | `isLoading` kekal `true` selamanya | `safetyTimer` tidak di-cancel bila `onAuthStateChange` dah fire |
+| `RouteGuards.tsx` | Loading screen tidak hilang | `minDelayPassed` stuck, atau `isLoading` tidak resolve |
+| `onAuthStateChange` vs `initialize()` | Race condition | Dua-dua path cuba set `isLoading=false` secara serentak |
+
+**Root cause paling biasa:** `onAuthStateChange` dan `initialize()` berlumba — `safetyTimer` tidak di-cancel walaupun auth sudah selesai, menyebabkan ia fire lambat dan set loading state yang dah expired.
+
+---
+
+### 26.2 Senibina Tiga-Lapisan Anti-Stuck (JANGAN BUANG)
+
+Sistem ini menggunakan **tiga lapisan** pertahanan supaya loading screen tidak stuck selamanya:
+
+```
+Lapisan 1: AuthContext safetyTimer (4 saat)
+   ↓ jika gagal (Supabase lambat response)
+Lapisan 2: onAuthStateChange cancel timer (serta-merta)
+   ↓ jika ada bug logic lain
+Lapisan 3: ProtectedRoute hardTimeout (8 saat) → paksa redirect /login
+```
+
+#### Lapisan 1 — `AuthContext.tsx`: Safety Timer
+
+```typescript
+// ⏱️ SAFETY TIMEOUT: Paksa loading screen hilang selepas 4 saat
+let safetyTimerFired = false;
+const safetyTimer = setTimeout(() => {
+  if (isMounted && !safetyTimerFired) {
+    safetyTimerFired = true;
+    setIsLoading(false); // ← Force hilang walaupun Supabase lambat
+  }
+}, 4000);
+```
+
+> [!WARNING]
+> **JANGAN** naikkan nilai ini ke lebih dari 4 saat. Pengguna di rangkaian perlahan akan stuck selama-lamanya jika nilai terlalu tinggi.
+
+#### Lapisan 2 — `AuthContext.tsx`: Cancel Timer dalam `onAuthStateChange`
+
+```typescript
+supabase.auth.onAuthStateChange(async (event, currentSession) => {
+  // ✅ KRITIKAL: Cancel safety timer bila auth confirm — tiada race condition
+  safetyTimerFired = true;
+  clearTimeout(safetyTimer);
+
+  // ... logik auth seterusnya
+  setIsLoading(false);
+});
+```
+
+> [!CAUTION]
+> **JANGAN buang `safetyTimerFired = true` dan `clearTimeout(safetyTimer)` ini.** Tanpanya, timer akan fire SELEPAS `onAuthStateChange` sudah selesai dan menyebabkan state update yang tidak dijangka (double-render, flicker, atau blank screen).
+
+#### Lapisan 3 — `RouteGuards.tsx`: Hard Timeout di `ProtectedRoute`
+
+```typescript
+// Hard timeout: jika loading stuck selama 8s, paksa redirect ke /login
+useEffect(() => {
+  if (isLoading) {
+    hardTimeoutRef.current = setTimeout(() => {
+      navigate('/login', { replace: true }); // ← Last resort
+    }, 8000);
+  } else {
+    clearTimeout(hardTimeoutRef.current);
+  }
+}, [isLoading, navigate]);
+```
+
+Ini adalah jaring keselamatan terakhir. Walaupun `AuthContext` ada bug, pengguna tidak akan stuck di loading screen lebih dari 8 saat.
+
+---
+
+### 26.3 Splash Screen Logic — `sessionStorage` Flag
+
+`ProtectedRoute` dan `PublicRoute` mempunyai splash screen (3 saat) yang **hanya ditunjukkan sekali** per sesi:
+
+```typescript
+const hasSeenSplash = sessionStorage.getItem('hz_splash_seen');
+if (hasSeenSplash) {
+  setMinDelayPassed(true); // Skip splash terus
+} else {
+  setTimeout(() => {
+    setMinDelayPassed(true);
+    sessionStorage.setItem('hz_splash_seen', 'true');
+  }, 3000);
+}
+```
+
+**Kenapa penting:** Tanpa flag ini, setiap kali user navigate antara page, mereka akan nampak splash screen 3 saat setiap kali — sangat annoying. Flag `sessionStorage` memastikan splash hanya sekali per tab/sesi.
+
+> [!NOTE]
+> `sessionStorage` (bukan `localStorage`) digunakan dengan sengaja — flag hilang bila tab ditutup, supaya Cold Boot PWA baru sentiasa dapat splash screen.
+
+---
+
+### 26.4 Sistem PWA Auto-Update — Senibina
+
+Fail: `src/components/PwaUpdater.tsx`
+
+#### Pemicu Update (4 cara):
+
+| Pemicu | Kekerapan | Keterangan |
+|---|---|---|
+| Interval berkala | Setiap **5 minit** | `setInterval` dalam `onRegistered` |
+| Tab visibility change | Bila user fokus balik ke tab | `document.visibilitychange` |
+| Reconnect dari offline | Bila internet pulih | `window.online` event |
+| Route navigation | Setiap tukar halaman | `useEffect([location.pathname])` |
+
+#### Strategi Auto-Reload:
+
+```typescript
+// Halaman selamat untuk auto-reload tanpa tanya
+const SAFE_AUTO_RELOAD_PATHS = ['/', '/portal', '/jpp', '/polymart', ...];
+
+if (isSafeToAutoReload(currentPath)) {
+  updateServiceWorker(true); // ← Auto-reload terus, user tak perasan
+} else {
+  toast(...); // ← Tanya user dulu (ada borang aktif)
+}
+```
+
+> [!IMPORTANT]
+> **JANGAN** tukar interval `setInterval` ke lebih dari 5 minit (300,000ms). Sebelum ini ia 1 jam — menyebabkan pelajar guna versi lama seharian walaupun dah ada update di server.
+
+> [!WARNING]
+> **JANGAN** buang `updateCalledRef` guard. Tanpanya, `updateServiceWorker(true)` akan dipanggil berkali-kali dalam satu render cycle dan menyebabkan reload loop yang tidak henti.
+
+#### Cara tambah halaman ke `SAFE_AUTO_RELOAD_PATHS`:
+
+Tambah path baharu ke dalam array `SAFE_AUTO_RELOAD_PATHS` dalam `PwaUpdater.tsx` **HANYA jika halaman tersebut tidak ada borang aktif yang boleh hilang data bila reload**. Contoh yang **TIDAK** selamat: halaman borang permohonan asrama, borang laporan, checkout PolyMart.
+
+---
+
+### 26.5 Senarai Semak — Sebelum Ubah Fail Auth/Loading
+
+```
+AuthContext.tsx:
+  [ ] safetyTimer masih 4000ms (atau lebih rendah)
+  [ ] safetyTimerFired = true ADA dalam onAuthStateChange
+  [ ] clearTimeout(safetyTimer) ADA dalam onAuthStateChange
+  [ ] setIsLoading(false) dipanggil dalam finally block initialize()
+  [ ] setIsLoading(false) dipanggil di akhir onAuthStateChange handler
+
+RouteGuards.tsx:
+  [ ] ProtectedRoute ada hardTimeoutRef dengan 8000ms
+  [ ] hardTimeout di-cancel apabila isLoading jadi false
+  [ ] sessionStorage 'hz_splash_seen' flag masih ada dan digunakan
+
+PwaUpdater.tsx:
+  [ ] setInterval dalam onRegistered TIDAK lebih dari 5 minit (300,000ms)
+  [ ] visibilitychange listener ADA dan trigger r.update()
+  [ ] window.online listener ADA dan trigger r.update()
+  [ ] useEffect([location.pathname]) ADA untuk semak update bila navigate
+  [ ] updateCalledRef guard ADA untuk elak double-call
+  [ ] SAFE_AUTO_RELOAD_PATHS ada semua halaman utama (bukan halaman borang)
+```
+
+---
+
+*Ditambah: Mei 2026 — Selepas isu loading stuck berlaku buat kali ke-2. Semoga kali ini kekal.*
+
 
 ---
