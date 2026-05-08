@@ -35,7 +35,7 @@ export function KlkResidencyFormPage() {
   const { fields: dynamicFields, kawasanList } = useKlkDynamicFields(isLuarStep);
   const academicYear = getKlkAcademicYear();
   const semInfo = profile?.intake_year
-    ? getSemesterInfo(profile.intake_year, profile.intake_period as 1 | 2, profile.programme_code === 'FTV')
+    ? getSemesterInfo(profile.intake_year, profile.intake_period as 1 | 2, profile.programme_code === 'FTV', 7, 1, profile.semester_override)
     : { semester: 0, level: 'Junior' as const };
 
   const jabatanLabel = JABATAN_LIST.find(j => j.value === profile?.department)?.label ?? profile?.department ?? '—';

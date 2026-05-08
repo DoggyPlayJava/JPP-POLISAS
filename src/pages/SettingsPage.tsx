@@ -40,7 +40,7 @@ function ProfileEditRequestSection() {
   const [reason, setReason] = React.useState('');
 
   const semInfo = profile?.intake_year
-    ? getSemesterInfo(profile.intake_year, profile.intake_period as 1 | 2, profile.programme_code === 'FTV')
+    ? getSemesterInfo(profile.intake_year, profile.intake_period as 1 | 2, profile.programme_code === 'FTV', 7, 1, profile.semester_override)
     : { semester: 0 };
 
   const fetchRequests = React.useCallback(async () => {
@@ -267,7 +267,7 @@ function ProfileEditRequestSection() {
 // ─────────────────────────────────────────────────────────────────────────────────
 
 function KediamanSettingsSection() {
-  const { user, profile } = useAuth();
+  const { user, profile, refetchProfile } = useAuth();
   const [step, setStep] = React.useState<'loading'|'choice'|'form'|'done'>('loading');
   const [existing, setExisting] = React.useState<any>(null);
   const [saving, setSaving] = React.useState(false);
@@ -276,20 +276,44 @@ function KediamanSettingsSection() {
   const [kawasanCustom, setKawasanCustom] = React.useState('');
   const [cadangan, setCadangan] = React.useState('');
   const [extraData, setExtraData] = React.useState<Record<string, string>>({});
+  // Flag — tunggu refetchProfile selesai sebelum semak kelayakan
+  const [profileReady, setProfileReady] = React.useState(false);
 
   // Dynamic fields — fetch from DB
   const isLuarForm = step === 'form';
   const { fields: dynamicFields, kawasanList } = useKlkDynamicFields(isLuarForm);
 
+  // ── Refresh profil dari DB sekali semasa mount supaya semester_override terkini ──
+  React.useEffect(() => {
+    refetchProfile().finally(() => setProfileReady(true));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const academicYear = getKlkAcademicYear();
-  const semInfo = profile?.intake_year
-    ? getSemesterInfo(profile.intake_year, profile.intake_period as 1|2, profile.programme_code === 'FTV')
-    : { semester: 0 };
+  // ── Kira semester: utamakan override walaupun intake_year tiada ──
+  const semInfo = (() => {
+    if (profile?.semester_override) {
+      const isFtv = profile.programme_code === 'FTV';
+      const level = isFtv ? 'Asasi' as const : profile.semester_override <= 3 ? 'Junior' as const : 'Senior' as const;
+      return { semester: profile.semester_override, level };
+    }
+    if (profile?.intake_year) {
+      return getSemesterInfo(
+        profile.intake_year,
+        profile.intake_period as 1 | 2,
+        profile.programme_code === 'FTV',
+        7, 1
+      );
+    }
+    return { semester: 0, level: 'Junior' as const };
+  })();
 
   // Cek semester layak (Sem 2 dan ke atas — BUKAN hanya Sem 2, tapi KECUALI Sem 1)
   const isEligible = semInfo.semester >= 2;
 
   React.useEffect(() => {
+    // Jangan semak kelayakan sehingga profil segar dari DB diperolehi
+    if (!profileReady) return;
     if (!user || !isEligible) { setStep('choice'); return; }
     void (async () => {
       try {
@@ -309,7 +333,7 @@ function KediamanSettingsSection() {
         } else { setStep('choice'); }
       } catch { setStep('choice'); }
     })();
-  }, [user, isEligible, academicYear, semInfo.semester]);
+  }, [user, profileReady, isEligible, academicYear, semInfo.semester]);
 
   const save = async (tinggalLuar: boolean, extra: Record<string, any> = {}) => {
     if (!user || !profile) return;

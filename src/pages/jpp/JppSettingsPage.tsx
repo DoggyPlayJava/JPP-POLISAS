@@ -11,6 +11,26 @@ import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import { QrLinkManager } from '@/components/jpp/QrLinkManager';
 
 // ═════════════════════════════════════════════════════════════════════════════
+// Helper: kira semula intake_year & intake_period dari semester yg dikehendaki
+function reverseCalcIntake(targetSem: number): { intake_year: number; intake_period: 1 | 2 } {
+  const now = new Date();
+  const cy = now.getFullYear(), cm = now.getMonth() + 1;
+  const s1 = 7, s2 = 1, maxSem = 6;
+  for (let d = 0; d <= 10; d++) {
+    const y = cy - d;
+    if (y < cy || cm >= s2) {
+      const m2 = (cy - y) * 12 + (cm - s2);
+      if (Math.min(Math.max(1, Math.floor(m2 / 6) + 1), maxSem) === targetSem) return { intake_year: y, intake_period: 2 };
+    }
+    if (y < cy || cm >= s1) {
+      const m1 = (cy - y) * 12 + (cm - s1);
+      if (Math.min(Math.max(1, Math.floor(m1 / 6) + 1), maxSem) === targetSem) return { intake_year: y, intake_period: 1 };
+    }
+  }
+  return { intake_year: cy, intake_period: 1 };
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
 // ProfileEditRequestsSection — Panel semakan pindaan profil pelajar untuk JPP
 // Setiap kelulusan/penolakan direkodkan sebagai Audit Log (reviewed_by, reviewed_at, review_note)
 // ═════════════════════════════════════════════════════════════════════════════
@@ -80,7 +100,12 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
         if (req.field_type === 'matric_no') {
           profileUpdate.matric_no = req.requested_value;
         } else if (req.field_type === 'semester') {
-          profileUpdate.semester_override = parseInt(req.requested_value, 10);
+          // Kira semula intake_year & intake_period supaya semester auto-naik ke depan
+          const targetSem = parseInt(req.requested_value, 10);
+          const { intake_year, intake_period } = reverseCalcIntake(targetSem);
+          profileUpdate.intake_year = intake_year;
+          profileUpdate.intake_period = intake_period;
+          profileUpdate.semester_override = null; // Buang freeze, biar auto-kira
         }
         const { error: profileErr } = await supabase
           .from('profiles')
@@ -101,6 +126,9 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
           ? `Permintaan anda untuk menukar ${fieldLabel} kepada "${req.requested_value}" telah diluluskan oleh MT JPP${reviewNote.trim() ? `. Nota: ${reviewNote.trim()}` : '.'}`
           : `Permintaan anda untuk menukar ${fieldLabel} kepada "${req.requested_value}" telah ditolak. Sebab: ${reviewNote.trim()}`,
         type: 'SYSTEM',
+        module: 'EKPP',
+        link: '/settings',
+        actor_name: profile.full_name,
         is_read: false,
       });
 

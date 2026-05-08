@@ -59,6 +59,7 @@ export function KlkResidencyModal() {
       profile.intake_year,
       profile.intake_period as 1 | 2,
       profile.programme_code === 'FTV',
+      7, 1, profile.semester_override
     );
 
     // Hanya tanya mulai Sem 2
@@ -134,6 +135,7 @@ export function KlkResidencyModal() {
         profile.intake_year!,
         profile.intake_period as 1 | 2,
         profile.programme_code === 'FTV',
+        7, 1, profile.semester_override
       );
 
       // Soalan SEMUA (applies_to === 'SEMUA') perlu dijawab walaupun KAMSIS
@@ -184,6 +186,7 @@ export function KlkResidencyModal() {
         profile.intake_year!,
         profile.intake_period as 1 | 2,
         profile.programme_code === 'FTV',
+        7, 1, profile.semester_override
       );
 
       const { error } = await supabase.from('klk_student_residency').insert({

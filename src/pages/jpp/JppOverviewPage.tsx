@@ -208,6 +208,35 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
   );
 }
 
+// ── Helper: kira semula intake_year & intake_period dari semester yg dikehendaki ──
+// Digunakan semasa kelulusan pindaan semester supaya auto-kira berfungsi ke depan.
+function reverseCalcIntake(targetSem: number): { intake_year: number; intake_period: 1 | 2 } {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1; // 1-indexed
+  const startMonth1 = 7; // Julai — Intake 1 (default)
+  const startMonth2 = 1; // Januari — Intake 2 (default)
+  const maxSem = 6;
+  for (let yearsBack = 0; yearsBack <= 10; yearsBack++) {
+    const year = currentYear - yearsBack;
+    // Cuba Intake 2 (Januari) dahulu untuk dapatkan intake terkini yang sah
+    const p2started = year < currentYear || (year === currentYear && currentMonth >= startMonth2);
+    if (p2started) {
+      const months2 = (currentYear - year) * 12 + (currentMonth - startMonth2);
+      const sem2 = Math.min(Math.max(1, Math.floor(months2 / 6) + 1), maxSem);
+      if (sem2 === targetSem) return { intake_year: year, intake_period: 2 };
+    }
+    // Cuba Intake 1 (Julai)
+    const p1started = year < currentYear || (year === currentYear && currentMonth >= startMonth1);
+    if (p1started) {
+      const months1 = (currentYear - year) * 12 + (currentMonth - startMonth1);
+      const sem1 = Math.min(Math.max(1, Math.floor(months1 / 6) + 1), maxSem);
+      if (sem1 === targetSem) return { intake_year: year, intake_period: 1 };
+    }
+  }
+  return { intake_year: currentYear, intake_period: 1 }; // fallback
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // ProfileEditRequestsSection — Panel semakan pindaan profil pelajar
 // ═════════════════════════════════════════════════════════════════════════════
@@ -266,8 +295,16 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
 
       if (action === 'APPROVED') {
         const profileUpdate: Record<string, any> = {};
-        if (req.field_type === 'matric_no') profileUpdate.matric_no = req.requested_value;
-        else if (req.field_type === 'semester') profileUpdate.semester_override = parseInt(req.requested_value, 10);
+        if (req.field_type === 'matric_no') {
+          profileUpdate.matric_no = req.requested_value;
+        } else if (req.field_type === 'semester') {
+          // Kira semula intake_year & intake_period supaya semester auto-naik ke depan
+          const targetSem = parseInt(req.requested_value, 10);
+          const { intake_year, intake_period } = reverseCalcIntake(targetSem);
+          profileUpdate.intake_year = intake_year;
+          profileUpdate.intake_period = intake_period;
+          profileUpdate.semester_override = null; // Buang freeze, biar auto-kira
+        }
         const { error: profileErr } = await supabase.from('profiles').update(profileUpdate).eq('id', req.user_id);
         if (profileErr) throw profileErr;
       }

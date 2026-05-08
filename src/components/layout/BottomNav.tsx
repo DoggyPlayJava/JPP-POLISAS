@@ -53,7 +53,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks }: BottomNa
   };
 
   const semInfo = profile?.intake_year
-    ? getSemesterInfo(profile.intake_year, profile.intake_period as 1 | 2, profile.programme_code === 'FTV')
+    ? getSemesterInfo(profile.intake_year, profile.intake_period as 1 | 2, profile.programme_code === 'FTV', 7, 1, profile.semester_override)
     : { semester: 0 };
   const isKlkEligible = semInfo.semester >= 2;
 
