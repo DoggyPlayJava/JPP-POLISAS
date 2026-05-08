@@ -251,7 +251,7 @@ export function JppSidebar() {
             end: !isNormalExco  
           },
           { icon: Users,           label: 'Ahli JPP',        href: '/jpp/members',  end: false },
-          { icon: BarChart3,       label: 'Gambaran Sistem', href: '/jpp/overview', end: false },
+          { icon: BarChart3,       label: 'Sistem Keseluruhan', href: '/jpp/overview', end: false },
           { icon: CalendarDays,    label: 'Takwim Global',   href: '/jpp/takwim',   end: false },
         ].map(item => (
           <NavLink

@@ -314,6 +314,7 @@ export function DashboardPage() {
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none">Papan <span className="gradient-text">Pemuka</span></h1>
         </div>
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto md:justify-end">
+          <ClubSwitcher />
           <NotificationBell />
           {allowAiBudget && (isPresident || isMT || isAdvisor) && (
             <Button onClick={() => setShowAiModal(true)} variant="outline" className="rounded-xl font-black text-[10px] uppercase h-10 border-indigo-500/30 text-indigo-600 bg-indigo-500/10 hover:bg-indigo-500/20 hover:text-indigo-700 shadow-sm transition-all group">
@@ -328,9 +329,6 @@ export function DashboardPage() {
           {isMT && <AddTaskModal onTaskAdded={fetchData} />}
         </div>
       </header>
-
-      {/* ── CLUB SWITCHER (multi-kelab) ── */}
-      <ClubSwitcher />
 
       {/* ── STAT CARDS ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

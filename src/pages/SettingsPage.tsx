@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
-  User, Bell, Shield, CreditCard, Mail, Lock, Camera, Check, Award, Globe, Loader2, FileText, Activity, HelpCircle, MessageSquare, Headphones, ExternalLink, Sparkles, Phone, ArrowLeft, Moon, MapPin, Home, Building2
+  User, Bell, Shield, CreditCard, Mail, Lock, Camera, Check, Award, Globe, Loader2, FileText, Activity, HelpCircle, MessageSquare, Headphones, ExternalLink, Sparkles, Phone, ArrowLeft, Moon, MapPin, Home, Building2, GraduationCap, ClipboardEdit, Clock, XCircle, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -26,6 +26,241 @@ import { KlkDynamicFieldRenderer } from '@/components/klk/KlkDynamicFieldRendere
 import { KawasanSearchSelect } from '@/components/klk/KawasanSearchSelect';
 import { getKlkAcademicYear } from '@/utils/klkUtils';
 import { BottomNav } from '@/components/layout/BottomNav';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ProfileEditRequestSection — Permintaan pindaan matrik/semester (dalam Tab Profil Awam)
+// ─────────────────────────────────────────────────────────────────────────────
+function ProfileEditRequestSection() {
+  const { user, profile } = useAuth();
+  const [requests, setRequests] = React.useState<any[]>([]);
+  const [loadingReqs, setLoadingReqs] = React.useState(true);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [fieldType, setFieldType] = React.useState<'matric_no' | 'semester'>('matric_no');
+  const [requestedValue, setRequestedValue] = React.useState('');
+  const [reason, setReason] = React.useState('');
+
+  const semInfo = profile?.intake_year
+    ? getSemesterInfo(profile.intake_year, profile.intake_period as 1 | 2, profile.programme_code === 'FTV')
+    : { semester: 0 };
+
+  const fetchRequests = React.useCallback(async () => {
+    if (!user) return;
+    setLoadingReqs(true);
+    try {
+      const { data } = await supabase
+        .from('profile_edit_requests')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('submitted_at', { ascending: false })
+        .limit(5);
+      setRequests(data || []);
+    } catch { /* silent */ }
+    finally { setLoadingReqs(false); }
+  }, [user]);
+
+  React.useEffect(() => { fetchRequests(); }, [fetchRequests]);
+
+  // Semak pending aktif per field_type
+  const hasPendingMatric = requests.some(r => r.field_type === 'matric_no' && r.status === 'PENDING');
+  const hasPendingSemester = requests.some(r => r.field_type === 'semester' && r.status === 'PENDING');
+  const hasPendingForSelected = fieldType === 'matric_no' ? hasPendingMatric : hasPendingSemester;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !profile) return;
+    if (!requestedValue.trim()) { toast.error('Sila isi nilai baharu.'); return; }
+    if (fieldType === 'semester') {
+      const sem = Number(requestedValue);
+      if (!Number.isInteger(sem) || sem < 1 || sem > 6) { toast.error('Semester mesti antara 1 hingga 6.'); return; }
+    }
+    if (hasPendingForSelected) { toast.error('Terdapat permintaan PENDING yang masih belum disemak.'); return; }
+
+    setSubmitting(true);
+    try {
+      const currentVal = fieldType === 'matric_no'
+        ? (profile.matric_no || '—')
+        : String(semInfo.semester || '—');
+
+      const { error } = await supabase.from('profile_edit_requests').insert({
+        user_id: user.id,
+        field_type: fieldType,
+        current_value: currentVal,
+        requested_value: requestedValue.trim().toUpperCase(),
+        reason: reason.trim() || null,
+      });
+      if (error) throw error;
+
+      // Hantar notifikasi kepada semua JPP
+      const { error: notifErr } = await supabase.from('notifications').insert({
+        user_id: null,
+        title: `📋 Permintaan Pindaan Profil Pelajar`,
+        message: `${profile.full_name} memohon pindaan ${fieldType === 'matric_no' ? 'No. Matrik' : 'Semester'}: ${currentVal} → ${requestedValue.trim().toUpperCase()}${reason.trim() ? `. Sebab: ${reason.trim()}` : ''}`,
+        type: 'SYSTEM',
+        module: 'JPP',
+        target_role: 'JPP',
+        link: '/jpp/overview',
+        actor_name: profile.full_name,
+        is_read: false,
+      });
+      if (notifErr) console.warn('Notifikasi JPP gagal:', notifErr.message);
+
+      toast.success('Permintaan pindaan berjaya dihantar! Sila tunggu semakan MT JPP.');
+      setRequestedValue('');
+      setReason('');
+      await fetchRequests();
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal hantar permintaan.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const statusBadge = (status: string) => {
+    if (status === 'PENDING') return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/10 text-amber-600 dark:text-amber-400"><Clock className="w-3 h-3" />MENUNGGU</span>;
+    if (status === 'APPROVED') return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="w-3 h-3" />DILULUSKAN</span>;
+    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-red-500/10 text-red-600 dark:text-red-400"><XCircle className="w-3 h-3" />DITOLAK</span>;
+  };
+
+  return (
+    <Card className="border-none shadow-xl rounded-[2.5rem] bg-card overflow-hidden border border-border/40">
+      <div className="p-6 sm:p-8 border-b border-border/40 bg-muted/10 flex items-center gap-4">
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <ClipboardEdit className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <h3 className="text-base font-black tracking-tight">Pindaan Maklumat Akademik</h3>
+          <p className="text-[11px] text-muted-foreground font-medium mt-0.5">Hantar permintaan untuk pinda No. Matrik atau Semester. Perlu kelulusan MT JPP.</p>
+        </div>
+      </div>
+
+      <div className="p-6 sm:p-8 space-y-6">
+        {/* Maklumat semasa */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-4 rounded-2xl bg-muted/30 border border-border/40">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">No. Matrik Semasa</p>
+            <p className="font-black text-sm text-foreground font-mono">{profile?.matric_no || <span className="text-muted-foreground italic text-xs">Belum ditetapkan</span>}</p>
+          </div>
+          <div className="p-4 rounded-2xl bg-muted/30 border border-border/40">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Semester Semasa</p>
+            <p className="font-black text-sm text-foreground">{semInfo.semester > 0 ? `Semester ${semInfo.semester}` : <span className="text-muted-foreground italic text-xs">—</span>}</p>
+          </div>
+        </div>
+
+        {/* Sejarah permintaan */}
+        {loadingReqs ? (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="w-3.5 h-3.5 animate-spin" />Memuatkan rekod...</div>
+        ) : requests.length > 0 ? (
+          <div className="space-y-2">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Rekod Permintaan</p>
+            <div className="space-y-2">
+              {requests.map(r => (
+                <div key={r.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/20 border border-border/30 gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-foreground">{r.field_type === 'matric_no' ? 'No. Matrik' : 'Semester'}: <span className="font-mono text-muted-foreground line-through">{r.current_value}</span> → <span className="font-mono text-primary">{r.requested_value}</span></p>
+                    {r.review_note && <p className="text-[10px] text-muted-foreground mt-0.5">Nota JPP: {r.review_note}</p>}
+                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">{new Date(r.submitted_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                  </div>
+                  {statusBadge(r.status)}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {/* Borang permintaan baharu */}
+        <div className="border-t border-border/40 pt-5">
+          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Hantar Permintaan Baharu</p>
+          {(hasPendingMatric && hasPendingSemester) ? (
+            <div className="flex items-center gap-3 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
+              <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+              <p className="text-xs font-medium text-amber-700 dark:text-amber-400">Anda mempunyai permintaan PENDING untuk kedua-dua No. Matrik dan Semester. Sila tunggu kelulusan MT JPP sebelum membuat permintaan baharu.</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Jenis Pindaan</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(['matric_no', 'semester'] as const).map(ft => {
+                    const isPending = ft === 'matric_no' ? hasPendingMatric : hasPendingSemester;
+                    return (
+                      <button
+                        key={ft}
+                        type="button"
+                        disabled={isPending}
+                        onClick={() => { setFieldType(ft); setRequestedValue(''); }}
+                        className={`p-3 rounded-xl border text-xs font-bold transition-all ${
+                          fieldType === ft && !isPending
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : isPending
+                            ? 'border-border/30 bg-muted/20 text-muted-foreground/40 cursor-not-allowed'
+                            : 'border-border/40 bg-muted/20 hover:border-primary/40 text-foreground'
+                        }`}
+                      >
+                        {ft === 'matric_no' ? '📋 No. Matrik' : '🎓 Semester'}
+                        {isPending && <span className="block text-[9px] mt-0.5 text-amber-500">Ada PENDING</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">
+                  {fieldType === 'matric_no' ? 'No. Matrik Baharu' : 'Semester Baharu (1–6)'}
+                  <span className="text-red-500 ml-0.5">*</span>
+                </Label>
+                {fieldType === 'semester' ? (
+                  <select
+                    value={requestedValue}
+                    onChange={e => setRequestedValue(e.target.value)}
+                    required
+                    className="w-full h-11 px-4 rounded-xl bg-background border border-border/50 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  >
+                    <option value="">-- Pilih Semester --</option>
+                    {[1,2,3,4,5,6].map(s => (
+                      <option key={s} value={String(s)}>{`Semester ${s}`}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <Input
+                    value={requestedValue}
+                    onChange={e => setRequestedValue(e.target.value.toUpperCase())}
+                    placeholder="cth: 23DIP234567"
+                    required
+                    className="h-11 rounded-xl bg-background border-border/50 font-mono text-sm uppercase focus-visible:ring-primary/50"
+                  />
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Sebab Pindaan <span className="text-muted-foreground font-medium">(Pilihan)</span></Label>
+                <textarea
+                  value={reason}
+                  onChange={e => setReason(e.target.value)}
+                  rows={2}
+                  placeholder="Terangkan sebab pindaan diperlukan..."
+                  className="w-full px-4 py-3 rounded-xl bg-background border border-border/50 text-sm font-medium resize-none focus-visible:ring-2 focus-visible:ring-primary/50 outline-none"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={submitting || !requestedValue}
+                className="w-full h-11 rounded-xl font-bold text-xs bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98]"
+              >
+                {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Menghantar...</> : 'Hantar Permintaan Pindaan'}
+              </Button>
+
+              <p className="text-[10px] text-muted-foreground text-center">
+                Permintaan akan disemak oleh MT JPP. Anda akan dimaklumkan melalui notifikasi.
+              </p>
+            </form>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // KediamanSettingsSection — Tab kediaman dalam SettingsPage
@@ -668,6 +903,9 @@ export function SettingsPage() {
                     </Button>
                   </div>
                 </Card>
+
+                {/* Seksyen Pindaan Maklumat Akademik */}
+                <ProfileEditRequestSection />
 
                 {/* Display Settings Card */}
                 <Card className="border-none shadow-xl rounded-[2.5rem] bg-card overflow-hidden border border-border/40">

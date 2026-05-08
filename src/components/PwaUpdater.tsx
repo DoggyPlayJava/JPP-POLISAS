@@ -35,8 +35,16 @@ export function PwaUpdater() {
     onRegistered(r) {
       if (!r) return;
 
-      // ── Semakan berjadual setiap 5 MINIT (lebih aggresif dari 1 jam) ──────
-      // Memastikan pengguna sentiasa dapat versi terbaharu tanpa perlu reload manual
+      // ── Semak SERTA-MERTA bila app dibuka (cold start / reload) ────────────
+      // Ini menutup "blind spot" di mana user boleh guna versi lama selama
+      // 5 minit penuh sebelum cek pertama berlaku. Delay 1s supaya SW
+      // selesai register dulu sebelum kita minta ia semak versi baru.
+      setTimeout(() => {
+        r.update().catch((err) => console.warn('[PwaUpdater] Startup update check failed:', err));
+      }, 1000);
+
+      // ── Semakan berjadual setiap 5 MINIT ─────────────────────────────────
+      // Untuk app yang dibiarkan buka lama (cth: pelajar tinggal tab portal)
       const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minit
       const intervalId = setInterval(() => {
         r.update().catch((err) => console.warn('[PwaUpdater] Periodic update check failed:', err));

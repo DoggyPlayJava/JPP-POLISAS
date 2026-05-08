@@ -1590,6 +1590,7 @@ Fail: `src/components/PwaUpdater.tsx`
 
 | Pemicu | Kekerapan | Keterangan |
 |---|---|---|
+| **Startup (cold start)** | **Serta-merta (1s delay)** | `setTimeout(r.update, 1000)` dalam `onRegistered` — menutup blind spot |
 | Interval berkala | Setiap **5 minit** | `setInterval` dalam `onRegistered` |
 | Tab visibility change | Bila user fokus balik ke tab | `document.visibilitychange` |
 | Reconnect dari offline | Bila internet pulih | `window.online` event |

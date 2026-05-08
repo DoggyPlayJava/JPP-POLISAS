@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   Menu, Bell, User, Plus, X, Search, Sparkles, QrCode, 
@@ -29,9 +29,28 @@ interface BottomNavProps {
 
 export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks }: BottomNavProps) {
   const [isActionsOpen, setIsActionsOpen] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
   const { isSuperAdmin, isJppMember, profile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const hideTooltip = localStorage.getItem('hide_bottomnav_tooltip');
+    if (!hideTooltip) {
+      const timer = setTimeout(() => setShowTooltip(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleDismissTooltip = () => {
+    localStorage.setItem('hide_bottomnav_tooltip', 'true');
+    setShowTooltip(false);
+  };
+
+  const handleFabClick = () => {
+    if (showTooltip) handleDismissTooltip();
+    setIsActionsOpen(!isActionsOpen);
+  };
 
   const semInfo = profile?.intake_year
     ? getSemesterInfo(profile.intake_year, profile.intake_period as 1 | 2, profile.programme_code === 'FTV')
@@ -115,9 +134,41 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks }: BottomNa
           </div>
 
           {/* Center Circular FAB */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+            
+            <AnimatePresence>
+              {showTooltip && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                  className="absolute bottom-[calc(100%+24px)] z-[100] w-[200px]"
+                >
+                  <motion.div 
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    className="bg-slate-900 text-white p-3 rounded-2xl shadow-2xl border border-slate-700 relative flex flex-col gap-1 items-center text-center"
+                  >
+                    <div className="flex items-start justify-between gap-2 w-full">
+                      <p className="text-xs font-bold leading-tight flex-1 text-left">
+                        Menu pintas & fungsi utama portal
+                      </p>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleDismissTooltip(); }}
+                        className="p-1 hover:bg-white/10 rounded-full transition-colors shrink-0 -mr-1 -mt-1"
+                      >
+                        <X className="w-3 h-3 text-slate-400 hover:text-white" />
+                      </button>
+                    </div>
+                    {/* Arrow down */}
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-900 border-b border-r border-slate-700 rotate-45" />
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <button
-              onClick={() => setIsActionsOpen(!isActionsOpen)}
+              onClick={handleFabClick}
               className={cn(
                 "w-14 h-14 rounded-full flex items-center justify-center shadow-lg ring-4 ring-white/90 dark:ring-zinc-950/90 transition-all duration-300 active:scale-95",
                 isActionsOpen 
