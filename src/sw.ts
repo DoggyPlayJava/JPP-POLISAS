@@ -1,10 +1,7 @@
-/// <reference lib="webworker" />
-/// <reference types="vite-plugin-pwa/client" />
-
 import { clientsClaim } from 'workbox-core';
 import { ExpirationPlugin } from 'workbox-expiration';
-import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from 'workbox-precaching';
-import { registerRoute, NavigationRoute, setCatchHandler } from 'workbox-routing';
+import { precacheAndRoute, cleanupOutdatedCaches, matchPrecache } from 'workbox-precaching';
+import { registerRoute } from 'workbox-routing';
 import { StaleWhileRevalidate, CacheFirst, NetworkFirst } from 'workbox-strategies';
 
 declare const self: ServiceWorkerGlobalScope;
@@ -36,24 +33,37 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 // ── Cache strategies ──────────────────────────────────────────────────────────
 
-// HTML pages — SPA Navigation Fallback (Returns precached index.html)
-try {
-  const handler = createHandlerBoundToURL('index.html');
-  registerRoute(
-    new NavigationRoute(handler, {
-      denylist: [/^\/api\//], // Do not intercept API calls
-    })
-  );
-} catch (e) {
-  console.warn('NavigationRoute setup failed (usually in dev mode). Using NetworkFirst fallback.');
-  // Fallback for dev mode di mana index.html tidak ada dalam precache
-  registerRoute(
-    ({ request }) => request.mode === 'navigate',
-    new NetworkFirst({
-      cacheName: 'dev-navigation-cache',
-    })
-  );
-}
+// HTML pages — Robust SPA Navigation Handler with Offline Fallback
+// Strategi: Precache → Network → offline.html
+registerRoute(
+  ({ request, url }) => request.mode === 'navigate' && !url.pathname.startsWith('/api/'),
+  async ({ request }) => {
+    // Cuba 1: Hidangkan index.html dari precache (paling cepat)
+    try {
+      const precachedResponse = await matchPrecache('index.html');
+      if (precachedResponse) return precachedResponse;
+    } catch (_e) { /* Precache miss — teruskan */ }
+
+    // Cuba 2: Fetch dari network
+    try {
+      const networkResponse = await fetch(request);
+      if (networkResponse.ok) return networkResponse;
+    } catch (_e) { /* Network gagal — teruskan */ }
+
+    // Cuba 3: Hidangkan halaman offline.html yang berjenama
+    try {
+      const offlineCache = await caches.open(OFFLINE_CACHE);
+      const offlineResponse = await offlineCache.match(OFFLINE_URL);
+      if (offlineResponse) return offlineResponse;
+    } catch (_e) { /* Cache miss — teruskan */ }
+
+    // Pertahanan terakhir: halaman HTML minimum
+    return new Response(
+      '<html><body style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:system-ui"><h1>Tiada Sambungan</h1></body></html>',
+      { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+    );
+  }
+);
 
 // Images — CacheFirst
 registerRoute(
@@ -64,10 +74,8 @@ registerRoute(
   })
 );
 
-// API/Supabase requests should NEVER be cached to avoid auth & stale data hangs.
-// EXCEPTION: Read-only public/semi-public data like Announcements and Takwim
-// PENTING: Hanya cache GET requests. POST/PATCH/DELETE TIDAK BOLEH di-cache
-// kerana ia akan menyebabkan data lama dipapar selepas admin buat perubahan.
+// API/Supabase — Hanya cache GET requests untuk Takwim & Announcements
+// POST/PATCH/DELETE TIDAK BOLEH di-cache
 registerRoute(
   ({ url, request }) => 
     request.method === 'GET' &&
@@ -75,36 +83,11 @@ registerRoute(
   new NetworkFirst({
     cacheName: 'supabase-offline-read-cache',
     plugins: [
-      new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 7 * 24 * 60 * 60 }) // 1 week
+      new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 7 * 24 * 60 * 60 })
     ],
   })
 );
 
-// ── GLOBAL CATCH HANDLER ──────────────────────────────────────────────────────
-// Apabila SEMUA strategi gagal (tiada internet / server down / Cloudflare 502/504),
-// hidangkan halaman offline.html yang berjenama JPP kepada pengguna.
-setCatchHandler(async ({ request }) => {
-  // Hanya intercept navigation requests (bukan API, gambar, dsb.)
-  if (request.mode === 'navigate') {
-    const cache = await caches.open(OFFLINE_CACHE);
-    const cachedResponse = await cache.match(OFFLINE_URL);
-    if (cachedResponse) {
-      // Pass URL asal supaya offline.html boleh auto-redirect ke halaman yang betul selepas pulih
-      const originalUrl = new URL(request.url);
-      const offlineUrl = new URL(OFFLINE_URL, self.location.origin);
-      offlineUrl.searchParams.set('redirect', originalUrl.pathname + originalUrl.search);
-
-      // Kita perlu pulangkan body yang sama tetapi dengan URL baru
-      // Guna cachedResponse terus kerana redirect param dikendalikan oleh JS dalam offline.html
-      return cachedResponse;
-    }
-  }
-
-  // Untuk bukan navigation (API, gambar), biarkan gagal secara semulajadi
-  return Response.error();
-});
-
-// ── Push Notification handler ─────────────────────────────────────────────────
 self.addEventListener('push', (event: PushEvent) => {
   if (!event.data) return;
 
