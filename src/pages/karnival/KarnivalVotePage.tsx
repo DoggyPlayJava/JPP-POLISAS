@@ -80,6 +80,7 @@ export function KarnivalVotePage() {
     } else {
       setSuccess(true);
       setAlreadyVoted(true);
+      if (navigator.vibrate) navigator.vibrate(50);
     }
     setSubmitting(false);
   };

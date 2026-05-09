@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JPP POLISAS — Tiada Sambungan</title>
+  <meta name="theme-color" content="#1e1b4b">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --accent: #6366f1;
+      --accent-soft: rgba(99, 102, 241, 0.08);
+      --border: rgba(0, 0, 0, 0.06);
+      --shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0c0a1d;
+        --card-bg: #1a1836;
+        --text: #f1f5f9;
+        --text-muted: #94a3b8;
+        --accent: #818cf8;
+        --accent-soft: rgba(129, 140, 248, 0.1);
+        --border: rgba(255, 255, 255, 0.06);
+        --shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.4);
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      overflow: hidden;
+    }
+
+    /* Ambient background glow */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -40%;
+      left: -20%;
+      width: 80vw;
+      height: 80vw;
+      background: radial-gradient(circle, var(--accent-soft) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -30%;
+      right: -20%;
+      width: 60vw;
+      height: 60vw;
+      background: radial-gradient(circle, rgba(244, 63, 94, 0.05) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 420px;
+      width: 100%;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 2.5rem;
+      padding: 3rem 2.5rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      text-align: center;
+      animation: cardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(24px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Pulsing icon container */
+    .icon-wrap {
+      width: 80px;
+      height: 80px;
+      border-radius: 2rem;
+      background: var(--accent-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 2rem;
+      position: relative;
+    }
+    .icon-wrap::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 2.25rem;
+      border: 2px solid var(--accent);
+      opacity: 0;
+      animation: pulse-ring 2.5s ease-out infinite;
+    }
+    @keyframes pulse-ring {
+      0% { opacity: 0.4; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.15); }
+    }
+
+    .icon-wrap svg {
+      width: 36px;
+      height: 36px;
+      color: var(--accent);
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+    }
+    h1 span { color: var(--accent); }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      font-weight: 500;
+    }
+
+    /* Retry status */
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 1rem;
+      background: var(--accent-soft);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.02em;
+    }
+    .status .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: blink 1.2s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+
+    .status.connected {
+      background: rgba(34, 197, 94, 0.1);
+      color: #16a34a;
+    }
+    .status.connected .dot {
+      background: #16a34a;
+      animation: none;
+    }
+
+    /* Button */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.875rem 1.5rem;
+      border: none;
+      border-radius: 1rem;
+      font-size: 0.7rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: #fff;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35); }
+    .btn:active { transform: translateY(0); }
+    .btn svg { width: 14px; height: 14px; }
+
+    .footer {
+      margin-top: 2rem;
+      font-size: 0.6rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+      opacity: 0.4;
+    }
+
+    /* Countdown ring */
+    .countdown {
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <!-- WiFi-off icon -->
+      <div class="icon-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 5.636a9 9 0 0 1 0 12.728M15.536 8.464a5 5 0 0 1 0 7.072M12 12h.01M8.464 8.464a5 5 0 0 0 0 7.072M5.636 5.636a9 9 0 0 0 0 12.728"/>
+          <!-- Slash line -->
+          <line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <h1 id="title">Tiada <span>Sambungan.</span></h1>
+      <p class="subtitle" id="subtitle">
+        Kami tidak dapat menghubungi pelayan. Ini mungkin disebabkan oleh sambungan internet anda atau penyelenggaraan sistem. Jangan risau — kami sedang cuba menyambung semula.
+      </p>
+
+      <!-- Auto-retry status -->
+      <div class="status" id="status">
+        <div class="dot"></div>
+        <span>Menyemak semula dalam <span class="countdown" id="countdown">5</span>s...</span>
+      </div>
+
+      <button class="btn" id="retryBtn" onclick="manualRetry()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182"/>
+        </svg>
+        Cuba Semula Sekarang
+      </button>
+
+      <p class="footer">JPP POLISAS • System Recovery</p>
+    </div>
+  </div>
+
+  <script>
+    let countdownValue = 5;
+    let intervalId = null;
+    const RETRY_INTERVAL = 5; // seconds
+
+    const countdownEl = document.getElementById('countdown');
+    const statusEl = document.getElementById('status');
+    const titleEl = document.getElementById('title');
+    const subtitleEl = document.getElementById('subtitle');
+
+    function startCountdown() {
+      countdownValue = RETRY_INTERVAL;
+      countdownEl.textContent = countdownValue;
+
+      if (intervalId) clearInterval(intervalId);
+
+      intervalId = setInterval(() => {
+        countdownValue--;
+        if (countdownValue <= 0) {
+          clearInterval(intervalId);
+          checkConnection();
+        } else {
+          countdownEl.textContent = countdownValue;
+        }
+      }, 1000);
+    }
+
+    async function checkConnection() {
+      statusEl.innerHTML = '<div class="dot"></div><span>Menyemak sambungan...</span>';
+
+      try {
+        // Cuba fetch halaman utama dengan cache-busting
+        const response = await fetch('/?_health=' + Date.now(), {
+          method: 'HEAD',
+          cache: 'no-store',
+          signal: AbortSignal.timeout(5000) // 5s timeout
+        });
+
+        if (response.ok) {
+          // Sambungan pulih!
+          statusEl.className = 'status connected';
+          statusEl.innerHTML = '<div class="dot"></div><span>Sambungan dipulihkan! Memuat semula...</span>';
+          titleEl.innerHTML = 'Sambungan <span>Dipulihkan!</span>';
+          subtitleEl.textContent = 'Halaman akan dimuat semula secara automatik dalam seketika...';
+
+          // Redirect ke halaman asal atau portal
+          setTimeout(() => {
+            const target = new URLSearchParams(window.location.search).get('redirect') || '/portal';
+            window.location.href = target;
+          }, 1200);
+          return;
+        }
+      } catch (e) {
+        // Masih gagal
+      }
+
+      // Reset dan cuba lagi
+      statusEl.className = 'status';
+      statusEl.innerHTML = '<div class="dot"></div><span>Menyemak semula dalam <span class="countdown" id="countdown">5</span>s...</span>';
+      startCountdown();
+    }
+
+    function manualRetry() {
+      if (intervalId) clearInterval(intervalId);
+      checkConnection();
+    }
+
+    // Mula countdown apabila halaman dimuatkan
+    startCountdown();
+
+    // Juga semak apabila status online berubah
+    window.addEventListener('online', () => {
+      if (intervalId) clearInterval(intervalId);
+      checkConnection();
+    });
+  </script>
+</body>
+</html>

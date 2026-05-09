@@ -30,7 +30,7 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024, // 6MB
         globPatterns: ['**/*.{js,mjs,css,html,ico,png,svg,webp,woff2}'],
       },
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'jpp-app-icon.png'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'jpp-app-icon.png', 'offline.html'],
       manifest: {
         name: 'JPP POLISAS',
         short_name: 'JPP Digital Portal',
@@ -44,6 +44,29 @@ export default defineConfig({
           { src: 'jpp-app-icon.png', sizes: '512x512', type: 'image/png' },
           { src: 'jpp-app-icon.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
+        shortcuts: [
+          {
+            name: "Buka Kad Matrik",
+            short_name: "QR Matrik",
+            description: "Papar kod QR matrik anda",
+            url: "/akademik/qr",
+            icons: [{ src: "jpp-app-icon.png", sizes: "192x192" }]
+          },
+          {
+            name: "Pengumuman Terkini",
+            short_name: "Pengumuman",
+            description: "Lihat pengumuman rasmi JPP",
+            url: "/jpp/announcements",
+            icons: [{ src: "jpp-app-icon.png", sizes: "192x192" }]
+          },
+          {
+            name: "Takwim Rasmi",
+            short_name: "Takwim",
+            description: "Lihat kalendar akademik dan aktiviti",
+            url: "/akademik/takwim",
+            icons: [{ src: "jpp-app-icon.png", sizes: "192x192" }]
+          }
+        ]
       },
       devOptions: {
         enabled: true,

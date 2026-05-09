@@ -4,10 +4,14 @@
 import { clientsClaim } from 'workbox-core';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from 'workbox-precaching';
-import { registerRoute, NavigationRoute } from 'workbox-routing';
+import { registerRoute, NavigationRoute, setCatchHandler } from 'workbox-routing';
 import { StaleWhileRevalidate, CacheFirst, NetworkFirst } from 'workbox-strategies';
 
 declare const self: ServiceWorkerGlobalScope;
+
+// ── Nama cache khas untuk halaman offline ─────────────────────────────────────
+const OFFLINE_CACHE = 'jpp-offline-fallback-v1';
+const OFFLINE_URL = '/offline.html';
 
 clientsClaim();
 
@@ -18,6 +22,14 @@ self.addEventListener('message', (event) => {
   }
 });
 
+// ── Precache offline fallback FIRST (install event) ──────────────────────────
+// Ini memastikan offline.html sentiasa tersedia walaupun server/tunnel mati sepenuhnya
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(OFFLINE_CACHE).then((cache) => cache.add(OFFLINE_URL))
+  );
+});
+
 // ── Precache all app assets (injected by Vite PWA plugin) ────────────────────
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
@@ -26,13 +38,21 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 // HTML pages — SPA Navigation Fallback (Returns precached index.html)
 try {
+  const handler = createHandlerBoundToURL('index.html');
   registerRoute(
-    new NavigationRoute(createHandlerBoundToURL('index.html'), {
+    new NavigationRoute(handler, {
       denylist: [/^\/api\//], // Do not intercept API calls
     })
   );
 } catch (e) {
-  console.warn('NavigationRoute setup failed:', e);
+  console.warn('NavigationRoute setup failed (usually in dev mode). Using NetworkFirst fallback.');
+  // Fallback for dev mode di mana index.html tidak ada dalam precache
+  registerRoute(
+    ({ request }) => request.mode === 'navigate',
+    new NetworkFirst({
+      cacheName: 'dev-navigation-cache',
+    })
+  );
 }
 
 // Images — CacheFirst
@@ -45,6 +65,44 @@ registerRoute(
 );
 
 // API/Supabase requests should NEVER be cached to avoid auth & stale data hangs.
+// EXCEPTION: Read-only public/semi-public data like Announcements and Takwim
+// PENTING: Hanya cache GET requests. POST/PATCH/DELETE TIDAK BOLEH di-cache
+// kerana ia akan menyebabkan data lama dipapar selepas admin buat perubahan.
+registerRoute(
+  ({ url, request }) => 
+    request.method === 'GET' &&
+    (url.pathname.includes('/rest/v1/takwim_pusat') || url.pathname.includes('/rest/v1/announcements')),
+  new NetworkFirst({
+    cacheName: 'supabase-offline-read-cache',
+    plugins: [
+      new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 7 * 24 * 60 * 60 }) // 1 week
+    ],
+  })
+);
+
+// ── GLOBAL CATCH HANDLER ──────────────────────────────────────────────────────
+// Apabila SEMUA strategi gagal (tiada internet / server down / Cloudflare 502/504),
+// hidangkan halaman offline.html yang berjenama JPP kepada pengguna.
+setCatchHandler(async ({ request }) => {
+  // Hanya intercept navigation requests (bukan API, gambar, dsb.)
+  if (request.mode === 'navigate') {
+    const cache = await caches.open(OFFLINE_CACHE);
+    const cachedResponse = await cache.match(OFFLINE_URL);
+    if (cachedResponse) {
+      // Pass URL asal supaya offline.html boleh auto-redirect ke halaman yang betul selepas pulih
+      const originalUrl = new URL(request.url);
+      const offlineUrl = new URL(OFFLINE_URL, self.location.origin);
+      offlineUrl.searchParams.set('redirect', originalUrl.pathname + originalUrl.search);
+
+      // Kita perlu pulangkan body yang sama tetapi dengan URL baru
+      // Guna cachedResponse terus kerana redirect param dikendalikan oleh JS dalam offline.html
+      return cachedResponse;
+    }
+  }
+
+  // Untuk bukan navigation (API, gambar), biarkan gagal secara semulajadi
+  return Response.error();
+});
 
 // ── Push Notification handler ─────────────────────────────────────────────────
 self.addEventListener('push', (event: PushEvent) => {

@@ -641,9 +641,18 @@ export function FloatingAiChat() {
   };
 
   // ── Send free-text message ───────────────────────────────────────────────
+  const MAX_INPUT_LENGTH = 700;
+
   const handleSend = async () => {
     const text = inputValue.trim();
     if (!text || isChatLoading) return;
+
+    // SECURITY: Enforce character limit (maxLength on <textarea> can be bypassed
+    // by programmatic setInputValue from quick-action chips or clipboard paste)
+    if (text.length > MAX_INPUT_LENGTH) {
+      toast.error(`Mesej terlalu panjang (${text.length}/${MAX_INPUT_LENGTH} aksara). Sila pendekkan.`);
+      return;
+    }
 
     // 1. Clear input immediately
     setInputValue('');
@@ -1039,7 +1048,7 @@ export function FloatingAiChat() {
                 <textarea
                   ref={textareaRef}
                   value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
+                  onChange={(e) => setInputValue(e.target.value.slice(0, MAX_INPUT_LENGTH))}
                   placeholder="Tanya sesuatu... (Shift+Enter = baris baru)"
                   rows={1}
                   maxLength={700}

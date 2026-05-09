@@ -405,6 +405,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     setIsLoading(true);
     await supabase.auth.signOut();
+    
+    // SECURITY: Clear offline caches to prevent cross-session data leaks
+    if ('caches' in window) {
+      try {
+        await caches.delete('supabase-offline-read-cache');
+      } catch (err) {
+        console.warn('Failed to clear offline cache:', err);
+      }
+    }
+    
     currentUserId.current = null;
     setProfile(null);
     setUser(null);

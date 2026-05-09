@@ -86,9 +86,14 @@ module.exports = {
   			'fade-in': 'fade-in 0.5s ease-out',
   			'slide-up': 'slide-up 0.5s ease-out',
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+  			'shimmer': 'shimmer 2s infinite linear'
   		},
   		keyframes: {
+  			shimmer: {
+  				'0%': { backgroundPosition: '200% 0' },
+  				'100%': { backgroundPosition: '-200% 0' },
+  			},
   			'fade-in': {
   				'0%': {
   					opacity: '0'

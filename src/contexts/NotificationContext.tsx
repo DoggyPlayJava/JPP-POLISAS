@@ -33,7 +33,23 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     if (data) {
       setNotifs(data as AppNotification[]);
       // Update cached count
-      lastUnreadCountRef.current = data.filter(n => !n.is_read).length;
+      const unreadCount = data.filter(n => !n.is_read).length;
+      lastUnreadCountRef.current = unreadCount;
+      
+      // Update App Badge
+      try {
+        if ('setAppBadge' in navigator && typeof navigator.setAppBadge === 'function') {
+          if (unreadCount > 0) {
+            navigator.setAppBadge(unreadCount);
+          } else {
+            if ('clearAppBadge' in navigator && typeof navigator.clearAppBadge === 'function') {
+              navigator.clearAppBadge();
+            }
+          }
+        }
+      } catch (e) {
+        // Ignore if unsupported or fails
+      }
     }
   }, [user?.id, setNotifs]);
 

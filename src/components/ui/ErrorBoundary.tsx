@@ -32,15 +32,24 @@ export class ErrorBoundary extends Component<Props, State> {
       error.message.includes('Failed to fetch dynamically imported module') ||
       error.message.includes('Importing a module script failed');
 
-    if (isChunkLoadError) {
-      // Refresh secara automatik untuk dapatkan versi terbaharu
-      window.location.reload();
+    if (isChunkLoadError && navigator.onLine) {
+      // Elakkan infinite loop jika server down (Cloudflare 502/504 memulangkan HTML berbanding JS)
+      const lastReload = sessionStorage.getItem('jpp_chunk_reload');
+      const now = Date.now();
+      
+      if (!lastReload || (now - parseInt(lastReload)) > 10000) { // Hanya benarkan auto-reload setiap 10 saat
+        sessionStorage.setItem('jpp_chunk_reload', now.toString());
+        window.location.reload();
+      }
     }
   }
 
   private handleReset = () => {
     this.setState({ hasError: false, error: null });
-    window.location.reload();
+    // Jika offline, jangan buang masa reload page sbb akan gagal lagi
+    if (navigator.onLine) {
+      window.location.reload();
+    }
   };
 
   private handleGoHome = () => {
@@ -66,10 +75,16 @@ export class ErrorBoundary extends Component<Props, State> {
                 
                 <div className="space-y-4">
                   <h1 className="text-3xl font-black tracking-tighter leading-tight">
-                    Ops! Berlaku <span className="text-rose-500">Ralat.</span>
+                    {navigator.onLine ? (
+                      <>Ops! Berlaku <span className="text-rose-500">Ralat.</span></>
+                    ) : (
+                      <>Tiada <span className="text-rose-500">Internet.</span></>
+                    )}
                   </h1>
                   <p className="text-sm text-muted-foreground font-medium px-4">
-                    Sesuatu yang tidak dijangka telah berlaku. Jangan risau, kami telah merekodkan kejadian ini.
+                    {navigator.onLine 
+                      ? "Sesuatu yang tidak dijangka telah berlaku. Jangan risau, kami telah merekodkan kejadian ini."
+                      : "Aplikasi gagal dimuatkan kerana anda sedang berada di luar talian (offline). Sila sambung ke internet untuk mengakses bahagian ini."}
                   </p>
                 </div>
 
