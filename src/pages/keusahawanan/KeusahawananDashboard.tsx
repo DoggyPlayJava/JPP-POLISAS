@@ -37,12 +37,15 @@ interface StatData {
 }
 
 import { useBusinessSwitcher } from '@/contexts/BusinessSwitcherContext';
+import { useBusinessData } from '@/hooks/useBusinessData';
+import { BusinessSwitcher } from '@/components/ui/BusinessSwitcher';
 
 // --- Dashboard Component ---
 export function KeusahawananDashboard() {
   const { color } = useExcoTheme();
   const { profile, isSuperAdmin } = useAuth();
   const { selectedBusiness, isLoading: isSwitcherLoading } = useBusinessSwitcher();
+  const { myMemberships, isLoading: isMembershipsLoading } = useBusinessData();
   const navigate = useNavigate();
   const displayName = getMalaysianNickname(profile?.full_name);
 
@@ -372,10 +375,13 @@ export function KeusahawananDashboard() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
         className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 relative z-10"
       >
-        <div className="space-y-1">
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground flex items-center gap-3">
-            Store Overview
-          </h1>
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground flex items-center gap-3">
+              Store Overview
+            </h1>
+            <BusinessSwitcher />
+          </div>
           <p className="text-sm font-medium text-muted-foreground">
             Halo <span style={{ color }}>{displayName}</span>, ini prestasi bisnes anda hari ini.
           </p>
@@ -400,6 +406,27 @@ export function KeusahawananDashboard() {
           <ExternalLink className="w-5 h-5 text-white/50 group-hover:text-white transition-colors relative z-10 sm:hidden" />
         </button>
       </motion.div>
+
+      {/* Sertai Perniagaan Lain Banner */}
+      {!isSuperAdmin && !isMembershipsLoading && myMemberships.filter(m => m.status === 'ACTIVE' || m.status === 'PENDING').length < 2 && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+          className="bg-emerald-500/10 border border-emerald-500/20 rounded-[1.5rem] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden"
+        >
+          <div className="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl" />
+          <div className="relative z-10">
+            <h3 className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400">Perniagaan Tambahan</h3>
+            <p className="text-xs font-medium text-emerald-600/70 dark:text-emerald-400/70 mt-0.5">
+              Anda masih mempunyai kuota untuk menyertai atau mencipta 1 lagi perniagaan.
+            </p>
+          </div>
+          <button 
+            onClick={() => navigate('/keusahawanan/onboarding')}
+            className="relative z-10 px-5 py-2.5 rounded-xl bg-emerald-500 text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all w-full sm:w-auto text-center"
+          >
+            Sertai Sekarang
+          </button>
+        </motion.div>
+      )}
 
       {/* TOP CARDS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6">

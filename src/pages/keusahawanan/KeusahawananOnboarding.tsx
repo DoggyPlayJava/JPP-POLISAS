@@ -25,11 +25,11 @@ export function KeusahawananOnboarding() {
   const [bCat, setBCat] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Check state early: If user has an ACTIVE membership, push them to dashboard
+  // Check state early: If user has reached the 2 active business limit, push them to dashboard
   useEffect(() => {
     if (!isLoading) {
-      const hasActive = myMemberships.some(m => m.status === 'ACTIVE');
-      if (hasActive) {
+      const activeOrPending = myMemberships.filter(m => m.status === 'ACTIVE' || m.status === 'PENDING').length;
+      if (activeOrPending >= 2) {
         navigate('/keusahawanan/dashboard', { replace: true });
       }
     }
@@ -70,7 +70,8 @@ export function KeusahawananOnboarding() {
     );
   }
 
-  // If there are pending memberships, show them the status screen
+  // If there are pending memberships, show them the status screen, BUT only if they don't want to use their 2nd slot.
+  // Actually, we can show a combined view or just let them click 'Kembali' or we can add a 'Daftar Perniagaan Lain' button on the pending screen.
   const pendingMemberships = myMemberships.filter(m => m.status === 'PENDING');
   const isWaiting = pendingMemberships.length > 0;
 
@@ -128,9 +129,16 @@ export function KeusahawananOnboarding() {
               ))}
             </div>
 
-            <Button onClick={refresh} variant="ghost" className="mt-10 uppercase tracking-widest text-[10px] font-black opacity-50 hover:opacity-100">
-              Semak Semula Status
-            </Button>
+            <div className="flex flex-col gap-3 mt-10">
+              {myMemberships.filter(m => m.status === 'ACTIVE' || m.status === 'PENDING').length < 2 && (
+                <Button onClick={() => setView('SELECT')} className="uppercase tracking-widest text-xs font-black bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl h-12 w-full max-w-sm mx-auto shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all">
+                  Daftar/Sertai Perniagaan Lain (Slot ke-2)
+                </Button>
+              )}
+              <Button onClick={refresh} variant="ghost" className="uppercase tracking-widest text-[10px] font-black opacity-50 hover:opacity-100 max-w-sm mx-auto w-full">
+                Semak Semula Status
+              </Button>
+            </div>
           </motion.div>
         ) : (
           <AnimatePresence mode="wait">

@@ -71,6 +71,13 @@ export function useBusinessData() {
   // Method to create a business
   const createBusiness = async (name: string, description: string, categoryId: string) => {
     if (!user) return { error: 'Tiada sesi' };
+    
+    // Check limit
+    const activeOrPending = myMemberships.filter(m => m.status === 'ACTIVE' || m.status === 'PENDING');
+    if (activeOrPending.length >= 2) {
+      return { error: 'Anda telah mencapai had maksimum (2 perniagaan).' };
+    }
+
     try {
       // 1. Insert business
       const { data: businessInfo, error: businessError } = await supabase
@@ -121,6 +128,14 @@ export function useBusinessData() {
   // Method to join an existing business or appeal
   const joinBusiness = async (businessId: string) => {
     if (!user) return;
+    
+    // Check limit
+    const activeOrPending = myMemberships.filter(m => m.status === 'ACTIVE' || m.status === 'PENDING');
+    if (activeOrPending.length >= 2) {
+      toast.error('Anda telah mencapai had maksimum (2 perniagaan).');
+      return;
+    }
+
     try {
       const existing = myMemberships.find(m => m.business_id === businessId);
 
