@@ -1651,3 +1651,26 @@ PwaUpdater.tsx:
 
 
 ---
+
+
+## 13. Piawaian UI/UX Mudah Alih & Hierarki Z-Index
+
+Bagi mengekalkan ciri 'Native-App Feel' dan mengelakkan pertindihan visual (UI overlap) pada peranti mudah alih, kod UI harus mematuhi hierarki Z-Index dan amalan prestasi berikut:
+
+### Hierarki Z-Index Global
+Semua komponen utama mestilah dipetakan mengikut lapisan Z-Index yang ketat ini (Dari Bawah ke Atas):
+
+1. **z-[0] hingga z-[40]**: Kandungan halaman biasa dan elemen terapung tahap rendah.
+2. **z-[112]**: BottomNav (Bar Navigasi Bawah Mudah Alih).
+3. **z-[120]**: FloatingAiChat (Butang Terapung AI Nexus).
+4. **z-[130]**: Backdrop (Latar gelap) untuk mana-mana Sidebar Modul (JPP, KLK, Kebajikan, dll).
+5. **z-[140]**: Sidebar (Kandungan sebenar menu navigasi tepi). *Ini memastikan Sidebar yang ditarik dari tepi sentiasa menutup BottomNav.*
+6. **z-[999]**: Semua Pop-out Shadcn (Drawer, Dialog, Sheet, AlertDialog). *Ini memastikan sebarang tetingkap timbul sentiasa berada di atas komponen susun atur.*
+7. **z-[9999]**: Notifikasi eact-hot-toast (ditetapkan ke 	op-center) dan Penunjuk Mod Luar Talian (OfflineIndicator).
+
+### Prestasi Navigasi (Mobile Performance)
+- **Elakkan React State untuk Scroll**: Gunakan Manipulasi DOM secara terus (
+avRef.current.classList.add) untuk kesan scroll (seperti Hide/Shrink BottomNav) bagi menjimatkan kitaran *re-render* dan menjaga kelancaran 60 FPS pada peranti spesifikasi rendah.
+- **Fat Finger Rule**: Apabila mengecilkan (shrink) saiz butang, jangan gunakan scale yang terlalu kecil. Had yang ideal adalah scale-[0.85] untuk memastikan ia kekal mesra-ibujari.
+- **Haptic Feedback**: Panggil 
+avigator.vibrate(30) untuk tindakan mikro (micro-interactions) bagi memberi rasa mekanikal/premium (cth: klik FAB atau besarkan navigasi).

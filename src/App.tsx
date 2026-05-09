@@ -415,6 +415,8 @@ function AppRoutes() {
 
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AiSettingsProvider } from '@/contexts/AiSettingsContext';
+import { ImageOptimizationProvider } from '@/contexts/ImageOptimizationContext';
+import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { JppConfigProvider } from './contexts/JppConfigContext';
 import { AcademicSessionProvider } from './contexts/AcademicSessionContext';
@@ -456,8 +458,9 @@ function App() {
                       <AppRoutes />
                       <PwaUpdater />
                       <InstallAppPrompt />
+                      <OfflineIndicator />
                       <Toaster
-                        position="top-right"
+                        position="top-center"
                         toastOptions={{
                           className: 'glass !bg-white/90 dark:!bg-slate-900/90 !backdrop-blur-xl !border-white/20 !shadow-2xl rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest !text-slate-900 dark:!text-white py-4 px-6',
                           duration: 4000,

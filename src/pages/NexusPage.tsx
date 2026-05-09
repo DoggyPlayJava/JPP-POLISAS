@@ -1159,7 +1159,7 @@ export function NexusPage() {
                           <div className="flex gap-2 mt-2 overflow-x-auto pb-1">
                             {images.map((img, idx) => (
                               <div key={idx} className="relative w-14 h-14 rounded-md border overflow-hidden flex-shrink-0 group">
-                                <img src={img.base64} alt="preview" className="w-full h-full object-cover" />
+                                <img src={img.base64} alt="preview" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                                 <button onClick={() => removeImage(idx)} className="absolute bg-background/80 backdrop-blur-sm inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                   <X className="w-4 h-4 text-rose-500" />
                                 </button>

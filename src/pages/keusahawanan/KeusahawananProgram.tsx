@@ -403,8 +403,8 @@ export function KeusahawananProgram() {
                 {/* Poster image */}
                 {program.image_url && (
                   <div className="h-36 overflow-hidden relative">
-                    <img src={program.image_url} alt={program.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
+                    <img src={program.image_url} alt={program.title} loading="lazy" decoding="async"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
                     {/* Visibility badge on image */}
                     {isJppMember && (
@@ -529,7 +529,7 @@ export function KeusahawananProgram() {
                 {/* Poster */}
                 {selectedProgram.image_url ? (
                   <div className="h-48 shrink-0 overflow-hidden relative">
-                    <img src={selectedProgram.image_url} alt={selectedProgram.title} className="w-full h-full object-cover" />
+                    <img src={selectedProgram.image_url} alt={selectedProgram.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     <div className="absolute inset-0 bg-gradient-to-t from-card/90 to-transparent" />
                     <button onClick={() => setSelectedProgram(null)}
                       className="absolute top-4 right-4 p-2 rounded-xl bg-black/40 text-white hover:bg-black/60 backdrop-blur-sm transition-all">
@@ -768,7 +768,7 @@ export function KeusahawananProgram() {
                       }} />
                     {fImagePreview ? (
                       <div className="relative rounded-xl overflow-hidden h-36 bg-muted/30 border border-border/50">
-                        <img src={fImagePreview} alt="preview" className="w-full h-full object-cover" />
+                        <img src={fImagePreview} alt="preview" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                         <button
                           onClick={() => { setFImageFile(null); setFImagePreview(null); if (fileRef.current) fileRef.current.value = ''; }}
                           className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full hover:bg-black/70 transition-all">

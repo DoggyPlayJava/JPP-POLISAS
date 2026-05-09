@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
-  User, Bell, Shield, CreditCard, Mail, Lock, Camera, Check, Award, Globe, Loader2, FileText, Activity, HelpCircle, MessageSquare, Headphones, ExternalLink, Sparkles, Phone, ArrowLeft, Moon, MapPin, Home, Building2, GraduationCap, ClipboardEdit, Clock, XCircle, CheckCircle2, AlertCircle
+  User, Bell, Shield, CreditCard, Mail, Lock, Camera, Check, Award, Globe, Loader2, FileText, Activity, HelpCircle, MessageSquare, Headphones, ExternalLink, Sparkles, Phone, ArrowLeft, Moon, MapPin, Home, Building2, GraduationCap, ClipboardEdit, Clock, XCircle, CheckCircle2, AlertCircle, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle
 } from '@/components/ui/card';
@@ -13,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
@@ -532,6 +534,7 @@ export function SettingsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'general';
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false); // State khas untuk avatar
   const [fullName, setFullName] = useState(profile?.full_name || '');
@@ -774,51 +777,105 @@ export function SettingsPage() {
       </header>
 
       {/* TABS PENGEMUDIAN DIUBAH KEPADA LAYOUT SIDEBAR VERTIKAL */}
-      <Tabs value={currentTab} onValueChange={(value) => setSearchParams({ tab: value }, { replace: true })} orientation="vertical" className="w-full flex flex-col md:flex-row gap-8 lg:gap-12 mt-8">
+      <Tabs value={currentTab} onValueChange={(value) => setSearchParams({ tab: value }, { replace: true })} orientation="vertical" className="w-full flex flex-col md:flex-row gap-6 md:gap-8 lg:gap-12 mt-4 md:mt-8">
         
-        {/* KIRI: Sidebar (Trigger List) */}
-        <div className="md:w-64 lg:w-72 shrink-0">
-          <div className="sticky top-24">
-            <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4 px-2">Menu Tetapan</h2>
-            <TabsList className="flex flex-col h-auto bg-transparent p-0 gap-1 space-y-1">
-              {[
-                { value: 'general', icon: User, label: 'Profil Awam', desc: 'Kemaskini maklumat asas' },
-                { value: 'kediaman', icon: MapPin, label: 'Status Kediaman', desc: 'Deklarasi lokasi semester ini' },
-                { value: 'notifications', icon: Bell, label: 'Pemberitahuan', desc: 'Urus notifikasi pop-up' },
-                { value: 'security', icon: Shield, label: 'Keselamatan', desc: 'Kata laluan & log masuk' },
-                { value: 'billing', icon: CreditCard, label: 'Langganan', desc: 'Pelan & pembayaran (Nexus)' },
-                { value: 'help', icon: HelpCircle, label: 'Bantuan & sokongan', desc: 'Sokongan dari pentadbir' },
-              ].map((tab) => (
-                <TabsTrigger 
-                  key={tab.value} 
-                  value={tab.value} 
-                  className="data-[state=active]:bg-card data-[state=active]:shadow-xl data-[state=active]:shadow-primary/5 data-[state=active]:border-border/60 data-[state=active]:text-primary border border-transparent w-full justify-start text-left px-4 py-3 rounded-2xl font-bold text-sm transition-all duration-300 flex items-center gap-4 group"
-                >
-                  <div className="p-2.5 rounded-xl bg-muted/80 group-data-[state=active]:bg-primary/10 group-data-[state=active]:text-primary shrink-0 transition-colors">
-                    <tab.icon className="w-[18px] h-[18px]" /> 
-                  </div>
-                  <div className="flex flex-col items-start gap-0.5">
-                    <span className="text-foreground group-data-[state=active]:text-primary truncate">{tab.label}</span>
-                    <span className="text-[10px] font-medium text-muted-foreground/60 group-data-[state=active]:text-primary/70 line-clamp-1">{tab.desc}</span>
-                  </div>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            
-            {/* Vercel-Style Divider in Sidebar */}
-            <Separator className="my-6 bg-border/40" />
-            <div className="px-2">
-              <div className="p-4 rounded-3xl bg-muted/30 border border-border/40 text-center space-y-2">
-                <Shield className="w-6 h-6 mx-auto text-primary opacity-50" />
-                <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Kawasan Selamat</p>
-                <p className="text-[10px] font-medium text-muted-foreground leading-relaxed">Semua tetapan anda disimpan dengan penyulitan penuh End-to-End.</p>
+        {/* SIDEBAR: Drawer on mobile, Static on desktop */}
+        <>
+          {/* Mobile Backdrop */}
+          <div
+            className={cn(
+              "fixed inset-0 bg-slate-950/60 z-[190] transition-opacity duration-300 md:hidden",
+              isSidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            )}
+            onClick={() => setIsSidebarOpen(false)}
+          />
+
+          {/* Sidebar Container */}
+          <div
+            className={cn(
+              "md:w-64 lg:w-72 shrink-0", // Desktop width
+              "fixed inset-y-0 left-0 w-80 z-[200] bg-card/95 backdrop-blur-xl border-r border-border/40 shadow-2xl flex flex-col p-6 transition-transform duration-300 md:static md:bg-transparent md:backdrop-blur-none md:border-none md:shadow-none md:p-0 md:translate-x-0 overflow-y-auto md:overflow-visible",
+              isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+            )}
+          >
+            {/* Mobile Header inside drawer */}
+            <div className="flex items-center justify-between md:hidden mb-8 shrink-0">
+              <h2 className="text-xl font-black tracking-tight">Menu Tetapan</h2>
+              <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)} className="rounded-full bg-muted/50 hover:bg-muted">
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+
+            <div className="sticky top-24 flex-1 flex flex-col min-h-0">
+              <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4 px-2 hidden md:block shrink-0">Menu Tetapan</h2>
+              <TabsList className="flex flex-col h-auto bg-transparent p-0 gap-1 space-y-1 overflow-y-auto md:overflow-visible shrink-0 pb-4 md:pb-0">
+                {[
+                  { value: 'general', icon: User, label: 'Profil Awam', desc: 'Kemaskini maklumat asas' },
+                  { value: 'kediaman', icon: MapPin, label: 'Status Kediaman', desc: 'Deklarasi lokasi semester ini' },
+                  { value: 'notifications', icon: Bell, label: 'Pemberitahuan', desc: 'Urus notifikasi pop-up' },
+                  { value: 'security', icon: Shield, label: 'Keselamatan', desc: 'Kata laluan & log masuk' },
+                  { value: 'billing', icon: CreditCard, label: 'Langganan', desc: 'Pelan & pembayaran (Nexus)' },
+                  { value: 'help', icon: HelpCircle, label: 'Bantuan & sokongan', desc: 'Sokongan dari pentadbir' },
+                ].map((tab) => (
+                  <TabsTrigger 
+                    key={tab.value} 
+                    value={tab.value} 
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="data-[state=active]:bg-card md:data-[state=active]:shadow-xl data-[state=active]:shadow-primary/5 data-[state=active]:border-border/60 data-[state=active]:text-primary border border-transparent w-full justify-start text-left px-4 py-3 rounded-2xl font-bold text-sm transition-all duration-300 flex items-center gap-4 group shrink-0"
+                  >
+                    <div className="p-2.5 rounded-xl bg-muted/80 group-data-[state=active]:bg-primary/10 group-data-[state=active]:text-primary shrink-0 transition-colors">
+                      <tab.icon className="w-[18px] h-[18px]" /> 
+                    </div>
+                    <div className="flex flex-col items-start gap-0.5 min-w-0">
+                      <span className="text-foreground group-data-[state=active]:text-primary truncate w-full text-left">{tab.label}</span>
+                      <span className="text-[10px] font-medium text-muted-foreground/60 group-data-[state=active]:text-primary/70 line-clamp-1 w-full text-left">{tab.desc}</span>
+                    </div>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              
+              {/* Vercel-Style Divider in Sidebar */}
+              <Separator className="my-6 bg-border/40 shrink-0" />
+              <div className="px-2 shrink-0 mt-auto md:mt-0">
+                <div className="p-4 rounded-3xl bg-muted/30 border border-border/40 text-center space-y-2">
+                  <Shield className="w-6 h-6 mx-auto text-primary opacity-50" />
+                  <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Kawasan Selamat</p>
+                  <p className="text-[10px] font-medium text-muted-foreground leading-relaxed">Semua tetapan anda disimpan dengan penyulitan penuh End-to-End.</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
 
         {/* KANAN: Tab Content (Vercel Style Forms) */}
         <div className="flex-1 min-w-0 pb-16">
+          {/* MOBILE: Select Dropdown (Visible on top of content to ensure discoverability) */}
+          <div className="block md:hidden shrink-0 mb-6">
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 px-1">Menu Pantas Tetapan</h2>
+            <Select value={currentTab} onValueChange={(value) => setSearchParams({ tab: value }, { replace: true })}>
+              <SelectTrigger className="h-14 px-4 rounded-2xl bg-card border border-border/40 shadow-sm font-bold text-sm">
+                <SelectValue placeholder="Pilih Tetapan" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border border-border/40 shadow-xl bg-card">
+                {[
+                  { value: 'general', label: 'Profil Awam', icon: User },
+                  { value: 'kediaman', label: 'Status Kediaman', icon: MapPin },
+                  { value: 'notifications', label: 'Pemberitahuan', icon: Bell },
+                  { value: 'security', label: 'Keselamatan', icon: Shield },
+                  { value: 'billing', label: 'Langganan', icon: CreditCard },
+                  { value: 'help', label: 'Bantuan & Sokongan', icon: HelpCircle },
+                ].map((tab) => (
+                  <SelectItem key={tab.value} value={tab.value} className="py-3 text-sm font-bold rounded-lg cursor-pointer focus:bg-primary/10 focus:text-primary">
+                    <div className="flex items-center gap-3">
+                      <tab.icon className="w-4 h-4 opacity-70" />
+                      <span>{tab.label}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <AnimatePresence mode="wait">
             
             {/* --- TAB PROFIL (GENERAL) --- */}
@@ -1253,7 +1310,7 @@ export function SettingsPage() {
       </AnimatePresence>
 
     </motion.div>
-    <BottomNav />
+    <BottomNav onOpenSidebar={() => setIsSidebarOpen(true)} />
     </>
   );
 }

@@ -166,7 +166,7 @@ function KeusahawananSidebar({ color }: { color: string }) {
 
   return (
     <aside
-      className="w-64 h-screen flex flex-col z-50 select-none"
+      className="w-64 h-screen flex flex-col z-[140] select-none"
       style={{ background: `linear-gradient(180deg, ${bg.top} 0%, ${bg.bottom} 100%)` }}
     >
       {/* Header */}
@@ -397,13 +397,13 @@ function LayoutInner({
           {isSidebarOpen && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setIsSidebarOpen(false)}
-              className="fixed inset-0 z-[100] md:hidden bg-black/60 backdrop-blur-sm" />
+              className="fixed inset-0 z-[130] md:hidden bg-black/60 backdrop-blur-sm" />
           )}
         </AnimatePresence>
 
         {/* Sidebar */}
         <aside className={cn(
-          'fixed inset-y-0 left-0 z-[110] w-64 transform transition-transform duration-300 ease-in-out',
+          'fixed inset-y-0 left-0 z-[140] w-64 transform transition-transform duration-300 ease-in-out',
           'md:relative md:translate-x-0 md:flex-shrink-0',
           isSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
         )}>

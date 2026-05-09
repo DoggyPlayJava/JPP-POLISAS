@@ -60,7 +60,7 @@ export function KlkLayout() {
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[130] lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -68,7 +68,7 @@ export function KlkLayout() {
       {/* Sidebar */}
       <div
         className={cn(
-          'fixed lg:relative z-50 h-screen transition-transform duration-300 ease-in-out lg:translate-x-0 w-[280px] flex-shrink-0',
+          'fixed lg:relative z-[140] h-screen transition-transform duration-300 ease-in-out lg:translate-x-0 w-[280px] flex-shrink-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >

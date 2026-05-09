@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   Menu, Bell, User, Plus, X, Search, Sparkles, QrCode, 
@@ -33,6 +33,50 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks }: BottomNa
   const { isSuperAdmin, isJppMember, profile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const navRef = useRef<HTMLDivElement>(null);
+
+  // ── Auto-hide on Scroll Logic ──────────────────────────────────────────
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+
+    const handleScroll = (e: Event) => {
+      // Ignore scroll events from inside Quick Actions menu or Tooltip
+      if (e.target instanceof Element && e.target.closest('#bottom-nav-dock, .quick-actions-menu')) {
+        return;
+      }
+
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          let currentScrollY = window.scrollY;
+          
+          if (e.target instanceof HTMLElement) {
+             if (e.target.clientHeight > window.innerHeight * 0.4) {
+                currentScrollY = e.target.scrollTop;
+             }
+          }
+
+          if (navRef.current && !isActionsOpen) {
+            // Shrink more if scrolling down past 50px
+            if (currentScrollY > lastScrollY && currentScrollY > 50) {
+              navRef.current.classList.add('opacity-75', 'scale-[0.85]', 'translate-y-4');
+            } 
+            // Restore if scrolling up or at the top
+            else {
+              navRef.current.classList.remove('opacity-75', 'scale-[0.85]', 'translate-y-4');
+            }
+          }
+
+          lastScrollY = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { capture: true, passive: true });
+    return () => window.removeEventListener('scroll', handleScroll, { capture: true });
+  }, [isActionsOpen]);
 
   useEffect(() => {
     const hideTooltip = localStorage.getItem('hide_bottomnav_tooltip');
@@ -48,6 +92,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks }: BottomNa
   };
 
   const handleFabClick = () => {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
     if (showTooltip) handleDismissTooltip();
     setIsActionsOpen(!isActionsOpen);
   };
@@ -98,10 +143,21 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks }: BottomNa
               initial={{ opacity: 0, y: 100, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 100, scale: 0.9 }}
-              className="fixed bottom-28 left-4 right-4 z-[111] bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-xl md:hidden"
+              className="quick-actions-menu fixed bottom-28 left-4 right-4 z-[111] bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-xl md:hidden"
             >
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/40 mb-4 text-center">Tindakan Pantas</h3>
-              <div className="grid grid-cols-4 gap-y-6 gap-x-2">
+              <motion.div 
+                className="grid grid-cols-4 gap-y-6 gap-x-2"
+                initial="hidden"
+                animate="visible"
+                exit="hidden"
+                variants={{
+                  hidden: {},
+                  visible: {
+                    transition: { staggerChildren: 0.04, delayChildren: 0.1 }
+                  }
+                }}
+              >
                 <QuickActionButton icon={CalendarRange} label="Takwim" color="bg-blue-500" onClick={() => handleQuickAction('/akademik/takwim')} />
                 <QuickActionButton icon={HeartHandshake} label="Aduan" color="bg-teal-500" onClick={() => handleQuickAction('/kebajikan/buat-aduan')} />
                 <QuickActionButton icon={Store} label="PolyMart" color="bg-emerald-500" onClick={() => handleQuickAction('/polymart')} />
@@ -115,14 +171,24 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks }: BottomNa
                 {(isSuperAdmin || isJppMember) && (
                   <QuickActionButton icon={Crown} label="JPP HQ" color="bg-indigo-500" onClick={() => handleQuickAction('/jpp')} />
                 )}
-              </div>
+              </motion.div>
             </motion.div>
           </>
         )}
       </AnimatePresence>
 
       {/* 2. Floating Bottom Nav Dock */}
-      <div className="md:hidden fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[360px] z-[112] transform-gpu">
+      <div 
+        ref={navRef}
+        id="bottom-nav-dock"
+        onClick={() => {
+          if (navRef.current && navRef.current.classList.contains('scale-[0.85]')) {
+            if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(30);
+            navRef.current.classList.remove('opacity-75', 'scale-[0.85]', 'translate-y-4');
+          }
+        }}
+        className="md:hidden fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[360px] z-[112] transform-gpu transition-all duration-300 ease-out cursor-pointer"
+      >
         {/* Changed blur to md to optimize for low end devices */}
         <div className="bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.5)] rounded-full px-2 py-2 flex items-center justify-between relative">
           
@@ -196,12 +262,19 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks }: BottomNa
 // Komponen Pembantu
 function QuickActionButton({ icon: Icon, label, color, onClick }: { icon: any, label: string, color: string, onClick: () => void }) {
   return (
-    <button onClick={onClick} className="flex flex-col items-center gap-2 group">
+    <motion.button 
+      onClick={onClick} 
+      className="flex flex-col items-center gap-2 group"
+      variants={{
+        hidden: { opacity: 0, y: 20, scale: 0.8 },
+        visible: { opacity: 1, y: 0, scale: 1 }
+      }}
+    >
       <div className={cn("w-12 h-12 rounded-[1rem] flex items-center justify-center text-white shadow-md transition-transform duration-200 active:scale-90", color)}>
         <Icon className="w-5 h-5" />
       </div>
       <span className="text-[8px] font-black uppercase tracking-wider text-slate-500 dark:text-white/60 text-center leading-tight max-w-[60px]">{label}</span>
-    </button>
+    </motion.button>
   );
 }
 

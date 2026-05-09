@@ -399,7 +399,7 @@ export function ProgramAttendPage() {
               <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-white/[0.05] flex items-center justify-center overflow-hidden shrink-0">
                   {profile.avatar_url
-                    ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     : <span className="text-base">{profile.full_name?.[0] ?? '?'}</span>
                   }
                 </div>

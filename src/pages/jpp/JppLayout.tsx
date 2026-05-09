@@ -66,14 +66,14 @@ export function JppLayout() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsMobileOpen(false)}
-            className="fixed inset-0 z-[100] md:hidden bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 z-[130] md:hidden bg-black/70 backdrop-blur-sm"
           />
         )}
       </AnimatePresence>
 
       {/* Sidebar */}
       <aside className={[
-        'fixed inset-y-0 left-0 z-[110] w-72 transform transition-transform duration-300 ease-in-out',
+        'fixed inset-y-0 left-0 z-[140] w-72 transform transition-transform duration-300 ease-in-out',
         'md:relative md:translate-x-0 md:flex-shrink-0',
         isMobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0',
       ].join(' ')}>

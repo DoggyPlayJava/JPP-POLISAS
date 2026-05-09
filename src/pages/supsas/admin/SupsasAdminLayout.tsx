@@ -44,7 +44,7 @@ export function SupsasAdminLayout() {
     <div className="min-h-screen bg-[#050A14] text-white flex">
       {/* Sidebar */}
       <aside className={cn(
-        'fixed inset-y-0 left-0 z-50 w-64 bg-[#0A1628]/95 backdrop-blur-xl border-r border-white/5 flex flex-col transition-transform duration-300',
+        'fixed inset-y-0 left-0 z-[140] w-64 bg-[#0A1628]/95 backdrop-blur-xl border-r border-white/5 flex flex-col transition-transform duration-300',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         'md:translate-x-0 md:static md:flex'
       )}>
@@ -110,7 +110,7 @@ export function SupsasAdminLayout() {
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setSidebarOpen(false)}
-            className="fixed inset-0 bg-black/60 z-40 md:hidden"
+            className="fixed inset-0 bg-black/60 z-[130] md:hidden"
           />
         )}
       </AnimatePresence>

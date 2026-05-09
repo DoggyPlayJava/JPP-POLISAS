@@ -286,7 +286,7 @@ export function UrusKelabPage() {
                             <div className="flex flex-col items-center gap-4">
                                 <div className="relative group">
                                     <div className="w-32 h-32 rounded-[2.5rem] bg-muted/30 flex items-center justify-center overflow-hidden border-4 shadow-xl transition-all duration-500 hover:scale-105" style={{ borderColor: clubData?.theme_color || 'hsl(var(--border))' }}>
-                                        {clubData?.logo_url ? <img src={clubData.logo_url} className="w-full h-full object-cover" /> : <Camera className="opacity-10 w-10 h-10" />}
+                                        {clubData?.logo_url ? <img src={clubData.logo_url} className="w-full h-full object-cover" loading="lazy" decoding="async" /> : <Camera className="opacity-10 w-10 h-10" />}
                                     </div>
                                     <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2.5rem] cursor-pointer">
                                         <Camera className="text-white w-6 h-6" />

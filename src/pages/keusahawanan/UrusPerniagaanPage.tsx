@@ -356,7 +356,7 @@ export function UrusPerniagaanPage() {
                 <div className="w-32 h-32 rounded-[2rem] bg-muted/30 border-4 overflow-hidden flex items-center justify-center shadow-xl"
                   style={{ borderColor: hexToRgba(color, 0.4) }}>
                   {businessData?.logo_url
-                    ? <img src={businessData.logo_url} alt="logo" className="w-full h-full object-cover" />
+                    ? <img src={businessData.logo_url} alt="logo" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     : <Building2 className="w-12 h-12 text-muted-foreground/20" />
                   }
                 </div>

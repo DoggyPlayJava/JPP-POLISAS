@@ -85,7 +85,7 @@ export function KlkSidebar() {
 
   return (
     <aside
-      className="w-[280px] h-screen flex flex-col select-none overflow-hidden flex-shrink-0 backdrop-blur-3xl z-50 relative border-r border-white/5"
+      className="w-[280px] h-screen flex flex-col select-none overflow-hidden flex-shrink-0 backdrop-blur-3xl z-[140] relative border-r border-white/5"
       style={{ background: 'linear-gradient(180deg, rgba(2,6,23,0.7) 0%, rgba(15,23,42,0.9) 100%)' }}
     >
       {/* Decorative glow */}
