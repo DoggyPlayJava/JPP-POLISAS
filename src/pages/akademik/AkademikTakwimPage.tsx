@@ -175,7 +175,7 @@ function StudentCalendar({ items, month, onPrev, onNext, onDayClick }: { items: 
               key={day.toISOString()}
               onClick={() => onDayClick(day)}
               className={cn(
-                'p-1.5 min-h-[80px] border-b border-r border-white/[0.03] transition-colors cursor-pointer select-none',
+                'p-1.5 min-h-[80px] border-b border-r border-white/[0.03] transition-colors cursor-pointer select-none overflow-hidden',
                 isToday && 'bg-indigo-500/5',
                 hasEvents ? 'hover:bg-white/[0.04] active:bg-white/[0.07]' : 'hover:bg-white/[0.02]'
               )}
@@ -186,10 +186,10 @@ function StudentCalendar({ items, month, onPrev, onNext, onDayClick }: { items: 
               <div className="mt-1 space-y-0.5">
                 {evts.slice(0, 3).map(e => {
                   const c = e.warna_custom || TAKWIM_JENIS[e.jenis]?.color || '#94A3B8';
-                  return <div key={e.id} className="text-[8px] font-bold px-1.5 py-0.5 rounded truncate" style={{ background: hexToRgba(c, 0.15), color: c }}>{e.tajuk}</div>;
+                  return <div key={e.id} className="text-[8px] font-bold px-1.5 py-0.5 rounded truncate w-full" style={{ background: hexToRgba(c, 0.15), color: c }}>{e.tajuk}</div>;
                 })}
                 {evts.length > 3 && (
-                  <div className="text-[8px] font-black text-white/40 px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.06)' }}>+{evts.length - 3} lagi</div>
+                  <div className="text-[8px] font-black text-white/40 px-1.5 py-0.5 rounded truncate w-full" style={{ background: 'rgba(255,255,255,0.06)' }}>+{evts.length - 3} lagi</div>
                 )}
               </div>
             </div>

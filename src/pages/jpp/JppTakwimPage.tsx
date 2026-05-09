@@ -238,16 +238,17 @@ export function JppTakwimPage() {
             <button onClick={() => setViewMode('table')} className={cn('p-2 rounded-lg transition-all', viewMode === 'table' ? 'bg-white/10 text-white' : 'text-white/40')}><Table className="w-4 h-4" /></button>
             <button onClick={() => setViewMode('calendar')} className={cn('p-2 rounded-lg transition-all', viewMode === 'calendar' ? 'bg-white/10 text-white' : 'text-white/40')}><LayoutGrid className="w-4 h-4" /></button>
           </div>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex flex-wrap justify-end items-center gap-2">
             {rbac.isAkademik && (
               <Button onClick={() => setBulkMode(true)} variant="outline" className="h-10 rounded-xl border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 text-[10px] font-black uppercase tracking-widest">
-                <Upload className="w-3 h-3 mr-2" />
-                Auto-Fill Akademik
+                <Upload className="w-3 h-3 md:mr-2" />
+                <span className="hidden md:inline">Auto-Fill Akademik</span>
               </Button>
             )}
             {rbac.isYDP && (
               <Button onClick={handleNotify} variant="outline" className="h-10 rounded-xl border-amber-500/30 text-amber-400 hover:bg-amber-500/10 text-[10px] font-black uppercase tracking-widest">
-                <Bell className="w-3 h-3 mr-2" />Hebah
+                <Bell className="w-3 h-3 md:mr-2" />
+                <span className="hidden md:inline">Hebah</span>
               </Button>
             )}
             {items.length > 0 && (
@@ -257,14 +258,16 @@ export function JppTakwimPage() {
               >
                 {({ loading: pdfLoading }) => (
                   <Button variant="outline" disabled={pdfLoading} className="h-10 rounded-xl border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-[10px] font-black uppercase tracking-widest">
-                    {pdfLoading ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Download className="w-3 h-3 mr-2" />}PDF
+                    {pdfLoading ? <Loader2 className="w-3 h-3 animate-spin md:mr-2" /> : <Download className="w-3 h-3 md:mr-2" />}
+                    <span className="hidden md:inline">PDF</span>
                   </Button>
                 )}
               </PDFDownloadLink>
             )}
             {rbac.canAdd && (
               <Button onClick={openCreate} className="h-10 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest">
-                <Plus className="w-3 h-3 mr-2" />Tambah
+                <Plus className="w-3 h-3 md:mr-2" />
+                <span className="hidden md:inline">Tambah</span>
               </Button>
             )}
           </div>
@@ -524,7 +527,7 @@ function TakwimCalendar({ items, month, onPrev, onNext, onDayClick }: { items: T
               key={day.toISOString()}
               onClick={() => onDayClick(day)}
               className={cn(
-                'p-1.5 min-h-[80px] border-b border-r border-white/[0.03] transition-colors cursor-pointer select-none',
+                'p-1.5 min-h-[80px] border-b border-r border-white/[0.03] transition-colors cursor-pointer select-none overflow-hidden',
                 isToday && 'bg-indigo-500/5',
                 hasEvents ? 'hover:bg-white/[0.04] active:bg-white/[0.07]' : 'hover:bg-white/[0.02]'
               )}
@@ -535,10 +538,10 @@ function TakwimCalendar({ items, month, onPrev, onNext, onDayClick }: { items: T
               <div className="mt-1 space-y-0.5">
                 {evts.slice(0, 3).map(e => {
                   const c = e.warna_custom || TAKWIM_JENIS[e.jenis]?.color || '#94A3B8';
-                  return <div key={e.id} className="text-[8px] font-bold px-1.5 py-0.5 rounded truncate" style={{ background: hexToRgba(c, 0.15), color: c }}>{e.tajuk}</div>;
+                  return <div key={e.id} className="text-[8px] font-bold px-1.5 py-0.5 rounded truncate w-full" style={{ background: hexToRgba(c, 0.15), color: c }}>{e.tajuk}</div>;
                 })}
                 {evts.length > 3 && (
-                  <div className="text-[8px] font-black text-white/40 px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.06)' }}>+{evts.length - 3} lagi</div>
+                  <div className="text-[8px] font-black text-white/40 px-1.5 py-0.5 rounded truncate w-full" style={{ background: 'rgba(255,255,255,0.06)' }}>+{evts.length - 3} lagi</div>
                 )}
               </div>
             </div>
