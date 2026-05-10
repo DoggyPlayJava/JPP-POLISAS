@@ -95,15 +95,24 @@ function OrderModal({
   const [note,       setNote]       = useState('');
   const [pickupTime, setPickupTime] = useState('');
   const [sharePhone, setSharePhone] = useState(true);
+  const [deliveryMethod, setDeliveryMethod] = useState<'PICKUP' | 'POLYRIDER'>('PICKUP');
+  const [dropoffLocation, setDropoffLocation] = useState('');
+  const [proposedPrice, setProposedPrice] = useState<number>(3.00);
   const [submitting, setSubmitting] = useState(false);
 
   const availableStock = Math.max(0, product.stock_quantity - (product.reserved_stock || 0));
   const maxQty = Math.min(availableStock, 10);
-  const total  = (product.price * qty).toFixed(2);
+  const itemsTotal = product.price * qty;
+  const deliveryFee = deliveryMethod === 'POLYRIDER' ? proposedPrice : 0;
+  const total = (itemsTotal + deliveryFee).toFixed(2);
 
   const submit = async () => {
     if (!user) { toast.error('Sila log masuk dahulu'); return; }
-    if (!pickupTime.trim()) { toast.error('Sila isi masa ambil'); return; }
+    if (!pickupTime.trim()) { toast.error('Sila isi masa pesanan siap/ambil'); return; }
+    if (deliveryMethod === 'POLYRIDER') {
+      if (!dropoffLocation.trim()) { toast.error('Sila isi lokasi penghantaran'); return; }
+      if (proposedPrice < 1) { toast.error('Harga tawaran rider minimum adalah RM 1.00'); return; }
+    }
     setSubmitting(true);
     try {
       // 1. Tempah stok dahulu
@@ -132,7 +141,7 @@ function OrderModal({
         throw error;
       }
 
-      // Notify vendor (fire-and-forget — jangan gagalkan pesanan jika push error)
+      // 3. Notify vendor (fire-and-forget — jangan gagalkan pesanan jika push error)
       try {
         await sendNotificationToBusinessVendor(product.business_id, {
           title: '🛍️ Pesanan Baharu!',
@@ -147,7 +156,22 @@ function OrderModal({
         console.error('Push notification gagal:', e);
       }
 
-      toast.success('Pesanan berjaya dihantar!', {
+      // 4. PolyRider Integration
+      if (deliveryMethod === 'POLYRIDER') {
+        const business = product.keusahawanan_businesses;
+        await supabase.from('polyrider_jobs').insert({
+          student_id: user.id,
+          job_type: 'POLYMART_CUST',
+          polymart_order_id: order.id,
+          pickup_name: business?.name || 'PolyMart Vendor',
+          dropoff_name: dropoffLocation.trim(),
+          status: 'PENDING',
+          base_fare: proposedPrice,
+          proposed_price: proposedPrice
+        });
+      }
+
+      toast.success(deliveryMethod === 'POLYRIDER' ? 'Pesanan & Rider berjaya ditempah!' : 'Pesanan berjaya dihantar!', {
         icon: '🎉',
         style: { borderRadius: '16px', fontWeight: 700 },
       });
@@ -211,11 +235,72 @@ function OrderModal({
             </div>
           </div>
 
+          {/* Delivery Method */}
+          <div className="bg-muted/10 rounded-2xl p-1 border border-border/50">
+            <div className="flex gap-1">
+              <button 
+                onClick={() => setDeliveryMethod('PICKUP')}
+                className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+                  deliveryMethod === 'PICKUP' 
+                    ? 'bg-background text-foreground shadow-sm ring-1 ring-border' 
+                    : 'text-muted-foreground hover:bg-muted/50'
+                }`}>
+                Ambil Sendiri
+              </button>
+              <button 
+                onClick={() => setDeliveryMethod('POLYRIDER')}
+                className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+                  deliveryMethod === 'POLYRIDER' 
+                    ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-500/20' 
+                    : 'text-muted-foreground hover:bg-muted/50'
+                }`}>
+                PolyRider
+              </button>
+            </div>
+          </div>
+
+          <AnimatePresence>
+            {deliveryMethod === 'POLYRIDER' && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                <div className="space-y-4 pt-1 pb-2">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2">Lokasi Penghantaran <span className="text-rose-400">*</span></p>
+                    <input value={dropoffLocation} onChange={e => setDropoffLocation(e.target.value)}
+                      placeholder="Cth: Kamsis A, Bilik 101"
+                      className="w-full h-10 px-3 rounded-xl text-sm outline-none bg-amber-500/5 border border-amber-500/20 text-foreground placeholder:text-muted-foreground/40 focus:border-amber-500/50 transition-all" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2">Harga Tawaran Rider (RM) <span className="text-rose-400">*</span></p>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setProposedPrice(p => Math.max(1, p - 0.5))}
+                        className="w-10 h-10 rounded-xl border border-border/60 flex items-center justify-center hover:bg-muted/50 transition-colors">
+                        <Minus className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                      <input 
+                        type="number" min={1} step={0.5}
+                        value={proposedPrice}
+                        onChange={e => setProposedPrice(parseFloat(e.target.value) || 0)}
+                        className="flex-1 h-10 px-3 rounded-xl text-center font-black text-amber-600 bg-amber-500/10 border border-amber-500/20 outline-none focus:border-amber-500/50 transition-all"
+                      />
+                      <button onClick={() => setProposedPrice(p => p + 0.5)}
+                        className="w-10 h-10 rounded-xl border border-border/60 flex items-center justify-center hover:bg-muted/50 transition-colors">
+                        <Plus className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </div>
+                    <p className="text-[9px] text-muted-foreground/50 mt-1">Tambang bergantung kepada jarak dari gerai ke lokasi anda.</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Pickup time */}
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2">Masa Ambil <span className="text-rose-400">*</span></p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2">
+              {deliveryMethod === 'POLYRIDER' ? 'Masa Pesanan Siap (Untuk Rider Ambil)' : 'Masa Ambil'} <span className="text-rose-400">*</span>
+            </p>
             <input value={pickupTime} onChange={e => setPickupTime(e.target.value)}
-              placeholder="cth: Rehat 1.00pm, Selepas kelas 4pm..."
+              placeholder={deliveryMethod === 'POLYRIDER' ? "cth: Segera, 2:30 PM..." : "cth: Rehat 1.00pm, Selepas kelas 4pm..."}
               className="w-full h-10 px-3 rounded-xl text-sm outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-amber-500/50 transition-all" />
           </div>
 

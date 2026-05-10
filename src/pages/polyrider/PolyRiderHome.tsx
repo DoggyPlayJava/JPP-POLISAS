@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bike, MapPin, Navigation, ShieldAlert, Banknote, UserCircle, MessageCircle, Send, Map as MapIcon, X, CheckCircle, Check, Users, Star, History, Clock, Phone, ChevronRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { MapPicker } from '@/components/MapPicker';
 import { SOSContactsManager } from './SOSContactsManager';
@@ -164,13 +164,17 @@ function RatingModal({ show, stars, note, onStars, onNote, onSubmit, onSkip, dis
 export function PolyRiderHome() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const polymartState = location.state as { polymartOrderId?: string, pickup_name?: string, dropoff_name?: string } | null;
+  const polymartOrderId = polymartState?.polymartOrderId;
+
   const [activeRiders, setActiveRiders] = useState(0);
   const [isRegisteredRider, setIsRegisteredRider] = useState(false);
   const [studentGender, setStudentGender] = useState<'LELAKI' | 'PEREMPUAN' | null>(null);
 
   // Booking Form State
-  const [pickup, setPickup] = useState('');
-  const [dropoff, setDropoff] = useState('');
+  const [pickup, setPickup] = useState(polymartState?.pickup_name || '');
+  const [dropoff, setDropoff] = useState(polymartState?.dropoff_name || '');
   const [pickupPos, setPickupPos] = useState<[number, number] | null>(null);
   const [dropoffPos, setDropoffPos] = useState<[number, number] | null>(null);
   const [activeMapPicker, setActiveMapPicker] = useState<'pickup' | 'dropoff' | null>(null);
@@ -424,6 +428,8 @@ export function PolyRiderHome() {
       p_proposed_price: proposedPrice,
       p_is_carpool_open: isJoiningCarpool ? true : isCarpoolOpen,
       p_join_group_id: joiningCarpool?.carpool_group_id ?? null,
+      p_job_type: polymartOrderId ? 'POLYMART_CUST' : 'RIDE',
+      p_polymart_order_id: polymartOrderId || null,
     });
     const job = Array.isArray(data) ? data[0] : data;
     if (error || !job) {
@@ -433,6 +439,11 @@ export function PolyRiderHome() {
       return;
     }
     setActiveJob(job); setJoiningCarpool(null);
+    
+    // Clear the location state if we came from PolyMart
+    if (polymartOrderId) {
+      navigate(location.pathname, { replace: true, state: null });
+    }
 
     // Only notify riders for direct (PENDING) jobs — not for GATHERING/CARPOOL_REQUEST
     if (!isCarpool && !isJoiningCarpool) {

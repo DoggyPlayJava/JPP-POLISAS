@@ -39,6 +39,7 @@ export function PolyMartCartPage() {
   const [pickupTime, setPickupTime] = useState<Record<string, string>>({});
   const [deliveryMethod, setDeliveryMethod] = useState<Record<string, 'PICKUP' | 'POLYRIDER'>>({});
   const [dropoffLocation, setDropoffLocation] = useState<Record<string, string>>({});
+  const [proposedPrice, setProposedPrice] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (!user) {
@@ -91,9 +92,16 @@ export function PolyMartCartPage() {
     }
 
     const method = deliveryMethod[businessId] || 'PICKUP';
-    if (method === 'POLYRIDER' && !dropoffLocation[businessId]?.trim()) {
-      toast.error('Sila isi lokasi penghantaran');
-      return;
+    const riderFare = proposedPrice[businessId] || 3.00;
+    if (method === 'POLYRIDER') {
+      if (!dropoffLocation[businessId]?.trim()) {
+        toast.error('Sila isi lokasi penghantaran');
+        return;
+      }
+      if (riderFare < 1) {
+        toast.error('Harga tawaran rider minimum adalah RM 1.00');
+        return;
+      }
     }
 
     const businessItems = items.filter(i => i.product.business_id === businessId);
@@ -162,8 +170,8 @@ export function PolyMartCartPage() {
           pickup_name: business?.name || 'PolyMart Vendor',
           dropoff_name: dropoff,
           status: 'PENDING',
-          base_fare: 3.00,
-          proposed_price: 3.00
+          base_fare: riderFare,
+          proposed_price: riderFare
         });
       }
 
@@ -295,8 +303,12 @@ export function PolyMartCartPage() {
                 {/* Checkout Footer */}
                 <div className="p-4 bg-muted/10 border-t border-border/40 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-muted-foreground">Jumlah (Tanpa Caj Rider)</span>
-                    <span className="text-lg font-black" style={{ color: PM_ACCENT }}>RM {subtotal.toFixed(2)}</span>
+                    <span className="text-xs font-bold text-muted-foreground">
+                      Jumlah {deliveryMethod[bizId] === 'POLYRIDER' ? '(Termasuk Rider)' : '(Tanpa Caj Rider)'}
+                    </span>
+                    <span className="text-lg font-black" style={{ color: PM_ACCENT }}>
+                      RM {(subtotal + (deliveryMethod[bizId] === 'POLYRIDER' ? (proposedPrice[bizId] || 3) : 0)).toFixed(2)}
+                    </span>
                   </div>
 
                   <div className="bg-background rounded-xl p-3 border border-border/50">
@@ -318,22 +330,49 @@ export function PolyMartCartPage() {
                             ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-500/20' 
                             : 'bg-muted text-muted-foreground hover:bg-muted/80'
                         }`}>
-                        PolyRider (+RM3)
+                        PolyRider
                       </button>
                     </div>
                   </div>
 
-                  {deliveryMethod[bizId] === 'POLYRIDER' && (
-                    <div className="flex gap-2">
-                      <input 
-                        value={dropoffLocation[bizId] || ''} 
-                        onChange={e => setDropoffLocation(prev => ({ ...prev, [bizId]: e.target.value }))}
-                        placeholder="Lokasi Penghantaran (cth: Kamsis A)"
-                        className="flex-1 h-10 px-3 rounded-xl text-xs outline-none bg-background border border-border/50 text-foreground focus:border-amber-500/50" 
-                      />
-                    </div>
-                  )}
-                  
+                  <AnimatePresence>
+                    {deliveryMethod[bizId] === 'POLYRIDER' && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                        <div className="space-y-4 pt-1 pb-2">
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2">Lokasi Penghantaran <span className="text-rose-400">*</span></p>
+                            <input 
+                              value={dropoffLocation[bizId] || ''} 
+                              onChange={e => setDropoffLocation(prev => ({ ...prev, [bizId]: e.target.value }))}
+                              placeholder="Cth: Kamsis A, Bilik 101"
+                              className="w-full h-10 px-3 rounded-xl text-xs outline-none bg-amber-500/5 border border-amber-500/20 text-foreground focus:border-amber-500/50 transition-all" 
+                            />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2">Harga Tawaran Rider (RM) <span className="text-rose-400">*</span></p>
+                            <div className="flex items-center gap-2">
+                              <button onClick={() => setProposedPrice(prev => ({ ...prev, [bizId]: Math.max(1, (prev[bizId] || 3) - 0.5) }))}
+                                className="w-10 h-10 rounded-xl border border-border/60 flex items-center justify-center hover:bg-muted/50 transition-colors bg-background">
+                                <Minus className="w-4 h-4 text-muted-foreground" />
+                              </button>
+                              <input 
+                                type="number" min={1} step={0.5}
+                                value={proposedPrice[bizId] || 3.00}
+                                onChange={e => setProposedPrice(prev => ({ ...prev, [bizId]: parseFloat(e.target.value) || 0 }))}
+                                className="flex-1 h-10 px-3 rounded-xl text-center font-black text-amber-600 bg-amber-500/10 border border-amber-500/20 outline-none focus:border-amber-500/50 transition-all"
+                              />
+                              <button onClick={() => setProposedPrice(prev => ({ ...prev, [bizId]: (prev[bizId] || 3) + 0.5 }))}
+                                className="w-10 h-10 rounded-xl border border-border/60 flex items-center justify-center hover:bg-muted/50 transition-colors bg-background">
+                                <Plus className="w-4 h-4 text-muted-foreground" />
+                              </button>
+                            </div>
+                            <p className="text-[9px] text-muted-foreground/50 mt-1">Tambang bergantung kepada jarak dari gerai ke lokasi anda.</p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   <div className="flex gap-2">
                     <input 
                       value={pickupTime[bizId] || ''} 

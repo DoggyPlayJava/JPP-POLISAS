@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -65,13 +65,14 @@ export function PolyMartLayout() {
   const [pendingVendorCount,setPendingVendorCount] = useState(0);
   const [myActiveOrdersCount, setMyActiveOrdersCount] = useState(0);
   const [cartCount, setCartCount] = useState(0);
+  const [myBizIds, setMyBizIds] = useState<string[]>([]);
 
   const isHome    = location.pathname === '/polymart' || location.pathname === '/polymart/';
   const isOrders  = location.pathname.includes('/pesanan-saya');
   const isVendorP = location.pathname.includes('/vendor');
   const isAdmin   = location.pathname.includes('/admin');
 
-  const refetchCounts = async () => {
+  const refetchCounts = useCallback(async () => {
     if (!user) return;
     const [buyerRes, vendorRes, bizRes, cartRes] = await Promise.all([
       supabase.from('polymart_orders').select('id', { count: 'exact', head: true })
@@ -88,6 +89,7 @@ export function PolyMartLayout() {
       ...(vendorRes.data?.map(b => b.id) ?? []),
       ...(bizRes.data?.map(m => m.business_id) ?? []),
     ];
+    setMyBizIds(bizIds);
     setIsVendor(bizIds.length > 0);
 
     if (bizIds.length > 0) {
@@ -96,21 +98,26 @@ export function PolyMartLayout() {
         .in('business_id', bizIds).eq('status', 'PENDING');
       setPendingVendorCount(count ?? 0);
     }
-  };
+  }, [user]);
 
-  useEffect(() => { refetchCounts(); }, [user]);
+  useEffect(() => { refetchCounts(); }, [refetchCounts]);
 
   // Realtime subscription — hanya untuk VENDOR sahaja
   // Vendor perlu nampak pesanan baru masuk secara serta-merta (badge count dikemas kini live)
   // Pembeli biasa: badge count dikemas kini setiap kali mereka buka PolyMart (fetch-on-mount sudah ada di atas)
   useEffect(() => {
-    if (!user || !isVendor) return; // \u2190 Pembeli biasa keluar di sini
+    if (!user || !isVendor || myBizIds.length === 0) return; // \u2190 Pembeli biasa keluar di sini
 
     const sub = supabase.channel('polymart_vendor_orders_live')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'polymart_orders' }, refetchCounts)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'polymart_orders' }, (payload) => {
+        const record = (payload.new && Object.keys(payload.new).length > 0) ? payload.new : payload.old;
+        if (record && myBizIds.includes(record.business_id)) {
+           refetchCounts();
+        }
+      })
       .subscribe();
     return () => { supabase.removeChannel(sub); };
-  }, [user, isVendor]);
+  }, [user, isVendor, myBizIds, refetchCounts]);
 
   return (
     <PolymartContext.Provider value={{

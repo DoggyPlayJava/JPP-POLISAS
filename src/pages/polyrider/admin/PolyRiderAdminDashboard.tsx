@@ -135,10 +135,16 @@ export function PolyRiderAdminDashboard() {
   };
 
   const resolveSOS = async (sosId: string) => {
+    const sos = sosAlerts.find(s => s.id === sosId);
     const { error } = await supabase.from('polyrider_sos_logs')
       .update({ resolved: true, resolved_at: new Date().toISOString() })
       .eq('id', sosId);
+      
     if (!error) {
+      if (sos && sos.job_id) {
+        // Bebaskan rider/pelajar daripada status kecemasan dengan membatalkan tugasan
+        await supabase.from('polyrider_jobs').update({ status: 'CANCELLED' }).eq('id', sos.job_id);
+      }
       toast.success('Kes SOS diselesaikan.');
       fetchSosAlerts();
     } else {

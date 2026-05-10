@@ -5,7 +5,7 @@ import {
   Lock, ShieldCheck, Palette, Settings, Megaphone,
   Briefcase, CalendarDays, FileWarning, Sparkles,
   Zap, FileText, ClipboardCheck, ChevronDown, ExternalLink, Store,
-  ChevronLeft, LayoutGrid, Building2, QrCode,
+  ChevronLeft, LayoutGrid, Building2, QrCode, Activity,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -304,6 +304,7 @@ export function JppSidebar() {
               { icon: Sparkles,    label: 'Nexus Hub', href: '/jpp/nexus' },
               { icon: FileWarning, label: 'Log Audit', href: '/jpp/logs' },
               { icon: Settings,    label: 'Tetapan',   href: '/jpp/settings' },
+              ...(isSuperAdmin ? [{ icon: Activity, label: 'Telemetri Sistem', href: '/jpp/telemetry' }] : []),
             ].map(item => (
               <NavLink
                 key={item.href}

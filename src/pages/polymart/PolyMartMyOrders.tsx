@@ -9,7 +9,7 @@ import { sendNotificationToUser } from '@/lib/notifications';
 import toast from 'react-hot-toast';
 import {
   Package, Clock, CheckCircle, XCircle, Truck, Star, Store,
-  ChevronRight, MessageCircle, Phone, X, RefreshCw,
+  ChevronRight, MessageCircle, Phone, X, RefreshCw, Bike,
 } from 'lucide-react';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -42,6 +42,11 @@ interface Order {
     owner: { phone: string | null } | null;
   } | null;
   buyer: { phone: string | null } | null;
+  polyrider_jobs?: {
+    id: string;
+    status: string;
+    rider: { profiles: { full_name: string | null } | null } | null;
+  }[];
 }
 
 const STATUS_TABS: { key: OrderStatus | 'all'; label: string; emoji: string }[] = [
@@ -281,8 +286,28 @@ function OrderCard({ order, onReview }: { order: Order; onReview: (o: Order) => 
       {/* Actions */}
       {(order.status === 'CONFIRMED' || order.status === 'READY') && (
         <div className="px-3.5 pb-3.5 space-y-3">
-          <div className="bg-white p-4 rounded-2xl flex flex-col items-center justify-center border border-border/50 shadow-sm mx-auto max-w-[200px]">
-            <QRCode value={`${window.location.origin}/polymart/vendor?order=${order.id}`} size={120} />
+          {/* PolyRider Status & Action */}
+          {order.polyrider_jobs && order.polyrider_jobs.length > 0 ? (
+            <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-3 rounded-2xl flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Bike className="w-5 h-5 text-amber-600 dark:text-amber-500" />
+                <div>
+                  <p className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-500 tracking-wider">Status Rider</p>
+                  <p className="text-xs font-bold text-amber-900 dark:text-amber-100">{order.polyrider_jobs[0].status === 'PENDING' ? 'Mencari Rider...' : order.polyrider_jobs[0].status === 'ACCEPTED' ? `Rider Ditugaskan: ${order.polyrider_jobs[0].rider?.profiles?.full_name || 'Rider'}` : order.polyrider_jobs[0].status === 'IN_TRANSIT' ? 'Rider Dalam Perjalanan!' : order.polyrider_jobs[0].status === 'ARRIVED' ? 'Rider Tiba!' : order.polyrider_jobs[0].status}</p>
+                </div>
+              </div>
+              <button onClick={() => navigate('/polyrider')} className="px-3 py-1.5 bg-amber-500 text-white rounded-lg text-[10px] font-black shadow-sm">Jejak</button>
+            </div>
+          ) : (
+            <button onClick={() => navigate('/polyrider', { state: { polymartOrderId: order.id, pickup_name: biz?.name, dropoff_name: 'Lokasi Anda (Sila isi)' } })}
+              className="w-full flex items-center justify-center gap-1.5 h-10 rounded-xl bg-amber-500 text-white text-[11px] font-black shadow-sm hover:bg-amber-600 transition-colors">
+              <Bike className="w-4 h-4" />
+              <span>Panggil Rider untuk Hantar</span>
+            </button>
+          )}
+
+          <div className="bg-white dark:bg-card p-4 rounded-2xl flex flex-col items-center justify-center border border-border/50 shadow-sm mx-auto max-w-[200px]">
+            <QRCode value={`${window.location.origin}/polymart/vendor?order=${order.id}`} size={120} className="dark:bg-white p-2 rounded-xl" />
             <p className="text-[10px] text-center text-muted-foreground font-bold mt-3 leading-tight">
               Tunjuk QR ini kepada vendor semasa ambil pesanan
             </p>
@@ -332,7 +357,11 @@ export function PolyMartMyOrders() {
           id, name, logo_url, polymart_contact_method,
           owner:profiles!owner_id(phone)
         ),
-        buyer:profiles!buyer_id(phone)
+        buyer:profiles!buyer_id(phone),
+        polyrider_jobs(
+          id, status, 
+          rider:polyrider_profiles(profiles(full_name))
+        )
       `)
       .eq('buyer_id', user.id)
       .order('created_at', { ascending: false });
@@ -387,8 +416,22 @@ export function PolyMartMyOrders() {
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
-  }, [user]);
+    const polyriderChannel = supabase.channel('polymart-rider-tracking')
+      .on('postgres_changes', { 
+        event: 'UPDATE', schema: 'public', table: 'polyrider_jobs' 
+      }, (payload) => {
+        const updated = payload.new;
+        if (updated.polymart_order_id) {
+          loadOrders(); // Refetch to get updated nested PolyRider job status
+        }
+      })
+      .subscribe();
+
+    return () => { 
+      supabase.removeChannel(channel);
+      supabase.removeChannel(polyriderChannel); 
+    };
+  }, [user, loadOrders]);
 
   const filtered = activeTab === 'all' ? orders : orders.filter(o => o.status === activeTab);
   const tabCounts: Record<string, number> = {};

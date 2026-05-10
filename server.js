@@ -74,6 +74,7 @@ const globalRateLimiter = rateLimit({
     message: { error: 'Terlalu banyak permintaan daripada IP ini. Sila cuba lagi selepas 15 minit.' },
     standardHeaders: true,
     legacyHeaders: false,
+    validate: { xForwardedForHeader: false, trustProxy: false, default: false },
 });
 app.use(globalRateLimiter);
 
@@ -177,6 +178,7 @@ function createUserRateLimiter(maxRequests, windowMinutes, errorMessage) {
         message: { error: errorMessage },
         standardHeaders: true,
         legacyHeaders: false,
+        validate: { xForwardedForHeader: false, trustProxy: false, default: false },
     });
 }
 
@@ -1759,6 +1761,364 @@ app.post('/api/klk-csv-import', requireAuth, upload.single('csv'), async (req, r
     } catch (err) {
         console.error('[klk-csv-import] Unexpected error:', err.message);
         return res.status(500).json({ error: err.message });
+    }
+});
+
+// ==========================================
+// 11. System Telemetry (SUPER_ADMIN_JPP Only)
+// Returns Node.js runtime metrics + module row counts
+// ==========================================
+app.get('/api/system-telemetry', requireAuth, async (req, res) => {
+    try {
+        if (!supabaseAdmin) throw new Error('Supabase Admin not initialized.');
+
+        // RBAC: Only SUPER_ADMIN_JPP
+        const { data: callerProfile } = await supabaseAdmin
+            .from('profiles').select('role').eq('id', req.user.id).single();
+        if (callerProfile?.role !== 'SUPER_ADMIN_JPP') {
+            return res.status(403).json({ error: 'Akses ditolak. Hanya SUPER_ADMIN_JPP.' });
+        }
+
+        // ── Server metrics ──
+        const memUsage = process.memoryUsage();
+        const cpuUsage = process.cpuUsage();
+        const uptimeSeconds = process.uptime();
+
+        // ── Module row counts (parallel queries) ──
+        const [
+            profilesRes, clubsRes, clubActRes, clubRepRes, clubMemRes,
+            kebajikanRes, kebajikanCommentsRes,
+            polymartOrdersRes, polymartReviewsRes, polymartReportsRes,
+            prJobsRes, prBidsRes, prSosRes,
+            bizRes, bizProdRes, bizTxRes,
+            supsasFixRes, supsasResultsRes, supsasSportsRes,
+            karnivalEdRes, karnivalBoothRes,
+            klkResRes, klkSyncRes,
+            takwimRes,
+            pushRes, notifRes,
+            akCgpaRes, akPencRes, akFilesRes,
+            aiUsageRes, sysSetsRes,
+        ] = await Promise.all([
+            supabaseAdmin.from('profiles').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('clubs').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('club_activities').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('club_reports').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('student_club_memberships').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('kebajikan_tickets').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('kebajikan_ticket_comments').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('polymart_orders').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('polymart_reviews').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('polymart_reports').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('polyrider_jobs').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('polyrider_bids').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('polyrider_sos_logs').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('keusahawanan_businesses').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('business_products').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('business_transactions').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('supsas_fixtures').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('supsas_results').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('supsas_sports').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('karnival_editions').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('karnival_booths').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('klk_student_residency').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('klk_sync_log').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('takwim_pusat').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('push_subscriptions').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('notifications').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('akademik_cgpa_records').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('akademik_pencapaian').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('akademik_files').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('ai_usage_logs').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('system_settings').select('key, value').in('key', ['ai_total_tokens', 'ai_token_limit']),
+        ]);
+
+        // Parse AI token usage
+        let aiTokensUsed = 0, aiTokenLimit = 1000000;
+        (sysSetsRes.data || []).forEach(s => {
+            if (s.key === 'ai_total_tokens') aiTokensUsed = parseInt(s.value) || 0;
+            if (s.key === 'ai_token_limit') aiTokenLimit = parseInt(s.value) || 1000000;
+        });
+
+        // ── Advanced Diagnostics Queries ──
+        const [
+            prDiagnosticsRes, pmDiagnosticsRes, kebDiagnosticsRes, accDiagnosticsRes,
+            dbHealthRes
+        ] = await Promise.all([
+            // PolyRider
+            supabaseAdmin.rpc('get_polyrider_telemetry').then(r => r, e => ({ data: null })),
+            // PolyMart
+            supabaseAdmin.rpc('get_polymart_telemetry').then(r => r, e => ({ data: null })),
+            // Kebajikan
+            supabaseAdmin.rpc('get_kebajikan_telemetry').then(r => r, e => ({ data: null })),
+            // Accounts
+            supabaseAdmin.rpc('get_account_telemetry').then(r => r, e => ({ data: null })),
+            // Database Health Metrics (V3)
+            supabaseAdmin.rpc('get_database_health_metrics').then(r => r, e => ({ data: null }))
+        ]);
+
+        // Note: the RPCs above might not exist yet, so we'll fallback to manual aggregation for PolyRider, PolyMart, Kebajikan, Accounts
+        
+        // PolyRider
+        const { data: prJobs } = await supabaseAdmin.from('polyrider_jobs').select('status, created_at');
+        let prStatus = {}, prStuckEmg = 0, prTotal = 0, prCancelled = 0;
+        (prJobs || []).forEach(j => {
+            prStatus[j.status] = (prStatus[j.status] || 0) + 1;
+            prTotal++;
+            if (j.status === 'CANCELLED') prCancelled++;
+        });
+
+        // Compute stuck emergencies accurately from active SOS logs
+        const { data: prSos } = await supabaseAdmin.from('polyrider_sos_logs').select('created_at').or('resolved.eq.false,resolved.is.null');
+        (prSos || []).forEach(s => {
+            if ((Date.now() - new Date(s.created_at).getTime()) > 3600000) prStuckEmg++;
+        });
+
+        // PolyMart
+        const { data: pmOrders } = await supabaseAdmin.from('polymart_orders').select('status, created_at');
+        let pmStatus = {}, pmStalePend = 0, pmTotal = 0, pmCancelled = 0;
+        (pmOrders || []).forEach(o => {
+            pmStatus[o.status] = (pmStatus[o.status] || 0) + 1;
+            pmTotal++;
+            if (o.status === 'CANCELLED') pmCancelled++;
+            if (o.status === 'PENDING' && (Date.now() - new Date(o.created_at).getTime()) > 48 * 3600000) pmStalePend++;
+        });
+
+        // Kebajikan
+        const { data: kebTickets } = await supabaseAdmin.from('kebajikan_tickets').select('status, sla_deadline, assigned_to, priority, reopen_count');
+        let kebStatus = {}, kebSlaBreach = 0, kebUnassigned = 0, kebHighOpen = 0, kebReopen = 0;
+        (kebTickets || []).forEach(t => {
+            kebStatus[t.status] = (kebStatus[t.status] || 0) + 1;
+            if (t.status !== 'RESOLVED' && t.status !== 'CLOSED' && t.status !== 'CANCELLED') {
+                if (t.sla_deadline && new Date(t.sla_deadline).getTime() < Date.now()) kebSlaBreach++;
+                if (!t.assigned_to) kebUnassigned++;
+                if (t.priority === 'HIGH' || t.priority === 'URGENT') kebHighOpen++;
+            }
+            if (t.reopen_count > 0) kebReopen++;
+        });
+
+        // Accounts
+        const { data: accProfiles } = await supabaseAdmin.from('profiles').select('account_status, department');
+        let accPending = 0, accRejected = 0, accNoDept = 0;
+        (accProfiles || []).forEach(p => {
+            if (p.account_status === 'PENDING') accPending++;
+            if (p.account_status === 'REJECTED') accRejected++;
+            if (!p.department) accNoDept++;
+        });
+
+        // Diagnostics Object Construction
+        const diagnostics = {
+            polyrider: {
+                status_breakdown: prStatus,
+                stuck_emergency: prStuckEmg,
+                cancel_rate_pct: prTotal > 0 ? (prCancelled / prTotal) * 100 : 0,
+                alerts: []
+            },
+            polymart: {
+                status_breakdown: pmStatus,
+                pending_stale: pmStalePend,
+                cancel_rate_pct: pmTotal > 0 ? (pmCancelled / pmTotal) * 100 : 0,
+                alerts: []
+            },
+            kebajikan: {
+                status_breakdown: kebStatus,
+                sla_breached: kebSlaBreach,
+                unassigned: kebUnassigned,
+                high_priority_open: kebHighOpen,
+                reopen_count: kebReopen,
+                alerts: []
+            },
+            ai: {
+                tokens_used: aiTokensUsed,
+                token_limit: aiTokenLimit,
+                usage_pct: aiTokenLimit > 0 ? (aiTokensUsed / aiTokenLimit) * 100 : 0,
+                alerts: []
+            },
+            push: {
+                total_subs: pushRes.count || 0,
+                total_profiles: profilesRes.count || 1,
+                adoption_rate_pct: profilesRes.count ? ((pushRes.count || 0) / profilesRes.count) * 100 : 0,
+                alerts: []
+            },
+            accounts: {
+                total: profilesRes.count || 0,
+                pending: accPending,
+                rejected: accRejected,
+                no_department: accNoDept,
+                alerts: []
+            },
+            database: {
+                max_connections: dbHealthRes?.data?.max_connections || 100,
+                active_connections: dbHealthRes?.data?.active_connections || 0,
+                idle_connections: dbHealthRes?.data?.idle_connections || 0,
+                txid_age: dbHealthRes?.data?.txid_age || 0,
+                db_size_mb: dbHealthRes?.data?.db_size_mb || 0,
+                cache_hit_rate_pct: dbHealthRes?.data?.cache_hit_rate_pct || 99.0,
+                dead_tuples_pct: dbHealthRes?.data?.dead_tuples_pct || 0,
+                waiting_locks: dbHealthRes?.data?.waiting_locks || 0,
+                long_running_queries: dbHealthRes?.data?.long_running_queries || 0,
+                alerts: []
+            }
+        };
+
+        // Populate Alerts
+        if (diagnostics.polyrider.stuck_emergency > 0) diagnostics.polyrider.alerts.push(`${diagnostics.polyrider.stuck_emergency} trip EMERGENCY tanpa respons rider!`);
+        if (diagnostics.polyrider.cancel_rate_pct > 60) diagnostics.polyrider.alerts.push(`Kadar pembatalan trip sangat tinggi (${diagnostics.polyrider.cancel_rate_pct.toFixed(1)}%)`);
+        
+        if (diagnostics.polymart.pending_stale > 0) diagnostics.polymart.alerts.push(`${diagnostics.polymart.pending_stale} pesanan PENDING > 48 jam`);
+        if (diagnostics.polymart.cancel_rate_pct > 60) diagnostics.polymart.alerts.push(`Kadar pembatalan pesanan sangat tinggi (${diagnostics.polymart.cancel_rate_pct.toFixed(1)}%)`);
+        
+        if (diagnostics.kebajikan.sla_breached > 0) diagnostics.kebajikan.alerts.push(`${diagnostics.kebajikan.sla_breached} tiket e-Kebajikan melepasi tarikh akhir SLA!`);
+        if (diagnostics.kebajikan.unassigned > 3) diagnostics.kebajikan.alerts.push(`${diagnostics.kebajikan.unassigned} tiket baharu belum ditugaskan kepada staf`);
+        
+        if (diagnostics.ai.usage_pct > 90) diagnostics.ai.alerts.push(`Penggunaan token AI telah mencapai ${diagnostics.ai.usage_pct.toFixed(1)}% dari had!`);
+        
+        if (diagnostics.database.active_connections > (diagnostics.database.max_connections * 0.85)) {
+            diagnostics.database.alerts.push(`AMARAN KRITIKAL: Penggunaan sambungan pangkalan data kritikal (${diagnostics.database.active_connections}/${diagnostics.database.max_connections} aktif)`);
+        }
+        if (diagnostics.database.txid_age > 1500000000) {
+            diagnostics.database.alerts.push(`AMARAN KRITIKAL: Risiko Transaction ID Wraparound! Umur TXID mencapai ${diagnostics.database.txid_age}. Jalankan VACUUM FREEZE segera.`);
+        }
+        if (diagnostics.database.waiting_locks > 5) {
+            diagnostics.database.alerts.push(`Terdapat ${diagnostics.database.waiting_locks} transaksi tersangkut menunggu Lock (Lock Contention).`);
+        }
+        if (diagnostics.database.long_running_queries > 3) {
+            diagnostics.database.alerts.push(`${diagnostics.database.long_running_queries} query sedang berjalan melebihi 5 minit (Bottleneck risiko tinggi).`);
+        }
+        if (diagnostics.database.cache_hit_rate_pct < 85) diagnostics.database.alerts.push(`Kadar hit cache PostgreSQL sangat rendah (${diagnostics.database.cache_hit_rate_pct}%)`);
+        if (diagnostics.database.dead_tuples_pct > 20) diagnostics.database.alerts.push(`Kadar dead tuples (bloat) tinggi (${diagnostics.database.dead_tuples_pct}%) - Perlu VACUUM.`);
+
+        // ── Historical snapshots (last 30 days) ──
+        const { data: snapshots } = await supabaseAdmin
+            .from('system_telemetry_snapshots')
+            .select('*')
+            .gte('snapshot_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+            .order('snapshot_date', { ascending: true });
+
+        return res.status(200).json({
+            server: {
+                uptime_seconds: Math.floor(uptimeSeconds),
+                memory: {
+                    rss_mb: +(memUsage.rss / 1024 / 1024).toFixed(2),
+                    heap_used_mb: +(memUsage.heapUsed / 1024 / 1024).toFixed(2),
+                    heap_total_mb: +(memUsage.heapTotal / 1024 / 1024).toFixed(2),
+                    external_mb: +(memUsage.external / 1024 / 1024).toFixed(2),
+                },
+                cpu: { user_us: cpuUsage.user, system_us: cpuUsage.system },
+                node_version: process.version,
+                platform: process.platform,
+                pid: process.pid,
+            },
+            modules: {
+                profiles:              profilesRes.count ?? 0,
+                clubs:                 clubsRes.count ?? 0,
+                club_activities:       clubActRes.count ?? 0,
+                club_reports:          clubRepRes.count ?? 0,
+                club_memberships:      clubMemRes.count ?? 0,
+                kebajikan_tickets:     kebajikanRes.count ?? 0,
+                kebajikan_comments:    kebajikanCommentsRes.count ?? 0,
+                kebajikan_breakdown:   { open: kebStatus.OPEN || 0, escalated: kebStatus.ESCALATED || 0, resolved: kebStatus.RESOLVED || 0 },
+                polymart_orders:       polymartOrdersRes.count ?? 0,
+                polymart_reviews:      polymartReviewsRes.count ?? 0,
+                polymart_reports:      polymartReportsRes.count ?? 0,
+                polyrider_jobs:        prJobsRes.count ?? 0,
+                polyrider_bids:        prBidsRes.count ?? 0,
+                polyrider_sos:         prSosRes.count ?? 0,
+                businesses:            bizRes.count ?? 0,
+                business_products:     bizProdRes.count ?? 0,
+                business_transactions: bizTxRes.count ?? 0,
+                supsas_fixtures:       supsasFixRes.count ?? 0,
+                supsas_results:        supsasResultsRes.count ?? 0,
+                supsas_sports:         supsasSportsRes.count ?? 0,
+                karnival_editions:     karnivalEdRes.count ?? 0,
+                karnival_booths:       karnivalBoothRes.count ?? 0,
+                klk_residency:         klkResRes.count ?? 0,
+                klk_sync_logs:         klkSyncRes.count ?? 0,
+                takwim_events:         takwimRes.count ?? 0,
+                push_subscriptions:    pushRes.count ?? 0,
+                notifications:         notifRes.count ?? 0,
+                akademik_cgpa:         akCgpaRes.count ?? 0,
+                akademik_pencapaian:   akPencRes.count ?? 0,
+                akademik_files:        akFilesRes.count ?? 0,
+                ai_usage_logs:         aiUsageRes.count ?? 0,
+                ai_tokens_used:        aiTokensUsed,
+                ai_token_limit:        aiTokenLimit,
+            },
+            diagnostics,
+            snapshots: snapshots || [],
+            timestamp: new Date().toISOString(),
+        });
+    } catch (err) {
+        console.error('[system-telemetry] Error:', err.message);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+// ── Daily Telemetry Snapshot Cron (03:00 AM) ──────────────────────────────────
+// Saves a snapshot of all module metrics for historical trend analysis.
+cron.schedule('0 3 * * *', async () => {
+    console.log('[CRON] Starting daily telemetry snapshot...');
+    try {
+        if (!supabaseAdmin) { console.warn('[CRON] Supabase Admin not available, skipping.'); return; }
+
+        const memUsage = process.memoryUsage();
+        const [
+            p, c, ca, cr, cm, kt, po, pj, ps,
+            b, bp, bt, sf, kb, klk, tw, push, notif, acgpa, apenc
+        ] = await Promise.all([
+            supabaseAdmin.from('profiles').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('clubs').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('club_activities').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('club_reports').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('student_club_memberships').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('kebajikan_tickets').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('polymart_orders').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('polyrider_jobs').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('polyrider_sos_logs').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('keusahawanan_businesses').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('business_products').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('business_transactions').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('supsas_fixtures').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('karnival_booths').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('klk_student_residency').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('takwim_pusat').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('push_subscriptions').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('notifications').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('akademik_cgpa_records').select('id', { count: 'exact', head: true }),
+            supabaseAdmin.from('akademik_pencapaian').select('id', { count: 'exact', head: true }),
+        ]);
+
+        const { error } = await supabaseAdmin.from('system_telemetry_snapshots').upsert({
+            snapshot_date: new Date().toISOString().split('T')[0],
+            server_uptime_seconds: Math.floor(process.uptime()),
+            server_rss_mb: +(memUsage.rss / 1024 / 1024).toFixed(2),
+            server_heap_used_mb: +(memUsage.heapUsed / 1024 / 1024).toFixed(2),
+            server_heap_total_mb: +(memUsage.heapTotal / 1024 / 1024).toFixed(2),
+            m_profiles: p.count ?? 0,
+            m_clubs: c.count ?? 0,
+            m_club_activities: ca.count ?? 0,
+            m_club_reports: cr.count ?? 0,
+            m_club_memberships: cm.count ?? 0,
+            m_kebajikan_tickets: kt.count ?? 0,
+            m_polymart_orders: po.count ?? 0,
+            m_polyrider_jobs: pj.count ?? 0,
+            m_polyrider_sos: ps.count ?? 0,
+            m_businesses: b.count ?? 0,
+            m_business_products: bp.count ?? 0,
+            m_business_transactions: bt.count ?? 0,
+            m_supsas_fixtures: sf.count ?? 0,
+            m_karnival_booths: kb.count ?? 0,
+            m_klk_residency: klk.count ?? 0,
+            m_takwim_events: tw.count ?? 0,
+            m_push_subscriptions: push.count ?? 0,
+            m_notifications: notif.count ?? 0,
+            m_akademik_cgpa: acgpa.count ?? 0,
+            m_akademik_pencapaian: apenc.count ?? 0,
+        }, { onConflict: 'snapshot_date' });
+
+        if (error) console.error('[CRON] Telemetry snapshot error:', error.message);
+        else console.log('[CRON] Telemetry snapshot saved successfully.');
+    } catch (err) {
+        console.error('[CRON] Telemetry snapshot failed:', err.message);
     }
 });
 

@@ -142,6 +142,7 @@ const JppLogsPage = lazy(() => import('./pages/jpp/JppLogsPage').then(m => ({ de
 const JppSettingsPage = lazy(() => import('./pages/jpp/JppSettingsPage').then(m => ({ default: m.JppSettingsPage })));
 const JppNexusPage = lazy(() => import('./pages/jpp/JppNexusPage').then(m => ({ default: m.JppNexusPage })));
 const JppAsramaPage = lazy(() => import('./pages/jpp/JppAsramaPage').then(m => ({ default: m.JppAsramaPage })));
+const JppTelemetryPage = lazy(() => import('./pages/jpp/JppTelemetryPage').then(m => ({ default: m.JppTelemetryPage })));
 
 // ── PolyRider ──
 const PolyRiderLayout = lazy(() => import('./pages/polyrider/PolyRiderLayout').then(m => ({ default: m.PolyRiderLayout })));
@@ -282,6 +283,7 @@ function AppRoutes() {
           <Route path="/jpp/logs"             element={<JppLogsPage />} />
           <Route path="/jpp/settings"         element={<JppSettingsPage />} />
           <Route path="/jpp/nexus"            element={<JppNexusPage />} />
+          <Route path="/jpp/telemetry"       element={<JppTelemetryPage />} />
           {/* ── Exco Universal Template Routes ── */}
           <Route path="/exco/:unitCode/aktiviti"          element={<ExcoAktivitiWrapper />} />
           <Route path="/exco/:unitCode/laporan"           element={<ExcoLaporanWrapper />} />

@@ -28,6 +28,11 @@ interface VendorOrder {
   business_id: string;
   business_products: { id: string; name: string; image_url: string | null; category: string } | null;
   buyer: { id: string; full_name: string; matric_no: string; phone: string | null } | null;
+  polyrider_jobs?: {
+    id: string;
+    status: string;
+    rider: { profiles: { full_name: string | null } | null } | null;
+  }[];
 }
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; bg: string }> = {
@@ -56,6 +61,7 @@ function StatCard({ label, value, icon: Icon, color }: { label: string; value: n
 // ── Order Action Card ──────────────────────────────────────────────────────────
 function VendorOrderCard({ order, onUpdate }: { order: VendorOrder; onUpdate: () => void }) {
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const [expanded,    setExpanded]   = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [showCancel,  setShowCancel] = useState(false);
@@ -255,6 +261,30 @@ function VendorOrderCard({ order, onUpdate }: { order: VendorOrder; onUpdate: ()
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* PolyRider Status & Action for Vendor */}
+        {(order.status === 'CONFIRMED' || order.status === 'READY') && (
+          <div className="mt-3">
+            {order.polyrider_jobs && order.polyrider_jobs.length > 0 ? (
+              <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-3 rounded-2xl flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Bike className="w-5 h-5 text-amber-600 dark:text-amber-500" />
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-500 tracking-wider">Status Rider</p>
+                    <p className="text-xs font-bold text-amber-900 dark:text-amber-100">{order.polyrider_jobs[0].status === 'PENDING' ? 'Mencari Rider...' : order.polyrider_jobs[0].status === 'ACCEPTED' ? `Rider Ditugaskan: ${order.polyrider_jobs[0].rider?.profiles?.full_name || 'Rider'}` : order.polyrider_jobs[0].status === 'IN_TRANSIT' ? 'Rider Dalam Perjalanan!' : order.polyrider_jobs[0].status === 'ARRIVED' ? 'Rider Tiba!' : order.polyrider_jobs[0].status}</p>
+                  </div>
+                </div>
+                <button onClick={() => navigate('/polyrider')} className="px-3 py-1.5 bg-amber-500 text-white rounded-lg text-[10px] font-black shadow-sm">Jejak</button>
+              </div>
+            ) : (
+              <button onClick={() => navigate('/polyrider', { state: { polymartOrderId: order.id, pickup_name: 'Kedai Saya', dropoff_name: 'Sila isi nama asrama/lokasi' } })}
+                className="w-full flex items-center justify-center gap-1.5 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-500 text-[11px] font-black hover:bg-amber-500/20 transition-colors border border-amber-500/20">
+                <Bike className="w-4 h-4" />
+                <span>Panggil Rider (Oleh Vendor)</span>
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Action buttons */}
         <div className="mt-3 flex gap-2">
@@ -490,13 +520,17 @@ export function PolyMartVendorDashboard() {
     ])];
     if (ids.length === 0) { setLoading(false); return; }
 
-    const { data } = await supabase.from('polymart_orders')
-      .select(`
-        *,
-        business_products!product_id(id, name, image_url, category),
-        buyer:profiles!buyer_id(id, full_name, matric_no, phone)
-      `)
-      .in('business_id', ids)
+      const { data } = await supabase.from('polymart_orders')
+        .select(`
+          *,
+          business_products!product_id(id, name, image_url, category),
+          buyer:profiles!buyer_id(id, full_name, matric_no, phone),
+          polyrider_jobs(
+            id, status, 
+            rider:polyrider_profiles(profiles(full_name))
+          )
+        `)
+        .in('business_id', ids)
       .order('created_at', { ascending: false });
 
     setOrders((data ?? []) as VendorOrder[]);
