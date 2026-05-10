@@ -7,7 +7,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   MapPin, Settings, LayoutDashboard,
   ChevronLeft, LayoutGrid, Crown,
-  LogOut, ShieldCheck, BarChart3,
+  LogOut, ShieldCheck, BarChart3, Bike
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotificationStore } from '@/store/useNotificationStore';
@@ -134,6 +134,11 @@ export function KlkSidebar() {
         {navItem('/klk', LayoutDashboard, 'Dashboard', true, unreadCount)}
         {navItem('/klk/statistik', BarChart3, 'Statistik Awam')}
         {navItem('/klk/tetapan', Settings, 'Tetapan & Import')}
+        
+        <p className="px-4 mb-3 mt-6 text-[10px] font-black uppercase tracking-[0.25em]" style={{ color: hexToRgba(KLS_COLOR, 0.5) }}>
+          Logistik
+        </p>
+        {navItem('/polyrider-admin', Bike, 'PolyRider Admin')}
       </nav>
 
       {/* ── Global JPP Dashboard — sama seperti Kebajikan ── */}

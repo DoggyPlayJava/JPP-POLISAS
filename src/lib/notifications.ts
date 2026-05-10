@@ -6,7 +6,7 @@
 import { supabase } from './supabase';
 import { API_BASE_URL } from './utils';
 
-export type NotificationModule = 'EKPP' | 'KEBAJIKAN' | 'AKADEMIK' | 'KEUSAHAWANAN' | 'JPP' | 'SYSTEM' | 'POLYMART' | 'KAMSIS' | 'KLK';
+export type NotificationModule = 'EKPP' | 'KEBAJIKAN' | 'AKADEMIK' | 'KEUSAHAWANAN' | 'JPP' | 'SYSTEM' | 'POLYMART' | 'KAMSIS' | 'KLK' | 'POLYRIDER';
 
 export interface NotificationPayload {
   title: string;
@@ -376,6 +376,53 @@ export async function sendNotificationToClubMT(
     if (!mtMembers?.length) return;
     
     const userIds = mtMembers.map(m => m.user_id);
+    const rows = userIds.map(user_id => ({ user_id, ...payload, is_read: false }));
+    
+    const { error } = await supabase.from('notifications').insert(rows);
+    if (error) return;
+    userIds.forEach(uid => firePush(uid, payload).catch(() => {}));
+  } catch (err) {}
+}
+
+// ─── Broadcast ke Exco KLK (Kediaman Luar Kampus & PolyRider) ───────────────
+export async function sendNotificationToKLKExco(
+  payload: NotificationPayload
+): Promise<void> {
+  try {
+    const [excoByUnit, mtAssigned, superAdmins] = await Promise.all([
+      supabase.from('profiles').select('id').eq('role', 'JPP').eq('jpp_unit', 'KLK'),
+      supabase.from('jpp_mt_assignments').select('mt_user_id').eq('unit', 'KLK'),
+      supabase.from('profiles').select('id').eq('role', 'SUPER_ADMIN_JPP'),
+    ]);
+    const userIds = new Set<string>();
+    excoByUnit.data?.forEach(p => userIds.add(p.id));
+    mtAssigned.data?.forEach(m => userIds.add(m.mt_user_id));
+    superAdmins.data?.forEach(a => userIds.add(a.id));
+    
+    if (userIds.size === 0) return;
+    
+    const rows = Array.from(userIds).map(user_id => ({ user_id, ...payload, is_read: false }));
+    const { error } = await supabase.from('notifications').insert(rows);
+    if (error) return;
+    Array.from(userIds).forEach(uid => firePush(uid, payload).catch(() => {}));
+  } catch (err) {}
+}
+
+// ─── Broadcast ke Semua PolyRider Aktif (Untuk Pesanan Baru) ───────────────
+export async function sendNotificationToActivePolyRiders(
+  payload: NotificationPayload
+): Promise<void> {
+  try {
+    // Cari rider yang is_on_duty = true dan license_status = 'APPROVED'
+    const { data: activeRiders } = await supabase
+      .from('polyrider_profiles')
+      .select('user_id')
+      .eq('is_on_duty', true)
+      .eq('license_status', 'APPROVED');
+      
+    if (!activeRiders?.length) return;
+    
+    const userIds = activeRiders.map(r => r.user_id);
     const rows = userIds.map(user_id => ({ user_id, ...payload, is_read: false }));
     
     const { error } = await supabase.from('notifications').insert(rows);

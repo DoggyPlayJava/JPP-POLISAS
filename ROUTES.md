@@ -49,6 +49,7 @@ Setiap exco baharu yang ditambah **MESTI** menggunakan prefix dengan ID exco mer
 | `/keusahawanan/*` | e-Keusahawanan | ✅ Aktif |
 | `/klk/*` | e-KLK (Kediaman Luar Kampus) | ✅ Aktif |
 | `/polymart/*` | PolyMart | ✅ Aktif |
+| `/polyrider/*` | PolyRider | ✅ Aktif |
 | `/karnival/*` | Sistem Karnival JPP | ✅ Aktif |
 | `/sukan/*` | e-Sukan | 🔜 Akan Datang |
 
@@ -60,6 +61,8 @@ Setiap exco baharu yang ditambah **MESTI** menggunakan prefix dengan ID exco mer
 /akademik/cgpa          (Akademik: Muat naik rekod HPNM)
 /klk/form               (Borang Kediaman Luar Kampus)
 /keusahawanan/dashboard (Dashboard Exco Keusahawanan)
+/polyrider              (Laman Utama PolyRider)
+/polyrider-admin        (Pusat Kawalan PolyRider)
 ```
 
 ---

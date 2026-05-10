@@ -143,6 +143,12 @@ const JppSettingsPage = lazy(() => import('./pages/jpp/JppSettingsPage').then(m 
 const JppNexusPage = lazy(() => import('./pages/jpp/JppNexusPage').then(m => ({ default: m.JppNexusPage })));
 const JppAsramaPage = lazy(() => import('./pages/jpp/JppAsramaPage').then(m => ({ default: m.JppAsramaPage })));
 
+// ── PolyRider ──
+const PolyRiderLayout = lazy(() => import('./pages/polyrider/PolyRiderLayout').then(m => ({ default: m.PolyRiderLayout })));
+const PolyRiderHome = lazy(() => import('./pages/polyrider/PolyRiderHome').then(m => ({ default: m.PolyRiderHome })));
+const PolyRiderDashboard = lazy(() => import('./pages/polyrider/PolyRiderDashboard').then(m => ({ default: m.PolyRiderDashboard })));
+const PolyRiderAdminDashboard = lazy(() => import('./pages/polyrider/admin/PolyRiderAdminDashboard').then(m => ({ default: m.PolyRiderAdminDashboard })));
+
 // ── Global Modals (lazy-loaded, deferred after paint) ──
 const CompleteProfileModal = lazy(() => import('@/components/ui/CompleteProfileModal').then(m => ({ default: m.CompleteProfileModal })));
 const GlobalAnnouncementModal = lazy(() => import('@/components/GlobalAnnouncementModal').then(m => ({ default: m.GlobalAnnouncementModal })));
@@ -344,6 +350,15 @@ function AppRoutes() {
         <Route element={<RequireApproval><KlkLayout /></RequireApproval>}>
           <Route path="/klk"         element={<KlkDashboard />} />
           <Route path="/klk/tetapan" element={<KlkSettingsPage />} />
+          <Route path="/polyrider-admin" element={<PolyRiderAdminDashboard />} />
+        </Route>
+      </Route>
+
+      {/* ── PolyRider ── */}
+      <Route element={<ProtectedRoute />}>
+        <Route element={<RequireApproval><PolyRiderLayout /></RequireApproval>}>
+          <Route path="/polyrider" element={<PolyRiderHome />} />
+          <Route path="/polyrider/rider" element={<PolyRiderDashboard />} />
         </Route>
       </Route>
 

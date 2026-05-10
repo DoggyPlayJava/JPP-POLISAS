@@ -793,8 +793,228 @@ app.post('/api/send-push-notification', requireAuth, async (req, res) => {
 });
 
 // ==========================================
-// 7. Notify Anomaly Endpoint
+// 6b. PolyRider Targeted Push Notification
+// Hantar kepada senarai userIds yang spesifik
+// Lebih efisyen: semak semua device setiap user
 // ==========================================
+app.post('/api/polyrider-notify', requireAuth, async (req, res) => {
+    try {
+        if (!supabaseAdmin) throw new Error('Supabase Admin Client not initialized.');
+
+        const { userIds, title, body, tag, url, icon } = req.body;
+
+        if (!Array.isArray(userIds) || userIds.length === 0) {
+            return res.status(400).json({ error: 'userIds[] diperlukan.' });
+        }
+        if (!title) return res.status(400).json({ error: 'title diperlukan.' });
+
+        const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:jpp@cipher-node.org';
+        const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
+        const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+
+        if (!vapidPublicKey || !vapidPrivateKey) {
+            throw new Error('VAPID keys belum dikonfigurasi.');
+        }
+        webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+
+        // Fetch ALL subscriptions for target users (multi-device aware)
+        const { data: subs, error: subsError } = await supabaseAdmin
+            .from('push_subscriptions')
+            .select('id, user_id, endpoint, p256dh, auth')
+            .in('user_id', userIds);
+
+        if (subsError) throw new Error(subsError.message);
+        if (!subs || subs.length === 0) {
+            return res.status(200).json({ success: true, sent: 0, message: 'Tiada subscription.' });
+        }
+
+        const payload = JSON.stringify({
+            title,
+            body: body || '',
+            icon: icon || '/icon-192-maskable.png',
+            badge: '/icon-192-maskable.png',
+            tag: tag || 'polyrider',
+            renotify: true,
+            requireInteraction: false,
+            data: { url: url || '/polyrider' },
+        });
+
+        let sent = 0;
+        let failed = 0;
+        const staleIds = [];
+
+        await Promise.allSettled(
+            subs.map(async (sub) => {
+                const subscription = {
+                    endpoint: sub.endpoint,
+                    keys: { p256dh: sub.p256dh, auth: sub.auth },
+                };
+                try {
+                    await webpush.sendNotification(subscription, payload);
+                    sent++;
+                } catch (e) {
+                    failed++;
+                    // 410 Gone = subscription expired, remove it
+                    if (e.statusCode === 410) staleIds.push(sub.id);
+                    console.warn(`[polyrider-notify] Sub failed (${e.statusCode}): ${sub.endpoint.slice(-20)}`);
+                }
+            })
+        );
+
+        // Cleanup stale subscriptions
+        if (staleIds.length > 0) {
+            await supabaseAdmin.from('push_subscriptions').delete().in('id', staleIds);
+            console.log(`[polyrider-notify] Removed ${staleIds.length} stale subscription(s).`);
+        }
+
+        console.log(`[polyrider-notify] "${title}" → Sent: ${sent}/${subs.length}, Failed: ${failed}, Users: ${userIds.length}`);
+        return res.status(200).json({ success: true, sent, failed, total: subs.length });
+
+    } catch (error) {
+        console.error('[polyrider-notify] Error:', error.message);
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+// ==========================================
+// 7. PolyRider SOS Alert Endpoint
+// Prioriti KRITIKAL: Dihantar kepada semua KLK & SUPER_ADMIN_JPP
+
+// ==========================================
+const sosRateLimiter = createUserRateLimiter(
+    5,   // max 5 SOS per user per 15 min (elak spam)
+    15,
+    'Terlalu banyak isyarat SOS. Sila hubungi KLK secara terus.'
+);
+
+app.post('/api/polyrider-sos', requireAuth, sosRateLimiter, async (req, res) => {
+    try {
+        if (!supabaseAdmin) throw new Error('Supabase Admin Client not initialized.');
+
+        const { sosId, jobId, lat, lng, userName, userMatric, riderName, plateNumber } = req.body;
+
+        if (!sosId || !jobId) {
+            return res.status(400).json({ error: 'sosId dan jobId diperlukan.' });
+        }
+
+        const triggeredAt = new Date().toLocaleString('ms-MY', {
+            timeZone: 'Asia/Kuala_Lumpur',
+            dateStyle: 'short',
+            timeStyle: 'medium',
+        });
+
+        // Build location info
+        const mapsLink = (lat && lng)
+            ? `https://maps.google.com/?q=${lat},${lng}`
+            : null;
+        const locationText = mapsLink
+            ? `<a href="${mapsLink}" style="color:#dc2626">📍 Buka di Google Maps</a>`
+            : '📍 Lokasi tidak tersedia (GPS dimatikan)';
+
+        // Build push payload
+        const pushTitle = '🚨 SOS POLYRIDER — KECEMASAN!';
+        const pushBody = `${userName || 'Pelajar'} memerlukan bantuan segera!${riderName ? ` Rider: ${riderName} (${plateNumber})` : ''}`;
+
+        // Build email HTML
+        const emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #fff; border: 2px solid #dc2626; border-radius: 12px; overflow: hidden;">
+          <div style="background: #dc2626; padding: 20px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">🚨 SOS KECEMASAN</h1>
+            <p style="color: #fca5a5; margin: 4px 0 0 0; font-size: 14px;">PolyRider — Sistem E-Hailing POLISAS</p>
+          </div>
+          <div style="padding: 24px;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 10px 0; border-bottom: 1px solid #fee2e2; color: #6b7280; width: 140px; font-size: 13px;">Pelajar</td><td style="padding: 10px 0; border-bottom: 1px solid #fee2e2; font-weight: bold;">${userName || 'Tidak diketahui'}</td></tr>
+              <tr><td style="padding: 10px 0; border-bottom: 1px solid #fee2e2; color: #6b7280; font-size: 13px;">No. Matrik</td><td style="padding: 10px 0; border-bottom: 1px solid #fee2e2; font-weight: bold;">${userMatric || '-'}</td></tr>
+              ${riderName ? `<tr><td style="padding: 10px 0; border-bottom: 1px solid #fee2e2; color: #6b7280; font-size: 13px;">Rider</td><td style="padding: 10px 0; border-bottom: 1px solid #fee2e2; font-weight: bold;">${riderName} • ${plateNumber || '-'}</td></tr>` : ''}
+              <tr><td style="padding: 10px 0; border-bottom: 1px solid #fee2e2; color: #6b7280; font-size: 13px;">Lokasi GPS</td><td style="padding: 10px 0; border-bottom: 1px solid #fee2e2;">${locationText}</td></tr>
+              <tr><td style="padding: 10px 0; color: #6b7280; font-size: 13px;">Masa</td><td style="padding: 10px 0; font-weight: bold;">${triggeredAt}</td></tr>
+            </table>
+            <div style="margin-top: 24px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px;">
+              <p style="margin: 0; color: #991b1b; font-weight: bold;">⚠️ Tindakan Segera Diperlukan</p>
+              <p style="margin: 8px 0 0 0; color: #dc2626; font-size: 14px;">Sila hubungi pelajar atau rider dengan serta-merta dan ambil tindakan kecemasan yang sewajarnya.</p>
+            </div>
+          </div>
+          <div style="background: #f9fafb; padding: 12px 24px; text-align: center; color: #9ca3af; font-size: 12px;">
+            Isyarat SOS ini dihantar automatik oleh Sistem PolyRider JPP-POLISAS
+          </div>
+        </div>`;
+
+        // 1. Fetch all push subscriptions for KLK and SUPER_ADMIN_JPP
+        const { data: klkProfiles } = await supabaseAdmin
+            .from('profiles')
+            .select('id, email, full_name')
+            .in('role', ['KLK', 'SUPER_ADMIN_JPP']);
+
+        const klkIds = (klkProfiles || []).map(p => p.id);
+        const klkEmails = (klkProfiles || []).map(p => p.email).filter(Boolean);
+
+        let pushCount = 0;
+        let emailCount = 0;
+
+        // 2. Send push notifications
+        if (klkIds.length > 0) {
+            const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
+            const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+            const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:jpp@cipher-node.org';
+
+            if (vapidPublicKey && vapidPrivateKey) {
+                webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+
+                const { data: subs } = await supabaseAdmin
+                    .from('push_subscriptions')
+                    .select('subscription')
+                    .in('user_id', klkIds);
+
+                const pushPayload = JSON.stringify({
+                    title: pushTitle,
+                    body: pushBody,
+                    icon: '/icon-192-maskable.png',
+                    badge: '/icon-192-maskable.png',
+                    tag: `sos-${sosId}`,
+                    renotify: true,
+                    data: { url: '/polyrider/admin', sosId, jobId },
+                    actions: mapsLink ? [{ action: 'map', title: '📍 Lokasi' }] : [],
+                    requireInteraction: true, // Notifikasi tidak auto-hilang
+                    vibrate: [200, 100, 200, 100, 200], // Pattern denyut kecemasan
+                });
+
+                await Promise.allSettled(
+                    (subs || []).map(s => webpush.sendNotification(s.subscription, pushPayload))
+                );
+                pushCount = (subs || []).length;
+            }
+        }
+
+        // 3. Send email alerts
+        const RESEND_API_KEY = process.env.RESEND_API_KEY;
+        if (RESEND_API_KEY && klkEmails.length > 0) {
+            sendEmailInternal(
+                klkEmails,
+                `🚨 SOS PolyRider — ${userName || 'Pelajar'} memerlukan bantuan!`,
+                emailHtml
+            ).catch(err => console.error('[polyrider-sos] Email error:', err.message));
+            emailCount = klkEmails.length;
+        }
+
+        console.log(`[polyrider-sos] SOS ${sosId} — push: ${pushCount}, email: ${emailCount}`);
+
+        return res.status(200).json({
+            success: true,
+            pushSent: pushCount,
+            emailSent: emailCount,
+            recipients: klkProfiles?.map(p => p.full_name) || [],
+        });
+    } catch (err) {
+        console.error('[polyrider-sos] Error:', err.message);
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+// ==========================================
+// 8. Notify Anomaly Endpoint
+// ==========================================
+
 app.post('/api/notify-anomaly', requireAuth, anomalyNotifyLimiter, async (req, res) => {
     try {
         const { alerts, sentAt } = req.body;

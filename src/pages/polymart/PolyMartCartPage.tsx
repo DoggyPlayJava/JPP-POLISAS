@@ -37,6 +37,8 @@ export function PolyMartCartPage() {
   const [loading, setLoading] = useState(true);
   const [checkingOut, setCheckingOut] = useState<string | null>(null); // business_id
   const [pickupTime, setPickupTime] = useState<Record<string, string>>({});
+  const [deliveryMethod, setDeliveryMethod] = useState<Record<string, 'PICKUP' | 'POLYRIDER'>>({});
+  const [dropoffLocation, setDropoffLocation] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!user) {
@@ -84,7 +86,13 @@ export function PolyMartCartPage() {
     if (!user) return;
     const time = pickupTime[businessId]?.trim();
     if (!time) {
-      toast.error('Sila isi masa ambil untuk pesanan ini');
+      toast.error('Sila isi masa pesanan siap / ambil');
+      return;
+    }
+
+    const method = deliveryMethod[businessId] || 'PICKUP';
+    if (method === 'POLYRIDER' && !dropoffLocation[businessId]?.trim()) {
+      toast.error('Sila isi lokasi penghantaran');
       return;
     }
 
@@ -143,7 +151,23 @@ export function PolyMartCartPage() {
         });
       } catch (e) {}
 
-      toast.success('Pesanan dihantar berjaya!', { icon: '🎉' });
+      // 5. PolyRider Integration
+      if (method === 'POLYRIDER') {
+        const dropoff = dropoffLocation[businessId]?.trim();
+        const business = businessItems[0].product.keusahawanan_businesses;
+        
+        await supabase.from('polyrider_jobs').insert({
+          student_id: user.id,
+          job_type: 'POLYMART_CUST',
+          pickup_name: business?.name || 'PolyMart Vendor',
+          dropoff_name: dropoff,
+          status: 'PENDING',
+          base_fare: 3.00,
+          proposed_price: 3.00
+        });
+      }
+
+      toast.success(method === 'POLYRIDER' ? 'Pesanan & Rider ditempah!' : 'Pesanan dihantar berjaya!', { icon: '🎉' });
       
       // Update UI
       setItems(prev => prev.filter(i => i.product.business_id !== businessId));
@@ -271,15 +295,50 @@ export function PolyMartCartPage() {
                 {/* Checkout Footer */}
                 <div className="p-4 bg-muted/10 border-t border-border/40 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-muted-foreground">Jumlah (Beli Bersemuka)</span>
+                    <span className="text-xs font-bold text-muted-foreground">Jumlah (Tanpa Caj Rider)</span>
                     <span className="text-lg font-black" style={{ color: PM_ACCENT }}>RM {subtotal.toFixed(2)}</span>
                   </div>
+
+                  <div className="bg-background rounded-xl p-3 border border-border/50">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Kaedah Pengambilan</p>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => setDeliveryMethod(prev => ({ ...prev, [bizId]: 'PICKUP' }))}
+                        className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
+                          (deliveryMethod[bizId] || 'PICKUP') === 'PICKUP' 
+                            ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-500/20' 
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        }`}>
+                        Ambil Sendiri
+                      </button>
+                      <button 
+                        onClick={() => setDeliveryMethod(prev => ({ ...prev, [bizId]: 'POLYRIDER' }))}
+                        className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
+                          deliveryMethod[bizId] === 'POLYRIDER' 
+                            ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-500/20' 
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        }`}>
+                        PolyRider (+RM3)
+                      </button>
+                    </div>
+                  </div>
+
+                  {deliveryMethod[bizId] === 'POLYRIDER' && (
+                    <div className="flex gap-2">
+                      <input 
+                        value={dropoffLocation[bizId] || ''} 
+                        onChange={e => setDropoffLocation(prev => ({ ...prev, [bizId]: e.target.value }))}
+                        placeholder="Lokasi Penghantaran (cth: Kamsis A)"
+                        className="flex-1 h-10 px-3 rounded-xl text-xs outline-none bg-background border border-border/50 text-foreground focus:border-amber-500/50" 
+                      />
+                    </div>
+                  )}
                   
                   <div className="flex gap-2">
                     <input 
                       value={pickupTime[bizId] || ''} 
                       onChange={e => setPickupTime(prev => ({ ...prev, [bizId]: e.target.value }))}
-                      placeholder="Waktu Ambil (cth: 2.00 PM)"
+                      placeholder={deliveryMethod[bizId] === 'POLYRIDER' ? "Masa Rider Ambil (cth: 2.00 PM)" : "Masa Ambil (cth: 2.00 PM)"}
                       className="flex-1 h-10 px-3 rounded-xl text-xs outline-none bg-background border border-border/50 text-foreground focus:border-amber-500/50" 
                     />
                     <button 

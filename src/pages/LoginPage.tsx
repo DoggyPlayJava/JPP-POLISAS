@@ -490,7 +490,7 @@ export function LoginPage() {
                               </button>
                             ) : (
                               <span className="bg-card/80 backdrop-blur-2xl px-4 py-1.5 rounded-full border border-rose-500/20 text-[10px] font-black uppercase tracking-widest text-rose-500 flex items-center gap-2">
-                                Pendaftaran Manual Ditutup Sementara
+                                Pendaftaran Manual Ditutup Sementara. Sila Klik "Daftar Bersama Google".
                               </span>
                             )}
                           </div>

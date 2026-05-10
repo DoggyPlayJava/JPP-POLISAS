@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { HeartHandshake, MessageSquarePlus, ArrowRight, ShoppingBag, QrCode, Crown, CalendarDays } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+import { PolymartServiceModal } from './PolymartServiceModal';
 
 export interface QuickActionsProps {
   isSuperAdmin: boolean;
@@ -23,9 +24,12 @@ export function QuickActions({
   isJPPMode
 }: QuickActionsProps) {
   const navigate = useNavigate();
+  const [showPolymartModal, setShowPolymartModal] = useState(false);
 
   return (
-    <motion.div
+    <>
+      <PolymartServiceModal isOpen={showPolymartModal} onClose={() => setShowPolymartModal(false)} />
+      <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
@@ -117,7 +121,7 @@ export function QuickActions({
               toast('PolyMart tidak aktif ketika ini!', { icon: '🚧' });
               return;
             }
-            navigate('/polymart');
+            setShowPolymartModal(true);
           }}
           className={cn(
             "col-span-2 md:col-span-2 group relative rounded-[2rem] text-left transition-all duration-500 overflow-hidden border p-5 sm:p-6 flex flex-row items-center gap-4",
@@ -210,5 +214,6 @@ export function QuickActions({
         </button>
       )}
     </motion.div>
+    </>
   );
 }

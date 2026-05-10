@@ -1,0 +1,578 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Shield, CheckCircle, XCircle, FileText, MapPin, Plus, Trash2, GripVertical, Eye, EyeOff, Phone, AlertTriangle, Settings } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import toast from 'react-hot-toast';
+
+export function PolyRiderAdminDashboard() {
+  const [pendingRiders, setPendingRiders] = useState<any[]>([]);
+  const [activeRiders, setActiveRiders] = useState<any[]>([]);
+  const [systemActive, setSystemActive] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'riders' | 'presets' | 'sos' | 'settings'>('riders');
+  const [sosAlerts, setSosAlerts] = useState<any[]>([]);
+  const [klkPhoneSetting, setKlkPhoneSetting] = useState('');
+  const [savingPhone, setSavingPhone] = useState(false);
+  const sosPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Location Presets State
+  const [presets, setPresets] = useState<any[]>([]);
+  const [newPreset, setNewPreset] = useState({ label: '', address: '', icon: '📍', lat: '', lng: '' });
+  const [savingPreset, setSavingPreset] = useState(false);
+
+  useEffect(() => {
+    fetchData();
+    fetchSystemSettings();
+    fetchPresets();
+    fetchSosAlerts();
+    fetchKlkPhone();
+    sosPollingRef.current = setInterval(fetchSosAlerts, 10000);
+    return () => { if (sosPollingRef.current) clearInterval(sosPollingRef.current); };
+  }, []);
+
+  const fetchSystemSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'polyrider_active')
+        .single();
+      
+      if (data) {
+        setSystemActive(data.value === 'true');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const toggleSystemStatus = async () => {
+    const newStatus = !systemActive;
+    const { error } = await supabase
+      .from('system_settings')
+      .upsert({ key: 'polyrider_active', value: String(newStatus) });
+
+    if (!error) {
+      setSystemActive(newStatus);
+      toast.success(`Sistem PolyRider kini ${newStatus ? 'AKTIF' : 'DITUTUP'}`);
+    }
+  };
+
+  const fetchData = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('polyrider_profiles')
+      .select('*, profiles(full_name, avatar_url)')
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setPendingRiders(data.filter(r => r.status === 'PENDING'));
+      setActiveRiders(data.filter(r => r.status === 'APPROVED'));
+    }
+    setLoading(false);
+  };
+
+  const fetchPresets = async () => {
+    const { data } = await supabase.from('polyrider_location_presets')
+      .select('*').order('sort_order');
+    if (data) setPresets(data);
+  };
+
+  const fetchSosAlerts = async () => {
+    // Step 1: Fetch SOS logs (simple — no joins to avoid silent failures)
+    const { data: sosData, error: sosError } = await supabase
+      .from('polyrider_sos_logs')
+      .select('*')
+      .or('resolved.eq.false,resolved.is.null')  // handle both false and NULL
+      .order('created_at', { ascending: false });
+
+    if (sosError) {
+      console.error('[SOS Admin] fetchSosAlerts error:', sosError.message);
+      return;
+    }
+
+    if (!sosData || sosData.length === 0) {
+      setSosAlerts([]);
+      return;
+    }
+
+    // Step 2: Enrich each SOS log with job + student + rider info
+    const enriched = await Promise.all(
+      sosData.map(async (sos) => {
+        if (!sos.job_id) return sos;
+        const { data: job } = await supabase
+          .from('polyrider_jobs')
+          .select('id, pickup_name, dropoff_name, proposed_price, student_id, rider_id, status')
+          .eq('id', sos.job_id)
+          .single();
+
+        if (!job) return { ...sos, job: null };
+
+        // Fetch student profile
+        const { data: student } = job.student_id
+          ? await supabase.from('profiles').select('full_name, matric_no').eq('id', job.student_id).single()
+          : { data: null };
+
+        // Fetch rider profile
+        const { data: riderProfile } = job.rider_id
+          ? await supabase.from('polyrider_profiles').select('plate_number').eq('user_id', job.rider_id).single()
+          : { data: null };
+        const { data: riderName } = job.rider_id
+          ? await supabase.from('profiles').select('full_name').eq('id', job.rider_id).single()
+          : { data: null };
+
+        return {
+          ...sos,
+          job: {
+            ...job,
+            student,
+            rider: riderProfile ? { ...riderProfile, profiles: riderName } : null,
+          },
+        };
+      })
+    );
+
+    setSosAlerts(enriched);
+  };
+
+  const resolveSOS = async (sosId: string) => {
+    const { error } = await supabase.from('polyrider_sos_logs')
+      .update({ resolved: true, resolved_at: new Date().toISOString() })
+      .eq('id', sosId);
+    if (!error) {
+      toast.success('Kes SOS diselesaikan.');
+      fetchSosAlerts();
+    } else {
+      toast.error('Gagal menanda selesai.');
+    }
+  };
+
+  const fetchKlkPhone = async () => {
+    const { data } = await supabase.from('system_settings').select('value').eq('key', 'klk_emergency_phone').single();
+    if (data?.value) {
+      try { setKlkPhoneSetting(JSON.parse(data.value)); } catch { setKlkPhoneSetting(data.value); }
+    }
+  };
+
+  const saveKlkPhone = async () => {
+    setSavingPhone(true);
+    await supabase.from('system_settings').upsert({ key: 'klk_emergency_phone', value: JSON.stringify(klkPhoneSetting) });
+    toast.success('No. telefon KLK dikemaskini!');
+    setSavingPhone(false);
+  };
+
+  const addPreset = async () => {
+    if (!newPreset.label.trim() || !newPreset.address.trim()) {
+      toast.error('Label dan alamat wajib diisi.'); return;
+    }
+    setSavingPreset(true);
+    const { error } = await supabase.from('polyrider_location_presets').insert({
+      label: newPreset.label.trim(),
+      address: newPreset.address.trim(),
+      icon: newPreset.icon || '📍',
+      lat: newPreset.lat ? Number(newPreset.lat) : null,
+      lng: newPreset.lng ? Number(newPreset.lng) : null,
+      sort_order: presets.length + 1,
+    });
+    setSavingPreset(false);
+    if (error) { toast.error('Gagal tambah preset.'); return; }
+    toast.success('Preset ditambah!');
+    setNewPreset({ label: '', address: '', icon: '📍', lat: '', lng: '' });
+    fetchPresets();
+  };
+
+  const togglePreset = async (id: string, current: boolean) => {
+    await supabase.from('polyrider_location_presets').update({ is_active: !current }).eq('id', id);
+    fetchPresets();
+  };
+
+  const deletePreset = async (id: string) => {
+    if (!window.confirm('Padam preset ini?')) return;
+    await supabase.from('polyrider_location_presets').delete().eq('id', id);
+    toast.success('Preset dipadam.');
+    fetchPresets();
+  };
+
+  const handleApprove = async (id: string) => {
+    const { error } = await supabase
+      .from('polyrider_profiles')
+      .update({ status: 'APPROVED', updated_at: new Date().toISOString() })
+      .eq('user_id', id);
+
+    if (!error) {
+      toast.success('Pendaftaran diluluskan!');
+      fetchData();
+    } else {
+      toast.error('Gagal meluluskan pendaftaran.');
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    if (!window.confirm('Pasti untuk tolak pendaftaran ini?')) return;
+    const { error } = await supabase
+      .from('polyrider_profiles')
+      .update({ status: 'REJECTED', updated_at: new Date().toISOString() })
+      .eq('user_id', id);
+
+    if (!error) {
+      toast.success('Pendaftaran ditolak.');
+      fetchData();
+    } else {
+      toast.error('Ralat.');
+    }
+  };
+
+  if (loading) {
+    return <div className="p-8 text-center text-slate-500 dark:text-white/50 animate-pulse">Memuatkan data admin...</div>;
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto pb-32 pt-4 px-4 min-h-screen">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            Kawalan KLK <Shield className="w-6 h-6 text-amber-500" />
+          </h1>
+          <p className="text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-widest mt-1">
+            Pengurusan PolyRider
+          </p>
+        </div>
+
+        {/* Master Switch */}
+        <button 
+          onClick={toggleSystemStatus}
+          className={`px-4 py-2 rounded-full font-black text-xs uppercase tracking-wider transition-all shadow-sm flex items-center gap-2 ${
+            systemActive 
+              ? 'bg-emerald-500 text-white shadow-emerald-500/20' 
+              : 'bg-rose-500 text-white shadow-rose-500/20'
+          }`}
+        >
+          {systemActive ? 'SISTEM ON' : 'SISTEM OFF'}
+        </button>
+      </div>
+
+      {/* Tab Bar */}
+      <div className="flex gap-1.5 mb-8 bg-slate-100 dark:bg-zinc-900 p-1 rounded-2xl overflow-x-auto">
+        <button onClick={() => setActiveTab('riders')}
+          className={`flex-1 py-2 px-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+            activeTab === 'riders' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-400 dark:text-white/40'
+          }`}>Pengurusan Rider</button>
+        <button onClick={() => setActiveTab('presets')}
+          className={`flex-1 py-2 px-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1 whitespace-nowrap ${
+            activeTab === 'presets' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-400 dark:text-white/40'
+          }`}><MapPin className="w-3 h-3" /> Preset</button>
+        <button onClick={() => setActiveTab('sos')}
+          className={`flex-1 py-2 px-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 whitespace-nowrap relative ${
+            activeTab === 'sos' ? 'bg-red-500 text-white shadow-sm' : 'text-red-500 dark:text-red-400'
+          }`}>
+          <AlertTriangle className="w-3 h-3" /> SOS
+          {sosAlerts.length > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center animate-bounce">
+              {sosAlerts.length}
+            </span>
+          )}
+        </button>
+        <button onClick={() => setActiveTab('settings')}
+          className={`flex-1 py-2 px-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1 whitespace-nowrap ${
+            activeTab === 'settings' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-400 dark:text-white/40'
+          }`}><Settings className="w-3 h-3" /> Tetapan</button>
+      </div>
+
+      {/* RIDERS TAB */}
+      {activeTab === 'riders' && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="bg-amber-50 dark:bg-amber-500/10 rounded-[2rem] p-6 border border-amber-100 dark:border-amber-500/20">
+          <div className="w-12 h-12 bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center mb-4">
+            <FileText className="w-6 h-6" />
+          </div>
+          <h3 className="text-3xl font-black text-amber-700 dark:text-amber-400 mb-1">{pendingRiders.length}</h3>
+          <p className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest">Menunggu Kelulusan</p>
+        </div>
+        <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-[2rem] p-6 border border-emerald-100 dark:border-emerald-500/20">
+          <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mb-4">
+            <CheckCircle className="w-6 h-6" />
+          </div>
+          <h3 className="text-3xl font-black text-emerald-700 dark:text-emerald-400 mb-1">{activeRiders.length}</h3>
+          <p className="text-xs font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest">Rider Berdaftar</p>
+        </div>
+      </div>
+
+      <div className="mb-8">
+        <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+          Permohonan Baharu <span className="bg-amber-500 text-white px-2 py-0.5 rounded-full text-[10px]">{pendingRiders.length}</span>
+        </h2>
+        
+        <div className="space-y-4">
+          {pendingRiders.length === 0 ? (
+            <div className="text-center p-8 bg-slate-50 dark:bg-zinc-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-white/10">
+              <p className="text-xs font-bold text-slate-400 dark:text-white/30 uppercase tracking-widest">Tiada Permohonan</p>
+            </div>
+          ) : (
+            pendingRiders.map(rider => (
+              <div key={rider.user_id} className="bg-white dark:bg-zinc-900 rounded-[2rem] p-5 shadow-lg shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-white/5">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <img src={rider.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${rider.profiles?.full_name}&background=random`} alt="avatar" className="w-12 h-12 rounded-full bg-slate-100 object-cover" />
+                    <div>
+                      <p className="font-bold text-slate-900 dark:text-white">{rider.profiles?.full_name}</p>
+                      <p className="text-xs font-medium text-slate-500 dark:text-white/50">{rider.vehicle_type} • {rider.plate_number}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {rider.license_url && (
+                      <a 
+                        href={rider.license_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-[10px] font-black uppercase tracking-widest text-blue-500 bg-blue-50 dark:bg-blue-500/10 px-3 py-2 rounded-xl"
+                      >
+                        Lihat Resit
+                      </a>
+                    )}
+                    <button onClick={() => handleApprove(rider.user_id)} className="w-10 h-10 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center transition-colors">
+                      <CheckCircle className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => handleReject(rider.user_id)} className="w-10 h-10 rounded-xl bg-rose-100 text-rose-500 hover:bg-rose-200 dark:bg-rose-500/20 dark:hover:bg-rose-500/30 flex items-center justify-center transition-colors">
+                      <XCircle className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">Semua Rider</h2>
+        <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-1 shadow-lg shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-white/5 overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr>
+                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 border-b border-slate-100 dark:border-white/5">Rider</th>
+                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 border-b border-slate-100 dark:border-white/5">Kenderaan</th>
+                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 border-b border-slate-100 dark:border-white/5">Status Tugas</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activeRiders.map(rider => (
+                <tr key={rider.user_id} className="hover:bg-slate-50 dark:hover:bg-white dark:bg-zinc-900/5 transition-colors">
+                  <td className="p-4 border-b border-slate-50 dark:border-white/5">
+                    <p className="font-bold text-sm text-slate-900 dark:text-white">{rider.profiles?.full_name}</p>
+                  </td>
+                  <td className="p-4 border-b border-slate-50 dark:border-white/5">
+                    <p className="text-xs font-bold text-slate-500 dark:text-white/60">{rider.plate_number}</p>
+                  </td>
+                  <td className="p-4 border-b border-slate-50 dark:border-white/5">
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${
+                      rider.is_active ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20' : 'bg-slate-100 text-slate-500 dark:bg-white dark:bg-zinc-900/10 dark:text-white/40'
+                    }`}>
+                      {rider.is_active ? 'On-Duty' : 'Off-Duty'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+        </>
+      )}
+
+      {/* PRESETS TAB */}
+      {activeTab === 'presets' && (
+        <div className="space-y-6">
+          {/* Add Form */}
+          <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-5 border border-slate-100 dark:border-white/5">
+            <h2 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+              <Plus className="w-4 h-4 text-amber-500" /> Tambah Lokasi Baru
+            </h2>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 block">Label *</label>
+                <input value={newPreset.label} onChange={e => setNewPreset({...newPreset, label: e.target.value})}
+                  placeholder="Kamsis D" className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-400" />
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 block">Icon Emoji</label>
+                <input value={newPreset.icon} onChange={e => setNewPreset({...newPreset, icon: e.target.value})}
+                  placeholder="📍" className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-400" />
+              </div>
+            </div>
+            <div className="mb-3">
+              <label className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 block">Alamat / Huraian *</label>
+              <input value={newPreset.address} onChange={e => setNewPreset({...newPreset, address: e.target.value})}
+                placeholder="Kolej Kediaman D, POLISAS" className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-400" />
+            </div>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <label className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 block">Latitud (Opsional)</label>
+                <input type="number" step="any" value={newPreset.lat} onChange={e => setNewPreset({...newPreset, lat: e.target.value})}
+                  placeholder="3.8333" className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-400" />
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 block">Longitud (Opsional)</label>
+                <input type="number" step="any" value={newPreset.lng} onChange={e => setNewPreset({...newPreset, lng: e.target.value})}
+                  placeholder="103.3167" className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-400" />
+              </div>
+            </div>
+            <button onClick={addPreset} disabled={savingPreset}
+              className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
+              <Plus className="w-4 h-4" /> {savingPreset ? 'Menyimpan...' : 'Tambah Preset'}
+            </button>
+          </div>
+
+          {/* Preset List */}
+          <div>
+            <h2 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white mb-4">
+              Preset Sedia Ada ({presets.length})
+            </h2>
+            <div className="space-y-3">
+              {presets.length === 0 ? (
+                <div className="text-center p-8 bg-slate-50 dark:bg-zinc-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-white/10">
+                  <p className="text-xs font-bold text-slate-400 dark:text-white/40 uppercase tracking-widest">Tiada Preset</p>
+                </div>
+              ) : (
+                presets.map(p => (
+                  <div key={p.id} className={`bg-white dark:bg-zinc-900 rounded-2xl p-4 border flex items-center justify-between gap-3 ${
+                    p.is_active ? 'border-slate-100 dark:border-white/5' : 'border-slate-200 dark:border-white/10 opacity-50'
+                  }`}>
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <span className="text-2xl shrink-0">{p.icon}</span>
+                      <div className="min-w-0">
+                        <p className="font-black text-slate-900 dark:text-white text-sm">{p.label}</p>
+                        <p className="text-xs text-slate-400 dark:text-white/40 truncate">{p.address}</p>
+                        {p.lat && <p className="text-[10px] text-slate-300 font-mono">{Number(p.lat).toFixed(4)}, {Number(p.lng).toFixed(4)}</p>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button onClick={() => togglePreset(p.id, p.is_active)}
+                        className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
+                          p.is_active ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10' : 'bg-slate-100 text-slate-400 dark:bg-white dark:bg-zinc-900/5'
+                        }`}>
+                        {p.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                      </button>
+                      <button onClick={() => deletePreset(p.id)}
+                        className="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-500 flex items-center justify-center">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* SOS TAB */}
+      {activeTab === 'sos' && (
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-sm font-black text-red-500 uppercase tracking-wider flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" /> Isyarat SOS Aktif
+            </h2>
+            <button onClick={fetchSosAlerts} className="text-[10px] font-black text-slate-400 dark:text-white/40 bg-slate-100 dark:bg-zinc-800 px-3 py-1.5 rounded-lg uppercase tracking-widest">
+              ↻ Muat Semula
+            </button>
+          </div>
+
+          {sosAlerts.length === 0 ? (
+            <div className="text-center p-12 bg-emerald-50 dark:bg-emerald-500/10 rounded-[2rem] border border-emerald-100 dark:border-emerald-500/20">
+              <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
+              <p className="font-black text-emerald-700 dark:text-emerald-400">Tiada Kecemasan Aktif</p>
+              <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-1">Semua pelajar dan rider selamat.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {sosAlerts.map(sos => {
+                const student = sos.job?.student;
+                const rider = sos.job?.rider;
+                const mapsLink = (sos.lat && sos.lng) ? `https://maps.google.com/?q=${sos.lat},${sos.lng}` : null;
+                const elapsed = Math.floor((Date.now() - new Date(sos.created_at).getTime()) / 60000);
+                return (
+                  <div key={sos.id} className="bg-red-50 dark:bg-red-500/10 border-2 border-red-200 dark:border-red-500/30 rounded-[2rem] p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl animate-pulse">🚨</span>
+                        <div>
+                          <p className="font-black text-red-700 dark:text-red-400 text-sm">SOS KECEMASAN</p>
+                          <p className="text-[10px] text-red-500 dark:text-red-400/70 font-bold">{elapsed} minit lepas</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-black bg-red-500 text-white px-2 py-1 rounded-lg uppercase">Belum Selesai</span>
+                    </div>
+
+                    <div className="space-y-2 mb-4">
+                      {student && (
+                        <div className="flex items-center justify-between bg-white dark:bg-zinc-900 rounded-xl p-3">
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 dark:text-white/40 uppercase">Pelajar</p>
+                            <p className="font-black text-slate-900 dark:text-white text-sm">{student.full_name}</p>
+                            {student.matric_no && <p className="text-xs text-slate-400">{student.matric_no}</p>}
+                          </div>
+                        </div>
+                      )}
+                      {rider && (
+                        <div className="flex items-center justify-between bg-white dark:bg-zinc-900 rounded-xl p-3">
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 dark:text-white/40 uppercase">Rider</p>
+                            <p className="font-black text-slate-900 dark:text-white text-sm">{rider.profiles?.full_name}</p>
+                            <p className="text-xs font-bold text-amber-500">{rider.plate_number}</p>
+                          </div>
+                        </div>
+                      )}
+                      {mapsLink && (
+                        <a href={mapsLink} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-2 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl p-3 text-blue-600 dark:text-blue-400 font-bold text-sm">
+                          <MapPin className="w-4 h-4" /> Buka Lokasi GPS di Maps
+                        </a>
+                      )}
+                      {!mapsLink && (
+                        <div className="bg-white dark:bg-zinc-900 rounded-xl p-3">
+                          <p className="text-[10px] text-slate-400 dark:text-white/40 font-bold uppercase">Lokasi GPS</p>
+                          <p className="text-sm font-bold text-slate-500 dark:text-white/60">Tidak tersedia</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => resolveSOS(sos.id)}
+                      className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <CheckCircle className="w-5 h-5" /> Tandakan Selesai / Resolved
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* SETTINGS TAB */}
+      {activeTab === 'settings' && (
+        <div className="space-y-6">
+          <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Tetapan PolyRider</h2>
+          <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 border border-slate-100 dark:border-white/5">
+            <label className="text-xs font-black text-slate-400 dark:text-white/40 uppercase tracking-widest block mb-2">No. Telefon Kecemasan KLK</label>
+            <p className="text-[10px] text-slate-400 dark:text-white/30 mb-3">Nombor ini akan dipaparkan kepada pelajar dan rider selepas mereka mencetuskan SOS.</p>
+            <div className="flex gap-3">
+              <input
+                type="tel"
+                value={klkPhoneSetting}
+                onChange={e => setKlkPhoneSetting(e.target.value)}
+                placeholder="Cth: 09-9000000"
+                className="flex-1 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
+              />
+              <button onClick={saveKlkPhone} disabled={savingPhone}
+                className="px-5 py-3 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl disabled:opacity-50 flex items-center gap-2">
+                <Phone className="w-4 h-4" />
+                {savingPhone ? '...' : 'Simpan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

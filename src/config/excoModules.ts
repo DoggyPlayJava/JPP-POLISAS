@@ -67,9 +67,8 @@ export const EXCO_MODULES: ExcoModule[] = [
     basePath: '/akademik',
     isActive: true,
   },
-  // NOTA: SUPSAS tidak dimasukkan dalam senarai ini — ia dikawal
-  // secara berasingan melalui event banner dalam PortalPage,
-  // dan hanya muncul apabila Exco Sukan mengaktifkan toggle.
+  // NOTA: SUPSAS dan PolyRider tidak dimasukkan dalam senarai ini — ia dikawal
+  // secara berasingan melalui komponen tersendiri (BottomNav atau event banner).
 ];
 
 // ============================================================

@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 import {
   Package, CheckCircle, XCircle, Truck, Clock, Store,
   Phone, MessageCircle, ChevronDown, ChevronUp, AlertTriangle,
-  TrendingUp, ShoppingBag,
+  TrendingUp, ShoppingBag, Bike
 } from 'lucide-react';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -540,13 +540,23 @@ export function PolyMartVendorDashboard() {
           <h1 className="text-xl font-black text-foreground">Dashboard Peniaga</h1>
           <p className="text-xs text-muted-foreground/60">Urus pesanan PolyMart anda</p>
         </div>
-        <button 
-          onClick={() => navigate('/keusahawanan/pos/stats')}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-black text-white transition-all hover:scale-105 active:scale-95 shadow-lg"
-          style={{ background: PM_GRADIENT }}>
-          <TrendingUp className="w-3.5 h-3.5" />
-          Lihat Analitik
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => navigate('/polyrider')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-black text-amber-700 bg-amber-100 dark:bg-amber-500/20 dark:text-amber-400 transition-all hover:scale-105 active:scale-95 border border-amber-200 dark:border-amber-500/30"
+          >
+            <Bike className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Panggil Rider</span>
+          </button>
+          <button 
+            onClick={() => navigate('/keusahawanan/pos/stats')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-black text-white transition-all hover:scale-105 active:scale-95 shadow-lg"
+            style={{ background: PM_GRADIENT }}>
+            <TrendingUp className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Lihat Analitik</span>
+            <span className="sm:hidden">Analitik</span>
+          </button>
+        </div>
       </motion.div>
 
       {/* Stats */}
