@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, CheckCircle, XCircle, FileText, MapPin, Plus, Trash2, GripVertical, Eye, EyeOff, Phone, AlertTriangle, Settings } from 'lucide-react';
+import { Shield, CheckCircle, XCircle, FileText, MapPin, Plus, Trash2, GripVertical, Eye, EyeOff, Phone, AlertTriangle, Settings, Upload, MessageCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 import { notifyKLKOnSuspension } from '@/lib/polyRiderNotify';
-
+import { uploadFileToDrive } from '@/lib/driveUpload';
 export function PolyRiderAdminDashboard() {
   const [pendingRiders, setPendingRiders] = useState<any[]>([]);
   const [activeRiders, setActiveRiders] = useState<any[]>([]);
@@ -14,6 +14,11 @@ export function PolyRiderAdminDashboard() {
   const [appeals, setAppeals] = useState<any[]>([]);
   const [klkPhoneSetting, setKlkPhoneSetting] = useState('');
   const [savingPhone, setSavingPhone] = useState(false);
+  const [whatsappSetting, setWhatsappSetting] = useState('');
+  const [savingWhatsapp, setWhatsappSaving] = useState(false);
+  const [qrFile, setQrFile] = useState<File | null>(null);
+  const [qrPreview, setQrPreview] = useState<string | null>(null);
+  const [savingQr, setSavingQr] = useState(false);
   const sosPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Location Presets State
@@ -28,6 +33,8 @@ export function PolyRiderAdminDashboard() {
     fetchSosAlerts();
     fetchAppeals();
     fetchKlkPhone();
+    fetchWhatsappLink();
+    fetchQrCode();
     sosPollingRef.current = setInterval(() => {
       fetchSosAlerts();
       fetchAppeals();
@@ -72,7 +79,7 @@ export function PolyRiderAdminDashboard() {
 
     if (!error && data) {
       setPendingRiders(data.filter(r => r.status === 'PENDING'));
-      setActiveRiders(data.filter(r => r.status === 'APPROVED'));
+      setActiveRiders(data.filter(r => r.status === 'APPROVED' || r.status === 'SUSPENDED'));
     }
     setLoading(false);
   };
@@ -251,6 +258,44 @@ export function PolyRiderAdminDashboard() {
     setSavingPhone(false);
   };
 
+  const fetchWhatsappLink = async () => {
+    const { data } = await supabase.from('system_settings').select('value').eq('key', 'polyrider_whatsapp_link').single();
+    if (data?.value) setWhatsappSetting(data.value);
+  };
+
+  const saveWhatsappLink = async () => {
+    setWhatsappSaving(true);
+    await supabase.from('system_settings').upsert({ key: 'polyrider_whatsapp_link', value: whatsappSetting });
+    toast.success('Pautan WhatsApp dikemaskini!');
+    setWhatsappSaving(false);
+  };
+
+  const fetchQrCode = async () => {
+    const { data } = await supabase.from('system_settings').select('value').eq('key', 'polyrider_admin_qr').single();
+    if (data?.value) {
+      setQrPreview(data.value);
+    }
+  };
+
+  const saveQrCode = async () => {
+    if (!qrFile) return;
+    setSavingQr(true);
+    try {
+      const url = await uploadFileToDrive(qrFile, 'polyrider-receipts');
+      if (url) {
+        await supabase.from('system_settings').upsert({ key: 'polyrider_admin_qr', value: url });
+        setQrPreview(url);
+        toast.success('QR Code berjaya dimuat naik!');
+      } else {
+        toast.error('Gagal memuat naik gambar.');
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'Ralat muat naik.');
+    } finally {
+      setSavingQr(false);
+    }
+  };
+
   const addPreset = async () => {
     if (!newPreset.label.trim() || !newPreset.address.trim()) {
       toast.error('Label dan alamat wajib diisi.'); return;
@@ -284,13 +329,20 @@ export function PolyRiderAdminDashboard() {
   };
 
   const handleApprove = async (id: string) => {
+    const validUntil = new Date();
+    validUntil.setDate(validUntil.getDate() + 30); // 30 hari
+    
     const { error } = await supabase
       .from('polyrider_profiles')
-      .update({ status: 'APPROVED', updated_at: new Date().toISOString() })
+      .update({ 
+        status: 'APPROVED', 
+        updated_at: new Date().toISOString(),
+        subscription_valid_until: validUntil.toISOString()
+      })
       .eq('user_id', id);
 
     if (!error) {
-      toast.success('Pendaftaran diluluskan!');
+      toast.success('Pendaftaran diluluskan & langganan diaktifkan 30 hari!');
       fetchData();
     } else {
       toast.error('Gagal meluluskan pendaftaran.');
@@ -310,6 +362,43 @@ export function PolyRiderAdminDashboard() {
     } else {
       toast.error('Ralat.');
     }
+  };
+
+  const handleSuspend = async (id: string) => {
+    if (!window.confirm('Pasti untuk gantung rider ini? Mereka tidak akan dapat bertugas.')) return;
+    const { error } = await supabase
+      .from('polyrider_profiles')
+      .update({ status: 'SUSPENDED', is_active: false, updated_at: new Date().toISOString() })
+      .eq('user_id', id);
+
+    if (!error) {
+      toast.success('Rider telah digantung.');
+      fetchData();
+    } else {
+      toast.error('Ralat menggantung rider.');
+    }
+  };
+
+  const handleResume = async (id: string) => {
+    if (!window.confirm('Pasti untuk sambung tugas rider ini?')) return;
+    const { error } = await supabase
+      .from('polyrider_profiles')
+      .update({ status: 'APPROVED', updated_at: new Date().toISOString() })
+      .eq('user_id', id);
+
+    if (!error) {
+      toast.success('Tugas rider telah disambung.');
+      fetchData();
+    } else {
+      toast.error('Ralat menyambung rider.');
+    }
+  };
+
+  const getDaysRemaining = (validUntil: string | null) => {
+    if (!validUntil) return 0;
+    const diffTime = new Date(validUntil).getTime() - new Date().getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
   };
 
   if (loading) {
@@ -421,9 +510,9 @@ export function PolyRiderAdminDashboard() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    {rider.license_url && (
+                    {(rider.receipt_url || rider.license_url) && (
                       <a 
-                        href={rider.license_url} 
+                        href={rider.receipt_url || rider.license_url} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-[10px] font-black uppercase tracking-widest text-blue-500 bg-blue-50 dark:bg-blue-500/10 px-3 py-2 rounded-xl"
@@ -453,27 +542,50 @@ export function PolyRiderAdminDashboard() {
               <tr>
                 <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 border-b border-slate-100 dark:border-white/5">Rider</th>
                 <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 border-b border-slate-100 dark:border-white/5">Kenderaan</th>
-                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 border-b border-slate-100 dark:border-white/5">Status Tugas</th>
+                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 border-b border-slate-100 dark:border-white/5">Status</th>
+                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 border-b border-slate-100 dark:border-white/5">Tindakan</th>
               </tr>
             </thead>
             <tbody>
-              {activeRiders.map(rider => (
-                <tr key={rider.user_id} className="hover:bg-slate-50 dark:hover:bg-white dark:bg-zinc-900/5 transition-colors">
-                  <td className="p-4 border-b border-slate-50 dark:border-white/5">
-                    <p className="font-bold text-sm text-slate-900 dark:text-white">{rider.profiles?.full_name}</p>
-                  </td>
-                  <td className="p-4 border-b border-slate-50 dark:border-white/5">
-                    <p className="text-xs font-bold text-slate-500 dark:text-white/60">{rider.plate_number}</p>
-                  </td>
-                  <td className="p-4 border-b border-slate-50 dark:border-white/5">
-                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${
-                      rider.is_active ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20' : 'bg-slate-100 text-slate-500 dark:bg-white dark:bg-zinc-900/10 dark:text-white/40'
-                    }`}>
-                      {rider.is_active ? 'On-Duty' : 'Off-Duty'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {activeRiders.map(rider => {
+                const daysRemaining = getDaysRemaining(rider.subscription_valid_until);
+                return (
+                  <tr key={rider.user_id} className={`hover:bg-slate-50 dark:hover:bg-white dark:bg-zinc-900/5 transition-colors ${rider.status === 'SUSPENDED' ? 'opacity-60' : ''}`}>
+                    <td className="p-4 border-b border-slate-50 dark:border-white/5">
+                      <p className="font-bold text-sm text-slate-900 dark:text-white">{rider.profiles?.full_name}</p>
+                      {rider.status === 'SUSPENDED' && <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest bg-rose-500/10 px-2 py-0.5 rounded-md mt-1 inline-block">Digantung</span>}
+                    </td>
+                    <td className="p-4 border-b border-slate-50 dark:border-white/5">
+                      <p className="text-xs font-bold text-slate-500 dark:text-white/60">{rider.plate_number}</p>
+                    </td>
+                    <td className="p-4 border-b border-slate-50 dark:border-white/5">
+                      <div className="flex flex-col gap-1">
+                        <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md w-fit ${
+                          rider.is_active ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20' : 'bg-slate-100 text-slate-500 dark:bg-white dark:bg-zinc-900/10 dark:text-white/40'
+                        }`}>
+                          {rider.is_active ? 'On-Duty' : 'Off-Duty'}
+                        </span>
+                        {rider.status === 'APPROVED' && (
+                          <span className={`text-[10px] font-bold ${daysRemaining <= 3 ? 'text-rose-500' : 'text-slate-400 dark:text-white/40'}`}>
+                            {daysRemaining} hari lagi
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4 border-b border-slate-50 dark:border-white/5">
+                      {rider.status === 'APPROVED' ? (
+                        <button onClick={() => handleSuspend(rider.user_id)} className="text-[10px] font-black uppercase tracking-widest bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 px-3 py-2 rounded-xl transition-colors">
+                          Gantung Tugas
+                        </button>
+                      ) : (
+                        <button onClick={() => handleResume(rider.user_id)} className="text-[10px] font-black uppercase tracking-widest bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 px-3 py-2 rounded-xl transition-colors">
+                          Sambung Tugas
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -736,6 +848,68 @@ export function PolyRiderAdminDashboard() {
                 <Phone className="w-4 h-4" />
                 {savingPhone ? '...' : 'Simpan'}
               </button>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 border border-slate-100 dark:border-white/5">
+            <label className="text-xs font-black text-slate-400 dark:text-white/40 uppercase tracking-widest block mb-2">Pautan Komuniti WhatsApp</label>
+            <p className="text-[10px] text-slate-400 dark:text-white/30 mb-3">Pautan ini akan dipaparkan kepada rider setelah pendaftaran mereka diluluskan.</p>
+            <div className="flex gap-3">
+              <input
+                type="url"
+                value={whatsappSetting}
+                onChange={e => setWhatsappSetting(e.target.value)}
+                placeholder="Cth: https://chat.whatsapp.com/..."
+                className="flex-1 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+              />
+              <button onClick={saveWhatsappLink} disabled={savingWhatsapp}
+                className="px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl disabled:opacity-50 flex items-center gap-2">
+                <MessageCircle className="w-4 h-4" />
+                {savingWhatsapp ? '...' : 'Simpan Pautan'}
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 border border-slate-100 dark:border-white/5">
+            <label className="text-xs font-black text-slate-400 dark:text-white/40 uppercase tracking-widest block mb-2">QR Code Bayaran Yuran PolyRider</label>
+            <p className="text-[10px] text-slate-400 dark:text-white/30 mb-3">Sila muat naik QR Code (contohnya DuitNow) untuk pelajar membayar yuran langganan bulanan RM10.</p>
+            <div className="flex flex-col md:flex-row gap-6 items-start">
+              <div className="border-2 border-dashed border-slate-200 dark:border-white/20 rounded-xl p-6 text-center hover:border-amber-500 transition-colors w-full md:w-1/2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  id="qr-upload"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setQrFile(file);
+                      setQrPreview(URL.createObjectURL(file));
+                    }
+                  }}
+                />
+                <label htmlFor="qr-upload" className="cursor-pointer flex flex-col items-center">
+                  <Upload className="w-8 h-8 text-slate-400 dark:text-white/40 mb-2" />
+                  <span className="text-sm font-bold text-amber-600">{qrFile ? qrFile.name : 'Pilih Gambar QR'}</span>
+                  <span className="text-xs text-slate-400 dark:text-white/40 mt-1">Sokongan JPG, PNG</span>
+                </label>
+              </div>
+              
+              <div className="w-full md:w-1/2 flex flex-col items-center">
+                {qrPreview ? (
+                  <img src={qrPreview} alt="QR Preview" className="w-48 h-48 object-contain rounded-xl border border-slate-200 dark:border-white/10 mb-4" />
+                ) : (
+                  <div className="w-48 h-48 bg-slate-50 dark:bg-zinc-800 rounded-xl border border-slate-200 dark:border-white/10 flex items-center justify-center mb-4">
+                    <span className="text-xs font-bold text-slate-400">Tiada QR</span>
+                  </div>
+                )}
+                
+                <button onClick={saveQrCode} disabled={!qrFile || savingQr}
+                  className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
+                  <Upload className="w-4 h-4" />
+                  {savingQr ? 'Memuat naik...' : 'Simpan QR Code'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

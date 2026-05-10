@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bike, MapPin, Navigation, ShieldAlert, Banknote, UserCircle, MessageCircle, Send, Map as MapIcon, X, CheckCircle, Check, Users, Star, History, Clock, Phone, ChevronRight, Bug, TrendingUp, Award, Receipt } from 'lucide-react';
+import { Bike, MapPin, Navigation, ShieldAlert, Banknote, UserCircle, MessageCircle, Send, Map as MapIcon, X, CheckCircle, Check, Users, Star, History, Clock, Phone, ChevronRight, Bug, TrendingUp, Award, Receipt, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
@@ -15,6 +15,51 @@ import { MapPicker } from '@/components/MapPicker';
 import { LocationSearchInput } from '@/components/polyrider/LocationSearchInput';
 import { SOSContactsManager } from './SOSContactsManager';
 import { notifyAllActiveRiders, notifyBiddingRiders, notifyUsers } from '@/lib/polyRiderNotify';
+import { POLYRIDER_ADDONS, type AddonKey } from '@/lib/polyRiderConstants';
+
+// Haversine distance utility — module scope (avoids re-creation in render loop)
+function haversineKm(a: [number, number], b: [number, number]): number {
+  const toRad = (d: number) => d * Math.PI / 180;
+  const R = 6371;
+  const dLat = toRad(b[0] - a[0]);
+  const dLng = toRad(b[1] - a[1]);
+  const x = Math.sin(dLat/2)**2 + Math.cos(toRad(a[0]))*Math.cos(toRad(b[0]))*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
+}
+
+/** Calculate total surcharge for multi-stop route based on actual detour distance.
+ *  Route: Pickup → Stop1 → Stop2 → ... → Dropoff
+ *  Surcharge = (total multi-stop route distance - direct pickup→dropoff distance) × RM1.50/km
+ *  Minimum RM0.50 per stop to cover rider inconvenience even for nearby stops. */
+function calcStopsSurcharge(
+  pickupPos: [number, number] | null,
+  dropoffPos: [number, number] | null,
+  stops: { name: string; lat: number | null; lng: number | null }[]
+): { surcharge: number; detourKm: number } {
+  const validStops = stops.filter(s => s.lat != null && s.lng != null);
+  if (!pickupPos || !dropoffPos || validStops.length === 0) return { surcharge: 0, detourKm: 0 };
+  
+  // Direct distance (no stops)
+  const directKm = haversineKm(pickupPos, dropoffPos);
+  
+  // Multi-stop route: Pickup → Stop1 → Stop2 → ... → Dropoff
+  const waypoints: [number, number][] = [
+    pickupPos,
+    ...validStops.map(s => [s.lat!, s.lng!] as [number, number]),
+    dropoffPos,
+  ];
+  let routeKm = 0;
+  for (let i = 0; i < waypoints.length - 1; i++) {
+    routeKm += haversineKm(waypoints[i], waypoints[i + 1]);
+  }
+  
+  const detourKm = Math.max(0, routeKm - directKm);
+  // RM1.50/km for detour, minimum RM0.50 per valid stop
+  const minSurcharge = validStops.length * 0.50;
+  const surcharge = Math.max(minSurcharge, +(detourKm * 1.5).toFixed(2));
+  
+  return { surcharge: +surcharge.toFixed(2), detourKm: +detourKm.toFixed(2) };
+}
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
@@ -116,25 +161,28 @@ interface RatingModalProps {
   show: boolean;
   stars: number;
   note: string;
+  tip: number;
   onStars: (s: number) => void;
   onNote: (n: string) => void;
+  onTip: (t: number) => void;
   onSubmit: () => void;
   onSkip: () => void;
   disabled: boolean;
 }
-function RatingModal({ show, stars, note, onStars, onNote, onSubmit, onSkip, disabled }: RatingModalProps) {
+function RatingModal({ show, stars, note, tip, onStars, onNote, onTip, onSubmit, onSkip, disabled }: RatingModalProps) {
   return createPortal(
     <AnimatePresence>
       {show && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/60 z-[300] flex items-end justify-center p-4">
           <motion.div initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}
-            className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 w-full max-w-sm">
+            className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 w-full max-w-sm max-h-[85dvh] overflow-y-auto">
             <div className="text-center mb-6">
               <div className="text-4xl mb-2">🎉</div>
               <h2 className="text-xl font-black text-slate-900 dark:text-white">Perjalanan Selesai!</h2>
               <p className="text-sm text-slate-500 dark:text-white/50 mt-1">Bagaimana pengalaman anda dengan rider ini?</p>
             </div>
+            {/* Stars */}
             <div className="flex justify-center gap-3 mb-4">
               {[1, 2, 3, 4, 5].map(s => (
                 <button key={s} onClick={() => onStars(s)}
@@ -143,16 +191,32 @@ function RatingModal({ show, stars, note, onStars, onNote, onSubmit, onSkip, dis
                 </button>
               ))}
             </div>
+            {/* Tip Section */}
+            <div className="mb-4">
+              <p className="text-xs font-bold text-slate-400 dark:text-white/40 uppercase tracking-wider text-center mb-2">Tambah Tip? (Opsional)</p>
+              <div className="flex justify-center gap-2">
+                {[0, 0.5, 1, 2].map(t => (
+                  <button key={t} onClick={() => onTip(t)}
+                    className={`px-3 py-2 rounded-xl text-sm font-bold border-2 transition-all ${
+                      tip === t
+                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                        : 'border-slate-100 dark:border-white/10 text-slate-500 dark:text-white/40'
+                    }`}>
+                    {t === 0 ? 'Tiada' : `RM${t.toFixed(2)}`}
+                  </button>
+                ))}
+              </div>
+            </div>
             <textarea
               value={note}
               onChange={e => onNote(e.target.value)}
               placeholder="Ulasan ringkas (opsional)..."
-              className="w-full bg-slate-50 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm mb-4 resize-none h-24 focus:ring-2 focus:ring-amber-500"
+              className="w-full bg-slate-50 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm mb-4 resize-none h-20 focus:ring-2 focus:ring-amber-500"
             />
             <div className="space-y-2">
               <button onClick={onSubmit} disabled={disabled || stars === 0}
                 className="w-full py-4 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-bold rounded-2xl transition-colors">
-                Hantar Penilaian
+                {tip > 0 ? `Hantar Penilaian + Tip RM${tip.toFixed(2)} 🎁` : 'Hantar Penilaian'}
               </button>
               <button onClick={onSkip}
                 className="w-full py-3 text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white text-sm font-bold transition-colors">
@@ -183,7 +247,7 @@ export function PolyRiderHome() {
   const [dropoff, setDropoff] = useState(polymartState?.dropoff_name || '');
   const [pickupPos, setPickupPos] = useState<[number, number] | null>(null);
   const [dropoffPos, setDropoffPos] = useState<[number, number] | null>(null);
-  const [activeMapPicker, setActiveMapPicker] = useState<'pickup' | 'dropoff' | null>(null);
+  const [activeMapPicker, setActiveMapPicker] = useState<string | null>(null);
   const [proposedPrice, setProposedPrice] = useState<number>(3.0);
   const [focusedField, setFocusedField] = useState<'pickup' | 'dropoff' | null>(null);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
@@ -237,7 +301,19 @@ export function PolyRiderHome() {
 
   // Auto-detect customer's current location for pickup
   const detectCurrentLocation = useCallback(async () => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      toast.error('GPS tidak disokong oleh peranti/pelayar ini.');
+      return;
+    }
+    // Geolocation only works on HTTPS or localhost — not plain HTTP via IP
+    const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+    if (!isSecure) {
+      toast('📍 Auto-detect GPS memerlukan HTTPS. Sila cari lokasi secara manual atau gunakan peta.', {
+        duration: 5000,
+        icon: '⚠️',
+      });
+      return;
+    }
     setIsDetectingLocation(true);
     try {
       const position = await new Promise<GeolocationPosition>((resolve, reject) =>
@@ -273,7 +349,8 @@ export function PolyRiderHome() {
         setPickup(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
       }
     } catch {
-      // GPS denied or unavailable — fail silently, user can set manually
+      // GPS denied or unavailable
+      toast('GPS dinafikan. Sila cari lokasi anda secara manual.', { icon: '📍', duration: 4000 });
     } finally {
       setIsDetectingLocation(false);
     }
@@ -290,6 +367,7 @@ export function PolyRiderHome() {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [ratingStars, setRatingStars] = useState(0);
   const [ratingNote, setRatingNote] = useState('');
+  const [ratingTip, setRatingTip] = useState(0);
   const [completedJob, setCompletedJob] = useState<any>(null);
 
   // Digital Receipt Modal
@@ -298,6 +376,38 @@ export function PolyRiderHome() {
 
   // Trip History
   const [tripHistory, setTripHistory] = useState<any[]>([]);
+
+  // Add-ons State
+  const [selectedAddons, setSelectedAddons] = useState<AddonKey[]>([]);
+  const toggleAddon = (key: AddonKey) =>
+    setSelectedAddons(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
+
+  // Multi-Stop State — dynamic array of stops [{name, lat, lng}]
+  const [stops, setStops] = useState<{ name: string; lat: number | null; lng: number | null }[]>([]);
+  const addStop = () => setStops(prev => [...prev, { name: '', lat: null, lng: null }]);
+  const removeStop = (i: number) => setStops(prev => prev.filter((_, idx) => idx !== i));
+  const updateStop = (i: number, name: string, lat: number | null, lng: number | null) =>
+    setStops(prev => prev.map((s, idx) => idx === i ? { name, lat, lng } : s));
+  // Partial update helpers to avoid stale closure issues in MapPicker
+  const updateStopName = (i: number, name: string) =>
+    setStops(prev => prev.map((s, idx) => idx === i ? { ...s, name } : s));
+  const updateStopPos = (i: number, lat: number, lng: number) =>
+    setStops(prev => prev.map((s, idx) => idx === i ? { ...s, lat, lng } : s));
+
+
+  // Auto-set proposed price when pickup or dropoff changes
+  useEffect(() => {
+    if (pickupPos && dropoffPos) {
+      const toRad = (d: number) => d * Math.PI / 180;
+      const R = 6371;
+      const dLat = toRad(dropoffPos[0] - pickupPos[0]);
+      const dLng = toRad(dropoffPos[1] - pickupPos[1]);
+      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(pickupPos[0]))*Math.cos(toRad(dropoffPos[0]))*Math.sin(dLng/2)**2;
+      const distKm = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const est = Math.max(5, distKm * 1.5);
+      setProposedPrice(parseFloat(est.toFixed(2)));
+    }
+  }, [pickupPos, dropoffPos]);
 
   // Fetch presets, active riders, carpools on mount
   useEffect(() => {
@@ -335,28 +445,36 @@ export function PolyRiderHome() {
     return () => clearInterval(interval);
   }, [user]);
 
-  // Fetch open carpools when idle with visibility check to save DB CPU
+  // Fetch open carpools + Realtime subscription for instant updates
   useEffect(() => {
     if (isSearching || activeJob || !user) return;
-    const fetch = async () => {
+    const fetchOpenCarpools = async () => {
       const { data } = await supabase.from('polyrider_jobs')
         .select('id, pickup_name, dropoff_name, proposed_price, is_carpool_open, student_id, carpool_group_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, passenger_gender, student:profiles!polyrider_jobs_student_id_profiles_fkey(full_name)')
         .eq('status', 'GATHERING').eq('is_carpool_open', true).neq('student_id', user.id)
         .order('created_at', { ascending: false });
       if (data) setOpenCarpools(data);
     };
-    fetch();
+    fetchOpenCarpools();
 
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') fetch();
-    };
+    // Realtime: refresh whenever any GATHERING job changes
+    const channel = supabase
+      .channel('open-carpools-watch')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'polyrider_jobs',
+        filter: 'status=eq.GATHERING',
+      }, () => { fetchOpenCarpools(); })
+      .subscribe();
+
+    // Also poll every 30s as a safety net
+    const handleVisibility = () => { if (document.visibilityState === 'visible') fetchOpenCarpools(); };
     document.addEventListener('visibilitychange', handleVisibility);
-
-    const iv = setInterval(() => {
-      if (document.visibilityState === 'visible') fetch();
-    }, 30000);
+    const iv = setInterval(() => { if (document.visibilityState === 'visible') fetchOpenCarpools(); }, 30000);
 
     return () => {
+      supabase.removeChannel(channel);
       document.removeEventListener('visibilitychange', handleVisibility);
       clearInterval(iv);
     };
@@ -551,16 +669,27 @@ export function PolyRiderHome() {
       searchStartTime.current = Date.now();
     }
 
+    // Calculate dynamic surcharge based on actual detour distance
+    const { surcharge: stopsSurcharge } = calcStopsSurcharge(pickupPos, dropoffPos, stops);
+    const totalPrice = +(proposedPrice + stopsSurcharge).toFixed(2);
+
     const { data, error } = await supabase.rpc('create_polyrider_job', {
       p_student_id: user.id, p_pickup_name: pickup, p_dropoff_name: dropoff,
       p_pickup_lat: pickupPos?.[0] ?? null, p_pickup_lng: pickupPos?.[1] ?? null,
       p_dropoff_lat: dropoffPos?.[0] ?? null, p_dropoff_lng: dropoffPos?.[1] ?? null,
-      p_proposed_price: proposedPrice,
+      p_proposed_price: totalPrice,
       p_is_carpool_open: isJoiningCarpool ? true : isCarpoolOpen,
       p_join_group_id: joiningCarpool?.carpool_group_id ?? null,
       p_job_type: polymartOrderId ? 'POLYMART_CUST' : 'RIDE',
       p_polymart_order_id: polymartOrderId || null,
+      p_addons: selectedAddons.length > 0 ? selectedAddons : [],
+      p_stops: stops.filter(s => s.name).length > 0
+        ? stops.filter(s => s.name).map(s => ({ name: s.name, lat: s.lat, lng: s.lng }))
+        : [],
     });
+    // Reset addons & stops after successful booking
+    setSelectedAddons([]);
+    setStops([]);
     const job = Array.isArray(data) ? data[0] : data;
     if (error || !job) {
       console.error('[handleBook] RPC error:', error?.message, error?.details, error?.hint);
@@ -568,7 +697,7 @@ export function PolyRiderHome() {
       setIsSearching(false);
       return;
     }
-    setActiveJob(job); setJoiningCarpool(null);
+    setActiveJob(job); setJoiningCarpool(null); savedFormState.current = null;
     
     // Clear the location state if we came from PolyMart
     if (polymartOrderId) {
@@ -604,13 +733,65 @@ export function PolyRiderHome() {
 
   const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
 
-  const openJoinCarpoolModal = (carpool: any) => {
+  // Save & restore main form state when carpool join modal opens/closes
+  const savedFormState = useRef<{pickup: string; dropoff: string; pickupPos: [number,number]|null; dropoffPos: [number,number]|null} | null>(null);
+
+  const openJoinCarpoolModal = async (carpool: any) => {
+    // Save current form values so we can restore on cancel
+    savedFormState.current = { pickup, dropoff, pickupPos, dropoffPos };
     setJoiningCarpool(carpool);
-    // Pre-fill destination — same as owner's dropoff. DO NOT clear pickup.
-    // Passenger sets their own pickup location separately.
+    // Pre-fill destination with owner's dropoff (name only — same destination)
     setDropoff(carpool.dropoff_name);
-    // Only prefill pickup if currently empty
-    if (!pickup) setPickup('');
+    setDropoffPos(null); // coordinates not required for joined carpool
+
+    // Detect GPS pickup first
+    let resolvedPickupPos = pickupPos;
+    if (!pickup && !pickupPos) {
+      const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+      if (isSecure && navigator.geolocation) {
+        setIsDetectingLocation(true);
+        try {
+          const position = await new Promise<GeolocationPosition>((resolve, reject) =>
+            navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 8000 })
+          );
+          const { latitude: lat, longitude: lng } = position.coords;
+          resolvedPickupPos = [lat, lng];
+          setPickupPos([lat, lng]);
+          // Reverse geocode
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ms`,
+              { headers: { 'User-Agent': 'JPP-POLISAS-PolyRider/1.0' } });
+            const geoData = await res.json();
+            const addr = geoData.address || {};
+            const name = addr.amenity || addr.building || addr.road || addr.neighbourhood || addr.suburb || geoData.display_name?.split(',')[0] || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            setPickup(name);
+          } catch { setPickup(`${lat.toFixed(5)}, ${lng.toFixed(5)}`); }
+        } catch { /* GPS denied — user will set manually */ }
+        finally { setIsDetectingLocation(false); }
+      }
+    }
+
+    // Auto-set sumbangan price based on distance from user's pickup to carpool's pickup point
+    if (resolvedPickupPos && carpool.pickup_lat && carpool.pickup_lng) {
+      const dist = haversineKm(resolvedPickupPos, [carpool.pickup_lat, carpool.pickup_lng]);
+      const est = Math.max(2, dist * 1.5);
+      setProposedPrice(parseFloat(est.toFixed(2)));
+    } else {
+      // Fallback: estimate from carpool's proposed_price / passengers
+      setProposedPrice(parseFloat((Number(carpool.proposed_price) / 2).toFixed(2)));
+    }
+  };
+
+  const closeJoinCarpoolModal = () => {
+    // Restore previous form state
+    if (savedFormState.current) {
+      setPickup(savedFormState.current.pickup);
+      setDropoff(savedFormState.current.dropoff);
+      setPickupPos(savedFormState.current.pickupPos);
+      setDropoffPos(savedFormState.current.dropoffPos);
+      savedFormState.current = null;
+    }
+    setJoiningCarpool(null);
   };
   const handleAcceptRequest = async (requestId: string) => {
     if (processingRequestId) return;
@@ -757,6 +938,29 @@ export function PolyRiderHome() {
     }
   };
 
+  // Counter-Offer State
+  const [counteringBidId, setCounteringBidId] = useState<string | null>(null);
+  const [counterAmount, setCounterAmount] = useState<number>(0);
+
+  const submitCounterOffer = async (bidId: string, riderId: string) => {
+    if (counterAmount < 1) { toast.error('Masukkan amaun tawaran balas yang sah.'); return; }
+    const { error } = await supabase
+      .from('polyrider_bids')
+      .update({ counter_amount: counterAmount, counter_status: 'PENDING_RIDER' })
+      .eq('id', bidId)
+      .eq('job_id', activeJob?.id);
+    if (error) { toast.error('Gagal hantar tawaran balas.'); return; }
+    setCounteringBidId(null);
+    // Notify rider
+    const { data: { session } } = await supabase.auth.getSession();
+    notifyUsers(session?.access_token ?? '', [riderId],
+      '💬 Tawaran Balas Diterima!',
+      `Pelajar menawar balik RM${counterAmount.toFixed(2)}. Semak sekarang!`,
+      { tag: 'polyrider-counter-offer', url: '/polyrider/rider' }
+    );
+    toast.success('Tawaran balas dihantar!');
+  };
+
   const acceptBid = async (bid: any) => {
     if (!activeJob || !user) return;
     const { data, error } = await supabase.rpc('accept_polyrider_bid', { p_bid_id: bid.id, p_student_id: user.id });
@@ -778,9 +982,20 @@ export function PolyRiderHome() {
 
   const submitRating = async () => {
     if (!completedJob || ratingStars === 0) return;
-    await supabase.from('polyrider_jobs').update({ student_rating: ratingStars, student_rating_note: ratingNote }).eq('id', completedJob.id);
-    const job = completedJob;
-    setShowRatingModal(false); setRatingStars(0); setRatingNote('');
+    await supabase.from('polyrider_jobs')
+      .update({ student_rating: ratingStars, student_rating_note: ratingNote, tip_amount: ratingTip })
+      .eq('id', completedJob.id);
+    // Notify rider if tip was given
+    if (ratingTip > 0 && completedJob.rider_id) {
+      const { data: { session } } = await supabase.auth.getSession();
+      notifyUsers(session?.access_token ?? '', [completedJob.rider_id],
+        `🎁 Tip RM${ratingTip.toFixed(2)} Diterima!`,
+        'Pelajar menghargai perkhidmatan anda. Terima kasih!',
+        { tag: 'polyrider-tip', url: '/polyrider/rider' }
+      );
+    }
+    const job = { ...completedJob, tip_amount: ratingTip };
+    setShowRatingModal(false); setRatingStars(0); setRatingNote(''); setRatingTip(0);
     setReceiptJob(job); setShowReceiptModal(true); setCompletedJob(null);
     toast.success('Terima kasih atas penilaian anda! ⭐');
   };
@@ -962,12 +1177,14 @@ export function PolyRiderHome() {
           show={showRatingModal}
           stars={ratingStars}
           note={ratingNote}
+          tip={ratingTip}
           onStars={setRatingStars}
           onNote={setRatingNote}
+          onTip={setRatingTip}
           onSubmit={submitRating}
           onSkip={() => { 
             const job = completedJob;
-            setShowRatingModal(false); 
+            setShowRatingModal(false); setRatingTip(0);
             setCompletedJob(null); 
             if (job) {
               setReceiptJob(job);
@@ -1155,12 +1372,14 @@ export function PolyRiderHome() {
         show={showRatingModal}
         stars={ratingStars}
         note={ratingNote}
+        tip={ratingTip}
         onStars={setRatingStars}
         onNote={setRatingNote}
+        onTip={setRatingTip}
         onSubmit={submitRating}
         onSkip={() => { 
           const job = completedJob;
-          setShowRatingModal(false); 
+          setShowRatingModal(false); setRatingTip(0);
           setCompletedJob(null); 
           if (job) {
             setReceiptJob(job);
@@ -1259,6 +1478,49 @@ export function PolyRiderHome() {
                 </button>
               </div>
 
+              {/* Multi-Stop / Hentian Tambahan */}
+              {stops.map((stop, i) => (
+                <div key={i} className="flex items-center gap-4 relative">
+                  <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center z-10 shrink-0">
+                    <div className="w-2 h-2 rounded-full bg-amber-500" />
+                  </div>
+                  <div className="flex-1 flex gap-2">
+                    <LocationSearchInput
+                      label={`Hentian ${i + 1}`}
+                      color="blue"
+                      placeholder="Cari lokasi hentian..."
+                      value={stop.name}
+                      onChange={(text) => updateStop(i, text, null, null)}
+                      onSelect={(result) => updateStop(i, result.name, result.lat, result.lng)}
+                    />
+                    <button onClick={() => setActiveMapPicker(`stop-${i}`)} className={`p-1.5 rounded-xl shrink-0 transition-all ${(stop.lat && stop.lng) ? 'bg-amber-500/20 text-amber-500' : 'text-slate-400 hover:text-amber-500'}`}>
+                      <MapIcon className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => removeStop(i)}
+                      className="p-1.5 rounded-xl text-slate-400 hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              
+              {stops.length < 3 && (
+                <div className="flex items-center gap-4 relative">
+                  <div className="w-6 h-6 rounded-full bg-transparent flex items-center justify-center z-10 shrink-0" />
+                  <div className="flex-1">
+                    <button
+                      onClick={addStop}
+                      className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-slate-200 dark:border-white/10 text-xs font-bold text-slate-400 dark:text-white/40 hover:border-amber-400 hover:text-amber-500 transition-all"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Tambah Hentian {stops.length > 0 ? '(caj ikut jarak)' : ''}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Dropoff — with search autocomplete */}
               <div className="flex items-center gap-4 relative">
                 <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center z-10 shrink-0">
@@ -1333,10 +1595,18 @@ export function PolyRiderHome() {
             )}
           </div>
 
-          <div className="h-px bg-slate-100 dark:bg-white/5 w-full my-1" />
+          <AnimatePresence>
+            {(pickupPos && dropoffPos) && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="flex flex-col gap-4"
+              >
+                <div className="h-px bg-slate-100 dark:bg-white/5 w-full mt-1 mb-2" />
 
-          {/* 2. Ride Mode & Settings Row */}
-          <div className="flex flex-col gap-3">
+                {/* 2. Ride Mode & Settings Row */}
+                <div className="flex flex-col gap-3">
 
             {/* Ride Mode Toggle */}
             <div className="bg-slate-50 dark:bg-zinc-950/50 p-1 rounded-xl flex border border-slate-100 dark:border-white/5">
@@ -1383,90 +1653,112 @@ export function PolyRiderHome() {
               </AnimatePresence>
             </div>
 
-            {/* Price Estimator — show when both coords available */}
-            {(() => {
-              if (!pickupPos || !dropoffPos) return null;
-              const toRad = (d: number) => d * Math.PI / 180;
-              const [lat1, lng1] = pickupPos;
-              const [lat2, lng2] = dropoffPos;
-              const R = 6371;
-              const dLat = toRad(lat2 - lat1);
-              const dLng = toRad(lng2 - lng1);
-              const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
-              const distKm = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-              const est = Math.max(5, distKm * 1.5);
-              const low = (est * 0.9).toFixed(2);
-              const high = (est * 1.1).toFixed(2);
-              return (
-                <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl px-3 py-2.5 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-[9px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-0.5">Anggaran Sistem</p>
-                    <p className="text-sm font-black text-slate-900 dark:text-white">
-                      ~{distKm.toFixed(1)} km · <span className="text-amber-600 dark:text-amber-400">RM{low} – RM{high}</span>
+            {/* UNIFIED PRICING SECTION */}
+            <div className="flex flex-col gap-3">
+              {/* Row 1: Price Input and Gender */}
+              <div className="flex gap-3">
+                {/* Price */}
+                <div className="flex-[1.2] bg-slate-50 dark:bg-zinc-950/50 rounded-xl p-2.5 border border-slate-100 dark:border-white/5 focus-within:border-amber-500/50 focus-within:ring-1 focus-within:ring-amber-500/20 transition-colors cursor-text flex flex-col justify-between relative" onClick={() => document.getElementById('priceInput')?.focus()}>
+                  <div className="flex justify-between items-center mb-1">
+                    <p className="text-[9px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest line-clamp-1">
+                      {stops.length > 0 ? 'Tambang Asas' : 'Tawaran RM'}
                     </p>
-                    <p className="text-[9px] text-slate-400 dark:text-white/40 font-medium mt-0.5">⚠️ Anggaran sahaja. Harga boleh dirunding.</p>
+                    {/* Inline Estimate Label if coords exist */}
+                    {(() => {
+                      if (!pickupPos || !dropoffPos) return null;
+                      return (
+                        <div className="text-[8px] bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded font-black">
+                          Anggaran Sistem (Boleh Bida)
+                        </div>
+                      );
+                    })()}
                   </div>
-                  <button
-                    onClick={() => setProposedPrice(parseFloat(est.toFixed(2)))}
-                    className="shrink-0 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black rounded-lg transition-colors"
-                  >
-                    Guna
-                  </button>
+                  
+                  <div className="flex items-center gap-1 border-b-2 border-dotted border-slate-200 dark:border-white/10 group-focus-within:border-amber-500/50">
+                    <span className="text-xl font-black text-amber-500">RM</span>
+                    <input
+                      id="priceInput"
+                      type="number"
+                      min="1"
+                      step="0.5"
+                      className="w-full bg-transparent border-none text-xl font-black text-slate-900 dark:text-white focus:outline-none focus:ring-0 p-0"
+                      value={proposedPrice}
+                      onChange={(e) => setProposedPrice(Number(e.target.value))}
+                    />
+                  </div>
                 </div>
-              );
-            })()}
 
-            {/* Price and Gender Horizontal Row */}
-            <div className="flex gap-3">
-              {/* Price */}
-              <div className="flex-[0.4] bg-slate-50 dark:bg-zinc-950/50 rounded-xl p-2.5 border border-slate-100 dark:border-white/5 focus-within:border-amber-500/50 focus-within:ring-1 focus-within:ring-amber-500/20 transition-colors cursor-text" onClick={() => document.getElementById('priceInput')?.focus()}>
-                <p className="text-[9px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 line-clamp-1">
-                  Tawaran RM
-                </p>
-                <div className="flex items-center gap-1 border-b-2 border-dotted border-slate-200 dark:border-white/10 group-focus-within:border-amber-500/50">
-                  <span className="text-sm font-black text-amber-500">RM</span>
-                  <input
-                    id="priceInput"
-                    type="number"
-                    min="1"
-                    step="0.5"
-                    className="w-full bg-transparent border-none text-xl font-black text-slate-900 dark:text-white focus:outline-none focus:ring-0 p-0"
-                    value={proposedPrice}
-                    onChange={(e) => setProposedPrice(Number(e.target.value))}
-                  />
+                {/* Gender */}
+                <div className="flex-[0.8] bg-slate-50 dark:bg-zinc-950/50 rounded-xl p-2.5 border border-slate-100 dark:border-white/5 flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">
+                      Jantina
+                    </p>
+                    {!studentGender && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
+                  </div>
+                  <div className="flex gap-1.5">
+                    {(['LELAKI', 'PEREMPUAN'] as const).map(g => (
+                      <button
+                        key={g}
+                        onClick={async () => {
+                          setStudentGender(g);
+                          if (user) await supabase.from('profiles').update({ gender: g }).eq('id', user.id);
+                        }}
+                        className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 border ${studentGender === g
+                            ? g === 'LELAKI'
+                              ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-500/20 dark:border-blue-500/50 dark:text-blue-400'
+                              : 'bg-rose-50 border-rose-500 text-rose-700 dark:bg-rose-500/20 dark:border-rose-500/50 dark:text-rose-400'
+                            : 'bg-white border-slate-200 text-slate-400 dark:bg-zinc-800 dark:border-white/10 dark:text-white/40'
+                          }`}
+                      >
+                        {g === 'LELAKI' ? '♂ L' : '♀ P'}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Gender */}
-              <div className="flex-[0.6] bg-slate-50 dark:bg-zinc-950/50 rounded-xl p-2.5 border border-slate-100 dark:border-white/5 flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">
-                    Jantina
+              {/* Fare Breakdown (Only show if stops exist, OR just show distance info) */}
+              {(() => {
+                if (!pickupPos || !dropoffPos) return null;
+                const toRad = (d: number) => d * Math.PI / 180;
+                const R = 6371;
+                const dLat = toRad(dropoffPos[0] - pickupPos[0]);
+                const dLng = toRad(dropoffPos[1] - pickupPos[1]);
+                const a = Math.sin(dLat/2)**2 + Math.cos(toRad(pickupPos[0]))*Math.cos(toRad(dropoffPos[0]))*Math.sin(dLng/2)**2;
+                const distKm = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                
+                if (stops.length > 0) {
+                  const { surcharge, detourKm } = calcStopsSurcharge(pickupPos, dropoffPos, stops);
+                  return (
+                    <div className="bg-amber-50 dark:bg-amber-500/10 rounded-xl p-3 border border-amber-200 dark:border-amber-500/20">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-[10px] text-amber-700 dark:text-amber-400 font-medium">Tambang Asas (~{distKm.toFixed(1)}km)</span>
+                        <span className="text-[10px] text-amber-700 dark:text-amber-400 font-bold">RM{proposedPrice.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center mb-2 pb-2 border-b border-amber-200/60 dark:border-amber-500/20">
+                        <span className="text-[10px] text-amber-700 dark:text-amber-400 font-medium">+ Caj {stops.filter(s => s.lat).length} Hentian (~{detourKm}km)</span>
+                        <span className="text-[10px] text-amber-700 dark:text-amber-400 font-bold">RM{surcharge.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-black text-amber-900 dark:text-amber-300 uppercase tracking-wider">Jumlah Keseluruhan</span>
+                        <span className="text-lg font-black text-amber-600 dark:text-amber-400">RM{(proposedPrice + surcharge).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  );
+                }
+
+                // If NO stops, just show a subtle distance/estimate hint
+                const est = Math.max(5, distKm * 1.5);
+                const low = (est * 0.9).toFixed(2);
+                const high = (est * 1.1).toFixed(2);
+                return (
+                  <p className="text-[10px] text-slate-500 dark:text-white/50 text-center font-medium">
+                    Jarak lurus ~{distKm.toFixed(1)} km · Anggaran biasa <strong className="text-amber-600 dark:text-amber-400">RM{low} - RM{high}</strong>
                   </p>
-                  {!studentGender && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
-                </div>
-                <div className="flex gap-1.5">
-                  {(['LELAKI', 'PEREMPUAN'] as const).map(g => (
-                    <button
-                      key={g}
-                      onClick={async () => {
-                        setStudentGender(g);
-                        if (user) await supabase.from('profiles').update({ gender: g }).eq('id', user.id);
-                      }}
-                      className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 border ${studentGender === g
-                          ? g === 'LELAKI'
-                            ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-500/20 dark:border-blue-500/50 dark:text-blue-400'
-                            : 'bg-rose-50 border-rose-500 text-rose-700 dark:bg-rose-500/20 dark:border-rose-500/50 dark:text-rose-400'
-                          : 'bg-white border-slate-200 text-slate-400 dark:bg-zinc-800 dark:border-white/10 dark:text-white/40'
-                        }`}
-                    >
-                      {g === 'LELAKI' ? '♂' : '♀'} {g === 'LELAKI' ? 'L' : 'P'}
-                    </button>
-                  ))}
-                </div>
-              </div>
+                );
+              })()}
             </div>
-
           </div>
 
           {/* 3. Carpool UI Context */}
@@ -1543,7 +1835,32 @@ export function PolyRiderHome() {
             </div>
           )}
 
-          {/* 4. Submit Button */}
+
+
+          {/* 5. Add-ons */}
+          <div>
+            <p className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-wider mb-2">
+              Keperluan Khas (Opsional)
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {POLYRIDER_ADDONS.map(addon => (
+                <button
+                  key={addon.key}
+                  onClick={() => toggleAddon(addon.key)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border-2 transition-all ${
+                    selectedAddons.includes(addon.key)
+                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                      : 'border-slate-100 dark:border-white/10 text-slate-500 dark:text-white/40 hover:border-slate-200 dark:hover:border-white/20'
+                  }`}
+                >
+                  <span>{addon.emoji}</span>
+                  {addon.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 6. Submit Button */}
           <button
             disabled={!pickup || !dropoff || isSearching || proposedPrice < 1 || !studentGender}
             onClick={handleBook}
@@ -1551,11 +1868,66 @@ export function PolyRiderHome() {
           >
             Minta Rider {isCarpoolOpen && openCarpools.length === 0 ? '(Cipta Carpool)' : ''}
           </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
         </div>
       </div>
 
-      {/* Public Carpool Board moved to main flow */}
+      {/* Public Carpool Board (Horizontal Scroll) */}
+      {openCarpools.length > 0 && (
+        <div className="mt-6 mb-2">
+          <div className="flex items-center justify-between mb-3 px-2">
+            <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-800 dark:text-white flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Carpool Awam Terbuka
+            </h3>
+            <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-0.5 rounded-full">
+              {openCarpools.length} Kumpulan
+            </span>
+          </div>
+
+          <div className="flex gap-3 overflow-x-auto pb-4 px-2 snap-x hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
+            {openCarpools.map(carpool => (
+              <div 
+                key={carpool.id} 
+                className="min-w-[240px] max-w-[240px] bg-white dark:bg-zinc-900 rounded-2xl p-3.5 border border-slate-100 dark:border-white/5 shadow-xl shadow-slate-200/40 dark:shadow-none snap-center flex flex-col justify-between gap-4 shrink-0 transition-transform active:scale-[0.98]"
+              >
+                <div>
+                  <div className="flex justify-between items-start mb-3">
+                    <p className="text-[9px] font-black uppercase text-slate-400 dark:text-white/40">
+                      Oleh {carpool.student?.full_name?.split(' ')[0] || 'Pelajar'}
+                    </p>
+                    <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-100 dark:border-amber-500/20">
+                      ~RM{(carpool.proposed_price / 2).toFixed(2)} / pax
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                      <p className="text-[11px] font-bold text-slate-600 dark:text-white/60 truncate">{carpool.pickup_name}</p>
+                    </div>
+                    <div className="w-0.5 h-2.5 bg-slate-200 dark:bg-white/10 ml-[3px]" />
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                      <p className="text-[12px] font-black text-slate-900 dark:text-white truncate">{carpool.dropoff_name}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => openJoinCarpoolModal(carpool)}
+                  className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-md shadow-emerald-500/20"
+                >
+                  Sertai Carpool
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mt-8 mb-4">
         <button
@@ -1598,63 +1970,137 @@ export function PolyRiderHome() {
           >
             <motion.div
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-              className="bg-white dark:bg-zinc-900 rounded-t-[2rem] w-full max-w-xl mx-auto p-6 flex flex-col shadow-2xl"
+              className="bg-white dark:bg-zinc-900 rounded-t-[2rem] w-full max-w-xl mx-auto p-6 flex flex-col shadow-2xl max-h-[90vh] overflow-y-auto"
             >
-              <div className="flex items-center justify-between mb-6">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-5">
                 <div>
                   <h3 className="font-black text-xl text-slate-900 dark:text-white">Tumpang Carpool</h3>
-                  <p className="text-xs font-medium text-slate-500 dark:text-white/50 mt-1">Bersama {joiningCarpool.student?.full_name?.split(' ')[0]}</p>
+                  <p className="text-xs font-medium text-slate-500 dark:text-white/50 mt-1">
+                    Bersama {joiningCarpool.student?.full_name?.split(' ')[0]} · {joiningCarpool.pickup_name} → {joiningCarpool.dropoff_name}
+                  </p>
                 </div>
-                <button onClick={() => setJoiningCarpool(null)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white dark:bg-zinc-900/10 flex items-center justify-center text-slate-500 dark:text-white/50">
+                <button onClick={closeJoinCarpoolModal} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-500 dark:text-white/50">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="space-y-4 mb-6">
-                <div className="bg-slate-50 dark:bg-zinc-950/50 p-3 rounded-xl border border-slate-200 dark:border-white/5">
-                  <p className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 ml-1">Dari (Pickup Anda)</p>
-                  <input
-                    type="text"
-                    placeholder="Lokasi anda..."
-                    className="w-full bg-transparent border-none text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-0 p-1"
-                    value={pickup}
-                    onChange={(e) => setPickup(e.target.value)}
-                  />
+              <div className="space-y-3 mb-5">
+
+                {/* ── PICKUP (Smart) ── */}
+                <div className="bg-slate-50 dark:bg-zinc-950/50 rounded-xl border border-slate-100 dark:border-white/5 p-3">
+                  <p className="text-[9px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-2">📍 Pickup Anda</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <LocationSearchInput
+                        label="Dari"
+                        color="blue"
+                        placeholder={isDetectingLocation ? 'Mengesan lokasi GPS...' : 'Cari lokasi pickup anda...'}
+                        value={pickup}
+                        onChange={(text) => { setPickup(text); if (!text) setPickupPos(null); }}
+                        onSelect={(r) => { setPickup(r.name); setPickupPos([r.lat, r.lng]); }}
+                      />
+                    </div>
+                    {/* GPS Button */}
+                    <button
+                      onClick={detectCurrentLocation}
+                      disabled={isDetectingLocation}
+                      title="Guna lokasi GPS semasa"
+                      className={`p-2 rounded-xl shrink-0 transition-all ${
+                        isDetectingLocation ? 'text-blue-400 animate-pulse'
+                        : pickupPos ? 'bg-blue-500 text-white shadow-md shadow-blue-500/20'
+                        : 'bg-slate-100 dark:bg-zinc-800 text-slate-400 hover:text-blue-500 dark:hover:text-blue-400'
+                      }`}
+                    >
+                      {isDetectingLocation
+                        ? <div className="w-4 h-4 border-2 border-blue-400/30 border-t-blue-500 rounded-full animate-spin" />
+                        : <Navigation className="w-4 h-4" />}
+                    </button>
+                    {/* Map Picker Button */}
+                    <button
+                      onClick={() => setActiveMapPicker('pickup')}
+                      title="Pilih dari peta"
+                      className={`p-2 rounded-xl shrink-0 transition-all ${
+                        pickupPos ? 'bg-blue-500/20 text-blue-500' : 'bg-slate-100 dark:bg-zinc-800 text-slate-400 hover:text-blue-500 dark:hover:text-blue-400'
+                      }`}
+                    >
+                      <MapIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {pickupPos && (
+                    <p className="text-[9px] text-blue-500 font-bold mt-1.5 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block" />
+                      Koordinat tersimpan
+                    </p>
+                  )}
                 </div>
-                <div className="bg-slate-50 dark:bg-zinc-950/50 p-3 rounded-xl border border-slate-200 dark:border-white/5">
-                  <p className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 ml-1">Ke (Destinasi Anda)</p>
-                  <input
-                    type="text"
-                    placeholder="Lokasi dituju..."
-                    className="w-full bg-transparent border-none text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-0 p-1"
-                    value={dropoff}
-                    onChange={(e) => setDropoff(e.target.value)}
-                  />
+
+                {/* ── DROPOFF (name-only, pre-filled from carpool) ── */}
+                <div className="bg-slate-50 dark:bg-zinc-950/50 rounded-xl border border-slate-100 dark:border-white/5 p-3">
+                  <p className="text-[9px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-2">🏁 Destinasi (Sama Dengan Kumpulan)</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <LocationSearchInput
+                        label="Ke"
+                        color="rose"
+                        placeholder="Destinasi..."
+                        value={dropoff}
+                        onChange={(text) => { setDropoff(text); if (!text) setDropoffPos(null); }}
+                        onSelect={(r) => { setDropoff(r.name); setDropoffPos([r.lat, r.lng]); }}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[9px] text-slate-400 dark:text-white/30 font-medium mt-1.5">
+                    💡 Telah diisi mengikut destinasi kumpulan. Boleh ubah jika perlu.
+                  </p>
                 </div>
-                <div className="bg-emerald-50 dark:bg-emerald-500/10 p-3 rounded-xl border border-emerald-200 dark:border-emerald-500/20 flex items-center">
-                  <div className="flex-1">
-                    <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1 ml-1">Sumbangan Tambang (RM)</p>
+
+                {/* ── PRICE ESTIMATOR ── */}
+                {pickupPos && (() => {
+                  const dist = haversineKm(pickupPos, [joiningCarpool.pickup_lat, joiningCarpool.pickup_lng]);
+                  const est = Math.max(2, dist * 1.5);
+                  return (
+                    <div className="bg-amber-50 dark:bg-amber-500/10 rounded-xl border border-amber-200 dark:border-amber-500/20 p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-[9px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-0.5">Anggaran Sumbangan</p>
+                          <p className="text-xs text-amber-700 dark:text-amber-300 font-semibold">
+                            ~{dist.toFixed(1)} km dari titik pickup kumpulan
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setProposedPrice(parseFloat(est.toFixed(2)))}
+                          className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black rounded-lg transition-colors"
+                        >
+                          Guna ~RM{est.toFixed(2)}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* ── PRICE INPUT ── */}
+                <div className="bg-emerald-50 dark:bg-emerald-500/10 p-3 rounded-xl border border-emerald-200 dark:border-emerald-500/20">
+                  <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Sumbangan Tambang (RM)</p>
+                  <div className="flex items-center gap-1">
+                    <span className="text-2xl font-black text-emerald-500">RM</span>
                     <input
                       type="number"
                       min="1"
                       step="0.5"
-                      className="w-full bg-transparent border-none text-xl font-black text-emerald-700 dark:text-emerald-300 focus:outline-none focus:ring-0 p-1"
+                      className="flex-1 bg-transparent border-none text-2xl font-black text-emerald-700 dark:text-emerald-300 focus:outline-none focus:ring-0 p-0"
                       value={proposedPrice}
                       onChange={(e) => setProposedPrice(Number(e.target.value))}
                     />
                   </div>
                 </div>
 
-                {/* Jantina Penumpang (Carpool Join) */}
-                <div className="bg-white dark:bg-zinc-950/50 p-3 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm">
+                {/* ── GENDER ── */}
+                <div className="bg-white dark:bg-zinc-950/50 p-3 rounded-xl border border-slate-200 dark:border-white/5">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">
-                      Jantina Penumpang
-                    </p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">Jantina Penumpang</p>
                     {!studentGender && (
-                      <p className="text-[10px] text-amber-500 font-bold animate-pulse">
-                        Mesti Pilih!
-                      </p>
+                      <p className="text-[10px] text-amber-500 font-bold animate-pulse">Mesti Pilih!</p>
                     )}
                   </div>
                   <div className="flex gap-2">
@@ -1665,12 +2111,13 @@ export function PolyRiderHome() {
                           setStudentGender(g);
                           if (user) await supabase.from('profiles').update({ gender: g }).eq('id', user.id);
                         }}
-                        className={`flex-1 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 border ${studentGender === g
+                        className={`flex-1 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 border ${
+                          studentGender === g
                             ? g === 'LELAKI'
-                              ? 'bg-blue-50 border-blue-500 text-blue-600 dark:bg-blue-500/10 dark:border-blue-500/50 dark:text-blue-400 shadow-sm shadow-blue-500/10'
-                              : 'bg-rose-50 border-rose-500 text-rose-600 dark:bg-rose-500/10 dark:border-rose-500/50 dark:text-rose-400 shadow-sm shadow-rose-500/10'
+                              ? 'bg-blue-50 border-blue-500 text-blue-600 dark:bg-blue-500/10 dark:border-blue-500/50 dark:text-blue-400'
+                              : 'bg-rose-50 border-rose-500 text-rose-600 dark:bg-rose-500/10 dark:border-rose-500/50 dark:text-rose-400'
                             : 'bg-slate-50 border-slate-100 text-slate-400 dark:bg-zinc-950/50 dark:border-white/5 dark:text-white/40 hover:bg-slate-100 dark:hover:bg-zinc-900'
-                          }`}
+                        }`}
                       >
                         {g === 'LELAKI' ? '♂' : '♀'} {g}
                       </button>
@@ -1679,13 +2126,19 @@ export function PolyRiderHome() {
                 </div>
               </div>
 
+              {/* CTA Button — pickup GPS required */}
               <button
                 onClick={handleBook}
-                disabled={!pickup || !dropoff || proposedPrice < 1 || !studentGender}
-                className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl disabled:opacity-50"
+                disabled={!pickup || !pickupPos || !dropoff || proposedPrice < 1 || !studentGender}
+                className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-2xl disabled:opacity-50 transition-all shadow-lg shadow-emerald-500/20"
               >
-                Sahkan & Minta Rider
+                {!pickupPos ? '📍 Tetapkan lokasi pickup dahulu' : 'Sahkan & Minta Rider'}
               </button>
+              {!pickupPos && (
+                <p className="text-center text-[10px] text-slate-400 dark:text-white/30 font-medium mt-2">
+                  Tekan ikon GPS atau cari lokasi pickup anda untuk meneruskan.
+                </p>
+              )}
             </motion.div>
           </motion.div>
         )}
@@ -1693,54 +2146,85 @@ export function PolyRiderHome() {
 
       {/* Map Picker Modal */}
       <AnimatePresence>
-        {activeMapPicker && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[120] bg-slate-900/50 dark:bg-black/70 backdrop-blur-sm flex flex-col justify-end"
-          >
+        {activeMapPicker && (() => {
+          const isStopPicker = activeMapPicker.startsWith('stop-');
+          const stopIndex = isStopPicker ? parseInt(activeMapPicker.split('-')[1], 10) : -1;
+          const stopData = isStopPicker ? stops[stopIndex] : null;
+
+          const getMapTitle = () => {
+            if (isStopPicker) return `Hentian ${stopIndex + 1}`;
+            return activeMapPicker === 'pickup' ? 'Pickup' : 'Destinasi';
+          };
+
+          const getMapSubtitle = () => {
+            if (isStopPicker) return '📍 Ketik peta untuk tetapkan hentian';
+            return activeMapPicker === 'pickup' ? '📍 Ketik peta atau pin lokasi anda sekarang' : '🏁 Ketik pada peta untuk tetapkan destinasi';
+          };
+
+          const getMapPosition = (): [number, number] | null => {
+            if (isStopPicker) return (stopData?.lat && stopData?.lng) ? [stopData.lat, stopData.lng] : null;
+            return activeMapPicker === 'pickup' ? pickupPos : dropoffPos;
+          };
+
+          const isConfirmDisabled = () => {
+            if (isStopPicker) return !stops[stopIndex]?.lat || !stops[stopIndex]?.lng;
+            return activeMapPicker === 'pickup' ? !pickupPos : !dropoffPos;
+          };
+
+          const getConfirmText = () => {
+            if (isStopPicker) return stops[stopIndex]?.name || `Lokasi Hentian ${stopIndex + 1}`;
+            return activeMapPicker === 'pickup' ? (pickup || 'Lokasi Pickup') : (dropoff || 'Lokasi Destinasi');
+          };
+
+          return (
             <motion.div
-              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-              className="bg-white dark:bg-zinc-900 rounded-t-[2rem] w-full max-w-xl mx-auto overflow-hidden h-[85vh] flex flex-col shadow-2xl"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[120] bg-slate-900/50 dark:bg-black/70 backdrop-blur-sm flex flex-col justify-end"
             >
-              <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-white/5 shrink-0">
-                <div>
-                  <h3 className="font-black text-slate-900 dark:text-white">Pilih Lokasi {activeMapPicker === 'pickup' ? 'Pickup' : 'Destinasi'}</h3>
-                  <p className="text-[10px] text-slate-400 dark:text-white/40 font-semibold mt-0.5">
-                    {activeMapPicker === 'pickup' ? '📍 Ketik peta atau pin lokasi anda sekarang' : '🏁 Ketik pada peta untuk tetapkan destinasi'}
-                  </p>
+              <motion.div
+                initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+                className="bg-white dark:bg-zinc-900 rounded-t-[2rem] w-full max-w-xl mx-auto overflow-hidden h-[85vh] flex flex-col shadow-2xl"
+              >
+                <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-white/5 shrink-0">
+                  <div>
+                    <h3 className="font-black text-slate-900 dark:text-white">Pilih Lokasi {getMapTitle()}</h3>
+                    <p className="text-[10px] text-slate-400 dark:text-white/40 font-semibold mt-0.5">
+                      {getMapSubtitle()}
+                    </p>
+                  </div>
+                  <button onClick={() => setActiveMapPicker(null)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-900/10 flex items-center justify-center text-slate-500 dark:text-white/50">
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-                <button onClick={() => setActiveMapPicker(null)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white dark:bg-zinc-900/10 flex items-center justify-center text-slate-500 dark:text-white/50">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="flex-1 p-4 flex flex-col min-h-0">
-                <MapPicker
-                  position={activeMapPicker === 'pickup' ? pickupPos : dropoffPos}
-                  label={activeMapPicker === 'pickup' ? 'Pickup' : 'Destinasi'}
-                  onPositionChange={(pos) => {
-                    if (activeMapPicker === 'pickup') setPickupPos(pos);
-                    else setDropoffPos(pos);
-                  }}
-                  onNameChange={(name) => {
-                    if (activeMapPicker === 'pickup') setPickup(name);
-                    else setDropoff(name);
-                  }}
-                />
-              </div>
-              <div className="p-4 border-t border-slate-100 dark:border-white/5 bg-white dark:bg-zinc-900 shrink-0">
-                <button
-                  onClick={() => setActiveMapPicker(null)}
-                  disabled={activeMapPicker === 'pickup' ? !pickupPos : !dropoffPos}
-                  className="w-full py-3.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white font-black rounded-xl transition-colors flex items-center justify-center gap-2"
-                >
-                  ✓ Sahkan {activeMapPicker === 'pickup'
-                    ? (pickup || 'Lokasi Pickup')
-                    : (dropoff || 'Lokasi Destinasi')}
-                </button>
-              </div>
+                <div className="flex-1 p-4 flex flex-col min-h-0">
+                  <MapPicker
+                    position={getMapPosition()}
+                    label={getMapTitle()}
+                    onPositionChange={(pos) => {
+                      if (isStopPicker) updateStopPos(stopIndex, pos[0], pos[1]);
+                      else if (activeMapPicker === 'pickup') setPickupPos(pos);
+                      else setDropoffPos(pos);
+                    }}
+                    onNameChange={(name) => {
+                      if (isStopPicker) updateStopName(stopIndex, name);
+                      else if (activeMapPicker === 'pickup') setPickup(name);
+                      else setDropoff(name);
+                    }}
+                  />
+                </div>
+                <div className="p-4 border-t border-slate-100 dark:border-white/5 bg-white dark:bg-zinc-900 shrink-0">
+                  <button
+                    onClick={() => setActiveMapPicker(null)}
+                    disabled={isConfirmDisabled()}
+                    className="w-full py-3.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white font-black rounded-xl transition-colors flex items-center justify-center gap-2"
+                  >
+                    ✓ Sahkan {getConfirmText()}
+                  </button>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
+          );
+        })()}
       </AnimatePresence>
 
       {/* Bidding / Searching Overlay */}
@@ -1782,7 +2266,7 @@ export function PolyRiderHome() {
                     </div>
                   ) : (
                     bids.map((bid) => (
-                      <motion.div
+                       <motion.div
                         key={bid.id}
                         initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
                         className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-white/10 rounded-2xl p-4"
@@ -1802,7 +2286,6 @@ export function PolyRiderHome() {
                                 {bid.rider?.total_trips > 0 && (
                                   <span className="text-[10px] font-bold text-slate-400 dark:text-white/40">{bid.rider.total_trips} trip</span>
                                 )}
-                                {/* Performance Badge */}
                                 {(() => {
                                   const trips = bid.rider?.total_trips || 0;
                                   const rating = Number(bid.rider?.avg_rating || 0);
@@ -1816,14 +2299,58 @@ export function PolyRiderHome() {
                           </div>
                           <div className="text-right">
                             <p className="text-xl font-black text-emerald-500">RM {Number(bid.bid_amount).toFixed(2)}</p>
-                            <button
-                              onClick={() => acceptBid(bid)}
-                              className="mt-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl text-xs transition-colors flex items-center gap-1"
-                            >
-                              Terima <CheckCircle className="w-3.5 h-3.5" />
-                            </button>
+                            {/* Counter-offer status badge */}
+                            {bid.counter_status === 'PENDING_RIDER' && (
+                              <span className="text-[9px] font-black bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full block mt-1">⏳ Menunggu Rider</span>
+                            )}
+                            {bid.counter_status === 'ACCEPTED' && (
+                              <span className="text-[9px] font-black bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full block mt-1">✓ Rider Setuju</span>
+                            )}
+                            {bid.counter_status === 'REJECTED' && (
+                              <span className="text-[9px] font-black bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-white/50 px-2 py-0.5 rounded-full block mt-1">✗ Rider Tolak</span>
+                            )}
+                            {(!bid.counter_status || bid.counter_status === 'REJECTED') && (
+                              <div className="flex flex-col gap-1 mt-1">
+                                <button onClick={() => acceptBid(bid)}
+                                  className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl text-xs transition-colors flex items-center gap-1">
+                                  Terima <CheckCircle className="w-3.5 h-3.5" />
+                                </button>
+                                <button onClick={() => { setCounteringBidId(bid.id); setCounterAmount(bid.bid_amount); }}
+                                  className="bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 font-bold px-4 py-1.5 rounded-xl text-xs transition-colors">
+                                  Tawar Balik
+                                </button>
+                              </div>
+                            )}
+                            {/* If rider accepted counter, allow final accept */}
+                            {bid.counter_status === 'ACCEPTED' && (
+                              <button onClick={() => acceptBid({ ...bid, bid_amount: bid.counter_amount })}
+                                className="mt-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl text-xs transition-colors flex items-center gap-1">
+                                Sahkan RM{Number(bid.counter_amount).toFixed(2)} <CheckCircle className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         </div>
+                        {/* Inline counter-offer input */}
+                        {counteringBidId === bid.id && (
+                          <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex gap-2">
+                            <div className="flex-1 relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">RM</span>
+                              <input type="number" min="1" step="0.5"
+                                value={counterAmount}
+                                onChange={e => setCounterAmount(Number(e.target.value))}
+                                className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl text-sm font-black text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500"
+                              />
+                            </div>
+                            <button onClick={() => submitCounterOffer(bid.id, bid.rider_id)}
+                              className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs transition-colors">
+                              Hantar
+                            </button>
+                            <button onClick={() => setCounteringBidId(null)}
+                              className="px-3 py-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white border border-slate-200 dark:border-white/10 rounded-xl text-xs transition-colors">
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
                       </motion.div>
                     ))
                   )}
@@ -1895,9 +2422,21 @@ export function PolyRiderHome() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center pt-1">
-                  <span className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Jumlah Bayaran</span>
-                  <span className="text-2xl font-black text-emerald-500">RM {Number(receiptJob.proposed_price).toFixed(2)}</span>
+                  <span className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Tambang</span>
+                  <span className="text-xl font-black text-slate-900 dark:text-white">RM {Number(receiptJob.proposed_price).toFixed(2)}</span>
                 </div>
+                {receiptJob.tip_amount > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-bold text-slate-500 dark:text-white/50">Tip Rider 🎁</span>
+                    <span className="text-sm font-black text-amber-500">+RM {Number(receiptJob.tip_amount).toFixed(2)}</span>
+                  </div>
+                )}
+                {receiptJob.tip_amount > 0 && (
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-white/10">
+                    <span className="text-sm font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Jumlah</span>
+                    <span className="text-2xl font-black text-emerald-500">RM {(Number(receiptJob.proposed_price) + Number(receiptJob.tip_amount)).toFixed(2)}</span>
+                  </div>
+                )}
               </div>
 
               <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-xl px-4 py-3 text-center mb-4">
@@ -2019,11 +2558,20 @@ export function PolyRiderHome() {
 
                   <button
                     onClick={() => setIsCancelModalOpen(true)}
-                    className="w-full py-4 rounded-xl font-bold text-slate-500 dark:text-white/50 bg-slate-100 dark:bg-white dark:bg-zinc-900/5 hover:bg-slate-200 dark:hover:bg-zinc-900/10 transition-colors"
+                    className="w-full py-4 rounded-xl font-bold text-slate-500 dark:text-white/50 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors"
                   >
                     Batal {activeJob.status === 'CARPOOL_REQUEST' ? 'Permintaan' : 'Carpool'}
                   </button>
                 </div>
+
+                {/* CancelJobModal lives inside portal so z-index stack works */}
+                <CancelJobModal
+                  isOpen={isCancelModalOpen}
+                  onClose={() => setIsCancelModalOpen(false)}
+                  onConfirm={handleCancelJob}
+                  role="STUDENT"
+                  isLoading={isCancelling}
+                />
               </motion.div>
             </motion.div>
           )}

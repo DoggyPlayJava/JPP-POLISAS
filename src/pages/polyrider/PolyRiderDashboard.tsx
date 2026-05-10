@@ -9,6 +9,7 @@ import { uploadFileToDrive } from '@/lib/driveUpload';
 import { RouteViewer } from '@/components/RouteViewer';
 import { SOSContactsManager } from './SOSContactsManager';
 import { notifyUsers } from '@/lib/polyRiderNotify';
+import { POLYRIDER_ADDONS } from '@/lib/polyRiderConstants';
 import { CancelJobModal } from '@/components/polyrider/CancelJobModal';
 import { notifyKLKOnSuspension } from '@/lib/polyRiderNotify';
 import { SwipeToSOS } from '@/components/polyrider/SwipeToSOS';
@@ -50,6 +51,13 @@ export function PolyRiderDashboard() {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
 
+  // Community & Renewal State
+  const [whatsappLink, setWhatsappLink] = useState('');
+  const [showWhatsappModal, setShowWhatsappModal] = useState(false);
+  const [showExpiredWarning, setShowExpiredWarning] = useState(false);
+  const [renewFile, setRenewFile] = useState<File | null>(null);
+  const [isRenewing, setIsRenewing] = useState(false);
+
   useEffect(() => {
     supabase.from('system_settings').select('value').eq('key', 'klk_emergency_phone').single()
       .then(({ data }) => {
@@ -57,13 +65,28 @@ export function PolyRiderDashboard() {
           try { setKlkPhone(JSON.parse(data.value)); } catch { setKlkPhone(data.value); }
         }
       });
+      
+    supabase.from('system_settings').select('value').eq('key', 'polyrider_whatsapp_link').single()
+      .then(({ data }) => {
+        if (data?.value) setWhatsappLink(data.value);
+      });
   }, []);
+
+  useEffect(() => {
+    if (profile?.status === 'APPROVED' && whatsappLink) {
+      const hasJoined = localStorage.getItem('polyrider_whatsapp_joined');
+      if (!hasJoined) {
+        setShowWhatsappModal(true);
+      }
+    }
+  }, [profile?.status, whatsappLink]);
 
   // Registration State
   const [vehicleType, setVehicleType] = useState('MOTOR');
   const [plateNumber, setPlateNumber] = useState('');
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [adminQrUrl, setAdminQrUrl] = useState<string | null>(null);
 
   // Dashboard State
   const [jobs, setJobs] = useState<any[]>([]);
@@ -80,11 +103,22 @@ export function PolyRiderDashboard() {
   const [bidAmount, setBidAmount] = useState<number>(0);
   const [processingBidId, setProcessingBidId] = useState<string | null>(null);
   const [submittedBids, setSubmittedBids] = useState<Record<string, number>>({});
+  // counter-offer info: bidId -> { counterAmt, counterStatus, studentId }
+  const [counterOfferBids, setCounterOfferBids] = useState<Record<string, { bidId: string; counterAmt: number; counterStatus: string; studentId: string }>>({});
   const [expandedCarpool, setExpandedCarpool] = useState<string | null>(null);
 
   // Chat State
   const [chatMessages, setChatMessages] = useState<Record<string, any[]>>({}); // Indexed by job_id
   const [newMessages, setNewMessages] = useState<Record<string, string>>({}); // Indexed by job_id
+  const [readChatCount, setReadChatCount] = useState<Record<string, number>>({});
+  const [openChatId, setOpenChatId] = useState<string | null>(null);
+
+  // Mark chat as read when openChatId changes or new messages arrive while open
+  useEffect(() => {
+    if (openChatId && chatMessages[openChatId]) {
+      setReadChatCount(prev => ({ ...prev, [openChatId]: chatMessages[openChatId].length }));
+    }
+  }, [chatMessages, openChatId]);
 
   useEffect(() => {
     if (user) fetchProfile();
@@ -96,6 +130,15 @@ export function PolyRiderDashboard() {
 
   useEffect(() => { submittedBidsRef.current = submittedBids; }, [submittedBids]);
   useEffect(() => { activeJobsRef.current = activeJobs; }, [activeJobs]);
+
+  // Auto-scroll to top when a new active job is received
+  const prevActiveJobsCount = useRef(0);
+  useEffect(() => {
+    if (activeJobs.length > prevActiveJobsCount.current) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    prevActiveJobsCount.current = activeJobs.length;
+  }, [activeJobs.length]);
 
   useEffect(() => {
     if (!user) return;
@@ -118,19 +161,26 @@ export function PolyRiderDashboard() {
     
     const { data: bidsData } = await supabase
       .from('polyrider_bids')
-      .select('job_id, bid_amount')
+      .select('id, job_id, bid_amount, counter_amount, counter_status')
       .eq('rider_id', user.id)
       .eq('status', 'PENDING');
       
     const biddedJobMap: Record<string, number> = {};
+    const counterMap: Record<string, { bidId: string; counterAmt: number; counterStatus: string; studentId: string }> = {};
     if (bidsData) {
-      bidsData.forEach(b => { biddedJobMap[b.job_id] = Number(b.bid_amount); });
+      bidsData.forEach(b => {
+        biddedJobMap[b.job_id] = Number(b.bid_amount);
+        if (b.counter_status === 'PENDING_RIDER' && b.counter_amount) {
+          counterMap[b.job_id] = { bidId: b.id, counterAmt: Number(b.counter_amount), counterStatus: b.counter_status, studentId: '' };
+        }
+      });
     }
     setSubmittedBids(biddedJobMap);
+    setCounterOfferBids(counterMap);
 
     const { data, error } = await supabase
       .from('polyrider_jobs')
-      .select('id, student_id, passenger_gender, pickup_name, dropoff_name, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, proposed_price, job_type, distance_km, carpool_group_id, student:profiles!polyrider_jobs_student_id_profiles_fkey(full_name)')
+      .select('id, student_id, passenger_gender, pickup_name, dropoff_name, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, proposed_price, job_type, distance_km, carpool_group_id, addons, stops, student:profiles!polyrider_jobs_student_id_profiles_fkey(full_name)')
       .eq('status', 'PENDING')
       .order('created_at', { ascending: true });
       
@@ -154,9 +204,9 @@ export function PolyRiderDashboard() {
     if (!user?.id) return;
     const today = new Date(); today.setHours(0,0,0,0);
     const { data } = await supabase.from('polyrider_jobs')
-      .select('proposed_price').eq('rider_id', user.id)
+      .select('proposed_price, tip_amount').eq('rider_id', user.id)
       .eq('status', 'COMPLETED').gte('updated_at', today.toISOString());
-    if (data) setTodayEarnings(data.reduce((s, j) => s + Number(j.proposed_price), 0));
+    if (data) setTodayEarnings(data.reduce((s, j) => s + Number(j.proposed_price) + Number(j.tip_amount || 0), 0));
   }, [user?.id]);
 
   // Consolidated poll — single interval for jobs, active trips, chat, earnings
@@ -272,7 +322,7 @@ export function PolyRiderDashboard() {
       const receipt_url = await uploadFileToDrive(receiptFile, 'polyrider-receipts');
       if (!receipt_url) throw new Error('Gagal muat naik resit');
 
-      const { error } = await supabase.from('polyrider_profiles').insert({
+      const { error } = await supabase.from('polyrider_profiles').upsert({
         user_id: user!.id,
         vehicle_type: vehicleType,
         plate_number: plateNumber.toUpperCase(),
@@ -295,6 +345,28 @@ export function PolyRiderDashboard() {
       toast.error('Selesaikan semua trip aktif sebelum OFF-DUTY');
       return;
     }
+
+    if (!profile.is_active) {
+      if (profile.status === 'SUSPENDED') {
+        toast.error('Akaun anda telah digantung oleh Admin. Anda tidak boleh bertugas.');
+        return;
+      }
+
+      // Check expiration
+      if (profile.subscription_valid_until) {
+        const now = new Date();
+        const validUntil = new Date(profile.subscription_valid_until);
+        const blockDate = new Date(validUntil.getTime() + 3 * 24 * 60 * 60 * 1000); // +3 days grace period
+        
+        if (now > blockDate) {
+          setShowExpiredWarning(true);
+          return;
+        } else if (now > validUntil) {
+          toast.error('Peringatan: Langganan bulanan tamat. Anda berada dalam tempoh ihsan 3 hari.', { duration: 6000 });
+        }
+      }
+    }
+
     const newStatus = !profile.is_active;
     // Optimistic update
     setProfile({ ...profile, is_active: newStatus });
@@ -465,6 +537,44 @@ export function PolyRiderDashboard() {
     }
   };
 
+  // Counter-Offer: Rider respond to passenger's counter-offer
+  const respondCounterOffer = async (bidId: string, jobStudentId: string, accept: boolean, counterAmt: number) => {
+    // Optimistically update UI
+    const jobId = Object.keys(counterOfferBids).find(key => counterOfferBids[key].bidId === bidId);
+    if (jobId) {
+      setCounterOfferBids(prev => {
+        const next = { ...prev };
+        delete next[jobId];
+        return next;
+      });
+      if (accept) {
+        setSubmittedBids(prev => ({ ...prev, [jobId]: counterAmt }));
+      }
+    }
+
+    const { error } = await supabase
+      .from('polyrider_bids')
+      .update({
+        counter_status: accept ? 'ACCEPTED' : 'REJECTED',
+        ...(accept ? { bid_amount: counterAmt } : {}),
+      })
+      .eq('id', bidId);
+    if (error) { toast.error(error.message); return; }
+    
+    // Fetch to ensure state syncs with DB
+    fetchJobs();
+
+    const { data: { session } } = await supabase.auth.getSession();
+    notifyUsers(session?.access_token ?? '', [jobStudentId],
+      accept ? '✅ Rider Setuju Tawaran Balas!' : '❌ Rider Tolak Tawaran Balas',
+      accept
+        ? `Rider bersetuju RM${counterAmt.toFixed(2)}. Tekan Sahkan untuk meneruskan.`
+        : 'Rider menolak tawaran anda. Pilih rider lain atau tawar semula.',
+      { tag: 'polyrider-counter-response', url: '/polyrider' }
+    );
+    toast.success(accept ? 'Tawaran balas diterima!' : 'Tawaran balas ditolak.');
+  };
+
   const updateJobStatus = async (jobId: string, newStatus: string) => {
     const job = activeJobs.find(j => j.id === jobId);
     if (!job || job.rider_id !== user?.id) { toast.error('Akses tidak dibenarkan.'); return; }
@@ -557,6 +667,32 @@ export function PolyRiderDashboard() {
     
     await supabase.from('polyrider_chats').insert({ job_id: jobId, sender_id: user!.id, message: msg.trim() });
     setNewMessages({ ...newMessages, [jobId]: '' });
+  };
+
+  const handleRenewSubscription = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!renewFile) { toast.error('Sila muat naik resit bayaran.'); return; }
+    setIsRenewing(true);
+    try {
+      const receipt_url = await uploadFileToDrive(renewFile, 'polyrider-receipts');
+      if (!receipt_url) throw new Error('Gagal muat naik resit');
+
+      const { error } = await supabase.from('polyrider_profiles').update({
+        receipt_url,
+        status: 'PENDING',
+        is_active: false
+      }).eq('user_id', user!.id);
+      
+      if (error) throw error;
+      toast.success('Resit pembaharuan berjaya dihantar untuk kelulusan!');
+      setShowExpiredWarning(false);
+      setRenewFile(null);
+      fetchProfile();
+    } catch (e: any) {
+      toast.error(e.message || 'Ralat muat naik resit.');
+    } finally {
+      setIsRenewing(false);
+    }
   };
 
   if (loading) return null;
@@ -693,7 +829,15 @@ export function PolyRiderDashboard() {
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-400 dark:text-white/40 uppercase tracking-wider block mb-2">Resit Yuran KLK (RM 3.00)</label>
+              <label className="text-xs font-bold text-slate-400 dark:text-white/40 uppercase tracking-wider block mb-2">Yuran Langganan Bulanan (RM 10.00)</label>
+              
+              {adminQrUrl && (
+                <div className="bg-slate-50 dark:bg-zinc-950/50 rounded-xl p-4 mb-4 flex flex-col items-center border border-slate-200 dark:border-white/10">
+                  <p className="text-xs font-bold text-slate-500 dark:text-white/60 mb-2">Imbas kod QR di bawah untuk pembayaran:</p>
+                  <img src={adminQrUrl} alt="Admin QR Code" className="w-48 h-48 object-contain rounded-lg border border-slate-200 dark:border-white/10" />
+                </div>
+              )}
+
               <div className="border-2 border-dashed border-slate-200 dark:border-white/20 rounded-xl p-6 text-center hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors">
                 <input
                   type="file"
@@ -789,32 +933,27 @@ export function PolyRiderDashboard() {
         
         <button 
           onClick={toggleStatus}
-          className={`px-4 py-2 rounded-full font-black text-xs tracking-wider transition-all flex items-center gap-2 ${profile.is_active ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-slate-200 dark:bg-white dark:bg-zinc-900/10 text-slate-500 dark:text-white/50'}`}
+          disabled={profile.status === 'SUSPENDED'}
+          className={`px-4 py-2 rounded-full font-black text-xs tracking-wider transition-all flex items-center gap-2 ${profile.status === 'SUSPENDED' ? 'opacity-50 cursor-not-allowed bg-slate-200 dark:bg-zinc-900/10 text-slate-500' : profile.is_active ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-slate-200 dark:bg-white dark:bg-zinc-900/10 text-slate-500 dark:text-white/50'}`}
         >
           <div className={`w-2 h-2 rounded-full ${profile.is_active ? 'bg-white dark:bg-zinc-900 animate-pulse' : 'bg-slate-400 dark:bg-white dark:bg-zinc-900/40'}`} />
           {profile.is_active ? 'ON-DUTY' : 'OFF-DUTY'}
         </button>
       </div>
-      {/* Earnings Card */}
-      {profile.is_active && (
-        <button 
-          onClick={() => setShowEarningsSheet(true)}
-          className="w-full text-left bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 rounded-2xl px-5 py-4 mb-6 flex items-center justify-between group transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-emerald-200/50 dark:bg-emerald-500/20 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest mb-0.5">Pendapatan Hari Ini</p>
-              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-300 leading-none">RM {todayEarnings.toFixed(2)}</p>
-            </div>
+
+      {/* Suspended Warning Banner */}
+      {profile.status === 'SUSPENDED' && (
+        <div className="mb-6 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-2xl p-4 flex items-start gap-3">
+          <ShieldAlert className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-sm font-black text-rose-700 dark:text-rose-400">Akaun Digantung</h3>
+            <p className="text-xs font-medium text-rose-600 dark:text-rose-400/80 mt-1 leading-relaxed">
+              Fungsi tugas anda telah digantung sementara oleh pihak pengurusan KLK. Sila hubungi urusetia jika ini adalah satu kesilapan.
+            </p>
           </div>
-          <div className="flex items-center text-[10px] font-black uppercase tracking-widest text-emerald-600/50 dark:text-emerald-400/50 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-            Sejarah Penuh →
-          </div>
-        </button>
+        </div>
       )}
+
 
       {/* ACTIVE JOBS (CARPOOL) */}
       {activeJobs.length > 0 && (
@@ -854,70 +993,144 @@ export function PolyRiderDashboard() {
                     dropoff={[job.dropoff_lat, job.dropoff_lng]}
                     pickupName={job.pickup_name}
                     dropoffName={job.dropoff_name}
+                    stops={job.stops}
+                    className="h-[120px]"
                   />
 
-                  {/* Chat System per job */}
-                  <div className="flex-1 min-h-[150px] flex flex-col mb-4">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 mb-2 flex items-center gap-1">
-                      <MessageCircle className="w-3 h-3" /> Chat Penumpang
-                    </h3>
-                    <div className="flex-1 bg-white dark:bg-zinc-900 rounded-2xl p-3 border border-slate-100 dark:border-white/5 overflow-y-auto space-y-2 mb-2 max-h-[200px]">
-                      {(!chatMessages[job.id] || chatMessages[job.id].length === 0) ? (
-                        <p className="text-xs text-center text-slate-400 dark:text-white/40 mt-6">Berhubung dengan pelajar.</p>
-                      ) : (
-                        chatMessages[job.id].map(msg => (
-                          <div key={msg.id} className={`flex ${msg.sender_id === user!.id ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`px-3 py-2 rounded-2xl max-w-[85%] text-xs font-semibold ${msg.sender_id === user!.id ? 'bg-amber-500 text-white rounded-tr-sm' : 'bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-white border border-slate-100 dark:border-white/5 rounded-tl-sm'}`}>
-                              {msg.message}
-                            </div>
+                  {/* Chronological Navigation Timeline */}
+                  <div className="my-3 relative">
+                    <div className="absolute top-4 bottom-4 left-3 w-0.5 bg-slate-200 dark:bg-white/10" />
+
+                    {/* 1. Pickup */}
+                    <div className="relative flex items-start gap-3 mb-3">
+                      <div className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center shrink-0 z-10 ring-4 ring-slate-50 dark:ring-zinc-950/50">
+                        <span className="text-[10px] font-black">A</span>
+                      </div>
+                      <div className="flex-1 bg-white dark:bg-zinc-900 border border-slate-100 dark:border-white/5 rounded-xl p-2.5 shadow-sm flex flex-col gap-1.5">
+                        <div>
+                          <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">Pickup</p>
+                          <p className="font-bold text-xs text-slate-900 dark:text-white leading-tight">{job.pickup_name}</p>
+                        </div>
+                        {job.status === 'ACCEPTED' && (
+                          <div className="flex gap-1.5 mt-0.5">
+                            <a href={`https://waze.com/ul?ll=${job.pickup_lat},${job.pickup_lng}&navigate=yes`} target="_blank" rel="noopener noreferrer" className="flex-1 text-center py-1.5 bg-[#33CCFF]/10 hover:bg-[#33CCFF]/20 text-[#0099CC] dark:text-[#33CCFF] font-bold rounded-lg text-[10px] transition-colors">
+                              🔵 Waze
+                            </a>
+                            <a href={`https://www.google.com/maps/dir/?api=1&destination=${job.pickup_lat},${job.pickup_lng}`} target="_blank" rel="noopener noreferrer" className="flex-1 text-center py-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-bold rounded-lg text-[10px] transition-colors">
+                              🟢 Maps
+                            </a>
                           </div>
-                        ))
-                      )}
+                        )}
+                      </div>
                     </div>
-                    <form onSubmit={(e) => sendMessage(e, job.id)} className="flex gap-2">
-                      <input 
-                        type="text" 
-                        value={newMessages[job.id] || ''} 
-                        onChange={e => setNewMessages({...newMessages, [job.id]: e.target.value})}
-                        placeholder="Mesej..." 
-                        className="flex-1 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 text-sm focus:outline-none focus:border-amber-500 text-slate-900 dark:text-white"
-                      />
-                      <button type="submit" className="w-12 h-12 bg-amber-500 hover:bg-amber-600 text-white rounded-xl flex items-center justify-center shrink-0">
-                        <Send className="w-5 h-5" />
-                      </button>
-                    </form>
+
+                    {/* 2. Intermediate Stops */}
+                    {Array.isArray(job.stops) && job.stops.length > 0 && job.stops.map((s: any, i: number) => (
+                      <div key={`stop-${i}`} className="relative flex items-start gap-3 mb-3">
+                        <div className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0 z-10 ring-4 ring-slate-50 dark:ring-zinc-950/50">
+                          <span className="text-[10px] font-black">{i + 1}</span>
+                        </div>
+                        <div className="flex-1 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-2.5 shadow-sm flex flex-col gap-1.5">
+                          <div>
+                            <p className="text-[8px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Singgahan {i + 1}</p>
+                            <p className="font-bold text-xs text-slate-900 dark:text-white leading-tight">{s.name}</p>
+                          </div>
+                          {job.status === 'IN_TRANSIT' && s.lat && s.lng && (
+                            <a href={`https://waze.com/ul?ll=${s.lat},${s.lng}&navigate=yes`} target="_blank" rel="noopener noreferrer" className="w-full text-center py-1.5 bg-[#33CCFF]/10 hover:bg-[#33CCFF]/20 text-[#0099CC] dark:text-[#33CCFF] font-bold rounded-lg text-[10px] transition-colors mt-0.5">
+                              🔵 Waze ke Singgahan
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* 3. Dropoff */}
+                    <div className="relative flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center shrink-0 z-10 ring-4 ring-slate-50 dark:ring-zinc-950/50">
+                        <span className="text-[10px] font-black">B</span>
+                      </div>
+                      <div className="flex-1 bg-white dark:bg-zinc-900 border border-slate-100 dark:border-white/5 rounded-xl p-2.5 shadow-sm flex flex-col gap-1.5">
+                        <div>
+                          <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">Destinasi Akhir</p>
+                          <p className="font-bold text-xs text-slate-900 dark:text-white leading-tight">{job.dropoff_name}</p>
+                        </div>
+                        {job.status === 'IN_TRANSIT' && (
+                          <div className="flex gap-1.5 mt-0.5">
+                            <a href={`https://waze.com/ul?ll=${job.dropoff_lat},${job.dropoff_lng}&navigate=yes`} target="_blank" rel="noopener noreferrer" className="flex-1 text-center py-1.5 bg-[#33CCFF]/10 hover:bg-[#33CCFF]/20 text-[#0099CC] dark:text-[#33CCFF] font-bold rounded-lg text-[10px] transition-colors">
+                              🔵 Waze
+                            </a>
+                            <a href={`https://www.google.com/maps/dir/?api=1&destination=${job.dropoff_lat},${job.dropoff_lng}`} target="_blank" rel="noopener noreferrer" className="flex-1 text-center py-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-bold rounded-lg text-[10px] transition-colors">
+                              🟢 Maps
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    {/* Navigation buttons — only show when coordinates are available */}
-                    {(() => {
-                      const navLat = job.status === 'ACCEPTED' ? job.pickup_lat : job.dropoff_lat;
-                      const navLng = job.status === 'ACCEPTED' ? job.pickup_lng : job.dropoff_lng;
-                      const navLabel = job.status === 'ACCEPTED' ? 'ke Pickup' : 'ke Destinasi';
-                      if (!navLat || !navLng) return null;
-                      const wazeUrl = `https://waze.com/ul?ll=${navLat},${navLng}&navigate=yes`;
-                      const gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${navLat},${navLng}`;
-                      return (
-                        <div className="col-span-2 grid grid-cols-2 gap-2 mb-1">
-                          <a
-                            href={wazeUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-2 py-2.5 bg-[#33CCFF]/10 hover:bg-[#33CCFF]/20 border border-[#33CCFF]/30 text-[#0099CC] dark:text-[#33CCFF] font-bold rounded-xl text-xs transition-colors"
-                          >
-                            <span className="text-base leading-none">🔵</span> Waze {navLabel}
-                          </a>
-                          <a
-                            href={gmapsUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-2 py-2.5 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 font-bold rounded-xl text-xs transition-colors"
-                          >
-                            <span className="text-base leading-none">🟢</span> Maps {navLabel}
-                          </a>
+                  {/* Chat System per job - Accordion */}
+                  <details 
+                    className="group mb-4 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-100 dark:border-white/5 overflow-hidden"
+                    onToggle={(e) => {
+                      if ((e.target as HTMLDetailsElement).open) {
+                        setOpenChatId(job.id);
+                      } else {
+                        if (openChatId === job.id) setOpenChatId(null);
+                      }
+                    }}
+                  >
+                    <summary className="cursor-pointer list-none flex items-center justify-between p-3 select-none">
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <MessageCircle className="w-4 h-4 text-amber-500" />
+                          {openChatId !== job.id && 
+                           chatMessages[job.id]?.length > 0 && 
+                           chatMessages[job.id][chatMessages[job.id].length - 1].sender_id !== user!.id && 
+                           chatMessages[job.id].length > (readChatCount[job.id] || 0) && (
+                            <>
+                              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-ping" />
+                              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+                            </>
+                          )}
                         </div>
-                      );
-                    })()}
+                        <span className="text-xs font-bold text-slate-700 dark:text-white/80">Chat Penumpang</span>
+                      </div>
+                      <span className="text-amber-500 transition-transform duration-300 group-open:-rotate-180">
+                        <ChevronRight className="w-4 h-4 rotate-90" />
+                      </span>
+                    </summary>
+                    <div className="px-3 pb-3">
+                      <div className="flex flex-col min-h-[120px] max-h-[150px]">
+                        <div className="flex-1 overflow-y-auto space-y-2 mb-2 p-1">
+                          {(!chatMessages[job.id] || chatMessages[job.id].length === 0) ? (
+                            <p className="text-[10px] text-center text-slate-400 dark:text-white/40 mt-4">Berhubung dengan pelajar.</p>
+                          ) : (
+                            chatMessages[job.id].map(msg => (
+                              <div key={msg.id} className={`flex ${msg.sender_id === user!.id ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`px-2.5 py-1.5 rounded-xl max-w-[85%] text-[10px] font-semibold ${msg.sender_id === user!.id ? 'bg-amber-500 text-white rounded-tr-sm' : 'bg-slate-50 dark:bg-zinc-800 text-slate-900 dark:text-white border border-slate-100 dark:border-white/5 rounded-tl-sm'}`}>
+                                  {msg.message}
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                        <form onSubmit={(e) => sendMessage(e, job.id)} className="flex gap-2">
+                          <input 
+                            type="text" 
+                            value={newMessages[job.id] || ''} 
+                            onChange={e => setNewMessages({...newMessages, [job.id]: e.target.value})}
+                            placeholder="Mesej..." 
+                            className="flex-1 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 text-slate-900 dark:text-white"
+                          />
+                          <button type="submit" className="px-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl flex items-center justify-center shrink-0 transition-colors">
+                            <Send className="w-4 h-4" />
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  </details>
+
+                  <div className="grid grid-cols-2 gap-3 mb-4">
                     {job.status === 'ACCEPTED' && (
                       <div className="col-span-2 py-2.5 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl flex items-center justify-between px-3">
                         <div className="flex items-center gap-2">
@@ -1133,6 +1346,7 @@ export function PolyRiderDashboard() {
                         dropoff={[job.dropoff_lat, job.dropoff_lng]}
                         pickupName={job.pickup_name}
                         dropoffName={job.dropoff_name}
+                        stops={job.stops}
                       />
                       {/* Fade gradient to separate map from content smoothly and hide Leaflet text */}
                       <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white dark:from-zinc-900 to-transparent z-[1000] pointer-events-none" />
@@ -1251,6 +1465,30 @@ export function PolyRiderDashboard() {
                               <p className="font-bold text-slate-900 dark:text-white text-sm line-clamp-2">{job.dropoff_name}</p>
                             </div>
                           </div>
+                          {/* Stops */}
+                          {Array.isArray(job.stops) && job.stops.length > 0 && (
+                            <div className="mt-2 pl-2 border-l-2 border-dashed border-amber-300 dark:border-amber-500/40 space-y-1">
+                              {job.stops.map((s: any, i: number) => (
+                                <p key={i} className="text-[10px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                                  <MapPin className="w-2.5 h-2.5" />
+                                  Singgah {i + 1}: {s.name}
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                          {/* Add-ons */}
+                          {Array.isArray(job.addons) && job.addons.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {job.addons.map((key: string) => {
+                                const addon = POLYRIDER_ADDONS.find(a => a.key === key);
+                                return addon ? (
+                                  <span key={key} className="flex items-center gap-1 px-2 py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold rounded-lg">
+                                    {addon.emoji} {addon.label}
+                                  </span>
+                                ) : null;
+                              })}
+                            </div>
+                          )}
                         </div>
                         
                         <div className="text-right shrink-0">
@@ -1277,10 +1515,26 @@ export function PolyRiderDashboard() {
 
                       {/* Bidding Controls */}
                       {submittedBids[job.id] !== undefined ? (
-                        <div className="pt-4 border-t border-slate-100 dark:border-white/5 flex gap-2">
-                          <div className="flex-1 py-3 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold rounded-xl flex items-center justify-center gap-2">
-                            <Clock className="w-5 h-5" /> Menunggu Respons Pelajar...
-                          </div>
+                        <div className="pt-4 border-t border-slate-100 dark:border-white/5 space-y-2">
+                          {counterOfferBids[job.id] ? (
+                            <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-xl p-3">
+                              <p className="text-xs font-black text-amber-700 dark:text-amber-400 mb-2">💬 Pelajar Tawar Balik RM{counterOfferBids[job.id].counterAmt.toFixed(2)}</p>
+                              <div className="flex gap-2">
+                                <button onClick={() => respondCounterOffer(counterOfferBids[job.id].bidId, job.student_id, true, counterOfferBids[job.id].counterAmt)}
+                                  className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs transition-colors">
+                                  ✓ Terima RM{counterOfferBids[job.id].counterAmt.toFixed(2)}
+                                </button>
+                                <button onClick={() => respondCounterOffer(counterOfferBids[job.id].bidId, job.student_id, false, counterOfferBids[job.id].counterAmt)}
+                                  className="flex-1 py-2 bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/60 font-bold rounded-xl text-xs transition-colors">
+                                  ✗ Tolak
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="py-3 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold rounded-xl flex items-center justify-center gap-2">
+                              <Clock className="w-5 h-5" /> Menunggu Respons Pelajar...
+                            </div>
+                          )}
                         </div>
                       ) : biddingJobId === job.id ? (
                         <div className="pt-4 border-t border-slate-100 dark:border-white/5 flex gap-2 items-center">
@@ -1336,6 +1590,27 @@ export function PolyRiderDashboard() {
         </div>
       )}
 
+      {/* Earnings Card */}
+      {profile.is_active && (
+        <button 
+          onClick={() => setShowEarningsSheet(true)}
+          className="w-full mt-4 text-left bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 rounded-2xl px-5 py-4 mb-6 flex items-center justify-between group transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-emerald-200/50 dark:bg-emerald-500/20 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest mb-0.5">Pendapatan Hari Ini</p>
+              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-300 leading-none">RM {todayEarnings.toFixed(2)}</p>
+            </div>
+          </div>
+          <div className="flex items-center text-[10px] font-black uppercase tracking-widest text-emerald-600/50 dark:text-emerald-400/50 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+            Sejarah Penuh →
+          </div>
+        </button>
+      )}
+
       <CancelJobModal 
         isOpen={isCancelModalOpen}
         onClose={() => { setIsCancelModalOpen(false); setCancelJobId(null); }}
@@ -1344,6 +1619,74 @@ export function PolyRiderDashboard() {
         isLoading={isCancelling}
       />
       {renderContactJPP()}
+
+      {/* MODALS: WHATSAPP & EXPIRATION */}
+      <AnimatePresence>
+        {showWhatsappModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm">
+            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 w-full max-w-sm shadow-2xl border border-slate-100 dark:border-white/10 text-center">
+              <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageCircle className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">Komuniti PolyRider</h3>
+              <p className="text-sm font-medium text-slate-500 dark:text-white/60 mb-6 leading-relaxed">
+                Tahniah, pendaftaran anda telah diluluskan! Sila sertai kumpulan WhatsApp rasmi PolyRider untuk mendapatkan info dan pengumuman terkini.
+              </p>
+              <div className="space-y-3">
+                <a href={whatsappLink} target="_blank" rel="noopener noreferrer" onClick={() => { localStorage.setItem('polyrider_whatsapp_joined', 'true'); setShowWhatsappModal(false); }} className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 transition-all">
+                  <MessageCircle className="w-5 h-5" /> Sertai Sekarang
+                </a>
+                <button onClick={() => { localStorage.setItem('polyrider_whatsapp_joined', 'true'); setShowWhatsappModal(false); }} className="w-full py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-600 dark:text-white/60 font-bold rounded-xl transition-colors">
+                  Tutup
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {showExpiredWarning && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md">
+            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 w-full max-w-md shadow-2xl border border-red-100 dark:border-red-500/20">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-red-100 dark:bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                  <ShieldAlert className="w-8 h-8" />
+                </div>
+                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">Langganan Tamat Tempoh</h3>
+                <p className="text-sm font-medium text-slate-500 dark:text-white/60 leading-relaxed">
+                  Langganan bulanan anda telah melepasi tempoh ihsan 3 hari. Akaun anda kini disekat dari bertugas. Sila jelaskan yuran RM10 untuk meneruskan perkhidmatan.
+                </p>
+              </div>
+
+              <form onSubmit={handleRenewSubscription} className="space-y-4">
+                {adminQrUrl && (
+                  <div className="bg-slate-50 dark:bg-zinc-950/50 rounded-xl p-4 flex flex-col items-center border border-slate-200 dark:border-white/10">
+                    <p className="text-[10px] font-bold text-slate-500 dark:text-white/60 mb-2 uppercase tracking-widest">Kod QR Bayaran (RM10)</p>
+                    <img src={adminQrUrl} alt="Admin QR Code" className="w-40 h-40 object-contain rounded-lg border border-slate-200 dark:border-white/10" />
+                  </div>
+                )}
+                
+                <div className="border-2 border-dashed border-slate-200 dark:border-white/20 rounded-xl p-4 text-center hover:border-amber-500 transition-colors">
+                  <input type="file" required accept="image/*,.pdf" className="hidden" id="renew-upload" onChange={(e) => setRenewFile(e.target.files?.[0] || null)} />
+                  <label htmlFor="renew-upload" className="cursor-pointer flex flex-col items-center">
+                    <Upload className="w-6 h-6 text-slate-400 dark:text-white/40 mb-2" />
+                    <span className="text-xs font-bold text-amber-600">{renewFile ? renewFile.name : 'Muat Naik Resit Baru'}</span>
+                  </label>
+                </div>
+                
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setShowExpiredWarning(false)} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-600 dark:text-white/60 font-bold rounded-xl transition-colors">
+                    Tutup
+                  </button>
+                  <button type="submit" disabled={isRenewing || !renewFile} className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl disabled:opacity-50 transition-colors shadow-lg shadow-amber-500/20">
+                    {isRenewing ? 'Menghantar...' : 'Hantar Resit'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

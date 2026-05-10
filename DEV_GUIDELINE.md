@@ -1455,7 +1455,7 @@ Semasa memuatkan Dashboard/Portal, satukan pengambilan data secara "Parallel". R
 
 ## 25. Modul PolyRider — Sistem Carpool & E-Hailing Kampus 🛵
 
-> Dikemas kini: Mei 2026 (Migrasi ke Realtime WebSockets & Keselamatan Bidaan)
+> Dikemas kini: Mei 2026 (Migrasi ke Realtime WebSockets, Keselamatan Bidaan, + Feature Wave 2: Add-ons, Tip, Counter-Offer, Multi-Stop)
 
 PolyRider merupakan sistem pengangkutan (carpool / e-hailing) khusus untuk kemudahan warga kampus. Ia kini beroperasi menggunakan model **Sistem Pengumpulan & Kelulusan (Gathering & Approval System)** di mana penumpang boleh berkongsi kenderaan (carpool) untuk meminimumkan kos tambang.
 
@@ -1463,9 +1463,9 @@ PolyRider merupakan sistem pengangkutan (carpool / e-hailing) khusus untuk kemud
 
 | Jadual | Fungsi |
 |---|---|
-| `polyrider_jobs` | Menyimpan rekod carpool/perjalanan. Status: `GATHERING`, `CARPOOL_REQUEST`, `PENDING`, `ACCEPTED`, `CANCELLED`, `COMPLETED` |
+| `polyrider_jobs` | Menyimpan rekod carpool/perjalanan. Status: `GATHERING`, `CARPOOL_REQUEST`, `PENDING`, `ACCEPTED`, `CANCELLED`, `COMPLETED`. Column tambahan: `addons` (JSONB), `stops` (JSONB), `tip_amount` (NUMERIC) |
 | `polyrider_profiles` | Profil pemandu (rider) termasuk butiran kenderaan, nombor plat, dan rating. |
-| `polyrider_bids` | Rekod bidaan harga oleh rider. |
+| `polyrider_bids` | Rekod bidaan harga oleh rider. Column tambahan: `counter_amount` (NUMERIC), `counter_status` (TEXT: `PENDING_RIDER`, `ACCEPTED`, `REJECTED`) |
 | `polyrider_chats` | Rekod perbualan antara rider dan penumpang dalam sesuatu tugasan. |
 
 ### 25.2 Aliran Sistem Carpool (Passenger Flow)
@@ -1490,7 +1490,7 @@ Semasa pembangunan, sistem ini mengalami isu *Infinite Recursion* (rujukan kendi
 ### 25.4 RPCs (Remote Procedure Calls) & State Transitions
 
 Logik transisi carpool dikendalikan sepenuhnya di peringkat database untuk mengelakkan *Race Conditions*:
-- `create_polyrider_job`: Inisialisasi bilik carpool baharu.
+- `create_polyrider_job`: Inisialisasi bilik carpool baharu. **Kini menerima `p_addons` (JSONB) dan `p_stops` (JSONB) sebagai parameter tambahan.** Surcharge RM0.50/stop dikira secara automatik dalam RPC.
 - `lock_polyrider_carpool`: Transisi kumpulan dari `GATHERING` ke `PENDING` secara serentak (atomic update).
 - `respond_carpool_request`: Mengendalikan kelulusan (approve/reject). Mempunyai logic lock/check saiz kumpulan supaya tidak melebihi limit secara *concurrent*.
 
@@ -1522,6 +1522,134 @@ Bagi UI perbualan (Chat), pengesanan *Sender* dan *Receiver* menggunakan logik p
 
 - Jika anda sedang menguji (testing) antara *Rider* dan *Penumpang*, pastikan anda menggunakan **dua akaun (emel) yang berbeza**.
 - Jika anda mencuba untuk log masuk dengan **akaun yang sama** di dalam dua tab/telefon yang berbeza (satu bertindak sebagai rider, satu sebagai penumpang), sistem akan mendapati bahawa `sender_id` tersebut milik anda di kedua-dua belah. Oleh itu, sistem akan meletakkan buih sembang (chat bubble) di sebelah **KANAN** (sebagai Penghantar) pada kedua-dua peranti. Ini **bukan satu bug**, tetapi ia tindak balas logikal berdasarkan ID pengguna yang sama.
+
+### 25.9 Add-ons / Keperluan Khas (Maxim-style) 🏷️
+
+> Ditambah: Mei 2026
+
+Penumpang boleh memilih keperluan khas sebelum tempah untuk memberi maklumat kepada rider.
+
+**Constants:** Semua definisi add-on ada dalam `src/lib/polyRiderConstants.ts` (diimport oleh kedua-dua Home & Dashboard).
+
+| Key | Label | Emoji |
+|---|---|---|
+| `BESAR` | Barang Besar/Berat | 📦 |
+| `LEBIH_SEORANG` | Lebih dari 1 Orang | 👥 |
+| `HUJAN` | Perlu Perlindungan | ☂️ |
+
+**Storan:** Column `addons JSONB DEFAULT '[]'` dalam `polyrider_jobs`. Dihantar ke RPC sebagai `p_addons` JSON string.
+
+**Peraturan Developer:**
+- **JANGAN** tambah add-on baru dalam kod — tambah dalam array `POLYRIDER_ADDONS` di `polyRiderConstants.ts` sahaja. Dashboard rider akan auto-reflect tanpa ubah kod lain.
+- Tiada RLS baharu diperlukan — column JSONB diwarisi oleh policy sedia ada.
+
+### 25.10 Sistem Tip Rider (Grab-style) 💰
+
+> Ditambah: Mei 2026
+
+Penumpang boleh memberi tip (RM0.50, RM1.00, atau RM2.00) kepada rider melalui `RatingModal` selepas perjalanan selesai.
+
+**Storan:** Column `tip_amount NUMERIC(8,2) DEFAULT 0` dalam `polyrider_jobs`.
+
+**Aliran:**
+1. `RatingModal` papar butang tip pilihan (Tiada / RM0.50 / RM1.00 / RM2.00)
+2. `submitRating()` update `tip_amount` dalam satu `.update()` call bersama rating
+3. Rider dinotifikasi via `notifyUsers()` jika tip > 0
+4. `fetchTodayEarnings()` dalam Dashboard kini include `tip_amount` dalam jumlah pendapatan harian
+5. Digital Receipt papar breakdown: Tambang + Tip Rider + Jumlah
+
+**Nota Kepatuhan:**
+- Satu `.update()` call sahaja — tiada N+1 (ikut §15.2)
+- Tiada Realtime subscription baharu
+
+### 25.11 Counter-Offer / Tawar-Menawar (inDrive-style) 💬
+
+> Ditambah: Mei 2026
+
+Penumpang boleh membalas bidaan rider dengan tawaran balas. Rider pula boleh terima atau tolak.
+
+**Schema:**
+```
+polyrider_bids.counter_amount  NUMERIC(8,2)  — amaun tawaran balas penumpang
+polyrider_bids.counter_status  TEXT          — NULL | 'PENDING_RIDER' | 'ACCEPTED' | 'REJECTED'
+```
+
+**Aliran (Passenger Side — PolyRiderHome.tsx):**
+1. Setiap bid card ada dua butang: **Terima** (hijau) dan **Tawar Balik** (kuning)
+2. Klik "Tawar Balik" → inline input muncul untuk masuk amaun baharu
+3. Hantar → `counter_status = 'PENDING_RIDER'` disimpan dalam `polyrider_bids`
+4. Rider dinotifikasi untuk respond
+5. Bila rider setuju (`ACCEPTED`) → butang "Sahkan" muncul dengan amaun counter untuk acceptance muktamad
+
+**Aliran (Rider Side — PolyRiderDashboard.tsx):**
+1. `fetchJobs()` fetch bids dengan `counter_amount` dan `counter_status`
+2. Jika `counter_status === 'PENDING_RIDER'` → kad "Pelajar Tawar Balik RM_X" muncul dengan butang Terima/Tolak
+3. `respondCounterOffer()` update `counter_status` dan notifikasi penumpang
+
+**Nota Kepatuhan:**
+- Counter-offer update guna Realtime channel sedia ada `polyrider_bids` — tiada subscription baharu
+- Tiada RLS baharu — `polyrider_bids` policy sedia ada sudah cukup
+- **Index:** `idx_polyrider_bids_counter_pending` (partial index, hanya row dengan `counter_status = 'PENDING_RIDER'`)
+
+### 25.12 Multi-Stop / Hentian Tambahan (Grab-style) 🗺️
+
+> Ditambah: Mei 2026
+
+Penumpang boleh tambah **sehingga 3 hentian pertengahan** (multi-stop) dalam satu perjalanan. Surcharge RM0.50 per hentian dikira automatik oleh RPC.
+
+**Storan:** Column `stops JSONB DEFAULT '[]'` dalam `polyrider_jobs`.
+
+**Format JSONB:**
+```json
+[
+  { "name": "ATM Koperasi", "lat": 3.1234, "lng": 101.5678 },
+  { "name": "Pejabat HEP", "lat": 3.1240, "lng": 101.5680 }
+]
+```
+
+**UI (PolyRiderHome.tsx):**
+- Butang "Tambah Hentian" muncul di borang tempahan (had 3 hentian)
+- Setiap hentian ada `LocationSearchInput` tersendiri dan butang padam (Trash2 icon)
+- Surcharge dipaparkan secara real-time: "+RM1.00 surcharge (2 hentian tambahan)"
+
+**Pengiraan Harga (dalam RPC `create_polyrider_job`):**
+```sql
+v_stop_count  := COALESCE(jsonb_array_length(p_stops), 0);
+v_final_price := p_proposed_price + (v_stop_count * 0.50);
+```
+
+**Paparan Rider (PolyRiderDashboard.tsx):**
+- Stops dipapar dalam job card dengan garis tepi putus-putus kuning
+- Format: "Singgah 1: ATM Koperasi", "Singgah 2: Pejabat HEP"
+
+**Nota Kepatuhan:**
+- `LocationSearchInput` terima `(result: LocationResult) => void` — gunakan `result.name`, `result.lat`, `result.lng`
+- Stops dikembalikan dalam query `polyrider_jobs` sedia ada — tiada fetch tambahan (tiada N+1)
+
+### 25.13 Sistem Langganan Rider & Gantung Tugas (Admin Suspension) 🛑
+
+> Ditambah: Mei 2026
+
+Bagi mengawal selia jumlah pemandu dan mengenakan yuran bulanan (RM10), sistem PolyRider menggunakan model langganan bulanan berasaskan `upsert` dan kawalan akses status secara terus (Direct Status Control).
+
+**Aliran Langganan (Subscription Flow):**
+1. Rider baru atau rider yang tamat tempoh wajib memuat naik resit pembayaran yuran pendaftaran/bulanan.
+2. Proses pendaftaran menggunakan `.upsert()` pada `polyrider_profiles` untuk menangani senario permohonan semula (mengelakkan ralat *409 Conflict*). Status diset kepada `PENDING`.
+3. Admin (Exco KLK) memeriksa pautan `receipt_url` dan meluluskan langganan.
+4. Apabila diluluskan, `status = 'APPROVED'`, dan `subscription_valid_until` disetkan ke 30 hari dari tarikh kelulusan.
+5. Selepas tamat tempoh, sistem memberi kelonggaran (grace period) selama 3 hari sebelum menyekat rider sepenuhnya.
+
+**Sistem Gantung Tugas (Suspension System):**
+1. Admin KLK mempunyai kawalan mutlak untuk menekan **"Gantung Tugas"** pada *dashboard* admin.
+2. Tindakan ini menukar `status = 'SUSPENDED'` dan `is_active = false`.
+3. Rider dengan status `SUSPENDED`:
+   - Dihalang daripada menekan butang ON-DUTY pada Dashboard.
+   - Dipaparkan *banner* amaran besar berwarna merah bahawa akaun mereka digantung.
+4. Admin boleh menekan **"Sambung Tugas"** untuk memulihkan status rider kembali kepada `APPROVED`.
+
+**Nota Kepatuhan Keselamatan:**
+- Logik *blocking* dalam `toggleStatus` wajib dikekalkan untuk menghalang eksploitasi di bahagian klien.
+- Maklumat profil rider (termasuk status gantung) dipantau terus tanpa melepaskan data melalui komponen UI secara lemah.
 
 ---
 
