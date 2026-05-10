@@ -153,6 +153,7 @@ const authFlowLimiter = rateLimit({
     message: { error: "Terlalu banyak percubaan. Sila cuba lagi selepas 1 jam." },
     standardHeaders: true,
     legacyHeaders: false,
+    validate: { xForwardedForHeader: false, trustProxy: false, default: false },
 });
 
 // ==========================================
@@ -1503,6 +1504,7 @@ const klkWebhookLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 60,
     message: { error: 'Webhook rate limit exceeded.' },
+    validate: { xForwardedForHeader: false, trustProxy: false, default: false },
 });
 
 // ── KLK Endpoint 1: Google Form Webhook ─────────────────────────────────────
