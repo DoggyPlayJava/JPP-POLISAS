@@ -1712,5 +1712,37 @@ Semua komponen utama mestilah dipetakan mengikut lapisan Z-Index yang ketat ini 
 - **Elakkan React State untuk Scroll**: Gunakan Manipulasi DOM secara terus (
 avRef.current.classList.add) untuk kesan scroll (seperti Hide/Shrink BottomNav) bagi menjimatkan kitaran *re-render* dan menjaga kelancaran 60 FPS pada peranti spesifikasi rendah.
 - **Fat Finger Rule**: Apabila mengecilkan (shrink) saiz butang, jangan gunakan scale yang terlalu kecil. Had yang ideal adalah scale-[0.85] untuk memastikan ia kekal mesra-ibujari.
-- **Haptic Feedback**: Panggil 
-avigator.vibrate(30) untuk tindakan mikro (micro-interactions) bagi memberi rasa mekanikal/premium (cth: klik FAB atau besarkan navigasi).
+- **Haptic Feedback**: Panggil `navigator.vibrate(30)` untuk tindakan mikro (micro-interactions) bagi memberi rasa mekanikal/premium (cth: klik FAB atau besarkan navigasi).
+
+---
+
+## 17. Senibina Modul PolyRider (Carpooling & Keselamatan) 🚗
+
+> Ditambah: Mei 2026
+
+Modul PolyRider merupakan sistem *ride-hailing* (e-hailing) kampus yang menghubungkan pelajar (penumpang) dengan pelajar lain yang mempunyai kenderaan (rider). Sistem ini dibina dengan mengutamakan kelajuan (*realtime*) dan keselamatan.
+
+### 17.1 Senibina Real-Time (Supabase Channels)
+Bagi mengekalkan prestasi dan mengelakkan isu *database CPU spike*, semua operasi yang memerlukan kemas kini pantas kini menggunakan **Supabase Realtime Channels** berbanding *polling* (`setInterval`).
+- **Penjejakan Status:** Jadual `polyrider_jobs` dipantau melalui *channel* untuk mendengar perubahan status (`ACCEPTED`, `ARRIVED`, `IN_TRANSIT`, `COMPLETED`).
+- **Sistem Bidaan (Bidding):** Perubahan pada jadual `polyrider_bids` didengari secara langsung.
+- **AMARAN:** Sentiasa bersihkan memori dengan memanggil `supabase.removeChannel(channel)` di dalam blok `return () => {}` bagi `useEffect` untuk mengelakkan kebocoran memori (memory leak).
+
+### 17.2 Protokol Keselamatan & SOS (Sangat Penting)
+Keselamatan penumpang adalah keutamaan.
+- **Tetapan Pengesanan GPS:** Fungsi `navigator.geolocation.getCurrentPosition` mesti mempunyai `enableHighAccuracy: true`, `timeout: 15000` (15 saat), dan `maximumAge: 0`. Berdasarkan ujian, *timeout* 5 saat terlalu singkat untuk telefon pintar menangkap lokasi tepat, menyebabkan sistem bergantung pada koordinat asal pesanan (*fallback*).
+- **Trigasi SOS:** Butang "Swipe to SOS" akan mengemas kini status pekerjaan ke `EMERGENCY` dan terus merekod log dalam `polyrider_sos_logs`.
+- **Notifikasi SOS:** Emel amaran secara automatik dihantar kepada ahli JPP unit KLS menggunakan fungsi `notifyKLKOnSuspension()` (melalui *Resend API*).
+- **Penolakan Prank/Khianat:** Jika Exco KLK menandakan isyarat SOS sebagai `FALSE_ALARM`, akaun pemanggil (pelajar atau rider) akan digantung secara automatik selama 24 jam. Ini diuruskan oleh *RPC* `cancel_polyrider_job`.
+
+### 17.3 Algoritma Bidaan & Anti-Spam
+Sistem harga berasaskan "bidaan" (*bidding*). Penumpang meletakkan harga permulaan, rider boleh terima atau tawar harga baharu.
+- **Anti-Spam (Pembatalan Berulang):** Sekiranya seorang penumpang atau rider membatalkan pesanan berturut-turut sebanyak lebih daripada 4 kali dalam tempoh 1 jam, akaun mereka akan digantung selama 24 jam. Ini disemak secara langsung dalam pangkalan data melalui fungsi RPC `cancel_polyrider_job`.
+- **Integriti Data:** `polyrider_bids` mempunyai kunci unik untuk memastikan *race conditions* tidak berlaku jika dua rider membida pesanan yang sama serentak. Indeks `idx_polyrider_bids_job` diletakkan untuk menggantikan kos mengimbas jadual (*table scan*).
+
+### 17.4 Hubungi JPP & Laporan Ralat
+Disebabkan kritikalnya sistem PolyRider (melibatkan pergerakan fizikal pelajar), satu **Floating Action Button (Menu Kenalan JPP)** sentiasa dipaparkan.
+1. **Lapor Ralat (Tech Support):** Menghala terus ke nombor pembangun (*developer*) sistem PolyRider (+601139413699).
+2. **Admin PolyRider (Exco KLK):** Menghala terus ke nombor rasmi unit KLK (Keselamatan & Lalu Lintas) melalui `system_settings` (`klk_emergency_phone`).
+
+**JANGAN buang atau sembunyikan butang ini** pada peranti mudah alih memandangkan sebarang masalah sistem berpotensi mengakibatkan pelajar terkandas di sekitar kampus.

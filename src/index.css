@@ -196,6 +196,15 @@
   @apply bg-muted-foreground/30 rounded-full hover:bg-muted-foreground/50 transition-colors;
 }
 
+/* Hide scrollbar for clean horizontal scrolls */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Page Transitions */
 .fade-in {
   animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);

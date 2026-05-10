@@ -1,8 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bike, MapPin, Navigation, ShieldAlert, Banknote, UserCircle, MessageCircle, Send, Map as MapIcon, X, CheckCircle, Check, Users, Star, History, Clock, Phone, ChevronRight } from 'lucide-react';
+import { Bike, MapPin, Navigation, ShieldAlert, Banknote, UserCircle, MessageCircle, Send, Map as MapIcon, X, CheckCircle, Check, Users, Star, History, Clock, Phone, ChevronRight, Bug } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
+import { CancelJobModal } from '@/components/polyrider/CancelJobModal';
+import { notifyKLKOnSuspension } from '@/lib/polyRiderNotify';
+import { SwipeToSOS } from '@/components/polyrider/SwipeToSOS';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -194,6 +199,8 @@ export function PolyRiderHome() {
   // Job & Bids State
   const [isSearching, setIsSearching] = useState(false);
   const [activeJob, setActiveJob] = useState<any>(null);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [bids, setBids] = useState<any[]>([]);
   const searchStartTime = useRef<number | null>(null);
   const [showNudge, setShowNudge] = useState(false);
@@ -201,6 +208,7 @@ export function PolyRiderHome() {
   // Chat State
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [showContactMenu, setShowContactMenu] = useState(false);
 
   // SOS State
   const [showSOSModal, setShowSOSModal] = useState(false);
@@ -261,7 +269,7 @@ export function PolyRiderHome() {
     return () => clearInterval(interval);
   }, [user]);
 
-  // Fetch open carpools when idle
+  // Fetch open carpools when idle with visibility check to save DB CPU
   useEffect(() => {
     if (isSearching || activeJob || !user) return;
     const fetch = async () => {
@@ -272,8 +280,20 @@ export function PolyRiderHome() {
       if (data) setOpenCarpools(data);
     };
     fetch();
-    const iv = setInterval(fetch, 12000);
-    return () => clearInterval(iv);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') fetch();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    const iv = setInterval(() => {
+      if (document.visibilityState === 'visible') fetch();
+    }, 30000);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      clearInterval(iv);
+    };
   }, [isSearching, activeJob, user]);
 
   // Fetch trip history when idle
@@ -556,12 +576,10 @@ export function PolyRiderHome() {
     }
   };
 
-  const handleCancelJob = async () => {
+  const handleCancelJob = async (reason: string) => {
     if (!activeJob) return;
-    if (['ACCEPTED', 'ARRIVED', 'IN_TRANSIT'].includes(activeJob.status)) {
-      toast.error('Rider sudah dalam perjalanan! Hubungi rider melalui chat.'); return;
-    }
 
+    setIsCancelling(true);
     // Check if this is a passenger pulling out of a group carpool
     const isPassengerLeaving = activeJob.carpool_group_id && activeJob.id !== activeJob.carpool_group_id;
     let groupOwnerId: string | null = null;
@@ -575,17 +593,27 @@ export function PolyRiderHome() {
       if (ownerJob) groupOwnerId = ownerJob.student_id;
     }
 
-    // Cancel based on the actual current status — not just PENDING
-    const { error } = await supabase
-      .from('polyrider_jobs')
-      .update({ status: 'CANCELLED' })
-      .eq('id', activeJob.id)
-      .in('status', ['PENDING', 'GATHERING', 'CARPOOL_REQUEST']);
+    // Call the new RPC to handle cancellation, anti-spam logic, and logging
+    const { error } = await supabase.rpc('cancel_polyrider_job', {
+      p_job_id: activeJob.id,
+      p_reason: reason
+    });
+
+    setIsCancelling(false);
+    setIsCancelModalOpen(false);
 
     if (error) {
       console.error('[handleCancelJob]', error);
       toast.error('Gagal membatalkan. Cuba lagi.');
       return;
+    }
+    
+    // Check if student was automatically suspended due to anti-spam
+    if (user?.id) {
+      const { data: myProfile } = await supabase.from('profiles').select('full_name, matric_no, polyrider_suspended_until').eq('id', user.id).single();
+      if (myProfile?.polyrider_suspended_until && new Date(myProfile.polyrider_suspended_until) > new Date()) {
+        await notifyKLKOnSuspension(supabase, myProfile.full_name, myProfile.matric_no, `Amaran Sistem: Kekerapan membatalkan pesanan (3 kali / jam). Sebab akhir: ${reason}`);
+      }
     }
 
     // Notify the owner if a passenger left
@@ -672,11 +700,12 @@ export function PolyRiderHome() {
     let lng: number | null = null;
     try {
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
       });
       lat = position.coords.latitude;
       lng = position.coords.longitude;
-    } catch {
+    } catch (err: any) {
+      console.warn("GPS detection failed:", err.message || err);
       // Fallback to job coordinates if GPS denied
       lat = activeJob.pickup_lat ?? null;
       lng = activeJob.pickup_lng ?? null;
@@ -736,17 +765,73 @@ export function PolyRiderHome() {
     setNewMessage('');
   };
 
+  const renderContactJPP = () => {
+    if (!klkPhone) return null;
+    let cleanPhone = klkPhone.replace(/\D/g, '');
+    if (cleanPhone.startsWith('0')) cleanPhone = '6' + cleanPhone;
+    else if (!cleanPhone.startsWith('6')) cleanPhone = '60' + cleanPhone;
+
+    return (
+      <div className="fixed bottom-24 right-4 z-50 flex flex-col items-end">
+        <AnimatePresence>
+          {showContactMenu && (
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.9 }}
+              className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 shadow-2xl rounded-2xl p-2 mb-3 flex flex-col gap-1 w-48 origin-bottom-right"
+            >
+              <a
+                href={`https://wa.me/601139413699`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setShowContactMenu(false)}
+                className="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors text-left"
+              >
+                <div className="w-8 h-8 rounded-full bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center shrink-0">
+                  <Bug className="w-4 h-4 text-rose-500" />
+                </div>
+                <div>
+                  <p className="text-xs font-black text-slate-900 dark:text-white">Lapor Ralat</p>
+                  <p className="text-[10px] font-bold text-slate-500 dark:text-white/50">Tech Support</p>
+                </div>
+              </a>
+              <div className="h-px bg-slate-100 dark:bg-white/5 w-full my-0.5" />
+              <a
+                href={`https://wa.me/${cleanPhone}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setShowContactMenu(false)}
+                className="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors text-left"
+              >
+                <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center shrink-0">
+                  <MessageCircle className="w-4 h-4 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-xs font-black text-slate-900 dark:text-white">Admin PolyRider</p>
+                  <p className="text-[10px] font-bold text-slate-500 dark:text-white/50">Exco KLK</p>
+                </div>
+              </a>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <button
+          onClick={() => setShowContactMenu(!showContactMenu)}
+          className="bg-emerald-500 text-white p-3.5 rounded-full shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
+          title="Hubungi JPP / Lapor Bug"
+        >
+          {showContactMenu ? <X className="w-6 h-6" /> : <Phone className="w-6 h-6" />}
+        </button>
+      </div>
+    );
+  };
+
   // RENDER: ACTIVE PERJALANAN — only for in-ride statuses (NOT carpool waiting phases)
   if (activeJob && ['ACCEPTED', 'ARRIVED', 'IN_TRANSIT', 'EMERGENCY'].includes(activeJob.status)) {
     const stepIdx = STATUS_STEPS.findIndex(s => s.key === activeJob.status);
     return (
       <div className="max-w-xl mx-auto pb-40 pt-4 px-4 min-h-[100dvh] flex flex-col">
-        <SOSConfirmModal
-          show={showSOSModal}
-          klkPhone={klkPhone}
-          onConfirm={triggerSOS}
-          onCancel={() => setShowSOSModal(false)}
-        />
         {/* SOS Contacts Sheet — auto-fires after SOS & manual open */}
         {showSOSContactsSheet && (
           <SOSContactsManager
@@ -830,47 +915,25 @@ export function PolyRiderHome() {
             </form>
           </div>
 
-          {sosActive ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
-              <div className="text-6xl mb-4 animate-pulse">🚨</div>
-              <h2 className="text-2xl font-black text-red-600 mb-2">Isyarat SOS Aktif</h2>
-              <p className="text-slate-500 dark:text-white/60 text-sm mb-6">
-                Pihak KLK dan Pentadbir JPP telah dimaklumkan. Sila tunggu bantuan.
-              </p>
-              {/* Contacts quick action */}
-              <button
-                onClick={() => setShowSOSContactsSheet(true)}
-                className="w-full flex items-center justify-center gap-2 bg-red-500 text-white font-bold px-6 py-4 rounded-2xl text-base shadow-lg shadow-red-500/30 mb-3"
-              >
-                <MessageCircle className="w-5 h-5" />
-                Maklumkan Kenalan Kecemasan
-              </button>
-              {klkPhone && (
-                <a href={`tel:${klkPhone}`}
-                  className="w-full flex items-center justify-center gap-2 bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 font-bold px-6 py-3 rounded-2xl text-sm mb-3"
-                >
-                  <Phone className="w-4 h-4" />
-                  Hubungi KLK: {klkPhone}
-                </a>
-              )}
-              <a href="tel:999"
-                className="flex items-center gap-2 text-red-500 font-bold text-sm py-2"
-              >
-                <Phone className="w-4 h-4" />
-                Kecemasan Polis/Bomba: 999
-              </a>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <button onClick={() => setShowSOSModal(true)} className="w-full py-3 bg-red-50 dark:bg-red-500/10 text-red-600 font-bold rounded-xl flex items-center justify-center gap-2">
-                <ShieldAlert className="w-5 h-5" /> Kecemasan (SOS)
-              </button>
-              <button onClick={() => setShowManageContacts(true)} className="w-full py-2 text-xs text-slate-400 dark:text-white/30 font-bold flex items-center justify-center gap-1.5">
-                <UserCircle className="w-3.5 h-3.5" /> Urus Kenalan Kecemasan SOS
-              </button>
-            </div>
-          )}
+          <div className="mt-6 border-t pt-6">
+            <SwipeToSOS onTrigger={triggerSOS} />
+          </div>
+
+          <div className="mt-4">
+             <Button variant="outline" className="w-full border-red-200 text-red-600 hover:bg-red-50" onClick={() => setIsCancelModalOpen(true)}>
+                Batal Pesanan
+             </Button>
+          </div>
+
+          <CancelJobModal 
+            isOpen={isCancelModalOpen}
+            onClose={() => setIsCancelModalOpen(false)}
+            onConfirm={handleCancelJob}
+            role="STUDENT"
+            isLoading={isCancelling}
+          />
         </div>
+        {renderContactJPP()}
       </div>
     );
   }
@@ -1426,12 +1489,19 @@ export function PolyRiderHome() {
                   )}
                 </div>
 
-                <button
-                  onClick={handleCancelJob}
-                  className="w-full py-4 rounded-xl font-bold text-slate-500 dark:text-white/50 bg-slate-100 dark:bg-white dark:bg-zinc-900/5 hover:bg-slate-200 dark:hover:bg-white dark:bg-zinc-900/10 transition-colors"
-                >
-                  Batal Carian
-                </button>
+                <div className="flex gap-2">
+                  <Button variant="outline" className="w-full border-red-200 text-red-600 hover:bg-red-50" onClick={() => setIsCancelModalOpen(true)}>
+                    Batal Carian
+                  </Button>
+                </div>
+                
+                <CancelJobModal 
+                  isOpen={isCancelModalOpen}
+                  onClose={() => setIsCancelModalOpen(false)}
+                  onConfirm={handleCancelJob}
+                  role="STUDENT"
+                  isLoading={isCancelling}
+                />
               </motion.div>
             </motion.div>
           )}
@@ -1541,7 +1611,7 @@ export function PolyRiderHome() {
                   )}
 
                   <button
-                    onClick={handleCancelJob}
+                    onClick={() => setIsCancelModalOpen(true)}
                     className="w-full py-4 rounded-xl font-bold text-slate-500 dark:text-white/50 bg-slate-100 dark:bg-white dark:bg-zinc-900/5 hover:bg-slate-200 dark:hover:bg-zinc-900/10 transition-colors"
                   >
                     Batal {activeJob.status === 'CARPOOL_REQUEST' ? 'Permintaan' : 'Carpool'}
@@ -1560,24 +1630,49 @@ export function PolyRiderHome() {
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 mb-3 flex items-center gap-2">
             <History className="w-3 h-3" /> Perjalanan Terkini
           </p>
-          <div className="space-y-2">
+          <div className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory hide-scrollbar">
             {tripHistory.map(t => (
-              <div key={t.id} className="bg-white dark:bg-zinc-900 border border-slate-100 dark:border-white/5 rounded-2xl px-4 py-3 flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{t.pickup_name} → {t.dropoff_name}</p>
-                  <p className="text-[10px] text-slate-400 dark:text-white/40 mt-0.5">{new Date(t.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short' })}</p>
+              <div key={t.id} className="min-w-[240px] w-[240px] shrink-0 snap-center bg-white dark:bg-zinc-900 border border-slate-100 dark:border-white/5 shadow-sm rounded-2xl p-4 flex flex-col relative overflow-hidden">
+                {/* Background decorative blob */}
+                <div className={`absolute -right-6 -top-6 w-20 h-20 rounded-full blur-2xl opacity-20 ${t.status === 'COMPLETED' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                
+                <div className="flex justify-between items-start mb-4 relative z-10">
+                  <div className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest ${
+                    t.status === 'COMPLETED' 
+                      ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                      : 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400'
+                  }`}>
+                    {t.status === 'COMPLETED' ? 'Selesai' : 'Batal'}
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-white/40">
+                    {new Date(t.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short' })}
+                  </p>
                 </div>
-                <div className="text-right shrink-0 ml-3">
-                  <p className="text-sm font-black text-emerald-500">RM {Number(t.proposed_price).toFixed(2)}</p>
-                  <span className={`text-[10px] font-bold ${t.status === 'COMPLETED' ? 'text-emerald-500' : 'text-slate-400 dark:text-white/40'}`}>
-                    {t.status === 'COMPLETED' ? 'Selesai' : 'Dibatal'}
-                  </span>
+
+                <div className="flex-1 flex flex-col gap-3 relative z-10">
+                  <div className="absolute left-[5px] top-2 bottom-2 w-[2px] bg-slate-100 dark:bg-white/10" />
+                  
+                  <div className="flex items-start gap-3 relative z-10">
+                     <div className="w-3 h-3 rounded-full bg-blue-500 ring-4 ring-white dark:ring-zinc-900 mt-0.5 shrink-0" />
+                     <p className="text-xs font-bold text-slate-700 dark:text-white/80 line-clamp-2 leading-tight">{t.pickup_name}</p>
+                  </div>
+                  <div className="flex items-start gap-3 relative z-10">
+                     <div className="w-3 h-3 rounded-full bg-rose-500 ring-4 ring-white dark:ring-zinc-900 mt-0.5 shrink-0" />
+                     <p className="text-xs font-bold text-slate-700 dark:text-white/80 line-clamp-2 leading-tight">{t.dropoff_name}</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-slate-50 dark:border-white/5 flex justify-between items-end relative z-10">
+                  <span className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest">Tambang</span>
+                  <span className="text-sm font-black text-slate-900 dark:text-white leading-none">RM {Number(t.proposed_price).toFixed(2)}</span>
                 </div>
               </div>
             ))}
           </div>
         </div>
       )}
+      
+      {renderContactJPP()}
     </div>
   );
 }

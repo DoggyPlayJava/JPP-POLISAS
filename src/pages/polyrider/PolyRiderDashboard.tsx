@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Bike, CheckCircle, ShieldAlert, Navigation, Upload, Clock, MapPin, X, MessageCircle, Send, Banknote, Users, Star, TrendingUp, Phone, UserCircle, History, ChevronRight } from 'lucide-react';
+import { Bike, CheckCircle, ShieldAlert, Navigation, Upload, Clock, MapPin, X, MessageCircle, Send, Banknote, Users, Star, TrendingUp, Phone, UserCircle, History, ChevronRight, Bug } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,66 +9,14 @@ import { uploadFileToDrive } from '@/lib/driveUpload';
 import { RouteViewer } from '@/components/RouteViewer';
 import { SOSContactsManager } from './SOSContactsManager';
 import { notifyUsers } from '@/lib/polyRiderNotify';
+import { CancelJobModal } from '@/components/polyrider/CancelJobModal';
+import { notifyKLKOnSuspension } from '@/lib/polyRiderNotify';
+import { SwipeToSOS } from '@/components/polyrider/SwipeToSOS';
+import { Button } from '@/components/ui/button';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
-// -------------------------------------------------------
-// SOS CONFIRM MODAL for Rider — module scope to prevent re-mounts
-// -------------------------------------------------------
-interface RiderSOSModalProps { show: boolean; klkPhone: string; onConfirm: () => void; onCancel: () => void; }
-function RiderSOSModal({ show, klkPhone, onConfirm, onCancel }: RiderSOSModalProps) {
-  const [countdown, setCountdown] = useState(3);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const hasConfirmedRef = useRef(false);
-  useEffect(() => {
-    if (show) {
-      hasConfirmedRef.current = false;
-      setCountdown(3);
-      timerRef.current = setInterval(() => {
-        setCountdown(prev => {
-          if (prev <= 1) { 
-            clearInterval(timerRef.current!); 
-            if (!hasConfirmedRef.current) {
-              hasConfirmedRef.current = true;
-              onConfirm(); 
-            }
-            return 0; 
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current);
-      setCountdown(3);
-    }
-    return () => { if (timerRef.current) clearInterval(timerRef.current!); };
-  }, [show, onConfirm]);
-  return (
-    <AnimatePresence>
-      {show && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] bg-red-600 flex flex-col items-center justify-center p-6">
-          <div className="text-center">
-            <div className="text-8xl mb-4 animate-pulse">🚨</div>
-            <h1 className="text-4xl font-black text-white mb-2">SOS KECEMASAN</h1>
-            <p className="text-red-100 text-lg mb-8">Isyarat akan dihantar dalam...</p>
-            <div className="w-28 h-28 rounded-full bg-white/20 border-4 border-white flex items-center justify-center mx-auto mb-8">
-              <span className="text-6xl font-black text-white">{countdown}</span>
-            </div>
-            <button onClick={onCancel} className="w-full py-5 bg-white text-red-600 font-black text-xl rounded-2xl shadow-xl">
-              BATAL — Tekan Untuk Batalkan
-            </button>
-            {klkPhone && (
-              <a href={`tel:${klkPhone}`} className="mt-4 flex items-center justify-center gap-2 text-white/80 text-sm py-3">
-                <Phone className="w-4 h-4" /> Hubungi KLK: {klkPhone}
-              </a>
-            )}
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
+// RiderSOSModal removed in favor of SwipeToSOS
 
 
 const VALID_TRANSITIONS: Record<string, string> = {
@@ -87,6 +35,13 @@ export function PolyRiderDashboard() {
   const [sosJobId, setSosJobId] = useState<string | null>(null);
   const [klkPhone, setKlkPhone] = useState('');
   const [showRiderContactsSheet, setShowRiderContactsSheet] = useState(false);
+  const [showContactMenu, setShowContactMenu] = useState(false);
+  
+  // Cancellation State
+  const [cancelJobId, setCancelJobId] = useState<string | null>(null);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+
   useEffect(() => {
     supabase.from('system_settings').select('value').eq('key', 'klk_emergency_phone').single()
       .then(({ data }) => {
@@ -316,6 +271,8 @@ export function PolyRiderDashboard() {
     }
   };
 
+
+
   const submitBid = async (job: any, amount: number) => {
     if (!job || !job.id || amount < 1 || !user || processingBidId) return;
     setProcessingBidId(job.id);
@@ -502,11 +459,13 @@ export function PolyRiderDashboard() {
     let lng: number | null = null;
     try {
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
       });
       lat = position.coords.latitude;
       lng = position.coords.longitude;
-    } catch { /* GPS unavailable */ }
+    } catch (err: any) { 
+      console.warn("GPS detection failed:", err.message || err);
+    }
 
     // 2. Insert SOS log with GPS
     const { data: sosLog } = await supabase.from('polyrider_sos_logs').insert({
@@ -550,6 +509,93 @@ export function PolyRiderDashboard() {
   };
 
   if (loading) return null;
+
+  // Handle Cancellation
+  const handleCancelJob = async (reason: string) => {
+    if (!cancelJobId) return;
+    setIsCancelling(true);
+
+    const { error } = await supabase.rpc('cancel_polyrider_job', {
+      p_job_id: cancelJobId,
+      p_reason: reason
+    });
+
+    setIsCancelling(false);
+    setIsCancelModalOpen(false);
+
+    if (error) {
+      toast.error('Gagal membatalkan. ' + error.message);
+      setCancelJobId(null);
+    } else {
+      toast.success('Tugasan dibatalkan');
+      setActiveJobs(prev => prev.filter(j => j.id !== cancelJobId));
+      setCancelJobId(null);
+      checkActiveJobs();
+    }
+  };
+
+  // RENDER JPP CONTACT BUTTON
+  const renderContactJPP = () => {
+    if (!klkPhone) return null;
+    let cleanPhone = klkPhone.replace(/\D/g, '');
+    if (cleanPhone.startsWith('0')) cleanPhone = '6' + cleanPhone;
+    else if (!cleanPhone.startsWith('6')) cleanPhone = '60' + cleanPhone;
+    
+    return (
+      <div className="fixed bottom-24 right-4 z-50 flex flex-col items-end">
+        <AnimatePresence>
+          {showContactMenu && (
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.9 }}
+              className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 shadow-2xl rounded-2xl p-2 mb-3 flex flex-col gap-1 w-48 origin-bottom-right"
+            >
+              <a
+                href={`https://wa.me/601139413699`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setShowContactMenu(false)}
+                className="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors text-left"
+              >
+                <div className="w-8 h-8 rounded-full bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center shrink-0">
+                  <Bug className="w-4 h-4 text-rose-500" />
+                </div>
+                <div>
+                  <p className="text-xs font-black text-slate-900 dark:text-white">Lapor Ralat</p>
+                  <p className="text-[10px] font-bold text-slate-500 dark:text-white/50">Tech Support</p>
+                </div>
+              </a>
+              <div className="h-px bg-slate-100 dark:bg-white/5 w-full my-0.5" />
+              <a
+                href={`https://wa.me/${cleanPhone}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setShowContactMenu(false)}
+                className="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors text-left"
+              >
+                <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center shrink-0">
+                  <MessageCircle className="w-4 h-4 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-xs font-black text-slate-900 dark:text-white">Admin PolyRider</p>
+                  <p className="text-[10px] font-bold text-slate-500 dark:text-white/50">Exco KLK</p>
+                </div>
+              </a>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <button
+          onClick={() => setShowContactMenu(!showContactMenu)}
+          className="bg-emerald-500 text-white p-3.5 rounded-full shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
+          title="Hubungi JPP / Lapor Bug"
+        >
+          {showContactMenu ? <X className="w-6 h-6" /> : <Phone className="w-6 h-6" />}
+        </button>
+      </div>
+    );
+  };
 
   // -------------------------------------------------------------
   // RENDER: Pendaftaran Belum Selesai
@@ -623,6 +669,7 @@ export function PolyRiderDashboard() {
             </button>
           </div>
         </form>
+        {renderContactJPP()}
       </div>
     );
   }
@@ -640,6 +687,7 @@ export function PolyRiderDashboard() {
         <p className="text-slate-500 dark:text-white/60 max-w-sm font-medium leading-relaxed">
           Pihak KLK sedang menyemak resit bayaran anda. Kelulusan biasanya mengambil masa kurang 24 jam bekerja.
         </p>
+        {renderContactJPP()}
       </div>
     );
   }
@@ -657,6 +705,7 @@ export function PolyRiderDashboard() {
         <button onClick={() => setProfile(null)} className="px-6 py-3 bg-slate-900 dark:bg-amber-500 text-white rounded-xl font-bold hover:bg-slate-800 dark:hover:bg-amber-600">
           Buat Permohonan Baru
         </button>
+        {renderContactJPP()}
       </div>
     );
   }
@@ -666,12 +715,6 @@ export function PolyRiderDashboard() {
   // -------------------------------------------------------------
   return (
     <div className="max-w-xl mx-auto pb-32 pt-4 px-4 min-h-screen flex flex-col">
-      <RiderSOSModal
-        show={sosJobId !== null}
-        klkPhone={klkPhone}
-        onConfirm={() => sosJobId && triggerSOS(sosJobId)}
-        onCancel={() => setSosJobId(null)}
-      />
       <EarningsAnalyticsSheet 
         show={showEarningsSheet} 
         onClose={() => setShowEarningsSheet(false)} 
@@ -811,13 +854,22 @@ export function PolyRiderDashboard() {
                       </button>
                     )}
                   </div>
-                  <div className="space-y-2">
-                    <button onClick={() => setSosJobId(job.id)} className="w-full py-3 bg-red-50 dark:bg-red-500/10 text-red-600 font-bold rounded-xl flex items-center justify-center gap-2">
-                      <ShieldAlert className="w-5 h-5" /> Kecemasan (SOS)
-                    </button>
-                    <button onClick={() => setShowRiderContactsSheet(true)} className="w-full py-2 text-xs text-slate-400 dark:text-white/30 font-bold flex items-center justify-center gap-1.5">
+                  <div className="mt-4 border-t border-slate-100 dark:border-white/5 pt-4">
+                    <SwipeToSOS onTrigger={() => triggerSOS(job.id)} />
+                    <button onClick={() => setShowRiderContactsSheet(true)} className="w-full mt-2 py-2 text-xs text-slate-400 dark:text-white/30 font-bold flex items-center justify-center gap-1.5">
                       <UserCircle className="w-3.5 h-3.5" /> Urus Kenalan Kecemasan SOS
                     </button>
+                    {job.status === 'ACCEPTED' && (
+                      <div className="mt-4">
+                        <Button 
+                          variant="outline" 
+                          className="w-full border-red-200 text-red-600 hover:bg-red-50" 
+                          onClick={() => { setCancelJobId(job.id); setIsCancelModalOpen(true); }}
+                        >
+                          Batal Tugasan
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -994,7 +1046,7 @@ export function PolyRiderDashboard() {
                                   {job.carpoolMembers.map((member: any, i: number) => (
                                     <div key={member.id} className="flex flex-col gap-2 pb-3 border-b border-slate-200 dark:border-white/5 last:border-0 last:pb-0">
                                       <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-black text-slate-400 dark:text-white/30 w-3">{i+1}.</span>
+                                        <span className="text-[10px] font-black text-slate-400 dark:border-white/30 w-3">{i+1}.</span>
                                         {member.passenger_gender ? (
                                           <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-black uppercase ${
                                             member.passenger_gender === 'LELAKI'
@@ -1153,6 +1205,15 @@ export function PolyRiderDashboard() {
           )}
         </div>
       )}
+
+      <CancelJobModal 
+        isOpen={isCancelModalOpen}
+        onClose={() => { setIsCancelModalOpen(false); setCancelJobId(null); }}
+        onConfirm={handleCancelJob}
+        role="RIDER"
+        isLoading={isCancelling}
+      />
+      {renderContactJPP()}
     </div>
   );
 }

@@ -3,18 +3,36 @@ import { Outlet } from 'react-router-dom';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { supabase } from '@/lib/supabase';
 import { ShieldAlert } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { PolyRiderSuspended } from './PolyRiderSuspended';
 
 export function PolyRiderLayout() {
+  const { user } = useAuth();
   const [isActive, setIsActive] = useState<boolean | null>(null);
+  const [suspendedUntil, setSuspendedUntil] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.from('system_settings').select('value').eq('key', 'polyrider_active').single()
-      .then(({ data }) => {
-        setIsActive(data?.value !== 'false');
-      });
-  }, []);
+    const fetchStatus = async () => {
+      // 1. Check system settings
+      const { data: settings } = await supabase.from('system_settings').select('value').eq('key', 'polyrider_active').single();
+      setIsActive(settings?.value !== 'false');
 
-  if (isActive === null) {
+      // 2. Check user profile for suspension
+      if (user) {
+        const { data: profile } = await supabase.from('profiles').select('polyrider_suspended_until').eq('id', user.id).single();
+        if (profile?.polyrider_suspended_until && new Date(profile.polyrider_suspended_until) > new Date()) {
+          setSuspendedUntil(profile.polyrider_suspended_until);
+        }
+      }
+      
+      setLoading(false);
+    };
+    
+    fetchStatus();
+  }, [user]);
+
+  if (loading || isActive === null) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center">
         <div className="w-10 h-10 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4" />
@@ -42,6 +60,10 @@ export function PolyRiderLayout() {
         <BottomNav />
       </div>
     );
+  }
+
+  if (suspendedUntil) {
+    return <PolyRiderSuspended suspendedUntil={suspendedUntil} />;
   }
 
   return (

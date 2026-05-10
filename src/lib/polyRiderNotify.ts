@@ -5,6 +5,7 @@
  */
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+import { sendEmail } from './email';
 
 interface NotifyOptions {
   tag?: string;
@@ -102,5 +103,50 @@ export async function notifyBiddingRiders(
     });
   } catch (e) {
     console.warn('[polyRiderNotify] notifyBiddingRiders failed:', e);
+  }
+}
+
+/**
+ * Hantar emel notifikasi kepada Exco KLK apabila akaun digantung (ban)
+ */
+export async function notifyKLKOnSuspension(
+  supabase: any,
+  studentName: string,
+  matricNo: string,
+  reason: string
+): Promise<void> {
+  try {
+    const { data: klkUsers } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('role', 'JPP')
+      .eq('jpp_unit', 'KLS')
+      .not('email', 'is', null);
+
+    if (!klkUsers || !klkUsers.length) return;
+    
+    const emails = klkUsers.map((u: any) => u.email);
+    const html = `
+      <div style="font-family: sans-serif; padding: 20px;">
+        <h2 style="color: #dc2626;">Notifikasi Sistem: Penggantungan Akaun PolyRider</h2>
+        <p>Akaun pelajar berikut telah digantung secara automatik atau melalui tindakan amaran (SOS Khianat):</p>
+        <div style="background-color: #fef2f2; border: 1px solid #fca5a5; padding: 15px; border-radius: 8px; margin: 15px 0;">
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            <li style="margin-bottom: 8px;"><strong>Nama:</strong> ${studentName || 'Tidak diketahui'}</li>
+            <li style="margin-bottom: 8px;"><strong>No. Matrik:</strong> ${matricNo || 'Tidak dinyatakan'}</li>
+            <li><strong>Sebab:</strong> ${reason}</li>
+          </ul>
+        </div>
+        <p style="color: #475569; font-size: 14px;">Akaun ini digantung selama 24 jam. Pelajar boleh membuat rayuan menerusi aplikasi yang akan dipaparkan pada Dashboard KLK anda.</p>
+      </div>
+    `;
+    
+    await sendEmail({
+      to: emails,
+      subject: `[PolyRider] Amaran: Penggantungan Akaun - ${studentName}`,
+      html
+    });
+  } catch (e) {
+    console.error('[polyRiderNotify] notifyKLKOnSuspension failed:', e);
   }
 }
