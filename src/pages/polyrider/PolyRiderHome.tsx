@@ -457,14 +457,15 @@ export function PolyRiderHome() {
     };
     fetchOpenCarpools();
 
-    // Realtime: refresh whenever any GATHERING job changes
+    // Realtime: listen to ALL polyrider_jobs changes (no row filter)
+    // so we catch cancellations, locks, and new carpools immediately.
+    // fetchOpenCarpools() applies the correct status=GATHERING filter itself.
     const channel = supabase
       .channel('open-carpools-watch')
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'polyrider_jobs',
-        filter: 'status=eq.GATHERING',
       }, () => { fetchOpenCarpools(); })
       .subscribe();
 
