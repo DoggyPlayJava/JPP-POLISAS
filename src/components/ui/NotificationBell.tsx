@@ -22,6 +22,7 @@ const MODULE_FALLBACK: Record<NotificationModule, string> = {
   POLYMART:     '/polymart',
   KAMSIS:       '/dashboard',
   KLK:          '/klk',
+  POLYRIDER:    '/polyrider',
 };
 
 function getNotifLink(notif: AppNotification): string | null {
@@ -40,6 +41,7 @@ const MODULE_CONFIG: Record<NotificationModule, { label: string; color: string; 
   POLYMART:     { label: 'PolyMart',     color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b' },
   KAMSIS:       { label: 'i-KAMSIS',     color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)',   dot: '#8B5CF6' },
   KLK:          { label: 'KLK',          color: '#14b8a6', bg: 'rgba(20,184,166,0.12)',   dot: '#14b8a6' },
+  POLYRIDER:    { label: 'PolyRider',    color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b' },
 };
 
 function ModuleBadge({ module }: { module: NotificationModule }) {

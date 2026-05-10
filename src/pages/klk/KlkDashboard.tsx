@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import {
   MapPin, Users, Home, Building2, ArrowUpRight, ChevronRight,
   Download, RefreshCw, Wifi, AlertTriangle, Filter, Search,
-  BarChart2, Clock, Database, Pencil, X, Check, Save,
+  BarChart2, Clock, Database, Pencil, X, Check, Save, Car,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -261,6 +261,7 @@ export function KlkDashboard() {
   const [filterKawasan, setFilterKawasan] = useState('');
   const [editRecord, setEditRecord] = useState<any | null>(null);  // rekod yang sedang diedit
   const [lainLainCount, setLainLainCount] = useState(0);
+  const [activeTab, setActiveTab] = useState<'senarai' | 'cadangan'>('senarai');
 
   const [selectedYear, setSelectedYear] = useState(getKlkAcademicYear());
   const academicYear = selectedYear;
@@ -304,7 +305,7 @@ export function KlkDashboard() {
       const [residencyRes, kawasanRes, lainRes] = await Promise.all([
         supabase
           .from('klk_student_residency')
-          .select('id, tinggal_luar, kawasan_kediaman, jabatan, source, created_at, nama_pelajar, no_matrik, no_telefon, kawasan_custom')
+          .select('id, tinggal_luar, kawasan_kediaman, jabatan, source, created_at, nama_pelajar, no_matrik, no_telefon, kawasan_custom, cadangan')
           .eq('academic_year', academicYear)
           .eq('is_expired', false)
           .order('created_at', { ascending: false }),
@@ -425,30 +426,51 @@ export function KlkDashboard() {
     return matchQ && matchK;
   });
 
+  const cadanganList = filteredSubs.filter(d => d.cadangan && d.cadangan.trim().length > 0);
+
   if (!hasAccess) return null;
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto min-h-screen">
-      {/* Greeting */}
-      <div className="mb-8">
-        <motion.h1 initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-          className="text-3xl font-black text-slate-50 mb-1 tracking-tight">
-          Selamat {getGreeting()}, {name}! 👋
-        </motion.h1>
-        <div className="flex items-center gap-3 flex-wrap mt-1">
-          <p className="text-sm text-slate-400 font-medium">
-            Dashboard Kediaman Luar Kampus — Tahun Akademik
-          </p>
-          <select
-            value={selectedYear}
-            onChange={e => setSelectedYear(e.target.value)}
-            className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-2.5 py-1 text-xs font-black text-blue-300 cursor-pointer hover:bg-blue-500/20 transition-colors"
-          >
-            {getKlkYearOptions().map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
+      {/* Greeting & Quick Actions */}
+      <div className="mb-8 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+        <div>
+          <motion.h1 initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+            className="text-3xl font-black text-slate-50 mb-1 tracking-tight">
+            Selamat {getGreeting()}, {name}! 👋
+          </motion.h1>
+          <div className="flex items-center gap-3 flex-wrap mt-1">
+            <p className="text-sm text-slate-400 font-medium">
+              Dashboard Kediaman Luar Kampus — Tahun Akademik
+            </p>
+            <select
+              value={selectedYear}
+              onChange={e => setSelectedYear(e.target.value)}
+              className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-2.5 py-1 text-xs font-black text-blue-300 cursor-pointer hover:bg-blue-500/20 transition-colors"
+            >
+              {getKlkYearOptions().map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </div>
         </div>
+
+        {/* Quick Setting PolyRider */}
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
+          <Link
+            to="/polyrider-admin"
+            className="inline-flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 hover:border-emerald-500/40 hover:bg-emerald-500/15 transition-all group shadow-lg shadow-emerald-500/5"
+          >
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+              <Car className="w-5 h-5 text-emerald-400" />
+            </div>
+            <div className="text-left">
+              <p className="text-xs font-black text-emerald-300 uppercase tracking-widest">PolyRider HQ</p>
+              <p className="text-[10px] text-emerald-400/70 font-medium group-hover:text-emerald-400 transition-colors">Urus Rider & Tetapan</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-emerald-500/50 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all ml-2" />
+          </Link>
+        </motion.div>
       </div>
 
       {/* DB Not Ready Banner */}
@@ -593,10 +615,27 @@ export function KlkDashboard() {
       {/* Senarai Pelajar */}
       <motion.div id="senarai" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
         className="rounded-2xl border border-white/[0.05] bg-white/[0.02] shadow-xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.04]">
-          <div>
-            <h2 className="font-black text-base text-slate-100">Senarai Pelajar Luar Kampus</h2>
-            <p className="text-[10px] text-slate-500 mt-0.5">{stats.total_luar} rekod · {academicYear}</p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between px-6 py-4 border-b border-white/[0.04] gap-4">
+          <div className="flex items-center gap-2 bg-slate-800/50 p-1.5 rounded-2xl w-fit">
+            <button
+              onClick={() => setActiveTab('senarai')}
+              className={cn("px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                activeTab === 'senarai' ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20" : "text-slate-400 hover:text-slate-200 hover:bg-white/5")}
+            >
+              Senarai Pelajar
+            </button>
+            <button
+              onClick={() => setActiveTab('cadangan')}
+              className={cn("px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2",
+                activeTab === 'cadangan' ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" : "text-slate-400 hover:text-slate-200 hover:bg-white/5")}
+            >
+              Cadangan / Maklum Balas
+              {cadanganList.length > 0 && (
+                <span className={cn("px-2 py-0.5 rounded-md text-[10px]", activeTab === 'cadangan' ? "bg-white/20 text-white" : "bg-white/10 text-slate-300")}>
+                  {cadanganList.length}
+                </span>
+              )}
+            </button>
           </div>
           <div className="flex items-center gap-3">
             <button onClick={fetchAll} className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
@@ -636,70 +675,103 @@ export function KlkDashboard() {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-white/[0.04]">
-                {['Nama Pelajar', 'No. Matrik', 'No. Telefon', 'Jabatan', 'Kawasan', 'Sumber', 'Tarikh', ''].map(h => (
-                  <th key={h} className="px-5 py-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-500">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={7} className="px-5 py-10 text-center text-xs text-slate-500">Memuatkan data...</td></tr>
-              ) : filteredSubs.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-5 py-12 text-center">
-                    <Home className="w-10 h-10 mx-auto mb-3 text-slate-700" />
-                    <p className="text-xs text-slate-500 font-medium">
-                      {dbReady ? 'Belum ada submission untuk semester ini' : 'Menunggu setup database...'}
-                    </p>
-                  </td>
+        {/* Content based on Tab */}
+        {activeTab === 'senarai' ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/[0.04]">
+                  {['Nama Pelajar', 'No. Matrik', 'No. Telefon', 'Jabatan', 'Kawasan', 'Sumber', 'Tarikh', ''].map(h => (
+                    <th key={h} className="px-5 py-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-500">{h}</th>
+                  ))}
                 </tr>
-              ) : (
-                filteredSubs.map((d, i) => (
-                  <motion.tr key={d.id ?? i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.02 }}
-                    className="border-b border-white/[0.02] hover:bg-white/[0.02] transition-colors group">
-                    <td className="px-5 py-3 text-sm font-black text-slate-200 whitespace-nowrap">{d.nama_pelajar}</td>
-                    <td className="px-5 py-3 text-xs font-mono text-slate-400 whitespace-nowrap">{d.no_matrik}</td>
-                    <td className="px-5 py-3 text-xs text-slate-400">{d.no_telefon ?? '—'}</td>
-                    <td className="px-5 py-3 text-xs text-slate-400 uppercase">{d.jabatan ?? '—'}</td>
-                    <td className="px-5 py-3">
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-lg"
-                        style={{ background: `rgba(${hexRgb(KLS_COLOR)}, 0.12)`, color: KLS_COLOR }}>
-                        {d.kawasan_kediaman === 'LAIN_LAIN' ? d.kawasan_custom : d.kawasan_kediaman}
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={8} className="px-5 py-10 text-center text-xs text-slate-500">Memuatkan data...</td></tr>
+                ) : filteredSubs.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-5 py-12 text-center">
+                      <Home className="w-10 h-10 mx-auto mb-3 text-slate-700" />
+                      <p className="text-xs text-slate-500 font-medium">
+                        {dbReady ? 'Belum ada rekod untuk tapisan ini' : 'Menunggu setup database...'}
+                      </p>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredSubs.map((d, i) => (
+                    <motion.tr key={d.id ?? i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.02 }}
+                      className="border-b border-white/[0.02] hover:bg-white/[0.02] transition-colors group">
+                      <td className="px-5 py-3 text-sm font-black text-slate-200 whitespace-nowrap">{d.nama_pelajar}</td>
+                      <td className="px-5 py-3 text-xs font-mono text-slate-400 whitespace-nowrap">{d.no_matrik}</td>
+                      <td className="px-5 py-3 text-xs text-slate-400">{d.no_telefon ?? '—'}</td>
+                      <td className="px-5 py-3 text-xs text-slate-400 uppercase">{d.jabatan ?? '—'}</td>
+                      <td className="px-5 py-3">
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-lg"
+                          style={{ background: `rgba(${hexRgb(KLS_COLOR)}, 0.12)`, color: KLS_COLOR }}>
+                          {d.kawasan_kediaman === 'LAIN_LAIN' ? d.kawasan_custom : d.kawasan_kediaman}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        <span className={cn('text-[9px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wide',
+                          d.source === 'WEBAPP' ? 'bg-indigo-500/10 text-indigo-400' :
+                          d.source === 'GOOGLE_FORM' ? 'bg-amber-500/10 text-amber-400' :
+                          'bg-emerald-500/10 text-emerald-400'
+                        )}>
+                          {d.source === 'WEBAPP' ? 'App' : d.source === 'GOOGLE_FORM' ? 'G-Form' : 'CSV'}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-xs text-slate-500">
+                        {d.created_at ? new Date(d.created_at).toLocaleDateString('ms-MY') : '—'}
+                      </td>
+                      {/* Butang Edit */}
+                      <td className="px-3 py-3">
+                        <button
+                          onClick={() => setEditRecord(d)}
+                          className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-lg bg-blue-500/10 hover:bg-blue-500/25 flex items-center justify-center transition-all border border-blue-500/20"
+                          title="Edit rekod"
+                        >
+                          <Pencil className="w-3.5 h-3.5 text-blue-400" />
+                        </button>
+                      </td>
+                    </motion.tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="p-6">
+            {loading ? (
+              <div className="text-center text-xs text-slate-500 py-10">Memuatkan cadangan...</div>
+            ) : cadanganList.length === 0 ? (
+              <div className="text-center py-12">
+                <AlertTriangle className="w-10 h-10 mx-auto mb-3 text-slate-700" />
+                <p className="text-xs text-slate-500 font-medium">Tiada cadangan dijumpai berdasarkan tapisan.</p>
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {cadanganList.map((d, i) => (
+                  <motion.div key={d.id ?? i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} 
+                    className="bg-slate-800/40 border border-white/[0.05] rounded-2xl p-5 hover:bg-slate-800/60 transition-colors">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <p className="text-sm font-black text-slate-200">{d.nama_pelajar}</p>
+                        <p className="text-[10px] text-slate-500">{d.no_matrik} • {d.kawasan_kediaman === 'LAIN_LAIN' ? d.kawasan_custom : d.kawasan_kediaman}</p>
+                      </div>
+                      <span className="text-[10px] text-slate-500 bg-slate-900 px-2 py-1 rounded-lg border border-white/[0.03]">
+                        {d.created_at ? new Date(d.created_at).toLocaleDateString('ms-MY') : '—'}
                       </span>
-                    </td>
-                    <td className="px-5 py-3">
-                      <span className={cn('text-[9px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wide',
-                        d.source === 'WEBAPP' ? 'bg-indigo-500/10 text-indigo-400' :
-                        d.source === 'GOOGLE_FORM' ? 'bg-amber-500/10 text-amber-400' :
-                        'bg-emerald-500/10 text-emerald-400'
-                      )}>
-                        {d.source === 'WEBAPP' ? 'App' : d.source === 'GOOGLE_FORM' ? 'G-Form' : 'CSV'}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3 text-xs text-slate-500">
-                      {d.created_at ? new Date(d.created_at).toLocaleDateString('ms-MY') : '—'}
-                    </td>
-                    {/* Butang Edit */}
-                    <td className="px-3 py-3">
-                      <button
-                        onClick={() => setEditRecord(d)}
-                        className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-lg bg-blue-500/10 hover:bg-blue-500/25 flex items-center justify-center transition-all border border-blue-500/20"
-                        title="Edit rekod"
-                      >
-                        <Pencil className="w-3.5 h-3.5 text-blue-400" />
-                      </button>
-                    </td>
-                  </motion.tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                    </div>
+                    <div className="text-xs text-slate-300 font-medium leading-relaxed p-4 bg-slate-900/50 rounded-xl border border-white/[0.02]">
+                      "{d.cadangan}"
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </motion.div>
 
       {/* ── Edit Record Modal ── */}

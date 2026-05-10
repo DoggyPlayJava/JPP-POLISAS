@@ -19,6 +19,9 @@ const MODULE_CONFIG: Record<NotificationModule, { label: string; color: string; 
   JPP:          { label: 'JPP HQ',       color: '#ef4444', bg: 'rgba(239,68,68,0.10)',    dot: '#ef4444', emoji: '🏅' },
   SYSTEM:       { label: 'Sistem',       color: '#94a3b8', bg: 'rgba(148,163,184,0.10)', dot: '#94a3b8', emoji: '⚙️' },
   POLYMART:     { label: 'PolyMart',     color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b', emoji: '🛍️' },
+  KAMSIS:       { label: 'i-KAMSIS',     color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)',   dot: '#8B5CF6', emoji: '🏠' },
+  KLK:          { label: 'KLK',          color: '#14b8a6', bg: 'rgba(20,184,166,0.12)',   dot: '#14b8a6', emoji: '🏢' },
+  POLYRIDER:    { label: 'PolyRider',    color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b', emoji: '🏍️' },
 };
 
 const MODULE_FALLBACK: Record<NotificationModule, string> = {
@@ -29,6 +32,9 @@ const MODULE_FALLBACK: Record<NotificationModule, string> = {
   JPP:          '/portal',
   SYSTEM:       '/dashboard',
   POLYMART:     '/polymart',
+  KAMSIS:       '/dashboard',
+  KLK:          '/klk',
+  POLYRIDER:    '/polyrider',
 };
 
 function getNotifLink(notif: AppNotification): string | null {
@@ -122,7 +128,7 @@ function NotifRow({ notif, onRead }: { notif: AppNotification; onRead: () => voi
 }
 
 // ─── Module Filter Chip ────────────────────────────────────────────────────────
-const ALL_MODULES: NotificationModule[] = ['KEBAJIKAN', 'EKPP', 'AKADEMIK', 'KEUSAHAWANAN', 'JPP', 'SYSTEM', 'POLYMART'];
+const ALL_MODULES: NotificationModule[] = ['KEBAJIKAN', 'EKPP', 'AKADEMIK', 'KEUSAHAWANAN', 'JPP', 'SYSTEM', 'POLYMART', 'KAMSIS', 'KLK', 'POLYRIDER'];
 
 function FilterChip({
   module, active, count, onClick,

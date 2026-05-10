@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Bike, CheckCircle, ShieldAlert, Navigation, Upload, Clock, MapPin, X, MessageCircle, Send, Banknote, Users, Star, TrendingUp, Phone, UserCircle, History, ChevronRight, Bug } from 'lucide-react';
+import { Bike, CheckCircle, ShieldAlert, Navigation, Upload, Clock, MapPin, X, MessageCircle, Send, Banknote, Users, Star, TrendingUp, Phone, UserCircle, History, ChevronRight, Bug, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,7 +16,15 @@ import { Button } from '@/components/ui/button';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
-// RiderSOSModal removed in favor of SwipeToSOS
+// Haversine distance utility — module scope (avoids re-creation in render loop)
+function haversineKm(a: [number, number], b: [number, number]): number {
+  const toRad = (d: number) => d * Math.PI / 180;
+  const R = 6371;
+  const dLat = toRad(b[0] - a[0]);
+  const dLng = toRad(b[1] - a[1]);
+  const x = Math.sin(dLat/2)**2 + Math.cos(toRad(a[0]))*Math.cos(toRad(b[0]))*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
+}
 
 
 const VALID_TRANSITIONS: Record<string, string> = {
@@ -64,6 +72,8 @@ export function PolyRiderDashboard() {
   const [todayEarnings, setTodayEarnings] = useState(0);
   const [showEarningsSheet, setShowEarningsSheet] = useState(false);
   const [genderFilter, setGenderFilter] = useState<'SEMUA' | 'LELAKI' | 'PEREMPUAN'>('SEMUA');
+  // Rider's own GPS position — captured once when going ON-DUTY (Fasa 3)
+  const [riderPos, setRiderPos] = useState<[number, number] | null>(null);
 
   // Bidding State
   const [biddingJobId, setBiddingJobId] = useState<string | null>(null);
@@ -202,6 +212,39 @@ export function PolyRiderDashboard() {
     };
   }, [profile?.is_active, profile?.status, fetchJobs, fetchTodayEarnings, user?.id, activeJobs.length]);
 
+  // Auto-share rider GPS every 90s while any job is ACCEPTED (rider on the way)
+  // Runs even when tab is backgrounded (rider likely in Waze/Maps)
+  useEffect(() => {
+    const acceptedJobs = activeJobs.filter(j => j.status === 'ACCEPTED');
+    if (acceptedJobs.length === 0 || !user) return;
+
+    const shareLocation = async () => {
+      if (!navigator.geolocation) return;
+      try {
+        const pos = await new Promise<GeolocationPosition>((res, rej) =>
+          navigator.geolocation.getCurrentPosition(res, rej, {
+            enableHighAccuracy: true, timeout: 15000, maximumAge: 0,
+          })
+        );
+        const updates = acceptedJobs.map(j =>
+          supabase.from('polyrider_jobs').update({
+            rider_lat: pos.coords.latitude,
+            rider_lng: pos.coords.longitude,
+            rider_location_updated_at: new Date().toISOString(),
+          }).eq('id', j.id)
+        );
+        await Promise.all(updates);
+      } catch {
+        // GPS unavailable — silent fail, will retry next interval
+      }
+    };
+
+    // Immediate first share, then every 90 seconds
+    shareLocation();
+    const iv = setInterval(shareLocation, 90_000);
+    return () => clearInterval(iv);
+  }, [activeJobs.map(j => `${j.id}:${j.status}`).join(','), user]);
+
   const fetchProfile = async () => {
     try {
       const { data, error } = await supabase
@@ -255,15 +298,23 @@ export function PolyRiderDashboard() {
     const newStatus = !profile.is_active;
     // Optimistic update
     setProfile({ ...profile, is_active: newStatus });
-    if (!newStatus) setJobs([]);
+    if (!newStatus) { setJobs([]); setRiderPos(null); }
+
+    // Capture GPS when going ON-DUTY
+    if (newStatus && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setRiderPos([pos.coords.latitude, pos.coords.longitude]),
+        () => {}, // silent fail
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+      );
+    }
 
     const { error } = await supabase
       .from('polyrider_profiles')
       .update({ is_active: newStatus })
-      .eq('user_id', user.id); // ✅ gunakan user_id, bukan profile.id
+      .eq('user_id', user.id);
 
     if (error) {
-      // Revert on failure
       setProfile({ ...profile, is_active: !newStatus });
       toast.error('Gagal tukar status. Cuba lagi.');
     } else {
@@ -838,11 +889,70 @@ export function PolyRiderDashboard() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 mb-4">
+                    {/* Navigation buttons — only show when coordinates are available */}
+                    {(() => {
+                      const navLat = job.status === 'ACCEPTED' ? job.pickup_lat : job.dropoff_lat;
+                      const navLng = job.status === 'ACCEPTED' ? job.pickup_lng : job.dropoff_lng;
+                      const navLabel = job.status === 'ACCEPTED' ? 'ke Pickup' : 'ke Destinasi';
+                      if (!navLat || !navLng) return null;
+                      const wazeUrl = `https://waze.com/ul?ll=${navLat},${navLng}&navigate=yes`;
+                      const gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${navLat},${navLng}`;
+                      return (
+                        <div className="col-span-2 grid grid-cols-2 gap-2 mb-1">
+                          <a
+                            href={wazeUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-2 py-2.5 bg-[#33CCFF]/10 hover:bg-[#33CCFF]/20 border border-[#33CCFF]/30 text-[#0099CC] dark:text-[#33CCFF] font-bold rounded-xl text-xs transition-colors"
+                          >
+                            <span className="text-base leading-none">🔵</span> Waze {navLabel}
+                          </a>
+                          <a
+                            href={gmapsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-2 py-2.5 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 font-bold rounded-xl text-xs transition-colors"
+                          >
+                            <span className="text-base leading-none">🟢</span> Maps {navLabel}
+                          </a>
+                        </div>
+                      );
+                    })()}
+                    {job.status === 'ACCEPTED' && (
+                      <div className="col-span-2 py-2.5 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl flex items-center justify-between px-3">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                          <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">Lokasi Auto-Dikongsi</span>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            try {
+                              const pos = await new Promise<GeolocationPosition>((res, rej) =>
+                                navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 })
+                              );
+                              const { error } = await supabase.from('polyrider_jobs').update({
+                                rider_lat: pos.coords.latitude,
+                                rider_lng: pos.coords.longitude,
+                                rider_location_updated_at: new Date().toISOString(),
+                              }).eq('id', job.id);
+                              if (error) { toast.error('Gagal kongsi lokasi. Cuba lagi.'); return; }
+                              toast.success('\ud83d\udccd Lokasi dikemas kini!');
+                            } catch {
+                              toast.error('GPS tidak tersedia.');
+                            }
+                          }}
+                          className="px-2.5 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-[10px] font-black rounded-lg transition-colors"
+                        >
+                          Kemas Kini Sekarang
+                        </button>
+                      </div>
+                    )}
                     {job.status === 'ACCEPTED' && (
                       <button onClick={() => updateJobStatus(job.id, 'ARRIVED')} className="col-span-2 py-3 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold rounded-xl flex items-center justify-center gap-2">
                         <MapPin className="w-5 h-5" /> Tiba di Pickup
                       </button>
                     )}
+
                     {job.status === 'ARRIVED' && (
                       <button onClick={() => updateJobStatus(job.id, 'IN_TRANSIT')} className="col-span-2 py-3 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold rounded-xl flex items-center justify-center gap-2">
                         <Navigation className="w-5 h-5" /> Mula Perjalanan
@@ -998,7 +1108,22 @@ export function PolyRiderDashboard() {
                       return job.passenger_gender === genderFilter || !job.passenger_gender;
                     });
 
-                    return filteredJobs.map(job => (
+                    // haversineKm defined at module scope above
+
+                    // Sort by distance to rider (nearest first)
+                    if (riderPos) {
+                      filteredJobs.sort((a, b) => {
+                        const dA = (a.pickup_lat && a.pickup_lng) ? haversineKm(riderPos, [a.pickup_lat, a.pickup_lng]) : 999;
+                        const dB = (b.pickup_lat && b.pickup_lng) ? haversineKm(riderPos, [b.pickup_lat, b.pickup_lng]) : 999;
+                        return dA - dB;
+                      });
+                    }
+
+                    return filteredJobs.map(job => {
+                      const distToPickup = (riderPos && job.pickup_lat && job.pickup_lng)
+                        ? haversineKm(riderPos, [job.pickup_lat, job.pickup_lng])
+                        : null;
+                      return (
                   <div key={job.id} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm flex flex-col">
                     
                     {/* Maps Route Viewer */}
@@ -1142,6 +1267,11 @@ export function PolyRiderDashboard() {
                             }
                           </p>
                           {job.distance_km && <p className="text-xs font-bold text-slate-400 dark:text-white/40">{job.distance_km.toFixed(1)} km</p>}
+                          {distToPickup !== null && (
+                            <p className="text-[10px] font-black text-blue-500 mt-0.5">
+                              📍 ~{distToPickup.toFixed(1)} km dari anda
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -1198,7 +1328,7 @@ export function PolyRiderDashboard() {
 
                     </div>
                   </div>
-                ))})()}
+                ); })})()}
                 </>
               )}
             </div>

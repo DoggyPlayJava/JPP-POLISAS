@@ -1506,7 +1506,17 @@ Sistem PolyRider mempunyai lapisan keselamatan tambahan (*constraints*) di perin
 - **Supabase Realtime (`postgres_changes`):** Fail `PolyRiderHome.tsx` dan `PolyRiderDashboard.tsx` kini melanggan kepada *Supabase Realtime WebSockets* untuk jadual `polyrider_jobs`, `polyrider_bids`, dan `polyrider_chats`. Sistem kini berehat 100% pada kadar CPU melainkan ada perubahan terbaharu yang ditolak masuk (push) dari pelayan.
 - **Fallback Polling (30 saat):** Sebagai *safety net*, `setInterval(poll, 30000)` digunakan untuk memulihkan sambungan sekiranya WebSocket gagal berfungsi akibat sambungan 4G yang lemah pada peranti pelajar.
 
-### 25.7 Metodologi Ujian Chat UI (Chat Testing Guidelines)
+### 25.7 Sistem Penjejakan Lokasi GPS Semasa (Live Tracking) 📡
+
+Untuk memastikan keselamatan dan pengalaman pengguna yang lancar, PolyRider menggunakan sistem penjejakan lokasi separa masa nyata (semi-realtime) semasa fasa perjalanan (`ACCEPTED`).
+
+- **Auto-Polling (Rider):** Apabila rider menerima pesanan (`ACCEPTED`), sistem di `PolyRiderDashboard.tsx` akan mula mengambil koordinat GPS (*auto-polling*) setiap **90 saat** secara automatik di latar belakang.
+- **Kestabilan Background:** Auto-polling ini di-desain supaya terus berjalan walaupun rider menukar aplikasi (contohnya membuka Waze atau Google Maps). Ia hanya akan berhenti secara automatik apabila status bertukar kepada `ARRIVED` atau ke atas.
+- **Fail-Safe Polling:** Permintaan GPS menggunakan *timeout* 15 saat dan mengabaikan ralat secara senyap (*silent fail*) untuk mengelakkan *toast error spam* yang mengganggu pemanduan rider.
+- **Paparan Pelajar (Passenger):** Di `PolyRiderHome.tsx`, pelajar akan dipaparkan kad maklumat "Lokasi Rider Semasa" yang mengira jarak proksimiti (menggunakan formula *Haversine*) dan menyediakan pautan terus ke Waze.
+- **Pengoptimuman Memori:** Fungsi matematik berat seperti `haversineKm` diletakkan di luar *React render loop* (*module scope*) untuk mengelakkan proses *Garbage Collection (GC)* yang tinggi yang boleh melemahkan peranti tahap rendah (*low-end devices*).
+
+### 25.8 Metodologi Ujian Chat UI (Chat Testing Guidelines)
 
 Bagi UI perbualan (Chat), pengesanan *Sender* dan *Receiver* menggunakan logik pengiraan boolean peribadi: `msg.sender_id === user.id`.
 
@@ -1730,7 +1740,7 @@ Bagi mengekalkan prestasi dan mengelakkan isu *database CPU spike*, semua operas
 
 ### 17.2 Protokol Keselamatan & SOS (Sangat Penting)
 Keselamatan penumpang adalah keutamaan.
-- **Tetapan Pengesanan GPS:** Fungsi `navigator.geolocation.getCurrentPosition` mesti mempunyai `enableHighAccuracy: true`, `timeout: 15000` (15 saat), dan `maximumAge: 0`. Berdasarkan ujian, *timeout* 5 saat terlalu singkat untuk telefon pintar menangkap lokasi tepat, menyebabkan sistem bergantung pada koordinat asal pesanan (*fallback*).
+- **Tetapan Pengesanan GPS & Auto-Polling:** Fungsi `navigator.geolocation.getCurrentPosition` mesti mempunyai `enableHighAccuracy: true`, `timeout: 15000` (15 saat), dan `maximumAge: 0`. Berdasarkan ujian, *timeout* 5 saat terlalu singkat untuk telefon pintar menangkap lokasi tepat. Sistem juga melaksanakan **Auto-Polling setiap 90 saat** semasa fasa `ACCEPTED` supaya lokasi dikemas kini berterusan di latar belakang, membolehkan pelajar memantau ketibaan rider. Ralat GPS sewaktu auto-polling diabaikan (*silent fail*) bagi mengelakkan gangguan UI pemandu.
 - **Trigasi SOS:** Butang "Swipe to SOS" akan mengemas kini status pekerjaan ke `EMERGENCY` dan terus merekod log dalam `polyrider_sos_logs`.
 - **Notifikasi SOS:** Emel amaran secara automatik dihantar kepada ahli JPP unit KLS menggunakan fungsi `notifyKLKOnSuspension()` (melalui *Resend API*).
 - **Penolakan Prank/Khianat:** Jika Exco KLK menandakan isyarat SOS sebagai `FALSE_ALARM`, akaun pemanggil (pelajar atau rider) akan digantung secara automatik selama 24 jam. Ini diuruskan oleh *RPC* `cancel_polyrider_job`.

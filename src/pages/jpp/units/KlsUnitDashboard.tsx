@@ -6,7 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home, Building2, MapPin, Database, ArrowRight, Wifi, Upload, AlertTriangle, BarChart3 } from 'lucide-react';
+import { Home, Building2, MapPin, Database, ArrowRight, Wifi, Upload, AlertTriangle, BarChart3, Car } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { KamsisKlkStatsWidget } from './KamsisKlkStatsWidget';
@@ -95,6 +95,7 @@ export function KlsUnitDashboard() {
           { label: 'Buka Dashboard KLK', desc: 'Peta hotspot + senarai pelajar', icon: MapPin, href: '/klk', color: KLS_COLOR },
           { label: 'Statistik Awam', desc: 'QR Code & data semasa', icon: BarChart3, href: '/klk/statistik', color: '#10B981' },
           { label: 'Tetapan & Import', desc: 'Webhook, CSV import, kawasan', icon: Database, href: '/klk/tetapan', color: '#818CF8' },
+          { label: 'PolyRider Admin', desc: 'Pantau rider & tetapan harga', icon: Car, href: '/polyrider-admin', color: '#8B5CF6' },
         ].map(link => (
           <motion.button key={link.href} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
             onClick={() => navigate(link.href)}
