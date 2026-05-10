@@ -342,8 +342,26 @@ export function PolyRiderHome() {
       }
     };
     poll();
-    const iv = setInterval(poll, 8000);
-    return () => clearInterval(iv);
+    
+    // Switch to Realtime channels to eliminate aggressive polling
+    const channel = supabase.channel(`student_job_${activeJob.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'polyrider_jobs', filter: `id=eq.${activeJob.id}` }, poll)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'polyrider_bids', filter: `job_id=eq.${activeJob.id}` }, poll)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'polyrider_chats', filter: `job_id=eq.${activeJob.id}` }, poll);
+      
+    if (activeJob.carpool_group_id) {
+       channel.on('postgres_changes', { event: '*', schema: 'public', table: 'polyrider_jobs', filter: `carpool_group_id=eq.${activeJob.carpool_group_id}` }, poll);
+    }
+    
+    channel.subscribe();
+    
+    // Slower fallback interval in case of missed WebSocket messages
+    const iv = setInterval(poll, 30000); 
+    
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(iv);
+    };
   }, [activeJob?.id, isSearching]);
 
   // Check existing unfinished job on mount

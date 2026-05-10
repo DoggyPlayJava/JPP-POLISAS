@@ -229,10 +229,22 @@ export function PolyRiderDashboard() {
     };
     poll();
     setIsPolling(true);
-    // Tiered interval: 5s when active trip running, 12s for idle job board
-    const hasActive = activeJobs.length > 0;
-    const interval = setInterval(poll, hasActive ? 5000 : 12000);
-    return () => { clearInterval(interval); setIsPolling(false); };
+    
+    // Switch to Realtime channels to eliminate aggressive polling
+    const channel = supabase.channel(`rider_dashboard_${user?.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'polyrider_jobs' }, poll)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'polyrider_bids' }, poll)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'polyrider_chats' }, poll)
+      .subscribe();
+      
+    // Slower fallback interval (30s) in case of missed WebSocket messages
+    const interval = setInterval(poll, 30000);
+    
+    return () => { 
+      supabase.removeChannel(channel);
+      clearInterval(interval); 
+      setIsPolling(false); 
+    };
   }, [profile?.is_active, profile?.status, fetchJobs, fetchTodayEarnings, user?.id, activeJobs.length]);
 
   const fetchProfile = async () => {

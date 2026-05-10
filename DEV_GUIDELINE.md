@@ -1453,25 +1453,65 @@ Semasa memuatkan Dashboard/Portal, satukan pengambilan data secara "Parallel". R
 
 ---
 
-## 25. Konsep Draft: Sistem PolyRider (Campus Delivery) 🛵
+## 25. Modul PolyRider — Sistem Carpool & E-Hailing Kampus 🛵
 
-> Ditambah: Mei 2026 (Draft/Perancangan)
+> Dikemas kini: Mei 2026 (Migrasi ke Realtime WebSockets & Keselamatan Bidaan)
 
-PolyRider adalah sistem penghantaran berkonsepkan *gig-economy* dalaman kampus. Ia direka untuk menyokong ekosistem **PolyMart** dan **e-Keusahawanan** dengan memberi peluang kepada pelajar menjana pendapatan sampingan melalui perkhidmatan *runner* (penghantaran makanan/barangan ke KAMSIS atau asrama luar).
+PolyRider merupakan sistem pengangkutan (carpool / e-hailing) khusus untuk kemudahan warga kampus. Ia kini beroperasi menggunakan model **Sistem Pengumpulan & Kelulusan (Gathering & Approval System)** di mana penumpang boleh berkongsi kenderaan (carpool) untuk meminimumkan kos tambang.
 
-### 25.1 Aliran Proses (Cadangan)
+### 25.1 Jadual Database Utama
 
-1. **Pembeli (Buyer):** Semasa *checkout* di PolyMart, pembeli memilih "Penghantaran (PolyRider)". Pembeli dikenakan caj penghantaran (cth: RM 1.00 - RM 2.00).
-2. **Ping & Terima (Broadcasting):** Pesanan masuk ke dalam pangkalan data dengan status penghantaran `WAITING_RIDER`. Sistem menghantar *Push Notification* (atau menerusi Realtime Channel) kepada semua pelajar yang mendaftar sebagai PolyRider aktif.
-3. **Penerimaan (Acceptance):** PolyRider pertama yang menekan "Terima Pesanan" akan di-"assign" kepada pesanan tersebut.
-4. **Pengambilan (Pickup):** PolyRider pergi ke lokasi kedai/vendor, menunjukkan kod pesanan, dan mengambil barang. Status pesanan ditukar ke `OUT_FOR_DELIVERY`.
-5. **Penghantaran Berjaya (Completed):** PolyRider menyerahkan barang kepada pembeli. Pembeli/Rider mengesahkan penerimaan (mungkin melalui pengimbasan Kod QR). Wang upah diberikan kepada Rider.
+| Jadual | Fungsi |
+|---|---|
+| `polyrider_jobs` | Menyimpan rekod carpool/perjalanan. Status: `GATHERING`, `CARPOOL_REQUEST`, `PENDING`, `ACCEPTED`, `CANCELLED`, `COMPLETED` |
+| `polyrider_profiles` | Profil pemandu (rider) termasuk butiran kenderaan, nombor plat, dan rating. |
+| `polyrider_bids` | Rekod bidaan harga oleh rider. |
+| `polyrider_chats` | Rekod perbualan antara rider dan penumpang dalam sesuatu tugasan. |
 
-### 25.2 Cabaran & Keperluan Teknikal
+### 25.2 Aliran Sistem Carpool (Passenger Flow)
 
-- **Pemantauan Lokasi (Geolokasi):** Adakah kita perlukan *live tracking*? Secara minimum, kita hanya perlukan status *timestamp* (Telah Diambil, Sedang Dihantar, Tiba di Lokasi).
-- **Pembayaran Upah:** Jika transaksi dilakukan secara tunai (COD), bagaimana pembahagian harga produk (untuk vendor) dan caj penghantaran (untuk rider) diuruskan secara praktikal? Integrasi tanpa tunai (Cashless) mungkin diperlukan bagi menyelesaikan masalah serahan wang tunai.
-- **Keselamatan & Kredibiliti:** Hanya pelajar yang mendaftar (ada Matrik sah) dan "disahkan" oleh JPP boleh menjadi PolyRider untuk mengelak kehilangan barang.
+Sistem carpool tidak lagi menggunakan instant-match secara membuta tuli, sebaliknya bergantung kepada "Bilik Carpool":
+
+1. **Buka Bilik (Owner):** Penumpang pertama (Owner) membuka bilik carpool (Status: `GATHERING`).
+2. **Mohon Sertai (Passenger):** Penumpang lain yang mencari destinasi sama akan nampak bilik ini dan memohon untuk menyertai (Status: `CARPOOL_REQUEST`).
+3. **Kelulusan (Owner):** Owner akan menerima notifikasi dan mempunyai kuasa untuk *Accept* atau *Reject* permohonan tersebut (had maksimum 3 orang penumpang tambahan, menjadikannya 4 termasuk owner, berdasarkan kapasiti kereta standard). Sistem menunjukkan nama dan jantina pemohon untuk tujuan keselamatan.
+4. **Kunci & Cari Rider:** Apabila kumpulan penuh atau owner sedia bertolak, owner menekan butang "Tutup Bilik & Cari Rider". Status berubah dari `GATHERING` ke `PENDING`. Semua permohonan yang belum dijawab akan dibatalkan (auto-cancel).
+5. **Diterima Rider:** Rider menerima tugasan (Status: `ACCEPTED`). Harga tambang akan dibahagikan secara automatik mengikut jumlah penumpang dalam kumpulan.
+
+### 25.3 RLS & Keselamatan Database (PENTING) ⚠️
+
+Semasa pembangunan, sistem ini mengalami isu *Infinite Recursion* (rujukan kendiri) dalam RLS yang menyebabkan CPU Database memuncak (500 Internal Server Error) dan mematikan API.
+
+**Peraturan Baharu RLS PolyRider:**
+- **JANGAN** tulis RLS pada `polyrider_jobs` yang membuat subquery kepada `polyrider_jobs` kembali secara terus.
+- **Guna Helper Function:** Kita menggunakan fungsi `SECURITY DEFINER` (seperti `get_my_carpool_group_ids()`) untuk memintas semakan RLS semasa mencari ahli kumpulan secara selamat.
+- **Polisi Kumpulan:** *"Carpool group members can view each other"* — membenarkan penumpang melihat satu sama lain untuk tujuan keselamatan dalam UI (Dashboard Rider) tanpa menyebabkan semakan rekursif.
+
+### 25.4 RPCs (Remote Procedure Calls) & State Transitions
+
+Logik transisi carpool dikendalikan sepenuhnya di peringkat database untuk mengelakkan *Race Conditions*:
+- `create_polyrider_job`: Inisialisasi bilik carpool baharu.
+- `lock_polyrider_carpool`: Transisi kumpulan dari `GATHERING` ke `PENDING` secara serentak (atomic update).
+- `respond_carpool_request`: Mengendalikan kelulusan (approve/reject). Mempunyai logic lock/check saiz kumpulan supaya tidak melebihi limit secara *concurrent*.
+
+### 25.5 Pengurusan Bidaan & Keselamatan Data (Anti-Spam) ⭐
+
+Sistem PolyRider mempunyai lapisan keselamatan tambahan (*constraints*) di peringkat database untuk mencegah eksploitasi (*spam*) pada fungsi bidaan:
+- **`unique_rider_job_bid` Constraint:** Setiap rider hanya dibenarkan membuat HANYA SATU bidaan yang sah untuk sesuatu perjalanan (`job_id`). Sebarang skrip API Postman yang cuba membanjiri sistem dengan ribuan tawaran akan terus ditolak oleh pelayan PostgreSQL dengan ralat *Error 23505*.
+- **Indexing (`idx_polyrider_bids_job`):** Sistem *lookup* perhubungan *foreign key* telah dioptimumkan menggunakan *Index* supaya pertanyaan carian harga tidak mengimbas keseluruhan pangkalan data (*Sequential Scans*).
+
+### 25.6 Real-time WebSockets vs API Polling (Optimasasi CPU) 🚀
+
+- **Penghapusan Polling Agresif:** Kaedah asal menggunakan `setInterval` setiap 5–8 saat telah dibuang sepenuhnya. Ini kerana *polling* secara membuta tuli menyebabkan 125+ API calls per saat jika terdapat 1000 pengguna serentak, yang membebankan kapasiti *Server CPU*.
+- **Supabase Realtime (`postgres_changes`):** Fail `PolyRiderHome.tsx` dan `PolyRiderDashboard.tsx` kini melanggan kepada *Supabase Realtime WebSockets* untuk jadual `polyrider_jobs`, `polyrider_bids`, dan `polyrider_chats`. Sistem kini berehat 100% pada kadar CPU melainkan ada perubahan terbaharu yang ditolak masuk (push) dari pelayan.
+- **Fallback Polling (30 saat):** Sebagai *safety net*, `setInterval(poll, 30000)` digunakan untuk memulihkan sambungan sekiranya WebSocket gagal berfungsi akibat sambungan 4G yang lemah pada peranti pelajar.
+
+### 25.7 Metodologi Ujian Chat UI (Chat Testing Guidelines)
+
+Bagi UI perbualan (Chat), pengesanan *Sender* dan *Receiver* menggunakan logik pengiraan boolean peribadi: `msg.sender_id === user.id`.
+
+- Jika anda sedang menguji (testing) antara *Rider* dan *Penumpang*, pastikan anda menggunakan **dua akaun (emel) yang berbeza**.
+- Jika anda mencuba untuk log masuk dengan **akaun yang sama** di dalam dua tab/telefon yang berbeza (satu bertindak sebagai rider, satu sebagai penumpang), sistem akan mendapati bahawa `sender_id` tersebut milik anda di kedua-dua belah. Oleh itu, sistem akan meletakkan buih sembang (chat bubble) di sebelah **KANAN** (sebagai Penghantar) pada kedua-dua peranti. Ini **bukan satu bug**, tetapi ia tindak balas logikal berdasarkan ID pengguna yang sama.
 
 ---
 
