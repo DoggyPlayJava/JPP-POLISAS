@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Store, Bike, X, ArrowRight } from 'lucide-react';
+import { Store, Bike, X, ArrowRight, MapPin, PhoneCall } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PolymartServiceModalProps {
@@ -47,14 +47,14 @@ export function PolymartServiceModal({ isOpen, onClose }: PolymartServiceModalPr
                   <X className="w-4 h-4" />
                 </button>
                 <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">
-                  Pilih Perkhidmatan
+                  PolyServices
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  Ke manakah arah tuju anda hari ini?
+                  Pilih perkhidmatan yang anda perlukan.
                 </p>
               </div>
 
-              <div className="p-6 pt-2 space-y-4">
+              <div className="p-6 pt-2 space-y-4 max-h-[70vh] overflow-y-auto">
                 {/* PolyMart Option */}
                 <button
                   onClick={() => handleSelect('/polymart')}
@@ -92,6 +92,46 @@ export function PolymartServiceModal({ isOpen, onClose }: PolymartServiceModalPr
 
                   <ArrowRight className="w-5 h-5 text-orange-500 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                 </button>
+
+                {/* i-Maps Option */}
+                <button
+                  onClick={() => handleSelect('/imaps')}
+                  className="w-full group relative flex flex-row items-center p-4 sm:p-5 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 transition-all text-left overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-400/0 via-indigo-400/10 to-indigo-400/0 -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
+                  
+                  <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform">
+                    <MapPin className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0 ml-4">
+                    <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight">i-Maps</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Pemetaan Fasiliti Kampus</p>
+                  </div>
+
+                  <ArrowRight className="w-5 h-5 text-indigo-500 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                </button>
+
+                {/* Helpline JPP Option */}
+                <a
+                  href="https://wa.me/601139413699"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full group relative flex flex-row items-center p-4 sm:p-5 rounded-2xl border border-teal-500/20 bg-teal-500/5 hover:bg-teal-500/10 dark:bg-teal-500/10 dark:hover:bg-teal-500/20 transition-all text-left overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-teal-400/0 via-teal-400/10 to-teal-400/0 -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
+                  
+                  <div className="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform">
+                    <PhoneCall className="w-6 h-6 text-teal-600 dark:text-teal-400" />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0 ml-4">
+                    <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight">Helpline JPP</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Bantuan & Sokongan (+6011-39413699)</p>
+                  </div>
+
+                  <ArrowRight className="w-5 h-5 text-teal-500 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                </a>
               </div>
             </motion.div>
           </div>
@@ -100,3 +140,4 @@ export function PolymartServiceModal({ isOpen, onClose }: PolymartServiceModalPr
     </AnimatePresence>
   );
 }
+
