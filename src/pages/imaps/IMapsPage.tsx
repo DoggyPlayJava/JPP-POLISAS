@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, CircleMarker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { 
@@ -57,6 +57,25 @@ function MapRecenter({ lat, lng, zoom }: { lat: number, lng: number, zoom: numbe
   }, [lat, lng, zoom, map]);
   return null;
 }
+
+const getCustomIcon = (code: string, isActive: boolean) => {
+  const html = `
+    <div style="position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center;">
+      <div style="width: 18px; height: 18px; border-radius: 50%; background-color: ${isActive ? '#ef4444' : '#0ea5e9'}; border: 3px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.4); z-index: ${isActive ? 1000 : 10}; position: relative;">
+        ${isActive ? '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 6px; height: 6px; background: white; border-radius: 50%;"></div>' : ''}
+      </div>
+      <div style="margin-top: 4px; background-color: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 10}; position: relative;">
+        ${code}
+      </div>
+    </div>
+  `;
+  return L.divIcon({
+    className: '', // Kosongkan class supaya tak ada style default yang mengganggu
+    html,
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
+  });
+};
 
 function calculateWalkingETA(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371; 
@@ -486,13 +505,13 @@ export function IMapsPage() {
         >
           <TileLayer
             attribution='&copy; <a href="https://www.google.com/maps">Google Maps</a>'
-            url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+            url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
             maxZoom={20}
           />
 
           {!isNavigating && activeBuilding?.center_lat && (
             <MapRecenter 
-              lat={activeBuilding.center_lat}
+              lat={activeBuilding.center_lat - 0.0013} // Offset yang seimbang supaya marker berada di tengah-tengah ruang yang ada
               lng={activeBuilding.center_lng} 
               zoom={18} 
             />
@@ -515,16 +534,16 @@ export function IMapsPage() {
           {allBuildings.map(b => {
             if (!b.center_lat) return null;
             const isActive = activeBuilding?.id === b.id;
+            
             return (
               <Marker 
                 key={b.id}
                 position={[b.center_lat, b.center_lng]}
-                icon={isActive ? destinationIcon : buildingIcon}
+                icon={getCustomIcon(b.code, isActive)}
                 eventHandlers={{
                   click: () => handleSelectBuildingMapMarker(b)
                 }}
               >
-                <Popup>{b.name} ({b.code})</Popup>
               </Marker>
             );
           })}
