@@ -192,7 +192,12 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks }: BottomNa
             navRef.current.classList.remove('opacity-75', 'scale-[0.85]', 'translate-y-4');
           }
         }}
-        className="md:hidden fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[360px] z-[112] transform-gpu transition-all duration-300 ease-out cursor-pointer"
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerMove={(e) => e.stopPropagation()}
+        onPointerUp={(e) => e.stopPropagation()}
+        className="md:hidden fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[360px] z-[9999] transform-gpu transition-all duration-300 ease-out cursor-pointer"
       >
         {/* Changed blur to md to optimize for low end devices */}
         <div className="bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.5)] rounded-full px-2 py-2 flex items-center justify-between relative">

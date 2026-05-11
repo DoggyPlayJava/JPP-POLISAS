@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { 
   Map, MapPin, Building2, Plus, Edit2, Trash2, 
   Search, RefreshCw, AlertCircle, Save, X, Navigation, UploadCloud, Image as ImageIcon
@@ -8,6 +11,48 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+
+// Fix for default marker icons in React-Leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+function LocationPickerMap({ lat, lng, onChange }: { lat: number, lng: number, onChange: (lat: number, lng: number) => void }) {
+  const MapEvents = () => {
+    useMapEvents({
+      click(e) {
+        onChange(e.latlng.lat, e.latlng.lng);
+      },
+    });
+    return null;
+  };
+
+  const defaultLat = 3.8625;
+  const defaultLng = 103.3153;
+  const mapCenter: [number, number] = [Number(lat) || defaultLat, Number(lng) || defaultLng];
+
+  return (
+    <div className="w-full h-48 rounded-xl overflow-hidden border border-white/10 mt-3 relative z-0">
+      <MapContainer center={mapCenter} zoom={17} className="w-full h-full" zoomControl={true}>
+        <TileLayer
+          attribution='&copy; Google'
+          url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+          maxZoom={20}
+        />
+        <MapEvents />
+        {lat && lng ? (
+          <Marker position={[lat, lng]} />
+        ) : null}
+      </MapContainer>
+      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000] bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/10 pointer-events-none shadow-lg whitespace-nowrap">
+        Sentuh peta untuk tetapkan lokasi
+      </div>
+    </div>
+  );
+}
 
 interface Building {
   id: string;
@@ -416,9 +461,9 @@ export function JppImapsAdmin() {
       {/* Building Modal */}
       <AnimatePresence>
         {showBuildingModal && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowBuildingModal(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-lg bg-[#0f1015] border border-white/10 rounded-3xl p-6 shadow-2xl overflow-hidden">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-lg max-h-[90vh] bg-[#0f1015] border border-white/10 rounded-3xl p-6 shadow-2xl overflow-y-auto">
               <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-sky-400" />
                 {currentBuilding.id ? 'Kemaskini Bangunan' : 'Tambah Bangunan'}
@@ -443,6 +488,13 @@ export function JppImapsAdmin() {
                     <input type="number" step="any" value={currentBuilding.center_lng || ''} onChange={e => setCurrentBuilding({...currentBuilding, center_lng: parseFloat(e.target.value)})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all" placeholder="103.123456" />
                   </div>
                 </div>
+                
+                <LocationPickerMap 
+                  lat={currentBuilding.center_lat} 
+                  lng={currentBuilding.center_lng} 
+                  onChange={(lat, lng) => setCurrentBuilding({...currentBuilding, center_lat: parseFloat(lat.toFixed(6)), center_lng: parseFloat(lng.toFixed(6))})} 
+                />
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {(['drone_image_url', 'floorplan_image_url', 'entrance_image_url'] as const).map(field => {
                     const label = field === 'drone_image_url' ? 'Imej Dron' : field === 'floorplan_image_url' ? 'Pelan Lantai' : 'Pintu Masuk';
@@ -551,9 +603,9 @@ export function JppImapsAdmin() {
       {/* Location Modal */}
       <AnimatePresence>
         {showLocationModal && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowLocationModal(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-lg bg-[#0f1015] border border-white/10 rounded-3xl p-6 shadow-2xl overflow-hidden">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-lg max-h-[90vh] bg-[#0f1015] border border-white/10 rounded-3xl p-6 shadow-2xl overflow-y-auto">
               <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                 <Navigation className="w-5 h-5 text-indigo-400" />
                 {currentLocation.id ? 'Kemaskini Lokasi' : 'Tambah Lokasi'}

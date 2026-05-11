@@ -159,7 +159,7 @@ export function IMapsPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const polisasCenter: [number, number] = [3.8569, 103.3283];
+  const polisasCenter: [number, number] = [3.8625, 103.3153];
 
   useEffect(() => {
     fetchInitialData();
@@ -511,7 +511,7 @@ export function IMapsPage() {
 
           {!isNavigating && activeBuilding?.center_lat && (
             <MapRecenter 
-              lat={activeBuilding.center_lat - 0.0013} // Offset yang seimbang supaya marker berada di tengah-tengah ruang yang ada
+              lat={activeBuilding.center_lat - 0.0010} // Offset diseimbangkan untuk ngam-ngam antara search bar dan kad
               lng={activeBuilding.center_lng} 
               zoom={18} 
             />
@@ -570,12 +570,12 @@ export function IMapsPage() {
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setIsSidebarOpen(false)}
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-[2000]"
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-[10000]"
             />
             <motion.div 
               initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="absolute top-0 left-0 bottom-0 w-80 bg-white dark:bg-slate-900 z-[2001] shadow-2xl flex flex-col"
+              className="absolute top-0 left-0 bottom-0 w-80 bg-white dark:bg-slate-900 z-[10001] shadow-2xl flex flex-col"
             >
               <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <div>
@@ -667,7 +667,7 @@ export function IMapsPage() {
       </AnimatePresence>
 
       {/* ── BOTTOM CONTROLS & INFO SHEET ── */}
-      <div className="absolute bottom-[90px] left-0 right-0 z-[1000] p-4 pointer-events-none pb-safe">
+      <div className="absolute bottom-[70px] sm:bottom-[90px] left-0 right-0 z-[1000] p-3 sm:p-4 pointer-events-none pb-safe">
         <div className="max-w-md mx-auto pointer-events-auto flex flex-col gap-4">
           
           {/* Navigation Active Banner */}
@@ -811,7 +811,7 @@ export function IMapsPage() {
                 </button>
 
                 {/* Media Area */}
-                <div className="w-full h-48 bg-slate-100 dark:bg-slate-800 relative">
+                <div className="w-full h-32 sm:h-48 bg-slate-100 dark:bg-slate-800 relative">
                   {/* Media Content */}
                   {activeImageTab === 'drone' && activeBuilding.drone_image_url && (
                     <img src={activeBuilding.drone_image_url} alt="Drone View" className="w-full h-full object-cover" />
@@ -921,88 +921,7 @@ export function IMapsPage() {
                     </div>
                   </div>
 
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 mb-4">
-                    <div className="flex gap-3">
-                      <Navigation className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        {selectedLocation && selectedLocation.direction_text ? (
-                          (() => {
-                            const distanceMeters = userLocation && activeBuilding?.center_lat
-                              ? calculateDistanceInMeters(userLocation[0], userLocation[1], activeBuilding.center_lat, activeBuilding.center_lng)
-                              : null;
-                            
-                            const hasArrived = isAdmin || (distanceMeters !== null && distanceMeters <= 30);
 
-                            if (!hasArrived) {
-                              return (
-                                <div>
-                                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-600/70 dark:text-amber-400/70 mb-1 block">
-                                    Panduan Dalaman
-                                  </span>
-                                  <p className="text-sm font-bold text-amber-800 dark:text-amber-200 leading-relaxed">
-                                    Panduan akan dipaparkan semasa mod Pandu Arah setelah anda tiba di kawasan bangunan ini.
-                                  </p>
-                                </div>
-                              );
-                            }
-
-                            const steps = selectedLocation.direction_text.split(/\r?\n/).filter(s => s.trim().length > 0);
-                            const isMultiStep = steps.length > 1;
-
-                            return isMultiStep ? (
-                              <motion.div key={currentStep} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
-                                <span className="text-[10px] font-black uppercase tracking-widest text-amber-600/70 dark:text-amber-400/70 mb-1 block">
-                                  Langkah {currentStep + 1} / {steps.length}
-                                </span>
-                                <p className="text-sm font-bold text-amber-800 dark:text-amber-200 leading-relaxed min-h-[40px]">
-                                  {steps[currentStep]}
-                                </p>
-                                <div className="flex justify-between items-center mt-3 pt-3 border-t border-amber-500/10">
-                                  <button 
-                                    disabled={currentStep === 0} 
-                                    onClick={() => setCurrentStep(prev => prev - 1)}
-                                    className="text-xs font-bold text-amber-700 dark:text-amber-300 disabled:opacity-30 transition-opacity"
-                                  >
-                                    Kembali
-                                  </button>
-                                  <div className="flex gap-1.5">
-                                    {steps.map((_, i) => (
-                                      <span key={i} className={cn("w-1.5 h-1.5 rounded-full transition-colors", i === currentStep ? "bg-amber-500" : "bg-amber-500/20")} />
-                                    ))}
-                                  </div>
-                                  <button 
-                                    disabled={currentStep === steps.length - 1} 
-                                    onClick={() => setCurrentStep(prev => prev + 1)}
-                                    className="text-xs font-bold text-amber-700 dark:text-amber-300 disabled:opacity-30 transition-opacity"
-                                  >
-                                    Seterusnya
-                                  </button>
-                                </div>
-                              </motion.div>
-                            ) : (
-                              <div>
-                                <span className="text-[10px] font-black uppercase tracking-widest text-amber-600/70 dark:text-amber-400/70 mb-1 block">
-                                  Panduan Dalaman
-                                </span>
-                                <p className="text-sm font-bold text-amber-800 dark:text-amber-200 leading-relaxed">
-                                  {selectedLocation.direction_text}
-                                </p>
-                              </div>
-                            );
-                          })()
-                        ) : (
-                          <div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-amber-600/70 dark:text-amber-400/70 mb-1 block">
-                              Panduan Umum
-                            </span>
-                            <p className="text-sm font-bold text-amber-800 dark:text-amber-200 leading-relaxed">
-                              Sila gunakan fungsi carian atau direktori untuk mendapatkan panduan arah kelas yang spesifik.
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
                   
                   {/* Action Buttons */}
                   <div className="flex flex-col gap-2">

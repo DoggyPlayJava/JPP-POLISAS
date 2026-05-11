@@ -71,7 +71,7 @@ function LocationMarker({
 }
 
 export function MapPicker({ position, onPositionChange, onNameChange, label }: MapPickerProps) {
-  const defaultCenter: [number, number] = [3.8569, 103.3268]; // POLISAS
+  const defaultCenter: [number, number] = [3.8625, 103.3153]; // POLISAS
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [resolvedName, setResolvedName] = useState<string | null>(null);
 
