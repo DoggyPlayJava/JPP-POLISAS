@@ -51,6 +51,16 @@ const buildingIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
+// ── Low-end device detection (run once on mount) ──────────────────────────────
+function isLowEndDevice(): boolean {
+  const lowCpu = navigator.hardwareConcurrency <= 4;
+  const lowRam = (navigator as any).deviceMemory != null && (navigator as any).deviceMemory < 4;
+  const conn = (navigator as any).connection;
+  const slowNet = conn && ['slow-2g', '2g', '3g'].includes(conn.effectiveType);
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return lowCpu || lowRam || slowNet || prefersReduced;
+}
+
 function MapRecenter({ lat, lng, zoom }: { lat: number, lng: number, zoom: number }) {
   const map = useMap();
   useEffect(() => {
@@ -59,19 +69,58 @@ function MapRecenter({ lat, lng, zoom }: { lat: number, lng: number, zoom: numbe
   return null;
 }
 
-const getCustomIcon = (code: string, isActive: boolean) => {
+// Smooth GPS follow during navigation
+// Low-end: instant setView (no animation cost). High-end: smooth panTo.
+function MapFollower({ lat, lng, isLowEnd }: { lat: number, lng: number, isLowEnd: boolean }) {
+  const map = useMap();
+  useEffect(() => {
+    if (isLowEnd) {
+      map.setView([lat, lng], map.getZoom(), { animate: false });
+    } else {
+      map.panTo([lat, lng], { animate: true, duration: 0.5, easeLinearity: 0.5 });
+    }
+  }, [lat, lng, map, isLowEnd]);
+  return null;
+}
+
+// One-shot initial zoom when navigation starts — flies once then calls onDone
+function MapFlyOnce({ lat, lng, zoom, onDone }: { lat: number, lng: number, zoom: number, onDone: () => void }) {
+  const map = useMap();
+  useEffect(() => {
+    map.flyTo([lat, lng], zoom, { animate: true, duration: 1.2 });
+    const t = setTimeout(onDone, 1300);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // intentionally empty — run once on mount only
+  return null;
+}
+
+// Detects when the user manually drags the map → signals to exit follow mode
+function MapDragDetector({ onDrag }: { onDrag: () => void }) {
+  useMapEvents({
+    dragstart: () => onDrag(),
+  });
+  return null;
+}
+
+const getCustomIcon = (code: string, isActive: boolean, lowEnd = false) => {
+  // Low-end: avoid backdrop-filter (creates extra GPU compositing layer per marker)
+  const labelStyle = lowEnd
+    ? `background-color: rgba(15, 23, 42, 0.95); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 10}; position: relative;`
+    : `background-color: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 10}; position: relative;`;
+
   const html = `
     <div style="position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center;">
       <div style="width: 18px; height: 18px; border-radius: 50%; background-color: ${isActive ? '#ef4444' : '#0ea5e9'}; border: 3px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.4); z-index: ${isActive ? 1000 : 10}; position: relative;">
         ${isActive ? '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 6px; height: 6px; background: white; border-radius: 50%;"></div>' : ''}
       </div>
-      <div style="margin-top: 4px; background-color: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 10}; position: relative;">
+      <div style="${labelStyle}">
         ${code}
       </div>
     </div>
   `;
   return L.divIcon({
-    className: '', // Kosongkan class supaya tak ada style default yang mengganggu
+    className: '',
     html,
     iconSize: [0, 0],
     iconAnchor: [0, 0],
@@ -160,6 +209,11 @@ export function IMapsPage() {
   const [isLocating, setIsLocating] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const [hasArrivedManual, setHasArrivedManual] = useState(false);
+  const [hasZoomedToNavigation, setHasZoomedToNavigation] = useState(false);
+  // Follow mode: true = map follows user; false = user panned away (show re-center button)
+  const [isFollowingUser, setIsFollowingUser] = useState(false);
+  // Run device detection once on mount
+  const isLowEnd = React.useRef(isLowEndDevice()).current;
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeSidebarTab, setActiveSidebarTab] = useState<'akademik' | 'fasiliti'>('akademik');
@@ -444,14 +498,18 @@ export function IMapsPage() {
     setIsNavigating(false);
     setCurrentStep(0);
     setHasArrivedManual(false);
+    setHasZoomedToNavigation(false);
+    setIsFollowingUser(false);
   };
 
   const startNavigation = () => {
     setIsNavigating(true);
     setHasArrivedManual(false);
-    if (!userLocation) {
-      locateUser();
-    }
+    setHasZoomedToNavigation(false);
+    setIsFollowingUser(false); // Will become true after MapFlyOnce completes
+    // NOTE: Do NOT call locateUser() here.
+    // watchPosition (in useEffect below) handles first fix + continuous tracking.
+    // Calling getCurrentPosition separately → double-trigger → white screen.
   };
 
   const locateUser = () => {
@@ -489,7 +547,13 @@ export function IMapsPage() {
         (error) => {
           console.error("Continuous GPS error:", error);
         },
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+        {
+          // Low-end: use network/cell GPS (less battery, enough accuracy for campus)
+          // High-end: high accuracy GPS hardware
+          enableHighAccuracy: !isLowEnd,
+          maximumAge: isLowEnd ? 8000 : 0,
+          timeout: isLowEnd ? 10000 : 5000,
+        }
       );
     }
 
@@ -498,7 +562,7 @@ export function IMapsPage() {
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [isNavigating]);
+  }, [isNavigating, isLowEnd]);
 
   const etaMinutes = useMemo(() => {
     if (userLocation && activeBuilding?.center_lat) {
@@ -658,28 +722,46 @@ export function IMapsPage() {
           zoom={16} 
           className="w-full h-full"
           zoomControl={false}
+          preferCanvas={true}  // All devices: render vector layers (Polyline etc) on canvas → fewer DOM nodes
         >
           <TileLayer
             attribution='&copy; <a href="https://www.google.com/maps">Google Maps</a>'
             url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
             maxZoom={20}
+            updateWhenZooming={false}       // Only update tiles after zoom ends (saves requests during pinch-zoom)
+            updateWhenIdle={isLowEnd}       // Low-end: only update when map stops moving
+            keepBuffer={isLowEnd ? 1 : 2}  // Low-end: pre-load 1 tile border vs default 2
           />
           <ZoomTracker />
 
           {!isNavigating && activeBuilding?.center_lat && (
             <MapRecenter 
-              lat={activeBuilding.center_lat - 0.0010} // Offset diseimbangkan untuk ngam-ngam antara search bar dan kad
+              lat={activeBuilding.center_lat - 0.0010}
               lng={activeBuilding.center_lng} 
               zoom={18} 
             />
           )}
 
-          {isNavigating && userLocation && (
-            <MapRecenter 
+          {/* Detect manual drag → exit follow mode, show re-center button */}
+          {isNavigating && (
+            <MapDragDetector onDrag={() => setIsFollowingUser(false)} />
+          )}
+
+          {/* Navigation: fly ONCE to zoom=19 on first GPS fix */}
+          {isNavigating && userLocation && !hasZoomedToNavigation && (
+            <MapFlyOnce
               lat={userLocation[0]}
-              lng={userLocation[1]} 
-              zoom={19} 
+              lng={userLocation[1]}
+              zoom={19}
+              onDone={() => {
+                setHasZoomedToNavigation(true);
+                setIsFollowingUser(true); // Activate follow mode after initial zoom
+              }}
             />
+          )}
+          {/* Follow mode: smoothly track user after initial zoom */}
+          {isNavigating && userLocation && hasZoomedToNavigation && isFollowingUser && (
+            <MapFollower lat={userLocation[0]} lng={userLocation[1]} isLowEnd={isLowEnd} />
           )}
 
           {userLocation && (
@@ -693,7 +775,7 @@ export function IMapsPage() {
             <Marker 
               key={`zone-${z.zone_name}`}
               position={[z.lat, z.lng]}
-              icon={getCustomIcon(z.zone_name, false)}
+              icon={getCustomIcon(z.zone_name, false, isLowEnd)}
               eventHandlers={{
                 click: () => {
                   // Apabila zon ditekan, auto-zoom in supaya pecah jadi bangunan
@@ -738,7 +820,7 @@ export function IMapsPage() {
               <Marker 
                 key={b.id}
                 position={[b.center_lat, b.center_lng]}
-                icon={getCustomIcon(b.code, isActive)}
+                icon={getCustomIcon(b.code, isActive, isLowEnd)}
                 eventHandlers={{
                   click: () => handleSelectBuildingMapMarker(b)
                 }}
@@ -769,11 +851,15 @@ export function IMapsPage() {
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setIsSidebarOpen(false)}
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-[10000]"
+              className={isLowEnd
+                ? "absolute inset-0 bg-slate-900/80 z-[10000]"
+                : "absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-[10000]"}
             />
             <motion.div 
-              initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              initial={isLowEnd ? { opacity: 0 } : { x: '-100%' }}
+              animate={isLowEnd ? { opacity: 1 } : { x: 0 }}
+              exit={isLowEnd ? { opacity: 0 } : { x: '-100%' }}
+              transition={isLowEnd ? { duration: 0.15 } : { type: 'spring', damping: 25, stiffness: 200 }}
               className="absolute top-0 left-0 bottom-0 w-80 bg-white dark:bg-slate-900 z-[10001] shadow-2xl flex flex-col"
             >
               <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
@@ -911,6 +997,23 @@ export function IMapsPage() {
               </div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* ── RE-CENTER BUTTON (visible in free mode during navigation) ── */}
+      <AnimatePresence>
+        {isNavigating && userLocation && hasZoomedToNavigation && !isFollowingUser && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setIsFollowingUser(true)}
+            className="absolute bottom-[200px] right-4 z-[1001] w-12 h-12 rounded-full bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center text-blue-500 hover:bg-blue-50 dark:hover:bg-slate-800 active:scale-90 transition-colors"
+            title="Kembali ke lokasi saya"
+          >
+            <Navigation className="w-5 h-5" />
+          </motion.button>
         )}
       </AnimatePresence>
 
@@ -1105,14 +1208,14 @@ export function IMapsPage() {
                 <div className="w-full h-32 sm:h-48 bg-slate-100 dark:bg-slate-800 relative">
                   {/* Media Content */}
                   {activeImageTab === 'drone' && activeBuilding.drone_image_url && (
-                    <img src={activeBuilding.drone_image_url} alt="Drone View" className="w-full h-full object-cover" />
+                    <img src={activeBuilding.drone_image_url} alt="Drone View" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                   )}
                   {activeImageTab === 'entrance' && activeBuilding.entrance_image_url && (
-                    <img src={activeBuilding.entrance_image_url} alt="Entrance View" className="w-full h-full object-cover" />
+                    <img src={activeBuilding.entrance_image_url} alt="Entrance View" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                   )}
                   {activeImageTab === 'floorplan' && activeBuilding.floorplan_image_url && (
                     <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowFullscreenImage(activeBuilding.floorplan_image_url!)}>
-                      <img src={activeBuilding.floorplan_image_url} alt="Floorplan View" className="w-full h-full object-contain bg-white dark:bg-slate-900 p-2" />
+                      <img src={activeBuilding.floorplan_image_url} alt="Floorplan View" loading="lazy" decoding="async" className="w-full h-full object-contain bg-white dark:bg-slate-900 p-2" />
                       <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                         <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">Tekan untuk Zoom</span>
                       </div>
@@ -1120,7 +1223,7 @@ export function IMapsPage() {
                   )}
                   {activeImageTab === 'room' && selectedLocation?.image_url && (
                     <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowFullscreenImage(selectedLocation.image_url!)}>
-                      <img src={selectedLocation.image_url} alt="Room View" className="w-full h-full object-cover" />
+                      <img src={selectedLocation.image_url} alt="Room View" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                         <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">Tekan untuk Zoom</span>
                       </div>
@@ -1259,27 +1362,8 @@ export function IMapsPage() {
         )}
       </AnimatePresence>
 
-      {/* ── LIGHTBOX FOR FULLSCREEN IMAGES ── */}
-      <AnimatePresence>
-        {showFullscreenImage && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[3000] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4"
-          >
-            <button 
-              onClick={() => setShowFullscreenImage(null)}
-              className="absolute top-6 right-6 z-10 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <img 
-              src={showFullscreenImage} 
-              alt="Fullscreen View" 
-              className="max-w-full max-h-[85vh] object-contain rounded-lg"
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* duplicate lightbox removed */}
+
 
       {/* ── GLOBAL BOTTOM NAV ── */}
       <BottomNav onOpenSidebar={() => setIsSidebarOpen(true)} />
