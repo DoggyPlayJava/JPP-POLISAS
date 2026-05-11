@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, CircleMarker } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, CircleMarker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { 
@@ -112,6 +112,7 @@ interface Building {
   code: string;
   center_lat: number;
   center_lng: number;
+  zone_name?: string | null;
   drone_image_url: string;
   is_facility?: boolean;
   facility_type?: string;
@@ -129,6 +130,13 @@ interface Location {
   image_url?: string;
   building: Building;
   building_id: string;
+}
+
+interface ZoneMarkerInfo {
+  zone_name: string;
+  lat: number;
+  lng: number;
+  buildings: Building[];
 }
 
 export function IMapsPage() {
@@ -150,8 +158,14 @@ export function IMapsPage() {
   const [isNavigating, setIsNavigating] = useState(false);
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeSidebarTab, setActiveSidebarTab] = useState<'akademik' | 'fasiliti'>('akademik');
+  const [expandedZone, setExpandedZone] = useState<string | null>(null);
   const [expandedBuildingId, setExpandedBuildingId] = useState<string | null>(null);
+  const [expandedFacilityType, setExpandedFacilityType] = useState<string | null>(null);
   const [expandedFloorLevel, setExpandedFloorLevel] = useState<string | null>(null);
+  
+  const [mapZoom, setMapZoom] = useState(16);
+  const [zones, setZones] = useState<ZoneMarkerInfo[]>([]);
 
   const [activeImageTab, setActiveImageTab] = useState<'drone' | 'entrance' | 'floorplan' | 'room'>('drone');
   const [showFullscreenImage, setShowFullscreenImage] = useState<string | null>(null);
@@ -164,6 +178,38 @@ export function IMapsPage() {
   useEffect(() => {
     fetchInitialData();
   }, []);
+
+  useEffect(() => {
+    const zoneMap: Record<string, Building[]> = {};
+    allBuildings.forEach(b => {
+      if (b.zone_name && b.center_lat && b.center_lng) {
+        if (!zoneMap[b.zone_name]) zoneMap[b.zone_name] = [];
+        zoneMap[b.zone_name].push(b);
+      }
+    });
+
+    const parsedZones: ZoneMarkerInfo[] = [];
+    Object.entries(zoneMap).forEach(([zone_name, buildings]) => {
+      const sumLat = buildings.reduce((acc, b) => acc + b.center_lat, 0);
+      const sumLng = buildings.reduce((acc, b) => acc + b.center_lng, 0);
+      parsedZones.push({
+        zone_name,
+        lat: sumLat / buildings.length,
+        lng: sumLng / buildings.length,
+        buildings
+      });
+    });
+    setZones(parsedZones);
+  }, [allBuildings]);
+
+  const ZoomTracker = () => {
+    useMapEvents({
+      zoomend: (e) => {
+        setMapZoom(e.target.getZoom());
+      }
+    });
+    return null;
+  };
 
   const fetchInitialData = async () => {
     // Check if user is admin or jpp_hq
@@ -508,6 +554,7 @@ export function IMapsPage() {
             url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
             maxZoom={20}
           />
+          <ZoomTracker />
 
           {!isNavigating && activeBuilding?.center_lat && (
             <MapRecenter 
@@ -531,9 +578,31 @@ export function IMapsPage() {
             </Marker>
           )}
 
+          {/* Render Zones when zoomed out */}
+          {mapZoom < 17 && zones.map(z => (
+            <Marker 
+              key={`zone-${z.zone_name}`}
+              position={[z.lat, z.lng]}
+              icon={getCustomIcon(z.zone_name, false)}
+              eventHandlers={{
+                click: () => {
+                  // Apabila zon ditekan, auto-zoom in supaya pecah jadi bangunan
+                  const map = z.buildings[0];
+                  if (map) {
+                     // We just fake an active building select so it centers and zooms in
+                     handleSelectBuildingMapMarker(map);
+                  }
+                }
+              }}
+            />
+          ))}
+
           {allBuildings.map(b => {
             if (!b.center_lat) return null;
             const isActive = activeBuilding?.id === b.id;
+            
+            // Sembunyikan bangunan dalam zon kalau masih zoom out, TAPI biarkan kalau bangunan tu tengah aktif (dipilih)
+            if (b.zone_name && mapZoom < 17 && !isActive) return null;
             
             return (
               <Marker 
@@ -586,80 +655,129 @@ export function IMapsPage() {
                   <X className="w-5 h-5 text-slate-500" />
                 </button>
               </div>
-              
+              <div className="p-2 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+                  <button onClick={() => setActiveSidebarTab('akademik')} className={cn("flex-1 text-xs font-bold py-2 rounded-lg transition-all", activeSidebarTab === 'akademik' ? "bg-white dark:bg-slate-700 shadow text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300")}>Zon / Jabatan</button>
+                  <button onClick={() => setActiveSidebarTab('fasiliti')} className={cn("flex-1 text-xs font-bold py-2 rounded-lg transition-all", activeSidebarTab === 'fasiliti' ? "bg-white dark:bg-slate-700 shadow text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300")}>Fasiliti Utama</button>
+                </div>
+              </div>
+
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                {allBuildings.map(b => {
-                  const isExpanded = expandedBuildingId === b.id;
-                  const floors = getFloorsForBuilding(b.id);
-                  
-                  return (
-                    <div key={b.id} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800">
-                      <button 
-                        onClick={() => setExpandedBuildingId(isExpanded ? null : b.id)}
-                        className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center">
-                            <Building2 className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-sm text-slate-800 dark:text-white leading-tight">{b.name}</p>
-                            <p className="text-[10px] font-black text-slate-400 mt-0.5">{b.code}</p>
-                          </div>
-                        </div>
-                        {isExpanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                      </button>
-                      
-                      <AnimatePresence>
-                        {isExpanded && (
-                          <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
-                            {floors.length === 0 ? (
-                              <p className="p-4 text-xs font-bold text-slate-400 text-center italic">Tiada data kelas.</p>
-                            ) : (
-                              <div className="py-2">
-                                {floors.map(f => {
-                                  const floorId = `${b.id}-floor-${f}`;
-                                  const isFloorExpanded = expandedFloorLevel === floorId;
-                                  const locs = getLocationsForBuilding(b.id).filter(l => l.floor_level === f);
-                                  
-                                  return (
-                                    <div key={floorId} className="px-2">
-                                      <button 
-                                        onClick={() => setExpandedFloorLevel(isFloorExpanded ? null : floorId)}
-                                        className="w-full py-2 px-3 flex items-center justify-between text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors"
-                                      >
-                                        <span className="text-sm font-bold text-slate-600 dark:text-slate-300">Aras {f === 0 ? 'G (Bawah)' : f}</span>
-                                        {isFloorExpanded ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />}
-                                      </button>
-                                      
-                                      <AnimatePresence>
-                                        {isFloorExpanded && (
-                                          <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden px-4 pb-2">
-                                            <div className="grid grid-cols-2 gap-2 mt-2">
-                                              {locs.map(l => (
-                                                <button
-                                                  key={l.id}
-                                                  onClick={() => handleSelectLocation(l)}
-                                                  className="py-1.5 px-2 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg text-xs font-black text-slate-700 dark:text-slate-200 text-center hover:border-sky-500/50 transition-colors"
-                                                >
-                                                  {l.room_code}
-                                                </button>
-                                              ))}
-                                            </div>
-                                          </motion.div>
-                                        )}
-                                      </AnimatePresence>
-                                    </div>
-                                  );
-                                })}
+                {activeSidebarTab === 'akademik' && (
+                  <>
+                    {zones.map(z => {
+                      const isZoneExpanded = expandedZone === z.zone_name;
+                      return (
+                        <div key={`sidebar-zone-${z.zone_name}`} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800">
+                          <button 
+                            onClick={() => setExpandedZone(isZoneExpanded ? null : z.zone_name)}
+                            className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+                                <Building2 className="w-4 h-4" />
                               </div>
+                              <p className="font-bold text-sm text-slate-800 dark:text-white leading-tight">Zon {z.zone_name}</p>
+                            </div>
+                            {isZoneExpanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+                          </button>
+                          
+                          <AnimatePresence>
+                            {isZoneExpanded && (
+                              <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 px-3 py-2 space-y-1">
+                                {z.buildings.map(b => (
+                                  <button
+                                    key={b.id}
+                                    onClick={() => {
+                                      handleSelectBuildingMapMarker(b);
+                                      setIsSidebarOpen(false);
+                                    }}
+                                    className="w-full py-2 px-3 flex flex-col text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors"
+                                  >
+                                    <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{b.name}</span>
+                                    <span className="text-[10px] font-black text-slate-400">{b.code}</span>
+                                  </button>
+                                ))}
+                              </motion.div>
                             )}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                })}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    })}
+                    
+                    {allBuildings.filter(b => !b.zone_name && !b.is_facility).map(b => (
+                      <div key={b.id} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800">
+                         <button 
+                            onClick={() => {
+                              handleSelectBuildingMapMarker(b);
+                              setIsSidebarOpen(false);
+                            }}
+                            className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+                                <Building2 className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <p className="font-bold text-sm text-slate-800 dark:text-white leading-tight">{b.name}</p>
+                                <p className="text-[10px] font-black text-slate-400 mt-0.5">{b.code}</p>
+                              </div>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-slate-400" />
+                          </button>
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {activeSidebarTab === 'fasiliti' && (() => {
+                  const facilityMap: Record<string, Building[]> = {};
+                  allBuildings.filter(b => b.is_facility).forEach(b => {
+                    const type = b.facility_type || 'Lain-lain';
+                    if (!facilityMap[type]) facilityMap[type] = [];
+                    facilityMap[type].push(b);
+                  });
+
+                  return Object.entries(facilityMap).map(([type, facilities]) => {
+                    const isTypeExpanded = expandedFacilityType === type;
+                    return (
+                      <div key={`facility-type-${type}`} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800">
+                        <button 
+                          onClick={() => setExpandedFacilityType(isTypeExpanded ? null : type)}
+                          className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                              <MapPin className="w-4 h-4" />
+                            </div>
+                            <p className="font-bold text-sm text-slate-800 dark:text-white leading-tight">{type}</p>
+                          </div>
+                          {isTypeExpanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+                        </button>
+                        
+                        <AnimatePresence>
+                          {isTypeExpanded && (
+                            <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 px-3 py-2 space-y-1">
+                              {facilities.map(b => (
+                                <button
+                                  key={b.id}
+                                  onClick={() => {
+                                    handleSelectBuildingMapMarker(b);
+                                    setIsSidebarOpen(false);
+                                  }}
+                                  className="w-full py-2 px-3 flex flex-col text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors"
+                                >
+                                  <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{b.name}</span>
+                                  <span className="text-[10px] font-black text-slate-400">{b.code}</span>
+                                </button>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             </motion.div>
           </>

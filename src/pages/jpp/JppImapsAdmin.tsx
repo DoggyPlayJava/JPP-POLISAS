@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, CircleMarker, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { 
@@ -20,7 +20,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-function LocationPickerMap({ lat, lng, onChange }: { lat: number, lng: number, onChange: (lat: number, lng: number) => void }) {
+function LocationPickerMap({ lat, lng, onChange, existingBuildings }: { lat: number, lng: number, onChange: (lat: number, lng: number) => void, existingBuildings?: Building[] }) {
   const MapEvents = () => {
     useMapEvents({
       click(e) {
@@ -43,6 +43,18 @@ function LocationPickerMap({ lat, lng, onChange }: { lat: number, lng: number, o
           maxZoom={20}
         />
         <MapEvents />
+        {existingBuildings?.map(b => b.center_lat && b.center_lng && (
+          <CircleMarker 
+            key={b.id} 
+            center={[b.center_lat, b.center_lng]} 
+            radius={8} 
+            pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.6, weight: 2 }}
+          >
+            <Tooltip direction="top" offset={[0, -10]} opacity={0.8}>
+              <span className="font-bold text-[10px] uppercase tracking-widest">{b.code || b.name}</span>
+            </Tooltip>
+          </CircleMarker>
+        ))}
         {lat && lng ? (
           <Marker position={[lat, lng]} />
         ) : null}
@@ -61,6 +73,7 @@ interface Building {
   description: string;
   center_lat: number;
   center_lng: number;
+  zone_name?: string | null;
   drone_image_url: string;
   is_facility?: boolean;
   facility_type?: string;
@@ -478,6 +491,10 @@ export function JppImapsAdmin() {
                   <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">Kod (Singkatan)</label>
                   <input type="text" value={currentBuilding.code || ''} onChange={e => setCurrentBuilding({...currentBuilding, code: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all" placeholder="Contoh: JKE" />
                 </div>
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">Nama Zon (Pilihan)</label>
+                  <input type="text" value={currentBuilding.zone_name || ''} onChange={e => setCurrentBuilding({...currentBuilding, zone_name: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all" placeholder="Contoh: JKE (Untuk kumpulkan bangunan)" />
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">Latitude</label>
@@ -488,12 +505,16 @@ export function JppImapsAdmin() {
                     <input type="number" step="any" value={currentBuilding.center_lng || ''} onChange={e => setCurrentBuilding({...currentBuilding, center_lng: parseFloat(e.target.value)})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all" placeholder="103.123456" />
                   </div>
                 </div>
-                
-                <LocationPickerMap 
-                  lat={currentBuilding.center_lat} 
-                  lng={currentBuilding.center_lng} 
-                  onChange={(lat, lng) => setCurrentBuilding({...currentBuilding, center_lat: parseFloat(lat.toFixed(6)), center_lng: parseFloat(lng.toFixed(6))})} 
-                />
+
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">Koordinat GPS</label>
+                  <LocationPickerMap 
+                    lat={currentBuilding.center_lat || 0} 
+                    lng={currentBuilding.center_lng || 0} 
+                    onChange={(lat, lng) => setCurrentBuilding({...currentBuilding, center_lat: parseFloat(lat.toFixed(6)), center_lng: parseFloat(lng.toFixed(6))})} 
+                    existingBuildings={buildings}
+                  />
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {(['drone_image_url', 'floorplan_image_url', 'entrance_image_url'] as const).map(field => {
