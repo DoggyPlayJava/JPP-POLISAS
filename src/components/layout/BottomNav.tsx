@@ -4,7 +4,7 @@ import {
   Menu, Bell, User, Plus, X, Search, Sparkles, QrCode, 
   Ticket, Home, Megaphone, CalendarRange, Flag, 
   Store, ShieldAlert, Building2, HeartHandshake, Landmark, Lightbulb, Crown,
-  Bike
+  Bike, Map
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -162,6 +162,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks }: BottomNa
                   }
                 }}
               >
+                <QuickActionButton icon={Map} label="iMaps" color="bg-sky-500" onClick={() => handleQuickAction('/imaps')} />
                 <QuickActionButton icon={CalendarRange} label="Takwim" color="bg-blue-500" onClick={() => handleQuickAction('/akademik/takwim')} />
                 <QuickActionButton icon={HeartHandshake} label="Aduan" color="bg-teal-500" onClick={() => handleQuickAction('/kebajikan/buat-aduan')} />
                 <QuickActionButton icon={Store} label="PolyMart" color="bg-emerald-500" onClick={() => { setIsActionsOpen(false); setShowPolymartModal(true); }} />

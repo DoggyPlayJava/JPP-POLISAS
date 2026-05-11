@@ -5,7 +5,7 @@ import {
   Lock, ShieldCheck, Palette, Settings, Megaphone,
   Briefcase, CalendarDays, FileWarning, Sparkles,
   Zap, FileText, ClipboardCheck, ChevronDown, ExternalLink, Store,
-  ChevronLeft, LayoutGrid, Building2, QrCode, Activity,
+  ChevronLeft, LayoutGrid, Building2, QrCode, Activity, Map,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -253,6 +253,7 @@ export function JppSidebar() {
           { icon: Users,           label: 'Ahli JPP',        href: '/jpp/members',  end: false },
           { icon: BarChart3,       label: 'Sistem Keseluruhan', href: '/jpp/overview', end: false },
           { icon: CalendarDays,    label: 'Takwim Global',   href: '/jpp/takwim',   end: false },
+          { icon: Map,             label: 'Pentadbiran iMaps', href: '/jpp/imaps',  end: false },
         ].map(item => (
           <NavLink
             key={item.href}

@@ -41,6 +41,7 @@ const KarnivalAdminResults    = lazy(() => import('./pages/karnival/admin/Karniv
 const NexusPage = lazy(() => import('./pages/NexusPage').then(m => ({ default: m.NexusPage })));
 const PortalPage = lazy(() => import('./pages/PortalPage').then(m => ({ default: m.PortalPage })));
 const NotifikasiPage = lazy(() => import('./pages/NotifikasiPage').then(m => ({ default: m.NotifikasiPage })));
+const IMapsPage = lazy(() => import('./pages/imaps/IMapsPage').then(m => ({ default: m.IMapsPage })));
 // ── JPP HQ Portal ──
 const JppLayout = lazy(() => import('./pages/jpp/JppLayout').then(m => ({ default: m.JppLayout })));
 const JppHomePage = lazy(() => import('./pages/jpp/JppHomePage').then(m => ({ default: m.JppHomePage })));
@@ -48,6 +49,7 @@ const JppMembersPage = lazy(() => import('./pages/jpp/JppMembersPage').then(m =>
 const JppOverviewPage = lazy(() => import('./pages/jpp/JppOverviewPage').then(m => ({ default: m.JppOverviewPage })));
 const JppUnitDashboard = lazy(() => import('./pages/jpp/JppUnitDashboard').then(m => ({ default: m.JppUnitDashboard })));
 const AnnouncementsPage = lazy(() => import('./pages/jpp/AnnouncementsPage').then(m => ({ default: m.default || m.AnnouncementsPage })));
+const JppImapsAdmin = lazy(() => import('./pages/jpp/JppImapsAdmin').then(m => ({ default: m.JppImapsAdmin })));
 
 // ── Exco Reporting System ──
 const ExcoAktivitiWrapper = lazy(() => import('./pages/jpp/ExcoWrappers').then(m => ({ default: m.ExcoAktivitiWrapper })));
@@ -248,6 +250,9 @@ function AppRoutes() {
         {/* 🌐 PORTAL HUB — standalone tanpa sidebar */}
         <Route path="/portal" element={<RequireApproval><PortalPage /></RequireApproval>} />
 
+        {/* 🗺️ iMAPS — standalone tanpa sidebar */}
+        <Route path="/imaps" element={<RequireApproval><IMapsPage /></RequireApproval>} />
+
         {/* 🔔 NOTIFIKASI — standalone tanpa sidebar */}
         <Route path="/notifikasi" element={<RequireApproval><NotifikasiPage /></RequireApproval>} />
 
@@ -280,6 +285,7 @@ function AppRoutes() {
           <Route path="/jpp/announcements"    element={<AnnouncementsPage />} />
           <Route path="/jpp/users"            element={<JppUsersPage />} />
           <Route path="/jpp/takwim"           element={<JppTakwimPage />} />
+          <Route path="/jpp/imaps"            element={<JppImapsAdmin />} />
           <Route path="/jpp/logs"             element={<JppLogsPage />} />
           <Route path="/jpp/settings"         element={<JppSettingsPage />} />
           <Route path="/jpp/nexus"            element={<JppNexusPage />} />
