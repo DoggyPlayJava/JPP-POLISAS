@@ -17,6 +17,12 @@ interface Building {
   center_lat: number;
   center_lng: number;
   drone_image_url: string;
+  is_facility?: boolean;
+  facility_type?: string;
+  op_start?: string;
+  op_end?: string;
+  floorplan_image_url?: string;
+  entrance_image_url?: string;
 }
 
 interface Location {
@@ -389,10 +395,66 @@ export function JppImapsAdmin() {
                     <input type="number" step="any" value={currentBuilding.center_lng || ''} onChange={e => setCurrentBuilding({...currentBuilding, center_lng: parseFloat(e.target.value)})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all" placeholder="103.123456" />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">URL Gambar Dron (Supabase Storage)</label>
-                  <input type="text" value={currentBuilding.drone_image_url || ''} onChange={e => setCurrentBuilding({...currentBuilding, drone_image_url: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all" placeholder="https://..." />
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">URL Dron</label>
+                    <input type="text" value={currentBuilding.drone_image_url || ''} onChange={e => setCurrentBuilding({...currentBuilding, drone_image_url: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all" placeholder="https://..." />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">URL Pelan Lantai</label>
+                    <input type="text" value={currentBuilding.floorplan_image_url || ''} onChange={e => setCurrentBuilding({...currentBuilding, floorplan_image_url: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all" placeholder="https://..." />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">URL Pintu Masuk</label>
+                    <input type="text" value={currentBuilding.entrance_image_url || ''} onChange={e => setCurrentBuilding({...currentBuilding, entrance_image_url: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all" placeholder="https://..." />
+                  </div>
                 </div>
+
+                <div className="p-4 rounded-xl border border-white/10 bg-white/5 space-y-4">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <div className="relative flex items-center">
+                      <input 
+                        type="checkbox" 
+                        checked={currentBuilding.is_facility || false}
+                        onChange={e => setCurrentBuilding({...currentBuilding, is_facility: e.target.checked})}
+                        className="peer sr-only"
+                      />
+                      <div className="w-10 h-6 bg-black/40 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500"></div>
+                    </div>
+                    <span className="text-sm font-bold text-white">Bangunan ini adalah Fasiliti Utama (Ada Waktu Operasi)</span>
+                  </label>
+
+                  {currentBuilding.is_facility && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-white/10">
+                      <div>
+                        <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">Kategori Fasiliti</label>
+                        <select 
+                          value={currentBuilding.facility_type || ''} 
+                          onChange={e => setCurrentBuilding({...currentBuilding, facility_type: e.target.value})}
+                          className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all appearance-none"
+                        >
+                          <option value="" disabled className="bg-slate-900">Pilih...</option>
+                          <option value="cafe" className="bg-slate-900">Kafe</option>
+                          <option value="surau" className="bg-slate-900">Surau / Masjid</option>
+                          <option value="toilet" className="bg-slate-900">Tandas Umum</option>
+                          <option value="library" className="bg-slate-900">Perpustakaan</option>
+                          <option value="atm" className="bg-slate-900">Mesin ATM</option>
+                          <option value="admin" className="bg-slate-900">Pentadbiran (HEPA dsb.)</option>
+                          <option value="other" className="bg-slate-900">Lain-lain</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">Buka (08:00)</label>
+                        <input type="time" value={currentBuilding.op_start || ''} onChange={e => setCurrentBuilding({...currentBuilding, op_start: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">Tutup (17:00)</label>
+                        <input type="time" value={currentBuilding.op_end || ''} onChange={e => setCurrentBuilding({...currentBuilding, op_end: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div>
                   <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">Penerangan</label>
                   <textarea rows={2} value={currentBuilding.description || ''} onChange={e => setCurrentBuilding({...currentBuilding, description: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all resize-none" placeholder="Maklumat ringkas..." />
@@ -449,7 +511,8 @@ export function JppImapsAdmin() {
 
                 <div>
                   <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">Panduan Arah Spesifik (Dalam Bangunan)</label>
-                  <textarea rows={3} value={currentLocation.direction_text || ''} onChange={e => setCurrentLocation({...currentLocation, direction_text: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-all resize-none" placeholder="Cth: Naik tangga utama, kelas berada di sebelah kiri hujung koridor." />
+                  <p className="text-[10px] text-white/30 mb-2 font-medium">Tips: Tekan 'Enter' untuk baris baharu jika ingin jadikan ia panduan Langkah-Demi-Langkah (Step-by-Step).</p>
+                  <textarea rows={4} value={currentLocation.direction_text || ''} onChange={e => setCurrentLocation({...currentLocation, direction_text: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-all resize-none leading-relaxed" placeholder="Contoh:&#10;Naik tangga utama.&#10;Belok ke kanan lorong makmal.&#10;Bilik di hujung sekali." />
                 </div>
 
                 <div>

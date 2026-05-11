@@ -1,13 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { ArrowLeft, Search, Navigation, MapPin, Building2, Layers, Clock } from 'lucide-react';
+import { 
+  Search, Navigation, MapPin, Building2, Layers, Clock, X, Menu, 
+  ChevronDown, ChevronRight, Share2, Coffee, Moon, Droplets, 
+  CreditCard, BookOpen, ImageIcon, Map as MapIcon, DoorOpen 
+} from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+import { BottomNav } from '@/components/layout/BottomNav';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -17,7 +22,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Custom User Location Icon
+// Custom Icons
 const userIcon = new L.Icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
@@ -27,7 +32,6 @@ const userIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-// Custom Destination Icon
 const destinationIcon = new L.Icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
@@ -37,7 +41,6 @@ const destinationIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-// Default Building Icon
 const buildingIcon = new L.Icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
@@ -47,7 +50,6 @@ const buildingIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-// Component to recenter map when destination changes
 function MapRecenter({ center, zoom }: { center: [number, number], zoom: number }) {
   const map = useMap();
   useEffect(() => {
@@ -56,9 +58,8 @@ function MapRecenter({ center, zoom }: { center: [number, number], zoom: number 
   return null;
 }
 
-// Calculate ETA based on straight-line distance (haversine) and walking speed
 function calculateWalkingETA(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371; // km
+  const R = 6371; 
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
   const a = 
@@ -67,12 +68,23 @@ function calculateWalkingETA(lat1: number, lon1: number, lat2: number, lon2: num
     Math.sin(dLon / 2) * Math.sin(dLon / 2); 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
   const distance = R * c;
-  
-  const walkingSpeedKmH = 4.5;
-  const timeMinutes = Math.ceil((distance / walkingSpeedKmH) * 60);
-  
-  // Add 1 min penalty for indoor finding
+  const timeMinutes = Math.ceil((distance / 4.5) * 60);
   return timeMinutes + 1;
+}
+
+function calculateDistanceInMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371e3; // metres
+  const phi1 = lat1 * Math.PI/180;
+  const phi2 = lat2 * Math.PI/180;
+  const dPhi = (lat2 - lat1) * Math.PI/180;
+  const dLambda = (lon2 - lon1) * Math.PI/180;
+
+  const a = Math.sin(dPhi / 2) * Math.sin(dPhi / 2) +
+          Math.cos(phi1) * Math.cos(phi2) *
+          Math.sin(dLambda / 2) * Math.sin(dLambda / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
 }
 
 interface Building {
@@ -82,6 +94,12 @@ interface Building {
   center_lat: number;
   center_lng: number;
   drone_image_url: string;
+  is_facility?: boolean;
+  facility_type?: string;
+  op_start?: string;
+  op_end?: string;
+  floorplan_image_url?: string;
+  entrance_image_url?: string;
 }
 
 interface Location {
@@ -90,32 +108,75 @@ interface Location {
   floor_level: number;
   direction_text: string;
   building: Building;
+  building_id: string;
 }
 
 export function IMapsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Location[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
   
   const [allBuildings, setAllBuildings] = useState<Building[]>([]);
+  const [allLocations, setAllLocations] = useState<Location[]>([]);
+  
   const [activeBuilding, setActiveBuilding] = useState<Building | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
 
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [expandedBuildingId, setExpandedBuildingId] = useState<string | null>(null);
+  const [expandedFloorLevel, setExpandedFloorLevel] = useState<string | null>(null);
 
-  // POLISAS Center Coordinates
+  const [activeImageTab, setActiveImageTab] = useState<'drone' | 'entrance' | 'floorplan'>('drone');
+  const [showFullscreenImage, setShowFullscreenImage] = useState<string | null>(null);
+  
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
+
   const polisasCenter: [number, number] = [3.8569, 103.3283];
 
   useEffect(() => {
-    fetchAllBuildings();
-    fetchLocations('');
+    fetchInitialData();
   }, []);
 
-  const fetchAllBuildings = async () => {
-    const { data } = await supabase.from('imaps_buildings').select('*');
-    if (data) setAllBuildings(data);
+  const fetchInitialData = async () => {
+    // Check if user is admin or jpp_hq
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      const { data: user } = await supabase.from('users').select('role').eq('id', session.user.id).single();
+      if (user && (user.role === 'admin' || user.role === 'jpp_hq')) {
+        setIsAdmin(true);
+      }
+    }
+
+    const { data: bData } = await supabase.from('imaps_buildings').select('*').order('name');
+    if (bData) setAllBuildings(bData);
+    
+    // Fetch all locations for the sidebar explorer
+    const { data: lData } = await supabase.from('imaps_locations').select('*, building:building_id(*)').order('floor_level');
+    if (lData) {
+      const formatted = lData.map((item: any) => ({
+        ...item,
+        building: Array.isArray(item.building) ? item.building[0] : item.building
+      }));
+      setAllLocations(formatted);
+    }
+    
+    // Handle Deep Link (?b=building_id)
+    const searchParams = new URLSearchParams(window.location.search);
+    const bId = searchParams.get('b');
+    if (bId && bData) {
+      const targetBuilding = bData.find(b => b.id === bId);
+      if (targetBuilding) {
+        handleSelectBuildingMapMarker(targetBuilding);
+      }
+    }
   };
 
   const fetchLocations = async (query: string) => {
@@ -127,7 +188,6 @@ export function IMapsPage() {
     setIsSearching(true);
     try {
       const q = query.toLowerCase();
-      // Search buildings locally
       const matchedBuildings = allBuildings.filter(b => 
         b.name.toLowerCase().includes(q) || b.code.toLowerCase().includes(q)
       );
@@ -158,7 +218,6 @@ export function IMapsPage() {
         building: Array.isArray(item.building) ? item.building[0] : item.building
       })) as Location[];
 
-      // Combine building results and location results
       setSearchResults([...buildingResults, ...formattedData]);
     } catch (error) {
       console.error('Error fetching locations:', error);
@@ -175,16 +234,63 @@ export function IMapsPage() {
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery]);
 
+  useEffect(() => {
+    if (activeFilter) {
+      let filtered = allBuildings.filter(b => b.facility_type === activeFilter);
+      
+      const mapped = filtered.map(b => {
+        let eta = null;
+        if (userLocation && b.center_lat) {
+          eta = calculateWalkingETA(userLocation[0], userLocation[1], b.center_lat, b.center_lng);
+        }
+        return {
+          id: `b-${b.id}`,
+          room_code: b.name,
+          floor_level: eta, // We'll hijack floor_level temporarily to store ETA for sorting/display
+          direction_text: '',
+          building: b
+        } as unknown as Location;
+      });
+
+      // Sort by ETA (closest first) if GPS is available
+      if (userLocation) {
+        mapped.sort((a, b) => (a.floor_level || 999) - (b.floor_level || 999));
+      }
+
+      setSearchResults(mapped);
+    } else if (!searchQuery) {
+      setSearchResults([]);
+    }
+  }, [activeFilter, userLocation, allBuildings]);
+
   const handleSelectLocation = (loc: Location) => {
     setSelectedLocation(loc);
     setActiveBuilding(loc.building);
+    setActiveImageTab('drone');
+    setCurrentStep(0);
     setSearchQuery('');
     setSearchResults([]);
+    setActiveFilter(null);
+    setIsSidebarOpen(false);
   };
 
   const handleSelectBuildingMapMarker = (b: Building) => {
     setSelectedLocation(null);
     setActiveBuilding(b);
+  };
+
+  const dismissCard = () => {
+    setActiveBuilding(null);
+    setSelectedLocation(null);
+    setIsNavigating(false);
+    setCurrentStep(0);
+  };
+
+  const startNavigation = () => {
+    setIsNavigating(true);
+    if (!userLocation) {
+      locateUser();
+    }
   };
 
   const locateUser = () => {
@@ -210,6 +316,29 @@ export function IMapsPage() {
     );
   };
 
+  // Continuous GPS Tracking during Navigation
+  useEffect(() => {
+    let watchId: number;
+
+    if (isNavigating && navigator.geolocation) {
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          setUserLocation([position.coords.latitude, position.coords.longitude]);
+        },
+        (error) => {
+          console.error("Continuous GPS error:", error);
+        },
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+      );
+    }
+
+    return () => {
+      if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, [isNavigating]);
+
   const etaMinutes = useMemo(() => {
     if (userLocation && activeBuilding?.center_lat) {
       return calculateWalkingETA(
@@ -220,18 +349,60 @@ export function IMapsPage() {
     return null;
   }, [userLocation, activeBuilding]);
 
+  // Sidebar Grouping Logic
+  const getLocationsForBuilding = (bId: string) => allLocations.filter(l => l.building_id === bId);
+  const getFloorsForBuilding = (bId: string) => {
+    const locs = getLocationsForBuilding(bId);
+    const floors = Array.from(new Set(locs.map(l => l.floor_level))).sort((a, b) => a - b);
+    return floors;
+  };
+
+  // Live Status Logic
+  const checkIsOpen = (start?: string, end?: string) => {
+    if (!start || !end) return false;
+    const now = new Date();
+    const currentMins = now.getHours() * 60 + now.getMinutes();
+    
+    const [startH, startM] = start.split(':').map(Number);
+    const startMins = startH * 60 + startM;
+    
+    const [endH, endM] = end.split(':').map(Number);
+    const endMins = endH * 60 + endM;
+    
+    return currentMins >= startMins && currentMins <= endMins;
+  };
+
+  const handleShare = () => {
+    if (!activeBuilding) return;
+    const url = `${window.location.origin}${window.location.pathname}?b=${activeBuilding.id}`;
+    navigator.clipboard.writeText(`📍 Lihat lokasi ${activeBuilding.name} di iMaps POLISAS:\n${url}`);
+    toast.success('Pautan disalin!');
+  };
+
+  const handleFilterClick = (filter: string) => {
+    if (activeFilter === filter) {
+      setActiveFilter(null);
+    } else {
+      setActiveFilter(filter);
+      if (!userLocation) {
+        locateUser(); // Auto trigger GPS to calculate nearest facility
+      }
+    }
+  };
+
   return (
     <div className="h-screen w-screen flex flex-col relative bg-slate-50 dark:bg-slate-950 overflow-hidden">
+      
       {/* ── HEADER & SEARCH BAR ── */}
       <div className="absolute top-0 left-0 right-0 z-[1000] p-4 pt-safe-top pointer-events-none">
-        <div className="max-w-md mx-auto space-y-4 pointer-events-auto">
+        <div className="max-w-md mx-auto space-y-3 pointer-events-auto">
           {/* Top Bar */}
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate('/portal')}
+              onClick={() => setIsSidebarOpen(true)}
               className="w-10 h-10 rounded-full bg-white dark:bg-slate-900 shadow-lg border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-800 dark:text-white shrink-0 hover:scale-105 active:scale-95 transition-transform"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <Menu className="w-5 h-5" />
             </button>
             <div className="flex-1 bg-white dark:bg-slate-900 shadow-lg border border-slate-200 dark:border-slate-800 rounded-full px-4 py-2.5 flex items-center gap-3">
               <Search className="w-5 h-5 text-slate-400" />
@@ -240,9 +411,31 @@ export function IMapsPage() {
                 placeholder="Cari kelas (Cth: A301, JKM)..."
                 className="flex-1 bg-transparent border-none outline-none text-sm font-bold text-slate-800 dark:text-white placeholder:text-slate-400"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setActiveFilter(null);
+                }}
               />
             </div>
+          </div>
+
+          {/* Quick Filters */}
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            <button
+              onClick={() => setActiveFilter(null)}
+              className={cn("px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border shadow-sm", !activeFilter ? "bg-slate-800 text-white border-slate-800 dark:bg-white dark:text-slate-900" : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700")}
+            >
+              Semua
+            </button>
+            <button onClick={() => handleFilterClick('cafe')} className={cn("px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm", activeFilter === 'cafe' ? "bg-amber-500 text-white border-amber-500" : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700")}>
+              <Coffee className="w-3.5 h-3.5" /> Kafe
+            </button>
+            <button onClick={() => handleFilterClick('surau')} className={cn("px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm", activeFilter === 'surau' ? "bg-emerald-500 text-white border-emerald-500" : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700")}>
+              <Moon className="w-3.5 h-3.5" /> Surau
+            </button>
+            <button onClick={() => handleFilterClick('toilet')} className={cn("px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 shadow-sm", activeFilter === 'toilet' ? "bg-sky-500 text-white border-sky-500" : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700")}>
+              <Droplets className="w-3.5 h-3.5" /> Tandas
+            </button>
           </div>
 
           {/* Search Results Dropdown */}
@@ -265,7 +458,14 @@ export function IMapsPage() {
                     </div>
                     <div>
                       <p className="font-black text-slate-800 dark:text-white">{loc.room_code}</p>
-                      <p className="text-xs font-bold text-slate-500">{loc.building?.name}</p>
+                      <p className="text-xs font-bold text-slate-500 flex items-center gap-2">
+                        {loc.building?.name}
+                        {activeFilter && loc.floor_level > 0 && (
+                          <span className="text-sky-500 flex items-center gap-1 bg-sky-500/10 px-1.5 py-0.5 rounded">
+                            <Clock className="w-3 h-3" /> {loc.floor_level} min
+                          </span>
+                        )}
+                      </p>
                     </div>
                   </button>
                 ))}
@@ -276,7 +476,7 @@ export function IMapsPage() {
       </div>
 
       {/* ── MAP CONTAINER ── */}
-      <div className="flex-1 w-full relative z-0">
+      <div className="flex-1 w-full relative z-0 pb-20">
         <MapContainer 
           center={polisasCenter} 
           zoom={16} 
@@ -284,8 +484,9 @@ export function IMapsPage() {
           zoomControl={false}
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.google.com/maps">Google Maps</a>'
+            url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+            maxZoom={20}
           />
 
           {activeBuilding?.center_lat && (
@@ -301,7 +502,6 @@ export function IMapsPage() {
             </Marker>
           )}
 
-          {/* Render All Buildings */}
           {allBuildings.map(b => {
             if (!b.center_lat) return null;
             const isActive = activeBuilding?.id === b.id;
@@ -319,8 +519,7 @@ export function IMapsPage() {
             );
           })}
 
-          {/* Draw Polyline if both user and destination are known */}
-          {userLocation && activeBuilding && activeBuilding.center_lat && (
+          {isNavigating && userLocation && activeBuilding && activeBuilding.center_lat && (
             <Polyline 
               positions={[
                 userLocation,
@@ -335,77 +534,324 @@ export function IMapsPage() {
         </MapContainer>
       </div>
 
+      {/* ── EXPLORE SIDEBAR ── */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setIsSidebarOpen(false)}
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-[2000]"
+            />
+            <motion.div 
+              initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="absolute top-0 left-0 bottom-0 w-80 bg-white dark:bg-slate-900 z-[2001] shadow-2xl flex flex-col"
+            >
+              <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-black text-slate-800 dark:text-white">Direktori</h2>
+                  <p className="text-xs font-bold text-slate-500">Terokai Bangunan & Kelas</p>
+                </div>
+                <button onClick={() => setIsSidebarOpen(false)} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                  <X className="w-5 h-5 text-slate-500" />
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                {allBuildings.map(b => {
+                  const isExpanded = expandedBuildingId === b.id;
+                  const floors = getFloorsForBuilding(b.id);
+                  
+                  return (
+                    <div key={b.id} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800">
+                      <button 
+                        onClick={() => setExpandedBuildingId(isExpanded ? null : b.id)}
+                        className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+                            <Building2 className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm text-slate-800 dark:text-white leading-tight">{b.name}</p>
+                            <p className="text-[10px] font-black text-slate-400 mt-0.5">{b.code}</p>
+                          </div>
+                        </div>
+                        {isExpanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+                      </button>
+                      
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                            {floors.length === 0 ? (
+                              <p className="p-4 text-xs font-bold text-slate-400 text-center italic">Tiada data kelas.</p>
+                            ) : (
+                              <div className="py-2">
+                                {floors.map(f => {
+                                  const floorId = `${b.id}-floor-${f}`;
+                                  const isFloorExpanded = expandedFloorLevel === floorId;
+                                  const locs = getLocationsForBuilding(b.id).filter(l => l.floor_level === f);
+                                  
+                                  return (
+                                    <div key={floorId} className="px-2">
+                                      <button 
+                                        onClick={() => setExpandedFloorLevel(isFloorExpanded ? null : floorId)}
+                                        className="w-full py-2 px-3 flex items-center justify-between text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors"
+                                      >
+                                        <span className="text-sm font-bold text-slate-600 dark:text-slate-300">Aras {f === 0 ? 'G (Bawah)' : f}</span>
+                                        {isFloorExpanded ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />}
+                                      </button>
+                                      
+                                      <AnimatePresence>
+                                        {isFloorExpanded && (
+                                          <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden px-4 pb-2">
+                                            <div className="grid grid-cols-2 gap-2 mt-2">
+                                              {locs.map(l => (
+                                                <button
+                                                  key={l.id}
+                                                  onClick={() => handleSelectLocation(l)}
+                                                  className="py-1.5 px-2 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg text-xs font-black text-slate-700 dark:text-slate-200 text-center hover:border-sky-500/50 transition-colors"
+                                                >
+                                                  {l.room_code}
+                                                </button>
+                                              ))}
+                                            </div>
+                                          </motion.div>
+                                        )}
+                                      </AnimatePresence>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* ── BOTTOM CONTROLS & INFO SHEET ── */}
-      <div className="absolute bottom-0 left-0 right-0 z-[1000] p-4 pointer-events-none pb-safe">
+      <div className="absolute bottom-[90px] left-0 right-0 z-[1000] p-4 pointer-events-none pb-safe">
         <div className="max-w-md mx-auto pointer-events-auto flex flex-col gap-4">
           
-          {/* Map Controls */}
-          <div className="flex justify-between items-end">
-            {etaMinutes !== null && (
+          {/* Navigation Active Banner */}
+          <AnimatePresence>
+            {isNavigating && activeBuilding && (
               <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl px-4 py-2 border border-slate-200 dark:border-slate-800 flex items-center gap-2"
+                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
+                className="bg-blue-600 rounded-3xl shadow-2xl p-4 flex flex-col gap-3"
               >
-                <Clock className="w-4 h-4 text-sky-500" />
-                <span className="text-xs font-black uppercase tracking-widest text-slate-700 dark:text-white">
-                  Anggaran: <span className="text-sky-500">{etaMinutes} min</span>
-                </span>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-blue-100 text-xs font-bold uppercase tracking-widest">Memandu Arah Ke</p>
+                    <p className="text-white font-black text-lg">{selectedLocation ? selectedLocation.room_code : activeBuilding.code}</p>
+                    {etaMinutes && (
+                      <p className="text-blue-200 text-xs font-bold mt-1 flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> Anggaran: {etaMinutes} minit
+                      </p>
+                    )}
+                  </div>
+                  <button 
+                    onClick={() => setIsNavigating(false)}
+                    className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl font-bold text-sm transition-colors"
+                  >
+                    Tamat
+                  </button>
+                </div>
+
+                {/* Inject Step-By-Step Directions into Active Navigation */}
+                {selectedLocation && selectedLocation.direction_text && (
+                  <div className="bg-white/10 rounded-2xl p-3 border border-white/10 mt-1">
+                    <div className="flex gap-3">
+                      <Navigation className="w-4 h-4 text-white/70 shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        {(() => {
+                          const distanceMeters = userLocation && activeBuilding?.center_lat
+                            ? calculateDistanceInMeters(userLocation[0], userLocation[1], activeBuilding.center_lat, activeBuilding.center_lng)
+                            : null;
+                          
+                          const hasArrived = isAdmin || (distanceMeters !== null && distanceMeters <= 30);
+
+                          if (!hasArrived) {
+                            return (
+                              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                                <span className="text-[9px] font-black uppercase tracking-widest text-white/50 mb-1 block">
+                                  Panduan Dalaman
+                                </span>
+                                <p className="text-sm font-bold text-white leading-relaxed">
+                                  Sila ikuti panduan arah pada peta untuk tiba di kawasan bangunan ini terlebih dahulu. Panduan dalaman akan dibuka apabila anda tiba (jarak &lt; 30m).
+                                </p>
+                              </motion.div>
+                            );
+                          }
+
+                          const steps = selectedLocation.direction_text.split(/\r?\n/).filter(s => s.trim().length > 0);
+                          const isMultiStep = steps.length > 1;
+
+                          return isMultiStep ? (
+                            <motion.div key={currentStep} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
+                              <span className="text-[9px] font-black uppercase tracking-widest text-white/50 mb-1 block">
+                                Langkah Dalaman ({currentStep + 1} / {steps.length})
+                              </span>
+                              <p className="text-sm font-bold text-white leading-relaxed min-h-[40px]">
+                                {steps[currentStep]}
+                              </p>
+                              <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/10">
+                                <button 
+                                  disabled={currentStep === 0} 
+                                  onClick={() => setCurrentStep(prev => prev - 1)}
+                                  className="text-xs font-bold text-white/70 disabled:opacity-30 transition-opacity"
+                                >
+                                  Kembali
+                                </button>
+                                <div className="flex gap-1.5">
+                                  {steps.map((_, i) => (
+                                    <span key={i} className={cn("w-1.5 h-1.5 rounded-full transition-colors", i === currentStep ? "bg-white" : "bg-white/20")} />
+                                  ))}
+                                </div>
+                                <button 
+                                  disabled={currentStep === steps.length - 1} 
+                                  onClick={() => setCurrentStep(prev => prev + 1)}
+                                  className="text-xs font-bold text-white/70 disabled:opacity-30 transition-opacity"
+                                >
+                                  Seterusnya
+                                </button>
+                              </div>
+                            </motion.div>
+                          ) : (
+                            <div>
+                              <span className="text-[9px] font-black uppercase tracking-widest text-white/50 mb-1 block">
+                                Panduan Dalaman
+                              </span>
+                              <p className="text-sm font-bold text-white leading-relaxed">
+                                {selectedLocation.direction_text}
+                              </p>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
-            <div className="flex-1" />
-            <button
-              onClick={locateUser}
-              className={cn(
-                "w-12 h-12 rounded-full shadow-lg border border-slate-200 dark:border-slate-800 flex items-center justify-center transition-all shrink-0",
-                isLocating 
-                  ? "bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed" 
-                  : userLocation 
-                    ? "bg-blue-500 text-white border-blue-500" 
-                    : "bg-white dark:bg-slate-900 text-slate-800 dark:text-white hover:scale-105 active:scale-95"
-              )}
-            >
-              <Navigation className={cn("w-5 h-5", isLocating && "animate-spin")} />
-            </button>
-          </div>
+          </AnimatePresence>
+
+          {/* Map Controls */}
+          {!isNavigating && (
+            <div className="flex justify-between items-end">
+              <div className="flex-1" />
+              <button
+                onClick={locateUser}
+                className={cn(
+                  "w-12 h-12 rounded-full shadow-lg border border-slate-200 dark:border-slate-800 flex items-center justify-center transition-all shrink-0",
+                  isLocating 
+                    ? "bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed" 
+                    : userLocation 
+                      ? "bg-blue-500 text-white border-blue-500" 
+                      : "bg-white dark:bg-slate-900 text-slate-800 dark:text-white hover:scale-105 active:scale-95"
+                )}
+              >
+                <Navigation className={cn("w-5 h-5", isLocating && "animate-spin")} />
+              </button>
+            </div>
+          )}
 
           {/* Info Card / Drone View */}
           <AnimatePresence>
-            {activeBuilding && (
+            {activeBuilding && !isNavigating && (
               <motion.div
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 50 }}
-                className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
+                className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden relative"
               >
-                {/* Drone Image Area */}
-                <div className="w-full h-40 bg-slate-100 dark:bg-slate-800 relative">
-                  {activeBuilding.drone_image_url ? (
-                    <img 
-                      src={activeBuilding.drone_image_url} 
-                      alt="Drone View"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
+                {/* Close Button */}
+                <button 
+                  onClick={dismissCard}
+                  className="absolute top-3 right-3 z-10 w-8 h-8 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                {/* Media Area */}
+                <div className="w-full h-48 bg-slate-100 dark:bg-slate-800 relative">
+                  {/* Media Content */}
+                  {activeImageTab === 'drone' && activeBuilding.drone_image_url && (
+                    <img src={activeBuilding.drone_image_url} alt="Drone View" className="w-full h-full object-cover" />
+                  )}
+                  {activeImageTab === 'entrance' && activeBuilding.entrance_image_url && (
+                    <img src={activeBuilding.entrance_image_url} alt="Entrance View" className="w-full h-full object-cover" />
+                  )}
+                  {activeImageTab === 'floorplan' && activeBuilding.floorplan_image_url && (
+                    <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowFullscreenImage(activeBuilding.floorplan_image_url!)}>
+                      <img src={activeBuilding.floorplan_image_url} alt="Floorplan View" className="w-full h-full object-contain bg-white dark:bg-slate-900 p-2" />
+                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">Tekan untuk Zoom</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Empty state fallback */}
+                  {((activeImageTab === 'drone' && !activeBuilding.drone_image_url) || 
+                    (activeImageTab === 'entrance' && !activeBuilding.entrance_image_url) || 
+                    (activeImageTab === 'floorplan' && !activeBuilding.floorplan_image_url)) && (
                     <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
-                      <Building2 className="w-10 h-10 mb-2 opacity-50" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Tiada Imej Dron</span>
+                      {activeImageTab === 'floorplan' ? <MapIcon className="w-10 h-10 mb-2 opacity-50" /> : <ImageIcon className="w-10 h-10 mb-2 opacity-50" />}
+                      <span className="text-[10px] font-black uppercase tracking-widest">Tiada Imej {activeImageTab === 'entrance' ? 'Pintu Masuk' : activeImageTab === 'floorplan' ? 'Pelan Lantai' : 'Dron'}</span>
                     </div>
                   )}
+                  
                   {selectedLocation && (
-                    <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase">
-                      PANDUAN INDOOR
+                    <div className="absolute top-3 left-3 bg-emerald-500/90 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase">
+                      LOKASI JUMPA
                     </div>
                   )}
+
+                  {/* Media Tabs */}
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 bg-black/40 backdrop-blur-md p-1 rounded-full border border-white/10">
+                    <button onClick={() => setActiveImageTab('drone')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors", activeImageTab === 'drone' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Dron</button>
+                    {activeBuilding.entrance_image_url && (
+                      <button onClick={() => setActiveImageTab('entrance')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors", activeImageTab === 'entrance' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Pintu Depan</button>
+                    )}
+                    {activeBuilding.floorplan_image_url && (
+                      <button onClick={() => setActiveImageTab('floorplan')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors", activeImageTab === 'floorplan' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Pelan Lantai</button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Details Area */}
                 <div className="p-5">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
-                        {selectedLocation ? selectedLocation.room_code : activeBuilding.name}
-                      </h2>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
+                          {selectedLocation ? selectedLocation.room_code : activeBuilding.name}
+                        </h2>
+                      </div>
+                      
+                      {/* Facility Live Status */}
+                      {activeBuilding.is_facility && activeBuilding.op_start && activeBuilding.op_end && !selectedLocation && (
+                        <div className="mt-1 mb-2 flex items-center gap-1.5">
+                          {checkIsOpen(activeBuilding.op_start, activeBuilding.op_end) ? (
+                            <span className="inline-flex items-center gap-1 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> BUKA ({activeBuilding.op_start.slice(0,5)} - {activeBuilding.op_end.slice(0,5)})
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
+                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> TUTUP
+                            </span>
+                          )}
+                        </div>
+                      )}
+
                       {selectedLocation && (
                         <p className="text-sm font-bold text-slate-500 flex items-center gap-1.5 mt-1">
                           <Building2 className="w-4 h-4" /> {activeBuilding.name}
@@ -417,36 +863,175 @@ export function IMapsPage() {
                         </p>
                       )}
                     </div>
-                    {selectedLocation && (
-                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex flex-col items-center justify-center shrink-0 ml-3">
-                        <Layers className="w-4 h-4" />
-                        <span className="text-[10px] font-black">T{selectedLocation.floor_level}</span>
+                    <div className="flex flex-col gap-2 items-end">
+                      {selectedLocation && (
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex flex-col items-center justify-center shrink-0 ml-3">
+                          <Layers className="w-4 h-4" />
+                          <span className="text-[10px] font-black">T{selectedLocation.floor_level}</span>
+                        </div>
+                      )}
+                      <button 
+                        onClick={handleShare}
+                        className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                        title="Kongsi Lokasi"
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 mb-4">
+                    <div className="flex gap-3">
+                      <Navigation className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        {selectedLocation && selectedLocation.direction_text ? (
+                          (() => {
+                            const distanceMeters = userLocation && activeBuilding?.center_lat
+                              ? calculateDistanceInMeters(userLocation[0], userLocation[1], activeBuilding.center_lat, activeBuilding.center_lng)
+                              : null;
+                            
+                            const hasArrived = isAdmin || (distanceMeters !== null && distanceMeters <= 30);
+
+                            if (!hasArrived) {
+                              return (
+                                <div>
+                                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-600/70 dark:text-amber-400/70 mb-1 block">
+                                    Panduan Dalaman
+                                  </span>
+                                  <p className="text-sm font-bold text-amber-800 dark:text-amber-200 leading-relaxed">
+                                    Panduan akan dipaparkan semasa mod Pandu Arah setelah anda tiba di kawasan bangunan ini.
+                                  </p>
+                                </div>
+                              );
+                            }
+
+                            const steps = selectedLocation.direction_text.split(/\r?\n/).filter(s => s.trim().length > 0);
+                            const isMultiStep = steps.length > 1;
+
+                            return isMultiStep ? (
+                              <motion.div key={currentStep} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-amber-600/70 dark:text-amber-400/70 mb-1 block">
+                                  Langkah {currentStep + 1} / {steps.length}
+                                </span>
+                                <p className="text-sm font-bold text-amber-800 dark:text-amber-200 leading-relaxed min-h-[40px]">
+                                  {steps[currentStep]}
+                                </p>
+                                <div className="flex justify-between items-center mt-3 pt-3 border-t border-amber-500/10">
+                                  <button 
+                                    disabled={currentStep === 0} 
+                                    onClick={() => setCurrentStep(prev => prev - 1)}
+                                    className="text-xs font-bold text-amber-700 dark:text-amber-300 disabled:opacity-30 transition-opacity"
+                                  >
+                                    Kembali
+                                  </button>
+                                  <div className="flex gap-1.5">
+                                    {steps.map((_, i) => (
+                                      <span key={i} className={cn("w-1.5 h-1.5 rounded-full transition-colors", i === currentStep ? "bg-amber-500" : "bg-amber-500/20")} />
+                                    ))}
+                                  </div>
+                                  <button 
+                                    disabled={currentStep === steps.length - 1} 
+                                    onClick={() => setCurrentStep(prev => prev + 1)}
+                                    className="text-xs font-bold text-amber-700 dark:text-amber-300 disabled:opacity-30 transition-opacity"
+                                  >
+                                    Seterusnya
+                                  </button>
+                                </div>
+                              </motion.div>
+                            ) : (
+                              <div>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-amber-600/70 dark:text-amber-400/70 mb-1 block">
+                                  Panduan Dalaman
+                                </span>
+                                <p className="text-sm font-bold text-amber-800 dark:text-amber-200 leading-relaxed">
+                                  {selectedLocation.direction_text}
+                                </p>
+                              </div>
+                            );
+                          })()
+                        ) : (
+                          <div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-amber-600/70 dark:text-amber-400/70 mb-1 block">
+                              Panduan Umum
+                            </span>
+                            <p className="text-sm font-bold text-amber-800 dark:text-amber-200 leading-relaxed">
+                              Sila gunakan fungsi carian atau direktori untuk mendapatkan panduan arah kelas yang spesifik.
+                            </p>
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
-
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex gap-3">
-                    <Navigation className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                    <p className="text-sm font-bold text-amber-800 dark:text-amber-200 leading-relaxed">
-                      {selectedLocation 
-                        ? (selectedLocation.direction_text || "Sila rujuk papan tanda di pintu masuk bangunan.")
-                        : "Sila gunakan fungsi carian di atas untuk mendapatkan panduan arah kelas yang spesifik."}
-                    </p>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={startNavigation}
+                      className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-2xl font-black text-sm transition-colors shadow-lg shadow-blue-500/30"
+                    >
+                      <Navigation className="w-4 h-4" /> Mula Pandu Arah
+                    </button>
+                    
+                    <button
+                      onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${activeBuilding.center_lat},${activeBuilding.center_lng}`, '_blank')}
+                      className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-3 rounded-2xl font-bold text-sm transition-colors"
+                    >
+                      <MapPin className="w-4 h-4" /> Buka di Google Maps
+                    </button>
                   </div>
-
-                  <button
-                    onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${activeBuilding.center_lat},${activeBuilding.center_lng}`, '_blank')}
-                    className="mt-4 w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-3 rounded-2xl font-bold text-sm transition-colors"
-                  >
-                    <MapPin className="w-4 h-4" /> Buka di Google Maps
-                  </button>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </div>
+      
+      {/* ── LIGHTBOX FOR FULLSCREEN IMAGES ── */}
+      <AnimatePresence>
+        {showFullscreenImage && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[3000] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <button 
+              onClick={() => setShowFullscreenImage(null)}
+              className="absolute top-6 right-6 z-10 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <img 
+              src={showFullscreenImage} 
+              alt="Fullscreen View" 
+              className="max-w-full max-h-[85vh] object-contain rounded-lg"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
+      {/* ── LIGHTBOX FOR FULLSCREEN IMAGES ── */}
+      <AnimatePresence>
+        {showFullscreenImage && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[3000] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <button 
+              onClick={() => setShowFullscreenImage(null)}
+              className="absolute top-6 right-6 z-10 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <img 
+              src={showFullscreenImage} 
+              alt="Fullscreen View" 
+              className="max-w-full max-h-[85vh] object-contain rounded-lg"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── GLOBAL BOTTOM NAV ── */}
+      <BottomNav />
     </div>
   );
 }
