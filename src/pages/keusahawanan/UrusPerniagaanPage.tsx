@@ -54,6 +54,10 @@ export function UrusPerniagaanPage() {
 
   const [description, setDescription] = useState('');
   const [useShiftSystem, setUseShiftSystem] = useState(false);
+  const [regType, setRegType] = useState<'SSM' | 'PUSKEP'>('PUSKEP');
+  const [ssmRegNumber, setSsmRegNumber] = useState('');
+  const [mentorName, setMentorName] = useState('');
+  const [mentorDept, setMentorDept] = useState('');
 
   // Derived
   const businessId = selectedBusiness?.id;
@@ -90,6 +94,10 @@ export function UrusPerniagaanPage() {
     setPromotionsEnabled(biz?.promotions_enabled ?? false);
     setCashSessionEnabled(biz?.cash_session_enabled ?? false);
     setUseShiftSystem(biz?.is_shift_enabled ?? false);
+    setRegType(biz?.registration_type === 'SSM' ? 'SSM' : 'PUSKEP');
+    setSsmRegNumber(biz?.ssm_registration_number || '');
+    setMentorName(biz?.mentor_name || '');
+    setMentorDept(biz?.mentor_department || '');
 
     const { data: mems } = await supabase
       .from('student_business_memberships')
@@ -191,7 +199,33 @@ export function UrusPerniagaanPage() {
   const handleSave = async () => {
     if (!businessId) return;
     setSaving(true);
-    await supabase.from('keusahawanan_businesses').update({ description }).eq('id', businessId);
+    let finalRegType = regType;
+    let finalSsm = ssmRegNumber.trim();
+    let updatedHistory = businessData?.registration_history || [];
+    
+    // Generate PUSKEP code if switching from SSM to PUSKEP and it doesn't have a PUSKEP code yet
+    if (finalRegType === 'PUSKEP' && (!finalSsm || !finalSsm.startsWith('P-'))) {
+       const { data: puskepNumber, error: puskepError } = await supabase.rpc('generate_puskep_reg_number');
+       if (!puskepError && puskepNumber) {
+          if (businessData?.registration_type === 'SSM' && businessData?.ssm_registration_number) {
+              updatedHistory = [
+                ...updatedHistory, 
+                { type: 'SSM', number: businessData.ssm_registration_number, changed_at: new Date().toISOString() }
+              ];
+          }
+          finalSsm = puskepNumber;
+          setSsmRegNumber(finalSsm);
+       }
+    }
+
+    await supabase.from('keusahawanan_businesses').update({ 
+       description,
+       registration_type: finalRegType,
+       ssm_registration_number: finalSsm,
+       mentor_name: mentorName,
+       mentor_department: mentorDept,
+       registration_history: updatedHistory
+    }).eq('id', businessId);
     await pos.writeLog(businessId, 'SETTINGS_UPDATED', 'Maklumat perniagaan dikemaskini.');
     toast.success('Perniagaan disimpan!');
     await fetchData();
@@ -389,6 +423,40 @@ export function UrusPerniagaanPage() {
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Nama Perniagaan</p>
                 <p className="text-xl font-black text-foreground">{businessData?.name}</p>
               </div>
+
+              {/* Registration and Mentor */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Jenis Pendaftaran</p>
+                  <select value={regType} onChange={e => setRegType(e.target.value as 'SSM'|'PUSKEP')}
+                    className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all">
+                    <option value="PUSKEP">PUSKEP-POLISAS</option>
+                    <option value="SSM">SSM</option>
+                  </select>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">No. Pendaftaran</p>
+                  <input type="text" value={ssmRegNumber} onChange={e => setSsmRegNumber(e.target.value)} disabled={regType === 'PUSKEP'}
+                    placeholder={regType === 'PUSKEP' ? 'Akan Dijana' : 'Contoh: 202101000001'}
+                    className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all disabled:opacity-50" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Nama Mentor</p>
+                  <input type="text" value={mentorName} onChange={e => setMentorName(e.target.value)}
+                    placeholder="Contoh: Dr. Ahmad Ali"
+                    className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Jabatan Mentor</p>
+                  <input type="text" value={mentorDept} onChange={e => setMentorDept(e.target.value)}
+                    placeholder="Contoh: JTMK"
+                    className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
+                </div>
+              </div>
+
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Penerangan</p>
                 <textarea value={description} onChange={e => setDescription(e.target.value)}

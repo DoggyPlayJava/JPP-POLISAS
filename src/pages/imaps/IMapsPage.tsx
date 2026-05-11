@@ -579,7 +579,7 @@ export function IMapsPage() {
           )}
 
           {/* Render Zones when zoomed out */}
-          {mapZoom < 17 && zones.map(z => (
+          {mapZoom < 19 && zones.map(z => (
             <Marker 
               key={`zone-${z.zone_name}`}
               position={[z.lat, z.lng]}
@@ -602,7 +602,7 @@ export function IMapsPage() {
             const isActive = activeBuilding?.id === b.id;
             
             // Sembunyikan bangunan dalam zon kalau masih zoom out, TAPI biarkan kalau bangunan tu tengah aktif (dipilih)
-            if (b.zone_name && mapZoom < 17 && !isActive) return null;
+            if (b.zone_name && mapZoom < 19 && !isActive) return null;
             
             return (
               <Marker 

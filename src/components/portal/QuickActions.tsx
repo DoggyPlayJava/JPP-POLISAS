@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { HeartHandshake, MessageSquarePlus, ArrowRight, ShoppingBag, QrCode, Crown, CalendarDays } from 'lucide-react';
+import { HeartHandshake, MessageSquarePlus, ArrowRight, Layers, QrCode, Crown, CalendarDays } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { PolymartServiceModal } from './PolymartServiceModal';
@@ -113,12 +113,12 @@ export function QuickActions({
         </button>
       )}
 
-      {/* ── BENTO 2: PolyMart (Wide on Desktop) ── */}
+      {/* ── BENTO 2: PolyServices (Wide on Desktop) ── */}
       {isModuleEnabled('keusahawanan') || isSuperAdmin ? (
         <button
           onClick={() => {
             if (!isModuleEnabled('keusahawanan') && !isSuperAdmin) {
-              toast('PolyMart tidak aktif ketika ini!', { icon: '🚧' });
+              toast('PolyServices tidak aktif ketika ini!', { icon: '🚧' });
               return;
             }
             setShowPolymartModal(true);
@@ -134,16 +134,16 @@ export function QuickActions({
           <div className="absolute inset-0 bg-gradient-to-r from-amber-400/0 via-amber-400/15 to-amber-400/0 -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out" />
           
           <div className="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center shrink-0 shadow-inner relative overflow-hidden group-hover:scale-110 transition-transform">
-            <ShoppingBag className="w-7 h-7 text-amber-600 dark:text-amber-400" />
+            <Layers className="w-7 h-7 text-amber-600 dark:text-amber-400" />
           </div>
           
           <div className="flex flex-col flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-lg font-black text-slate-800 dark:text-white tracking-tight">PolyMart</span>
+              <span className="text-lg font-black text-slate-800 dark:text-white tracking-tight">PolyServices</span>
               <span className="text-[9px] font-black bg-amber-500/20 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-full uppercase tracking-widest">BETA</span>
             </div>
             <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium tracking-wide mt-0.5">
-              {polyMartStats ? `${polyMartStats.listings} produk • ${polyMartStats.businesses} peniaga` : 'Marketplace Pelajar'}
+              Pusat Ekosistem Pintar Pelajar
             </span>
           </div>
 

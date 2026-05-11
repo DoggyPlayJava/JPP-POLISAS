@@ -23,6 +23,9 @@ export function KeusahawananOnboarding() {
   const [bName, setBName] = useState('');
   const [bDesc, setBDesc] = useState('');
   const [bCat, setBCat] = useState('');
+  const [bSsm, setBSsm] = useState('');
+  const [bMentorName, setBMentorName] = useState('');
+  const [bMentorDept, setBMentorDept] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   // Check state early: If user has reached the 2 active business limit, push them to dashboard
@@ -38,7 +41,7 @@ export function KeusahawananOnboarding() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const res = await createBusiness(bName, bDesc, bCat);
+    const res = await createBusiness(bName, bDesc, bCat, bSsm, bMentorName, bMentorDept);
     setSubmitting(false);
     if (!res.error) {
       // --- Trigger Push Notification ---
@@ -298,9 +301,31 @@ export function KeusahawananOnboarding() {
                       className="bg-white/5 border-white/10 focus-visible:ring-amber-500 text-white placeholder:text-white/20 rounded-xl min-h-[120px] resize-none" />
                   </div>
 
+                  <div className="space-y-2">
+                    <label className="text-xs font-black uppercase tracking-widest text-white/60">No. Pendaftaran SSM (Optional)</label>
+                    <Input placeholder="Contoh: 202101000001 / '-' jika tiada" 
+                      value={bSsm} onChange={e => setBSsm(e.target.value)}
+                      className="bg-white/5 border-white/10 focus-visible:ring-amber-500 text-white placeholder:text-white/20 h-12 rounded-xl" />
+                    <p className="text-[10px] text-white/40">Biarkan kosong untuk daftar di bawah PUSKEP-POLISAS.</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black uppercase tracking-widest text-white/60">Nama Mentor (Optional)</label>
+                    <Input placeholder="Contoh: Dr. Ahmad Ali" 
+                      value={bMentorName} onChange={e => setBMentorName(e.target.value)}
+                      className="bg-white/5 border-white/10 focus-visible:ring-amber-500 text-white placeholder:text-white/20 h-12 rounded-xl" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-black uppercase tracking-widest text-white/60">Jabatan Mentor (Optional)</label>
+                    <Input placeholder="Contoh: JTMK" 
+                      value={bMentorDept} onChange={e => setBMentorDept(e.target.value)}
+                      className="bg-white/5 border-white/10 focus-visible:ring-amber-500 text-white placeholder:text-white/20 h-12 rounded-xl" />
+                  </div>
+
                   <div className="pt-4">
                     <Button type="submit" disabled={submitting} 
-                      className="w-full h-14 bg-amber-500 hover:bg-amber-400 text-amber-950 font-black text-sm uppercase tracking-widest rounded-2xl shadow-[0_0_30px_rgba(245,158,11,0.2)] hover:shadow-[0_0_40px_rgba(245,158,11,0.4)] transition-all">
+                      className="w-full h-auto py-4 px-4 whitespace-normal leading-relaxed text-center bg-amber-500 hover:bg-amber-400 text-amber-950 font-black text-xs sm:text-sm uppercase tracking-wider sm:tracking-widest rounded-2xl shadow-[0_0_30px_rgba(245,158,11,0.2)] hover:shadow-[0_0_40px_rgba(245,158,11,0.4)] transition-all">
                       {submitting ? 'Sedang Diproses...' : 'Hantar Permohonan & Jadual Temuduga'}
                     </Button>
                   </div>

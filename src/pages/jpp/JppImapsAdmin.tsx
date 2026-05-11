@@ -493,7 +493,19 @@ export function JppImapsAdmin() {
                 </div>
                 <div>
                   <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">Nama Zon (Pilihan)</label>
-                  <input type="text" value={currentBuilding.zone_name || ''} onChange={e => setCurrentBuilding({...currentBuilding, zone_name: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all" placeholder="Contoh: JKE (Untuk kumpulkan bangunan)" />
+                  <input 
+                    type="text" 
+                    list="zone-suggestions"
+                    value={currentBuilding.zone_name || ''} 
+                    onChange={e => setCurrentBuilding({...currentBuilding, zone_name: e.target.value})} 
+                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all" 
+                    placeholder="Contoh: JKE (Untuk kumpulkan bangunan)" 
+                  />
+                  <datalist id="zone-suggestions">
+                    {Array.from(new Set(buildings.map(b => b.zone_name).filter(Boolean))).map(zone => (
+                      <option key={zone} value={zone} />
+                    ))}
+                  </datalist>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>

@@ -31,6 +31,9 @@ interface Business {
   owner_email?: string;
   owner_matric?: string;
   staff_count: number;
+  registration_type?: string;
+  ssm_registration_number?: string;
+  registration_history?: any[];
 }
 
 // ─── Status Meta ──────────────────────────────────────────────────────────────
@@ -135,6 +138,25 @@ function BusinessDetailModal({
                 <p className="text-sm font-black text-white">{business.staff_count} orang</p>
               </div>
             </div>
+
+            <div className="bg-white/[0.03] rounded-2xl p-3 border border-white/[0.04]">
+              <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">Pendaftaran</p>
+              <p className="text-sm font-black text-white">
+                {business.registration_type === 'SSM' ? 'SSM' : 'PUSKEP'} 
+                {business.ssm_registration_number ? ` - ${business.ssm_registration_number}` : ''}
+              </p>
+              {business.registration_history && business.registration_history.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-white/10">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">Rekod Lampau</p>
+                  {business.registration_history.map((hist: any, i: number) => (
+                    <p key={i} className="text-[10px] text-white/60">
+                      {hist.type} - {hist.number}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {business.interview_date && (
               <div className="bg-white/[0.03] rounded-2xl p-3 border border-white/[0.04]">
                 <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">Tarikh Temuduga</p>
@@ -226,6 +248,9 @@ export function KeusahawananAdminPanel() {
           created_at,
           interview_date,
           owner_id,
+          registration_type,
+          ssm_registration_number,
+          registration_history,
           profiles:owner_id (
             full_name,
             email,
@@ -259,6 +284,9 @@ export function KeusahawananAdminPanel() {
         owner_email:  b.profiles?.email      ?? undefined,
         owner_matric: b.profiles?.matric_no  ?? undefined,
         staff_count:  staffCount[b.id] ?? 0,
+        registration_type: b.registration_type,
+        ssm_registration_number: b.ssm_registration_number,
+        registration_history: b.registration_history,
       }));
 
       setBusinesses(mapped);

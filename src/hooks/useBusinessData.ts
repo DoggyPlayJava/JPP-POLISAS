@@ -69,7 +69,14 @@ export function useBusinessData() {
   }, [fetchInitialData]);
 
   // Method to create a business
-  const createBusiness = async (name: string, description: string, categoryId: string) => {
+  const createBusiness = async (
+    name: string,
+    description: string,
+    categoryId: string,
+    ssmRegistrationNumber?: string,
+    mentorName?: string,
+    mentorDepartment?: string
+  ) => {
     if (!user) return { error: 'Tiada sesi' };
     
     // Check limit
@@ -79,6 +86,17 @@ export function useBusinessData() {
     }
 
     try {
+      // Determine registration number and type
+      let finalSsm = ssmRegistrationNumber?.trim();
+      let finalRegType = 'SSM';
+      if (!finalSsm || finalSsm === '-') {
+        // Fetch generated PUSKEP number
+        const { data: puskepNumber, error: puskepError } = await supabase.rpc('generate_puskep_reg_number');
+        if (puskepError) throw puskepError;
+        finalSsm = puskepNumber;
+        finalRegType = 'PUSKEP';
+      }
+
       // 1. Insert business
       const { data: businessInfo, error: businessError } = await supabase
         .from('keusahawanan_businesses')
@@ -87,7 +105,11 @@ export function useBusinessData() {
           description,
           category_id: categoryId,
           owner_id: user.id,
-          status: 'PENDING_INTERVIEW'
+          status: 'PENDING_INTERVIEW',
+          ssm_registration_number: finalSsm,
+          registration_type: finalRegType,
+          mentor_name: mentorName,
+          mentor_department: mentorDepartment,
         }])
         .select()
         .single();

@@ -49,6 +49,8 @@ export function KeusahawananUnitDashboard() {
   const [pendingOld, setPendingOld]       = useState<PendingOldBusiness[]>([]);
   const [auditLogs, setAuditLogs]         = useState<AuditLog[]>([]);
   const [pendingReports, setPendingReports] = useState(0);
+  const [puskepCount, setPuskepCount]       = useState(0);
+  const [ssmCount, setSsmCount]             = useState(0);
   const [loadingExtra, setLoadingExtra]     = useState(true);
 
   const fetchExtras = async () => {
@@ -56,7 +58,7 @@ export function KeusahawananUnitDashboard() {
     try {
       const threshold7d = subDays(new Date(), 7).toISOString();
 
-      const [oldPendingRes, logsRes, reportsRes] = await Promise.all([
+      const [oldPendingRes, logsRes, reportsRes, puskepRes, ssmRes] = await Promise.all([
         // Pending lama > 7 hari
         supabase.from('keusahawanan_businesses')
           .select(`
@@ -77,7 +79,17 @@ export function KeusahawananUnitDashboard() {
         // Laporan PolyMart terbuka
         supabase.from('polymart_reports')
           .select('id', { count: 'exact', head: true })
-          .eq('status', 'OPEN')
+          .eq('status', 'OPEN'),
+          
+        // Statistik Pendaftaran PUSKEP
+        supabase.from('keusahawanan_businesses')
+          .select('id', { count: 'exact', head: true })
+          .eq('registration_type', 'PUSKEP'),
+          
+        // Statistik Pendaftaran SSM
+        supabase.from('keusahawanan_businesses')
+          .select('id', { count: 'exact', head: true })
+          .eq('registration_type', 'SSM')
       ]);
 
       const now = new Date();
@@ -92,6 +104,8 @@ export function KeusahawananUnitDashboard() {
       );
       setAuditLogs((logsRes.data || []) as AuditLog[]);
       setPendingReports(reportsRes.count || 0);
+      setPuskepCount(puskepRes?.count || 0);
+      setSsmCount(ssmRes?.count || 0);
     } catch (e) {
       console.error('Keusahawanan extras fetch error:', e);
     } finally {
@@ -127,6 +141,30 @@ export function KeusahawananUnitDashboard() {
         {activeMainTab === 'perniagaan' && (
           <motion.div key="perniagaan" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
             
+            {/* ── Statistik Pendaftaran ─── */}
+            {!loadingExtra && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/[0.03] border border-white/[0.05] rounded-2xl p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Pendaftaran PUSKEP</p>
+                    <p className="text-3xl font-black text-white mt-1">{puskepCount}</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                    <Store className="w-5 h-5 text-emerald-400" />
+                  </div>
+                </div>
+                <div className="bg-white/[0.03] border border-white/[0.05] rounded-2xl p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-blue-400">Pendaftaran SSM</p>
+                    <p className="text-3xl font-black text-white mt-1">{ssmCount}</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                    <Store className="w-5 h-5 text-blue-400" />
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* ── Alert: Permohonan lama (> 7 hari) ─── */}
             {!loadingExtra && pendingOld.length > 0 && (
               <motion.div
