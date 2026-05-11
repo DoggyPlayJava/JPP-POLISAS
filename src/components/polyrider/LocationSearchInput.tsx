@@ -26,6 +26,15 @@ interface LocationResult {
   lng: number;
 }
 
+interface PresetLocation {
+  id: string;
+  label: string;
+  address: string;
+  lat: number | null;
+  lng: number | null;
+  icon?: string;
+}
+
 interface LocationSearchInputProps {
   value: string;
   onChange: (text: string) => void;
@@ -33,6 +42,8 @@ interface LocationSearchInputProps {
   placeholder?: string;
   label?: string;
   color?: 'blue' | 'rose';
+  /** Admin presets — used as local fallback when Nominatim is unavailable */
+  presets?: PresetLocation[];
 }
 
 function buildShortName(result: NominatimResult): string {
@@ -57,6 +68,7 @@ export function LocationSearchInput({
   placeholder = 'Cari lokasi...',
   label,
   color = 'blue',
+  presets = [],
 }: LocationSearchInputProps) {
   const [query, setQuery] = useState(value);
   const [results, setResults] = useState<LocationResult[]>([]);
@@ -69,6 +81,21 @@ export function LocationSearchInput({
   useEffect(() => {
     setQuery(value);
   }, [value]);
+
+  // Fuzzy-match presets locally (instant, no network)
+  const matchPresets = useCallback((q: string): LocationResult[] => {
+    if (!presets.length || q.length < 2) return [];
+    const lower = q.toLowerCase();
+    return presets
+      .filter(p => p.label.toLowerCase().includes(lower) || p.address.toLowerCase().includes(lower))
+      .filter(p => p.lat && p.lng)
+      .map(p => ({
+        name: `${p.icon || '📍'} ${p.label}`,
+        fullName: p.address,
+        lat: p.lat!,
+        lng: p.lng!,
+      }));
+  }, [presets]);
 
   const search = useCallback(async (q: string) => {
     if (q.trim().length < 2) {
@@ -85,6 +112,13 @@ export function LocationSearchInput({
       return;
     }
 
+    // Show local preset matches instantly while Nominatim loads
+    const presetMatches = matchPresets(q);
+    if (presetMatches.length > 0) {
+      setResults(presetMatches);
+      setIsOpen(true);
+    }
+
     setIsLoading(true);
     try {
       const res = await fetch(
@@ -98,15 +132,19 @@ export function LocationSearchInput({
         lat: parseFloat(r.lat),
         lng: parseFloat(r.lon),
       }));
-      queryCache.set(cacheKey, mapped, 10 * 60 * 1000); // 10 min TTL
-      setResults(mapped);
-      setIsOpen(mapped.length > 0);
+      // Merge: preset matches first, then Nominatim (dedupe by name)
+      const presetNames = new Set(presetMatches.map(p => p.name));
+      const combined = [...presetMatches, ...mapped.filter(m => !presetNames.has(m.name))];
+      queryCache.set(cacheKey, combined, 30 * 60 * 1000); // 30 min TTL
+      setResults(combined);
+      setIsOpen(combined.length > 0);
     } catch {
-      setResults([]);
+      // Nominatim down — fallback to presets only
+      if (presetMatches.length === 0) setResults([]);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [matchPresets]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;

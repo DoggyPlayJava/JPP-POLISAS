@@ -240,6 +240,8 @@ function AppRoutes() {
       <Route path="/launch" element={<LaunchVideo />} />
       <Route path="/kebajikan/statistik" element={<KebajikanStatsPage />} />
       <Route path="/klk/statistik" element={<KlkPublicStats />} />
+      {/* 🗺️ iMAPS — Fully public, no login required (anyone can view campus map) */}
+      <Route path="/imaps" element={<IMapsPage />} />
       {/* QR Program Attendance — standalone, redirect ke login diuruskan dalam page itu sendiri */}
       <Route path="/program/attend/:token" element={<ProgramAttendPage />} />
 
@@ -249,9 +251,6 @@ function AppRoutes() {
 
         {/* 🌐 PORTAL HUB — standalone tanpa sidebar */}
         <Route path="/portal" element={<RequireApproval><PortalPage /></RequireApproval>} />
-
-        {/* 🗺️ iMAPS — standalone tanpa sidebar */}
-        <Route path="/imaps" element={<RequireApproval><IMapsPage /></RequireApproval>} />
 
         {/* 🔔 NOTIFIKASI — standalone tanpa sidebar */}
         <Route path="/notifikasi" element={<RequireApproval><NotifikasiPage /></RequireApproval>} />

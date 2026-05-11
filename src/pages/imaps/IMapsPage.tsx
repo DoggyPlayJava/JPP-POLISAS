@@ -7,7 +7,8 @@ import L from 'leaflet';
 import { 
   Search, Navigation, MapPin, Building2, Layers, Clock, X, Menu, 
   ChevronDown, ChevronRight, Share2, Coffee, Moon, Droplets, 
-  CreditCard, BookOpen, ImageIcon, Map as MapIcon, DoorOpen 
+  CreditCard, BookOpen, ImageIcon, Map as MapIcon, DoorOpen,
+  CloudRain, Sun
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
@@ -130,6 +131,8 @@ interface Location {
   image_url?: string;
   building: Building;
   building_id: string;
+  op_start?: string;
+  op_end?: string;
 }
 
 interface ZoneMarkerInfo {
@@ -156,6 +159,7 @@ export function IMapsPage() {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [hasArrivedManual, setHasArrivedManual] = useState(false);
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeSidebarTab, setActiveSidebarTab] = useState<'akademik' | 'fasiliti'>('akademik');
@@ -172,11 +176,26 @@ export function IMapsPage() {
   
   const [currentStep, setCurrentStep] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [weather, setWeather] = useState<{ isRaining: boolean, isHot: boolean } | null>(null);
 
   const polisasCenter: [number, number] = [3.8625, 103.3153];
 
   useEffect(() => {
     fetchInitialData();
+    
+    // Fetch basic weather for Kuantan (POLISAS coords)
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=3.8168&longitude=103.3317&current_weather=true')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.current_weather) {
+          const code = data.current_weather.weathercode;
+          const temp = data.current_weather.temperature;
+          setWeather({
+            isRaining: code >= 50 && code <= 99,
+            isHot: temp >= 32
+          });
+        }
+      }).catch(e => console.log('Weather fetch failed', e));
   }, []);
 
   useEffect(() => {
@@ -212,35 +231,72 @@ export function IMapsPage() {
   };
 
   const fetchInitialData = async () => {
-    // Check if user is admin or jpp_hq
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      const { data: user } = await supabase.from('users').select('role').eq('id', session.user.id).single();
-      if (user && (user.role === 'admin' || user.role === 'jpp_hq')) {
-        setIsAdmin(true);
+    // Check if user is logged in and is an admin/JPP member
+    // This is optional — page works fully for unauthenticated users too
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+        if (profile && ['JPP', 'SUPER_ADMIN_JPP', 'ADMIN'].includes(profile.role)) {
+          setIsAdmin(true);
+        }
       }
+    } catch {
+      // Ignore auth errors — page is public, auth is optional
     }
 
-    const { data: bData } = await supabase.from('imaps_buildings').select('*').order('name');
+    // Fetch buildings — public RLS policy allows anon access
+    const { data: bData, error: bError } = await supabase
+      .from('imaps_buildings')
+      .select('*')
+      .order('name');
+    if (bError) {
+      console.error('iMaps: Failed to load buildings:', bError.message);
+    }
     if (bData) setAllBuildings(bData);
     
-    // Fetch all locations for the sidebar explorer
-    const { data: lData } = await supabase.from('imaps_locations').select('*, building:building_id(*)').order('floor_level');
-    if (lData) {
-      const formatted = lData.map((item: any) => ({
-        ...item,
-        building: Array.isArray(item.building) ? item.building[0] : item.building
-      }));
+    // Fetch all locations — public RLS policy allows anon access
+    const { data: lData, error: lError } = await supabase
+      .from('imaps_locations')
+      .select('*, building:building_id(*)')
+      .order('floor_level');
+    if (lError) {
+      console.error('iMaps: Failed to load locations:', lError.message);
+    }
+    const formatted = (lData || []).map((item: any) => ({
+      ...item,
+      building: Array.isArray(item.building) ? item.building[0] : item.building
+    }));
+    if (formatted.length > 0) {
       setAllLocations(formatted);
     }
     
-    // Handle Deep Link (?b=building_id)
+    // Handle Deep Link (?b=building_id or ?room=room_id)
     const searchParams = new URLSearchParams(window.location.search);
     const bId = searchParams.get('b');
-    if (bId && bData) {
+    const rId = searchParams.get('room');
+    
+    if (rId && formatted.length > 0) {
+      // Find the room
+      const targetRoom = formatted.find((r: any) => r.id === rId);
+      if (targetRoom) {
+        setTimeout(() => {
+          setSelectedLocation(targetRoom);
+          setActiveBuilding(targetRoom.building);
+          setActiveImageTab(targetRoom.image_url ? 'room' : 'drone');
+        }, 300);
+      }
+    } else if (bId && bData) {
       const targetBuilding = bData.find(b => b.id === bId);
       if (targetBuilding) {
-        handleSelectBuildingMapMarker(targetBuilding);
+        setTimeout(() => {
+          setActiveBuilding(targetBuilding);
+          setActiveImageTab('drone');
+        }, 300);
       }
     }
   };
@@ -387,10 +443,12 @@ export function IMapsPage() {
     setSelectedLocation(null);
     setIsNavigating(false);
     setCurrentStep(0);
+    setHasArrivedManual(false);
   };
 
   const startNavigation = () => {
     setIsNavigating(true);
+    setHasArrivedManual(false);
     if (!userLocation) {
       locateUser();
     }
@@ -476,10 +534,15 @@ export function IMapsPage() {
   };
 
   const handleShare = () => {
-    if (!activeBuilding) return;
-    const url = `${window.location.origin}${window.location.pathname}?b=${activeBuilding.id}`;
-    navigator.clipboard.writeText(`📍 Lihat lokasi ${activeBuilding.name} di iMaps POLISAS:\n${url}`);
-    toast.success('Pautan disalin!');
+    if (selectedLocation) {
+      const url = `${window.location.origin}${window.location.pathname}?room=${selectedLocation.id}`;
+      navigator.clipboard.writeText(`📍 Lihat lokasi bilik/kelas ${selectedLocation.room_code} di iMaps POLISAS:\n${url}`);
+      toast.success('Pautan kelas disalin!');
+    } else if (activeBuilding) {
+      const url = `${window.location.origin}${window.location.pathname}?b=${activeBuilding.id}`;
+      navigator.clipboard.writeText(`📍 Lihat lokasi ${activeBuilding.name} di iMaps POLISAS:\n${url}`);
+      toast.success('Pautan bangunan disalin!');
+    }
   };
 
   const handleFilterClick = (filter: string) => {
@@ -560,8 +623,18 @@ export function IMapsPage() {
                       <MapPin className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="font-black text-slate-800 dark:text-white">{loc.room_code}</p>
-                      <p className="text-xs font-bold text-slate-500 flex items-center gap-2">
+                      <div className="font-black text-slate-800 dark:text-white flex items-center gap-2">
+                        {loc.room_code}
+                        {loc.op_start && loc.op_end && (
+                          <span className={cn(
+                            "text-[9px] px-1.5 py-0.5 rounded-sm font-black tracking-wider uppercase",
+                            checkIsOpen(loc.op_start, loc.op_end) ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                          )}>
+                            {checkIsOpen(loc.op_start, loc.op_end) ? "BUKA" : "TUTUP"}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs font-bold text-slate-500 flex items-center gap-2 mt-0.5">
                         {loc.building?.name}
                         {activeFilter && loc.floor_level > 0 && (
                           <span className="text-sky-500 flex items-center gap-1 bg-sky-500/10 px-1.5 py-0.5 rounded">
@@ -616,7 +689,7 @@ export function IMapsPage() {
           )}
 
           {/* Render Zones when zoomed out */}
-          {mapZoom < 19 && zones.map(z => (
+          {mapZoom < 18 && zones.map(z => (
             <Marker 
               key={`zone-${z.zone_name}`}
               position={[z.lat, z.lng]}
@@ -639,7 +712,7 @@ export function IMapsPage() {
             const isActive = activeBuilding?.id === b.id;
             
             // Sembunyikan bangunan dalam zon kalau masih zoom out, TAPI biarkan kalau bangunan tu tengah aktif (dipilih)
-            if (b.zone_name && mapZoom < 19 && !isActive) return null;
+            if (b.zone_name && mapZoom < 18 && !isActive) return null;
 
             // Jika activeFilter wujud, sembunyikan bangunan yang tak sepadan
             if (activeFilter) {
@@ -863,7 +936,7 @@ export function IMapsPage() {
                     )}
                   </div>
                   <button 
-                    onClick={() => setIsNavigating(false)}
+                    onClick={() => { setIsNavigating(false); setHasArrivedManual(false); }}
                     className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl font-bold text-sm transition-colors"
                   >
                     Tamat
@@ -881,17 +954,41 @@ export function IMapsPage() {
                             ? calculateDistanceInMeters(userLocation[0], userLocation[1], activeBuilding.center_lat, activeBuilding.center_lng)
                             : null;
                           
-                          const hasArrived = isAdmin || (distanceMeters !== null && distanceMeters <= 30);
+                          // Admin bypass removed — use manual "Seterusnya" button or GPS proximity (<= 30m)
+                          const hasArrived = hasArrivedManual || (distanceMeters !== null && distanceMeters <= 30);
 
                           if (!hasArrived) {
                             return (
                               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                                 <span className="text-[9px] font-black uppercase tracking-widest text-white/50 mb-1 block">
-                                  Panduan Dalaman
+                                  Langkah Luaran (Menuju Bangunan)
                                 </span>
-                                <p className="text-sm font-bold text-white leading-relaxed">
-                                  Sila ikuti panduan arah pada peta untuk tiba di kawasan bangunan ini terlebih dahulu. Panduan dalaman akan dibuka apabila anda tiba (jarak &lt; 30m).
+                                <p className="text-sm font-bold text-white leading-relaxed mb-3">
+                                  Sila ikuti panduan arah pada peta untuk tiba di bangunan ini terlebih dahulu. Panduan dalaman akan dibuka automatik jika jarak &lt; 30m, atau teruskan manual.
                                 </p>
+
+                                {distanceMeters !== null && distanceMeters > 200 && weather && (weather.isRaining || weather.isHot) && (
+                                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 mb-3 flex items-start gap-3">
+                                    <div className="p-1.5 bg-amber-500/20 rounded-lg text-amber-400 shrink-0 mt-0.5">
+                                      {weather.isRaining ? <CloudRain className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                                    </div>
+                                    <div>
+                                      <p className="text-xs font-bold text-amber-400 mb-0.5">Jarak Agak Jauh ({(distanceMeters / 1000).toFixed(1)}km)</p>
+                                      <p className="text-[10px] text-amber-500/80 leading-snug">
+                                        Cuaca sekarang {weather.isRaining ? 'sedang hujan' : 'agak panas'}. Pastikan anda bawa payung untuk berjalan ke destinasi!
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+
+                                <div className="flex justify-end pt-3 border-t border-white/10">
+                                  <button 
+                                    onClick={() => setHasArrivedManual(true)}
+                                    className="text-xs font-bold text-white bg-white/10 hover:bg-white/20 px-4 py-2.5 rounded-xl transition-colors flex items-center gap-1.5"
+                                  >
+                                    Seterusnya <Navigation className="w-3 h-3 rotate-90" />
+                                  </button>
+                                </div>
                               </motion.div>
                             );
                           }
@@ -900,35 +997,54 @@ export function IMapsPage() {
                           const isMultiStep = steps.length > 1;
 
                           return isMultiStep ? (
-                            <motion.div key={currentStep} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
-                              <span className="text-[9px] font-black uppercase tracking-widest text-white/50 mb-1 block">
-                                Langkah Dalaman ({currentStep + 1} / {steps.length})
-                              </span>
-                              <p className="text-sm font-bold text-white leading-relaxed min-h-[40px]">
-                                {steps[currentStep]}
-                              </p>
-                              <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/10">
-                                <button 
-                                  disabled={currentStep === 0} 
-                                  onClick={() => setCurrentStep(prev => prev - 1)}
-                                  className="text-xs font-bold text-white/70 disabled:opacity-30 transition-opacity"
-                                >
-                                  Kembali
-                                </button>
-                                <div className="flex gap-1.5">
-                                  {steps.map((_, i) => (
-                                    <span key={i} className={cn("w-1.5 h-1.5 rounded-full transition-colors", i === currentStep ? "bg-white" : "bg-white/20")} />
-                                  ))}
-                                </div>
-                                <button 
-                                  disabled={currentStep === steps.length - 1} 
-                                  onClick={() => setCurrentStep(prev => prev + 1)}
-                                  className="text-xs font-bold text-white/70 disabled:opacity-30 transition-opacity"
-                                >
-                                  Seterusnya
-                                </button>
+                            <div className="flex flex-col">
+                              {/* Segmented Progress Bar */}
+                              <div className="flex gap-1.5 mb-3 w-full">
+                                {steps.map((_, idx) => (
+                                  <div key={idx} className="h-1 rounded-full flex-1 bg-white/20 overflow-hidden">
+                                    <motion.div 
+                                      className="h-full bg-white"
+                                      initial={false}
+                                      animate={{ 
+                                        width: idx <= currentStep ? '100%' : '0%' 
+                                      }}
+                                      transition={{ duration: 0.3 }}
+                                    />
+                                  </div>
+                                ))}
                               </div>
-                            </motion.div>
+
+                              <motion.div key={currentStep} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
+                                <span className="text-[9px] font-black uppercase tracking-widest text-white/50 mb-1 block">
+                                  Langkah Dalaman ({currentStep + 1} / {steps.length})
+                                </span>
+                                <p className="text-sm font-bold text-white leading-relaxed min-h-[40px]">
+                                  {steps[currentStep]}
+                                </p>
+                                <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/10">
+                                  <button 
+                                    disabled={currentStep === 0} 
+                                    onClick={() => {
+                                      if (navigator.vibrate) navigator.vibrate(30);
+                                      setCurrentStep(prev => prev - 1);
+                                    }}
+                                    className="text-xs font-bold text-white/70 disabled:opacity-30 transition-opacity px-3 py-1.5 -ml-3"
+                                  >
+                                    Kembali
+                                  </button>
+                                  <button 
+                                    disabled={currentStep === steps.length - 1} 
+                                    onClick={() => {
+                                      if (navigator.vibrate) navigator.vibrate(50);
+                                      setCurrentStep(prev => prev + 1);
+                                    }}
+                                    className="text-xs font-bold text-white bg-white/10 hover:bg-white/20 rounded-lg disabled:opacity-30 disabled:bg-transparent transition-colors px-4 py-1.5"
+                                  >
+                                    Seterusnya
+                                  </button>
+                                </div>
+                              </motion.div>
+                            </div>
                           ) : (
                             <div>
                               <span className="text-[9px] font-black uppercase tracking-widest text-white/50 mb-1 block">
@@ -1109,9 +1225,9 @@ export function IMapsPage() {
                     
                     <button
                       onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${activeBuilding.center_lat},${activeBuilding.center_lng}`, '_blank')}
-                      className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-3 rounded-2xl font-bold text-sm transition-colors"
+                      className="w-full text-center text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 text-xs font-bold transition-colors mt-1 underline underline-offset-2"
                     >
-                      <MapPin className="w-4 h-4" /> Buka di Google Maps
+                      Memandu dari luar kampus? Buka Google Maps
                     </button>
                   </div>
                 </div>

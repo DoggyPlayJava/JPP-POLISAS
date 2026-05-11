@@ -1458,6 +1458,7 @@ export function PolyRiderHome() {
                   value={pickup}
                   onChange={(text) => { setPickup(text); if (!text) setPickupPos(null); }}
                   onSelect={(r) => { setPickup(r.name); setPickupPos([r.lat, r.lng]); }}
+                  presets={presets}
                 />
                 {/* GPS detect button */}
                 <button
@@ -1534,6 +1535,7 @@ export function PolyRiderHome() {
                   value={dropoff}
                   onChange={(text) => { setDropoff(text); if (!text) setDropoffPos(null); }}
                   onSelect={(r) => { setDropoff(r.name); setDropoffPos([r.lat, r.lng]); }}
+                  presets={presets}
                 />
                 <button onClick={() => setActiveMapPicker('dropoff')} className={`p-1.5 rounded-xl shrink-0 transition-all ${dropoffPos ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20' : 'text-slate-400 hover:text-rose-500'}`}>
                   <MapIcon className="w-4 h-4" />
@@ -1550,8 +1552,13 @@ export function PolyRiderHome() {
                     {presets.map(p => (
                       <button key={p.id}
                         onClick={() => {
-                          if (focusedField === 'pickup') setPickup(p.label);
-                          else setDropoff(p.label);
+                          if (focusedField === 'pickup') {
+                            setPickup(p.label);
+                            if (p.lat && p.lng) setPickupPos([Number(p.lat), Number(p.lng)]);
+                          } else {
+                            setDropoff(p.label);
+                            if (p.lat && p.lng) setDropoffPos([Number(p.lat), Number(p.lng)]);
+                          }
                         }}
                         className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 dark:bg-zinc-950/50 border border-slate-200 dark:border-white/5 rounded-full text-[10px] font-bold text-slate-600 dark:text-white/60 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
                         <span className="opacity-70">{p.icon}</span> {p.label}
@@ -2000,6 +2007,7 @@ export function PolyRiderHome() {
                         value={pickup}
                         onChange={(text) => { setPickup(text); if (!text) setPickupPos(null); }}
                         onSelect={(r) => { setPickup(r.name); setPickupPos([r.lat, r.lng]); }}
+                        presets={presets}
                       />
                     </div>
                     {/* GPS Button */}
@@ -2048,6 +2056,7 @@ export function PolyRiderHome() {
                         value={dropoff}
                         onChange={(text) => { setDropoff(text); if (!text) setDropoffPos(null); }}
                         onSelect={(r) => { setDropoff(r.name); setDropoffPos([r.lat, r.lng]); }}
+                        presets={presets}
                       />
                     </div>
                   </div>

@@ -152,6 +152,7 @@ export function JppImapsAdmin() {
   const [isZoneDropdownOpen, setIsZoneDropdownOpen] = useState(false);
   const [isBuildingFilterDropdownOpen, setIsBuildingFilterDropdownOpen] = useState(false);
   const [filterDropdownSearch, setFilterDropdownSearch] = useState('');
+  const [isZoneModalDropdownOpen, setIsZoneModalDropdownOpen] = useState(false);
   
   const { isSuperAdmin, isJppMember } = useAuth();
 
@@ -240,7 +241,9 @@ export function JppImapsAdmin() {
           floor_level: currentLocation.floor_level,
           direction_text: currentLocation.direction_text,
           search_tags: currentLocation.search_tags,
-          image_url: currentLocation.image_url
+          image_url: currentLocation.image_url,
+          op_start: currentLocation.op_start || null,
+          op_end: currentLocation.op_end || null
         };
         
         console.log("SIMPAN PAYLOAD:", payload);
@@ -264,7 +267,9 @@ export function JppImapsAdmin() {
           floor_level: currentLocation.floor_level,
           direction_text: currentLocation.direction_text,
           search_tags: currentLocation.search_tags,
-          image_url: currentLocation.image_url
+          image_url: currentLocation.image_url,
+          op_start: currentLocation.op_start || null,
+          op_end: currentLocation.op_end || null
         }));
 
         const { error } = await supabase
@@ -619,21 +624,49 @@ export function JppImapsAdmin() {
                   <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">Kod (Singkatan)</label>
                   <input type="text" value={currentBuilding.code || ''} onChange={e => setCurrentBuilding({...currentBuilding, code: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all" placeholder="Contoh: JKE" />
                 </div>
-                <div>
+                <div className="relative">
                   <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">Nama Zon (Pilihan)</label>
                   <input 
                     type="text" 
-                    list="zone-suggestions"
                     value={currentBuilding.zone_name || ''} 
-                    onChange={e => setCurrentBuilding({...currentBuilding, zone_name: e.target.value})} 
+                    onFocus={() => setIsZoneModalDropdownOpen(true)}
+                    onBlur={() => setTimeout(() => setIsZoneModalDropdownOpen(false), 200)}
+                    onChange={e => {
+                      setCurrentBuilding({...currentBuilding, zone_name: e.target.value});
+                      setIsZoneModalDropdownOpen(true);
+                    }} 
                     className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all" 
                     placeholder="Contoh: JKE (Untuk kumpulkan bangunan)" 
                   />
-                  <datalist id="zone-suggestions">
-                    {Array.from(new Set(buildings.map(b => b.zone_name).filter(Boolean))).map(zone => (
-                      <option key={zone} value={zone} />
-                    ))}
-                  </datalist>
+                  <AnimatePresence>
+                    {isZoneModalDropdownOpen && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute left-0 right-0 top-full mt-2 bg-[#1a1b23] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[10001] max-h-60 overflow-y-auto"
+                      >
+                        {Array.from(new Set(buildings.map(b => b.zone_name).filter(Boolean)))
+                          .filter(zone => !currentBuilding.zone_name || (zone as string).toLowerCase().includes(currentBuilding.zone_name.toLowerCase()))
+                          .map(zone => (
+                          <button
+                            key={zone as string}
+                            onClick={() => {
+                              setCurrentBuilding({...currentBuilding, zone_name: zone as string});
+                              setIsZoneModalDropdownOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-colors text-sm text-white font-bold"
+                          >
+                            {zone as string}
+                          </button>
+                        ))}
+                        {Array.from(new Set(buildings.map(b => b.zone_name).filter(Boolean)))
+                          .filter(zone => !currentBuilding.zone_name || (zone as string).toLowerCase().includes(currentBuilding.zone_name.toLowerCase())).length === 0 && (
+                            <div className="px-4 py-3 text-sm text-white/40 italic text-center">Tiada zon sedia ada padan. Zon baru akan dicipta.</div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -845,6 +878,17 @@ export function JppImapsAdmin() {
                   <div>
                     <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">Aras (Tingkat)</label>
                     <input type="number" value={currentLocation.floor_level || 0} onChange={e => setCurrentLocation({...currentLocation, floor_level: parseInt(e.target.value) || 0})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-all" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">Waktu Buka (Pilihan)</label>
+                    <input type="time" value={currentLocation.op_start || ''} onChange={e => setCurrentLocation({...currentLocation, op_start: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-all [color-scheme:dark]" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">Waktu Tutup (Pilihan)</label>
+                    <input type="time" value={currentLocation.op_end || ''} onChange={e => setCurrentLocation({...currentLocation, op_end: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-all [color-scheme:dark]" />
                   </div>
                 </div>
 
