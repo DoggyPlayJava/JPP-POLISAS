@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Map, MapPin, Building2, Plus, Edit2, Trash2, 
-  Search, RefreshCw, AlertCircle, Save, X, Navigation
+  Search, RefreshCw, AlertCircle, Save, X, Navigation, UploadCloud, Image as ImageIcon
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
@@ -32,6 +32,7 @@ interface Location {
   floor_level: number;
   direction_text: string;
   search_tags: string;
+  image_url?: string;
 }
 
 export function JppImapsAdmin() {
@@ -48,6 +49,43 @@ export function JppImapsAdmin() {
   const [currentLocation, setCurrentLocation] = useState<Partial<Location>>({});
   
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState<Record<string, boolean>>({});
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: 'drone_image_url' | 'entrance_image_url' | 'floorplan_image_url' | 'image_url', isLocation = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(prev => ({...prev, [fieldName]: true}));
+    const toastId = toast.loading('Memuat naik imej...');
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `imaps/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('imaps_assets')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('imaps_assets')
+        .getPublicUrl(filePath);
+
+      if (isLocation) {
+        setCurrentLocation(prev => ({...prev, [fieldName]: data.publicUrl}));
+      } else {
+        setCurrentBuilding(prev => ({...prev, [fieldName]: data.publicUrl}));
+      }
+      toast.success('Imej berjaya dimuat naik!', { id: toastId });
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast.error('Gagal memuat naik. Pastikan bucket imaps_assets wujud.', { id: toastId });
+    } finally {
+      setIsUploading(prev => ({...prev, [fieldName]: false}));
+    }
+  };
   const [searchQuery, setSearchQuery] = useState('');
   
   const { isSuperAdmin, isJppMember } = useAuth();
@@ -131,17 +169,26 @@ export function JppImapsAdmin() {
     setIsSaving(true);
     try {
       if (currentLocation.id) {
+        const payload = {
+          building_id: currentLocation.building_id,
+          room_code: currentLocation.room_code.trim(),
+          floor_level: currentLocation.floor_level,
+          direction_text: currentLocation.direction_text,
+          search_tags: currentLocation.search_tags,
+          image_url: currentLocation.image_url
+        };
+        
+        console.log("SIMPAN PAYLOAD:", payload);
+        
         const { error } = await supabase
           .from('imaps_locations')
-          .update({
-            building_id: currentLocation.building_id,
-            room_code: currentLocation.room_code.trim(),
-            floor_level: currentLocation.floor_level,
-            direction_text: currentLocation.direction_text,
-            search_tags: currentLocation.search_tags
-          })
+          .update(payload)
           .eq('id', currentLocation.id);
-        if (error) throw error;
+          
+        if (error) {
+          console.error("Supabase Update Error:", error);
+          throw error;
+        }
         toast.success('Lokasi dikemaskini');
       } else {
         // Bulk insert support! Split by comma.
@@ -151,7 +198,8 @@ export function JppImapsAdmin() {
           room_code: code,
           floor_level: currentLocation.floor_level,
           direction_text: currentLocation.direction_text,
-          search_tags: currentLocation.search_tags
+          search_tags: currentLocation.search_tags,
+          image_url: currentLocation.image_url
         }));
 
         const { error } = await supabase
@@ -395,19 +443,47 @@ export function JppImapsAdmin() {
                     <input type="number" step="any" value={currentBuilding.center_lng || ''} onChange={e => setCurrentBuilding({...currentBuilding, center_lng: parseFloat(e.target.value)})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all" placeholder="103.123456" />
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">URL Dron</label>
-                    <input type="text" value={currentBuilding.drone_image_url || ''} onChange={e => setCurrentBuilding({...currentBuilding, drone_image_url: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all" placeholder="https://..." />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">URL Pelan Lantai</label>
-                    <input type="text" value={currentBuilding.floorplan_image_url || ''} onChange={e => setCurrentBuilding({...currentBuilding, floorplan_image_url: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all" placeholder="https://..." />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">URL Pintu Masuk</label>
-                    <input type="text" value={currentBuilding.entrance_image_url || ''} onChange={e => setCurrentBuilding({...currentBuilding, entrance_image_url: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all" placeholder="https://..." />
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {(['drone_image_url', 'floorplan_image_url', 'entrance_image_url'] as const).map(field => {
+                    const label = field === 'drone_image_url' ? 'Imej Dron' : field === 'floorplan_image_url' ? 'Pelan Lantai' : 'Pintu Masuk';
+                    const value = currentBuilding[field];
+                    return (
+                      <div key={field} className="bg-black/20 border border-white/10 rounded-xl p-3">
+                        <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-2">{label}</label>
+                        {value ? (
+                          <div className="relative w-full h-24 rounded-lg overflow-hidden border border-white/10 mb-2 group">
+                            <img src={value} alt={label} className="w-full h-full object-cover" />
+                            <button 
+                              onClick={() => setCurrentBuilding({...currentBuilding, [field]: ''})}
+                              className="absolute top-1 right-1 bg-black/60 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-500"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <label className={cn(
+                            "flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:bg-white/5 hover:border-sky-500/50 transition-colors mb-2",
+                            isUploading[field] && "opacity-50 pointer-events-none"
+                          )}>
+                            {isUploading[field] ? (
+                              <RefreshCw className="w-5 h-5 text-sky-400 animate-spin mb-1" />
+                            ) : (
+                              <UploadCloud className="w-5 h-5 text-white/40 mb-1" />
+                            )}
+                            <span className="text-[10px] font-bold text-white/50">{isUploading[field] ? 'Memuat naik...' : 'Pilih Gambar'}</span>
+                            <input 
+                              type="file" 
+                              accept="image/*"
+                              className="hidden" 
+                              onChange={(e) => handleImageUpload(e, field, false)}
+                              disabled={isUploading[field]}
+                            />
+                          </label>
+                        )}
+                        <input type="url" value={value || ''} onChange={e => setCurrentBuilding({...currentBuilding, [field]: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-[10px] text-white focus:outline-none focus:border-sky-500/50 transition-all" placeholder="Atau paste URL..." />
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <div className="p-4 rounded-xl border border-white/10 bg-white/5 space-y-4">
@@ -518,6 +594,41 @@ export function JppImapsAdmin() {
                 <div>
                   <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">Tags Carian (Pisah dengan koma)</label>
                   <input type="text" value={currentLocation.search_tags || ''} onChange={e => setCurrentLocation({...currentLocation, search_tags: e.target.value})} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-all" placeholder="Cth: Makmal Komputer, JTM, Lab" />
+                </div>
+
+                <div className="bg-black/20 border border-white/10 rounded-xl p-3">
+                  <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-2">Gambar Lokasi/Pintu Bilik (Pilihan)</label>
+                  {currentLocation.image_url ? (
+                    <div className="relative w-full h-32 rounded-lg overflow-hidden border border-white/10 mb-2 group">
+                      <img src={currentLocation.image_url} alt="Gambar Bilik" className="w-full h-full object-cover" />
+                      <button 
+                        onClick={() => setCurrentLocation({...currentLocation, image_url: ''})}
+                        className="absolute top-2 right-2 bg-black/60 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-500"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className={cn(
+                      "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:bg-white/5 hover:border-indigo-500/50 transition-colors mb-2",
+                      isUploading['image_url'] && "opacity-50 pointer-events-none"
+                    )}>
+                      {isUploading['image_url'] ? (
+                        <RefreshCw className="w-6 h-6 text-indigo-400 animate-spin mb-2" />
+                      ) : (
+                        <ImageIcon className="w-6 h-6 text-white/40 mb-2" />
+                      )}
+                      <span className="text-xs font-bold text-white/50">{isUploading['image_url'] ? 'Memuat naik...' : 'Pilih Gambar Pintu / Dalam Bilik'}</span>
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        className="hidden" 
+                        onChange={(e) => handleImageUpload(e, 'image_url', true)}
+                        disabled={isUploading['image_url']}
+                      />
+                    </label>
+                  )}
+                  <input type="url" value={currentLocation.image_url || ''} onChange={e => setCurrentLocation({...currentLocation, image_url: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500/50 transition-all" placeholder="Atau paste URL..." />
                 </div>
               </div>
 

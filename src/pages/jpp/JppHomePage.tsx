@@ -56,7 +56,7 @@ function UnitCard({
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-      onClick={() => canOpen && onNavigate(cfg.moduleLink)}
+      onClick={() => canOpen && onNavigate(`/jpp/unit/${code.toLowerCase()}`)}
       className={cn(
         'relative rounded-[1.75rem] border overflow-hidden transition-all duration-500 p-5',
         canOpen

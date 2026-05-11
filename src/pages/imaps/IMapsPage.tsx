@@ -50,11 +50,11 @@ const buildingIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-function MapRecenter({ center, zoom }: { center: [number, number], zoom: number }) {
+function MapRecenter({ lat, lng, zoom }: { lat: number, lng: number, zoom: number }) {
   const map = useMap();
   useEffect(() => {
-    map.flyTo(center, zoom, { animate: true, duration: 1.5 });
-  }, [center, zoom, map]);
+    map.flyTo([lat, lng], zoom, { animate: true, duration: 1.5 });
+  }, [lat, lng, zoom, map]);
   return null;
 }
 
@@ -107,6 +107,7 @@ interface Location {
   room_code: string;
   floor_level: number;
   direction_text: string;
+  image_url?: string;
   building: Building;
   building_id: string;
 }
@@ -133,7 +134,7 @@ export function IMapsPage() {
   const [expandedBuildingId, setExpandedBuildingId] = useState<string | null>(null);
   const [expandedFloorLevel, setExpandedFloorLevel] = useState<string | null>(null);
 
-  const [activeImageTab, setActiveImageTab] = useState<'drone' | 'entrance' | 'floorplan'>('drone');
+  const [activeImageTab, setActiveImageTab] = useState<'drone' | 'entrance' | 'floorplan' | 'room'>('drone');
   const [showFullscreenImage, setShowFullscreenImage] = useState<string | null>(null);
   
   const [currentStep, setCurrentStep] = useState(0);
@@ -203,7 +204,7 @@ export function IMapsPage() {
       const { data, error } = await supabase
         .from('imaps_locations')
         .select(`
-          id, room_code, floor_level, direction_text, search_tags,
+          id, room_code, floor_level, direction_text, search_tags, image_url,
           building:building_id (
             id, name, code, center_lat, center_lng, drone_image_url
           )
@@ -266,7 +267,7 @@ export function IMapsPage() {
   const handleSelectLocation = (loc: Location) => {
     setSelectedLocation(loc);
     setActiveBuilding(loc.building);
-    setActiveImageTab('drone');
+    setActiveImageTab(loc.image_url ? 'room' : 'drone');
     setCurrentStep(0);
     setSearchQuery('');
     setSearchResults([]);
@@ -489,10 +490,19 @@ export function IMapsPage() {
             maxZoom={20}
           />
 
-          {activeBuilding?.center_lat && (
+          {!isNavigating && activeBuilding?.center_lat && (
             <MapRecenter 
-              center={[activeBuilding.center_lat, activeBuilding.center_lng]} 
+              lat={activeBuilding.center_lat}
+              lng={activeBuilding.center_lng} 
               zoom={18} 
+            />
+          )}
+
+          {isNavigating && userLocation && (
+            <MapRecenter 
+              lat={userLocation[0]}
+              lng={userLocation[1]} 
+              zoom={19} 
             />
           )}
 
@@ -798,14 +808,23 @@ export function IMapsPage() {
                       </div>
                     </div>
                   )}
+                  {activeImageTab === 'room' && selectedLocation?.image_url && (
+                    <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowFullscreenImage(selectedLocation.image_url!)}>
+                      <img src={selectedLocation.image_url} alt="Room View" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">Tekan untuk Zoom</span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Empty state fallback */}
                   {((activeImageTab === 'drone' && !activeBuilding.drone_image_url) || 
                     (activeImageTab === 'entrance' && !activeBuilding.entrance_image_url) || 
-                    (activeImageTab === 'floorplan' && !activeBuilding.floorplan_image_url)) && (
+                    (activeImageTab === 'floorplan' && !activeBuilding.floorplan_image_url) ||
+                    (activeImageTab === 'room' && !selectedLocation?.image_url)) && (
                     <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
                       {activeImageTab === 'floorplan' ? <MapIcon className="w-10 h-10 mb-2 opacity-50" /> : <ImageIcon className="w-10 h-10 mb-2 opacity-50" />}
-                      <span className="text-[10px] font-black uppercase tracking-widest">Tiada Imej {activeImageTab === 'entrance' ? 'Pintu Masuk' : activeImageTab === 'floorplan' ? 'Pelan Lantai' : 'Dron'}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest">Tiada Imej {activeImageTab === 'entrance' ? 'Pintu Masuk' : activeImageTab === 'floorplan' ? 'Pelan Lantai' : activeImageTab === 'room' ? 'Bilik' : 'Dron'}</span>
                     </div>
                   )}
                   
@@ -817,12 +836,15 @@ export function IMapsPage() {
 
                   {/* Media Tabs */}
                   <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 bg-black/40 backdrop-blur-md p-1 rounded-full border border-white/10">
-                    <button onClick={() => setActiveImageTab('drone')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors", activeImageTab === 'drone' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Dron</button>
+                    <button onClick={() => setActiveImageTab('drone')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'drone' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Dron</button>
                     {activeBuilding.entrance_image_url && (
-                      <button onClick={() => setActiveImageTab('entrance')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors", activeImageTab === 'entrance' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Pintu Depan</button>
+                      <button onClick={() => setActiveImageTab('entrance')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'entrance' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Depan</button>
                     )}
                     {activeBuilding.floorplan_image_url && (
-                      <button onClick={() => setActiveImageTab('floorplan')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors", activeImageTab === 'floorplan' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Pelan Lantai</button>
+                      <button onClick={() => setActiveImageTab('floorplan')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'floorplan' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Lantai</button>
+                    )}
+                    {selectedLocation && selectedLocation.image_url && (
+                      <button onClick={() => setActiveImageTab('room')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'room' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Bilik</button>
                     )}
                   </div>
                 </div>
@@ -1031,7 +1053,7 @@ export function IMapsPage() {
       </AnimatePresence>
 
       {/* ── GLOBAL BOTTOM NAV ── */}
-      <BottomNav />
+      <BottomNav onOpenSidebar={() => setIsSidebarOpen(true)} />
     </div>
   );
 }
