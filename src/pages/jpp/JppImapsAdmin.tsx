@@ -147,6 +147,11 @@ export function JppImapsAdmin() {
     }
   };
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterZone, setFilterZone] = useState<string>('all');
+  const [filterBuilding, setFilterBuilding] = useState<string>('all');
+  const [isZoneDropdownOpen, setIsZoneDropdownOpen] = useState(false);
+  const [isBuildingFilterDropdownOpen, setIsBuildingFilterDropdownOpen] = useState(false);
+  const [filterDropdownSearch, setFilterDropdownSearch] = useState('');
   
   const { isSuperAdmin, isJppMember } = useAuth();
 
@@ -291,16 +296,22 @@ export function JppImapsAdmin() {
     }
   };
 
-  const filteredBuildings = buildings.filter(b => 
-    b.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    b.code.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredBuildings = buildings.filter(b => {
+    const matchSearch = b.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                        b.code.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchZone = filterZone === 'all' || b.zone_name === filterZone;
+    return matchSearch && matchZone;
+  });
 
-  const filteredLocations = locations.filter(l => 
-    l.room_code.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    l.search_tags?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    buildings.find(b => b.id === l.building_id)?.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredLocations = locations.filter(l => {
+    const matchSearch = l.room_code.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                        l.search_tags?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        buildings.find(b => b.id === l.building_id)?.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchBuilding = filterBuilding === 'all' || l.building_id === filterBuilding;
+    return matchSearch && matchBuilding;
+  });
+
+  const uniqueZones = Array.from(new Set(buildings.map(b => b.zone_name).filter(Boolean))) as string[];
 
   if (!isSuperAdmin && !isJppMember) return null;
 
@@ -366,16 +377,126 @@ export function JppImapsAdmin() {
             <Navigation className="w-4 h-4" /> Kelas / Lokasi
           </button>
         </div>
-        
-        <div className="relative w-full md:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-          <input 
-            type="text"
-            placeholder="Cari..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="w-full bg-black/20 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/50 transition-all"
-          />
+        <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
+          {activeTab === 'buildings' ? (
+            <div className="relative w-full md:w-48">
+              <input
+                type="text"
+                value={isZoneDropdownOpen ? filterDropdownSearch : (filterZone === 'all' ? 'Semua Zon' : filterZone)}
+                onFocus={() => {
+                  setFilterDropdownSearch('');
+                  setIsZoneDropdownOpen(true);
+                }}
+                onBlur={() => setTimeout(() => setIsZoneDropdownOpen(false), 200)}
+                onChange={e => {
+                  setFilterDropdownSearch(e.target.value);
+                  setIsZoneDropdownOpen(true);
+                }}
+                placeholder="Cari Zon..."
+                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-sky-500/50"
+              />
+              
+              <AnimatePresence>
+                {isZoneDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute left-0 right-0 top-full mt-2 bg-[#1a1b23] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[100] max-h-60 overflow-y-auto"
+                  >
+                    <button
+                      onClick={() => setFilterZone('all')}
+                      className={cn(
+                        "w-full text-left px-4 py-2.5 text-sm transition-colors",
+                        filterZone === 'all' ? "bg-sky-500/20 text-sky-400 font-bold" : "text-white/70 hover:bg-white/5 hover:text-white"
+                      )}
+                    >
+                      Semua Zon
+                    </button>
+                    {uniqueZones
+                      .filter(z => z.toLowerCase().includes(filterDropdownSearch.toLowerCase()))
+                      .map(zone => (
+                      <button
+                        key={zone}
+                        onClick={() => setFilterZone(zone)}
+                        className={cn(
+                          "w-full text-left px-4 py-2.5 text-sm transition-colors",
+                          filterZone === zone ? "bg-sky-500/20 text-sky-400 font-bold" : "text-white/70 hover:bg-white/5 hover:text-white"
+                        )}
+                      >
+                        {zone}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <div className="relative w-full md:w-64">
+              <input
+                type="text"
+                value={isBuildingFilterDropdownOpen ? filterDropdownSearch : (filterBuilding === 'all' ? 'Semua Bangunan' : buildings.find(b => b.id === filterBuilding)?.code || 'Semua Bangunan')}
+                onFocus={() => {
+                  setFilterDropdownSearch('');
+                  setIsBuildingFilterDropdownOpen(true);
+                }}
+                onBlur={() => setTimeout(() => setIsBuildingFilterDropdownOpen(false), 200)}
+                onChange={e => {
+                  setFilterDropdownSearch(e.target.value);
+                  setIsBuildingFilterDropdownOpen(true);
+                }}
+                placeholder="Cari Bangunan..."
+                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-sky-500/50"
+              />
+              
+              <AnimatePresence>
+                {isBuildingFilterDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute left-0 right-0 top-full mt-2 bg-[#1a1b23] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[100] max-h-60 overflow-y-auto"
+                  >
+                    <button
+                      onClick={() => setFilterBuilding('all')}
+                      className={cn(
+                        "w-full text-left px-4 py-2.5 text-sm transition-colors",
+                        filterBuilding === 'all' ? "bg-indigo-500/20 text-indigo-400 font-bold" : "text-white/70 hover:bg-white/5 hover:text-white"
+                      )}
+                    >
+                      Semua Bangunan
+                    </button>
+                    {buildings
+                      .filter(b => b.name.toLowerCase().includes(filterDropdownSearch.toLowerCase()) || b.code.toLowerCase().includes(filterDropdownSearch.toLowerCase()))
+                      .map(b => (
+                      <button
+                        key={b.id}
+                        onClick={() => setFilterBuilding(b.id)}
+                        className={cn(
+                          "w-full text-left px-4 py-2.5 transition-colors flex flex-col",
+                          filterBuilding === b.id ? "bg-indigo-500/20 text-indigo-400 border-l-2 border-indigo-500" : "hover:bg-white/5"
+                        )}
+                      >
+                        <span className={cn("text-sm font-bold", filterBuilding === b.id ? "text-indigo-400" : "text-white")}>{b.code}</span>
+                        <span className="text-xs text-white/50 truncate w-full">{b.name}</span>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
+          <div className="relative w-full md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+            <input 
+              type="text"
+              placeholder="Cari..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full bg-black/20 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/50 transition-all"
+            />
+          </div>
         </div>
       </div>
 

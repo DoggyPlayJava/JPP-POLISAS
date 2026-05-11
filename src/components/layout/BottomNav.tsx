@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   Menu, Bell, User, Plus, X, Search, Sparkles, QrCode, 
-  Ticket, Home, Megaphone, CalendarRange, Flag, 
+  Ticket, Home, Megaphone, CalendarRange, Flag, Layers,
   Store, ShieldAlert, Building2, HeartHandshake, Landmark, Lightbulb, Crown,
   Bike, Map
 } from 'lucide-react';
@@ -162,15 +162,14 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks }: BottomNa
                   }
                 }}
               >
-                <QuickActionButton icon={Map} label="iMaps" color="bg-sky-500" onClick={() => handleQuickAction('/imaps')} />
+                <QuickActionButton icon={Layers} label="PolyServices" color="bg-amber-500" onClick={() => { setIsActionsOpen(false); setShowPolymartModal(true); }} />
                 <QuickActionButton icon={CalendarRange} label="Takwim" color="bg-blue-500" onClick={() => handleQuickAction('/akademik/takwim')} />
                 <QuickActionButton icon={HeartHandshake} label="Aduan" color="bg-teal-500" onClick={() => handleQuickAction('/kebajikan/buat-aduan')} />
-                <QuickActionButton icon={Store} label="PolyMart" color="bg-emerald-500" onClick={() => { setIsActionsOpen(false); setShowPolymartModal(true); }} />
                 <QuickActionButton icon={Landmark} label="Kelab" color="bg-red-400" onClick={() => handleQuickAction('/kelab')} />
                 
                 <QuickActionButton icon={Lightbulb} label="Bisnes" color="bg-green-400" onClick={() => handleQuickAction('/keusahawanan/dashboard')} />
                 {isKlkEligible && (
-                  <QuickActionButton icon={Building2} label="Kediaman" color="bg-orange-500" onClick={() => handleQuickAction('/klk/form')} />
+                  <QuickActionButton icon={Building2} label="Kediaman" color="bg-orange-500" onClick={() => handleQuickAction('/tetapan?tab=kediaman')} />
                 )}
                 
                 {(isSuperAdmin || isJppMember) && (
