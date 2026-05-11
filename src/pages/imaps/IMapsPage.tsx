@@ -548,10 +548,12 @@ export function IMapsPage() {
           console.error("Continuous GPS error:", error);
         },
         {
-          // Low-end: use network/cell GPS (less battery, enough accuracy for campus)
-          // High-end: high accuracy GPS hardware
-          enableHighAccuracy: !isLowEnd,
-          maximumAge: isLowEnd ? 8000 : 0,
+          // Always use high accuracy GPS — arrival detection threshold is 30m.
+          // Network GPS (10-50m error) would cause missed arrivals on low-end devices.
+          // Low-end gets a longer timeout (more patient for first GPS fix),
+          // but accuracy is NEVER sacrificed.
+          enableHighAccuracy: true,
+          maximumAge: 0,
           timeout: isLowEnd ? 10000 : 5000,
         }
       );
