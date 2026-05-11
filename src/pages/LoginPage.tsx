@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'react-hot-toast';
-import { Mail, Lock, ArrowRight, User, Hash, Building2, ChevronLeft, ChevronDown, Sparkles, Crown, Link2 } from 'lucide-react';
+import { Mail, Lock, ArrowRight, User, Hash, Building2, ChevronLeft, ChevronDown, Sparkles, Crown, Link2, PhoneCall } from 'lucide-react';
 import { UserRole, JABATAN_LIST, JabatanValue, ALL_CLUBS, ROLE_LABELS, getAkademikClubId } from '@/types';
 import { cn } from '@/lib/utils';
 import { sanitizeRedirect } from '@/utils/sanitizeRedirect';
@@ -803,7 +803,19 @@ export function LoginPage() {
             </div>
           )}
 
-          <div className="mt-12 text-center lg:hidden">
+          <div className="mt-8 flex justify-center">
+            <a 
+              href="https://wa.me/601139413699" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20 transition-colors text-[10px] font-black uppercase tracking-widest"
+            >
+              <PhoneCall className="w-3.5 h-3.5" />
+              Hubungi JPP Sekiranya Ada Masalah
+            </a>
+          </div>
+
+          <div className="mt-8 text-center lg:hidden">
             <p className="text-[10px] font-medium text-muted-foreground/40">© 2026 JPP Digital Portal. Hak cipta terpelihara.</p>
           </div>
         </motion.div>
