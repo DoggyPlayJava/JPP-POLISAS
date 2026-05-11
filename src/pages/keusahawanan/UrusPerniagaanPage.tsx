@@ -56,8 +56,7 @@ export function UrusPerniagaanPage() {
   const [useShiftSystem, setUseShiftSystem] = useState(false);
   const [regType, setRegType] = useState<'SSM' | 'PUSKEP'>('PUSKEP');
   const [ssmRegNumber, setSsmRegNumber] = useState('');
-  const [mentorName, setMentorName] = useState('');
-  const [mentorDept, setMentorDept] = useState('');
+  const [mentors, setMentors] = useState<{name: string, department: string}[]>([{ name: '', department: '' }]);
 
   // Derived
   const businessId = selectedBusiness?.id;
@@ -96,8 +95,7 @@ export function UrusPerniagaanPage() {
     setUseShiftSystem(biz?.is_shift_enabled ?? false);
     setRegType(biz?.registration_type === 'SSM' ? 'SSM' : 'PUSKEP');
     setSsmRegNumber(biz?.ssm_registration_number || '');
-    setMentorName(biz?.mentor_name || '');
-    setMentorDept(biz?.mentor_department || '');
+    setMentors(biz?.mentors && biz.mentors.length > 0 ? biz.mentors : [{ name: '', department: '' }]);
 
     const { data: mems } = await supabase
       .from('student_business_memberships')
@@ -222,8 +220,7 @@ export function UrusPerniagaanPage() {
        description,
        registration_type: finalRegType,
        ssm_registration_number: finalSsm,
-       mentor_name: mentorName,
-       mentor_department: mentorDept,
+       mentors,
        registration_history: updatedHistory
     }).eq('id', businessId);
     await pos.writeLog(businessId, 'SETTINGS_UPDATED', 'Maklumat perniagaan dikemaskini.');
@@ -442,19 +439,50 @@ export function UrusPerniagaanPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Nama Mentor</p>
-                  <input type="text" value={mentorName} onChange={e => setMentorName(e.target.value)}
-                    placeholder="Contoh: Dr. Ahmad Ali"
-                    className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Mentor Penasihat (Maks 5)</p>
+                  {isOwner && mentors.length < 5 && (
+                    <button type="button" onClick={() => setMentors([...mentors, { name: '', department: '' }])}
+                      className="text-xs text-amber-500 font-bold hover:text-amber-400 flex items-center gap-1">
+                      <Plus className="w-3 h-3" /> Tambah Mentor
+                    </button>
+                  )}
                 </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Jabatan Mentor</p>
-                  <input type="text" value={mentorDept} onChange={e => setMentorDept(e.target.value)}
-                    placeholder="Contoh: JTMK"
-                    className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
-                </div>
+                {mentors.map((m, i) => (
+                  <div key={i} className="flex flex-col gap-4 p-4 rounded-2xl bg-muted/20 border border-border/50 relative group">
+                    {isOwner && i > 0 && (
+                      <button type="button" onClick={() => setMentors(mentors.filter((_, idx) => idx !== i))}
+                        className="absolute top-3 right-3 text-muted-foreground/40 hover:text-rose-500">
+                        Tutup
+                      </button>
+                    )}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Nama Mentor {i===0 && "(Wajib)"}</p>
+                        <input type="text" value={m.name} onChange={e => {
+                            const newM = [...mentors];
+                            newM[i].name = e.target.value;
+                            setMentors(newM);
+                          }}
+                          placeholder={i===0 ? "Contoh: Dr. Ahmad Ali (Wajib)" : "Contoh: Dr. Ahmad Ali"}
+                          disabled={!isOwner}
+                          className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all disabled:opacity-50" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Jabatan Mentor {i===0 && "(Wajib)"}</p>
+                        <input type="text" value={m.department} onChange={e => {
+                            const newM = [...mentors];
+                            newM[i].department = e.target.value;
+                            setMentors(newM);
+                          }}
+                          placeholder={i===0 ? "Contoh: JTMK (Wajib)" : "Contoh: JTMK"}
+                          disabled={!isOwner}
+                          className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all disabled:opacity-50" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div>

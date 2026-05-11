@@ -465,6 +465,10 @@ export interface KeusahawananBusiness {
   is_active: boolean;
   is_shift_enabled: boolean;
   created_at: string;
+  ssm_registration_number?: string | null;
+  registration_type?: string | null;
+  registration_history?: any[];
+  mentors?: { name: string; department: string }[];
   // Joined
   category?: KeusahawananCategory;
   owner?: { id: string; full_name: string; avatar_url?: string };

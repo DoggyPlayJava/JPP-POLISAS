@@ -563,8 +563,6 @@ Jika anda menambah sistem exco baharu dan memerlukan ikon/warna lencana (badge) 
 
 ---
 
-## 15. Sistem Kohort Pelajar POLISAS ⭐
-
 > Ditambah: April 2026
 
 Sistem kohort membolehkan pegawai JPP mengenal pasti tahap pengajian dan program pelajar (Junior/Senior/Asasi) dan menapis ahli mengikut program atau semester dengan mudah.
@@ -575,17 +573,6 @@ Sistem kohort membolehkan pegawai JPP mengenal pasti tahap pengajian dan program
 |---|---|---|
 | `programme_code` | `TEXT` | Kod program: `DEE`, `DTK`, `DEP`, `DAD`, `DKM`, `DSB`, `DKA`, `DGU`, `DTM`, `DMH`, `DAT`, `DSK`, `DLS`, `DBS`, `FTV` |
 | `intake_year` | `SMALLINT` | Tahun pengambilan: 2020–2026 |
-| `intake_period` | `SMALLINT` | `1` = Intake Pertama (Pertengahan Tahun, ~Julai) \| `2` = Intake Kedua (Awal Tahun, ~Januari) |
-| `semester_override` | `SMALLINT` | Pembetulan manual semester. `NULL` = guna kiraan auto |
-
-> **Nota:** Semua kolum adalah `NULLABLE`. Staf (`STAFF`, `SUPER_ADMIN_JPP`, `ADMIN`) dikecualikan daripada pengisian data kohort.
-
-### 14.2 Konfigurasi Sistem (`system_settings`)
-
-| Key | Jenis | Nilai Lalai | Maksud |
-|---|---|---|---|
-| `intake_1_month` | `INT` | `7` (Julai) | Bulan mula Intake Pertama |
-| `intake_2_month` | `INT` | `1` (Januari) | Bulan mula Intake Kedua |
 | `intake_1_alert_sent_{YEAR}` | `BOOL` | — | Flag: notifikasi intake 1 sudah dihantar tahun ini |
 | `intake_2_alert_sent_{YEAR}` | `BOOL` | — | Flag: notifikasi intake 2 sudah dihantar tahun ini |
 
@@ -1884,3 +1871,30 @@ Disebabkan kritikalnya sistem PolyRider (melibatkan pergerakan fizikal pelajar),
 2. **Admin PolyRider (Exco KLK):** Menghala terus ke nombor rasmi unit KLK (Keselamatan & Lalu Lintas) melalui `system_settings` (`klk_emergency_phone`).
 
 **JANGAN buang atau sembunyikan butang ini** pada peranti mudah alih memandangkan sebarang masalah sistem berpotensi mengakibatkan pelajar terkandas di sekitar kampus.
+
+---
+
+## 18. Antaramuka Pengguna (UI) iMaps & Pengurusan Zon 🗺️
+
+> Ditambah: Mei 2026
+
+Modul iMaps pada asalnya memaparkan semua bangunan secara serentak yang mengakibatkan UI menjadi sangat padat (cluttered), terutamanya di kawasan yang banyak bangunan seperti Jabatan Akademik atau Kamsis. 
+
+### 18.1 Sistem Pengelompokan Zon (Zone Grouping)
+- **Konsep:** Bangunan kini boleh dikelompokkan menggunakan medan `zone_name`. 
+- **Dynamic Map Clustering:** Di dalam `IMapsPage.tsx`, peta menggunakan logik skala *zoom* untuk memutuskan sama ada memaparkan label kumpulan (contoh: "JKE") atau label bangunan individu.
+- **Skala Zoom:** Skala penanda aras diletakkan pada `< 19` (`mapZoom < 19`). Ini bermakna kumpulan (zon) akan kekal dipaparkan walaupun pengguna telah mula *zoom in* (skala 16, 17, dan 18). Hanya pada tahap *zoom* maksimum (skala 19), barulah label berpecah kepada bangunan individu.
+- **Sidebar Terkategori:** Menu Eksplorasi (Explore Sidebar) kini menggunakan reka bentuk **Accordion Bertab**. 
+  - **Tab Akademik/Blok:** Menghimpunkan bangunan mengikut `zone_name`. Bangunan tanpa zon akan dipaparkan secara tunggal di bawah senarai.
+  - **Tab Fasiliti Utama:** Menghimpunkan bangunan mengikut jenis fasiliti (`facility_type`) seperti "Kafe", "Surau", dsb.
+- **Penyembunyian Bersyarat (Conditional Visibility):** Fasiliti berkapasiti kecil dan banyak seperti "Tandas" disembunyikan daripada peta secara lalai bagi mengelakkan kesesakan visual (*clutter*). Penanda hanya muncul sekiranya pengguna menekan butang *filter* "Tandas" di bar navigasi.
+
+### 18.2 Input Auto-Saran (Datalist) untuk Admin
+Bagi memastikan kelancaran logik pengelompokan (grouping) dan klasifikasi fasiliti, pentadbir tidak boleh melakukan kesilapan ejaan (contohnya: terbuat "Jke" dan "JKE " atau "Cafe" dan "Kafe").
+- **Penyelesaian:** Modul Admin iMaps (`JppImapsAdmin.tsx`) menggunakan elemen asli HTML `<datalist>` untuk medan `zone_name` dan `facility_type`.
+- Apabila admin klik pada ruang input, senarai cadangan (diambil secara dinamik dari pangkalan data sedia ada) akan terpapar.
+- Titik merah (`CircleMarker`) juga ditambah ke dalam Peta Admin untuk memudahkan admin melihat lokasi bangunan sedia ada bagi mengelakkan pertindihan data (*double-entry*).
+
+### 18.3 Pemilihan Bangunan (Admin UI)
+- **Input Asal:** Dropdown <select> biasa yang menjadi sangat meleret.
+- **Naik Taraf (Datalist):** Ditukar menggunakan <input> bersama <datalist>. Pentadbir kini boleh *type-to-search* nama bangunan atau kod bangunan. Sistem akan secara proaktif menterjemahkan teks yang dipadankan kepada uilding_id di sebalik tabir.

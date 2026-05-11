@@ -34,6 +34,7 @@ interface Business {
   registration_type?: string;
   ssm_registration_number?: string;
   registration_history?: any[];
+  mentors?: { name: string; department: string }[];
 }
 
 // ─── Status Meta ──────────────────────────────────────────────────────────────
@@ -167,6 +168,20 @@ function BusinessDetailModal({
             )}
           </div>
 
+          {business.mentors && business.mentors.length > 0 && (
+            <div className="bg-white/[0.03] rounded-2xl p-4 border border-white/[0.04] mb-6">
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-3 border-b border-white/10 pb-2">Senarai Mentor Penasihat</p>
+              <div className="space-y-3">
+                {business.mentors.map((m, i) => (
+                  <div key={i} className="flex flex-col">
+                    <p className="text-sm font-black text-white">{m.name} {i === 0 && <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded ml-2 uppercase">Wajib</span>}</p>
+                    <p className="text-[11px] text-white/60">{m.department}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <p className="text-[10px] text-white/30 text-right">
             Didaftar: {new Date(business.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
@@ -251,6 +266,7 @@ export function KeusahawananAdminPanel() {
           registration_type,
           ssm_registration_number,
           registration_history,
+          mentors,
           profiles:owner_id (
             full_name,
             email,
@@ -287,6 +303,7 @@ export function KeusahawananAdminPanel() {
         registration_type: b.registration_type,
         ssm_registration_number: b.ssm_registration_number,
         registration_history: b.registration_history,
+        mentors: b.mentors,
       }));
 
       setBusinesses(mapped);

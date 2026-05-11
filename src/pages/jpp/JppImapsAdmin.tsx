@@ -105,6 +105,8 @@ export function JppImapsAdmin() {
   // Form states
   const [currentBuilding, setCurrentBuilding] = useState<Partial<Building>>({});
   const [currentLocation, setCurrentLocation] = useState<Partial<Location>>({});
+  const [buildingSearchText, setBuildingSearchText] = useState('');
+  const [isBuildingDropdownOpen, setIsBuildingDropdownOpen] = useState(false);
   
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState<Record<string, boolean>>({});
@@ -333,7 +335,7 @@ export function JppImapsAdmin() {
             </button>
           ) : (
             <button
-              onClick={() => { setCurrentLocation({}); setShowLocationModal(true); }}
+              onClick={() => { setCurrentLocation({}); setBuildingSearchText(''); setShowLocationModal(true); }}
               className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold tracking-wide transition-colors shadow-lg shadow-indigo-500/20"
             >
               <Plus className="w-4 h-4" /> Tambah Lokasi
@@ -454,7 +456,12 @@ export function JppImapsAdmin() {
                       </td>
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => { setCurrentLocation(l); setShowLocationModal(true); }} className="p-1.5 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors">
+                          <button onClick={() => {
+                            setCurrentLocation(l);
+                            const matchedBuilding = buildings.find(b => b.id === l.building_id);
+                            setBuildingSearchText(matchedBuilding ? matchedBuilding.code : '');
+                            setShowLocationModal(true);
+                          }} className="p-1.5 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors">
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button onClick={() => deleteLocation(l.id)} className="p-1.5 rounded-lg hover:bg-rose-500/20 text-white/50 hover:text-rose-400 transition-colors">
@@ -589,20 +596,19 @@ export function JppImapsAdmin() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-white/10">
                       <div>
                         <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">Kategori Fasiliti</label>
-                        <select 
+                        <input 
+                          type="text"
+                          list="facility-suggestions"
                           value={currentBuilding.facility_type || ''} 
                           onChange={e => setCurrentBuilding({...currentBuilding, facility_type: e.target.value})}
-                          className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all appearance-none"
-                        >
-                          <option value="" disabled className="bg-slate-900">Pilih...</option>
-                          <option value="cafe" className="bg-slate-900">Kafe</option>
-                          <option value="surau" className="bg-slate-900">Surau / Masjid</option>
-                          <option value="toilet" className="bg-slate-900">Tandas Umum</option>
-                          <option value="library" className="bg-slate-900">Perpustakaan</option>
-                          <option value="atm" className="bg-slate-900">Mesin ATM</option>
-                          <option value="admin" className="bg-slate-900">Pentadbiran (HEPA dsb.)</option>
-                          <option value="other" className="bg-slate-900">Lain-lain</option>
-                        </select>
+                          className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 transition-all"
+                          placeholder="Cth: Kafe, Surau, Tandas..."
+                        />
+                        <datalist id="facility-suggestions">
+                          {Array.from(new Set(buildings.filter(b => b.is_facility && b.facility_type).map(b => b.facility_type))).map(type => (
+                            <option key={type} value={type} />
+                          ))}
+                        </datalist>
                       </div>
                       <div>
                         <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">Buka (08:00)</label>
@@ -647,16 +653,67 @@ export function JppImapsAdmin() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-black uppercase tracking-wider text-white/40 mb-1">Bangunan</label>
-                  <select 
-                    value={currentLocation.building_id || ''} 
-                    onChange={e => setCurrentLocation({...currentLocation, building_id: e.target.value})}
-                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-all appearance-none"
-                  >
-                    <option value="" disabled className="bg-slate-900">Pilih Bangunan...</option>
-                    {buildings.map(b => (
-                      <option key={b.id} value={b.id} className="bg-slate-900">{b.name} ({b.code})</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <input 
+                      type="text"
+                      value={buildingSearchText} 
+                      onFocus={() => setIsBuildingDropdownOpen(true)}
+                      onBlur={() => {
+                        // Delay closing to allow onClick on dropdown item to fire
+                        setTimeout(() => setIsBuildingDropdownOpen(false), 200);
+                      }}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setBuildingSearchText(val);
+                        setIsBuildingDropdownOpen(true);
+                        // Case-insensitive match on code or name
+                        const matched = buildings.find(b => 
+                          b.code.toLowerCase() === val.toLowerCase() || 
+                          b.name.toLowerCase() === val.toLowerCase()
+                        );
+                        setCurrentLocation({...currentLocation, building_id: matched ? matched.id : ''});
+                      }}
+                      placeholder="Pilih Bangunan (Cth: JKE, Pusat Pelajar)..."
+                      className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-all"
+                    />
+                    
+                    <AnimatePresence>
+                      {isBuildingDropdownOpen && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="absolute left-0 right-0 top-full mt-2 bg-[#1a1b23] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[10001] max-h-60 overflow-y-auto"
+                        >
+                          {buildings
+                            .filter(b => 
+                              b.name.toLowerCase().includes(buildingSearchText.toLowerCase()) || 
+                              b.code.toLowerCase().includes(buildingSearchText.toLowerCase())
+                            )
+                            .map(b => (
+                            <button
+                              key={b.id}
+                              onClick={() => {
+                                setBuildingSearchText(b.code);
+                                setCurrentLocation({...currentLocation, building_id: b.id});
+                                setIsBuildingDropdownOpen(false);
+                              }}
+                              className="w-full text-left px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-colors flex flex-col"
+                            >
+                              <span className="font-bold text-white text-sm">{b.code}</span>
+                              <span className="text-xs text-white/50">{b.name}</span>
+                            </button>
+                          ))}
+                          {buildings.filter(b => 
+                              b.name.toLowerCase().includes(buildingSearchText.toLowerCase()) || 
+                              b.code.toLowerCase().includes(buildingSearchText.toLowerCase())
+                            ).length === 0 && (
+                              <div className="px-4 py-3 text-sm text-white/40 italic text-center">Tiada bangunan ditemui</div>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">

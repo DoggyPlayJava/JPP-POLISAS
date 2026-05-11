@@ -302,9 +302,19 @@ export function IMapsPage() {
 
   useEffect(() => {
     if (activeFilter) {
-      let filtered = allBuildings.filter(b => b.facility_type === activeFilter);
+      const filter = activeFilter.toLowerCase();
+      let filtered = allBuildings.filter(b => {
+        if (!b.is_facility) return false;
+        const bType = b.facility_type?.toLowerCase() || '';
+        return bType === filter || 
+               (filter === 'cafe' && bType === 'kafe') ||
+               (filter === 'kafe' && bType === 'cafe') ||
+               (filter === 'surau' && bType.includes('surau')) ||
+               (filter === 'toilet' && bType === 'tandas') ||
+               (filter === 'tandas' && bType === 'toilet');
+      });
       
-      const mapped = filtered.map(b => {
+      const mappedBuildings = filtered.map(b => {
         let eta = null;
         if (userLocation && b.center_lat) {
           eta = calculateWalkingETA(userLocation[0], userLocation[1], b.center_lat, b.center_lng);
@@ -318,12 +328,39 @@ export function IMapsPage() {
         } as unknown as Location;
       });
 
+      // Juga cari Lokasi (kelas/bilik) yang sepadan dengan filter (melalui nama atau tag carian)
+      const locationKeywords = {
+        cafe: ['kafe', 'cafe', 'kantin', 'makan'],
+        surau: ['surau', 'masjid', 'solat'],
+        toilet: ['tandas', 'toilet', 'washroom']
+      };
+      
+      const targetKeywords = locationKeywords[filter as keyof typeof locationKeywords] || [filter];
+      
+      const matchedLocations = allLocations.filter(loc => {
+        const textToSearch = `${loc.room_code} ${loc.search_tags || ''}`.toLowerCase();
+        return targetKeywords.some(keyword => textToSearch.includes(keyword));
+      });
+
+      const mappedLocations = matchedLocations.map(loc => {
+        let eta = null;
+        if (userLocation && loc.building?.center_lat) {
+          eta = calculateWalkingETA(userLocation[0], userLocation[1], loc.building.center_lat, loc.building.center_lng);
+        }
+        return {
+          ...loc,
+          floor_level: eta // Use the hijacked floor_level for ETA sorting to mix perfectly with buildings
+        };
+      });
+
+      const combined = [...mappedBuildings, ...mappedLocations];
+
       // Sort by ETA (closest first) if GPS is available
       if (userLocation) {
-        mapped.sort((a, b) => (a.floor_level || 999) - (b.floor_level || 999));
+        combined.sort((a, b) => (a.floor_level || 999) - (b.floor_level || 999));
       }
 
-      setSearchResults(mapped);
+      setSearchResults(combined);
     } else if (!searchQuery) {
       setSearchResults([]);
     }
@@ -603,6 +640,26 @@ export function IMapsPage() {
             
             // Sembunyikan bangunan dalam zon kalau masih zoom out, TAPI biarkan kalau bangunan tu tengah aktif (dipilih)
             if (b.zone_name && mapZoom < 19 && !isActive) return null;
+
+            // Jika activeFilter wujud, sembunyikan bangunan yang tak sepadan
+            if (activeFilter) {
+              const bType = b.facility_type?.toLowerCase() || '';
+              const filter = activeFilter.toLowerCase();
+              const isMatch = bType === filter || 
+                             (filter === 'cafe' && bType === 'kafe') ||
+                             (filter === 'kafe' && bType === 'cafe') ||
+                             (filter === 'surau' && bType.includes('surau')) ||
+                             (filter === 'toilet' && bType === 'tandas') ||
+                             (filter === 'tandas' && bType === 'toilet');
+              if (!isMatch && !isActive) return null;
+            }
+
+            // Sembunyikan fasiliti kecil (seperti Tandas) secara default melainkan difilter atau sedang aktif
+            const isTandas = b.facility_type?.toLowerCase() === 'tandas' || b.facility_type?.toLowerCase() === 'toilet';
+            const isToiletFilterActive = activeFilter?.toLowerCase() === 'toilet' || activeFilter?.toLowerCase() === 'tandas';
+            if (b.is_facility && isTandas && !isToiletFilterActive && !isActive) {
+              return null;
+            }
             
             return (
               <Marker 

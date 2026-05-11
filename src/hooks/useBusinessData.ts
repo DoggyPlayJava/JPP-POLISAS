@@ -74,8 +74,7 @@ export function useBusinessData() {
     description: string,
     categoryId: string,
     ssmRegistrationNumber?: string,
-    mentorName?: string,
-    mentorDepartment?: string
+    mentors: { name: string; department: string }[] = []
   ) => {
     if (!user) return { error: 'Tiada sesi' };
     
@@ -108,8 +107,7 @@ export function useBusinessData() {
           status: 'PENDING_INTERVIEW',
           ssm_registration_number: finalSsm,
           registration_type: finalRegType,
-          mentor_name: mentorName,
-          mentor_department: mentorDepartment,
+          mentors,
         }])
         .select()
         .single();
