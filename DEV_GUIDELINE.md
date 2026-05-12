@@ -1898,3 +1898,4 @@ Bagi memastikan kelancaran logik pengelompokan (grouping) dan klasifikasi fasili
 ### 18.3 Pemilihan Bangunan (Admin UI)
 - **Input Asal:** Dropdown <select> biasa yang menjadi sangat meleret.
 - **Naik Taraf (Datalist):** Ditukar menggunakan <input> bersama <datalist>. Pentadbir kini boleh *type-to-search* nama bangunan atau kod bangunan. Sistem akan secara proaktif menterjemahkan teks yang dipadankan kepada uilding_id di sebalik tabir.
+

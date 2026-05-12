@@ -27,9 +27,10 @@ interface BottomNavProps {
     left: NavLinkData[];
     right: NavLinkData[];
   };
+  forceShowDesktop?: boolean;
 }
 
-export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks }: BottomNavProps) {
+export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowDesktop = false }: BottomNavProps) {
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const { isSuperAdmin, isJppMember, profile } = useAuth();
@@ -185,18 +186,22 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks }: BottomNa
       <div 
         ref={navRef}
         id="bottom-nav-dock"
-        onClick={() => {
+        onClick={(e) => {
+          e.nativeEvent.stopImmediatePropagation();
           if (navRef.current && navRef.current.classList.contains('scale-[0.85]')) {
             if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(30);
             navRef.current.classList.remove('opacity-75', 'scale-[0.85]', 'translate-y-4');
           }
         }}
-        onTouchStart={(e) => e.stopPropagation()}
-        onTouchMove={(e) => e.stopPropagation()}
-        onPointerDown={(e) => e.stopPropagation()}
-        onPointerMove={(e) => e.stopPropagation()}
-        onPointerUp={(e) => e.stopPropagation()}
-        className="md:hidden fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[360px] z-[120] transform-gpu transition-all duration-300 ease-out cursor-pointer"
+        onTouchStart={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+        onTouchMove={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+        onPointerDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+        onPointerMove={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+        onPointerUp={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+        className={cn(
+          !forceShowDesktop && "md:hidden",
+          "fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[360px] z-[120] transform-gpu transition-all duration-300 ease-out cursor-pointer"
+        )}
       >
         {/* Changed blur to md to optimize for low end devices */}
         <div className="bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.5)] rounded-full px-2 py-2 flex items-center justify-between relative">

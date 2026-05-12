@@ -241,6 +241,7 @@ export function PolyRiderHome() {
   const [activeRiders, setActiveRiders] = useState(0);
   const [isRegisteredRider, setIsRegisteredRider] = useState(false);
   const [studentGender, setStudentGender] = useState<'LELAKI' | 'PEREMPUAN' | null>(null);
+  const [genderError, setGenderError] = useState(false);
 
   // Booking Form State
   const [pickup, setPickup] = useState(polymartState?.pickup_name || '');
@@ -279,6 +280,14 @@ export function PolyRiderHome() {
   // Chat State
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
+
   const [showContactMenu, setShowContactMenu] = useState(false);
 
   // SOS State
@@ -472,12 +481,10 @@ export function PolyRiderHome() {
     // Also poll every 30s as a safety net
     const handleVisibility = () => { if (document.visibilityState === 'visible') fetchOpenCarpools(); };
     document.addEventListener('visibilitychange', handleVisibility);
-    const iv = setInterval(() => { if (document.visibilityState === 'visible') fetchOpenCarpools(); }, 30000);
 
     return () => {
       supabase.removeChannel(channel);
       document.removeEventListener('visibilitychange', handleVisibility);
-      clearInterval(iv);
     };
   }, [isSearching, activeJob, user]);
 
@@ -489,7 +496,18 @@ export function PolyRiderHome() {
     }
     const tick = () => {
       const diff = new Date(activeJob.expires_at).getTime() - Date.now();
-      if (diff <= 0) { setExpiresIn('Tamat'); return; }
+      if (diff <= 0) { 
+        setExpiresIn('Tamat'); 
+        if (isSearching && activeJob.status === 'PENDING') {
+          supabase.rpc('cancel_polyrider_job', { p_job_id: activeJob.id, p_reason: 'Sistem: Tiada rider ditemui selepas 15 minit' })
+            .then(() => {
+               toast.error('Tiada rider ditemui selepas 15 minit. Sila cuba sebentar lagi.');
+               setIsSearching(false); setActiveJob(null); setBids([]); setShowNudge(false);
+               searchStartTime.current = null;
+            });
+        }
+        return; 
+      }
       const m = Math.floor(diff / 60000);
       const s = Math.floor((diff % 60000) / 1000);
       setExpiresIn(`${m}:${s.toString().padStart(2, '0')}`);
@@ -608,12 +626,8 @@ export function PolyRiderHome() {
     
     channel.subscribe();
     
-    // Slower fallback interval in case of missed WebSocket messages
-    const iv = setInterval(poll, 30000); 
-    
     return () => {
       supabase.removeChannel(channel);
-      clearInterval(iv);
     };
   }, [activeJob?.id, isSearching]);
 
@@ -641,6 +655,12 @@ export function PolyRiderHome() {
     // When joining a carpool, pickup is required — show a clear error if missing
     if (!pickup) {
       toast.error('Sila isi lokasi pickup anda dahulu.');
+      return;
+    }
+
+    if (!studentGender) {
+      setGenderError(true);
+      toast.error('Sila pilih Jantina (L/P) sebelum minta rider.');
       return;
     }
 
@@ -1281,7 +1301,7 @@ export function PolyRiderHome() {
           {/* Chat */}
           <div className="flex-1 flex flex-col mb-4">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 mb-2 flex items-center gap-1"><MessageCircle className="w-3 h-3" /> Chat Rider</p>
-            <div className="flex-1 bg-slate-50 dark:bg-zinc-950/50 rounded-2xl p-3 border border-slate-100 dark:border-white/5 overflow-y-auto space-y-2 mb-2 max-h-[28vh]">
+            <div ref={chatContainerRef} className="flex-1 bg-slate-50 dark:bg-zinc-950/50 rounded-2xl p-3 border border-slate-100 dark:border-white/5 overflow-y-auto space-y-2 mb-2 max-h-[28vh]">
               {chatMessages.length === 0 ? <p className="text-xs text-center text-slate-400 dark:text-white/40 mt-6">Berhubung dengan rider di sini.</p> : (
                 chatMessages.map(msg => (
                   <div key={msg.id} className={`flex ${msg.sender_id === user!.id ? 'justify-end' : 'justify-start'}`}>
@@ -1686,18 +1706,21 @@ export function PolyRiderHome() {
                     <span className="text-xl font-black text-amber-500">RM</span>
                     <input
                       id="priceInput"
-                      type="number"
-                      min="1"
-                      step="0.5"
+                      type="text"
+                      inputMode="numeric"
                       className="w-full bg-transparent border-none text-xl font-black text-slate-900 dark:text-white focus:outline-none focus:ring-0 p-0"
-                      value={proposedPrice}
-                      onChange={(e) => setProposedPrice(Number(e.target.value))}
+                      value={proposedPrice.toFixed(2)}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        const num = parseInt(val, 10) || 0;
+                        setProposedPrice(num / 100);
+                      }}
                     />
                   </div>
                 </div>
 
                 {/* Gender */}
-                <div className="flex-[0.8] bg-slate-50 dark:bg-zinc-950/50 rounded-xl p-2.5 border border-slate-100 dark:border-white/5 flex flex-col justify-between">
+                <div className={`flex-[0.8] bg-slate-50 dark:bg-zinc-950/50 rounded-xl p-2.5 border flex flex-col justify-between ${genderError ? 'border-red-500 ring-2 ring-red-500/20' : 'border-slate-100 dark:border-white/5'}`}>
                   <div className="flex items-center justify-between mb-1">
                     <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">
                       Jantina
@@ -1710,6 +1733,7 @@ export function PolyRiderHome() {
                         key={g}
                         onClick={async () => {
                           setStudentGender(g);
+                          setGenderError(false);
                           if (user) await supabase.from('profiles').update({ gender: g }).eq('id', user.id);
                         }}
                         className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 border ${studentGender === g
@@ -1870,7 +1894,7 @@ export function PolyRiderHome() {
 
           {/* 6. Submit Button */}
           <button
-            disabled={!pickup || !dropoff || isSearching || proposedPrice < 1 || !studentGender}
+            disabled={!pickup || !dropoff || isSearching || proposedPrice < 1}
             onClick={handleBook}
             className="w-full h-12 mt-1 bg-amber-500 hover:bg-amber-600 text-white font-black text-sm rounded-xl shadow-lg shadow-amber-500/30 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
           >
@@ -2095,18 +2119,21 @@ export function PolyRiderHome() {
                   <div className="flex items-center gap-1">
                     <span className="text-2xl font-black text-emerald-500">RM</span>
                     <input
-                      type="number"
-                      min="1"
-                      step="0.5"
+                      type="text"
+                      inputMode="numeric"
                       className="flex-1 bg-transparent border-none text-2xl font-black text-emerald-700 dark:text-emerald-300 focus:outline-none focus:ring-0 p-0"
-                      value={proposedPrice}
-                      onChange={(e) => setProposedPrice(Number(e.target.value))}
+                      value={proposedPrice.toFixed(2)}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        const num = parseInt(val, 10) || 0;
+                        setProposedPrice(num / 100);
+                      }}
                     />
                   </div>
                 </div>
 
                 {/* ── GENDER ── */}
-                <div className="bg-white dark:bg-zinc-950/50 p-3 rounded-xl border border-slate-200 dark:border-white/5">
+                <div className={`bg-white dark:bg-zinc-950/50 p-3 rounded-xl border ${genderError ? 'border-red-500 ring-2 ring-red-500/20' : 'border-slate-200 dark:border-white/5'}`}>
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">Jantina Penumpang</p>
                     {!studentGender && (
@@ -2119,6 +2146,7 @@ export function PolyRiderHome() {
                         key={g}
                         onClick={async () => {
                           setStudentGender(g);
+                          setGenderError(false);
                           if (user) await supabase.from('profiles').update({ gender: g }).eq('id', user.id);
                         }}
                         className={`flex-1 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 border ${
@@ -2139,7 +2167,7 @@ export function PolyRiderHome() {
               {/* CTA Button — pickup GPS required */}
               <button
                 onClick={handleBook}
-                disabled={!pickup || !pickupPos || !dropoff || proposedPrice < 1 || !studentGender}
+                disabled={!pickup || !pickupPos || !dropoff || proposedPrice < 1}
                 className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-2xl disabled:opacity-50 transition-all shadow-lg shadow-emerald-500/20"
               >
                 {!pickupPos ? '📍 Tetapkan lokasi pickup dahulu' : 'Sahkan & Minta Rider'}
@@ -2345,9 +2373,13 @@ export function PolyRiderHome() {
                           <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex gap-2">
                             <div className="flex-1 relative">
                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">RM</span>
-                              <input type="number" min="1" step="0.5"
-                                value={counterAmount}
-                                onChange={e => setCounterAmount(Number(e.target.value))}
+                              <input type="text" inputMode="numeric"
+                                value={counterAmount.toFixed(2)}
+                                onChange={(e) => {
+                                  const val = e.target.value.replace(/\D/g, '');
+                                  const num = parseInt(val, 10) || 0;
+                                  setCounterAmount(num / 100);
+                                }}
                                 className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl text-sm font-black text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500"
                               />
                             </div>

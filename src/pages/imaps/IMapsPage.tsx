@@ -381,7 +381,7 @@ export function IMapsPage() {
         .select(`
           id, room_code, floor_level, direction_text, search_tags, image_url,
           building:building_id (
-            id, name, code, center_lat, center_lng, drone_image_url
+            id, name, code, center_lat, center_lng, drone_image_url, zone_name
           )
         `)
         .or(`room_code.ilike.%${query}%,search_tags.ilike.%${query}%`)
@@ -623,7 +623,7 @@ export function IMapsPage() {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col relative bg-slate-50 dark:bg-slate-950 overflow-hidden">
+    <div className="h-[100dvh] w-screen flex flex-col relative bg-slate-50 dark:bg-slate-950 overflow-hidden">
       
       {/* ── HEADER & SEARCH BAR ── */}
       <div className="absolute top-0 left-0 right-0 z-[1000] p-4 pt-safe-top pointer-events-none">
@@ -691,6 +691,11 @@ export function IMapsPage() {
                     <div>
                       <div className="font-black text-slate-800 dark:text-white flex items-center gap-2">
                         {loc.room_code}
+                        {loc.building?.zone_name && (
+                          <span className="text-[10px] bg-sky-500/10 text-sky-600 dark:text-sky-400 px-1.5 py-0.5 rounded-md font-bold tracking-wider uppercase">
+                            Zon {loc.building.zone_name}
+                          </span>
+                        )}
                         {loc.op_start && loc.op_end && (
                           <span className={cn(
                             "text-[9px] px-1.5 py-0.5 rounded-sm font-black tracking-wider uppercase",
@@ -701,7 +706,7 @@ export function IMapsPage() {
                         )}
                       </div>
                       <p className="text-xs font-bold text-slate-500 flex items-center gap-2 mt-0.5">
-                        {loc.building?.name}
+                        {loc.id.startsWith('b-') ? 'Bangunan' : loc.building?.name}
                         {activeFilter && loc.floor_level > 0 && (
                           <span className="text-sky-500 flex items-center gap-1 bg-sky-500/10 px-1.5 py-0.5 rounded">
                             <Clock className="w-3 h-3" /> {loc.floor_level} min
@@ -1368,7 +1373,7 @@ export function IMapsPage() {
 
 
       {/* ── GLOBAL BOTTOM NAV ── */}
-      <BottomNav onOpenSidebar={() => setIsSidebarOpen(true)} />
+      <BottomNav onOpenSidebar={() => setIsSidebarOpen(true)} forceShowDesktop={true} />
     </div>
   );
 }

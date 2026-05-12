@@ -19,7 +19,6 @@ export function PolyRiderAdminDashboard() {
   const [qrFile, setQrFile] = useState<File | null>(null);
   const [qrPreview, setQrPreview] = useState<string | null>(null);
   const [savingQr, setSavingQr] = useState(false);
-  const sosPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Location Presets State
   const [presets, setPresets] = useState<any[]>([]);
@@ -35,11 +34,17 @@ export function PolyRiderAdminDashboard() {
     fetchKlkPhone();
     fetchWhatsappLink();
     fetchQrCode();
-    sosPollingRef.current = setInterval(() => {
+    
+    // Lightweight 60s polling for SOS & Appeals (removed from Realtime publication
+    // to reduce WAL overhead — these are admin-only, low-frequency features)
+    const pollInterval = setInterval(() => {
       fetchSosAlerts();
       fetchAppeals();
-    }, 10000);
-    return () => { if (sosPollingRef.current) clearInterval(sosPollingRef.current); };
+    }, 60000);
+      
+    return () => {
+      clearInterval(pollInterval);
+    };
   }, []);
 
   const fetchSystemSettings = async () => {

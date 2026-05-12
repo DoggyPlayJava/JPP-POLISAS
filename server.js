@@ -1854,8 +1854,14 @@ app.get('/api/system-telemetry', requireAuth, async (req, res) => {
             supabaseAdmin.rpc('get_kebajikan_telemetry').then(r => r, e => ({ data: null })),
             // Accounts
             supabaseAdmin.rpc('get_account_telemetry').then(r => r, e => ({ data: null })),
-            // Database Health Metrics (V3)
-            supabaseAdmin.rpc('get_database_health_metrics').then(r => r, e => ({ data: null }))
+            // Database Health Metrics (V3) — with proper error handling
+            supabaseAdmin.rpc('get_database_health_metrics').then(r => {
+                if (r.error) {
+                    console.error('[telemetry] get_database_health_metrics RPC error:', r.error.message);
+                    return { data: null };
+                }
+                return r;
+            }, e => { console.error('[telemetry] get_database_health_metrics exception:', e.message); return { data: null }; })
         ]);
 
         // Note: the RPCs above might not exist yet, so we'll fallback to manual aggregation for PolyRider, PolyMart, Kebajikan, Accounts
@@ -1958,6 +1964,14 @@ app.get('/api/system-telemetry', requireAuth, async (req, res) => {
                 dead_tuples_pct: dbHealthRes?.data?.dead_tuples_pct || 0,
                 waiting_locks: dbHealthRes?.data?.waiting_locks || 0,
                 long_running_queries: dbHealthRes?.data?.long_running_queries || 0,
+                // WAL / Realtime monitoring
+                wal_retained_mb: dbHealthRes?.data?.wal_retained_mb || 0,
+                replication_slot_name: dbHealthRes?.data?.replication_slot_name || 'none',
+                replication_slot_active: dbHealthRes?.data?.replication_slot_active || false,
+                realtime_tables: dbHealthRes?.data?.realtime_tables || 0,
+                realtime_list_changes_calls: dbHealthRes?.data?.realtime_list_changes_calls || 0,
+                realtime_list_changes_total_ms: dbHealthRes?.data?.realtime_list_changes_total_ms || 0,
+                db_uptime_seconds: dbHealthRes?.data?.db_uptime_seconds || 0,
                 alerts: []
             }
         };
@@ -1988,6 +2002,15 @@ app.get('/api/system-telemetry', requireAuth, async (req, res) => {
         }
         if (diagnostics.database.cache_hit_rate_pct < 85) diagnostics.database.alerts.push(`Kadar hit cache PostgreSQL sangat rendah (${diagnostics.database.cache_hit_rate_pct}%)`);
         if (diagnostics.database.dead_tuples_pct > 20) diagnostics.database.alerts.push(`Kadar dead tuples (bloat) tinggi (${diagnostics.database.dead_tuples_pct}%) - Perlu VACUUM.`);
+        // WAL / Realtime alerts — CRASH PREVENTION (Had: 2GB / max_slot_wal_keep_size = 2048MB)
+        if (diagnostics.database.wal_retained_mb > 1024) {
+            diagnostics.database.alerts.push(`🚨 KRITIKAL: WAL Retained sudah ${diagnostics.database.wal_retained_mb} MB! Had sistem: 2GB. Restart Realtime service SEGERA.`);
+        } else if (diagnostics.database.wal_retained_mb > 512) {
+            diagnostics.database.alerts.push(`⚠️ AMARAN: WAL Retained sudah ${diagnostics.database.wal_retained_mb} MB. Pantau dengan rapat — had sistem: 2GB.`);
+        }
+        if (diagnostics.database.realtime_tables > 10) {
+            diagnostics.database.alerts.push(`⚠️ Terlalu banyak jadual Realtime (${diagnostics.database.realtime_tables}). Setiap jadual tambahan meningkatkan beban WAL. Pertimbangkan untuk kurangkan.`);
+        }
 
         // ── Historical snapshots (last 30 days) ──
         const { data: snapshots } = await supabaseAdmin
@@ -2121,6 +2144,224 @@ cron.schedule('0 3 * * *', async () => {
         else console.log('[CRON] Telemetry snapshot saved successfully.');
     } catch (err) {
         console.error('[CRON] Telemetry snapshot failed:', err.message);
+    }
+});
+
+// ── Infrastructure Watchdog Cron (Every 5 Minutes) ────────────────────────────
+// Auto-detects crash precursors (WAL bloat, OOM risk) and sends emergency email.
+// Provides 2–4 hour warning window before potential OOM crash.
+const _watchdogLastAlerts = {}; // Cooldown tracker: { alertKey: lastSentTimestamp }
+const WATCHDOG_ALERT_EMAIL = 'aceneko14@gmail.com';
+const WATCHDOG_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour cooldown per alert type
+
+cron.schedule('*/5 * * * *', async () => {
+    try {
+        if (!supabaseAdmin) return;
+
+        const { data: health, error: rpcErr } = await supabaseAdmin.rpc('get_database_health_metrics');
+        if (rpcErr || !health) {
+            console.warn('[WATCHDOG] RPC failed:', rpcErr?.message || 'null data');
+            return;
+        }
+
+        const alerts = [];
+        const nodeMemMb = +(process.memoryUsage().rss / 1024 / 1024).toFixed(2);
+
+        // ── Check 1: WAL Retained (KRITIKAL — direct OOM crash precursor)
+        // Server: 16GB RAM, max_slot_wal_keep_size = 2048MB
+        // Alert early so admin has time to react before slot gets invalidated at 2GB
+        if (health.wal_retained_mb > 1024) {
+            alerts.push({
+                key: 'wal_critical',
+                severity: 'KRITIKAL',
+                color: '#EF4444',
+                emoji: '🚨',
+                title: 'WAL Retained Kritikal',
+                detail: `WAL retained: ${health.wal_retained_mb} MB — melebihi 1GB! Had sistem: 2GB. Jika mencapai 2GB, replication slot akan di-invalidate.`,
+                action: 'Restart Realtime container atau kurangkan jadual Realtime SEGERA.',
+            });
+        } else if (health.wal_retained_mb > 512) {
+            alerts.push({
+                key: 'wal_warning',
+                severity: 'AMARAN',
+                color: '#F59E0B',
+                emoji: '⚠️',
+                title: 'WAL Retained Tinggi',
+                detail: `WAL retained: ${health.wal_retained_mb} MB — mendekati had amaran. Had sistem: 2GB.`,
+                action: 'Pantau dengan rapat. Pertimbangkan restart Realtime service jika terus meningkat.',
+            });
+        }
+
+        // ── Check 2: Node.js RSS Memory (application-level OOM)
+        if (nodeMemMb > 900) {
+            alerts.push({
+                key: 'node_mem_critical',
+                severity: 'KRITIKAL',
+                color: '#EF4444',
+                emoji: '🧠',
+                title: 'Node.js Memori Kritikal',
+                detail: `Node.js RSS: ${nodeMemMb} MB — mendekati had OOM.`,
+                action: 'Restart server Node.js segera. Semak memory leak.',
+            });
+        } else if (nodeMemMb > 500) {
+            alerts.push({
+                key: 'node_mem_warning',
+                severity: 'AMARAN',
+                color: '#F59E0B',
+                emoji: '🧠',
+                title: 'Node.js Memori Tinggi',
+                detail: `Node.js RSS: ${nodeMemMb} MB — penggunaan memori luar biasa tinggi.`,
+                action: 'Pantau trend. Pertimbangkan restart jika terus meningkat.',
+            });
+        }
+
+        // ── Check 3: Database Connections Exhaustion
+        const connPct = health.max_connections > 0 ? (health.active_connections / health.max_connections) * 100 : 0;
+        if (connPct > 85) {
+            alerts.push({
+                key: 'conn_critical',
+                severity: 'KRITIKAL',
+                color: '#EF4444',
+                emoji: '🔌',
+                title: 'Sambungan DB Hampir Penuh',
+                detail: `${health.active_connections}/${health.max_connections} sambungan aktif (${connPct.toFixed(1)}%).`,
+                action: 'Semak connection leak. Restart aplikasi jika perlu.',
+            });
+        }
+
+        // ── Check 4: Dead Tuples Bloat
+        if (health.dead_tuples_pct > 40) {
+            alerts.push({
+                key: 'dead_tuples',
+                severity: 'AMARAN',
+                color: '#F59E0B',
+                emoji: '🗑️',
+                title: 'Dead Tuples Sangat Tinggi',
+                detail: `Dead tuples: ${health.dead_tuples_pct}% — query performance terjejas.`,
+                action: 'Jalankan VACUUM ANALYZE dari SQL Editor.',
+            });
+        }
+
+        // ── Check 5: Replication Slot Inactive (Realtime down)
+        if (health.replication_slot_name !== 'none' && !health.replication_slot_active) {
+            alerts.push({
+                key: 'repl_slot_dead',
+                severity: 'KRITIKAL',
+                color: '#EF4444',
+                emoji: '💀',
+                title: 'Replication Slot Tidak Aktif',
+                detail: `Slot "${health.replication_slot_name}" tidak aktif — Realtime service mungkin mati. WAL akan terus terkumpul tanpa consumer.`,
+                action: 'Restart Supabase Realtime container SEGERA. Ini boleh menyebabkan crash.',
+            });
+        }
+
+        if (alerts.length === 0) return; // All clear
+
+        // ── Cooldown: Skip alerts sent within the last hour
+        const now = Date.now();
+        const newAlerts = alerts.filter(a => {
+            const lastSent = _watchdogLastAlerts[a.key] || 0;
+            return (now - lastSent) > WATCHDOG_COOLDOWN_MS;
+        });
+        if (newAlerts.length === 0) return;
+
+        // ── Build email
+        const RESEND_API_KEY = process.env.RESEND_API_KEY;
+        if (!RESEND_API_KEY) { console.warn('[WATCHDOG] RESEND_API_KEY not configured, skipping email.'); return; }
+
+        const alertRows = newAlerts.map(a => `
+            <tr>
+                <td style="padding:16px 20px;border-bottom:1px solid #1e293b;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                        <span style="font-size:20px;">${a.emoji}</span>
+                        <span style="background:${a.color}20;color:${a.color};padding:3px 10px;border-radius:20px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;">${a.severity}</span>
+                    </div>
+                    <h3 style="color:#f8fafc;font-size:16px;font-weight:800;margin:0 0 6px 0;">${a.title}</h3>
+                    <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0 0 8px 0;">${a.detail}</p>
+                    <p style="color:${a.color};font-size:12px;font-weight:700;margin:0;">→ ${a.action}</p>
+                </td>
+            </tr>`).join('');
+
+        const uptimeStr = `${Math.floor((health.db_uptime_seconds || 0) / 3600)}j ${Math.floor(((health.db_uptime_seconds || 0) % 3600) / 60)}m`;
+
+        const emailHtml = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background-color:#0f172a;">
+    <div style="background-color:#0f172a;padding:40px 20px;">
+        <table align="center" style="max-width:580px;margin:0 auto;width:100%;border-collapse:collapse;">
+            <tr>
+                <td style="padding:32px 24px;text-align:center;border-bottom:2px solid ${newAlerts[0].color}40;">
+                    <div style="display:inline-block;width:48px;height:48px;background:${newAlerts[0].color}20;border-radius:16px;line-height:48px;font-size:24px;margin-bottom:16px;">${newAlerts[0].emoji}</div>
+                    <h1 style="color:#f8fafc;font-size:22px;font-weight:900;margin:0 0 4px 0;">JPP POLISAS — Server Alert</h1>
+                    <p style="color:${newAlerts[0].color};font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:3px;margin:0;">Watchdog Automatik · ${new Date().toLocaleString('ms-MY', { timeZone: 'Asia/Kuala_Lumpur' })}</p>
+                </td>
+            </tr>
+            ${alertRows}
+            <tr>
+                <td style="padding:20px;background:#1e293b40;border-radius:0 0 16px 16px;">
+                    <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                        <tr>
+                            <td style="color:#64748b;font-size:11px;padding:4px 0;">WAL Retained</td>
+                            <td style="color:#e2e8f0;font-size:11px;font-weight:700;text-align:right;padding:4px 0;">${health.wal_retained_mb} MB</td>
+                        </tr>
+                        <tr>
+                            <td style="color:#64748b;font-size:11px;padding:4px 0;">Node.js RSS</td>
+                            <td style="color:#e2e8f0;font-size:11px;font-weight:700;text-align:right;padding:4px 0;">${nodeMemMb} MB</td>
+                        </tr>
+                        <tr>
+                            <td style="color:#64748b;font-size:11px;padding:4px 0;">DB Connections</td>
+                            <td style="color:#e2e8f0;font-size:11px;font-weight:700;text-align:right;padding:4px 0;">${health.active_connections}/${health.max_connections}</td>
+                        </tr>
+                        <tr>
+                            <td style="color:#64748b;font-size:11px;padding:4px 0;">Realtime Tables</td>
+                            <td style="color:#e2e8f0;font-size:11px;font-weight:700;text-align:right;padding:4px 0;">${health.realtime_tables}</td>
+                        </tr>
+                        <tr>
+                            <td style="color:#64748b;font-size:11px;padding:4px 0;">DB Uptime</td>
+                            <td style="color:#e2e8f0;font-size:11px;font-weight:700;text-align:right;padding:4px 0;">${uptimeStr}</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding:24px;text-align:center;">
+                    <a href="https://jpp.cipher-node.org/jpp/telemetry" style="display:inline-block;background:${newAlerts[0].color};color:#fff;font-size:12px;font-weight:800;text-decoration:none;padding:14px 32px;border-radius:12px;text-transform:uppercase;letter-spacing:1.5px;">Buka Telemetry Dashboard</a>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding:16px 24px;text-align:center;">
+                    <p style="color:#475569;font-size:10px;margin:0;">Alert automatik oleh JPP POLISAS Infrastructure Watchdog.<br/>Cooldown: 1 jam antara setiap jenis alert.</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>`;
+
+        const highestSeverity = newAlerts.some(a => a.severity === 'KRITIKAL') ? '🚨 KRITIKAL' : '⚠️ AMARAN';
+        const subjectAlerts = newAlerts.map(a => a.title).join(', ');
+
+        const resendRes = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                from: 'JPP Watchdog <jpp@cipher-node.org>',
+                to: WATCHDOG_ALERT_EMAIL,
+                subject: `${highestSeverity} JPP Server — ${subjectAlerts}`,
+                html: emailHtml,
+            }),
+        });
+
+        if (resendRes.ok) {
+            newAlerts.forEach(a => { _watchdogLastAlerts[a.key] = now; });
+            console.log(`[WATCHDOG] ✅ Alert email sent: ${subjectAlerts}`);
+        } else {
+            const errBody = await resendRes.json().catch(() => ({}));
+            console.error('[WATCHDOG] ❌ Email send failed:', errBody);
+        }
+    } catch (err) {
+        console.error('[WATCHDOG] Cron error:', err.message);
     }
 });
 

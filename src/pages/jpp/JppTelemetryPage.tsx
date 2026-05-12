@@ -400,6 +400,102 @@ export function JppTelemetryPage() {
                 </div>
 
               </div>
+
+              {/* WAL & Realtime Monitoring — crash prevention panel */}
+              {d?.database && (
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                  className={cn(
+                    "rounded-[2rem] border p-6 relative overflow-hidden",
+                    d.database.wal_retained_mb > 1024
+                      ? "border-red-500/30 bg-red-500/5"
+                      : d.database.wal_retained_mb > 512
+                        ? "border-amber-500/30 bg-amber-500/5"
+                        : "border-[#A78BFA]/20 bg-[#A78BFA]/5"
+                  )}
+                >
+                  <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#A78BFA]/10 blur-3xl rounded-full" />
+                  <div className="flex items-center justify-between mb-6 z-10 relative">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-[#A78BFA]/20 flex items-center justify-center">
+                        <Zap className="w-5 h-5 text-[#A78BFA]" />
+                      </div>
+                      <div>
+                        <h3 className="text-white font-black text-lg leading-tight">WAL & Realtime Monitor</h3>
+                        <p className="text-[10px] text-[#A78BFA]/60 font-black uppercase tracking-widest">Pencegahan Crash Automatik</p>
+                      </div>
+                    </div>
+                    <div className={cn("px-3 py-1 rounded-full text-[10px] font-black tracking-widest",
+                      d.database.wal_retained_mb > 1024 ? "bg-red-500/20 text-red-400" :
+                      d.database.wal_retained_mb > 512 ? "bg-amber-500/20 text-amber-400" :
+                      "bg-[#10B981]/20 text-[#10B981]"
+                    )}>
+                      {d.database.wal_retained_mb > 1024 ? '🚨 KRITIKAL' : d.database.wal_retained_mb > 512 ? '⚠️ AMARAN' : '✅ SELAMAT'}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 z-10 relative mb-4">
+                    {/* WAL Retained */}
+                    <div className="col-span-2">
+                      <div className="flex justify-between items-end mb-1">
+                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">WAL Retained</p>
+                        <span className={cn("text-[10px] font-bold",
+                          d.database.wal_retained_mb > 1024 ? "text-red-400" :
+                          d.database.wal_retained_mb > 512 ? "text-amber-400" :
+                          "text-[#A78BFA]"
+                        )}>{d.database.wal_retained_mb > 1024 ? '🚨 BAHAYA' : d.database.wal_retained_mb > 512 ? '⚠️ TINGGI' : 'Normal'}</span>
+                      </div>
+                      <p className="text-2xl font-black text-white">
+                        {d.database.wal_retained_mb || 0} <span className="text-sm text-white/40 font-medium">/ 2,048 MB</span>
+                      </p>
+                      <div className="h-1.5 w-full bg-white/10 rounded-full mt-2 overflow-hidden">
+                        <div className={cn("h-full rounded-full transition-all",
+                          d.database.wal_retained_mb > 1024 ? "bg-red-500" :
+                          d.database.wal_retained_mb > 512 ? "bg-amber-500" :
+                          "bg-[#A78BFA]"
+                        )} style={{ width: `${Math.min((d.database.wal_retained_mb / 2048) * 100, 100)}%` }} />
+                      </div>
+                      <p className="text-[9px] text-white/20 mt-1">Had sistem: 2GB. Slot di-invalidate jika melebihi had.</p>
+                    </div>
+
+                    {/* Realtime Tables */}
+                    <div>
+                      <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">Jadual Realtime</p>
+                      <p className={cn("text-2xl font-black", d.database.realtime_tables > 10 ? "text-amber-400" : "text-white")}>
+                        {d.database.realtime_tables || 0}
+                      </p>
+                      <p className="text-[9px] text-white/20 mt-1">Optimal: ≤ 10 jadual</p>
+                    </div>
+
+                    {/* DB Uptime */}
+                    <div>
+                      <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">DB Uptime</p>
+                      <p className="text-2xl font-black text-white">{formatUptime(d.database.db_uptime_seconds || 0)}</p>
+                      <p className="text-[9px] text-white/20 mt-1">Sejak restart terakhir</p>
+                    </div>
+                  </div>
+
+                  {/* Bottom stats row */}
+                  <div className="grid grid-cols-3 gap-2 z-10 relative border-t border-white/5 pt-4 mt-2">
+                    <div>
+                      <p className="text-[9px] text-white/30 uppercase tracking-widest">list_changes Calls</p>
+                      <p className="text-sm font-black text-white">{(d.database.realtime_list_changes_calls || 0).toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] text-white/30 uppercase tracking-widest">CPU Time (list_changes)</p>
+                      <p className="text-sm font-black text-white">{((d.database.realtime_list_changes_total_ms || 0) / 1000).toFixed(1)}s</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] text-white/30 uppercase tracking-widest">Replication Slot</p>
+                      <p className={cn("text-sm font-black", d.database.replication_slot_active ? "text-[#10B981]" : "text-red-400")}>
+                        {d.database.replication_slot_active ? '● Aktif' : '○ Tidak Aktif'}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </div>
 
             {/* ═══ SECTION B: Module Metrics ═══ */}

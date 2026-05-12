@@ -110,8 +110,17 @@ export function PolyRiderDashboard() {
   // Chat State
   const [chatMessages, setChatMessages] = useState<Record<string, any[]>>({}); // Indexed by job_id
   const [newMessages, setNewMessages] = useState<Record<string, string>>({}); // Indexed by job_id
+  const chatContainerRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [hiddenJobs, setHiddenJobs] = useState<string[]>([]);
   const [readChatCount, setReadChatCount] = useState<Record<string, number>>({});
+
   const [openChatId, setOpenChatId] = useState<string | null>(null);
+  useEffect(() => {
+    if (openChatId && chatContainerRefs.current[openChatId]) {
+      const container = chatContainerRefs.current[openChatId];
+      if (container) container.scrollTop = container.scrollHeight;
+    }
+  }, [chatMessages, openChatId]);
 
   // Mark chat as read when openChatId changes or new messages arrive while open
   useEffect(() => {
@@ -252,12 +261,8 @@ export function PolyRiderDashboard() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'polyrider_chats' }, poll)
       .subscribe();
       
-    // Slower fallback interval (30s) in case of missed WebSocket messages
-    const interval = setInterval(poll, 30000);
-    
     return () => { 
       supabase.removeChannel(channel);
-      clearInterval(interval); 
       setIsPolling(false); 
     };
   }, [profile?.is_active, profile?.status, fetchJobs, fetchTodayEarnings, user?.id, activeJobs.length]);
@@ -1101,7 +1106,7 @@ export function PolyRiderDashboard() {
                     </summary>
                     <div className="px-3 pb-3">
                       <div className="flex flex-col min-h-[120px] max-h-[150px]">
-                        <div className="flex-1 overflow-y-auto space-y-2 mb-2 p-1">
+                        <div ref={el => chatContainerRefs.current[job.id] = el} className="flex-1 overflow-y-auto space-y-2 mb-2 p-1">
                           {(!chatMessages[job.id] || chatMessages[job.id].length === 0) ? (
                             <p className="text-[10px] text-center text-slate-400 dark:text-white/40 mt-4">Berhubung dengan pelajar.</p>
                           ) : (
@@ -1323,16 +1328,22 @@ export function PolyRiderDashboard() {
 
                     // haversineKm defined at module scope above
 
+                    // Filter out hidden jobs
+                    const visibleJobs = filteredJobs.filter(job => !hiddenJobs.includes(job.id));
+                    const hiddenCount = filteredJobs.length - visibleJobs.length;
+
                     // Sort by distance to rider (nearest first)
                     if (riderPos) {
-                      filteredJobs.sort((a, b) => {
+                      visibleJobs.sort((a, b) => {
                         const dA = (a.pickup_lat && a.pickup_lng) ? haversineKm(riderPos, [a.pickup_lat, a.pickup_lng]) : 999;
                         const dB = (b.pickup_lat && b.pickup_lng) ? haversineKm(riderPos, [b.pickup_lat, b.pickup_lng]) : 999;
                         return dA - dB;
                       });
                     }
 
-                    return filteredJobs.map(job => {
+                    return (
+                      <>
+                        {visibleJobs.map(job => {
                       const distToPickup = (riderPos && job.pickup_lat && job.pickup_lng)
                         ? haversineKm(riderPos, [job.pickup_lat, job.pickup_lng])
                         : null;
@@ -1341,6 +1352,12 @@ export function PolyRiderDashboard() {
                     
                     {/* Maps Route Viewer */}
                     <div className="h-40 bg-slate-100 relative rounded-t-2xl overflow-hidden">
+                      <button
+                        onClick={() => setHiddenJobs(prev => [...prev, job.id])}
+                        className="absolute top-3 right-3 z-[1001] w-8 h-8 bg-white/80 dark:bg-black/60 hover:bg-white dark:hover:bg-black backdrop-blur-md rounded-full flex items-center justify-center text-slate-600 dark:text-white/80 transition-colors border border-slate-200/50 dark:border-white/10 shadow-sm"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                       <RouteViewer
                         pickup={[job.pickup_lat, job.pickup_lng]}
                         dropoff={[job.dropoff_lat, job.dropoff_lng]}
@@ -1538,14 +1555,21 @@ export function PolyRiderDashboard() {
                         </div>
                       ) : biddingJobId === job.id ? (
                         <div className="pt-4 border-t border-slate-100 dark:border-white/5 flex gap-2 items-center">
-                          <input 
-                            type="number" 
-                            min="1" step="0.5"
-                            value={bidAmount}
-                            onChange={(e) => setBidAmount(Number(e.target.value))}
-                            disabled={processingBidId === job.id}
-                            className="flex-1 bg-slate-50 dark:bg-zinc-950/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-amber-500 text-slate-900 dark:text-white disabled:opacity-50"
-                          />
+                          <div className="flex-1 relative">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">RM</span>
+                            <input 
+                              type="text"
+                              inputMode="numeric"
+                              value={bidAmount.toFixed(2)}
+                              onChange={(e) => {
+                                const val = e.target.value.replace(/\D/g, '');
+                                const num = parseInt(val, 10) || 0;
+                                setBidAmount(num / 100);
+                              }}
+                              disabled={processingBidId === job.id}
+                              className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-zinc-950/50 border border-slate-200 dark:border-white/10 rounded-xl text-sm font-bold focus:outline-none focus:border-amber-500 text-slate-900 dark:text-white disabled:opacity-50"
+                            />
+                          </div>
                           <button onClick={() => setBiddingJobId(null)} disabled={processingBidId === job.id} className="p-3 bg-slate-100 dark:bg-white dark:bg-zinc-900/5 text-slate-500 dark:text-white/50 rounded-xl disabled:opacity-50">
                             <X className="w-5 h-5" />
                           </button>
@@ -1582,7 +1606,21 @@ export function PolyRiderDashboard() {
 
                     </div>
                   </div>
-                ); })})()}
+                );
+              })}
+              {hiddenCount > 0 && (
+                  <div className="mt-4 pt-4 border-t border-slate-200 dark:border-white/10 flex justify-center">
+                    <button
+                      onClick={() => setHiddenJobs([])}
+                      className="px-4 py-2 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-600 dark:text-white/60 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors flex items-center gap-2 shadow-sm"
+                    >
+                      👀 {hiddenCount} Tugasan Disembunyikan - Buka Semula
+                    </button>
+                  </div>
+              )}
+            </>
+          );
+        })()}
                 </>
               )}
             </div>
