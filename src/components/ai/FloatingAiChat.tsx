@@ -223,6 +223,8 @@ export function FloatingAiChat() {
     if (p.startsWith('/kebajikan')) return ["Apa status aduan saya?", "Bagaimana nak lapor kerosakan fasiliti?", "Berapa aduan belum diselesaikan?"];
     if (p.startsWith('/polymart')) return ["Di mana pesanan makanan saya?", "Macam mana nak bayar pesanan?", "Ada diskaun tak hari ini?"];
     if (p.startsWith('/aktiviti') || p.startsWith('/kelab')) return ["Bila program kelab saya seterusnya?", "Ada apa dalam takwim minggu depan?", "Berapa lama lagi sebelum cuti?"];
+    if (p.startsWith('/imaps')) return ["Cari bilik kelas saya", "Kafe mana yang buka sekarang?", "Di mana surau terdekat?"];
+    if (p.startsWith('/polyrider')) return ["Cara tempah perjalanan baru?", "Apa itu carpool dan macam mana guna?", "Macam mana nak daftar jadi rider?"];
     return ["Bila cuti semester seterusnya?", "Ada apa dalam takwim minggu depan?", "Bantu drafkan kertas kerja laporan."];
   }, [location.pathname, hasKebajikanAccess]);
 
@@ -483,6 +485,113 @@ export function FloatingAiChat() {
               };
             }
           }
+          // ─ 2G. DATA iMAPS ─────────────────────────────────
+          else if (p.startsWith('/imaps')) {
+            try {
+              const raw = sessionStorage.getItem('nexus_imaps_ctx');
+              if (raw) {
+                const s = JSON.parse(raw);
+                ctx.iMapsInfo = {
+                  activeBuildingName: s.activeBuildingName ?? undefined,
+                  activeBuildingCode: s.activeBuildingCode ?? undefined,
+                  activeBuildingZone: s.activeBuildingZone ?? undefined,
+                  facilityStatus: s.facilityStatus ?? undefined,
+                  isNavigating: s.isNavigating ?? false,
+                  targetRoomCode: s.targetRoomCode ?? undefined,
+                };
+              } else {
+                ctx.iMapsInfo = {}; // user on iMaps but no building selected
+              }
+            } catch { /* silent fail — corrupt sessionStorage */ }
+          }
+          // ─ 2H. DATA POLYRIDER ─────────────────────────────────
+          else if (p.startsWith('/polyrider')) {
+            if (profile?.id) {
+              const { data: riderProfile } = await supabase
+                .from('polyrider_profiles')
+                .select('status, is_active')
+                .eq('user_id', profile.id)
+                .maybeSingle();
+
+              if (riderProfile) {
+                // --- USER IS RIDER ---
+                const riderStatus = riderProfile.status === 'SUSPENDED'
+                  ? 'SUSPENDED'
+                  : riderProfile.is_active ? 'ON_DUTY' : 'OFF_DUTY';
+
+                const today = new Date(); today.setHours(0, 0, 0, 0);
+                const [activeJobRes, pendingCountRes, earningsRes] = await Promise.all([
+                  supabase.from('polyrider_jobs')
+                    .select('status, pickup_name, dropoff_name')
+                    .eq('rider_id', profile.id)
+                    .in('status', ['ACCEPTED', 'IN_TRANSIT', 'ARRIVED'])
+                    .maybeSingle(),
+                  supabase.from('polyrider_jobs')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('status', 'PENDING'),
+                  supabase.from('polyrider_jobs')
+                    .select('proposed_price, tip_amount')
+                    .eq('rider_id', profile.id)
+                    .eq('status', 'COMPLETED')
+                    .gte('updated_at', today.toISOString()),
+                ]);
+
+                const earnings = earningsRes.data?.reduce(
+                  (s: number, j: any) => s + Number(j.proposed_price) + Number(j.tip_amount || 0), 0
+                ) ?? 0;
+
+                ctx.polyRiderInfo = {
+                  userType: 'RIDER',
+                  riderStatus,
+                  riderProfileStatus: riderProfile.status,
+                  activeJobRiderStatus: activeJobRes.data?.status,
+                  activeJobRiderPickup: activeJobRes.data?.pickup_name,
+                  activeJobRiderDropoff: activeJobRes.data?.dropoff_name,
+                  pendingJobsCount: pendingCountRes.count ?? 0,
+                  todayEarnings: earnings,
+                };
+              } else {
+                // --- USER IS PASSENGER ---
+                const { data: activeJob } = await supabase
+                  .from('polyrider_jobs')
+                  .select('id, status, pickup_name, dropoff_name, proposed_price, carpool_group_id')
+                  .eq('student_id', profile.id)
+                  .in('status', ['GATHERING', 'PENDING', 'ACCEPTED', 'IN_TRANSIT', 'CARPOOL_REQUEST'])
+                  .maybeSingle();
+
+                let activeBidsCount = 0;
+                let carpoolMembersCount = 0;
+
+                if (activeJob) {
+                  const [bidsRes, carpoolRes] = await Promise.all([
+                    supabase.from('polyrider_bids')
+                      .select('id', { count: 'exact', head: true })
+                      .eq('job_id', activeJob.id)
+                      .eq('status', 'PENDING'),
+                    activeJob.carpool_group_id
+                      ? supabase.from('polyrider_jobs')
+                          .select('id', { count: 'exact', head: true })
+                          .eq('carpool_group_id', activeJob.carpool_group_id)
+                          .in('status', ['GATHERING', 'PENDING'])
+                      : Promise.resolve({ count: 0 }),
+                  ]);
+                  activeBidsCount = bidsRes.count ?? 0;
+                  carpoolMembersCount = (carpoolRes as any).count ?? 0;
+                }
+
+                ctx.polyRiderInfo = {
+                  userType: 'PASSENGER',
+                  activeJobStatus: activeJob?.status,
+                  activeJobPickup: activeJob?.pickup_name,
+                  activeJobDropoff: activeJob?.dropoff_name,
+                  proposedPrice: activeJob ? Number(activeJob.proposed_price) : undefined,
+                  activeBidsCount,
+                  carpoolMembersCount,
+                  hasActiveBid: activeBidsCount > 0,
+                };
+              }
+            }
+          }
           // ─ 2F. DATA POLYMART ────────────────────────────────
           else if (p.startsWith('/polymart')) {
              const { count: buyerCount } = await supabase.from('polymart_orders').select('id', { count: 'exact', head: true }).eq('buyer_id', profile.id).not('status', 'in', '("COMPLETED", "CANCELLED", "REJECTED")');
@@ -657,6 +766,25 @@ export function FloatingAiChat() {
     // 1. Clear input immediately
     setInputValue('');
 
+    // --- LOCAL DUPLICATE CACHE CHECK (ZERO SERVER LOAD) ---
+    const lowerText = text.toLowerCase().replace(/\s+/g, ' ');
+    const isDynamicQuery = lowerText.includes('sekarang') || lowerText.includes('baru') || lowerText.includes('hari ini');
+    if (text.length >= 2 && text.length < 150 && !isDynamicQuery) {
+      const historyArr = messagesRef.current;
+      for (let i = historyArr.length - 1; i >= 0; i--) {
+        if (historyArr[i].role === 'user' && historyArr[i].content.toLowerCase().replace(/\s+/g, ' ') === lowerText) {
+          const nextMsg = historyArr[i + 1];
+          if (nextMsg && nextMsg.role === 'ai') {
+            const userMsg: ChatMessage = { id: generateId(), role: 'user', content: text, timestamp: new Date().toISOString() };
+            const aiMsg: ChatMessage = { id: generateId(), role: 'ai', content: nextMsg.content, timestamp: new Date().toISOString() };
+            setMessages((prev) => [...prev, userMsg, aiMsg]);
+            return; // Short-circuit! Skip API call completely.
+          }
+        }
+      }
+    }
+    // --- END LOCAL DUPLICATE CACHE ---
+
     // 2. Build user message object manually
     const userMsg: ChatMessage = {
       id: generateId(),
@@ -765,6 +893,63 @@ export function FloatingAiChat() {
     { icon: '📊', label: 'Laporan', prompt: 'Di mana nak semak rekod transaksi lepas?' },
     { icon: '💡', label: 'Idea Bisnes', prompt: 'Ada cadangan bisnes menarik untuk student kampus?' }
   ];
+
+  // ── iMaps quick-action chips (dynamic by state) ──────────────────────────
+  const getImapsChips = (): { icon: string; label: string; prompt: string }[] => {
+    const im = chatContext?.iMapsInfo;
+    if (im?.isNavigating && im.activeBuildingName) return [
+      { icon: '📍', label: 'Jauh lagi?', prompt: `Saya sedang navigate ke ${im.activeBuildingName}. Jauh lagi tak?` },
+      { icon: '🗺️', label: 'Langkah seterusnya', prompt: 'Tunjukkan langkah seterusnya untuk sampai ke destinasi.' },
+      { icon: '🚫', label: 'Tamat navigasi', prompt: 'Macam mana nak tamatkan navigasi sekarang?' },
+    ];
+    if (im?.activeBuildingName) return [
+      { icon: '🧭', label: 'Navigate ke sini', prompt: `Macam mana nak mula navigate ke ${im.activeBuildingName}?` },
+      { icon: '⏰', label: 'Status buka?', prompt: `${im.activeBuildingName} buka atau tutup sekarang?` },
+      { icon: '🗂️', label: 'Bilik dalam bangunan', prompt: `Ada bilik/lokasi apa dalam ${im.activeBuildingName}?` },
+    ];
+    return [
+      { icon: '🏫', label: 'Cari kelas saya', prompt: 'Macam mana nak cari bilik kelas saya di iMaps?' },
+      { icon: '🍽️', label: 'Kafe buka?', prompt: 'Kafe mana yang buka sekarang di kampus?' },
+      { icon: '🕌', label: 'Surau terdekat', prompt: 'Di mana surau terdekat pada lokasi saya?' },
+    ];
+  };
+
+  // ── PolyRider quick-action chips (dynamic by role+state) ─────────────────
+  const getPolyriderChips = (): { icon: string; label: string; prompt: string }[] => {
+    const pr = chatContext?.polyRiderInfo;
+    if (pr?.userType === 'RIDER') {
+      if (pr.activeJobRiderStatus) return [
+        { icon: '📦', label: 'Update status', prompt: 'Macam mana nak update status trip saya sekarang?' },
+        { icon: '💬', label: 'Chat penumpang', prompt: 'Macam mana nak chat dengan penumpang dalam app?' },
+        { icon: '❌', label: 'Batalkan trip', prompt: 'Macam mana nak batalkan trip yang sedang aktif?' },
+      ];
+      return [
+        { icon: '🟢', label: 'Cara ON-DUTY', prompt: 'Macam mana nak set status ON-DUTY sebagai rider?' },
+        { icon: `🔔 ${pr.pendingJobsCount || 0}`, label: 'Trip menunggu', prompt: 'Ada berapa trip menunggu bidaan saya sekarang?' },
+        { icon: '💰', label: `RM${(pr.todayEarnings || 0).toFixed(2)} hari ini`, prompt: 'Berapa pendapatan saya hari ini dan macam mana nak tingkatkan?' },
+      ];
+    }
+    // Passenger
+    if (pr?.activeJobStatus === 'PENDING' && pr.hasActiveBid) return [
+      { icon: `🤝 ${pr.activeBidsCount}`, label: 'Semak bidaan', prompt: 'Ada bidaan rider. Macam mana nak terima atau tawar balik?' },
+      { icon: '💬', label: 'Tawar balik', prompt: 'Macam mana cara tawar balik harga dengan rider?' },
+      { icon: '❌', label: 'Batalkan', prompt: 'Macam mana nak batalkan tempahan saya?' },
+    ];
+    if (pr?.activeJobStatus === 'GATHERING') return [
+      { icon: '👥', label: `${pr.carpoolMembersCount || 1} ahli`, prompt: 'Berapa ramai lagi boleh sertai bilik carpool saya?' },
+      { icon: '🔒', label: 'Tutup bilik', prompt: 'Macam mana nak tutup bilik carpool dan mula cari rider?' },
+      { icon: '❓', label: 'Cara luluskan', prompt: 'Macam mana nak terima atau tolak ahli yang mohon sertai?' },
+    ];
+    if (pr?.activeJobStatus === 'ACCEPTED' || pr?.activeJobStatus === 'IN_TRANSIT') return [
+      { icon: '📍', label: 'Rider di mana?', prompt: 'Macam mana nak semak lokasi rider yang sedang dalam perjalanan?' },
+      { icon: '🆘', label: 'Kecemasan SOS', prompt: 'Macam mana nak aktifkan butang SOS jika kecemasan?' },
+    ];
+    return [
+      { icon: '🛵', label: 'Cara tempah', prompt: 'Macam mana nak tempah perjalanan baru dalam PolyRider?' },
+      { icon: '🚗', label: 'Apa itu carpool?', prompt: 'Boleh terangkan macam mana sistem carpool PolyRider berfungsi?' },
+      { icon: '💰', label: 'Harga wajar?', prompt: 'Berapa anggaran harga yang wajar untuk perjalanan dalam kampus?' },
+    ];
+  };
 
   // ── Render ───────────────────────────────────────────────────────────────
   const content = (
@@ -1044,15 +1229,47 @@ export function FloatingAiChat() {
                   ))}
                 </div>
               )}
+              {/* iMaps quick-action chips */}
+              {location.pathname.startsWith('/imaps') && !isExcoMode && (
+                <div className="flex gap-1.5 overflow-x-auto pb-2 mb-2 scrollbar-hide">
+                  {getImapsChips().map((chip) => (
+                    <button
+                      key={chip.label}
+                      onClick={() => setInputValue(chip.prompt)}
+                      disabled={isChatLoading}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-black whitespace-nowrap transition-all border shrink-0"
+                      style={{ background: 'rgba(14,165,233,0.08)', borderColor: 'rgba(14,165,233,0.25)', color: '#0ea5e9' }}
+                    >
+                      <span>{chip.icon}</span>{chip.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {/* PolyRider quick-action chips */}
+              {location.pathname.startsWith('/polyrider') && !isExcoMode && (
+                <div className="flex gap-1.5 overflow-x-auto pb-2 mb-2 scrollbar-hide">
+                  {getPolyriderChips().map((chip) => (
+                    <button
+                      key={chip.label}
+                      onClick={() => setInputValue(chip.prompt)}
+                      disabled={isChatLoading}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-black whitespace-nowrap transition-all border shrink-0"
+                      style={{ background: 'rgba(234,179,8,0.08)', borderColor: 'rgba(234,179,8,0.25)', color: '#ca8a04' }}
+                    >
+                      <span>{chip.icon}</span>{chip.label}
+                    </button>
+                  ))}
+                </div>
+              )}
               <div className="flex gap-2 items-end">
                 <textarea
                   ref={textareaRef}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value.slice(0, MAX_INPUT_LENGTH))}
-                  placeholder="Tanya sesuatu... (Shift+Enter = baris baru)"
+                  placeholder={isBusy ? "AI sedang berfikir..." : "Tanya sesuatu... (Shift+Enter = baris baru)"}
                   rows={1}
                   maxLength={700}
-                  disabled={isChatLoading}
+                  disabled={isBusy}
                   className="flex-1 text-sm bg-muted/30 border border-border focus:border-indigo-500 rounded-2xl py-3 px-4 resize-none focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-muted-foreground/50 overflow-y-auto"
                   style={{ maxHeight: '120px' }}
                   onKeyDown={(e) => {
@@ -1066,7 +1283,7 @@ export function FloatingAiChat() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={handleSend}
-                  disabled={isChatLoading || !inputValue.trim()}
+                  disabled={isBusy || !inputValue.trim()}
                   className="w-10 h-10 bg-indigo-600 hover:bg-indigo-700 disabled:bg-muted disabled:text-muted-foreground text-white rounded-2xl flex items-center justify-center transition-colors shrink-0 disabled:cursor-not-allowed"
                   title="Hantar (Enter)"
                 >

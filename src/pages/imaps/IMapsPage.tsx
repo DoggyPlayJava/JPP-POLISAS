@@ -275,6 +275,40 @@ export function IMapsPage() {
     setZones(parsedZones);
   }, [allBuildings]);
 
+  // ── Nexus AI State Bridge (sessionStorage) ───────────────────────────────
+  // Writes current iMaps state so FloatingChatAI can read it lazily.
+  // No realtime subscription needed — AI reads once on chat open.
+  useEffect(() => {
+    const checkIsOpen = (opStart?: string, opEnd?: string): boolean => {
+      if (!opStart || !opEnd) return true; // no hours set = always open
+      const now = new Date();
+      const [sh, sm] = opStart.split(':').map(Number);
+      const [eh, em] = opEnd.split(':').map(Number);
+      const cur = now.getHours() * 60 + now.getMinutes();
+      return cur >= sh * 60 + sm && cur <= eh * 60 + em;
+    };
+
+    try {
+      const bridgeData = {
+        activeBuildingName: activeBuilding ? `${activeBuilding.name}${activeBuilding.zone_name ? ` - ${activeBuilding.zone_name}` : ''}` : null,
+        activeBuildingCode: activeBuilding?.code ?? null,
+        activeBuildingZone: activeBuilding?.zone_name ?? null,
+        facilityStatus: activeBuilding?.is_facility
+          ? (checkIsOpen(activeBuilding.op_start, activeBuilding.op_end)
+            ? `BUKA${activeBuilding.op_start ? ` (${activeBuilding.op_start}-${activeBuilding.op_end})` : ''}`
+            : 'TUTUP')
+          : null,
+        isNavigating,
+        targetRoomCode: selectedLocation?.room_code ?? null,
+      };
+      sessionStorage.setItem('nexus_imaps_ctx', JSON.stringify(bridgeData));
+    } catch { /* silent fail — private browsing may block sessionStorage */ }
+
+    return () => {
+      try { sessionStorage.removeItem('nexus_imaps_ctx'); } catch { /* ignore */ }
+    };
+  }, [activeBuilding, isNavigating, selectedLocation]);
+
   const ZoomTracker = () => {
     useMapEvents({
       zoomend: (e) => {

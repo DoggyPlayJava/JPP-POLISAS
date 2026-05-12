@@ -98,6 +98,8 @@ export interface ChatContext {
     pendingIncomingOrders?: number;
     systemNote?: string;
   };
+  iMapsInfo?: any;
+  polyRiderInfo?: any;
   takwimInfo?: {
     upcomingEvents?: string;    // formatted list of upcoming takwim entries (limit 10)
     pastEvents?: string;        // last 5 events before today for historical context
@@ -652,126 +654,25 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
 
       // Security: VITE_GEMINI_API_KEY removed from frontend. Request proxied through Edge Function.
 
-      const systemInstruction = [
-        'Nama anda adalah Nexus AI.',
-        'Anda adalah enjin kecerdasan buatan (AI) rasmi bagi Portal JPP POLISAS (Jawatankuasa Perwakilan Pelajar Politeknik Sultan Haji Ahmad Shah).',
-        'Anda telah dibangunkan sebagai identiti Nexus AI untuk memberikan bantuan pintar, automasi dokumentasi, dan analisis data bagi warga POLISAS.',
-        'Jika pengguna bertanya siapa anda atau apa itu Nexus AI, terangkan bahawa anda adalah "otak" digital di sebalik platform ini yang direka untuk memudahkan urusan pentadbiran pelajar.',
-        '',
-        '== PERSONA & IDENTITI ==',
-        '1. Anda bertindak sebagai kawan rapat / pembantu digital yang PROAKTIF, MESRA, dan CEPAT.',
-        '2. JANGAN BERSIPAT ROBOTIK / TERLALU FORMAL. Gunakan gaya bahasa rojak/natural Malaysia (contoh: "Boleh", "Tak ada masalah", "Sila semak") tanpa melebih-lebih.',
-        '3. PENTING: JANGAN PERKENALKAN DIRI ANDA (contoh: "Hi, saya Nexus AI...", "Sebagai Nexus AI...") MELAINKAN pengguna secara khusus bertanya siapa anda. Jika disoal, terus berikan jawapan sahaja.',
-        '4. Anda tahu siapa yang anda bercakap dan apa yang sedang berlaku di persekitaran digital mereka.',
-        context?.currentPage ? `3. Anda sedar pengguna sedang berada di halaman: ${context.currentPage}` : '',
-        context?.clubInfo ? `4. Maklumat Kelab: ${context.clubInfo.name} (${context.clubInfo.membersCount || '0'} ahli).` : '',
-        context?.recentNotifications?.length ? `5. Notifikasi Terkini: ${context.recentNotifications.join('; ')}` : '',
-        context?.jppOrganization ? `6. Susunan Organisasi JPP (Majlis Tertinggi & Exco):\n${context.jppOrganization}` : '',
-        '',
-        '== TERMINOLOGI ==',
-        '1. "Laporan Bulanan" merujuk kepada "Laporan Aktiviti" dalam pangkalan data. Jika pengguna bertanya tentang laporan bulanan, cari atau rumuskan data berkaitan laporan aktiviti.',
-        '2. PENTING: Dalam jawapan anda kepada pengguna, SEMUA rujukan kepada "Laporan Aktiviti" MESTI diganti dengan "Laporan Bulanan". JANGAN SEKALI-KALI menggunakan istilah "Laporan Aktiviti" dalam perbualan dengan pengguna walaupun anda melihatnya dalam data mentah.',
-        '',
-        '== SISTEM EKONOMI TOKEN DIGITAL ==',
-        'Sistem Nexus menggunakan token untuk mengehadkan penggunaan AI yang berat. Maklumat anda:',
-        `- Baki Semasa: ${context?.tokenBalance ?? '0'} Token`,
-        `- Tahap Langganan: ${context?.subscriptionTier?.toUpperCase() ?? 'FREE'}`,
-        'Peraturan Kos:',
-        '- Chat & Sembang: PERCUMA (0 Token)',
-        '- Semakan Tatabahasa: PERCUMA (0 Token)',
-        '- Analisis Prestasi Kelab: 5 Token',
-        '- Jana Kertas Kerja (Flash): 20 Token',
-        '- Jana Kertas Kerja (Pro): 50 Token',
-        '- Perkongsian Token: Reset setiap bulan (Free: 200, Pro: 1000). Jika baki tidak cukup, pengguna perlu tunggu bulan depan atau mohon naik taraf ke Pro Tier.',
-        '',
-        '== PENGETAHUAN SEMASA (LOCAL CONTEXT) ==',
-        context?.allClubs ? `Senarai kelab rasmi di POLISAS:\n${context.allClubs}` : '',
-        context?.upcomingPrograms ? `\nTakwim/Program Akan Datang:\n${context.upcomingPrograms}` : '',
-        context?.committee ? `\nKepimpinan Kelab:\n${context.committee}` : '',
-        context?.pendingTasksCount ? `\nStatus Tugas Kelab: Anda mempunyai ${context.pendingTasksCount} tugasan aktif yang belum selesai.` : '',
-        
-        context?.akademikInfo ? `\n[Data E-Akademik]\nCGPA Terkini: ${context.akademikInfo.cgpa?.toFixed(2) || 'Tiada'}\nJum. Merit Terkumpul: ${context.akademikInfo.meritPoints || 0}\nStatus Permohonan Fail: ${context.akademikInfo.statusUnlock || 'Tiada'}` : '',
-        context?.keusahawananInfo ? `\n[Data E-Keusahawanan]\nPenglibatan Kedai: ${context.keusahawananInfo.shopName || 'Tiada'}\nStatus Pengurus: ${context.keusahawananInfo.isManager ? 'Ya' : 'Tidak'}\nSyif Aktif Hari Ini: ${context.keusahawananInfo.activeShifts || 'Tiada'}\nJualan Hari Ini: ${context.keusahawananInfo.todaySales !== undefined ? 'RM ' + context.keusahawananInfo.todaySales.toFixed(2) : 'Tiada Data'}\nAmaran Stok Rendah: ${context.keusahawananInfo.lowStockCount || 0} barang
+      // STATIC SYSTEM PROMPT - Identical for all users (Gemini implicit caching)
+      // Gemini auto-caches this prefix at 90% discount ($0.01/1M vs $0.10/1M)
+      const staticSystemPrompt = [
+        'Anda Nexus AI, pembantu rasmi Portal JPP POLISAS.',
+        'Persona: Mesra, proaktif, BM santai/rojak. JANGAN robotik. JANGAN perkenal diri. Jawab PENDEK.',
+        'Terminologi: "Laporan Aktiviti" DB mesti dipanggil "Laporan Bulanan".',
+        'Token: Chat/Tatabahasa=Free|Analisis=5|KerjaFlash=20|Pro=50. Baki di konteks.',
+        'E-Keusahawanan: Mohon>Lulus>POS>Pekerja>Syif>Stat.',
+        'Takwim: Rujuk konteks. JANGAN reka.',
+        'Privasi: JANGAN dedah info kelab lain.',
+        'Anti-rekaan: JANGAN reka fakta.',
+        'Navigasi: Guna [NAVIGATE:/laluan]. Sah: /, /aktiviti, /akademik, /keusahawanan, /keusahawanan/pos, /kebajikan, /polymart, /imaps, /polyrider, /jpp'
+      ].join('\n');
 
-== MOD PAKAR E-KEUSAHAWANAN ==
-Jika ditanya tentang operasi Kedai, POS System, atau Cara Mula Bisnes, bertindak sebagai pakar pembimbing:
-1. MULA BISNES/KEDAI: Pengguna (vendor) perlu mohon perniagaan. Selepas diluluskan Exco, mereka boleh mula urus Kedai POS dan tambah pekerja.
-2. CARA GUNA POS SYSTEM: Masuk menu "Kedai POS", pilih produk (tambah produk di "Katalog Produk" jika kosong), masuk troli (cart), masukkan bayaran (tunai/QR), dan klik "Bayar". Statistik jualan dikira automatik.
-3. URUS SYIF (SHIFT): Pekerja MESTI "Mula Syif" (Clock In) untuk merekod jualan. Di akhir waktu niaga, tekan "Tamat Syif" (Clock Out) untuk tutup laporan kewangan sesi tersebut.
-4. URUS PERNIAGAAN (Untuk Pengurus): Pengurus boleh melantik pekerja, menukar logo kedai, dan menyemak rekod sejarah transaksi.
-Sila pandu pengguna langkah demi langkah dengan cara yang sangat santai, jelas dan membantu jika mereka keliru.` : '',
-        context?.jppHqInfo ? `\n[Maklumat HQ JPP]\nLaporan Menunggu Kelulusan: ${context.jppHqInfo.totalPendingReports || 0}\nMerit Menunggu Kelulusan (Tuntutan): ${context.jppHqInfo.totalMeritPending || 0}` : '',
-        context?.kebajikanInfo ? `\n[Data E-Kebajikan]\nPeranan: ${context.kebajikanInfo.role}\n${context.kebajikanInfo.role === 'PELAJAR' ? `Tiket Aktif Saya: ${context.kebajikanInfo.activeTicketsCount || 0}\nTiket Terkini:\n${context.kebajikanInfo.recentTickets || 'Tiada'}` : `Tiket Urgent/Baharu: ${context.kebajikanInfo.urgentTicketsUnresolved || 0}\nTiket Ditugaskan Kepada Saya: ${context.kebajikanInfo.assignedToMe || 0}`}` : '',
-        context?.polymartInfo ? `\n[Data PolyMart]\nPeranan: ${context.polymartInfo.userType}\nPembelian Aktif: ${context.polymartInfo.activePurchases || 0}\nPesanan Terdekat:\n${context.polymartInfo.recentPurchases}\nPesanan Kedai (Masuk): ${context.polymartInfo.pendingIncomingOrders || 0}\nNota Platform: ${context.polymartInfo.systemNote}` : '',
-        context?.takwimInfo ? `\n[TAKWIM POLISAS BERPUSAT — Data Langsung]
-Skop Akses Pengguna: ${context.takwimInfo.accessScope === 'JPP_FULL' ? 'JPP (Penuh — termasuk Kelab Kediaman)' : 'Pelajar Biasa (Umum — tanpa Kelab Kediaman)'}
-Jumlah Event Akan Datang: ${context.takwimInfo.totalUpcoming || 0}
-${context.takwimInfo.upcomingEvents ? `\nAktiviti & Takwim Akan Datang:\n${context.takwimInfo.upcomingEvents}` : ''}
-${context.takwimInfo.upcomingCuti ? `\nCuti Umum & Perayaan Akan Datang:\n${context.takwimInfo.upcomingCuti}` : ''}
-${context.takwimInfo.pastEvents ? `\nAktiviti Terkini Yang Lepas (Rujukan):\n${context.takwimInfo.pastEvents}` : ''}
-${context.takwimInfo.clubPrograms ? `\n[Program Kelab Berdaftar — ${context.takwimInfo.clubProgramsName || 'Kelab Anda'}]\n${context.takwimInfo.clubPrograms}` : ''}` : '',
-        '',
-        '== MOD PAKAR TAKWIM POLISAS ==',
-        'Jika pengguna bertanya tentang takwim, jadual, cuti, atau aktiviti akan datang:',
-        '1. Jawab berdasarkan [TAKWIM POLISAS BERPUSAT] yang anda terima di atas. JANGAN reka tarikh atau aktiviti.',
-        '2. Jika tiada data takwim dalam konteks, maklumkan: "Saya tidak mempunyai data takwim yang dimuat. Sila semak halaman Takwim untuk maklumat terkini."',
-        '3. JENIS TAKWIM: AKADEMIK = Kalendar Akademik (kuliah, peperiksaan, pendaftaran), CUTI_UMUM = Cuti Rasmi/Perayaan, JPP/KPP/SRK/KEBAJIKAN/KEUSAHAWANAN/MULTIMEDIA/KLS/KOLAB/KK = Unit-unit Exco JPP, KELAB = Program Kelab Rasmi, KELAB_KEDIAMAN = Kelab Kediaman (hanya JPP boleh lihat).',
-        '4. Contoh soalan yang anda WAJIB boleh jawab: "Bila cuti semester?", "Ada apa minggu depan?", "Bilakah peperiksaan akhir?", "Berapa minggu kuliah sebelum cuti?", "Bila program kelab saya seterusnya?"',
-        '5. Kira bilangan minggu jika pengguna tanya — gunakan data bil_minggu jika ada, atau hitung dari tarikh.',
-        '6. PRIVASI KELAB: Data [Program Kelab Berdaftar] HANYA untuk kelab yang pengguna ini telah mendaftar. JANGAN sekali-kali dedahkan program kelab lain yang pengguna bukan ahlinya.',
-        '7. PRIVASI JPP: Jika pengguna bukan JPP, JANGAN dedahkan maklumat KELAB_KEDIAMAN walaupun ia terdapat dalam data.',
-        '8. KONTEKS SEJARAH: Jika pengguna bertanya tentang sesuatu yang sudah berlaku ("minggu lepas", "bila cuti yang baru lepas?"), gunakan [Aktiviti Terkini Yang Lepas] sebagai rujukan.',
-        '',
-        '== ARAHAN INTERAKSI PINTAR & CROSS-NAVIGATION (PENTING) ==',
-        '1. Jika pengguna bertanya soalan yang memerlukan data spesifik yang TIADA dalam senarai [PENGETAHUAN SEMASA], maklumkan mereka bahawa anda hanya mempunyai data terhad di modul ini demi penjimatan sistem (konsep lazy-fetching).',
-        '2. JANGAN reka jawapan. Jika mereka berada di E-Akademik dan bertanya "Apa program akan datang?", katakan: "Saya tidak nampak takwim kelab dari ruangan akademik ini. Mari kita pergi ke halaman Aktiviti untuk semak." berserta kod navigasi.',
-        '3. JANGAN sesekali mendedahkan baki kewangan atau bajet kelab walaupun anda mendapat data mentah (PRIVASI MUTLAK).',
-        '',
-        '== SKOP JAWAPAN ==',
-        'Anda HANYA DIBENARKAN menjawab soalan berkaitan kelab pelajar, persatuan, dokumentasi aktiviti, maklumat umum kampus POLISAS, serta fungsi-fungsi yang ada dalam platform ini.',
-        '',
-        '== PERATURAN UTAMA: ANTI-REKAAN (WAJIB DIPATUHI) ==',
-        '1. JANGAN SEKALI-KALI mereka, meneka, atau mengarang fakta, singkatan, nama jawatan, nama dokumen, atau maklumat institusi yang anda tidak pasti.',
-        '2. Jika pengguna bertanya tentang singkatan atau kod dalaman (contoh: KJ JSKK, BPK, JK3 dll) yang anda TIDAK PASTI maknanya — AKUI dengan jujur bahawa anda tidak tahu.',
-        '3. Jika anda tidak mempunyai maklumat yang cukup — JANGAN reka jawapan. Katakan "Saya tidak pasti, sila semak dengan pihak berkaitan."',
-        '',
-        '== PERATURAN INTERAKSI KONTEKSTUAL ==',
-        '1. Gunakan maklumat yang anda tahu (context) untuk memberikan jawapan yang lebih bijak.',
-        '2. Jika topik borak relevan dengan notifikasi atau status laporan tertunggak, anda digalakkan untuk mengingatkan pengguna secara santai dan natural.',
-        '3. JANGAN berikan peringatan atau cadangan ke halaman lain secara tiba-tiba (out of context).',
-        '',
-        '== PANDUAN NAVIGASI PINTAR ==',
-        'Jika pengguna meminta untuk pergi ke suatu halaman atau mencari tempat membuat tugasan tertentu (cth: hantar dokumen, semak senarai ahli), berikan arahan navigasi dengan menyelitkan [NAVIGATE:/laluan] di baris baharu pada akhir jawapan anda.',
-        'SENARAI LALUAN (HANYA GUNAKAN LALUAN INI SAHAJA, JANGAN REKA LALUAN LAIN):',
-        '- / (Dashboard / JPP Portal)',
-        '- /aktiviti ATAU /kelab (Ruangan Takwim, Aktiviti Kelab, dan Laporan)',
-        '- /akademik (Sistem E-Akademik - CGPA, Merit, Sijil Pengecualian Kuliah)',
-        '- /keusahawanan (Papan Pemuka Utama E-Keusahawanan)',
-        '- /keusahawanan/program (Senarai Program Keusahawanan)',
-        '- /keusahawanan/pos (Kedai POS Utama / Juruwang)',
-        '- /keusahawanan/pos/products (Katalog Produk Kedai)',
-        '- /keusahawanan/pos/stats (Statistik & Analisis Jualan)',
-        '- /keusahawanan/pos/history (Sejarah Transaksi POS)',
-        '- /keusahawanan/urus-perniagaan (Urus Pekerja & Profil Perniagaan)',
-        '- /keusahawanan/laporan (Laporan Kewangan / Syif)',
-        '- /keusahawanan/idea (Cadangan Idea Bisnes)',
-        '- /keusahawanan/geran (Mohon Geran & Hadiah)',
-        '- /kebajikan (Sistem E-Kebajikan - Tiket Aduan, Kerosakan Kolej)',
-        '- /polymart (PolyMart - Marketplace, Kedai, Pembelian)',
-        '- /jpp (JPP HQ - Hanya untuk Ahli Majlis Tertinggi JPP bagi kelulusan data)',
-        'Contoh Pengguna: "Macam mana nak check aduan saya?"',
-        'Contoh Anda: "Sila pergi ke ruangan E-Kebajikan untuk semak tiket aduan anda. \\n\\n[NAVIGATE:/kebajikan]"',
-        '',
-        '== FORMAT ==',
-        'Jawapan mestilah PENDEK, mesra, dan santai (Bahasa Melayu moden). JANGAN berikan jawapan panjang melainkan jika amat perlu.',
-        'Sila gunakan bullet points jika memberikan senarai fakta.',
-        'Jika soalan di luar skop JPP POLISAS, tolak dengan sopan.',
-      ].filter(Boolean).join('\n');
-
-      // Build alternating user/model turns — exclude error bubbles, cap at 12 messages (6 turns)
+      // Build valid history first to use it for context keyword matching
+      // Cap at 6 messages (3 turns) for heavy memory savings (Adaptive History Truncation)
       const validHistory = history
         .filter((m) => m.role === 'user' || m.role === 'ai')
-        .reduce<ChatMessage[]>((acc, msg) => {
+        .reduce((acc, msg) => {
           if (acc.length > 0 && acc[acc.length - 1].role === msg.role) {
             acc[acc.length - 1] = msg; // merge consecutive same-role
           } else {
@@ -779,16 +680,91 @@ ${context.takwimInfo.clubPrograms ? `\n[Program Kelab Berdaftar — ${context.ta
           }
           return acc;
         }, [])
-        .slice(-12);
+        .slice(-6);
+
+      // --- CLIENT-SIDE RAG (Keyword Routing) ---
+      // Combine user text and recent history to decide if we need to inject heavy context
+      const searchString = (userText + ' ' + validHistory.slice(-2).map(m => m.content).join(' ')).toLowerCase();
+      
+      const takwimKeywords = ['takwim', 'jadual', 'program', 'cuti', 'aktiviti', 'bila', 'tarikh', 'esok', 'lusa', 'minggu depan', 'bulan depan', 'sem ', 'semester', 'exam', 'peperiksaan', 'daftar', 'pendaftaran', 'perayaan', 'sukan'];
+      const clubsKeywords = ['kelab', 'persatuan', 'senarai', 'sukan', 'nama', 'join', 'masuk', 'sertai'];
+      const jppKeywords = ['jpp', 'exco', 'majlis tertinggi', 'presiden', 'organisasi', 'struktur', 'biro', 'tugas', 'siapa', 'wakil', 'mpp'];
+
+      const needsTakwim = takwimKeywords.some(kw => searchString.includes(kw));
+      const needsClubs = clubsKeywords.some(kw => searchString.includes(kw));
+      const needsJppOrg = jppKeywords.some(kw => searchString.includes(kw));
+
+      // DYNAMIC CONTEXT - per-user, per-session (injected into contents[0])
+      const dynamicContextParts = [];
+      if (context?.currentPage) dynamicContextParts.push(`Halaman semasa: ${context.currentPage}`);
+      if (context?.clubInfo) dynamicContextParts.push(`Kelab: ${context.clubInfo.name} (${context.clubInfo.membersCount || '0'} ahli)`);
+      if (context?.recentNotifications?.length) dynamicContextParts.push(`Notifikasi: ${context.recentNotifications.join('; ')}`);
+      if (context?.tokenBalance !== undefined) dynamicContextParts.push(`Baki Token: ${context.tokenBalance} | Tahap: ${context?.subscriptionTier?.toUpperCase() ?? 'FREE'}`);
+      if (context?.committee) dynamicContextParts.push(`Kepimpinan kelab:\n${context.committee}`);
+      if (context?.pendingTasksCount) dynamicContextParts.push(`Tugasan aktif: ${context.pendingTasksCount}`);
+      if (context?.akademikInfo) dynamicContextParts.push(`[E-Akademik] CGPA: ${context.akademikInfo.cgpa?.toFixed(2) || 'Tiada'} | Merit: ${context.akademikInfo.meritPoints || 0} | Fail: ${context.akademikInfo.statusUnlock || 'Tiada'}`);
+      
+      // Heavy payloads - only inject if keywords matched
+      if (needsJppOrg && context?.jppOrganization) dynamicContextParts.push(`Organisasi JPP:\n${context.jppOrganization}`);
+      if (needsClubs && context?.allClubs) dynamicContextParts.push(`Senarai kelab:\n${context.allClubs}`);
+      if (needsTakwim && context?.upcomingPrograms) dynamicContextParts.push(`Program akan datang:\n${context.upcomingPrograms}`);
+
+      if (context?.keusahawananInfo) {
+        const ki = context.keusahawananInfo;
+        dynamicContextParts.push(`[E-Keusahawanan] Kedai: ${ki.shopName || 'Tiada'} | Pengurus: ${ki.isManager ? 'Ya' : 'Tidak'} | Syif: ${ki.activeShifts || 'Tiada'} | Jualan: ${ki.todaySales !== undefined ? 'RM' + ki.todaySales.toFixed(2) : '-'} | Stok rendah: ${ki.lowStockCount || 0}`);
+      }
+      if (context?.jppHqInfo) dynamicContextParts.push(`[HQ JPP] Laporan pending: ${context.jppHqInfo.totalPendingReports || 0} | Merit pending: ${context.jppHqInfo.totalMeritPending || 0}`);
+      if (context?.kebajikanInfo) {
+        const kb = context.kebajikanInfo;
+        dynamicContextParts.push(`[Kebajikan] Peranan: ${kb.role}${kb.role === 'PELAJAR' ? ` | Tiket aktif: ${kb.activeTicketsCount || 0}` : ` | Urgent: ${kb.urgentTicketsUnresolved || 0} | Assigned: ${kb.assignedToMe || 0}`}`);
+      }
+      if (context?.polymartInfo) dynamicContextParts.push(`[PolyMart] ${context.polymartInfo.userType} | Beli aktif: ${context.polymartInfo.activePurchases || 0} | Masuk: ${context.polymartInfo.pendingIncomingOrders || 0}`);
+      
+      // Heavy Payload - Takwim
+      if (needsTakwim && context?.takwimInfo) {
+        const ti = context.takwimInfo;
+        const tParts = [`[Takwim] Akses: ${ti.accessScope === 'JPP_FULL' ? 'JPP Penuh' : 'Pelajar'} | Akan datang: ${ti.totalUpcoming || 0}`];
+        if (ti.upcomingEvents) tParts.push(`Aktiviti:\n${ti.upcomingEvents}`);
+        if (ti.upcomingCuti) tParts.push(`Cuti:\n${ti.upcomingCuti}`);
+        if (ti.pastEvents) tParts.push(`Lepas:\n${ti.pastEvents}`);
+        if (ti.clubPrograms) tParts.push(`Program ${ti.clubProgramsName || 'Kelab'}:\n${ti.clubPrograms}`);
+        dynamicContextParts.push(tParts.join('\n'));
+      }
+      
+      if (context?.iMapsInfo) {
+        const im = context.iMapsInfo;
+        if (im.isNavigating && im.activeBuildingName) {
+          dynamicContextParts.push(`[iMaps] Navigasi ke: ${im.activeBuildingName}${im.targetRoomCode ? ' Bilik: ' + im.targetRoomCode : ''}`);
+        } else if (im.activeBuildingName) {
+          dynamicContextParts.push(`[iMaps] Bangunan: ${im.activeBuildingName}${im.activeBuildingZone ? ' Zon: ' + im.activeBuildingZone : ''}${im.facilityStatus ? ' (' + im.facilityStatus + ')' : ''}`);
+        }
+      }
+      if (context?.polyRiderInfo) {
+        const pr = context.polyRiderInfo;
+        const prParts = [`[PolyRider] ${pr.userType}`];
+        if (pr.userType === 'RIDER') {
+          prParts.push(`Status: ${pr.riderStatus || '?'} | Pendapatan: RM${(pr.todayEarnings || 0).toFixed(2)}`);
+          if (pr.activeJobRiderStatus) prParts.push(`Trip: ${pr.activeJobRiderPickup || '?'} > ${pr.activeJobRiderDropoff || '?'} (${pr.activeJobRiderStatus})`);
+        } else if (pr.userType === 'PASSENGER' && pr.activeJobStatus) {
+          prParts.push(`Trip: ${pr.activeJobPickup || '?'} > ${pr.activeJobDropoff || '?'} (${pr.activeJobStatus})`);
+          if (pr.activeBidsCount) prParts.push(`${pr.activeBidsCount} bidaan menunggu`);
+        }
+        dynamicContextParts.push(prParts.join(' | '));
+      }
+
+      const dynamicContext = dynamicContextParts.join('\n');
 
       const contents = [
+        ...(dynamicContext ? [
+          { role: 'user', parts: [{ text: `[KONTEKS SESI]\n${dynamicContext}` }] },
+          { role: 'model', parts: [{ text: 'Faham, saya sedia membantu.' }] },
+        ] : []),
         ...validHistory.map((m) => ({
           role: m.role === 'user' ? 'user' : 'model',
           parts: [{ text: m.content }],
         })),
         { role: 'user', parts: [{ text: userText }] },
       ];
-
       const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
       let responseData;
       let attempt = 0;
@@ -806,9 +782,9 @@ ${context.takwimInfo.clubPrograms ? `\n[Program Kelab Berdaftar — ${context.ta
               action: 'proxy',
               endpoint: endpoint,
               payload: {
-                system_instruction: { parts: [{ text: systemInstruction }] },
+                system_instruction: { parts: [{ text: staticSystemPrompt }] },
                 contents,
-                generationConfig: { temperature: 0.3, maxOutputTokens: 1500, topP: 0.85 }
+                generationConfig: { temperature: 0.3, maxOutputTokens: 800, topP: 0.85 }
               }
             }
           });
