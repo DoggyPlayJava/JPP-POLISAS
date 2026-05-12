@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function GlobalPullToUpdate() {
+  const location = useLocation();
   const [pullProgress, setPullProgress] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -11,7 +13,12 @@ export function GlobalPullToUpdate() {
   const isRefreshingRef = React.useRef(false);
   const pullProgressRef = React.useRef(0);
 
+  // Pilihan 1: Tutup Pull-to-Refresh 100% di iMaps (Route Exclusion)
+  const isImaps = location.pathname.startsWith('/imaps') || location.pathname.startsWith('/jpp/imaps');
+
   useEffect(() => {
+    if (isImaps) return; // Batalkan pendaftaran pengesan sentuhan jika di iMaps
+
     let startY = 0;
     let isPulling = false;
     let scrollContainer: HTMLElement | null = null;
@@ -100,7 +107,9 @@ export function GlobalPullToUpdate() {
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, []); // Kosongkan dependency array supaya event listener tak putus masa tengah swipe
+  }, [isImaps]); // React akan pasang balik listener jika keluar dari kawasan iMaps
+
+  if (isImaps) return null; // Sembunyikan terus komponen UI
 
   return (
     <AnimatePresence>
