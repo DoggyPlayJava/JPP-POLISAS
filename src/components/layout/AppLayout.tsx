@@ -58,8 +58,12 @@ export function AppLayout() {
     } else {
       document.body.style.overflow = '';
     }
+    // Ensure native mobile pull-to-refresh is disabled so custom GlobalPullToUpdate works smoothly
+    document.body.style.overscrollBehaviorY = 'none';
+    
     return () => {
       document.body.style.overflow = '';
+      document.body.style.overscrollBehaviorY = '';
     };
   }, [isSidebarOpen]);
 

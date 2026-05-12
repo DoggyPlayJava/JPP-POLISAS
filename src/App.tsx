@@ -1,6 +1,9 @@
 import React, { Suspense, lazy, useEffect, useState, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, ToastBar, resolveValue } from 'react-hot-toast';
+import { motion } from 'framer-motion';
+import { Check, X, Bell } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute, PublicRoute } from '@/components/RouteGuards';
@@ -483,19 +486,50 @@ function App() {
                       <PwaUpdater />
                       <InstallAppPrompt />
                       <OfflineIndicator />
-                      <Toaster
-                        position="top-center"
-                        toastOptions={{
-                          className: 'glass !bg-white/90 dark:!bg-slate-900/90 !backdrop-blur-xl !border-white/20 !shadow-2xl rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest !text-slate-900 dark:!text-white py-4 px-6',
-                          duration: 4000,
-                          success: {
-                            iconTheme: { primary: '#10b981', secondary: '#fff' },
-                          },
-                          error: {
-                            iconTheme: { primary: '#ef4444', secondary: '#fff' },
-                          },
+                      <Toaster position="top-center">
+                        {(t) => {
+                          const isError = t.type === 'error';
+                          const isSuccess = t.type === 'success';
+                          
+                          return (
+                            <motion.div
+                              layout
+                              initial={{ opacity: 0, y: -50, scale: 0.3, width: 60, height: 20 }}
+                              animate={{ 
+                                opacity: t.visible ? 1 : 0, 
+                                y: t.visible ? 8 : -50,
+                                scale: t.visible ? 1 : 0.5,
+                                width: 'auto',
+                                height: 'auto'
+                              }}
+                              exit={{ opacity: 0, y: -50, scale: 0.5 }}
+                              transition={{ 
+                                type: "spring", 
+                                stiffness: 400, 
+                                damping: 25,
+                                mass: 0.8
+                              }}
+                              className={cn(
+                                "flex items-center gap-3 px-4 py-2.5 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] pointer-events-auto overflow-hidden",
+                                "bg-black border border-white/10",
+                                "rounded-full min-w-[160px] max-w-[90vw] justify-center mt-[env(safe-area-inset-top,0px)]"
+                              )}
+                            >
+                              <div className="flex-shrink-0">
+                                {isSuccess && <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center"><Check className="w-3 h-3 text-emerald-400 stroke-[3]" /></div>}
+                                {isError && <div className="w-5 h-5 rounded-full bg-rose-500/20 flex items-center justify-center"><X className="w-3 h-3 text-rose-400 stroke-[3]" /></div>}
+                                {t.type === 'loading' && <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white animate-spin" />}
+                                {t.type !== 'success' && t.type !== 'error' && t.type !== 'loading' && (
+                                  t.icon || <Bell className="w-4 h-4 text-white/50" />
+                                )}
+                              </div>
+                              <div className="text-[11px] font-bold tracking-wide text-white line-clamp-2 pr-2">
+                                {resolveValue(t.message, t)}
+                              </div>
+                            </motion.div>
+                          );
                         }}
-                      />
+                      </Toaster>
                     </KarnivalProvider>
                   </JppConfigProvider>
                 </AiSettingsProvider>
