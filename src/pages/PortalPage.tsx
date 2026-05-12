@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { ExcoCard } from '@/components/portal/ExcoCard';
 import { KarnivalEffects } from '@/components/portal/KarnivalEffects';
 import { SupsasEffects } from '@/components/portal/SupsasEffects';
+import { CurtainReveal } from '@/components/portal/CurtainReveal';
 import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import { KarnivalMegaBanner } from '@/components/portal/KarnivalMegaBanner';
 import { SupsasMegaBanner } from '@/components/portal/SupsasMegaBanner';
@@ -278,6 +279,7 @@ export function PortalPage() {
       />
 
       {/* Visual Effects */}
+      <CurtainReveal karnivalActive={karnivalActive} supsasActive={supsasActive} />
       {karnivalActive && <KarnivalEffects />}
       {supsasActive && !karnivalActive && <SupsasEffects />}
 
@@ -425,6 +427,8 @@ export function PortalPage() {
                 hasKebajikanAccess={hasKebajikanAccess}
                 kbStats={kbStats}
                 isJPPMode={isJPPMode}
+                karnivalActive={karnivalActive}
+                supsasActive={supsasActive}
               />
 
             </motion.div>

@@ -146,7 +146,7 @@ export function KarnivalMegaBanner({ karnivalStatus }: KarnivalMegaBannerProps) 
           </div>
         </div>
 
-        <div className="flex items-center justify-between px-7 pt-12 pb-0 relative z-30 translate-z-[50px]">
+        <div className="flex items-center justify-between px-7 pt-12 pb-0 relative z-30" style={{ transform: "translateZ(50px)" }}>
           <div className="flex items-center gap-2">
             <span className="relative flex h-3 w-3"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75" /><span className="relative inline-flex h-3 w-3 rounded-full bg-violet-500" /></span>
             <span className="text-[10px] font-black uppercase tracking-[0.4em] text-violet-300 drop-shadow-[0_0_5px_rgba(192,132,252,0.8)]">Sedang Berlangsung</span>
@@ -154,7 +154,7 @@ export function KarnivalMegaBanner({ karnivalStatus }: KarnivalMegaBannerProps) 
           <span className="text-[10px] font-black uppercase tracking-[0.3em] px-3 py-1.5 rounded-full backdrop-blur-md" style={{ background: 'rgba(139,92,246,0.2)', color: '#c084fc', border: '1px solid rgba(139,92,246,0.4)', boxShadow: '0 0 15px rgba(139,92,246,0.3)' }}>🎪 Karnival JPP</span>
         </div>
 
-        <div className="px-7 pt-5 pb-8 text-center space-y-4 relative z-30 translate-z-[80px]">
+        <div className="px-7 pt-5 pb-8 text-center space-y-4 relative z-30" style={{ transform: "translateZ(80px)" }}>
           <motion.div 
             onClick={handleSecretClick}
             whileHover={{ scale: 1.15, rotate: 10, filter: 'drop-shadow(0 0 30px rgba(168,85,247,0.8))' }}
@@ -180,7 +180,7 @@ export function KarnivalMegaBanner({ karnivalStatus }: KarnivalMegaBannerProps) 
               ))}
             </div>
           )}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-1 translate-z-[100px]">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-1" style={{ transform: "translateZ(100px)" }}>
             <motion.button onClick={e => { e.stopPropagation(); triggerHaptic('medium'); navigate('/karnival'); }}
               whileHover={{ 
                 scale: 1.05, 

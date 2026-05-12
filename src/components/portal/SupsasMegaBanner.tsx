@@ -125,7 +125,7 @@ export function SupsasMegaBanner({ supsasEdition }: SupsasMegaBannerProps) {
           </div>
         </div>
 
-        <div className="flex items-center justify-between px-7 pt-12 pb-0 relative z-30 translate-z-[30px]">
+        <div className="flex items-center justify-between px-7 pt-12 pb-0 relative z-30" style={{ transform: "translateZ(30px)" }}>
           <div className="flex items-center gap-2">
             <span className="relative flex h-3 w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
@@ -138,7 +138,7 @@ export function SupsasMegaBanner({ supsasEdition }: SupsasMegaBannerProps) {
           </span>
         </div>
 
-        <div className="px-7 pt-5 pb-8 text-center space-y-4 relative z-30 translate-z-[40px]">
+        <div className="px-7 pt-5 pb-8 text-center space-y-4 relative z-30" style={{ transform: "translateZ(40px)" }}>
           <div 
             onClick={handleSecretClick}
             className="text-5xl sm:text-6xl cursor-help hover:scale-110 active:scale-95 transition-transform" 
@@ -185,7 +185,7 @@ export function SupsasMegaBanner({ supsasEdition }: SupsasMegaBannerProps) {
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-1 translate-z-[50px]">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-1" style={{ transform: "translateZ(50px)" }}>
             <button onClick={e => { e.stopPropagation(); triggerHaptic('medium'); navigate('/supsas/scoreboard'); }}
               className="flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95 relative"
               style={{ background: 'linear-gradient(135deg, #b45309, #f59e0b)', boxShadow: '0 8px 30px rgba(245,158,11,0.35)', color: '#000' }}>
