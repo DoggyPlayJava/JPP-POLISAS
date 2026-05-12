@@ -295,7 +295,7 @@ export function PortalPage() {
       {isLoadingSettings ? (
         <PortalSkeleton />
       ) : (
-        <main className="relative z-10 pt-32 md:pt-40 pb-28 md:pb-20 px-4 md:px-8 max-w-7xl mx-auto flex-1">
+        <main className="relative z-10 pt-32 md:pt-40 pb-28 px-4 md:px-8 max-w-7xl mx-auto flex-1">
           {/* Title Section */}
           <div className="flex flex-col items-center text-center mb-16 md:mb-24 space-y-6 md:space-y-8">
             <motion.div
@@ -437,7 +437,7 @@ export function PortalPage() {
           {/* Modules Grid */}
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 lg:gap-10">
-              {EXCO_MODULES.map((mod, i) => {
+              {EXCO_MODULES.filter(mod => mod.id !== 'kebajikan').map((mod, i, arr) => {
                 let badgeText;
                 let notificationCount;
 
@@ -465,6 +465,7 @@ export function PortalPage() {
                     supsasActive={supsasActive}
                     badgeText={badgeText}
                     notificationCount={notificationCount}
+                    className={arr.length % 2 !== 0 && i === arr.length - 1 ? 'sm:col-span-2' : ''}
                   />
                 );
               })}

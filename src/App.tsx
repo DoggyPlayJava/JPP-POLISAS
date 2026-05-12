@@ -444,6 +444,7 @@ import { JppConfigProvider } from './contexts/JppConfigContext';
 import { AcademicSessionProvider } from './contexts/AcademicSessionContext';
 import { PwaUpdater } from '@/components/PwaUpdater';
 import { InstallAppPrompt } from '@/components/pwa/InstallAppPrompt';
+import { GlobalPullToUpdate } from '@/components/layout/GlobalPullToUpdate';
 
 function GlobalRedirector() {
   const navigate = useNavigate();
@@ -477,6 +478,7 @@ function App() {
                 <AiSettingsProvider>
                   <JppConfigProvider>
                     <KarnivalProvider>
+                      <GlobalPullToUpdate />
                       <AppRoutes />
                       <PwaUpdater />
                       <InstallAppPrompt />

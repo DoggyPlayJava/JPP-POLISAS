@@ -267,7 +267,7 @@ export function PolyMartLayout() {
         </header>
 
         {/* Main content */}
-        <main className="max-w-5xl mx-auto w-full px-3 sm:px-5 py-4 pb-28 sm:pb-8">
+        <main className="max-w-5xl mx-auto w-full px-3 sm:px-5 py-4 pb-28">
           <Outlet />
         </main>
 

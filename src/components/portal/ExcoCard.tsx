@@ -128,9 +128,10 @@ export interface ExcoCardProps {
   supsasActive?: boolean;
   badgeText?: string;
   notificationCount?: number;
+  className?: string;
 }
 
-export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onColorSave, karnivalActive, supsasActive, badgeText, notificationCount }: ExcoCardProps) {
+export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onColorSave, karnivalActive, supsasActive, badgeText, notificationCount, className }: ExcoCardProps) {
   const navigate = useNavigate();
   const [showColorPicker, setShowColorPicker] = useState(false);
 
@@ -174,7 +175,8 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
               karnivalActive ? "bg-black/40 backdrop-blur-xl border-violet-500/20" : "bg-black/20 border-white/10",
               karnivalActive ? "hover:border-transparent hover:bg-violet-950/30 hover:shadow-[inset_0_0_30px_rgba(192,132,252,0.15),0_10px_50px_rgba(192,132,252,0.25)]" : "hover:border-amber-500/40 hover:bg-amber-500/10 hover:shadow-[0_8px_40px_rgba(245,158,11,0.15)]"
             )
-          : "bg-white/80 dark:bg-slate-900/40 border-slate-200/50 dark:border-white/5 hover:bg-white dark:hover:bg-slate-900/80 hover:-translate-y-1"
+          : "bg-white/80 dark:bg-slate-900/40 border-slate-200/50 dark:border-white/5 hover:bg-white dark:hover:bg-slate-900/80 hover:-translate-y-1",
+        className
       )}
       style={!isEventMode ? {
         '--hover-shadow': `0 10px 40px -10px ${hexToRgba(color, 0.2)}`,

@@ -308,7 +308,7 @@ export function SupsasLayout() {
             </motion.p>
           </div>
         ) : (
-          <div className="pb-24 md:pb-0">
+          <div className="pb-28">
             <Outlet />
           </div>
         )}

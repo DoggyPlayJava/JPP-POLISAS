@@ -43,7 +43,7 @@ export function PolyRiderLayout() {
 
   if (!isActive) {
     return (
-      <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 pb-16">
+      <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 pb-28">
         <div className="flex-1 w-full flex items-center justify-center p-6">
           <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-8 text-center max-w-sm shadow-xl border border-slate-100 dark:border-white/5">
             <div className="w-20 h-20 bg-red-50 dark:bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -67,7 +67,7 @@ export function PolyRiderLayout() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 pb-16">
+    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 pb-28">
       <div className="flex-1 w-full">
         <Outlet />
       </div>
