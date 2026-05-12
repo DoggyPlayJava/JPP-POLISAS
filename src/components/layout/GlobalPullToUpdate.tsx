@@ -19,10 +19,9 @@ export function GlobalPullToUpdate() {
     // Recursive function to find the closest scrolling container
     const getScrollContainer = (el: HTMLElement | null): HTMLElement | null => {
       if (!el) return null;
-      const style = window.getComputedStyle(el);
       if (
-        (style.overflowY === 'auto' || style.overflowY === 'scroll') &&
-        el.scrollHeight >= el.clientHeight // Gunakan >= supaya elemen kosong/pendek pun dikesan
+        el.scrollHeight > el.clientHeight && 
+        (window.getComputedStyle(el).overflowY === 'auto' || window.getComputedStyle(el).overflowY === 'scroll')
       ) {
         return el;
       }
@@ -35,8 +34,8 @@ export function GlobalPullToUpdate() {
       const target = e.target as HTMLElement;
       scrollContainer = getScrollContainer(target) || document.documentElement;
 
-      // Beri kelonggaran margin of error <= 5px untuk scroll inertia pada telefon
-      if (scrollContainer && scrollContainer.scrollTop <= 5) {
+      // Only allow pull-to-refresh if the user is exactly at the top of the container
+      if (scrollContainer && scrollContainer.scrollTop <= 0) {
         startY = e.touches[0].clientY;
         isPulling = true;
       }
@@ -48,11 +47,12 @@ export function GlobalPullToUpdate() {
       const currentY = e.touches[0].clientY;
       const deltaY = currentY - startY;
 
-      // Pastikan hanya tarikan ke Bawah (pull down) dan pengguna berada di paling atas
-      if (deltaY > 10 && scrollContainer && scrollContainer.scrollTop <= 5) {
-        // Prevent default supaya tiada pantulan (rubber-band)
+      // Only pull down
+      if (deltaY > 0 && scrollContainer && scrollContainer.scrollTop <= 0) {
+        // Prevent default browser pull-to-refresh so we can handle it via SW
         if (e.cancelable) e.preventDefault();
         
+        // Max pull visual progress is 150px
         const progress = Math.min((deltaY / 150) * 100, 100);
         pullProgressRef.current = progress;
         setPullProgress(progress);
@@ -63,12 +63,13 @@ export function GlobalPullToUpdate() {
       if (!isPulling || isRefreshingRef.current) return;
       isPulling = false;
 
-      // Jika tarikan mencukupi (lebih 70%)
-      if (pullProgressRef.current > 70) {
+      // If user pulled down more than 80% of the threshold, trigger the update
+      if (pullProgressRef.current > 80) {
         isRefreshingRef.current = true;
         setIsRefreshing(true);
         
         try {
+          // 1. Force Service Worker to Update (OTA Update)
           if ('serviceWorker' in navigator) {
             const registrations = await navigator.serviceWorker.getRegistrations();
             for (let registration of registrations) {
@@ -79,24 +80,25 @@ export function GlobalPullToUpdate() {
           console.error("SW Update failed", err);
         }
         
+        // 2. Clear cache and Hard Reload to bypass browser caching
         setTimeout(() => {
           window.location.reload();
-        }, 1200);
+        }, 1200); // Give enough time for the user to see the spinning animation
       } else {
         pullProgressRef.current = 0;
         setPullProgress(0);
       }
     };
 
-    // Gunakan CAPTURE PHASE supaya tiada elemen lain boleh block/stop event ni
-    document.addEventListener('touchstart', handleTouchStart, { passive: true, capture: true });
-    document.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true });
-    document.addEventListener('touchend', handleTouchEnd, { passive: true, capture: true });
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    // touchmove must not be passive so we can call e.preventDefault()
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
-      document.removeEventListener('touchstart', handleTouchStart, { capture: true });
-      document.removeEventListener('touchmove', handleTouchMove, { capture: true });
-      document.removeEventListener('touchend', handleTouchEnd, { capture: true });
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
     };
   }, []); // Kosongkan dependency array supaya event listener tak putus masa tengah swipe
 
