@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
-  User, Bell, Shield, CreditCard, Mail, Lock, Camera, Check, Award, Globe, Loader2, FileText, Activity, HelpCircle, MessageSquare, Headphones, ExternalLink, Sparkles, Phone, ArrowLeft, Moon, MapPin, Home, Building2, GraduationCap, ClipboardEdit, Clock, XCircle, CheckCircle2, AlertCircle, X
+  User, Bell, Shield, CreditCard, Mail, Lock, Camera, Check, Award, Globe, Loader2, FileText, Activity, HelpCircle, MessageSquare, Headphones, ExternalLink, Sparkles, Phone, ArrowLeft, Moon, MapPin, Home, Building2, GraduationCap, ClipboardEdit, Clock, XCircle, CheckCircle2, AlertCircle, X, LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -527,7 +527,7 @@ function KediamanSettingsSection() {
 }
 
 export function SettingsPage() {
-  const { user, profile, refetchProfile, effectiveRole } = useAuth();
+  const { user, profile, refetchProfile, effectiveRole, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
 
   const navigate = useNavigate();
@@ -794,7 +794,7 @@ export function SettingsPage() {
           <div
             className={cn(
               "md:w-64 lg:w-72 shrink-0", // Desktop width
-              "fixed inset-y-0 left-0 w-80 z-[200] bg-card/95 backdrop-blur-xl border-r border-border/40 shadow-2xl flex flex-col p-6 transition-transform duration-300 md:static md:bg-transparent md:backdrop-blur-none md:border-none md:shadow-none md:p-0 md:translate-x-0 overflow-y-auto md:overflow-visible",
+              "fixed inset-y-0 left-0 w-80 z-[200] bg-card/95 backdrop-blur-xl border-r border-border/40 shadow-2xl flex flex-col p-6 pb-32 transition-transform duration-300 md:static md:bg-transparent md:backdrop-blur-none md:border-none md:shadow-none md:p-0 md:pb-0 md:translate-x-0 overflow-y-auto md:overflow-visible",
               isSidebarOpen ? "translate-x-0" : "-translate-x-full"
             )}
           >
@@ -836,6 +836,22 @@ export function SettingsPage() {
               
               {/* Vercel-Style Divider in Sidebar */}
               <Separator className="my-6 bg-border/40 shrink-0" />
+              
+              <div className="px-2 shrink-0 mb-6">
+                <Button 
+                  onClick={signOut}
+                  variant="ghost" 
+                  className="w-full justify-start text-left px-4 py-3 rounded-2xl font-bold text-sm text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 transition-colors flex items-center gap-4 group"
+                >
+                  <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-500 shrink-0 transition-colors group-hover:bg-rose-500 group-hover:text-white">
+                    <LogOut className="w-[18px] h-[18px]" />
+                  </div>
+                  <div className="flex flex-col items-start gap-0.5 min-w-0">
+                    <span className="text-rose-600 group-hover:text-rose-700 w-full text-left">Log Keluar</span>
+                  </div>
+                </Button>
+              </div>
+
               <div className="px-2 shrink-0 mt-auto md:mt-0">
                 <div className="p-4 rounded-3xl bg-muted/30 border border-border/40 text-center space-y-2">
                   <Shield className="w-6 h-6 mx-auto text-primary opacity-50" />
