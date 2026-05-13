@@ -466,24 +466,12 @@ export function PolyRiderHome() {
     };
     fetchOpenCarpools();
 
-    // Realtime: listen to ALL polyrider_jobs changes (no row filter)
-    // so we catch cancellations, locks, and new carpools immediately.
-    // fetchOpenCarpools() applies the correct status=GATHERING filter itself.
-    const channel = supabase
-      .channel('open-carpools-watch')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'polyrider_jobs',
-      }, () => { fetchOpenCarpools(); })
-      .subscribe();
-
+    // Realtime removed
     // Also poll every 30s as a safety net
     const handleVisibility = () => { if (document.visibilityState === 'visible') fetchOpenCarpools(); };
     document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
-      supabase.removeChannel(channel);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, [isSearching, activeJob, user]);
@@ -614,21 +602,8 @@ export function PolyRiderHome() {
     };
     poll();
     
-    // Switch to Realtime channels to eliminate aggressive polling
-    const channel = supabase.channel(`student_job_${activeJob.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'polyrider_jobs', filter: `id=eq.${activeJob.id}` }, poll)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'polyrider_bids', filter: `job_id=eq.${activeJob.id}` }, poll)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'polyrider_chats', filter: `job_id=eq.${activeJob.id}` }, poll);
-      
-    if (activeJob.carpool_group_id) {
-       channel.on('postgres_changes', { event: '*', schema: 'public', table: 'polyrider_jobs', filter: `carpool_group_id=eq.${activeJob.carpool_group_id}` }, poll);
-    }
-    
-    channel.subscribe();
-    
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // Realtime removed
+    return () => {};
   }, [activeJob?.id, isSearching]);
 
   // Check existing unfinished job on mount

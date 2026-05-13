@@ -149,21 +149,7 @@ export function PolyRiderDashboard() {
     prevActiveJobsCount.current = activeJobs.length;
   }, [activeJobs.length]);
 
-  useEffect(() => {
-    if (!user) return;
-    const channel = supabase.channel('polyrider_cancellations')
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'polyrider_jobs', filter: "status=eq.CANCELLED" },
-        (payload) => {
-           if (submittedBidsRef.current[payload.new.id] !== undefined || activeJobsRef.current.some(j => j.id === payload.new.id)) {
-              toast.error('⚠️ Peringatan: Seorang penumpang telah menarik diri atau membatalkan perjalanannya.');
-           }
-        }
-      )
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [user]);
+  // Realtime removed for polyrider_cancellations
 
   const fetchJobs = useCallback(async () => {
     if (!user?.id) return;
@@ -254,15 +240,8 @@ export function PolyRiderDashboard() {
     poll();
     setIsPolling(true);
     
-    // Switch to Realtime channels to eliminate aggressive polling
-    const channel = supabase.channel(`rider_dashboard_${user?.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'polyrider_jobs' }, poll)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'polyrider_bids' }, poll)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'polyrider_chats' }, poll)
-      .subscribe();
-      
+    // Realtime removed
     return () => { 
-      supabase.removeChannel(channel);
       setIsPolling(false); 
     };
   }, [profile?.is_active, profile?.status, fetchJobs, fetchTodayEarnings, user?.id, activeJobs.length]);

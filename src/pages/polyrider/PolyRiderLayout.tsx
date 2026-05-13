@@ -25,10 +25,10 @@ export function PolyRiderLayout() {
           setSuspendedUntil(profile.polyrider_suspended_until);
         }
       }
-      
+
       setLoading(false);
     };
-    
+
     fetchStatus();
   }, [user]);
 
@@ -53,7 +53,7 @@ export function PolyRiderLayout() {
               Sistem Ditutup
             </h1>
             <p className="text-sm font-medium text-slate-500 dark:text-white/60 mb-6">
-              Perkhidmatan PolyRider sedang ditutup sementara waktu oleh pihak pentadbir untuk tujuan penyelenggaraan atau di luar waktu operasi.
+              Perkhidmatan PolyRider sedang ditutup sementara waktu oleh pihak pembangun.
             </p>
           </div>
         </div>
