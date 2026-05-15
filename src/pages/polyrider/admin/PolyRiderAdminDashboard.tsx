@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 import { notifyKLKOnSuspension } from '@/lib/polyRiderNotify';
 import { uploadFileToDrive } from '@/lib/driveUpload';
+import { logAuditAction } from '@/lib/auditLogger';
 export function PolyRiderAdminDashboard() {
   const [pendingRiders, setPendingRiders] = useState<any[]>([]);
   const [activeRiders, setActiveRiders] = useState<any[]>([]);
@@ -72,6 +73,7 @@ export function PolyRiderAdminDashboard() {
     if (!error) {
       setSystemActive(newStatus);
       toast.success(`Sistem PolyRider kini ${newStatus ? 'AKTIF' : 'DITUTUP'}`);
+      logAuditAction({ actionType: newStatus ? 'SYSTEM_ACTIVATED' : 'SYSTEM_DEACTIVATED', module: 'PolyRider', description: `Sistem PolyRider ${newStatus ? 'diaktifkan' : 'ditutup'}`, actorId: (await supabase.auth.getUser()).data.user!.id });
     }
   };
 
@@ -181,6 +183,7 @@ export function PolyRiderAdminDashboard() {
       toast.error('Gagal memproses rayuan. ' + error.message);
     } else {
       toast.success(approve ? 'Rayuan diluluskan' : 'Rayuan ditolak');
+      logAuditAction({ actionType: approve ? 'APPEAL_APPROVED' : 'APPEAL_REJECTED', module: 'PolyRider', entityId: appealId, description: `Rayuan PolyRider ${approve ? 'diluluskan' : 'ditolak'}${notes ? ': ' + notes : ''}`, actorId: (await supabase.auth.getUser()).data.user!.id });
       fetchAppeals();
     }
   };
@@ -197,6 +200,7 @@ export function PolyRiderAdminDashboard() {
         await supabase.from('polyrider_jobs').update({ status: 'CANCELLED' }).eq('id', sos.job_id);
       }
       toast.success('Kes SOS diselesaikan.');
+      logAuditAction({ actionType: 'SOS_RESOLVED', module: 'PolyRider', entityId: sosId, description: 'Kes SOS diselesaikan oleh admin', actorId: (await supabase.auth.getUser()).data.user!.id });
       fetchSosAlerts();
     } else {
       toast.error('Gagal menanda selesai.');
@@ -348,6 +352,7 @@ export function PolyRiderAdminDashboard() {
 
     if (!error) {
       toast.success('Pendaftaran diluluskan & langganan diaktifkan 30 hari!');
+      logAuditAction({ actionType: 'RIDER_APPROVED', module: 'PolyRider', entityId: id, description: 'Pendaftaran rider diluluskan (30 hari)', actorId: (await supabase.auth.getUser()).data.user!.id });
       fetchData();
     } else {
       toast.error('Gagal meluluskan pendaftaran.');
@@ -363,6 +368,7 @@ export function PolyRiderAdminDashboard() {
 
     if (!error) {
       toast.success('Pendaftaran ditolak.');
+      logAuditAction({ actionType: 'RIDER_REJECTED', module: 'PolyRider', entityId: id, description: 'Pendaftaran rider ditolak', actorId: (await supabase.auth.getUser()).data.user!.id });
       fetchData();
     } else {
       toast.error('Ralat.');
@@ -378,6 +384,7 @@ export function PolyRiderAdminDashboard() {
 
     if (!error) {
       toast.success('Rider telah digantung.');
+      logAuditAction({ actionType: 'RIDER_SUSPENDED', module: 'PolyRider', entityId: id, description: 'Rider digantung dari tugas', actorId: (await supabase.auth.getUser()).data.user!.id });
       fetchData();
     } else {
       toast.error('Ralat menggantung rider.');
@@ -393,6 +400,7 @@ export function PolyRiderAdminDashboard() {
 
     if (!error) {
       toast.success('Tugas rider telah disambung.');
+      logAuditAction({ actionType: 'RIDER_RESUMED', module: 'PolyRider', entityId: id, description: 'Tugas rider disambung semula', actorId: (await supabase.auth.getUser()).data.user!.id });
       fetchData();
     } else {
       toast.error('Ralat menyambung rider.');

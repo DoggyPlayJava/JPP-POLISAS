@@ -9,6 +9,14 @@ import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { QrCodeFab } from '@/components/jpp/QrCodeFab';
 import { BottomNav } from '@/components/layout/BottomNav';
 
+// Auto-calculate current academic session
+function getCurrentAcademicSession(): string {
+  const now = new Date();
+  const m = now.getMonth();
+  const y = now.getFullYear();
+  return m >= 6 ? `Sem 1 ${y}/${y + 1}` : `Sem 2 ${y - 1}/${y}`;
+}
+
 const JPP_UNIT_LINKS = [
   { label: 'Dashboard JPP HQ', path: '/jpp' },
   { label: 'Senarai Ahli JPP', path: '/jpp/ahli' },
@@ -100,9 +108,14 @@ export function JppLayout() {
           >
             <Menu className="w-5 h-5" />
           </button>
-          <div className="flex items-center gap-2">
-            <img src="/jpp-logo.png" alt="JPP" className="h-7 object-contain" />
-            <span className="text-sm font-black text-white tracking-tight">JPP HQ</span>
+          <div className="flex flex-col items-center">
+            <div className="flex items-center gap-2">
+              <img src="/jpp-logo.png" alt="JPP" className="h-7 object-contain" />
+              <span className="text-sm font-black text-white tracking-tight">JPP HQ</span>
+            </div>
+            <span className="text-[8px] font-black uppercase tracking-widest text-white/25 mt-0.5">
+              {getCurrentAcademicSession()}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <NotificationBell />

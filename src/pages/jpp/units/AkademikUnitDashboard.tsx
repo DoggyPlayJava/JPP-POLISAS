@@ -7,13 +7,14 @@ import { sendNotificationToUser } from '@/lib/notifications';
 import {
   Trophy, Users, Star, CheckCircle, XCircle, Clock,
   Settings, LayoutDashboard, QrCode, AlertCircle, Loader2,
-  ChevronLeft, ChevronRight, Shield, Unlock, BarChart3,
+  ChevronLeft, ChevronRight, Shield, Unlock, BarChart3, ShieldAlert,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { format, parseISO } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { QrMeritManager } from '@/pages/akademik/AkademikQrScan';
 import { JPP_MT_POSITIONS } from '@/types';
+import { DemeritManager } from '@/pages/akademik/DemeritManager';
 
 const THEME = '#818CF8';
 
@@ -639,7 +640,7 @@ const TABS = [
   { id: 'semak',        label: 'Semak',          icon: Trophy },
   { id: 'buka-kunci',   label: 'Buka Kunci',     icon: Unlock },
   { id: 'qr',           label: 'QR Merit',       icon: QrCode },
-
+  { id: 'demerit',      label: 'Demerit',        icon: ShieldAlert },
   { id: 'merit-config', label: 'Tetapan Merit',  icon: Settings },
 ];
 
@@ -750,7 +751,7 @@ export function AkademikUnitDashboard() {
               {tab.startsWith('semak')       && <PencapaianReviewPanel />}
               {tab === 'buka-kunci'          && <UnlockRequestsPanel />}
               {tab === 'qr'                  && <QrMeritManager themeColor={THEME} />}
-
+              {tab === 'demerit'             && <DemeritManager sourceOverride="AKADEMIK" />}
               {tab === 'merit-config'        && <MeritConfigPanel />}
         </motion.div>
       </AnimatePresence>

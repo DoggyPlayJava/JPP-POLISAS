@@ -95,7 +95,7 @@ export function JppLogsPage() {
   const fetchData = async () => {
     setLoading(true);
     const { data } = await supabase.from('system_logs')
-      .select('id, action_type, entity_type, entity_id, details, club_name, created_at, full_name, role')
+      .select('id, action_type, entity_type, entity_id, details, club_name, created_at, full_name, role, metadata')
       .order('created_at', { ascending: false })
       .limit(200);
 
@@ -193,15 +193,19 @@ export function JppLogsPage() {
     if (t.includes('kebajikan') || t.includes('tiket')) return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
     if (t.includes('kelab') || t.includes('karnival')) return 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20';
     if (t.includes('pos')) return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-    if (t.includes('sistem') || t.includes('admin') || t.includes('keusahawanan')) return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+    if (t.includes('polyrider') || t.includes('rider')) return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+    if (t.includes('imaps') || t.includes('bangunan') || t.includes('lokasi')) return 'bg-sky-500/10 text-sky-400 border-sky-500/20';
+    if (t.includes('takwim') || t.includes('akademik')) return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
+    if (t.includes('jpp') || t.includes('admin')) return 'bg-violet-500/10 text-violet-400 border-violet-500/20';
+    if (t.includes('sistem') || t.includes('keusahawanan')) return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
     return 'bg-white/5 text-white/60 border-white/10';
   };
 
   // ── Action badge colour ───────────────────────────────────────────────────────
   const actionColor = (action: string) => {
-    if (action?.includes('DELETE') || action?.includes('DISSOLVE') || action?.includes('REJECT') || action?.includes('KICK')) return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
-    if (action?.includes('UPDATE') || action?.includes('APPROVE') || action?.includes('SETTINGS')) return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-    if (action?.includes('CREATE') || action?.includes('ADD') || action?.includes('ASSIGN')) return 'bg-sky-500/10 text-sky-400 border-sky-500/20';
+    if (action?.includes('DELETE') || action?.includes('DISSOLVE') || action?.includes('REJECT') || action?.includes('KICK') || action?.includes('SUSPEND') || action?.includes('REMOVE') || action?.includes('DEACTIVATE')) return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+    if (action?.includes('UPDATE') || action?.includes('APPROVE') || action?.includes('SETTINGS') || action?.includes('RESUME') || action?.includes('RESOLVE') || action?.includes('ACTIVATE')) return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+    if (action?.includes('CREATE') || action?.includes('ADD') || action?.includes('ASSIGN') || action?.includes('BULK')) return 'bg-sky-500/10 text-sky-400 border-sky-500/20';
     return 'bg-white/5 text-white/50 border-white/10';
   };
 
@@ -360,7 +364,7 @@ export function JppLogsPage() {
         {/* ── Tabs ── */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-          {['Semua', 'Karnival/Kelab', 'Keusahawanan', 'Kebajikan', 'POS System'].map(tab => (
+          {['Semua', 'Karnival/Kelab', 'Keusahawanan', 'Kebajikan', 'POS System', 'JPP Admin', 'PolyRider', 'iMaps', 'PolyMart', 'Takwim', 'Akademik'].map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={cn('px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border',
                 activeTab === tab ? 'bg-white/10 text-white border-white/20' : 'text-white/40 border-transparent hover:text-white/60 hover:bg-white/5')}
@@ -414,12 +418,21 @@ export function JppLogsPage() {
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30 shrink-0">
-                            <span className="text-[9px] font-black text-indigo-400">{(log.full_name || '?')[0].toUpperCase()}</span>
+                          <div className={cn(
+                            'w-6 h-6 rounded flex items-center justify-center border shrink-0',
+                            log.full_name ? 'bg-indigo-500/20 border-indigo-500/30' : 'bg-white/5 border-white/10'
+                          )}>
+                            <span className={cn('text-[9px] font-black', log.full_name ? 'text-indigo-400' : 'text-white/30')}>
+                              {(log.full_name || log.metadata?.actor_label || 'S')[0].toUpperCase()}
+                            </span>
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-white/80">{log.full_name || 'System'}</p>
-                            <p className="text-[9px] font-black uppercase tracking-widest text-white/30">{log.role || 'SYSTEM'}</p>
+                            <p className="text-xs font-bold text-white/80">
+                              {log.full_name || (log.metadata?.actor_label ? String(log.metadata.actor_label) : 'Sistem')}
+                            </p>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-white/30">
+                              {log.role || (log.metadata?.backfill ? 'REKOD LAMA' : 'SYSTEM')}
+                            </p>
                           </div>
                         </div>
                       </td>

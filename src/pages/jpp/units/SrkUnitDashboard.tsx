@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   Trophy, ToggleLeft, ToggleRight, ExternalLink, Loader2,
   CalendarDays, Users, Medal, BarChart3, Settings, AlertTriangle,
-  CheckCircle2, Clock, ArrowRight,
+  CheckCircle2, Clock, ArrowRight, LayoutGrid
 } from 'lucide-react';
 import { cn, hexToRgba } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
@@ -84,6 +84,8 @@ export function SrkUnitDashboard() {
   const [stats, setStats] = useState<SupsasStats | null>(null);
   const [loadingData, setLoadingData] = useState(true);
 
+
+
   const isYDP = profile?.jpp_position === 'YDP' || isSuperAdmin;
   const isSRK = profile?.jpp_unit === 'SRK' || isYDP;
 
@@ -132,7 +134,14 @@ export function SrkUnitDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* ── SUPSAS Toggle Card ── */}
+      <motion.div
+        key="supsas"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -4 }}
+        className="space-y-6"
+      >
+          {/* ── SUPSAS Toggle Card ── */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -312,6 +321,7 @@ export function SrkUnitDashboard() {
           )}
         </>
       )}
+    </motion.div>
     </div>
   );
 }

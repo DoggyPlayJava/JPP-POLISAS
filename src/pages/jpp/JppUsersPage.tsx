@@ -8,6 +8,7 @@ import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { hexToRgba, cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { getSemesterInfo } from '@/types';
+import { logAuditAction } from '@/lib/auditLogger';
 
 export function JppUsersPage() {
     const { isSuperAdmin, profile } = useAuth();
@@ -61,6 +62,7 @@ export function JppUsersPage() {
         }
         await supabase.from('ai_tier_requests').update({ status: 'APPROVED' }).eq('id', requestId);
         toast.success(`Berjaya dinaik taraf ke tier ${newTier.toUpperCase()}`);
+        logAuditAction({ actionType: 'AI_TIER_APPROVED', module: 'JPP Admin', entityId: userId, description: `Tier AI diluluskan ke ${newTier.toUpperCase()}`, actorId: profile!.id, metadata: { new_tier: newTier, receipt_url } });
         if(receipt_url) {
             await supabase.from('club_logs').insert([{
                 user_id: profile?.id,
@@ -75,6 +77,7 @@ export function JppUsersPage() {
         if (!confirm('Tolak permohonan ini?')) return;
         await supabase.from('ai_tier_requests').update({ status: 'REJECTED' }).eq('id', requestId);
         toast.success("Permohonan ditolak");
+        logAuditAction({ actionType: 'AI_TIER_REJECTED', module: 'JPP Admin', entityId: userId, description: `Permohonan tier AI ditolak`, actorId: profile!.id, metadata: { receipt_url } });
         if(receipt_url) {
             await supabase.from('club_logs').insert([{
                 user_id: profile?.id,
@@ -334,6 +337,7 @@ export function JppUsersPage() {
                                                                             const { error } = await supabase.rpc('toggle_jpp_role', { p_target_id: u.id });
                                                                             if (error) { toast.error(error.message); return; }
                                                                             toast.success(`Peranan dikemaskini.`);
+                                                                            logAuditAction({ actionType: u.role === 'JPP' ? 'JPP_ROLE_REMOVED' : 'JPP_ROLE_ASSIGNED', module: 'JPP Admin', entityId: u.id, description: `${u.full_name}: ${u.role === 'JPP' ? 'Diturunkan dari JPP' : 'Dilantik sebagai JPP'}`, actorId: profile!.id });
                                                                             fetchAdminData();
                                                                         }
                                                                     }}

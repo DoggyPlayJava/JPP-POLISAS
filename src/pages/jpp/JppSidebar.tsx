@@ -18,6 +18,18 @@ import { toast } from 'react-hot-toast';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID, getJppSidebarBg, JPP_COLOR_PRESETS } from './jppConfig';
 import { useJppConfig } from '@/contexts/JppConfigContext';
 
+// Auto-calculate current academic session based on date
+function getCurrentAcademicSession(): string {
+  const now = new Date();
+  const month = now.getMonth(); // 0-indexed
+  const year = now.getFullYear();
+  // Malaysian poly: Sem 1 = Jul-Dec, Sem 2 = Jan-Jun
+  if (month >= 6) {
+    return `Sem 1 ${year}/${year + 1}`;
+  }
+  return `Sem 2 ${year - 1}/${year}`;
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 export function JppSidebar() {
   const { user, profile, signOut, isSuperAdmin, hasKediamanAccess } = useAuth();
@@ -138,6 +150,12 @@ export function JppSidebar() {
               style={{ color: hexToRgba(themeColor, 0.7) }}>
               Politeknik Polisas
             </p>
+            <div className="flex items-center gap-1.5 mt-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[9px] font-black uppercase tracking-widest text-white/35">
+                {getCurrentAcademicSession()}
+              </span>
+            </div>
           </div>
           <div className="ml-auto flex items-center gap-1">
             {canCustomize && (
@@ -291,6 +309,31 @@ export function JppSidebar() {
             )}
           </NavLink>
         ))}
+
+        {/* ── Pengurusan Merit & Disiplin ─── */}
+        {(isYDP || isSuperAdmin || ['AKADEMIK', 'KPP', 'KK'].includes(profile?.jpp_unit || '')) && (
+          <>
+            <div className="pt-4 pb-1.5">
+              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-white/25">
+                Pengurusan Pelajar
+              </p>
+            </div>
+            <NavLink
+              to="/jpp/demerit"
+              className={({ isActive }) => cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
+                isActive
+                  ? 'bg-rose-500/20 text-rose-300'
+                  : 'text-rose-400/60 hover:text-rose-400/90 hover:bg-rose-500/10'
+              )}
+            >
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-rose-500/20 text-rose-400">
+                <ShieldCheck className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-xs font-bold tracking-tight flex-1">Pengurusan Demerit</span>
+            </NavLink>
+          </>
+        )}
 
         {/* ── Pentadbiran Portal (Admin) ─── */}
         {(isYDP || isSuperAdmin) && (

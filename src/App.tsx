@@ -93,6 +93,7 @@ const AkademikCgpa = lazy(() => import('./pages/akademik/AkademikCgpa').then(m =
 const AkademikFolderPage = lazy(() => import('./pages/akademik/AkademikFolderPage').then(m => ({ default: m.AkademikFolderPage })));
 const AkademikLeaderboard = lazy(() => import('./pages/akademik/AkademikLeaderboard').then(m => ({ default: m.AkademikLeaderboard })));
 const AkademikTakwimPage = lazy(() => import('./pages/akademik/AkademikTakwimPage').then(m => ({ default: m.AkademikTakwimPage })));
+const DemeritManager = lazy(() => import('./pages/akademik/DemeritManager').then(m => ({ default: m.DemeritManager })));
 
 // ── SUPSAS ──
 import { SupsasProvider } from './contexts/SupsasContext';
@@ -288,6 +289,7 @@ function AppRoutes() {
           <Route path="/jpp/users"            element={<JppUsersPage />} />
           <Route path="/jpp/takwim"           element={<JppTakwimPage />} />
           <Route path="/jpp/imaps"            element={<JppImapsAdmin />} />
+          <Route path="/jpp/demerit"          element={<DemeritManager sourceOverride="MANUAL" />} />
           <Route path="/jpp/logs"             element={<JppLogsPage />} />
           <Route path="/jpp/settings"         element={<JppSettingsPage />} />
           <Route path="/jpp/nexus"            element={<JppNexusPage />} />

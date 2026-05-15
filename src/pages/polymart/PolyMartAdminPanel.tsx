@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_EMOJI } from './PolyMartLayout';
 import { sendNotificationToUser } from '@/lib/notifications';
 import toast from 'react-hot-toast';
+import { logAuditAction } from '@/lib/auditLogger';
 import {
   Flag, CheckCircle, Trash2, Eye, Store, Package,
   TrendingUp, AlertTriangle, Shield, X, Megaphone, Plus, PlusCircle,
@@ -82,6 +83,7 @@ function ReportCard({ report, onAction }: { report: Report; onAction: () => void
       });
     }
     toast.success(`Produk "${product.name}" dikeluarkan dari PolyMart`);
+    logAuditAction({ actionType: 'PRODUCT_REMOVED', module: 'PolyMart', entityId: product.id, description: `Produk "${product.name}" dikeluarkan — Sebab: ${report.reason}`, actorId: user!.id });
     onAction();
     setLoading(false);
   };
@@ -222,6 +224,8 @@ function AdsManagerTab() {
       const { error } = await supabase.from('polymart_ads').update(updates).eq('id', ad.id);
       if (error) throw error;
       toast.success('Iklan berjaya diluluskan (Aktif)!');
+      const actorId = (await supabase.auth.getUser()).data.user?.id;
+      if (actorId) logAuditAction({ actionType: 'AD_APPROVED', module: 'PolyMart', entityId: ad.id, description: `Iklan "${ad.title}" diluluskan`, actorId });
       
       // Notify creator if exists
       if (ad.created_by) {
@@ -311,6 +315,8 @@ function AdsManagerTab() {
       }
       await supabase.from('polymart_ads').delete().eq('id', ad.id);
       toast.success('Iklan dipadam');
+      const actorId = (await supabase.auth.getUser()).data.user?.id;
+      if (actorId) logAuditAction({ actionType: 'AD_DELETED', module: 'PolyMart', entityId: ad.id, description: `Iklan "${ad.title}" dipadam`, actorId });
       fetchAds();
     } catch (e: any) {
       toast.error('Ralat memadam iklan');

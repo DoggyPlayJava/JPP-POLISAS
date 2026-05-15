@@ -9,6 +9,7 @@ import { cn, hexToRgba } from '@/lib/utils';
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
+import { logAuditAction } from '@/lib/auditLogger';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import TakwimPusatPDFTemplate from '@/components/reports/TakwimPusatPDFTemplate';
 import {
@@ -153,6 +154,7 @@ export function JppTakwimPage() {
         : await supabase.from('takwim_pusat').insert([payload]);
       if (res.error) throw res.error;
       toast.success(editTarget ? 'Dikemaskini!' : 'Ditambah!');
+      if (rbac.userId) logAuditAction({ actionType: editTarget ? 'TAKWIM_UPDATED' : 'TAKWIM_ADDED', module: 'Takwim', entityId: editTarget?.id, description: `Takwim ${editTarget ? 'dikemaskini' : 'ditambah'}: ${form.tajuk} (${TAKWIM_JENIS[form.jenis]?.label || form.jenis})`, actorId: rbac.userId });
       setDialogOpen(false);
       refresh();
     } catch (e: any) { toast.error(e.message || 'Gagal.'); }
@@ -162,7 +164,7 @@ export function JppTakwimPage() {
   const handleDelete = async (item: TakwimItem) => {
     if (!window.confirm(`Padam "${item.tajuk}"?`)) return;
     const { error } = await supabase.from('takwim_pusat').delete().eq('id', item.id);
-    if (error) toast.error(error.message); else { toast.success('Dipadam!'); refresh(); }
+    if (error) toast.error(error.message); else { toast.success('Dipadam!'); if (rbac.userId) logAuditAction({ actionType: 'TAKWIM_DELETED', module: 'Takwim', entityId: item.id, description: `Takwim dipadam: ${item.tajuk}`, actorId: rbac.userId }); refresh(); }
   };
 
   const handleBulkDelete = async () => {
@@ -174,6 +176,7 @@ export function JppTakwimPage() {
       const { error } = await supabase.from('takwim_pusat').delete().in('id', ids);
       if (error) throw error;
       toast.success(`${ids.length} entri berjaya dipadam!`);
+      if (rbac.userId) logAuditAction({ actionType: 'TAKWIM_BULK_DELETED', module: 'Takwim', description: `${ids.length} entri takwim dipadam secara pukal`, actorId: rbac.userId, metadata: { count: ids.length } });
       setBulkSelected(new Set());
       refresh();
     } catch (e: any) { toast.error(e.message || 'Gagal padam.'); }

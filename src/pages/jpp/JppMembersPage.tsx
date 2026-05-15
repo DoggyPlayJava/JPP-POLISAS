@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { useJppConfig } from '@/contexts/JppConfigContext';
+import { logAuditAction } from '@/lib/auditLogger';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface JppMember {
@@ -113,6 +114,7 @@ function MemberCard({
       onUpdate(member.id, patch);
       setEditing(false);
       toast.success('Maklumat ahli dikemaskini.');
+      logAuditAction({ actionType: 'JPP_MEMBER_UPDATED', module: 'JPP Admin', entityId: member.id, description: `Maklumat ahli ${member.full_name} dikemaskini (Jawatan: ${position || '-'}, Unit: ${unit || '-'})`, actorId: member.id, metadata: { position, unit, overseeUnits } });
     } catch (err: any) {
       toast.error('Gagal simpan: ' + err.message);
     } finally {
@@ -400,6 +402,7 @@ function AddMemberModal({
       }
 
       toast.success('Ahli berjaya ditambah ke JPP.');
+      logAuditAction({ actionType: 'JPP_MEMBER_ADDED', module: 'JPP Admin', entityId: selectedUser.id, description: `${selectedUser.full_name} ditambah ke JPP (Jawatan: ${position || '-'})`, actorId: selectedUser.id, metadata: { position, unit, overseeUnits } });
       onSuccess({
         id: selectedUser.id,
         full_name: selectedUser.full_name,
@@ -726,8 +729,10 @@ export function JppMembersPage() {
     try {
       const { error } = await supabase.rpc('remove_jpp_member', { p_target_id: id });
       if (error) throw error;
+      const removed = members.find(m => m.id === id);
       setMembers(prev => prev.filter(m => m.id !== id));
       toast.success('Ahli berjaya dibuang dari JPP.');
+      logAuditAction({ actionType: 'JPP_MEMBER_REMOVED', module: 'JPP Admin', entityId: id, description: `${removed?.full_name || 'Ahli'} dibuang dari JPP`, actorId: user!.id });
     } catch (err: any) {
       toast.error('Gagal membuang ahli: ' + err.message);
     }
@@ -738,6 +743,7 @@ export function JppMembersPage() {
       const { error } = await supabase.rpc('reset_jpp_cohort');
       if (error) throw error;
       toast.success('Berjaya reset kohort JPP. Semua ahli telah dikeluarkan.');
+      logAuditAction({ actionType: 'JPP_KOHORT_RESET', module: 'JPP Admin', description: `Kohort JPP direset — ${members.length} ahli dikeluarkan`, actorId: user!.id, metadata: { total_removed: members.length } });
       fetchMembers(); // Refresh senarai ahli
     } catch (err: any) {
       toast.error('Gagal mereset kohort: ' + err.message);

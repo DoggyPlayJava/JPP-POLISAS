@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { logAuditAction } from '@/lib/auditLogger';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -203,6 +204,8 @@ export function JppImapsAdmin() {
         if (error) throw error;
         toast.success('Bangunan ditambah');
       }
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (userId) logAuditAction({ actionType: currentBuilding.id ? 'BUILDING_UPDATED' : 'BUILDING_ADDED', module: 'iMaps', entityId: currentBuilding.id || currentBuilding.code, description: `Bangunan ${currentBuilding.id ? 'dikemaskini' : 'ditambah'}: ${currentBuilding.name} (${currentBuilding.code})`, actorId: userId });
       setShowBuildingModal(false);
       setCurrentBuilding({});
       fetchData();
@@ -219,6 +222,8 @@ export function JppImapsAdmin() {
       const { error } = await supabase.from('imaps_buildings').delete().eq('id', id);
       if (error) throw error;
       toast.success('Bangunan dipadam');
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (userId) logAuditAction({ actionType: 'BUILDING_DELETED', module: 'iMaps', entityId: id, description: `Bangunan dipadam`, actorId: userId });
       fetchData();
     } catch (error: any) {
       toast.error('Gagal memadam bangunan');
@@ -281,6 +286,8 @@ export function JppImapsAdmin() {
       }
       setShowLocationModal(false);
       setCurrentLocation({});
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (userId) logAuditAction({ actionType: currentLocation.id ? 'LOCATION_UPDATED' : 'LOCATION_ADDED', module: 'iMaps', entityId: currentLocation.id || currentLocation.room_code, description: `Lokasi ${currentLocation.id ? 'dikemaskini' : 'ditambah'}: ${currentLocation.room_code}`, actorId: userId });
       fetchData();
     } catch (error: any) {
       toast.error(error.message || 'Gagal menyimpan lokasi');
@@ -295,6 +302,8 @@ export function JppImapsAdmin() {
       const { error } = await supabase.from('imaps_locations').delete().eq('id', id);
       if (error) throw error;
       toast.success('Lokasi dipadam');
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (userId) logAuditAction({ actionType: 'LOCATION_DELETED', module: 'iMaps', entityId: id, description: 'Lokasi dipadam', actorId: userId });
       fetchData();
     } catch (error: any) {
       toast.error('Gagal memadam lokasi');
