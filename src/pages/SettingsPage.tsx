@@ -750,7 +750,7 @@ export function SettingsPage() {
 
   return (
     <>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="page-container relative space-y-10 pb-32 pt-8 z-0">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="page-container relative space-y-10 after:content-[''] after:block after:h-36 after:shrink-0 pt-8 z-0">
       
       {/* Latar Belakang Dekoratif Premium */}
       <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)]">
@@ -794,7 +794,7 @@ export function SettingsPage() {
           <div
             className={cn(
               "md:w-64 lg:w-72 shrink-0", // Desktop width
-              "fixed inset-y-0 left-0 w-80 z-[200] bg-card/95 backdrop-blur-xl border-r border-border/40 shadow-2xl flex flex-col p-6 pb-32 transition-transform duration-300 md:static md:bg-transparent md:backdrop-blur-none md:border-none md:shadow-none md:p-0 md:pb-0 md:translate-x-0 overflow-y-auto md:overflow-visible",
+              "fixed inset-y-0 left-0 w-80 z-[200] bg-card/95 backdrop-blur-xl border-r border-border/40 shadow-2xl flex flex-col p-6 after:content-[''] after:block after:h-36 after:shrink-0 transition-transform duration-300 md:static md:bg-transparent md:backdrop-blur-none md:border-none md:shadow-none md:p-0 md:pb-0 md:translate-x-0 overflow-y-auto md:overflow-visible",
               isSidebarOpen ? "translate-x-0" : "-translate-x-full"
             )}
           >

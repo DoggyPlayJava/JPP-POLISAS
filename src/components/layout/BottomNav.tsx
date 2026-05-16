@@ -65,8 +65,8 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
             if (currentScrollY > lastScrollY && currentScrollY > 50) {
               navRef.current.classList.add('opacity-75', 'scale-[0.85]', 'translate-y-4');
             } 
-            // Restore if scrolling up or at the top
-            else {
+            // Restore if scrolling up significantly (>15px) or at the top
+            else if (lastScrollY - currentScrollY > 15 || currentScrollY <= 50) {
               navRef.current.classList.remove('opacity-75', 'scale-[0.85]', 'translate-y-4');
             }
           }

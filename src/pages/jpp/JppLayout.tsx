@@ -123,7 +123,7 @@ export function JppLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto scrollbar-hide pb-28">
+        <main className="flex-1 overflow-y-auto scrollbar-hide after:content-[''] after:block after:h-32 after:shrink-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}

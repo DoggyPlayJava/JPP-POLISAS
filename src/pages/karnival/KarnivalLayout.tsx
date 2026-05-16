@@ -179,7 +179,7 @@ export function KarnivalLayout() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="pb-28"
+          className="after:content-[''] after:block after:h-32 after:shrink-0"
         >
           <Outlet />
         </motion.div>

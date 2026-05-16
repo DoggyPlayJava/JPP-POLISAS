@@ -308,7 +308,7 @@ export function SupsasLayout() {
             </motion.p>
           </div>
         ) : (
-          <div className="pb-28">
+          <div className="after:content-[''] after:block after:h-32 after:shrink-0">
             <Outlet />
           </div>
         )}

@@ -488,7 +488,7 @@ function LayoutInner({
           {/* Pages */}
           {/* PENTING: Jangan guna y/x transforms di sini — ia akan merosakkan
               position:fixed modal di semua sub-pages (stacking context bug) */}
-          <main className="flex-1 overflow-y-auto bg-background scrollbar-hide pb-28 relative">
+          <main className="flex-1 overflow-y-auto bg-background scrollbar-hide after:content-[''] after:block after:h-32 after:shrink-0 relative">
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}

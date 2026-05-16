@@ -72,28 +72,67 @@ export function LoginPage() {
       });
   }, []);
 
+  // Resolve identifier (emel/nama/no matrik) → emel sebenar
+  const resolveIdentifier = async (identifier: string): Promise<{ email: string | null; error: string | null }> => {
+    const trimmed = identifier.trim();
+    // Jika ada '@', ia sudah emel — bypass RPC
+    if (trimmed.includes('@')) {
+      return { email: trimmed.toLowerCase(), error: null };
+    }
+    // Guna RPC untuk resolve nama/no matrik → emel
+    const { data, error } = await supabase.rpc('resolve_login_identifier', { p_identifier: trimmed });
+    if (error) return { email: null, error: error.message };
+    if (!data || data.length === 0) return { email: null, error: 'Tiada akaun dijumpai dengan maklumat ini.' };
+    const result = data[0];
+    if (result.match_type === 'matric_no_duplicate') {
+      return { email: null, error: `Terdapat ${result.match_count} akaun dengan no matrik yang sama. Sila log masuk menggunakan emel anda, atau hubungi JPP untuk bantuan.` };
+    }
+    if (result.match_type === 'full_name_duplicate') {
+      return { email: null, error: `Terdapat ${result.match_count} akaun dengan nama yang sama. Sila gunakan emel atau no matrik untuk log masuk.` };
+    }
+    if (result.match_type === 'not_found') {
+      return { email: null, error: 'Tiada akaun dijumpai. Sila semak ejaan atau daftar akaun baru.' };
+    }
+    return { email: result.email, error: null };
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
       if (isForgotPassword) {
+        // Resolve identifier dulu sebelum hantar reset
+        const resolved = await resolveIdentifier(email);
+        if (resolved.error || !resolved.email) {
+          toast.error(resolved.error || 'Emel tidak dapat dikenal pasti.');
+          setIsLoading(false);
+          return;
+        }
         // Guna endpoint Express kita sendiri — bypass SMTP sepenuhnya
         // Resend HTTP API digunakan di backend (tiada port SMTP diperlukan)
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
         const response = await fetch(`${API_BASE_URL}/api/reset-password`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email.trim() }),
+          body: JSON.stringify({ email: resolved.email }),
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Gagal menghantar emel reset.');
         setResetSent(true);
         toast.success('Pautan tetapan semula telah dihantar ke emel anda.');
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        // Resolve identifier → emel sebenar
+        const resolved = await resolveIdentifier(email);
+        if (resolved.error || !resolved.email) {
+          toast.error(resolved.error || 'Identiti tidak dapat dikenal pasti.');
+          setIsLoading(false);
+          return;
+        }
+        const resolvedEmail = resolved.email;
+        const { error } = await supabase.auth.signInWithPassword({ email: resolvedEmail, password });
         if (error) {
           if (error.message === 'Invalid login credentials') {
-            const { data: providers } = await supabase.rpc('get_auth_providers', { p_email: email.trim().toLowerCase() });
+            const { data: providers } = await supabase.rpc('get_auth_providers', { p_email: resolvedEmail });
             if (providers && providers.includes('google') && !providers.includes('email')) {
               toast.error('Akaun ini menggunakan Google. Sila tekan butang "Teruskan dengan Google" di bawah untuk log masuk.', { duration: 6000 });
               setIsLoading(false);
@@ -106,7 +145,7 @@ export function LoginPage() {
       }
     } catch (error: any) {
       const msg: Record<string, string> = {
-        'Invalid login credentials': 'Emel atau kata laluan tidak sah.',
+        'Invalid login credentials': 'Emel/Nama/No Matrik atau kata laluan tidak sah.',
         'User already registered': 'Emel ini sudah berdaftar. Cuba log masuk.',
         'Password should be at least 6 characters': 'Kata laluan mesti sekurang-kurangnya 6 aksara.',
         'Email not confirmed': 'Sila sahkan emel anda dahulu.',
@@ -178,6 +217,24 @@ export function LoginPage() {
 
     setIsLoading(true);
     try {
+      // ── Semakan 1: No matrik sudah didaftarkan? ──────────────────────
+      if (registerMode !== 'staff') {
+        const { data: matricCheck, error: matricErr } = await supabase.rpc('check_matric_registered', { p_matric_no: matricNo.trim() });
+        if (!matricErr && matricCheck?.exists) {
+          const hint = matricCheck.email_hint || '***';
+          const count = matricCheck.account_count || 1;
+          toast.error(
+            `No matrik ${matricNo.trim()} sudah didaftarkan${count > 1 ? ` (${count} akaun!)` : ''}. ` +
+            `Sila log masuk dengan emel asal anda (${hint}), atau tekan "Teruskan dengan Google". ` +
+            `Jika anda terlupa kata laluan, gunakan "Lupa?" untuk tetapkan semula.`,
+            { duration: 10000 }
+          );
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // ── Semakan 2: Emel sudah wujud? ────────────────────────────────
       // Periksa jika emel sudah wujud untuk mengelakkan isu "fake success" dari Supabase (terutamanya bagi kes login Google)
       const { data: emailExists, error: checkError } = await supabase.rpc('check_email_registered', { p_email: email.trim().toLowerCase() });
 
@@ -728,13 +785,18 @@ export function LoginPage() {
             ) : (
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-1.5">
-                  <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">Emel</Label>
+                  <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70">
+                    {isForgotPassword ? 'Emel / Nama / No Matrik' : 'Emel / Nama / No Matrik'}
+                  </Label>
                   <div className="relative group">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
-                    <Input type="email" placeholder="emel@gmail.com" required value={email}
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-accent transition-colors" />
+                    <Input type="text" placeholder="emel@gmail.com / NAMA PENUH / 02DKM1234" required value={email}
                       onChange={e => setEmail(e.target.value)}
                       className="h-12 pl-11 rounded-xl bg-muted/40 border-border/60 focus-visible:ring-accent/40 font-medium" />
                   </div>
+                  <p className="text-[10px] text-muted-foreground/50 pl-1">
+                    💡 Boleh guna emel, nama penuh, atau no matrik untuk log masuk
+                  </p>
                 </div>
                 {!isForgotPassword && (
                   <div className="space-y-1.5">

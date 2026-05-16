@@ -81,7 +81,7 @@ export function PolyRiderSuspended({ suspendedUntil }: PolyRiderSuspendedProps) 
   };
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-red-50 dark:bg-zinc-950 pb-28">
+    <div className="flex flex-col min-h-[100dvh] bg-red-50 dark:bg-zinc-950 after:content-[''] after:block after:h-32 after:shrink-0">
       <div className="flex-1 flex items-center justify-center p-4">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}

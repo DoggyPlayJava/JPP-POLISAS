@@ -94,7 +94,7 @@ export function KebajikanLayout() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto pb-28">
+        <div className="flex-1 overflow-y-auto after:content-[''] after:block after:h-32 after:shrink-0">
           <Outlet />
         </div>
         <FloatingAiChat />

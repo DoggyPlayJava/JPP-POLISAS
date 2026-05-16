@@ -522,7 +522,7 @@ const SystemShowcase = () => {
   const rotateX = useTransform(scrollYProgress, [0, 0.4], [20, 0]);
 
   return (
-    <section id="ekosistem" className="relative pb-20 md:pb-32 pt-16 md:pt-24 z-10 flex flex-col items-center justify-center px-4 overflow-hidden" style={{ perspective: 1200 }}>
+    <section id="ekosistem" className="relative pb-20 md:after:content-[''] after:block after:h-36 after:shrink-0 pt-16 md:pt-24 z-10 flex flex-col items-center justify-center px-4 overflow-hidden" style={{ perspective: 1200 }}>
       {/* Decorative Blur behind showcase */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-4xl h-48 md:h-64 bg-red-900/20 blur-[100px] rounded-full pointer-events-none" />
 

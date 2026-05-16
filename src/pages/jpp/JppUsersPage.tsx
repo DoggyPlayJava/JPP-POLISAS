@@ -2,13 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { Users, Search, Sparkles, ShieldCheck, FileText, ChevronDown, CheckCircle2, XCircle, GraduationCap } from 'lucide-react';
+import { Users, Search, Sparkles, ShieldCheck, FileText, ChevronDown, CheckCircle2, XCircle, GraduationCap, AlertTriangle, Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { hexToRgba, cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { getSemesterInfo } from '@/types';
 import { logAuditAction } from '@/lib/auditLogger';
+
+interface DuplicateGroup {
+    matric_no: string;
+    account_count: number;
+    accounts: {
+        id: string;
+        full_name: string;
+        email: string;
+        role: string;
+        department: string | null;
+        created_at: string;
+        last_sign_in: string | null;
+        providers: string[];
+        email_confirmed: boolean;
+    }[];
+}
 
 export function JppUsersPage() {
     const { isSuperAdmin, profile } = useAuth();
@@ -23,6 +39,11 @@ export function JppUsersPage() {
     const [loading, setLoading] = useState(true);
     const [sm1, setSm1] = useState(7);
     const [sm2, setSm2] = useState(1);
+    
+    // Duplicate detection state
+    const [duplicates, setDuplicates] = useState<DuplicateGroup[]>([]);
+    const [duplicateLoading, setDuplicateLoading] = useState(false);
+    const [showDuplicates, setShowDuplicates] = useState(false);
 
     const isMTUser = ['YANG_DIPERTUA', 'NAIB_YANG_DIPERTUA', 'SETIAUSAHA_KEHORMAT', 'BENAHARI_KEHORMAT'].includes(profile?.jpp_position || '');
 
@@ -47,6 +68,62 @@ export function JppUsersPage() {
         });
         
         setLoading(false);
+    };
+
+    const fetchDuplicates = async () => {
+        setDuplicateLoading(true);
+        try {
+            const { data, error } = await supabase.rpc('detect_duplicate_matric_accounts');
+            if (error) {
+                toast.error('Gagal menyemak akaun berganda: ' + error.message);
+                return;
+            }
+            setDuplicates((data || []) as DuplicateGroup[]);
+            setShowDuplicates(true);
+            if (!data || data.length === 0) {
+                toast.success('Tiada akaun berganda dijumpai! 🎉');
+            }
+        } finally {
+            setDuplicateLoading(false);
+        }
+    };
+
+    const handleMergeAccounts = async (primaryId: string, secondaryId: string, primaryName: string, secondaryName: string, secondaryEmail: string) => {
+        const confirmed = confirm(
+            `⚠️ AMARAN: Tindakan ini TIDAK BOLEH diundur!\n\n` +
+            `Akaun SECONDARY akan DIHAPUSKAN:\n` +
+            `• ${secondaryName} (${secondaryEmail})\n\n` +
+            `Semua data akan dipindahkan ke akaun PRIMARY:\n` +
+            `• ${primaryName}\n\n` +
+            `Termasuk: keahlian kelab, merit, tugasan, notifikasi, & token AI.\n\n` +
+            `Teruskan?`
+        );
+        if (!confirmed) return;
+        
+        try {
+            const { data, error } = await supabase.rpc('admin_merge_duplicate_accounts', {
+                p_primary_id: primaryId,
+                p_secondary_id: secondaryId,
+            });
+            if (error) {
+                toast.error('Gagal menggabungkan akaun: ' + error.message);
+                return;
+            }
+            toast.success(data?.message || 'Akaun berjaya digabungkan!');
+            logAuditAction({
+                actionType: 'ACCOUNT_MERGED',
+                module: 'JPP Admin',
+                entityId: primaryId,
+                description: `Merged ${secondaryName} (${secondaryEmail}) → ${primaryName}`,
+                actorId: profile!.id,
+                metadata: { secondary_id: secondaryId }
+            });
+            // Refresh data
+            fetchDuplicates();
+            fetchAdminData();
+        } catch (err: any) {
+            toast.error(err.message || 'Ralat tidak dijangka.');
+        }
     };
 
     useEffect(() => {
@@ -107,7 +184,8 @@ export function JppUsersPage() {
 
     const filteredUsers = allUsers.filter(u => {
         const matchSearch = (u.full_name?.toLowerCase() || '').includes(userSearch.toLowerCase()) || 
-            (u.email?.toLowerCase() || '').includes(userSearch.toLowerCase());
+            (u.email?.toLowerCase() || '').includes(userSearch.toLowerCase()) ||
+            (u.matric_no?.toLowerCase() || '').includes(userSearch.toLowerCase());
         if (!matchSearch) return false;
 
         if (filterProg !== 'all' && u.programme_code !== filterProg) return false;
@@ -213,6 +291,195 @@ export function JppUsersPage() {
                     </motion.div>
                 )}
 
+                {/* Duplicate Account Detection Panel */}
+                {(isMTUser || isSuperAdmin) && (
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
+                        <div className="rounded-[1.75rem] border border-white/[0.06] bg-white/[0.02] p-6 lg:p-8 relative overflow-hidden">
+                            {/* Subtle warning glow */}
+                            <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl opacity-5 bg-amber-500 pointer-events-none" />
+                            
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 border-b border-white/[0.06] pb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-3 bg-amber-500/10 rounded-2xl text-amber-400">
+                                        <AlertTriangle className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-white text-lg">Pengesanan Akaun Berganda</h3>
+                                        <p className="text-[11px] text-white/40 mt-1 max-w-xl">
+                                            Imbas pangkalan data untuk mengesan pelajar yang mempunyai lebih dari satu akaun menggunakan no matrik yang sama.
+                                        </p>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={fetchDuplicates}
+                                    disabled={duplicateLoading}
+                                    className="px-5 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50 flex items-center gap-2 shrink-0"
+                                >
+                                    {duplicateLoading ? (
+                                        <>
+                                            <div className="w-3.5 h-3.5 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+                                            Mengimbas...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Search className="w-3.5 h-3.5" />
+                                            {showDuplicates ? 'Imbas Semula' : 'Imbas Sekarang'}
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+
+                            <AnimatePresence>
+                                {showDuplicates && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        {duplicates.length === 0 ? (
+                                            <div className="flex flex-col items-center justify-center py-10 text-center space-y-3">
+                                                <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+                                                    <CheckCircle2 className="w-7 h-7 text-emerald-400" />
+                                                </div>
+                                                <p className="text-sm font-bold text-emerald-400">Semua Bersih!</p>
+                                                <p className="text-[11px] text-white/40 max-w-xs">Tiada akaun berganda dikesan. Setiap no matrik hanya wujud dalam satu akaun sahaja.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                {/* Summary badge */}
+                                                <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-500/8 border border-rose-500/20">
+                                                    <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                                                    <p className="text-[11px] text-rose-400 font-bold">
+                                                        {duplicates.length} no matrik dengan akaun berganda dikesan ({duplicates.reduce((sum, d) => sum + d.account_count, 0)} akaun keseluruhan)
+                                                    </p>
+                                                </div>
+
+                                                {/* Duplicate groups */}
+                                                <div className="grid gap-3">
+                                                    {duplicates.map((group) => {
+                                                        // Tentukan PRIMARY = akaun dengan last_sign_in paling terkini
+                                                        // (bukan akaun paling lama) — sbb tu yang student ingat
+                                                        const primaryIdx = group.accounts.reduce((bestIdx, acc, idx) => {
+                                                            const bestLogin = group.accounts[bestIdx].last_sign_in;
+                                                            const currLogin = acc.last_sign_in;
+                                                            if (!currLogin) return bestIdx;
+                                                            if (!bestLogin) return idx;
+                                                            return new Date(currLogin) > new Date(bestLogin) ? idx : bestIdx;
+                                                        }, 0);
+                                                        const primaryAcc = group.accounts[primaryIdx];
+
+                                                        return (
+                                                        <div key={group.matric_no} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
+                                                            {/* Group header */}
+                                                            <div className="px-5 py-4 bg-white/[0.02] border-b border-white/[0.04] flex items-center justify-between">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="px-3 py-1.5 rounded-lg bg-rose-500/15 border border-rose-500/25">
+                                                                        <span className="text-[11px] font-black text-rose-400 tracking-wider font-mono">{group.matric_no}</span>
+                                                                    </div>
+                                                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/40">
+                                                                        {group.account_count} akaun
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Accounts list */}
+                                                            <div className="divide-y divide-white/[0.03]">
+                                                                {group.accounts.map((acc, idx) => {
+                                                                    const isPrimary = idx === primaryIdx;
+                                                                    return (
+                                                                    <div key={acc.id} className={cn("px-5 py-4 transition-colors", isPrimary ? "bg-emerald-500/[0.03]" : "hover:bg-white/[0.02]")}>
+                                                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                                                            <div className="space-y-1.5">
+                                                                                <div className="flex items-center gap-2 flex-wrap">
+                                                                                    <span className="text-sm font-bold text-white">{acc.full_name || 'Tanpa Nama'}</span>
+                                                                                    {isPrimary && (
+                                                                                        <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 text-[8px] font-black uppercase tracking-widest border border-emerald-500/20">
+                                                                                            ★ Kekal (Login Terkini)
+                                                                                        </span>
+                                                                                    )}
+                                                                                    {!isPrimary && (
+                                                                                        <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-400 text-[8px] font-black uppercase tracking-widest border border-rose-500/20">
+                                                                                            Duplikat
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                                                                                    <span className="text-[11px] text-white/50 flex items-center gap-1">
+                                                                                        📧 {acc.email}
+                                                                                    </span>
+                                                                                    <span className="text-[10px] text-white/30">
+                                                                                        {acc.providers?.join(', ') || 'email'}
+                                                                                    </span>
+                                                                                    {acc.email_confirmed ? (
+                                                                                        <span className="text-[9px] text-emerald-400 font-bold">✓ Disahkan</span>
+                                                                                    ) : (
+                                                                                        <span className="text-[9px] text-amber-400 font-bold">⚠ Belum Sah</span>
+                                                                                    )}
+                                                                                </div>
+                                                                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-white/25">
+                                                                                    <span>Daftar: {format(new Date(acc.created_at), 'dd MMM yyyy, h:mm a')}</span>
+                                                                                    <span className={isPrimary ? "text-emerald-400/60 font-bold" : ""}>
+                                                                                        Log masuk terakhir: {acc.last_sign_in ? format(new Date(acc.last_sign_in), 'dd MMM yyyy, h:mm a') : 'Tiada rekod'}
+                                                                                    </span>
+                                                                                    {acc.department && <span>Jabatan: {acc.department}</span>}
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-2 shrink-0">
+                                                                                <span className={cn(
+                                                                                    "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border",
+                                                                                    acc.role === 'SUPER_ADMIN_JPP' ? "bg-purple-500/10 text-purple-400 border-purple-500/20" :
+                                                                                    acc.role === 'JPP' ? "bg-blue-500/10 text-blue-400 border-blue-500/20" :
+                                                                                    "bg-white/5 text-white/40 border-white/10"
+                                                                                )}>
+                                                                                    {acc.role}
+                                                                                </span>
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        navigator.clipboard.writeText(acc.id);
+                                                                                        toast.success('UUID disalin!');
+                                                                                    }}
+                                                                                    className="p-1.5 rounded-lg hover:bg-white/10 text-white/30 hover:text-white/60 transition-colors"
+                                                                                    title="Salin UUID"
+                                                                                >
+                                                                                    <Copy className="w-3.5 h-3.5" />
+                                                                                </button>
+                                                                                {/* Merge button — hanya untuk akaun DUPLIKAT dan hanya SUPER_ADMIN */}
+                                                                                {!isPrimary && isSuperAdmin && (
+                                                                                    <button
+                                                                                        onClick={() => handleMergeAccounts(
+                                                                                            primaryAcc.id,
+                                                                                            acc.id,
+                                                                                            primaryAcc.full_name,
+                                                                                            acc.full_name,
+                                                                                            acc.email
+                                                                                        )}
+                                                                                        className="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/25 text-rose-400 transition-colors flex items-center gap-1.5"
+                                                                                        title={`Gabung data dari akaun ini ke ${primaryAcc.full_name} (login terkini)`}
+                                                                                    >
+                                                                                        <ExternalLink className="w-3 h-3" />
+                                                                                        Gabung ke Aktif
+                                                                                    </button>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    </motion.div>
+                )}
+
                 {/* User Table */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
                     <div className="rounded-[1.75rem] border border-white/[0.06] bg-white/[0.02] p-6 lg:p-8">
@@ -226,7 +493,7 @@ export function JppUsersPage() {
                                 <div className="relative">
                                     <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
                                     <input
-                                        type="text" placeholder="Cari emel atau nama..."
+                                        type="text" placeholder="Cari emel, nama, atau no matrik..."
                                         value={userSearch} onChange={e => setUserSearch(e.target.value)}
                                         className="pl-10 pr-4 h-11 bg-white/5 border border-white/10 rounded-2xl text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 transition-all font-medium w-48"
                                     />

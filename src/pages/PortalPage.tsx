@@ -295,7 +295,7 @@ export function PortalPage() {
       {isLoadingSettings ? (
         <PortalSkeleton />
       ) : (
-        <main className="relative z-10 pt-32 md:pt-40 pb-28 px-4 md:px-8 max-w-7xl mx-auto flex-1">
+        <main className="relative z-10 pt-32 md:pt-40 after:content-[''] after:block after:h-32 after:shrink-0 px-4 md:px-8 max-w-7xl mx-auto flex-1">
           {/* Title Section */}
           <div className="flex flex-col items-center text-center mb-16 md:mb-24 space-y-6 md:space-y-8">
             <motion.div

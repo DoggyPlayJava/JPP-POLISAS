@@ -258,7 +258,7 @@ export function UrusKelabPage() {
 
 
     return (
-        <div className="page-container space-y-10 pb-32">
+        <div className="page-container space-y-10 after:content-[''] after:block after:h-36 after:shrink-0">
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div className="space-y-2">
                     <h1 className="text-4xl md:text-5xl font-black tracking-tighter gradient-text leading-tight">Urus Kelab</h1>
