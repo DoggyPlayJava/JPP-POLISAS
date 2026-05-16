@@ -220,7 +220,16 @@ export function LoginPage() {
       // ── Semakan 1: No matrik sudah didaftarkan? ──────────────────────
       if (registerMode !== 'staff') {
         const { data: matricCheck, error: matricErr } = await supabase.rpc('check_matric_registered', { p_matric_no: matricNo.trim() });
-        if (!matricErr && matricCheck?.exists) {
+        console.log('[REG GUARD] matric check:', { matricCheck, matricErr });
+        
+        if (matricErr) {
+          // RPC gagal — JANGAN benarkan registration (fail-safe)
+          toast.error('Tidak dapat mengesahkan no matrik. Sila cuba lagi.');
+          setIsLoading(false);
+          return;
+        }
+        
+        if (matricCheck?.exists) {
           const hint = matricCheck.email_hint || '***';
           const count = matricCheck.account_count || 1;
           toast.error(

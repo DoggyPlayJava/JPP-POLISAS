@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Phone, Loader2, Sparkles, Building2, Crown, Hash, User,
-  GraduationCap, Calendar, AlertTriangle, ChevronDown,
+  GraduationCap, Calendar, AlertTriangle, ChevronDown, LogOut,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -69,6 +69,32 @@ export function CompleteProfileModal() {
     }
     return () => clearTimeout(timeout);
   }, [loading]);
+
+  const handleLogout = async () => {
+    if (!profile?.matric_no?.trim()) {
+      const confirmDelete = window.confirm(
+        "Adakah anda pasti mahu membatalkan pendaftaran? Akaun anda akan dipadam dari sistem."
+      );
+      if (!confirmDelete) return;
+
+      setLoading(true);
+      try {
+        const { error: rpcError } = await supabase.rpc('delete_own_account');
+        if (rpcError) throw rpcError;
+        
+        await supabase.auth.signOut();
+        toast.success("Pendaftaran dibatalkan dan akaun berjaya dipadamkan.");
+        window.location.href = '/login';
+      } catch (err: any) {
+        toast.error("Ralat memadam akaun: " + (err.message || "Sila cuba lagi."));
+        setLoading(false);
+      }
+    } else {
+      setLoading(true);
+      await supabase.auth.signOut();
+      window.location.href = '/login';
+    }
+  };
 
   // Intake config from system_settings
   const [sm1, setSm1] = useState(7);
@@ -208,6 +234,30 @@ export function CompleteProfileModal() {
     if (registerMode !== 'staff' && !matricNo.trim().startsWith('02')) {
       toast.error('No. Matrik pelajar mestilah bermula dengan "02".'); return;
     }
+
+    // ── Semakan duplikat matric_no ────────────────────────────────────────
+    if (registerMode !== 'staff') {
+      const { data: matricCheck, error: matricErr } = await supabase.rpc('check_matric_registered', { p_matric_no: matricNo.trim() });
+      console.log('[CompleteProfile] matric check:', { matricCheck, matricErr });
+      
+      if (matricErr) {
+        toast.error('Tidak dapat mengesahkan no matrik. Sila cuba lagi.');
+        return;
+      }
+      
+      if (matricCheck?.exists) {
+        const hint = matricCheck.email_hint || '***';
+        const count = matricCheck.account_count || 1;
+        toast.error(
+          `No matrik ${matricNo.trim()} sudah didaftarkan${count > 1 ? ` (${count} akaun!)` : ''}. ` +
+          `Sila log masuk dengan emel asal anda (${hint}), atau tekan "Teruskan dengan Google". ` +
+          `Jika anda terlupa kata laluan, gunakan "Lupa?" untuk tetapkan semula.`,
+          { duration: 10000 }
+        );
+        return;
+      }
+    }
+
     if (registerMode === 'staff') {
       const { data: isValid } = await supabase.rpc('verify_staff_code', { p_code: passcode });
       if (!isValid) { toast.error('Kod pengesahan staf tidak sah.'); return; }
@@ -727,6 +777,17 @@ export function CompleteProfileModal() {
                   className="w-full h-14 rounded-2xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-black text-sm uppercase tracking-widest shadow-xl transition-all"
                 >
                   {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Simpan'}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleLogout}
+                  disabled={loading}
+                  className="w-full h-14 rounded-2xl border-2 border-red-500/20 bg-red-50 dark:bg-red-950/20 text-red-600 hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-900/30 font-bold text-sm transition-all flex items-center justify-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  {!profile?.matric_no?.trim() ? 'Batal & Log Keluar' : 'Log Keluar'}
                 </Button>
               </div>
 
