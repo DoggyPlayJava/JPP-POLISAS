@@ -104,4 +104,95 @@ Jika diminta untuk memodifikasi atau menambah ciri pada PolySuara di masa hadapa
 5. Segala perubahan pada layout mestilah menghormati komponen `BottomNav` (`pb-24 md:pb-6`) mengikut garis panduan JPP-POLISAS.
 
 ---
-*(Dokumen ini dikemaskini berdasarkan Audit Deep Dive v5 pada 17 Mei 2026)*
+
+## 7. Sistem Karma / Downvote (Community Auto-Hide)
+
+> Ditambah: 18 Mei 2026
+
+### 7.1 Konsep
+
+Sistem karma membolehkan pelajar membantah (downvote) luahan yang dianggap tidak bersesuaian. Apabila luahan mencapai had tertentu, ia disembunyikan secara automatik dan dihantar ke Exco Kebajikan untuk semakan manual.
+
+**Syarat Auto-Hide:**
+- Minimum **40 undian** keseluruhan (upvote + downvote)
+- **>60% downvote** ratio
+
+### 7.2 Jadual & Kolum Baharu
+
+1. **`polysuara_downvotes`** — Mengelak duplicate downvote.
+   - Composite PK: `(confession_id, user_id)`
+   - Index: `idx_polysuara_downvotes_user`, `idx_polysuara_downvotes_confession`
+2. **`polysuara_confessions` (kolum baharu):**
+   - `downvotes` (INTEGER DEFAULT 0) — Counter cache
+   - `is_hidden_by_community` (BOOLEAN DEFAULT false) — Flag auto-hide
+
+### 7.3 RPC Functions
+
+- **`toggle_polysuara_downvote(p_confession_id)`:** Toggle downvote secara atomic. Secara automatik buang upvote jika wujud (mutual exclusion). Returns `TRUE` jika luahan baru sahaja di-auto-hide.
+- **`toggle_polysuara_upvote(p_confession_id)`:** (Dikemaskini) Kini juga membuang downvote jika wujud.
+- **`restore_hidden_confession(p_confession_id)`:** Admin-only RPC (SECURITY DEFINER). Reset `is_hidden_by_community = false`, `downvotes = 0`, dan padam semua rekod downvote.
+
+### 7.4 RLS Policies
+
+- **`polysuara_confessions` SELECT:** Pelajar hanya nampak `is_approved = true AND is_hidden_by_community = false`. JPP boleh lihat semua.
+- **`polysuara_downvotes` DELETE:** Pemilik sendiri ATAU `is_jpp_admin` (untuk aliran Restore).
+
+### 7.5 Aliran Frontend
+
+```
+Pelajar tekan Downvote → toggle_polysuara_downvote() → Semak syarat
+    ├─ Belum cukup syarat → Update UI biasa (optimistic)
+    └─ Cukup syarat (≥40 undi, >60% downvote) →
+         ├─ RPC returns TRUE
+         ├─ sendNotificationToKebajikanExco({...}) → Push ke semua Exco Kebajikan
+         ├─ Luahan hilang dari feed pelajar
+         └─ Luahan muncul di TOP Admin Dashboard dengan label "🚨 MENUNGGU SEMAKAN"
+
+Admin Dashboard:
+    ├─ [Lepaskan] → restore_hidden_confession() → Kembali ke feed awam
+    └─ [Padam] → handleDeleteSuara() → Padam kekal
+```
+
+### 7.6 Peraturan Modifikasi
+
+1. **Jangan** tukar threshold di frontend — ia dikuatkuasa di database RPC.
+2. Butang downvote menggunakan **ThumbsDown** icon (bukan ArrowUpCircle).
+3. Notifikasi auto-hide **WAJIB** guna `sendNotificationToKebajikanExco(NotificationPayload)` — bukan string.
+4. Admin restore **WAJIB** guna RPC `restore_hidden_confession` — bukan direct `.update()` + `.delete()` kerana RLS akan block.
+
+---
+
+## 8. Penambahbaikan Poll & Pagination (v5.1)
+
+> Ditambah: 18 Mei 2026
+
+### 8.1 RPC Atomic Poll Vote
+
+Sebelum ini, undian poll (single-choice) membuat 2-5 network request berasingan (delete semua → insert baru). Ini menyebabkan _race condition_ jika talian terputus separuh jalan.
+
+**Penyelesaian:** RPC `toggle_polysuara_poll_vote(p_option_id)` mengendalikan keseluruhan logik dalam satu transaksi PostgreSQL:
+- Toggle ON/OFF secara atomic
+- Mutual exclusion untuk single-choice poll (buang pilihan lama secara automatik)
+- Returns `{ action: 'added'|'removed', option_id, removed_from: UUID[] }` untuk frontend reconciliation
+
+### 8.2 Counter Cache (`vote_count`)
+
+Kolum `vote_count` (INTEGER DEFAULT 0) ditambah pada `polysuara_poll_options`. Dikemaskini secara automatik melalui trigger `trg_sync_poll_vote_count` (AFTER INSERT/DELETE).
+
+**Kesan:**
+- Frontend tidak perlu lagi mengira `polysuara_poll_votes.length` — guna `vote_count` terus.
+- RLS pada `polysuara_poll_votes` **diketatkan** — pelajar hanya boleh baca rekod milik sendiri (`user_id = auth.uid()`). Ini menghalang kebocoran identiti dalam sistem anonymous.
+
+### 8.3 Pagination & Infinite Scroll
+
+- **Feed Pelajar (`PolySuaraPage`):** Menggunakan `IntersectionObserver` + cursor-based `.range()` dengan `FEED_PAGE_SIZE = 20`. Metadata (upvotes, downvotes, tags, my_ids) hanya di-fetch pada initial load.
+- **Admin Dashboard (`PolyServicesAdmin`):** Hard limit `.limit(500)` pada query utama.
+
+### 8.4 Peraturan Modifikasi Tambahan
+
+1. **WAJIB** guna RPC `toggle_polysuara_poll_vote` untuk undian poll — **JANGAN** buat `.delete()` + `.insert()` secara berasingan.
+2. Paparan bilangan undian **WAJIB** guna `vote_count` — bukan `polysuara_poll_votes.length` (kerana RLS hanya tunjuk rekod pengguna sendiri).
+3. Sebarang perubahan pada feed query **WAJIB** mengekalkan `.range()` pagination — jangan guna `.limit()` tanpa offset.
+
+---
+*(Dokumen ini dikemaskini berdasarkan Audit Deep Dive v5 + Karma System + Poll/Pagination v5.1 pada 18 Mei 2026)*

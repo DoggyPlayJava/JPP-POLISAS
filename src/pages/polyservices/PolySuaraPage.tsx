@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import toast from 'react-hot-toast';
-import { Send, Shield, AlertTriangle, MessageSquare, Flag, ArrowUpCircle, Flame, Lock, EyeOff, Search, Hash, Loader2, Image as ImageIcon, X, Pin, Check, ChevronLeft, Bell, BellRing, BarChart, XCircle, UserCircle2, CheckCircle, Clock, Share2, Ghost, Heart, Sparkles } from 'lucide-react';
+import { Send, Shield, AlertTriangle, MessageSquare, Flag, ThumbsDown, Flame, Lock, EyeOff, Search, Hash, Loader2, Image as ImageIcon, X, Pin, Check, ChevronLeft, Bell, BellRing, BarChart, XCircle, UserCircle2, CheckCircle, Clock, Share2, Ghost, Heart, Sparkles } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +17,7 @@ import { IGStoryExportCard } from '@/components/polysuara/IGStoryExportCard';
 
 const CATEGORIES = ['UMUM', 'AKADEMIK', 'FASILITI', 'KAMSIS', 'KAUNSELING'];
 const MAX_POLL_OPTIONS = 4;
+const FEED_PAGE_SIZE = 20;
 
 export function PolySuaraPage() {
   const { profile } = useAuth();
@@ -26,8 +27,24 @@ export function PolySuaraPage() {
   // Core state
   const [confessions, setConfessions] = useState<any[]>([]);
   const [userUpvotes, setUserUpvotes] = useState<Set<string>>(new Set());
+  const [userDownvotes, setUserDownvotes] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [moduleEnabled, setModuleEnabled] = useState(true);
+
+  // Pagination state
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [feedOffset, setFeedOffset] = useState(0);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useCallback((node: HTMLDivElement | null) => {
+    if (observerRef.current) observerRef.current.disconnect();
+    observerRef.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
+        loadMoreConfessions();
+      }
+    }, { rootMargin: '200px' });
+    if (node) observerRef.current.observe(node);
+  }, [hasMore, loadingMore, loading]);
 
   // Filter & sort
   const [activeCategory, setActiveCategory] = useState<string>('SEMUA');
@@ -130,7 +147,11 @@ export function PolySuaraPage() {
 
   useEffect(() => {
     checkModuleStatus();
-    fetchConfessions();
+    // Reset pagination on sort change
+    setConfessions([]);
+    setFeedOffset(0);
+    setHasMore(true);
+    fetchConfessions(0, true);
   }, [profile, sortBy]);
 
   const checkModuleStatus = async () => {
@@ -140,39 +161,71 @@ export function PolySuaraPage() {
     }
   };
 
-  const fetchConfessions = async () => {
+  const buildFeedQuery = (offset: number) => {
+    let query = supabase
+      .from('polysuara_confessions')
+      .select('id, content, category, upvotes, downvotes, created_at, official_reply, official_reply_at, responder:replied_by(full_name), status, codename, hashtags, author_reply, author_reply_at, image_url, is_pinned, polysuara_polls(id, is_multiple_choice, polysuara_poll_options(id, option_text, vote_count, polysuara_poll_votes(user_id)))')
+      .eq('is_archived', false);
+
+    if (sortBy === 'TRENDING') {
+      query = query.order('is_pinned', { ascending: false }).order('upvotes', { ascending: false }).order('created_at', { ascending: false });
+    } else {
+      query = query.order('is_pinned', { ascending: false }).order('created_at', { ascending: false });
+    }
+
+    return query.range(offset, offset + FEED_PAGE_SIZE - 1);
+  };
+
+  const fetchConfessions = async (offset = 0, isInitial = false) => {
     if (!profile) return;
     try {
-      setLoading(true);
+      if (isInitial) setLoading(true);
       
-      let query = supabase
-        .from('polysuara_confessions')
-        .select('id, content, category, upvotes, created_at, official_reply, official_reply_at, responder:replied_by(full_name), status, codename, hashtags, author_reply, author_reply_at, image_url, is_pinned, polysuara_polls(id, is_multiple_choice, polysuara_poll_options(id, option_text, polysuara_poll_votes(user_id)))')
-        .eq('is_archived', false);
+      const queries: any[] = [buildFeedQuery(offset)];
 
-      if (sortBy === 'TRENDING') query = query.order('is_pinned', { ascending: false }).order('upvotes', { ascending: false }).order('created_at', { ascending: false }).limit(100);
-      else query = query.order('is_pinned', { ascending: false }).order('created_at', { ascending: false }).limit(100);
+      // Only fetch metadata on initial load
+      if (isInitial) {
+        queries.push(
+          supabase.from('polysuara_upvotes').select('confession_id').eq('user_id', profile.id),
+          supabase.from('polysuara_downvotes').select('confession_id').eq('user_id', profile.id),
+          supabase.rpc('get_trending_polysuara_tags'),
+          supabase.rpc('get_my_polysuara_ids')
+        );
+      }
 
-      const [confRes, upvoteRes, tagsRes, myIdsRes] = await Promise.all([
-        query,
-        supabase.from('polysuara_upvotes').select('confession_id').eq('user_id', profile.id),
-        supabase.rpc('get_trending_polysuara_tags'),
-        supabase.rpc('get_my_polysuara_ids')
-      ]);
+      const results = await Promise.all(queries);
+      const confRes = results[0];
 
       if (confRes.error) throw confRes.error;
       
-      setConfessions(confRes.data || []);
-      setUserUpvotes(new Set(upvoteRes.data?.map(u => u.confession_id) || []));
-      setTrendingTags(tagsRes.data || []);
-      setMyConfessions(new Set(myIdsRes.data?.map((r: any) => r.id) || []));
+      const newData = confRes.data || [];
+      
+      if (isInitial) {
+        setConfessions(newData);
+        setUserUpvotes(new Set(results[1].data?.map((u: any) => u.confession_id) || []));
+        setUserDownvotes(new Set(results[2].data?.map((d: any) => d.confession_id) || []));
+        setTrendingTags(results[3].data || []);
+        setMyConfessions(new Set(results[4].data?.map((r: any) => r.id) || []));
+      } else {
+        setConfessions(prev => [...prev, ...newData]);
+      }
+
+      setHasMore(newData.length === FEED_PAGE_SIZE);
+      setFeedOffset(offset + newData.length);
 
     } catch (err: any) {
       console.error(err);
       toast.error('Gagal memuatkan luahan.');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
+  };
+
+  const loadMoreConfessions = () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    fetchConfessions(feedOffset, false);
   };
 
   const handlePost = async (e: React.FormEvent) => {
@@ -225,7 +278,7 @@ export function PolySuaraPage() {
       setImagePreview(null);
       setShowPoll(false);
       setPollOptions(['', '']);
-      fetchConfessions();
+      fetchConfessions(0, true);
     } catch (err: any) {
       console.error(err);
       toast.error('Gagal menghantar luahan.');
@@ -240,13 +293,25 @@ export function PolySuaraPage() {
     setUserUpvotes(prev => {
       const next = new Set(prev);
       if (isCurrentlyUpvoted) next.delete(confessionId);
-      else next.add(confessionId);
+      else {
+        next.add(confessionId);
+        // Mutual exclusion
+        setUserDownvotes(down => {
+          const downNext = new Set(down);
+          downNext.delete(confessionId);
+          return downNext;
+        });
+      }
       return next;
     });
 
     setConfessions(prev => prev.map(c => {
       if (c.id === confessionId) {
-        return { ...c, upvotes: c.upvotes + (isCurrentlyUpvoted ? -1 : 1) };
+        return { 
+          ...c, 
+          upvotes: (c.upvotes || 0) + (isCurrentlyUpvoted ? -1 : 1),
+          downvotes: userDownvotes.has(confessionId) ? (c.downvotes || 0) - 1 : (c.downvotes || 0)
+        };
       }
       return c;
     }));
@@ -255,12 +320,65 @@ export function PolySuaraPage() {
       const { error } = await supabase.rpc('toggle_polysuara_upvote', {
         p_confession_id: confessionId
       });
-      
       if (error) throw error;
     } catch (err: any) {
       console.error(err);
       toast.error('Gagal memproses sokongan.');
-      fetchConfessions();
+      fetchConfessions(0, true);
+    }
+  };
+
+  const handleDownvote = async (confessionId: string) => {
+    const isCurrentlyDownvoted = userDownvotes.has(confessionId);
+    
+    setUserDownvotes(prev => {
+      const next = new Set(prev);
+      if (isCurrentlyDownvoted) next.delete(confessionId);
+      else {
+        next.add(confessionId);
+        // Mutual exclusion
+        setUserUpvotes(up => {
+          const upNext = new Set(up);
+          upNext.delete(confessionId);
+          return upNext;
+        });
+      }
+      return next;
+    });
+
+    setConfessions(prev => prev.map(c => {
+      if (c.id === confessionId) {
+        return { 
+          ...c, 
+          downvotes: (c.downvotes || 0) + (isCurrentlyDownvoted ? -1 : 1),
+          upvotes: userUpvotes.has(confessionId) ? (c.upvotes || 0) - 1 : (c.upvotes || 0)
+        };
+      }
+      return c;
+    }));
+
+    try {
+      const { data: justHidden, error } = await supabase.rpc('toggle_polysuara_downvote', {
+        p_confession_id: confessionId
+      });
+      
+      if (error) throw error;
+
+      if (justHidden) {
+         sendNotificationToKebajikanExco({
+           title: '🚨 Luahan Disembunyikan Automatik',
+           message: 'Luahan telah melebihi had downvote (>60% daripada 40 undian). Sila semak di panel Moderasi PolySuara.',
+           type: 'ALERT',
+           module: 'KEBAJIKAN',
+           link: '/jpp/kebajikan'
+         }).catch(console.error);
+         setConfessions(prev => prev.filter(c => c.id !== confessionId));
+         toast('Luahan ini telah disembunyikan dari awam', { icon: '🚨' });
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error('Gagal memproses undian.');
+      fetchConfessions(0, true);
     }
   };
 
@@ -317,7 +435,7 @@ export function PolySuaraPage() {
       setReplyModalOpen(false);
       setReplyText('');
       setReplyTargetId(null);
-      fetchConfessions();
+      fetchConfessions(0, true);
     } catch (err: any) {
       console.error(err);
       toast.error('Gagal menghantar maklum balas');
@@ -340,7 +458,7 @@ export function PolySuaraPage() {
       toast.success('Maklum balas anda telah dihantar kepada JPP');
       setAuthorReplyModalOpen(false);
       setAuthorReplyText('');
-      fetchConfessions();
+      fetchConfessions(0, true);
 
       sendNotificationToKebajikanExco({
         title: '💬 Balasan Pengguna PolySuara',
@@ -763,21 +881,38 @@ export function PolySuaraPage() {
                         )}
 
                         <div className="flex items-center justify-between pt-3 border-t border-slate-800/50" data-html2canvas-ignore>
-                          <button
-                            onClick={() => handleUpvote(confession.id)}
-                            className={cn(
-                              "flex items-center gap-2 px-3 py-1.5 rounded-full transition-all group",
-                              isUpvoted ? "bg-rose-500/10 text-rose-500" : "hover:bg-slate-800 text-slate-500 hover:text-rose-400"
-                            )}
-                          >
-                            <motion.div
-                              animate={isUpvoted ? { scale: [1, 1.3, 1] } : {}}
-                              transition={{ duration: 0.3 }}
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleUpvote(confession.id)}
+                              className={cn(
+                                "flex items-center gap-2 px-3 py-1.5 rounded-full transition-all group",
+                                isUpvoted ? "bg-rose-500/10 text-rose-500" : "hover:bg-slate-800 text-slate-500 hover:text-rose-400"
+                              )}
                             >
-                              <Heart className={cn("w-4 h-4", isUpvoted ? "fill-rose-500" : "group-hover:fill-rose-400/20")} />
-                            </motion.div>
-                            <span className="text-xs font-bold">{confession.upvotes}</span>
-                          </button>
+                              <motion.div
+                                animate={isUpvoted ? { scale: [1, 1.3, 1] } : {}}
+                                transition={{ duration: 0.3 }}
+                              >
+                                <Heart className={cn("w-4 h-4", isUpvoted ? "fill-rose-500" : "group-hover:fill-rose-400/20")} />
+                              </motion.div>
+                              <span className="text-xs font-bold">{confession.upvotes}</span>
+                            </button>
+                            <button
+                              onClick={() => handleDownvote(confession.id)}
+                              className={cn(
+                                "flex items-center gap-2 px-3 py-1.5 rounded-full transition-all group",
+                                userDownvotes.has(confession.id) ? "bg-indigo-500/10 text-indigo-500" : "hover:bg-slate-800 text-slate-500 hover:text-indigo-400"
+                              )}
+                            >
+                              <motion.div
+                                animate={userDownvotes.has(confession.id) ? { scale: [1, 1.3, 1] } : {}}
+                                transition={{ duration: 0.3 }}
+                              >
+                                <ThumbsDown className={cn("w-4 h-4", userDownvotes.has(confession.id) && "fill-indigo-500")} />
+                              </motion.div>
+                              <span className="text-xs font-bold">{confession.downvotes || 0}</span>
+                            </button>
+                          </div>
 
                           <div className="flex items-center gap-1">
                             <button
@@ -841,6 +976,24 @@ export function PolySuaraPage() {
                     );
                   })}
                 </AnimatePresence>
+              )}
+
+              {/* Infinite scroll trigger */}
+              {!loading && hasMore && (
+                <div ref={loadMoreRef} className="flex items-center justify-center py-8">
+                  {loadingMore && (
+                    <div className="flex items-center gap-3 text-slate-500">
+                      <Loader2 className="w-5 h-5 animate-spin text-rose-500" />
+                      <span className="text-xs font-bold uppercase tracking-widest">Memuatkan lagi...</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!loading && !hasMore && confessions.length > FEED_PAGE_SIZE && (
+                <div className="text-center py-6">
+                  <span className="text-xs text-slate-600 font-bold uppercase tracking-widest">Anda telah melihat semua luahan 🎉</span>
+                </div>
               )}
             </div>
           </>

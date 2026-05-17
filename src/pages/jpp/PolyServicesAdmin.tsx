@@ -120,7 +120,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
     try {
       if (activeTab === 'POLYSUARA' || activeTab === 'ANALITIK') {
         const [suaraRes, reportsRes] = await Promise.all([
-          supabase.from('polysuara_confessions').select('id, content, category, upvotes, created_at, official_reply, official_reply_at, status, codename, hashtags, author_reply, author_reply_at, image_url, is_pinned, is_approved, author_id, profiles:author_id(full_name, matric_no)').eq('is_archived', false).order('is_pinned', { ascending: false }).order('created_at', { ascending: false }),
+          supabase.from('polysuara_confessions').select('id, content, category, upvotes, downvotes, created_at, official_reply, official_reply_at, status, codename, hashtags, author_reply, author_reply_at, image_url, is_pinned, is_approved, is_hidden_by_community, author_id, profiles:author_id(full_name, matric_no)').eq('is_archived', false).order('is_pinned', { ascending: false }).order('created_at', { ascending: false }).limit(500),
           supabase.from('polyservices_reports').select('target_id, reason, created_at, profiles:reporter_id(matric_no)').eq('target_type', 'SUARA')
         ]);
         
@@ -178,6 +178,19 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
       setSuaraList(prev => prev.map(item => item.id === id ? { ...item, is_approved: !currentStatus } : item));
     } catch (err: any) {
       toast.error('Gagal kemaskini status');
+    }
+  };
+
+  const handleRestoreHidden = async (id: string) => {
+    try {
+      const { error } = await supabase.rpc('restore_hidden_confession', {
+        p_confession_id: id
+      });
+      if (error) throw error;
+      toast.success('Confession dikembalikan ke paparan awam');
+      setSuaraList(prev => prev.map(item => item.id === id ? { ...item, is_hidden_by_community: false, is_approved: true, downvotes: 0 } : item));
+    } catch (err: any) {
+      toast.error('Gagal memulihkan confession');
     }
   };
 
@@ -329,7 +342,16 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
   const filteredSuara = suaraList.filter(s => 
     s.content.toLowerCase().includes(search.toLowerCase()) || 
     s.profiles?.matric_no?.toLowerCase().includes(search.toLowerCase())
-  );
+  ).sort((a, b) => {
+    // Force auto-hidden items to the very top
+    if (a.is_hidden_by_community && !b.is_hidden_by_community) return -1;
+    if (!a.is_hidden_by_community && b.is_hidden_by_community) return 1;
+    // Pinned next
+    if (a.is_pinned && !b.is_pinned) return -1;
+    if (!a.is_pinned && b.is_pinned) return 1;
+    // Finally created_at
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
 
   const filteredMatch = matchList.filter(m => 
     m.title.toLowerCase().includes(search.toLowerCase()) || 
@@ -566,12 +588,18 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
 
                     <div className="flex flex-col mb-3">
                        <div className="flex items-center gap-3 mb-2">
-                        <span className={cn(
-                          "px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest",
-                          suara.is_approved ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
-                        )}>
-                          {suara.is_approved ? "AKTIF" : "DISEMBUNYIKAN"}
-                        </span>
+                        {suara.is_hidden_by_community ? (
+                          <span className="bg-red-500/20 text-red-400 px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1 border border-red-500/50">
+                            🚨 MENUNGGU SEMAKAN (AUTO-HIDE)
+                          </span>
+                        ) : (
+                          <span className={cn(
+                            "px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest",
+                            suara.is_approved ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+                          )}>
+                            {suara.is_approved ? "AKTIF" : "DISEMBUNYIKAN"}
+                          </span>
+                        )}
                         <span className="text-[10px] text-white/40 font-bold tracking-widest uppercase">
                           {format(new Date(suara.created_at), 'dd MMM yyyy, HH:mm', { locale: ms })}
                         </span>
@@ -621,7 +649,8 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                     )}
                     
                     <div className="flex items-center gap-4">
-                      <div className="text-[10px] text-white/30 font-bold">👍 {suara.upvotes} Upvotes</div>
+                      <div className="text-[10px] text-white/30 font-bold">👍 {suara.upvotes || 0} Sokong</div>
+                      <div className="text-[10px] text-white/30 font-bold">👎 {suara.downvotes || 0} Bantah</div>
                       {suara.reports && suara.reports.length > 0 && (
                         <div className="text-[10px] text-amber-500 font-bold flex items-center gap-1">
                           <AlertTriangle className="w-3 h-3" />
@@ -641,55 +670,76 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                   </div>
                   
                   <div className="flex flex-row sm:flex-col gap-2 shrink-0">
-                    {!suara.official_reply && (
-                      <button
-                        onClick={() => {
-                          setReplyTargetId(suara.id);
-                          setReplyModalOpen(true);
-                        }}
-                        className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 bg-teal-500/10 text-teal-400 hover:bg-teal-500/20"
-                      >
-                        <MessageSquare className="w-4 h-4" />
-                        <span className="hidden sm:inline">Balas</span>
-                      </button>
+                    {suara.is_hidden_by_community ? (
+                      <>
+                        <button
+                          onClick={() => handleRestoreHidden(suara.id)}
+                          className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          <span className="hidden sm:inline">Lepaskan</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSuara(suara.id)}
+                          className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          <span className="hidden sm:inline">Padam</span>
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        {!suara.official_reply && (
+                          <button
+                            onClick={() => {
+                              setReplyTargetId(suara.id);
+                              setReplyModalOpen(true);
+                            }}
+                            className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 bg-teal-500/10 text-teal-400 hover:bg-teal-500/20"
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                            <span className="hidden sm:inline">Balas</span>
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleToggleSuaraApproval(suara.id, suara.is_approved)}
+                          className={cn(
+                            "flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2",
+                            suara.is_approved 
+                              ? "bg-amber-500/10 text-amber-400 hover:bg-amber-500/20" 
+                              : "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                          )}
+                        >
+                          {suara.is_approved ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                          <span className="hidden sm:inline">{suara.is_approved ? "Sembunyikan" : "Luluskan"}</span>
+                        </button>
+                        <button
+                          onClick={() => handleTogglePin(suara.id, !!suara.is_pinned)}
+                          className={cn(
+                            "px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2",
+                            suara.is_pinned ? "bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20" : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                          )}
+                        >
+                          <Pin className="w-4 h-4" />
+                          <span className="hidden sm:inline">{suara.is_pinned ? "Unpin" : "Pin"}</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSuara(suara.id)}
+                          className="px-4 py-2 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 text-xs font-bold transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          <span className="hidden sm:inline">Padam</span>
+                        </button>
+                        <button
+                          onClick={() => handleShareImage(suara.id)}
+                          disabled={shareLoadingId === suara.id}
+                          className="px-4 py-2 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 text-xs font-bold transition-colors flex items-center justify-center gap-2"
+                        >
+                          {shareLoadingId === suara.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
+                          <span className="hidden sm:inline">IG Story</span>
+                        </button>
+                      </>
                     )}
-                    <button
-                      onClick={() => handleToggleSuaraApproval(suara.id, suara.is_approved)}
-                      className={cn(
-                        "flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2",
-                        suara.is_approved 
-                          ? "bg-amber-500/10 text-amber-400 hover:bg-amber-500/20" 
-                          : "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
-                      )}
-                    >
-                      {suara.is_approved ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
-                      <span className="hidden sm:inline">{suara.is_approved ? "Sembunyikan" : "Luluskan"}</span>
-                    </button>
-                    <button
-                      onClick={() => handleTogglePin(suara.id, !!suara.is_pinned)}
-                      className={cn(
-                        "px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2",
-                        suara.is_pinned ? "bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20" : "bg-slate-800 text-slate-400 hover:bg-slate-700"
-                      )}
-                    >
-                      <Pin className="w-4 h-4" />
-                      <span className="hidden sm:inline">{suara.is_pinned ? "Unpin" : "Pin"}</span>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteSuara(suara.id)}
-                      className="px-4 py-2 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 text-xs font-bold transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      <span className="hidden sm:inline">Padam</span>
-                    </button>
-                    <button
-                      onClick={() => handleShareImage(suara.id)}
-                      disabled={shareLoadingId === suara.id}
-                      className="px-4 py-2 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 text-xs font-bold transition-colors flex items-center justify-center gap-2"
-                    >
-                      {shareLoadingId === suara.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
-                      <span className="hidden sm:inline">IG Story</span>
-                    </button>
                   </div>
                 </div>
               ))
