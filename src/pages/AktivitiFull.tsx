@@ -12,7 +12,7 @@ import {
   FileUp, CloudUpload, Clock, Check, Send, ChevronRight, MessageCircle,
   BellRing, Timer, History, Unlock, Archive, Info, Trash2,
   Zap, Users, CalendarDays, Activity, Filter, Image as ImageIcon, X, Sparkles,
-  QrCode, Trophy, Copy, ExternalLink
+  QrCode, Trophy, Copy, ExternalLink, HelpCircle
 } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -44,6 +44,8 @@ import { AIGrammarCheck } from '@/components/ai/AIGrammarCheck';
 import { AIBudgetGenerator } from '@/components/ai/AIBudgetGenerator';
 import { QrCodeModal } from '@/components/program/QrCodeModal';
 import { ProgramStatistikTab } from '@/components/program/ProgramStatistikTab';
+import { SystemTour } from '@/components/ui/SystemTour';
+import { useTour } from '@/hooks/useTour';
 
 // ─── STATUS CONFIG ────────────────────────────────────────────────────────────
 const ACTIVITY_STATUS: Record<string, { label: string; color: string; bg: string }> = {
@@ -63,18 +65,27 @@ const PRIORITY_CONFIG: Record<string, { label: string; dot: string }> = {
 export function AktivitiFull() {
   const { user, profile, isPresident, isMT, isSuperAdmin, selectedClubId, effectiveRole } = useAuth();
   const canManageTakwim = isMT || isSuperAdmin;
+  const { runTour, startTour, closeTour } = useTour('EKPP_AKTIVITI', !!profile);
 
   return (
     <div className="page-container space-y-8 pb-20">
       {/* HEADER */}
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-        <Badge className="mb-3 px-3 py-1 text-[10px] font-black uppercase tracking-widest bg-accent/10 text-accent border-none">
-          {profile?.club_id ? 'Kelab' : 'JPP'}
-        </Badge>
-        <h1 className="text-5xl font-black tracking-tighter gradient-text">Aktiviti</h1>
-        <p className="text-muted-foreground mt-1 font-medium">
-          Takwim Rasmi &amp; Aktiviti Harian Kelab
-        </p>
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-start gap-4">
+        <div>
+          <Badge className="mb-3 px-3 py-1 text-[10px] font-black uppercase tracking-widest bg-accent/10 text-accent border-none">
+            {profile?.club_id ? 'Kelab' : 'JPP'}
+          </Badge>
+          <h1 className="text-5xl font-black tracking-tighter gradient-text">Aktiviti</h1>
+          <p className="text-muted-foreground mt-1 font-medium">
+            Takwim Rasmi &amp; Aktiviti Harian Kelab
+          </p>
+        </div>
+        <button
+          onClick={startTour}
+          className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-500 shadow-lg border border-blue-200 dark:border-blue-800/50 flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-transform mt-2"
+        >
+          <HelpCircle className="w-5 h-5" />
+        </button>
       </motion.div>
 
       {/* TABS */}
@@ -82,19 +93,19 @@ export function AktivitiFull() {
         <TabsList className="bg-muted/40 p-1.5 rounded-2xl gap-2 border border-border/50 shadow-inner mb-2 flex">
           <TabsTrigger
             value="aktiviti"
-            className="flex-1 rounded-xl px-6 py-3 font-black text-[10px] uppercase tracking-[0.15em] data-[state=active]:bg-background data-[state=active]:shadow-xl data-[state=active]:text-emerald-600 flex items-center gap-2 justify-center"
+            className="tour-tab-aktiviti flex-1 rounded-xl px-6 py-3 font-black text-[10px] uppercase tracking-[0.15em] data-[state=active]:bg-background data-[state=active]:shadow-xl data-[state=active]:text-emerald-600 flex items-center gap-2 justify-center"
           >
             <Zap className="w-3.5 h-3.5" /> Aktiviti Kelab
           </TabsTrigger>
           <TabsTrigger
             value="takwim"
-            className="flex-1 rounded-xl px-6 py-3 font-black text-[10px] uppercase tracking-[0.15em] data-[state=active]:bg-background data-[state=active]:shadow-xl data-[state=active]:text-primary flex items-center gap-2 justify-center"
+            className="tour-tab-takwim flex-1 rounded-xl px-6 py-3 font-black text-[10px] uppercase tracking-[0.15em] data-[state=active]:bg-background data-[state=active]:shadow-xl data-[state=active]:text-primary flex items-center gap-2 justify-center"
           >
             <CalendarDays className="w-3.5 h-3.5" /> Takwim Rasmi
           </TabsTrigger>
           <TabsTrigger
             value="statistik"
-            className="flex-1 rounded-xl px-6 py-3 font-black text-[10px] uppercase tracking-[0.15em] data-[state=active]:bg-background data-[state=active]:shadow-xl data-[state=active]:text-violet-600 flex items-center gap-2 justify-center"
+            className="tour-tab-statistik flex-1 rounded-xl px-6 py-3 font-black text-[10px] uppercase tracking-[0.15em] data-[state=active]:bg-background data-[state=active]:shadow-xl data-[state=active]:text-violet-600 flex items-center gap-2 justify-center"
           >
             <Activity className="w-3.5 h-3.5" /> Statistik
           </TabsTrigger>
@@ -115,6 +126,8 @@ export function AktivitiFull() {
           <ProgramStatistikTab selectedClubId={selectedClubId} isSuperAdmin={isSuperAdmin} />
         </TabsContent>
       </Tabs>
+
+      <SystemTour run={runTour} onClose={closeTour} tourKey="EKPP_AKTIVITI" />
     </div>
   );
 }

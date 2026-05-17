@@ -13,11 +13,11 @@ export function GlobalPullToUpdate() {
   const isRefreshingRef = React.useRef(false);
   const pullProgressRef = React.useRef(0);
 
-  // Pilihan 1: Tutup Pull-to-Refresh 100% di iMaps (Route Exclusion)
-  const isImaps = location.pathname.startsWith('/imaps') || location.pathname.startsWith('/jpp/imaps');
+  // Pilihan 1: Tutup Pull-to-Refresh 100% di PolyMaps (Route Exclusion)
+  const isPolyMaps = location.pathname.startsWith('/polymaps') || location.pathname.startsWith('/jpp/polymaps');
 
   useEffect(() => {
-    if (isImaps) return; // Batalkan pendaftaran pengesan sentuhan jika di iMaps
+    if (isPolyMaps) return; // Batalkan pendaftaran pengesan sentuhan jika di PolyMaps
 
     let startY = 0;
     let isPulling = false;
@@ -107,9 +107,9 @@ export function GlobalPullToUpdate() {
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [isImaps]); // React akan pasang balik listener jika keluar dari kawasan iMaps
+  }, [isPolyMaps]); // React akan pasang balik listener jika keluar dari kawasan PolyMaps
 
-  if (isImaps) return null; // Sembunyikan terus komponen UI
+  if (isPolyMaps) return null; // Sembunyikan terus komponen UI
 
   return (
     <AnimatePresence>

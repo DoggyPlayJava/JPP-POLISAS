@@ -67,7 +67,7 @@ export function KebajikanSidebar() {
   );
   return (
     <aside
-      className="w-[280px] h-screen flex flex-col select-none overflow-hidden flex-shrink-0 backdrop-blur-3xl z-[140] relative border-r border-white/5"
+      className="tour-kebajikan-sidebar w-[280px] h-screen flex flex-col select-none overflow-hidden flex-shrink-0 backdrop-blur-3xl z-[140] relative border-r border-white/5"
       style={{ background: `linear-gradient(180deg, ${bg.top} 0%, ${bg.bottom} 100%)` }}
     >
       {/* Decorative Glow */}

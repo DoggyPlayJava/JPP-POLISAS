@@ -42,7 +42,7 @@ export const UNIT_CFG: Record<string, UnitConfig> = {
     fullLabel: 'Keusahawanan & Inovasi',
     icon: Lightbulb,
     color: '#4ADE80',
-    moduleLink: '/keusahawanan/dashboard',
+    moduleLink: '/jpp/keusahawanan-hub',
     isActive: true,
   },
   KEBAJIKAN: {

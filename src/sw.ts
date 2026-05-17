@@ -1,10 +1,11 @@
+/// <reference lib="webworker" />
 import { clientsClaim } from 'workbox-core';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, cleanupOutdatedCaches, matchPrecache } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { StaleWhileRevalidate, CacheFirst, NetworkFirst } from 'workbox-strategies';
 
-declare const self: ServiceWorkerGlobalScope;
+declare let self: ServiceWorkerGlobalScope;
 
 // ── Nama cache khas untuk halaman offline ─────────────────────────────────────
 const OFFLINE_CACHE = 'jpp-offline-fallback-v1';
@@ -106,6 +107,7 @@ self.addEventListener('push', (event: PushEvent) => {
     icon: payload.icon ?? '/jpp-app-icon.png',
     // Android memerlukan icon monokrom lutsinar untuk badge, kita guna jpp-logo sementara belum ada khas
     badge: payload.badge ?? '/jpp-app-icon.png',
+    // @ts-ignore
     image: payload.image, // Gambar banner besar
     vibrate: [200, 100, 200, 100, 200], // Premium vibration pattern
     data: { url: targetUrl, ...payload.data },
@@ -136,7 +138,7 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
   }
 
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       // If app is already open, focus it and navigate
       for (const client of clientList) {
         if ('focus' in client) {
@@ -146,7 +148,7 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
         }
       }
       // Otherwise open new window
-      return clients.openWindow(targetUrl);
+      return self.clients.openWindow(targetUrl);
     })
   );
 });

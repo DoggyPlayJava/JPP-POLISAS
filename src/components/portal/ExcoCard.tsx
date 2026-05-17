@@ -167,6 +167,7 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
       transition={{ delay: index * 0.05, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       onClick={handleClick}
       className={cn(
+        `tour-mod-${module.id}`,
         "group relative cursor-pointer overflow-hidden rounded-[2rem] p-8 transition-all duration-500 min-h-[280px] flex flex-col justify-between",
         "border shadow-sm hover:shadow-2xl dark:shadow-none backdrop-blur-xl",
         !canAccess && "opacity-60 grayscale-[0.8] cursor-not-allowed",

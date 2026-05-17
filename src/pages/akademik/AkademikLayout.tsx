@@ -8,13 +8,15 @@ import { Button } from '@/components/ui/button';
 import {
   GraduationCap, LayoutDashboard, Trophy, FileText,
   BarChart3, QrCode, ArrowLeft, Menu, X, ChevronRight,
-  Star, BookOpen, Building2, LogOut, Crown, CalendarDays
+  Star, BookOpen, Building2, LogOut, Crown, CalendarDays, HelpCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { QrCodeFab } from '@/components/jpp/QrCodeFab';
 import { BottomNav } from '@/components/layout/BottomNav';
+import { SystemTour } from '@/components/ui/SystemTour';
+import { useTour } from '@/hooks/useTour';
 
 const AKADEMIK_UNIT_LINKS = [
   { label: 'Dashboard Akademik', path: '/akademik' },
@@ -42,6 +44,7 @@ export function AkademikLayout() {
   const navigate   = useNavigate();
   const location   = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { runTour, startTour, closeTour } = useTour('akademik_module_tour', false);
 
   const isActive = (path: string) =>
     path === '/akademik' ? location.pathname === '/akademik' : location.pathname.startsWith(path);
@@ -63,8 +66,42 @@ export function AkademikLayout() {
     };
   }, [sidebarOpen]);
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const akademikTourSteps = [
+    {
+      target: 'body',
+      content: 'Selamat datang ke e-Akademik! Sistem berpusat untuk mengurus pencapaian, merit, dan dokumen akademik anda.',
+      title: 'Modul e-Akademik 🎓',
+      placement: 'center' as const,
+      disableBeacon: true,
+    },
+    {
+      target: isMobile ? '.tour-mobile-hamburger' : '.tour-akademik-sidebar',
+      content: isMobile ? 'Gunakan menu ini untuk mengakses pencapaian, HPNM/CGPA, dokumen, dan merit.' : 'Di ruangan tepi ini, anda boleh melihat pencapaian, mengemas kini CGPA, serta menyemak merit.',
+      title: 'Navigasi Menu 📑',
+      placement: isMobile ? 'bottom' as const : 'right' as const,
+    },
+    {
+      target: '.tour-akademik-cgpa',
+      content: 'Di sini anda dapat melihat ringkasan CGPA terkini dan memantau prestasi akademik anda dari masa ke semasa.',
+      title: 'Prestasi Akademik 📈',
+      placement: 'bottom' as const,
+    },
+    {
+      target: '.tour-akademik-merit',
+      content: 'Anda boleh memantau baki merit anda di sini untuk kelayakan permohonan asrama.',
+      title: 'Status Merit ⭐',
+      placement: 'bottom' as const,
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-slate-950 text-white font-sans overflow-x-hidden">
+      <SystemTour
+        run={runTour}
+        onClose={closeTour}
+        steps={akademikTourSteps}
+      />
 
       {/* ── Background blobs ── */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
@@ -114,7 +151,7 @@ export function AkademikLayout() {
         <header className="sticky top-0 z-30 flex items-center gap-3 px-4 md:px-6 py-3.5 border-b border-white/[0.06] bg-slate-950/80 backdrop-blur-xl">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="md:hidden p-2 rounded-xl text-white/40 hover:text-white hover:bg-white/[0.06] transition-all"
+            className="tour-mobile-hamburger md:hidden p-2 rounded-xl text-white/40 hover:text-white hover:bg-white/[0.06] transition-all"
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -132,6 +169,9 @@ export function AkademikLayout() {
           </div>
 
           <div className="flex items-center gap-3">
+            <button onClick={startTour} className="p-2 text-white/40 hover:text-white hover:bg-white/[0.06] rounded-xl transition-all">
+               <HelpCircle className="w-4 h-4" />
+            </button>
             <ThemeToggle />
             <NotificationBell />
             <button
@@ -162,7 +202,9 @@ export function AkademikLayout() {
 
         {/* QR Code FAB — untuk Exco Akademik jana QR */}
         <QrCodeFab unitLinks={AKADEMIK_UNIT_LINKS} accentColor="#818CF8" />
-        <BottomNav onOpenSidebar={() => setSidebarOpen(true)} />
+        <div className="tour-akademik-mobile-nav">
+          <BottomNav onOpenSidebar={() => setSidebarOpen(true)} />
+        </div>
       </div>
     </div>
   );
@@ -210,7 +252,7 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav className="tour-akademik-sidebar flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         <p className="text-[8px] font-black uppercase tracking-[0.3em] text-white/20 px-3 mb-3">Navigasi</p>
         {NAV_ITEMS.map(item => {
           const active = isActive(item.path);

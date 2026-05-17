@@ -98,7 +98,7 @@ export interface ChatContext {
     pendingIncomingOrders?: number;
     systemNote?: string;
   };
-  iMapsInfo?: any;
+  PolyMapsInfo?: any;
   polyRiderInfo?: any;
   takwimInfo?: {
     upcomingEvents?: string;    // formatted list of upcoming takwim entries (limit 10)
@@ -665,7 +665,7 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
         'Takwim: Rujuk konteks. JANGAN reka.',
         'Privasi: JANGAN dedah info kelab lain.',
         'Anti-rekaan: JANGAN reka fakta.',
-        'Navigasi: Guna [NAVIGATE:/laluan]. Sah: /, /aktiviti, /akademik, /keusahawanan, /keusahawanan/pos, /kebajikan, /polymart, /imaps, /polyrider, /jpp'
+        'Navigasi: Guna [NAVIGATE:/laluan]. Sah: /, /aktiviti, /akademik, /keusahawanan, /keusahawanan/pos, /kebajikan, /polymart, /polymaps, /polyrider, /jpp'
       ].join('\n');
 
       // Build valid history first to use it for context keyword matching
@@ -731,12 +731,12 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
         dynamicContextParts.push(tParts.join('\n'));
       }
       
-      if (context?.iMapsInfo) {
-        const im = context.iMapsInfo;
+      if (context?.PolyMapsInfo) {
+        const im = context.PolyMapsInfo;
         if (im.isNavigating && im.activeBuildingName) {
-          dynamicContextParts.push(`[iMaps] Navigasi ke: ${im.activeBuildingName}${im.targetRoomCode ? ' Bilik: ' + im.targetRoomCode : ''}`);
+          dynamicContextParts.push(`[PolyMaps] Navigasi ke: ${im.activeBuildingName}${im.targetRoomCode ? ' Bilik: ' + im.targetRoomCode : ''}`);
         } else if (im.activeBuildingName) {
-          dynamicContextParts.push(`[iMaps] Bangunan: ${im.activeBuildingName}${im.activeBuildingZone ? ' Zon: ' + im.activeBuildingZone : ''}${im.facilityStatus ? ' (' + im.facilityStatus + ')' : ''}`);
+          dynamicContextParts.push(`[PolyMaps] Bangunan: ${im.activeBuildingName}${im.activeBuildingZone ? ' Zon: ' + im.activeBuildingZone : ''}${im.facilityStatus ? ' (' + im.facilityStatus + ')' : ''}`);
         }
       }
       if (context?.polyRiderInfo) {

@@ -8,12 +8,14 @@ import {
   Search, Navigation, MapPin, Building2, Layers, Clock, X, Menu, 
   ChevronDown, ChevronRight, Share2, Coffee, Moon, Droplets, 
   CreditCard, BookOpen, ImageIcon, Map as MapIcon, DoorOpen,
-  CloudRain, Sun
+  CloudRain, Sun, HelpCircle
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { BottomNav } from '@/components/layout/BottomNav';
+import { SystemTour } from '@/components/ui/SystemTour';
+import { useTour } from '@/hooks/useTour';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -191,7 +193,7 @@ interface ZoneMarkerInfo {
   buildings: Building[];
 }
 
-export function IMapsPage() {
+export function PolyMapsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
@@ -231,6 +233,8 @@ export function IMapsPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
   const [weather, setWeather] = useState<{ isRaining: boolean, isHot: boolean } | null>(null);
+
+  const { runTour, startTour, closeTour } = useTour('POLYMAPS_PAGE', true, 2500);
 
   const polisasCenter: [number, number] = [3.8625, 103.3153];
 
@@ -276,7 +280,7 @@ export function IMapsPage() {
   }, [allBuildings]);
 
   // ── Nexus AI State Bridge (sessionStorage) ───────────────────────────────
-  // Writes current iMaps state so FloatingChatAI can read it lazily.
+  // Writes current PolyMaps state so FloatingChatAI can read it lazily.
   // No realtime subscription needed — AI reads once on chat open.
   useEffect(() => {
     const checkIsOpen = (opStart?: string, opEnd?: string): boolean => {
@@ -301,11 +305,11 @@ export function IMapsPage() {
         isNavigating,
         targetRoomCode: selectedLocation?.room_code ?? null,
       };
-      sessionStorage.setItem('nexus_imaps_ctx', JSON.stringify(bridgeData));
+      sessionStorage.setItem('nexus_polymaps_ctx', JSON.stringify(bridgeData));
     } catch { /* silent fail — private browsing may block sessionStorage */ }
 
     return () => {
-      try { sessionStorage.removeItem('nexus_imaps_ctx'); } catch { /* ignore */ }
+      try { sessionStorage.removeItem('nexus_polymaps_ctx'); } catch { /* ignore */ }
     };
   }, [activeBuilding, isNavigating, selectedLocation]);
 
@@ -343,7 +347,7 @@ export function IMapsPage() {
       .select('*')
       .order('name');
     if (bError) {
-      console.error('iMaps: Failed to load buildings:', bError.message);
+      console.error('PolyMaps: Failed to load buildings:', bError.message);
     }
     if (bData) setAllBuildings(bData);
     
@@ -353,7 +357,7 @@ export function IMapsPage() {
       .select('*, building:building_id(*)')
       .order('floor_level');
     if (lError) {
-      console.error('iMaps: Failed to load locations:', lError.message);
+      console.error('PolyMaps: Failed to load locations:', lError.message);
     }
     const formatted = (lData || []).map((item: any) => ({
       ...item,
@@ -636,11 +640,11 @@ export function IMapsPage() {
   const handleShare = () => {
     if (selectedLocation) {
       const url = `${window.location.origin}${window.location.pathname}?room=${selectedLocation.id}`;
-      navigator.clipboard.writeText(`📍 Lihat lokasi bilik/kelas ${selectedLocation.room_code} di iMaps POLISAS:\n${url}`);
+      navigator.clipboard.writeText(`📍 Lihat lokasi bilik/kelas ${selectedLocation.room_code} di PolyMaps POLISAS:\n${url}`);
       toast.success('Pautan kelas disalin!');
     } else if (activeBuilding) {
       const url = `${window.location.origin}${window.location.pathname}?b=${activeBuilding.id}`;
-      navigator.clipboard.writeText(`📍 Lihat lokasi ${activeBuilding.name} di iMaps POLISAS:\n${url}`);
+      navigator.clipboard.writeText(`📍 Lihat lokasi ${activeBuilding.name} di PolyMaps POLISAS:\n${url}`);
       toast.success('Pautan bangunan disalin!');
     }
   };
@@ -670,7 +674,7 @@ export function IMapsPage() {
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="flex-1 bg-white dark:bg-slate-900 shadow-lg border border-slate-200 dark:border-slate-800 rounded-full px-4 py-2.5 flex items-center gap-3">
+            <div className="tour-polymaps-search flex-1 bg-white dark:bg-slate-900 shadow-lg border border-slate-200 dark:border-slate-800 rounded-full px-4 py-2.5 flex items-center gap-3">
               <Search className="w-5 h-5 text-slate-400" />
               <input
                 type="text"
@@ -683,10 +687,16 @@ export function IMapsPage() {
                 }}
               />
             </div>
+            <button
+              onClick={startTour}
+              className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-500 shadow-lg border border-blue-200 dark:border-blue-800/50 flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-transform"
+            >
+              <HelpCircle className="w-5 h-5" />
+            </button>
           </div>
 
           {/* Quick Filters */}
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+          <div className="tour-polymaps-quick flex gap-2 overflow-x-auto no-scrollbar pb-1">
             <button
               onClick={() => setActiveFilter(null)}
               className={cn("px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border shadow-sm", !activeFilter ? "bg-slate-800 text-white border-slate-800 dark:bg-white dark:text-slate-900" : "bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700")}
@@ -1362,7 +1372,7 @@ export function IMapsPage() {
                   <div className="flex flex-col gap-2">
                     <button
                       onClick={startNavigation}
-                      className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-2xl font-black text-sm transition-colors shadow-lg shadow-blue-500/30"
+                      className="tour-polymaps-navigate w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-2xl font-black text-sm transition-colors shadow-lg shadow-blue-500/30"
                     >
                       <Navigation className="w-4 h-4" /> Mula Pandu Arah
                     </button>
@@ -1408,6 +1418,8 @@ export function IMapsPage() {
 
       {/* ── GLOBAL BOTTOM NAV ── */}
       <BottomNav onOpenSidebar={() => setIsSidebarOpen(true)} forceShowDesktop={true} />
+
+      <SystemTour run={runTour} onClose={closeTour} tourKey="POLYMAPS_PAGE" />
     </div>
   );
 }

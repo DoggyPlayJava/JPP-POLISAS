@@ -103,3 +103,14 @@ export function triggerHaptic(type: 'light' | 'medium' | 'heavy' | 'success' | '
     }
   }
 }
+
+/**
+ * Menyembunyikan nama penuh pengguna untuk tujuan privasi (Privacy Shield).
+ * Contoh: "Ahmad Ali Bin Abu" -> "Ahmad A."
+ */
+export function formatMaskedName(fullName?: string | null): string {
+  if (!fullName) return 'Pelajar POLISAS';
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[1].charAt(0).toUpperCase()}.`;
+}

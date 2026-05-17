@@ -5,10 +5,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
   ArrowLeft, ShoppingBag, Search, Package, LayoutGrid,
-  Shield, Home, SlidersHorizontal, X, LogIn, ShoppingCart,
+  Shield, Home, SlidersHorizontal, X, LogIn, ShoppingCart, HelpCircle
 } from 'lucide-react';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { BottomNav } from '@/components/layout/BottomNav';
+import { SystemTour } from '@/components/ui/SystemTour';
+import { useTour } from '@/hooks/useTour';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 export const PM_ACCENT   = '#f59e0b';
@@ -66,6 +68,7 @@ export function PolyMartLayout() {
   const [myActiveOrdersCount, setMyActiveOrdersCount] = useState(0);
   const [cartCount, setCartCount] = useState(0);
   const [myBizIds, setMyBizIds] = useState<string[]>([]);
+  const { runTour, startTour, closeTour } = useTour('POLYMART_LAYOUT', !!user);
 
   const isHome    = location.pathname === '/polymart' || location.pathname === '/polymart/';
   const isOrders  = location.pathname.includes('/pesanan-saya');
@@ -106,7 +109,7 @@ export function PolyMartLayout() {
   // Vendor perlu nampak pesanan baru masuk secara serta-merta (badge count dikemas kini live)
   // Pembeli biasa: badge count dikemas kini setiap kali mereka buka PolyMart (fetch-on-mount sudah ada di atas)
   useEffect(() => {
-    if (!user || !isVendor || myBizIds.length === 0) return; // \u2190 Pembeli biasa keluar di sini
+    if (!user || !isVendor || myBizIds.length === 0) return; // ← Pembeli biasa keluar di sini
 
     const sub = supabase.channel('polymart_vendor_orders_live')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'polymart_orders' }, (payload) => {
@@ -119,11 +122,18 @@ export function PolyMartLayout() {
     return () => { supabase.removeChannel(sub); };
   }, [user, isVendor, myBizIds, refetchCounts]);
 
+
+
   return (
     <PolymartContext.Provider value={{
       activeCategory, setActiveCategory, searchQuery, setSearchQuery,
       isVendor, pendingVendorCount, myActiveOrdersCount, cartCount, refetchCounts,
     }}>
+      <SystemTour
+        run={runTour}
+        onClose={closeTour}
+        tourKey="POLYMART_LAYOUT"
+      />
       <div className="min-h-screen bg-background">
 
         {/* ── Top Navbar ─────────────────────────────────────────────── */}
@@ -186,10 +196,15 @@ export function PolyMartLayout() {
               {/* Right icons */}
               {!showSearch && (
                 <div className="flex items-center gap-0.5 shrink-0">
+                  <button onClick={startTour}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-amber-500/10 text-amber-500/70 hover:text-amber-500 transition-colors">
+                    <HelpCircle className="w-[18px] h-[18px]" />
+                  </button>
+
                   {user ? (
                     <>
                       <button onClick={() => navigate('/polymart/troli')}
-                        className="relative w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/60 transition-colors">
+                        className="tour-polymart-cart relative w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/60 transition-colors">
                         <ShoppingCart className="w-[18px] h-[18px] text-muted-foreground" />
                         {cartCount > 0 && (
                           <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full text-white text-[7px] font-black flex items-center justify-center"
@@ -212,7 +227,7 @@ export function PolyMartLayout() {
 
                       {isVendor && (
                         <button onClick={() => navigate('/polymart/vendor')}
-                          className="relative w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/60 transition-colors">
+                          className="tour-polymart-vendor relative w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/60 transition-colors">
                           <LayoutGrid className="w-[18px] h-[18px] text-muted-foreground" />
                           {pendingVendorCount > 0 && (
                             <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full bg-rose-500 text-white text-[7px] font-black flex items-center justify-center">
@@ -245,7 +260,7 @@ export function PolyMartLayout() {
 
             {/* Category pills – only on homepage */}
             {isHome && !showSearch && (
-              <div className="flex items-center gap-1.5 pb-3 pt-0.5 overflow-x-auto scrollbar-hide">
+              <div className="tour-polymart-categories flex items-center gap-1.5 pb-3 pt-0.5 overflow-x-auto scrollbar-hide">
                 {CATEGORY_LIST.map(cat => (
                   <motion.button
                     key={cat.key}
@@ -332,18 +347,20 @@ export function PolyMartLayout() {
         </AnimatePresence>
 
         {/* ── Mobile Bottom Nav (Global Standardized) ── */}
-        <BottomNav 
-          customLinks={{
-            left: [
-              { icon: Home, label: 'Utama', onClick: () => navigate('/polymart'), isActive: isHome },
-              { icon: Search, label: 'Cari', onClick: () => setShowMobileSearch(true), isActive: showMobileSearch }
-            ],
-            right: [
-              { icon: ShoppingCart, label: 'Troli', onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/troli')}`) : navigate('/polymart/troli'), isActive: location.pathname.includes('/polymart/troli'), badge: cartCount },
-              { icon: Package, label: 'Pesanan', onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/pesanan-saya')}`) : navigate('/polymart/pesanan-saya'), isActive: isOrders, badge: myActiveOrdersCount }
-            ]
-          }}
-        />
+        <div className="tour-polymart-mobile-nav">
+          <BottomNav 
+            customLinks={{
+              left: [
+                { icon: Home, label: 'Utama', onClick: () => navigate('/polymart'), isActive: isHome },
+                { icon: Search, label: 'Cari', onClick: () => setShowMobileSearch(true), isActive: showMobileSearch }
+              ],
+              right: [
+                { icon: ShoppingCart, label: 'Troli', onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/troli')}`) : navigate('/polymart/troli'), isActive: location.pathname.includes('/polymart/troli'), badge: cartCount },
+                { icon: Package, label: 'Pesanan', onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/pesanan-saya')}`) : navigate('/polymart/pesanan-saya'), isActive: isOrders, badge: myActiveOrdersCount }
+              ]
+            }}
+          />
+        </div>
         
         {/* Global Floating AI Chat */}
         <FloatingAiChat />

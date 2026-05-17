@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Store, Bike, X, ArrowRight, MapPin, PhoneCall } from 'lucide-react';
+import { Store, Bike, X, ArrowRight, MapPin, PhoneCall, Briefcase, Ghost, Puzzle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+
+import { queryCache } from '@/lib/cache';
 
 interface PolymartServiceModalProps {
   isOpen: boolean;
@@ -11,6 +14,27 @@ interface PolymartServiceModalProps {
 
 export function PolymartServiceModal({ isOpen, onClose }: PolymartServiceModalProps) {
   const navigate = useNavigate();
+  const [settings, setSettings] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (isOpen) {
+      const CACHE_KEY = 'portal_settings_cache';
+      const cached = queryCache.get(CACHE_KEY);
+      if (cached) {
+        setSettings(cached);
+        return;
+      }
+
+      supabase.from('portal_settings').select('exco_module, is_enabled').then(({ data }) => {
+        if (data) {
+          const map: Record<string, boolean> = {};
+          data.forEach(d => { map[d.exco_module] = d.is_enabled; });
+          setSettings(map);
+          queryCache.set(CACHE_KEY, map, 10 * 60 * 1000); // 10 minutes cache per guideline
+        }
+      });
+    }
+  }, [isOpen]);
 
   const handleSelect = (path: string) => {
     onClose();
@@ -74,28 +98,30 @@ export function PolymartServiceModal({ isOpen, onClose }: PolymartServiceModalPr
                   <ArrowRight className="w-5 h-5 text-amber-500 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                 </button>
 
-                {/* PolyRider Option */}
-                <button
-                  onClick={() => handleSelect('/polyrider')}
-                  className="w-full group relative flex flex-row items-center p-4 sm:p-5 rounded-2xl border border-orange-500/20 bg-orange-500/5 hover:bg-orange-500/10 dark:bg-orange-500/10 dark:hover:bg-orange-500/20 transition-all text-left overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-orange-400/0 via-orange-400/10 to-orange-400/0 -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
-                  
-                  <div className="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform">
-                    <Bike className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0 ml-4">
-                    <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight">PolyRider</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Servis Penghantaran Pantas</p>
-                  </div>
+                {/* PolyTask Option */}
+                {settings['polytask'] !== false && (
+                  <button
+                    onClick={() => handleSelect('/polytask')}
+                    className="w-full group relative flex flex-row items-center p-4 sm:p-5 rounded-2xl border border-violet-500/20 bg-violet-500/5 hover:bg-violet-500/10 dark:bg-violet-500/10 dark:hover:bg-violet-500/20 transition-all text-left overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-violet-400/0 via-violet-400/10 to-violet-400/0 -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
+                    
+                    <div className="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform">
+                      <Briefcase className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0 ml-4">
+                      <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight">PolyTask</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Selesaikan Tugas, Jana Pendapatan</p>
+                    </div>
 
-                  <ArrowRight className="w-5 h-5 text-orange-500 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                </button>
+                    <ArrowRight className="w-5 h-5 text-violet-500 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  </button>
+                )}
 
-                {/* i-Maps Option */}
+                {/* PolyMaps Option */}
                 <button
-                  onClick={() => handleSelect('/imaps')}
+                  onClick={() => handleSelect('/polymaps')}
                   className="w-full group relative flex flex-row items-center p-4 sm:p-5 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 transition-all text-left overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-400/0 via-indigo-400/10 to-indigo-400/0 -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
@@ -105,12 +131,54 @@ export function PolymartServiceModal({ isOpen, onClose }: PolymartServiceModalPr
                   </div>
                   
                   <div className="flex-1 min-w-0 ml-4">
-                    <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight">i-Maps</h3>
+                    <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight">PolyMaps</h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Pemetaan Fasiliti Kampus</p>
                   </div>
 
                   <ArrowRight className="w-5 h-5 text-indigo-500 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                 </button>
+
+                {/* PolySuara Option */}
+                {settings['polysuara'] !== false && (
+                  <button
+                    onClick={() => handleSelect('/polysuara')}
+                    className="w-full group relative flex flex-row items-center p-4 sm:p-5 rounded-2xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 transition-all text-left overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-rose-400/0 via-rose-400/10 to-rose-400/0 -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
+                    
+                    <div className="w-12 h-12 rounded-xl bg-rose-500/20 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform">
+                      <Ghost className="w-6 h-6 text-rose-600 dark:text-rose-400" />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0 ml-4">
+                      <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight">PolySuara</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Ruang Luahan & Komuniti Anon</p>
+                    </div>
+
+                    <ArrowRight className="w-5 h-5 text-rose-500 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  </button>
+                )}
+
+                {/* PolyMatch Option */}
+                {settings['polymatch'] !== false && (
+                  <button
+                    onClick={() => handleSelect('/polymatch')}
+                    className="w-full group relative flex flex-row items-center p-4 sm:p-5 rounded-2xl border border-teal-500/20 bg-teal-500/5 hover:bg-teal-500/10 dark:bg-teal-500/10 dark:hover:bg-teal-500/20 transition-all text-left overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-teal-400/0 via-teal-400/10 to-teal-400/0 -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
+                    
+                    <div className="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform">
+                      <Puzzle className="w-6 h-6 text-teal-600 dark:text-teal-400" />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0 ml-4">
+                      <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tight">PolyMatch</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Pencari Geng Projek & Housemate</p>
+                    </div>
+
+                    <ArrowRight className="w-5 h-5 text-teal-500 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  </button>
+                )}
 
               </div>
             </motion.div>

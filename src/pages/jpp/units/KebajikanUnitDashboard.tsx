@@ -26,6 +26,7 @@ import {
 } from '@/types';
 import { JPP_MT_POSITIONS } from '@/types';
 import { UNIT_CFG } from '../jppConfig';
+import { PolyServicesAdmin } from '../PolyServicesAdmin';
 
 const TEAL = UNIT_CFG['KEBAJIKAN']?.color ?? '#2DD4BF';
 
@@ -50,11 +51,12 @@ const PRIORITY_META: Record<string, { color: string; label: string }> = {
 };
 
 // ─── Sub-tab button ────────────────────────────────────────────────────────────
-type KbjTab = 'overview' | 'aduan' | 'aktiviti' | 'laporan' | 'semakan';
+type KbjTab = 'overview' | 'aduan' | 'moderasi' | 'aktiviti' | 'laporan' | 'semakan';
 
 const TABS: { id: KbjTab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'aduan', label: 'Aduan Pelajar' },
+  { id: 'moderasi', label: 'Moderasi Awam' },
   { id: 'aktiviti', label: 'Aktiviti' },
   { id: 'laporan', label: 'Laporan' },
   { id: 'semakan', label: 'Semakan Laporan' },
@@ -418,7 +420,7 @@ export function KebajikanUnitDashboard() {
           {/* Quick actions */}
           <div>
             <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/25 mb-3">Tindakan Pantas</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
               <QuickAction
                 label="Buka Modul E-Kebajikan"
                 description="Urus tiket, aduan, dan tetapan kebajikan"
@@ -439,6 +441,13 @@ export function KebajikanUnitDashboard() {
                 icon={ClipboardCheck}
                 color={TEAL}
                 onClick={() => navigate('/jpp/semak-laporan-exco/kebajikan')}
+              />
+              <QuickAction
+                label="Moderasi Awam"
+                description="Urus kandungan PolySuara & PolyMatch"
+                icon={ShieldAlert}
+                color={TEAL}
+                onClick={() => setTab('moderasi')}
               />
             </div>
           </div>
@@ -542,6 +551,15 @@ export function KebajikanUnitDashboard() {
             <span className="text-xs font-black" style={{ color: TEAL }}>Buka Halaman Tiket Penuh dalam E-Kebajikan</span>
             <ExternalLink className="w-3.5 h-3.5" style={{ color: TEAL }} />
           </button>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════
+          TAB: MODERASI AWAM (POLYSERVICES)
+      ══════════════════════════════════════════════ */}
+      {tab === 'moderasi' && (
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-400">
+          <PolyServicesAdmin isEmbedded={true} />
         </div>
       )}
 

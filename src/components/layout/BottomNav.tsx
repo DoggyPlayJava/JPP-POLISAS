@@ -149,7 +149,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
       pillBg: 'bg-indigo-500/15 dark:bg-indigo-400/20',
       glow: 'shadow-[0_0_20px_rgba(99,102,241,0.5)]'
     };
-    if (path.startsWith('/imaps')) return {
+    if (path.startsWith('/polymaps')) return {
       color: 'text-sky-600 dark:text-sky-400',
       bg: 'bg-sky-400',
       shadow: 'shadow-[0_0_8px_rgba(14,165,233,0.8)]',
@@ -276,7 +276,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
         onPointerMove={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
         onPointerUp={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
         className={cn(
-          "fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[360px] z-[120] transform-gpu transition-all duration-300 ease-out cursor-pointer"
+          "tour-bottom-nav fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[360px] z-[120] transform-gpu transition-all duration-300 ease-out cursor-pointer"
         )}
       >
         <div className="bg-white/60 dark:bg-zinc-950/60 backdrop-blur-3xl border-t border-white/40 dark:border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.5)] rounded-full px-2 py-2 flex items-center justify-between relative">
@@ -341,7 +341,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
             <button
               onClick={handleFabClick}
               className={cn(
-                "w-14 h-14 rounded-full flex items-center justify-center shadow-lg ring-4 ring-white/60 dark:ring-zinc-950/60 transition-all duration-300 active:scale-95",
+                "tour-bottomnav-fab w-14 h-14 rounded-full flex items-center justify-center shadow-lg ring-4 ring-white/60 dark:ring-zinc-950/60 transition-all duration-300 active:scale-95",
                 isActionsOpen 
                   ? "bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-white rotate-45 scale-90" 
                   : cn(theme.fabBg, "text-white scale-105")

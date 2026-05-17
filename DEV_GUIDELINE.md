@@ -1874,15 +1874,15 @@ Disebabkan kritikalnya sistem PolyRider (melibatkan pergerakan fizikal pelajar),
 
 ---
 
-## 18. Antaramuka Pengguna (UI) iMaps & Pengurusan Zon 🗺️
+## 18. Antaramuka Pengguna (UI) PolyMaps & Pengurusan Zon 🗺️
 
 > Ditambah: Mei 2026
 
-Modul iMaps pada asalnya memaparkan semua bangunan secara serentak yang mengakibatkan UI menjadi sangat padat (cluttered), terutamanya di kawasan yang banyak bangunan seperti Jabatan Akademik atau Kamsis. 
+Modul PolyMaps pada asalnya memaparkan semua bangunan secara serentak yang mengakibatkan UI menjadi sangat padat (cluttered), terutamanya di kawasan yang banyak bangunan seperti Jabatan Akademik atau Kamsis. 
 
 ### 18.1 Sistem Pengelompokan Zon (Zone Grouping)
 - **Konsep:** Bangunan kini boleh dikelompokkan menggunakan medan `zone_name`. 
-- **Dynamic Map Clustering:** Di dalam `IMapsPage.tsx`, peta menggunakan logik skala *zoom* untuk memutuskan sama ada memaparkan label kumpulan (contoh: "JKE") atau label bangunan individu.
+- **Dynamic Map Clustering:** Di dalam `PolyMapsPage.tsx`, peta menggunakan logik skala *zoom* untuk memutuskan sama ada memaparkan label kumpulan (contoh: "JKE") atau label bangunan individu.
 - **Skala Zoom:** Skala penanda aras diletakkan pada `< 19` (`mapZoom < 19`). Ini bermakna kumpulan (zon) akan kekal dipaparkan walaupun pengguna telah mula *zoom in* (skala 16, 17, dan 18). Hanya pada tahap *zoom* maksimum (skala 19), barulah label berpecah kepada bangunan individu.
 - **Sidebar Terkategori:** Menu Eksplorasi (Explore Sidebar) kini menggunakan reka bentuk **Accordion Bertab**. 
   - **Tab Akademik/Blok:** Menghimpunkan bangunan mengikut `zone_name`. Bangunan tanpa zon akan dipaparkan secara tunggal di bawah senarai.
@@ -1891,7 +1891,7 @@ Modul iMaps pada asalnya memaparkan semua bangunan secara serentak yang mengakib
 
 ### 18.2 Input Auto-Saran (Datalist) untuk Admin
 Bagi memastikan kelancaran logik pengelompokan (grouping) dan klasifikasi fasiliti, pentadbir tidak boleh melakukan kesilapan ejaan (contohnya: terbuat "Jke" dan "JKE " atau "Cafe" dan "Kafe").
-- **Penyelesaian:** Modul Admin iMaps (`JppImapsAdmin.tsx`) menggunakan elemen asli HTML `<datalist>` untuk medan `zone_name` dan `facility_type`.
+- **Penyelesaian:** Modul Admin PolyMaps (`JppPolyMapsAdmin.tsx`) menggunakan elemen asli HTML `<datalist>` untuk medan `zone_name` dan `facility_type`.
 - Apabila admin klik pada ruang input, senarai cadangan (diambil secara dinamik dari pangkalan data sedia ada) akan terpapar.
 - Titik merah (`CircleMarker`) juga ditambah ke dalam Peta Admin untuk memudahkan admin melihat lokasi bangunan sedia ada bagi mengelakkan pertindihan data (*double-entry*).
 

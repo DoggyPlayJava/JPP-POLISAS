@@ -172,7 +172,7 @@ export function QuickActions({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
-      className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-4xl mx-auto w-full relative z-10"
+      className="tour-quick-actions mt-10 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-4xl mx-auto w-full relative z-10"
       style={{ perspective: 1000 }}
     >
       {/* ── BENTO 1: PolyServices (Large / Wide) ── */}
@@ -211,7 +211,7 @@ export function QuickActions({
           }
           setShowPolymartModal(true);
         }, cn(
-          "col-span-2 md:col-span-2 row-span-2 group relative rounded-[2rem] text-left transition-all duration-500 p-6 flex flex-col justify-between",
+          "tour-qa-polyservices col-span-2 md:col-span-2 row-span-2 group relative rounded-[2rem] text-left transition-all duration-500 p-6 flex flex-col justify-between",
           (!isModuleEnabled('keusahawanan') && !isSuperAdmin) ? "opacity-60 grayscale-[0.8] cursor-not-allowed" : "cursor-pointer hover:scale-[1.02]",
           getSkinClasses("bg-gradient-to-br from-amber-500/10 to-orange-500/5 dark:from-amber-500/15 dark:to-orange-500/5 backdrop-blur-xl border border-amber-500/20 dark:border-amber-500/25 shadow-[0_20px_50px_-12px_rgba(245,158,11,0.25)] dark:shadow-[0_20px_50px_-12px_rgba(245,158,11,0.15)] hover:border-amber-500/40", 'amber', 'gold', 1)
         ))
@@ -256,7 +256,7 @@ export function QuickActions({
           }
           navigate('/kebajikan');
         }, cn(
-          "col-span-2 md:col-span-2 rounded-[2rem] overflow-hidden transition-all duration-500 relative group flex flex-row items-center cursor-pointer hover:scale-[1.02]",
+          "tour-qa-kebajikan col-span-2 md:col-span-2 rounded-[2rem] overflow-hidden transition-all duration-500 relative group flex flex-row items-center cursor-pointer hover:scale-[1.02]",
           getSkinClasses("border border-teal-500/15 bg-white dark:bg-slate-900/40 backdrop-blur-xl shadow-2xl hover:shadow-[0_20px_50px_-12px_rgba(45,212,191,0.25)]", 'cyan', 'silver', 2)
         ))
       ) : (
@@ -291,7 +291,7 @@ export function QuickActions({
           }
           navigate('/kebajikan/buat-aduan');
         }, cn(
-          "col-span-2 md:col-span-2 group relative rounded-[2rem] overflow-hidden text-left transition-all duration-500 flex flex-row items-center gap-4 p-5 sm:p-6",
+          "tour-qa-kebajikan col-span-2 md:col-span-2 group relative rounded-[2rem] overflow-hidden text-left transition-all duration-500 flex flex-row items-center gap-4 p-5 sm:p-6",
           (!isModuleEnabled('kebajikan') && !isSuperAdmin) ? "opacity-60 grayscale-[0.8] cursor-not-allowed" : "hover:scale-[1.02] active:scale-[0.98] cursor-pointer",
           getSkinClasses("border border-teal-500/20 bg-white dark:bg-slate-900/40 backdrop-blur-xl shadow-[0_20px_50px_-12px_rgba(45,212,191,0.2)] dark:shadow-[0_20px_50px_-12px_rgba(45,212,191,0.1)] hover:bg-slate-50 dark:hover:bg-slate-900/60", 'cyan', 'silver', 2)
         ))
@@ -319,7 +319,7 @@ export function QuickActions({
         }
         navigate('/akademik/qr');
       }, cn(
-        "col-span-1 md:col-span-1 group relative p-5 sm:p-6 rounded-[2rem] flex flex-col justify-between text-left overflow-hidden transition-all duration-500",
+        "tour-qa-qr col-span-1 md:col-span-1 group relative p-5 sm:p-6 rounded-[2rem] flex flex-col justify-between text-left overflow-hidden transition-all duration-500",
         (!isModuleEnabled('akademik') && !isSuperAdmin) ? "opacity-60 grayscale-[0.8] cursor-not-allowed" : "hover:scale-[1.02] active:scale-[0.98] cursor-pointer",
         getSkinClasses("bg-white dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 shadow-sm hover:shadow-[0_20px_50px_-12px_rgba(16,185,129,0.25)] dark:hover:shadow-[0_20px_50px_-12px_rgba(16,185,129,0.15)]", 'pink', 'bronze', 3)
       ))}
@@ -341,7 +341,7 @@ export function QuickActions({
             </div>
           </>
         ), true, () => navigate('/akademik/takwim'), cn(
-          "col-span-1 md:col-span-1 group relative flex flex-col justify-between p-5 sm:p-6 rounded-[2rem] text-left overflow-hidden transition-all duration-500 hover:scale-[1.02] active:scale-[0.98] cursor-pointer",
+          "tour-qa-takwim col-span-1 md:col-span-1 group relative flex flex-col justify-between p-5 sm:p-6 rounded-[2rem] text-left overflow-hidden transition-all duration-500 hover:scale-[1.02] active:scale-[0.98] cursor-pointer",
           getSkinClasses("bg-white dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 shadow-sm hover:shadow-[0_20px_50px_-12px_rgba(14,165,233,0.25)] dark:hover:shadow-[0_20px_50px_-12px_rgba(14,165,233,0.15)]", 'purple', 'bronze', 4)
         ))
       )}

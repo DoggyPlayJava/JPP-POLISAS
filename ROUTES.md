@@ -50,6 +50,7 @@ Setiap exco baharu yang ditambah **MESTI** menggunakan prefix dengan ID exco mer
 | `/klk/*` | e-KLK (Kediaman Luar Kampus) | ✅ Aktif |
 | `/polymart/*` | PolyMart | ✅ Aktif |
 | `/polyrider/*` | PolyRider | ✅ Aktif |
+| `/polytask/*` | PolyTask | ✅ Aktif |
 | `/karnival/*` | Sistem Karnival JPP | ✅ Aktif |
 | `/sukan/*` | e-Sukan | 🔜 Akan Datang |
 

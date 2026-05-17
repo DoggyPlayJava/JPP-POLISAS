@@ -493,7 +493,7 @@ const MINIT_SPACING = { line: 276, lineRule: 'auto' as const, after: 0, before: 
 /** Simple cell helper for minit mesyuarat tables */
 const minitCell = (
   paragraphs: Paragraph | Paragraph[],
-  opts?: { width?: number; bold?: boolean; align?: (typeof AlignmentType)[keyof typeof AlignmentType]; colSpan?: number; vAlign?: (typeof VerticalAlign)[keyof typeof VerticalAlign]; bg?: string }
+  opts?: { width?: number; bold?: boolean; align?: any; colSpan?: number; vAlign?: any; bg?: string }
 ) => {
   const children = Array.isArray(paragraphs) ? paragraphs : [paragraphs];
   return new TableCell({
@@ -652,8 +652,8 @@ export const generateMinitMesyuaratDocx = async (data: MinitMesyuaratData): Prom
       bottom: { style: BorderStyle.NONE, size: 0, color: 'auto' },
       left: { style: BorderStyle.NONE, size: 0, color: 'auto' },
       right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
-      insideH: { style: BorderStyle.NONE, size: 0, color: 'auto' },
-      insideV: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+      insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+      insideVertical: { style: BorderStyle.NONE, size: 0, color: 'auto' },
     }
   });
 

@@ -94,7 +94,7 @@ interface Location {
   image_url?: string;
 }
 
-export function JppImapsAdmin() {
+export function JppPolyMapsAdmin() {
   const [activeTab, setActiveTab] = useState<'buildings' | 'locations'>('buildings');
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
@@ -122,7 +122,7 @@ export function JppImapsAdmin() {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `imaps/${fileName}`;
+      const filePath = `polymaps/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('imaps_assets')
@@ -175,7 +175,7 @@ export function JppImapsAdmin() {
       setBuildings(buildingsRes.data || []);
       setLocations(locationsRes.data || []);
     } catch (error: any) {
-      toast.error('Gagal memuat turun data iMaps');
+      toast.error('Gagal memuat turun data PolyMaps');
     } finally {
       setLoading(false);
     }
@@ -205,7 +205,7 @@ export function JppImapsAdmin() {
         toast.success('Bangunan ditambah');
       }
       const userId = (await supabase.auth.getUser()).data.user?.id;
-      if (userId) logAuditAction({ actionType: currentBuilding.id ? 'BUILDING_UPDATED' : 'BUILDING_ADDED', module: 'iMaps', entityId: currentBuilding.id || currentBuilding.code, description: `Bangunan ${currentBuilding.id ? 'dikemaskini' : 'ditambah'}: ${currentBuilding.name} (${currentBuilding.code})`, actorId: userId });
+      if (userId) logAuditAction({ actionType: currentBuilding.id ? 'BUILDING_UPDATED' : 'BUILDING_ADDED', module: 'PolyMaps', entityId: currentBuilding.id || currentBuilding.code, description: `Bangunan ${currentBuilding.id ? 'dikemaskini' : 'ditambah'}: ${currentBuilding.name} (${currentBuilding.code})`, actorId: userId });
       setShowBuildingModal(false);
       setCurrentBuilding({});
       fetchData();
@@ -223,7 +223,7 @@ export function JppImapsAdmin() {
       if (error) throw error;
       toast.success('Bangunan dipadam');
       const userId = (await supabase.auth.getUser()).data.user?.id;
-      if (userId) logAuditAction({ actionType: 'BUILDING_DELETED', module: 'iMaps', entityId: id, description: `Bangunan dipadam`, actorId: userId });
+      if (userId) logAuditAction({ actionType: 'BUILDING_DELETED', module: 'PolyMaps', entityId: id, description: `Bangunan dipadam`, actorId: userId });
       fetchData();
     } catch (error: any) {
       toast.error('Gagal memadam bangunan');
@@ -287,7 +287,7 @@ export function JppImapsAdmin() {
       setShowLocationModal(false);
       setCurrentLocation({});
       const userId = (await supabase.auth.getUser()).data.user?.id;
-      if (userId) logAuditAction({ actionType: currentLocation.id ? 'LOCATION_UPDATED' : 'LOCATION_ADDED', module: 'iMaps', entityId: currentLocation.id || currentLocation.room_code, description: `Lokasi ${currentLocation.id ? 'dikemaskini' : 'ditambah'}: ${currentLocation.room_code}`, actorId: userId });
+      if (userId) logAuditAction({ actionType: currentLocation.id ? 'LOCATION_UPDATED' : 'LOCATION_ADDED', module: 'PolyMaps', entityId: currentLocation.id || currentLocation.room_code, description: `Lokasi ${currentLocation.id ? 'dikemaskini' : 'ditambah'}: ${currentLocation.room_code}`, actorId: userId });
       fetchData();
     } catch (error: any) {
       toast.error(error.message || 'Gagal menyimpan lokasi');
@@ -303,7 +303,7 @@ export function JppImapsAdmin() {
       if (error) throw error;
       toast.success('Lokasi dipadam');
       const userId = (await supabase.auth.getUser()).data.user?.id;
-      if (userId) logAuditAction({ actionType: 'LOCATION_DELETED', module: 'iMaps', entityId: id, description: 'Lokasi dipadam', actorId: userId });
+      if (userId) logAuditAction({ actionType: 'LOCATION_DELETED', module: 'PolyMaps', entityId: id, description: 'Lokasi dipadam', actorId: userId });
       fetchData();
     } catch (error: any) {
       toast.error('Gagal memadam lokasi');
@@ -338,7 +338,7 @@ export function JppImapsAdmin() {
             <div className="w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center">
               <Map className="w-5 h-5 text-sky-400" />
             </div>
-            <h1 className="text-2xl font-black text-white tracking-tight">Pentadbiran iMaps</h1>
+            <h1 className="text-2xl font-black text-white tracking-tight">Pentadbiran PolyMaps</h1>
           </div>
           <p className="text-sm font-medium text-white/50">Urus koordinat bangunan dan panduan laluan dalaman kampus POLISAS</p>
         </div>

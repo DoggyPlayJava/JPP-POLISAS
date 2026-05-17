@@ -8,6 +8,9 @@ import { NotificationBell } from '@/components/ui/NotificationBell';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { QrCodeFab } from '@/components/jpp/QrCodeFab';
 import { BottomNav } from '@/components/layout/BottomNav';
+import { SystemTour } from '@/components/ui/SystemTour';
+import { HelpCircle } from 'lucide-react';
+import { useTour } from '@/hooks/useTour';
 
 const KEBAJIKAN_UNIT_LINKS = [
   { label: 'Hantar Aduan Kebajikan', path: '/kebajikan/buat-aduan' },
@@ -16,9 +19,10 @@ const KEBAJIKAN_UNIT_LINKS = [
 ];
 
 export function KebajikanLayout() {
-  const { isLoading, hasKebajikanAccess, hasKebajikanKKAccess } = useAuth();
+  const { isLoading, hasKebajikanAccess, hasKebajikanKKAccess, profile } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const { runTour, startTour, closeTour } = useTour('kebajikan_module_tour', false);
 
   // Tutup sidebar automatik bila tukar page di mobile
   useEffect(() => {
@@ -59,8 +63,36 @@ export function KebajikanLayout() {
     return <Navigate to="/kebajikan/buat-aduan" replace />;
   }
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const kebajikanTourSteps = [
+    {
+      target: 'body',
+      content: 'Selamat datang ke modul E-Kebajikan! Sistem pemantauan aduan dan penyelesaian masalah berpusat.',
+      title: 'E-Kebajikan 🤝',
+      placement: 'center' as const,
+      disableBeacon: true,
+    },
+    {
+      target: isMobile ? '.tour-mobile-hamburger' : '.tour-kebajikan-sidebar',
+      content: isMobile ? 'Gunakan menu ini untuk membuat aduan atau memantau status aduan anda.' : 'Akses semua keperluan e-kebajikan dari panel sisi ini. Buat aduan, semak status dan lihat statistik awam.',
+      title: 'Menu Navigasi 📑',
+      placement: isMobile ? 'bottom' as const : 'right' as const,
+    },
+    {
+      target: '.tour-kebajikan-mobile-nav',
+      content: 'Ruangan pantas navigasi untuk mengakses pelbagai fungsi ke arah kebajikan warga kampus.',
+      title: 'Navigasi Pantas 🚀',
+      placement: 'top' as const,
+    }
+  ];
+
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-950 text-slate-50 relative">
+    <div className="flex h-screen w-full bg-background overflow-hidden relative">
+      <SystemTour
+        run={runTour}
+        onClose={closeTour}
+        steps={kebajikanTourSteps}
+      />
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div 
@@ -82,15 +114,21 @@ export function KebajikanLayout() {
       <main className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-950 text-slate-50 relative min-w-0">
         <div className="lg:hidden flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-white/5 bg-slate-950/80 backdrop-blur-xl relative z-30">
           <div className="flex items-center gap-2">
+
             <button 
               onClick={() => setSidebarOpen(true)} 
-              className="p-2 -ml-2 text-white/50 hover:text-white transition-colors"
+              className="tour-mobile-hamburger p-2 -ml-2 text-white/50 hover:text-white transition-colors"
             >
               <Menu className="w-5 h-5" />
             </button>
             <span className="font-black text-[10px] uppercase tracking-widest text-[#2DD4BF] ml-1">E-Kebajikan</span>
           </div>
-          <NotificationBell variant="dark" />
+          <div className="flex items-center gap-3">
+            <button onClick={startTour} className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-all">
+              <HelpCircle className="w-4 h-4" />
+            </button>
+            <NotificationBell variant="dark" />
+          </div>
         </div>
 
         {/* Content Area */}
@@ -101,7 +139,9 @@ export function KebajikanLayout() {
 
         {/* QR Code FAB — untuk Exco Kebajikan */}
         <QrCodeFab unitLinks={KEBAJIKAN_UNIT_LINKS} />
-        <BottomNav onOpenSidebar={() => setSidebarOpen(true)} />
+        <div className="tour-kebajikan-mobile-nav">
+          <BottomNav onOpenSidebar={() => setSidebarOpen(true)} />
+        </div>
       </main>
     </div>
   );

@@ -305,7 +305,7 @@ export function AkademikDashboard() {
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.1 }}
-        className="relative overflow-hidden rounded-[2rem] p-6 border border-white/[0.06]"
+        className="tour-akademik-merit relative overflow-hidden rounded-[2rem] p-6 border border-white/[0.06]"
         style={{ background: `linear-gradient(135deg, ${hexToRgba(THEME, 0.15)}, ${hexToRgba('#60A5FA', 0.08)})` }}
       >
         <div className="absolute inset-0 opacity-5"
@@ -365,7 +365,7 @@ export function AkademikDashboard() {
       </motion.div>
 
       {/* ── 4 Stat Cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="tour-akademik-cgpa grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard label="Pencapaian"   value={stats.totalPencapaian} icon={Trophy}      color={THEME}      delay={0.0}  onClick={() => navigate('/akademik/pencapaian')} />
         <StatCard label="Disahkan"     value={stats.disahkan}        icon={CheckCircle}  color="#10B981"    delay={0.06} />
         <StatCard label="Menunggu"     value={stats.menunggu}        icon={Clock}        color={stats.menunggu > 0 ? '#F59E0B' : '#94A3B8'} delay={0.12} />

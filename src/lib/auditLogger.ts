@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase';
  *
  * Modul yang disokong:
  * - JPP Admin, Akademik, PolyRider, SUPSAS, KLK, PolyMart,
- *   iMaps, Karnival, Takwim, Settings, Announcement, Merit
+ *   PolyMaps, Karnival, Takwim, Settings, Announcement, Merit
  */
 
 export type AuditModule =
@@ -19,7 +19,7 @@ export type AuditModule =
   | 'SUPSAS'
   | 'KLK'
   | 'PolyMart'
-  | 'iMaps'
+  | 'PolyMaps'
   | 'Karnival'
   | 'Takwim'
   | 'Settings'

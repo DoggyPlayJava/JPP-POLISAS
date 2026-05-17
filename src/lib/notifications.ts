@@ -6,7 +6,7 @@
 import { supabase } from './supabase';
 import { API_BASE_URL } from './utils';
 
-export type NotificationModule = 'EKPP' | 'KEBAJIKAN' | 'AKADEMIK' | 'KEUSAHAWANAN' | 'JPP' | 'SYSTEM' | 'POLYMART' | 'KAMSIS' | 'KLK' | 'POLYRIDER';
+export type NotificationModule = 'EKPP' | 'KEBAJIKAN' | 'AKADEMIK' | 'KEUSAHAWANAN' | 'JPP' | 'SYSTEM' | 'POLYMART' | 'KAMSIS' | 'KLK' | 'POLYRIDER' | 'POLYTASK';
 
 export interface NotificationPayload {
   title: string;

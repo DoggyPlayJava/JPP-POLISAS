@@ -503,7 +503,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
   const handleCreate = async () => {
     if (!form.title) { toast.error('Tajuk diperlukan.'); return; }
     if (form.use_gps && (!form.location_lat || !form.location_lng)) {
-      toast.error('Sila isi koordinat iMaps jika guna perlindungan GPS.');
+      toast.error('Sila isi koordinat PolyMaps jika guna perlindungan GPS.');
       return;
     }
     
@@ -690,7 +690,7 @@ export function QrMeritManager({ themeColor = THEME }: { themeColor?: string }) 
               <div className="col-span-full pt-2 border-t border-white/[0.08] space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="block text-[9px] font-black uppercase tracking-widest text-emerald-400 mb-0.5">Perlindungan iMaps (Anti-Cheat)</label>
+                    <label className="block text-[9px] font-black uppercase tracking-widest text-emerald-400 mb-0.5">Perlindungan PolyMaps (Anti-Cheat)</label>
                     <p className="text-[10px] text-white/40">Gunakan semakan jarak lokasi & PIN ganti.</p>
                   </div>
                   <button type="button" onClick={() => field('use_gps', !form.use_gps)} 

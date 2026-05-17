@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSemesterInfo } from '@/types';
 
-export function IMapsModal() {
+export function PolyMapsModal() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const { profile } = useAuth();
@@ -19,7 +19,7 @@ export function IMapsModal() {
       if (semInfo.semester !== 1) return;
     }
 
-    const hasSeen = localStorage.getItem('has_seen_imaps_intro');
+    const hasSeen = localStorage.getItem('has_seen_polymaps_intro');
     if (!hasSeen) {
       // Delay slightly for better UX after login
       const timer = setTimeout(() => setIsOpen(true), 2000);
@@ -29,12 +29,12 @@ export function IMapsModal() {
 
   const handleClose = () => {
     setIsOpen(false);
-    localStorage.setItem('has_seen_imaps_intro', 'true');
+    localStorage.setItem('has_seen_polymaps_intro', 'true');
   };
 
   const handleGoToMaps = () => {
     handleClose();
-    navigate('/imaps');
+    navigate('/polymaps');
   };
 
   if (!isOpen) return null;
@@ -90,7 +90,7 @@ export function IMapsModal() {
               Sesat Cari Kelas? 😅
             </h2>
             <p className="text-slate-500 dark:text-slate-400 leading-relaxed mb-8">
-              Khas untuk pelajar Semester 1, kini anda boleh menggunakan <span className="font-bold text-blue-500">POLISAS iMaps</span>. Taip sahaja kod kelas (Contoh: A301), sistem akan tunjukkan laluan luar dan panduan dron bangunan tersebut!
+              Khas untuk pelajar Semester 1, kini anda boleh menggunakan <span className="font-bold text-blue-500">POLISAS PolyMaps</span>. Taip sahaja kod kelas (Contoh: A301), sistem akan tunjukkan laluan luar dan panduan dron bangunan tersebut!
             </p>
           </motion.div>
 
@@ -105,7 +105,7 @@ export function IMapsModal() {
               className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-colors shadow-lg shadow-blue-500/30"
             >
               <Navigation className="w-4 h-4" />
-              Cuba iMaps Sekarang
+              Cuba PolyMaps Sekarang
             </button>
             <button
               onClick={handleClose}

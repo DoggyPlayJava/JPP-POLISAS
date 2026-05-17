@@ -97,7 +97,7 @@ export function PortalNavbar({ isScrolled, karnivalActive, supsasActive, profile
 
         <div
           className={cn(
-            "flex items-center gap-3 pl-4 border-l cursor-pointer group transition-colors",
+            "tour-navbar-profile flex items-center gap-3 pl-4 border-l cursor-pointer group transition-colors",
             karnivalActive ? "border-pink-500/30" : supsasActive ? "border-amber-500/30" : "border-black/5 dark:border-white/10"
           )}
           onClick={() => setIsSidebarOpen(true)}

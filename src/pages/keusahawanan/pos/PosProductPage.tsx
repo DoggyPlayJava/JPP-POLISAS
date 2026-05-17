@@ -11,10 +11,12 @@ import {
   Plus, Search, Edit2, Trash2, Package, AlertTriangle,
   Eye, EyeOff, X, Camera, ChevronDown, ChevronUp,
   TrendingUp, Layers, Lightbulb, BarChart3, Info,
-  DollarSign, ShoppingBag,
+  DollarSign, ShoppingBag, HelpCircle
 } from 'lucide-react';
 import { type BusinessProduct, type CostItem } from '@/types';
 import toast from 'react-hot-toast';
+import { useTour } from '@/hooks/useTour';
+import { SystemTour } from '@/components/ui/SystemTour';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -600,6 +602,7 @@ export function PosProductPage() {
   const isOwner = isKeusahawananAdmin || selectedBusiness?.owner_id === user?.id;
 
   const pos = usePosData(businessId);
+  const { runTour, startTour, closeTour } = useTour('KEUSAHAWANAN_PRODUCT', !!businessId);
 
   const [search, setSearch]       = useState('');
   const [sortBy, setSortBy]       = useState<'name' | 'margin' | 'stock'>('name');
@@ -737,12 +740,17 @@ export function PosProductPage() {
             <div className="w-1 h-5 rounded-full" style={{ background: color }} />
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/50">POS</p>
           </div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground">Katalog Produk</h1>
+          <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
+            Katalog Produk
+            <button onClick={startTour} className="w-8 h-8 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
+              <HelpCircle className="w-4 h-4" />
+            </button>
+          </h1>
           <p className="text-sm text-muted-foreground mt-0.5">{pos.products.length} produk dalam katalog</p>
         </div>
         {isOwner && (
           <button onClick={openAdd}
-            className="flex items-center gap-2.5 h-12 px-6 rounded-2xl text-white text-xs font-black uppercase tracking-wider shadow-lg transition-all hover:brightness-110 active:scale-95"
+            className="tour-pos-product-add flex items-center gap-2.5 h-12 px-6 rounded-2xl text-white text-xs font-black uppercase tracking-wider shadow-lg transition-all hover:brightness-110 active:scale-95"
             style={{ background: color }}>
             <Plus className="w-4 h-4" /> Tambah Produk
           </button>
@@ -753,7 +761,7 @@ export function PosProductPage() {
       <PolymartAdsPromoBanner color={color} />
 
       {/* Search + Sort */}
-      <div className="flex gap-3">
+      <div className="tour-pos-product-category flex gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
           <input value={search} onChange={e => setSearch(e.target.value)}
@@ -812,7 +820,7 @@ export function PosProductPage() {
                   <p className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/40 mb-0.5">{p.category}</p>
                   <h3 className="text-sm font-black text-foreground leading-tight line-clamp-2 mb-2">{p.name}</h3>
 
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="tour-pos-product-stock flex items-center justify-between mb-1">
                     <span className="text-base font-black" style={{ color }}>{`RM ${p.price.toFixed(2)}`}</span>
                     <span className="text-xs text-muted-foreground">Stok: {p.stock_quantity}</span>
                   </div>
@@ -1055,6 +1063,8 @@ export function PosProductPage() {
           )}
         </AnimatePresence>
       , document.body)}
+
+      <SystemTour run={runTour} onClose={closeTour} tourKey="KEUSAHAWANAN_PRODUCT" />
     </div>
   );
 }

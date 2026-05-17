@@ -223,7 +223,7 @@ export function FloatingAiChat() {
     if (p.startsWith('/kebajikan')) return ["Apa status aduan saya?", "Bagaimana nak lapor kerosakan fasiliti?", "Berapa aduan belum diselesaikan?"];
     if (p.startsWith('/polymart')) return ["Di mana pesanan makanan saya?", "Macam mana nak bayar pesanan?", "Ada diskaun tak hari ini?"];
     if (p.startsWith('/aktiviti') || p.startsWith('/kelab')) return ["Bila program kelab saya seterusnya?", "Ada apa dalam takwim minggu depan?", "Berapa lama lagi sebelum cuti?"];
-    if (p.startsWith('/imaps')) return ["Cari bilik kelas saya", "Kafe mana yang buka sekarang?", "Di mana surau terdekat?"];
+    if (p.startsWith('/polymaps')) return ["Cari bilik kelas saya", "Kafe mana yang buka sekarang?", "Di mana surau terdekat?"];
     if (p.startsWith('/polyrider')) return ["Cara tempah perjalanan baru?", "Apa itu carpool dan macam mana guna?", "Macam mana nak daftar jadi rider?"];
     return ["Bila cuti semester seterusnya?", "Ada apa dalam takwim minggu depan?", "Bantu drafkan kertas kerja laporan."];
   }, [location.pathname, hasKebajikanAccess]);
@@ -485,13 +485,13 @@ export function FloatingAiChat() {
               };
             }
           }
-          // ─ 2G. DATA iMAPS ─────────────────────────────────
-          else if (p.startsWith('/imaps')) {
+          // ─ 2G. DATA POLYMAPS ─────────────────────────────────
+          else if (p.startsWith('/polymaps')) {
             try {
-              const raw = sessionStorage.getItem('nexus_imaps_ctx');
+              const raw = sessionStorage.getItem('nexus_polymaps_ctx');
               if (raw) {
                 const s = JSON.parse(raw);
-                ctx.iMapsInfo = {
+                ctx.PolyMapsInfo = {
                   activeBuildingName: s.activeBuildingName ?? undefined,
                   activeBuildingCode: s.activeBuildingCode ?? undefined,
                   activeBuildingZone: s.activeBuildingZone ?? undefined,
@@ -500,7 +500,7 @@ export function FloatingAiChat() {
                   targetRoomCode: s.targetRoomCode ?? undefined,
                 };
               } else {
-                ctx.iMapsInfo = {}; // user on iMaps but no building selected
+                ctx.PolyMapsInfo = {}; // user on PolyMaps but no building selected
               }
             } catch { /* silent fail — corrupt sessionStorage */ }
           }
@@ -894,9 +894,9 @@ export function FloatingAiChat() {
     { icon: '💡', label: 'Idea Bisnes', prompt: 'Ada cadangan bisnes menarik untuk student kampus?' }
   ];
 
-  // ── iMaps quick-action chips (dynamic by state) ──────────────────────────
-  const getImapsChips = (): { icon: string; label: string; prompt: string }[] => {
-    const im = chatContext?.iMapsInfo;
+  // ── PolyMaps quick-action chips (dynamic by state) ──────────────────────────
+  const getPolyMapsChips = (): { icon: string; label: string; prompt: string }[] => {
+    const im = chatContext?.PolyMapsInfo;
     if (im?.isNavigating && im.activeBuildingName) return [
       { icon: '📍', label: 'Jauh lagi?', prompt: `Saya sedang navigate ke ${im.activeBuildingName}. Jauh lagi tak?` },
       { icon: '🗺️', label: 'Langkah seterusnya', prompt: 'Tunjukkan langkah seterusnya untuk sampai ke destinasi.' },
@@ -908,7 +908,7 @@ export function FloatingAiChat() {
       { icon: '🗂️', label: 'Bilik dalam bangunan', prompt: `Ada bilik/lokasi apa dalam ${im.activeBuildingName}?` },
     ];
     return [
-      { icon: '🏫', label: 'Cari kelas saya', prompt: 'Macam mana nak cari bilik kelas saya di iMaps?' },
+      { icon: '🏫', label: 'Cari kelas saya', prompt: 'Macam mana nak cari bilik kelas saya di PolyMaps?' },
       { icon: '🍽️', label: 'Kafe buka?', prompt: 'Kafe mana yang buka sekarang di kampus?' },
       { icon: '🕌', label: 'Surau terdekat', prompt: 'Di mana surau terdekat pada lokasi saya?' },
     ];
@@ -1229,10 +1229,10 @@ export function FloatingAiChat() {
                   ))}
                 </div>
               )}
-              {/* iMaps quick-action chips */}
-              {location.pathname.startsWith('/imaps') && !isExcoMode && (
+              {/* PolyMaps quick-action chips */}
+              {location.pathname.startsWith('/polymaps') && !isExcoMode && (
                 <div className="flex gap-1.5 overflow-x-auto pb-2 mb-2 scrollbar-hide">
-                  {getImapsChips().map((chip) => (
+                  {getPolyMapsChips().map((chip) => (
                     <button
                       key={chip.label}
                       onClick={() => setInputValue(chip.prompt)}

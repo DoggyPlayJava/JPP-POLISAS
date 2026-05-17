@@ -509,7 +509,7 @@ export function PolyMartHome() {
       )}
 
       {/* Product grid section */}
-      <section>
+      <section className="tour-polymart-home">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-lg flex items-center justify-center" style={{ background: PM_LIGHT }}>

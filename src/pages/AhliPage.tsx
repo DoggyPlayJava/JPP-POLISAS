@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, UserPlus, Mail, MoreVertical, Trash2, Check, X, Clock, Users, Hash } from 'lucide-react';
+import { Search, UserPlus, Mail, MoreVertical, Trash2, Check, X, Clock, Users, Hash, HelpCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,8 @@ import { sendNotificationToUser } from '@/lib/notifications';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { SystemTour } from '@/components/ui/SystemTour';
+import { useTour } from '@/hooks/useTour';
 import {
   Empty,
   EmptyHeader,
@@ -65,6 +67,8 @@ export function AhliPage() {
   const [search, setSearch] = useState('');
   const [kickReason, setKickReason] = useState('');
   const [kickingMember, setKickingMember] = useState<any | null>(null);
+
+  const { runTour, startTour, closeTour } = useTour('EKPP_AHLI', !!profile);
 
   // ✅ canApprove — boleh approve jika Presiden, Penasihat, atau JPP
   const canApprove = isPresident || effectiveRole === 'CLUB_ADVISOR' || 
@@ -307,20 +311,28 @@ export function AhliPage() {
               Urus permohonan pendaftaran baru dan senarai jawatankuasa sedia ada untuk kelab anda.
             </p>
           </div>
-          {(effectiveRole === 'CLUB_PRESIDENT' || effectiveRole === 'CLUB_ADVISOR' || effectiveRole?.includes('JPP')) && (
-             <Button onClick={() => navigate('/urus-kelab')} className="w-full md:w-auto bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-black text-[11px] uppercase tracking-widest px-8 h-12 shadow-xl shadow-primary/20 shrink-0">
-               <UserPlus className="w-4 h-4 mr-2" /> Urus Jawatankuasa
-             </Button>
-          )}
+          <div className="flex gap-2 w-full md:w-auto">
+            {(effectiveRole === 'CLUB_PRESIDENT' || effectiveRole === 'CLUB_ADVISOR' || effectiveRole?.includes('JPP')) && (
+               <Button onClick={() => navigate('/urus-kelab')} className="w-full md:w-auto bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-black text-[11px] uppercase tracking-widest px-8 h-12 shadow-xl shadow-primary/20 shrink-0">
+                 <UserPlus className="w-4 h-4 mr-2" /> Urus Jawatankuasa
+               </Button>
+            )}
+            <button
+              onClick={startTour}
+              className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-500 shadow-lg border border-blue-200 dark:border-blue-800/50 flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-transform"
+            >
+              <HelpCircle className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </motion.div>
 
       <Tabs defaultValue="senarai" className="w-full">
         <TabsList className="bg-muted/40 p-1 rounded-2xl mb-8 border border-border/50 shadow-inner flex-nowrap overflow-x-auto no-scrollbar justify-start sm:justify-start w-full sm:w-fit h-auto">
-          <TabsTrigger value="senarai" className="rounded-xl px-6 sm:px-8 py-3 font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap">
+          <TabsTrigger value="senarai" className="tour-senarai-mt rounded-xl px-6 sm:px-8 py-3 font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap">
             Senarai Jawatankuasa
           </TabsTrigger>
-          <TabsTrigger value="pending" className="rounded-xl px-6 sm:px-8 py-3 font-black text-[10px] uppercase tracking-widest transition-all relative whitespace-nowrap">
+          <TabsTrigger value="pending" className="tour-permohonan-baru rounded-xl px-6 sm:px-8 py-3 font-black text-[10px] uppercase tracking-widest transition-all relative whitespace-nowrap">
             Permohonan Baru
             {pendingMembers.length > 0 && (
               <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white flex items-center justify-center rounded-full text-[10px] animate-bounce border-2 border-background">
@@ -461,6 +473,8 @@ export function AhliPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <SystemTour run={runTour} onClose={closeTour} tourKey="EKPP_AHLI" />
     </div>
   );
 }

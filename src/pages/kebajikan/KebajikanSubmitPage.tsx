@@ -2,9 +2,9 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   HeartHandshake, ChevronRight, ChevronLeft, Building2,
-  Dumbbell, Coffee, Wifi, MoreHorizontal, Check,
-  Upload, X, AlertCircle, CheckCircle2, Clock,
-  TrendingUp, ListChecks, ArrowUpRight, Star,
+  Dumbbell, Coffee, Wifi, MoreHorizontal, Check, CheckCircle2, Clock,
+  TrendingUp, ListChecks, ArrowUpRight, Star, HelpCircle,
+  Upload, AlertCircle, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
@@ -21,6 +21,8 @@ import {
 } from '@/types';
 import { cn } from '@/lib/utils';
 import { hexToRgba } from '@/lib/utils';
+import { SystemTour } from '@/components/ui/SystemTour';
+import { useTour } from '@/hooks/useTour';
 
 const TEAL = KEBAJIKAN_THEME_COLOR;
 
@@ -106,6 +108,8 @@ export function KebajikanSubmitPage() {
     id: string; ticket_no: string; title: string; status: string;
   } | null>(null);
   const [bypassDuplicate, setBypassDuplicate] = useState(false);
+
+  const { runTour, startTour, closeTour } = useTour('KEBAJIKAN_SUBMIT', !!profile);
 
   const [form, setForm] = useState<FormData>({
     full_name:    profile?.full_name || '',
@@ -326,6 +330,12 @@ export function KebajikanSubmitPage() {
           <ChevronLeft className="w-3.5 h-3.5" />Portal JPP
         </Link>
         <div className="flex items-center gap-2">
+          <button
+            onClick={startTour}
+            className="w-8 h-8 rounded-full bg-white/5 text-white/40 hover:text-white/80 flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-transform"
+          >
+            <HelpCircle className="w-4 h-4" />
+          </button>
           <HeartHandshake className="w-4 h-4" style={{ color: TEAL }} />
           <span className="font-black text-xs uppercase tracking-widest text-white/80">E-Kebajikan</span>
         </div>
@@ -409,7 +419,7 @@ export function KebajikanSubmitPage() {
               <p className="text-xs text-white/40">Pilih kategori yang paling sesuai dengan aduan anda</p>
             </div>
 
-            <div className="grid grid-cols-1 gap-3">
+            <div className="tour-aduan-kategori grid grid-cols-1 gap-3">
               {CATEGORIES.map(cat => {
                 const isSelected = form.category === cat.key;
                 return (
@@ -539,7 +549,7 @@ export function KebajikanSubmitPage() {
                 </div>
 
                 {/* Image Upload */}
-                <div>
+                <div className="tour-aduan-gambar">
                   <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-2 block">Gambar Sokongan (maks. 3)</label>
                   <div className="flex gap-3 flex-wrap">
                     {images.map((img, i) => (
@@ -694,6 +704,8 @@ export function KebajikanSubmitPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <SystemTour run={runTour} onClose={closeTour} tourKey="KEBAJIKAN_SUBMIT" />
     </div>
   );
 }

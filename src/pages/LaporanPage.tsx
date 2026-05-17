@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Upload, FileText, RefreshCw, Lock, BookOpen, Users, Calendar, Award, Zap, CalendarDays
+  Upload, FileText, RefreshCw, Lock, BookOpen, Users, Calendar, Award, Zap, CalendarDays, HelpCircle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,8 @@ import { pdf } from '@react-pdf/renderer';
 import { LaporanPDFTemplate } from '@/components/reports/LaporanPDFTemplate';
 import { normalizeReportData } from '@/lib/report-utils';
 import { uploadPdfToDrive } from '@/lib/driveUpload';
+import { SystemTour } from '@/components/ui/SystemTour';
+import { useTour } from '@/hooks/useTour';
 
 const ALL_DOC_TYPES = [
   { value: 'Laporan Aktiviti', label: 'Laporan Bulanan (Auto-Jana)', icon: Zap },
@@ -66,6 +68,8 @@ export function LaporanPage() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [logoData, setLogoData] = useState<string | undefined>(undefined);
   const [presidentName, setPresidentName] = useState<string>('PRESIDEN KELAB');
+
+  const { runTour, startTour, closeTour } = useTour('EKPP_LAPORAN', !!profile);
 
   // ── Derived values ────────────────────────────────────────────────
   const monthLabel = format(parseISO(`${targetMonth}-01`), 'MMMM yyyy', { locale: ms }).toUpperCase();
@@ -322,13 +326,21 @@ export function LaporanPage() {
 
   return (
     <div className="page-container space-y-10">
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-        <Badge className="mb-3 bg-primary/10 text-primary border-none">{clubName}</Badge>
-        <h1 className="text-5xl font-black tracking-tighter gradient-text">Pusat Dokumen</h1>
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-start gap-4">
+        <div>
+          <Badge className="mb-3 bg-primary/10 text-primary border-none">{clubName}</Badge>
+          <h1 className="text-5xl font-black tracking-tighter gradient-text">Pusat Dokumen</h1>
+        </div>
+        <button
+          onClick={startTour}
+          className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-500 shadow-lg border border-blue-200 dark:border-blue-800/50 flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-transform mt-2"
+        >
+          <HelpCircle className="w-5 h-5" />
+        </button>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        <Card className="lg:col-span-2 bento-card border-none">
+        <Card className="tour-tab-laporan-semua lg:col-span-2 bento-card border-none">
           <CardHeader><CardTitle>Pengurusan Laporan</CardTitle></CardHeader>
           <CardContent className="space-y-6">
             <Select value={reportType} onValueChange={setReportType}>
@@ -420,7 +432,7 @@ export function LaporanPage() {
             <AnimatePresence mode="popLayout">
               {reports.filter(r => filterTab === 'arkib' ? r.is_archived : !r.is_archived).map((r) => (
                 <motion.div key={r.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}>
-                  <Card className={cn("bento-card border-none p-5", r.is_archived && "opacity-70 grayscale-[20%] border-border/50")}>
+                  <Card className={cn("tour-laporan-card bento-card border-none p-5", r.is_archived && "opacity-70 grayscale-[20%] border-border/50")}>
                     <div className="flex flex-col gap-3">
                       <div className="flex justify-between items-start">
                         <div className="flex gap-4">
@@ -471,6 +483,8 @@ export function LaporanPage() {
           onSubmit={handleConfirmGenerate}
         />
       )}
+
+      <SystemTour run={runTour} onClose={closeTour} tourKey="EKPP_LAPORAN" />
     </div>
   );
 }

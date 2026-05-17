@@ -9,8 +9,10 @@ import { hexToRgba } from '@/lib/utils';
 import {
   ShoppingCart, Search, Plus, Minus, Trash2, X, Percent, Tag,
   CreditCard, Banknote, QrCode, CheckCircle2, FileText, AlertTriangle,
-  ShieldOff, Package, ChevronDown, RotateCcw, Ticket,
+  ShieldOff, Package, ChevronDown, RotateCcw, Ticket, HelpCircle
 } from 'lucide-react';
+import { useTour } from '@/hooks/useTour';
+import { SystemTour } from '@/components/ui/SystemTour';
 import { type BusinessProduct, type BusinessTransactionItem, type BusinessPromotion } from '@/types';
 import toast from 'react-hot-toast';
 import { EInvoiceModal } from '@/components/keusahawanan/EInvoiceModal';
@@ -151,6 +153,7 @@ export function PosOrderPage() {
   const activeBusiness = selectedBusiness;
 
   const pos = usePosData(businessId, isBusinessLoading);
+  const { runTour, startTour, closeTour } = useTour('KEUSAHAWANAN_ORDER', !!businessId);
 
   // ── State ─────────────────────────────────────────────────────────────────
 
@@ -495,13 +498,16 @@ export function PosOrderPage() {
         </div>
 
         {/* ── RIGHT: Cart & Checkout ─────────────────────────────────────── */}
-        <div className="w-full lg:w-[380px] xl:w-[420px] flex flex-col bg-card border-t lg:border-t-0 border-border/50 max-h-[55vh] lg:max-h-none">
+        <div className="tour-pos-order-create w-full lg:w-[380px] xl:w-[420px] flex flex-col bg-card border-t lg:border-t-0 border-border/50 max-h-[55vh] lg:max-h-none">
           
           {/* Cart Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
             <div className="flex items-center gap-2.5">
               <ShoppingCart className="w-4 h-4" style={{ color }} />
               <span className="text-xs font-black uppercase tracking-wider text-foreground">Troli</span>
+              <button onClick={startTour} className="ml-1 w-6 h-6 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
+                <HelpCircle className="w-3.5 h-3.5" />
+              </button>
               {cart.length > 0 && (
                 <span className="w-5 h-5 rounded-full text-[10px] font-black text-white flex items-center justify-center" style={{ background: color }}>
                   {cart.length}
@@ -540,7 +546,7 @@ export function PosOrderPage() {
             </div>
 
             {cart.length > 0 && (
-              <div className="px-5 pb-5 space-y-4">
+              <div className="tour-pos-order-payment px-5 pb-5 space-y-4">
                 {/* Customer info */}
                 <div className="space-y-2">
                   <input value={customerName} onChange={e => setCustomerName(e.target.value)}
@@ -820,6 +826,8 @@ export function PosOrderPage() {
           )}
         </AnimatePresence>
       , document.body)}
+
+      <SystemTour run={runTour} onClose={closeTour} tourKey="KEUSAHAWANAN_ORDER" />
     </div>
   );
 }

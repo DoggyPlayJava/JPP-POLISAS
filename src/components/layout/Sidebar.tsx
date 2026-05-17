@@ -157,7 +157,7 @@ function EkppSidebarContent() {
   const isMemberOnly = !isSuperAdmin && !isPresident;
 
   return (
-    <nav className="flex-1 py-6 px-3 space-y-0.5 overflow-y-auto scrollbar-hide">
+    <nav className="tour-kelab-sidebar flex-1 py-6 px-3 space-y-0.5 overflow-y-auto scrollbar-hide">
       {/* Menu Utama */}
       <p className="px-3 mb-3 text-[10px] font-black uppercase tracking-[0.25em] text-white/25">Menu Utama</p>
       {EKPP_NAV.map(item => (

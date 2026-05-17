@@ -271,7 +271,7 @@ export function JppSidebar() {
           { icon: Users,           label: 'Ahli JPP',        href: '/jpp/members',  end: false },
           { icon: BarChart3,       label: 'Sistem Keseluruhan', href: '/jpp/overview', end: false },
           { icon: CalendarDays,    label: 'Takwim Global',   href: '/jpp/takwim',   end: false },
-          { icon: Map,             label: 'Pentadbiran iMaps', href: '/jpp/imaps',  end: false },
+          { icon: Map,             label: 'Pentadbiran PolyMaps', href: '/jpp/polymaps',  end: false },
         ].map(item => (
           <NavLink
             key={item.href}
@@ -479,6 +479,7 @@ export function JppSidebar() {
                 if (code === 'KEBAJIKAN') {
                   subItems.push({ icon: LayoutDashboard, label: 'Dashboard Tiket',  href: '/kebajikan' });
                   subItems.push({ icon: ClipboardCheck,  label: 'Senarai Tiket',    href: '/kebajikan/tiket' });
+                  subItems.push({ icon: ShieldCheck,     label: 'Moderasi Awam',    href: '/jpp/polyservices' });
                   subItems.push({ icon: FileText,         label: 'Laporan Bulanan',  href: '/kebajikan/laporan' });
                 }
                 // SUPSAS shortcuts untuk SRK
@@ -503,6 +504,10 @@ export function JppSidebar() {
                   if (code === 'KK') {
                     subItems.push({ icon: Building2, label: 'Rujukan Asrama', href: '/jpp/asrama' });
                     subItems.push({ icon: QrCode,    label: 'QR Merit',       href: '/jpp/unit/kk?tab=qr' });
+                  }
+                  if (code === 'KEBAJIKAN') {
+                    subItems.push({ icon: LayoutDashboard, label: 'Dashboard Tiket',  href: '/kebajikan' });
+                    subItems.push({ icon: ShieldCheck,     label: 'Moderasi Awam',    href: '/jpp/polyservices' });
                   }
                 }
                 // Semak laporan exco unit ini (universal)

@@ -9,9 +9,11 @@ import { hexToRgba } from '@/lib/utils';
 import {
   Camera, Save, Users, ShieldCheck, Trash2, Check, X, Clock,
   Activity, Building2, ToggleLeft, ToggleRight, UserPlus, Logs,
-  Tag, Ticket, BadgePercent, Plus, Calendar, ShieldAlert
+  Tag, Ticket, BadgePercent, Plus, Calendar, ShieldAlert, HelpCircle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useTour } from '@/hooks/useTour';
+import { SystemTour } from '@/components/ui/SystemTour';
 import { sendNotificationToUser } from '@/lib/notifications';
 import { type BusinessPromotion, type PosDiscountType } from '@/types';
 import { BusinessJadual, SesiBusiness } from './BusinessShiftModule';
@@ -45,6 +47,7 @@ export function UrusPerniagaanPage() {
   const { color } = useExcoTheme();
   const { user, profile, isSuperAdmin } = useAuth();
   const { selectedBusiness, isKeusahawananAdmin, refreshBusinesses } = useBusinessSwitcher();
+  const { runTour, startTour, closeTour } = useTour('KEUSAHAWANAN_URUS', !!selectedBusiness?.id);
 
   const [businessData, setBusinessData] = useState<any>(null);
   const [members, setMembers]           = useState<any[]>([]);
@@ -349,9 +352,16 @@ export function UrusPerniagaanPage() {
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/50">e-Keusahawanan</p>
         </div>
         <div className="flex items-end justify-between">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-foreground">Urus Perniagaan</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">{businessData?.name}</p>
+          <div className="flex items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
+                Urus Perniagaan
+                <button onClick={startTour} className="w-8 h-8 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
+                  <HelpCircle className="w-4 h-4" />
+                </button>
+              </h1>
+              <p className="text-sm text-muted-foreground mt-0.5">{businessData?.name}</p>
+            </div>
           </div>
           {pending.length > 0 && (
             <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/20">
@@ -363,14 +373,20 @@ export function UrusPerniagaanPage() {
       </motion.div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 bg-muted/30 p-1 rounded-2xl overflow-x-auto">
-        {tabs.map(({ key, label, icon: Icon }) => (
-          <button key={key} onClick={() => setActiveTab(key)}
-            className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all min-w-[80px]"
-            style={activeTab === key ? { background: color, color: '#fff' } : { color: 'hsl(var(--muted-foreground)/0.6)' }}>
-            <Icon className="w-3.5 h-3.5" /> {label}
-          </button>
-        ))}
+      <div className="tour-urus-nav flex gap-1 bg-muted/30 p-1 rounded-2xl overflow-x-auto">
+        {tabs.map(({ key, label, icon: Icon }) => {
+          let tourClass = '';
+          if (key === 'staff') tourClass = 'tour-urus-add';
+          if (key === 'ciri') tourClass = 'tour-urus-setting';
+
+          return (
+            <button key={key} onClick={() => setActiveTab(key)}
+              className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all min-w-[80px] ${tourClass}`}
+              style={activeTab === key ? { background: color, color: '#fff' } : { color: 'hsl(var(--muted-foreground)/0.6)' }}>
+              <Icon className="w-3.5 h-3.5" /> {label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Tab content */}
@@ -898,6 +914,7 @@ export function UrusPerniagaanPage() {
         )}
       </AnimatePresence>
 
+      <SystemTour run={runTour} onClose={closeTour} tourKey="KEUSAHAWANAN_URUS" />
     </div>
   );
 }

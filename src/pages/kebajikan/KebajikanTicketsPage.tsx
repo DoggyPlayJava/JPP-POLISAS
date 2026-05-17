@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
-  Search, Filter, ChevronRight, AlertTriangle, Clock,
-  CheckCircle2, XCircle, RefreshCw, MoreHorizontal, SortAsc, LayoutGrid, Building2, Coffee, Wifi, Box
+  CheckCircle2, XCircle, RefreshCw, MoreHorizontal, SortAsc, LayoutGrid, Building2, Coffee, Wifi, Box, HelpCircle
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ms } from 'date-fns/locale';
@@ -18,6 +17,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { hexToRgba } from '@/lib/utils';
+import { SystemTour } from '@/components/ui/SystemTour';
+import { useTour } from '@/hooks/useTour';
 
 const TEAL  = KEBAJIKAN_THEME_COLOR;
 const ALL_STATUSES: KebajikanTicketStatus[] = ['NEW','IN_PROGRESS','WAITING_INFO','PENDING_EXTERNAL','DELEGATED','ESCALATED','REOPENED','RESOLVED','CLOSED','CANCELLED'];
@@ -34,6 +35,8 @@ export function KebajikanTicketsPage() {
   );
   const [catFilter, setCatFilter]   = useState('ALL');
   const [showFilter, setShowFilter] = useState(false);
+
+  const { runTour, startTour, closeTour } = useTour('KEBAJIKAN_TICKETS', !!user);
 
   const fetchTickets = useCallback(async () => {
     setLoading(true);
@@ -104,9 +107,17 @@ export function KebajikanTicketsPage() {
             {newCount > 0 && <span className="ml-2 font-black" style={{ color: TEAL }}>· {newCount} baru</span>}
           </p>
         </div>
-        <Button onClick={() => setShowFilter(!showFilter)} variant="outline" className="h-10 px-5 text-xs font-black border-white/10 hover:bg-white/[0.05] text-slate-300 rounded-xl gap-2 shadow-lg backdrop-blur-md">
-          <Filter className="w-4 h-4" /> Tapis
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button onClick={() => setShowFilter(!showFilter)} variant="outline" className="h-10 px-5 text-xs font-black border-white/10 hover:bg-white/[0.05] text-slate-300 rounded-xl gap-2 shadow-lg backdrop-blur-md">
+            <Filter className="w-4 h-4" /> Tapis
+          </Button>
+          <button
+            onClick={startTour}
+            className="w-10 h-10 rounded-full bg-white/5 text-slate-400 hover:text-slate-200 border border-white/10 flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-transform"
+          >
+            <HelpCircle className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -152,7 +163,7 @@ export function KebajikanTicketsPage() {
       </AnimatePresence>
 
       {/* Ticket list */}
-      <div className="relative z-10">
+      <div className="tour-ticket-status relative z-10">
         {loading ? (
           <div className="space-y-4">
             {[1,2,3,4,5].map(i => <div key={i} className="h-24 rounded-3xl bg-white/[0.02] animate-pulse border border-white/5" />)}
@@ -203,6 +214,8 @@ export function KebajikanTicketsPage() {
           </div>
         )}
       </div>
+
+      <SystemTour run={runTour} onClose={closeTour} tourKey="KEBAJIKAN_TICKETS" />
     </div>
   );
 }

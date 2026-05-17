@@ -24,6 +24,8 @@ import {
   useBusinessSwitcher,
 } from '@/contexts/BusinessSwitcherContext';
 import { BottomNav } from '@/components/layout/BottomNav';
+import { SystemTour } from '@/components/ui/SystemTour';
+import { useTour } from '@/hooks/useTour';
 
 const KEUSAHAWANAN_UNIT_LINKS = [
   { label: 'Dashboard Perniagaan', path: '/keusahawanan' },
@@ -56,10 +58,7 @@ const navItems = [
   { icon: History,         label: 'Sejarah Transaksi', href: '/keusahawanan/pos/history',     jppOnly: false, ownerOnly: false, posSection: false },
   { icon: Settings2,       label: 'Urus Perniagaan',   href: '/keusahawanan/urus-perniagaan', jppOnly: false, ownerOnly: true,  posSection: false },
   // Lain-lain
-  { icon: Lightbulb,       label: 'Cadangan Idea',     href: '/keusahawanan/idea',            jppOnly: false, ownerOnly: false, posSection: false },
-  { icon: Award,           label: 'Geran & Hadiah',    href: '/keusahawanan/geran',           jppOnly: false, ownerOnly: false, posSection: false },
-  { icon: FileText,        label: 'Laporan',           href: '/keusahawanan/laporan',         jppOnly: false, ownerOnly: false, posSection: false },
-  { icon: Settings,        label: 'Tetapan',           href: '/tetapan',                      jppOnly: false, ownerOnly: false, posSection: false },
+  { icon: Building2,       label: 'Sertai / Cipta Perniagaan', href: '/keusahawanan/onboarding',      jppOnly: false, ownerOnly: false, posSection: false },
 ];
 
 
@@ -315,6 +314,9 @@ export function KeusahawananLayout() {
   const [themeColor, setThemeColor] = useState(DEFAULT_COLOR);
   const [moduleEnabled, setModuleEnabled] = useState<boolean | null>(null);
 
+  // Gunakan hook useTour supaya logik localStorage & auto-start lebih robust
+  const { runTour, startTour, closeTour } = useTour('keusahawanan_module_tour', false);
+
   useEffect(() => {
     supabase.from('portal_settings').select('color, is_enabled').eq('exco_module', MODULE_ID).single()
       .then(({ data }) => {
@@ -322,6 +324,36 @@ export function KeusahawananLayout() {
         setModuleEnabled(data?.is_enabled ?? false);
       });
   }, []);
+
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  const keusahawananTourSteps = [
+    {
+      target: 'body',
+      content: 'Selamat datang ke modul e-Keusahawanan! Di sini anda boleh menguruskan perniagaan, rekod kewangan, dan sistem POS.',
+      title: 'e-Keusahawanan 💡',
+      placement: 'center' as const,
+      disableBeacon: true,
+    },
+    {
+      target: isMobile ? '.tour-mobile-hamburger' : '.tour-keusahawanan-sidebar',
+      content: isMobile ? 'Gunakan menu ini untuk mengakses sistem POS, statistik, senarai perniagaan, dan banyak lagi.' : 'Pilih fungsi yang diinginkan dari senarai menu ini termasuk sistem POS pintar kami.',
+      title: 'Navigasi Penuh 📑',
+      placement: isMobile ? 'bottom' as const : 'right' as const,
+    },
+    {
+      target: '.tour-keusahawanan-quickpos',
+      content: 'Tekan pautan ini untuk akses terus ke mesin Kaunter Jualan (POS) bagi merekod setiap transaksi pelanggan.',
+      title: 'Akses Pantas POS 🛒',
+      placement: 'bottom' as const,
+    },
+    {
+      target: '.tour-keusahawanan-stats',
+      content: 'Prestasi perniagaan, carta sasaran bulanan dan kutipan dipaparkan di ruang jualan ini.',
+      title: 'Prestasi Bisnes 📈',
+      placement: 'bottom' as const,
+    }
+  ];
 
   useEffect(() => { setIsSidebarOpen(false); }, [location.pathname]);
 
@@ -354,6 +386,11 @@ export function KeusahawananLayout() {
 
   return (
     <BusinessSwitcherProvider>
+      <SystemTour
+        run={runTour}
+        onClose={closeTour}
+        steps={keusahawananTourSteps}
+      />
       <LayoutInner
         themeColor={themeColor}
         isSidebarOpen={isSidebarOpen}
@@ -361,6 +398,7 @@ export function KeusahawananLayout() {
         moduleEnabled={moduleEnabled}
         isSuperAdmin={isSuperAdmin}
         hasKeusahawananAccess={hasKeusahawananAccess}
+        startTour={startTour}
       />
     </BusinessSwitcherProvider>
   );
@@ -369,7 +407,7 @@ export function KeusahawananLayout() {
 // ── Inner layout (inside BusinessSwitcherProvider) ─────────────────────────────
 
 function LayoutInner({
-  themeColor, isSidebarOpen, setIsSidebarOpen, moduleEnabled, isSuperAdmin, hasKeusahawananAccess,
+  themeColor, isSidebarOpen, setIsSidebarOpen, moduleEnabled, isSuperAdmin, hasKeusahawananAccess, startTour
 }: {
   themeColor: string;
   isSidebarOpen: boolean;
@@ -377,6 +415,7 @@ function LayoutInner({
   moduleEnabled: boolean | null;
   isSuperAdmin: boolean;
   hasKeusahawananAccess: boolean;
+  startTour: () => void;
 }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -403,7 +442,7 @@ function LayoutInner({
 
         {/* Sidebar */}
         <aside className={cn(
-          'fixed inset-y-0 left-0 z-[140] w-64 transform transition-transform duration-300 ease-in-out',
+          'tour-keusahawanan-sidebar fixed inset-y-0 left-0 z-[140] w-64 transform transition-transform duration-300 ease-in-out',
           'md:relative md:translate-x-0 md:flex-shrink-0',
           isSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
         )}>
@@ -423,7 +462,7 @@ function LayoutInner({
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setIsSidebarOpen(true)}
-                className="md:hidden p-2 -ml-2 rounded-xl transition-all active:scale-95 bg-muted/30 text-foreground"
+                className="tour-mobile-hamburger md:hidden p-2 -ml-2 rounded-xl transition-all active:scale-95 bg-muted/30 text-foreground"
               >
                 <Menu className="w-5 h-5" />
               </button>
@@ -466,9 +505,17 @@ function LayoutInner({
                        <Button 
                           variant="outline" 
                           onClick={() => window.open('https://wa.me/601139413699', '_blank')}
-                          className="w-full rounded-xl h-10 font-black text-[9px] uppercase tracking-widest gap-2 bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20 shadow-none"
+                          className="w-full rounded-xl h-10 font-black text-[9px] uppercase tracking-widest gap-2 bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20 shadow-none mb-2"
                        >
                           <Send size={12} /> WhatsApp JPP Support
+                       </Button>
+
+                       <Button 
+                          variant="outline" 
+                          onClick={() => { startTour(); document.body.click(); }}
+                          className="w-full rounded-xl h-10 font-black text-[9px] uppercase tracking-widest gap-2 bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20 shadow-none"
+                       >
+                          <HelpCircle size={12} /> Panduan Sistem Tour
                        </Button>
                     </div>
                   </div>

@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { EXCO_MODULES, getExcoColor, ExcoColorSetting } from '@/config/excoModules';
 
-import { Sparkles, Building2 } from 'lucide-react';
+import { Sparkles, Building2, HelpCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { cn, getMalaysianNickname } from '@/lib/utils';
 import { PortalSidebar } from '@/components/layout/PortalSidebar';
@@ -24,6 +24,9 @@ import { QuickActions } from '@/components/portal/QuickActions';
 import { PortalNavbar } from '@/components/portal/PortalNavbar';
 import { PortalFooter } from '@/components/portal/PortalFooter';
 import { PortalSkeleton } from '@/components/portal/PortalSkeleton';
+import { SystemTour } from '@/components/ui/SystemTour';
+import { useTour } from '@/hooks/useTour';
+import { Step } from 'react-joyride';
 import { KamsisAppealModal } from '@/components/kamsis/KamsisAppealModal';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { LayoutDashboard, GraduationCap, ShieldAlert as ShieldIcon } from 'lucide-react';
@@ -38,6 +41,7 @@ export function PortalPage() {
   const [isLoadingSettings, setIsLoadingSettings] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { runTour, startTour, closeTour } = useTour('jpp_has_seen_portal_tour', !!profile);
 
   // Kebajikan live stats
   const [kbStats, setKbStats] = useState<{ open: number; resolved: number; rating: number | null } | null>(null);
@@ -268,6 +272,83 @@ export function PortalPage() {
           : 'bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-white selection:bg-emerald-500/20'
     )}>
 
+      <SystemTour 
+        run={runTour}
+        onClose={closeTour}
+        steps={[
+          {
+            target: 'body',
+            content: 'Selamat Datang ke Ekosistem Digital JPP-POLISAS! Mari luangkan masa 1 minit untuk mengenali setiap butang dan fungsi supaya anda tidak keliru.',
+            title: 'Selamat Datang! 👋',
+            placement: 'center',
+            disableBeacon: true,
+          },
+          {
+            target: '.tour-navbar-profile',
+            content: 'Klik di sini untuk buka menu Profil. Anda boleh tukar nama, gambar profil, kata laluan, atau log keluar dari sistem di sini.',
+            title: 'Menu Profil ⚙️',
+            placement: 'bottom',
+          },
+          {
+            target: '.tour-qa-polyservices',
+            content: 'Ini adalah PolyServices. Di dalam ini terdapat pelbagai perkhidmatan pantas seperti tempahan dan perkhidmatan luar.',
+            title: 'PolyServices ⚡',
+            placement: 'top',
+          },
+          {
+            target: '.tour-qa-kebajikan',
+            content: 'Perlu lapor kerosakan bilik kuliah? Atau mohon bantuan tabung siswa? Tekan butang E-Kebajikan ini untuk membuat aduan rasmi.',
+            title: 'E-Kebajikan ❤️',
+            placement: 'top',
+          },
+          {
+            target: '.tour-qa-qr',
+            content: 'Semasa menghadiri program atau aktiviti, tekan butang ini untuk imbas Kod QR dan secara automatik kumpul mata merit ke dalam akaun anda.',
+            title: 'Imbas QR Merit 📸',
+            placement: 'top',
+          },
+          {
+            target: '.tour-qa-takwim',
+            content: 'Takwim Rasmi JPP dan POLISAS. Anda boleh semak senarai cuti, tarikh penting, dan program yang akan datang di sini.',
+            title: 'Takwim & Jadual 🗓️',
+            placement: 'top',
+          },
+          {
+            target: '.tour-mod-ekpp',
+            content: 'Modul Sistem Kelab (EKPP). Jika anda adalah wakil kelab persatuan, pengurusan pendaftaran, laporan, dan aktiviti akan dilakukan di sini.',
+            title: 'Sistem Kelab 🏛️',
+            placement: 'top',
+          },
+          {
+            target: '.tour-mod-keusahawanan',
+            content: 'PolyMart. Ruang khas untuk pelajar memulakan bisnes kecil, mengiklankan produk jualan, dan menjalankan perniagaan e-Dagang kampus.',
+            title: 'e-Keusahawanan 💡',
+            placement: 'top',
+          },
+          {
+            target: '.tour-mod-akademik',
+            content: 'Modul e-Akademik. Di sinilah tempat anda menyemak baki jumlah mata merit semasa, senarai program, dan maklumat akademik anda.',
+            title: 'e-Akademik 🎓',
+            placement: 'top',
+          },
+          {
+            target: '.tour-bottomnav-fab',
+            content: 'Terakhir dan paling penting! Ini adalah Navigasi Pintar. Jika anda tersesat di halaman mana sekalipun, tekan butang (+) ini untuk menu pintas.',
+            title: 'Navigasi Pintar (FAB) 🧭',
+            placement: 'top',
+          }
+        ]}
+      />
+
+      {/* Help Button — Manual Tour Restart */}
+      <button
+        onClick={startTour}
+        className="tour-help-button fixed top-20 right-4 z-[60] w-10 h-10 rounded-full bg-white/10 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-lg flex items-center justify-center text-slate-500 dark:text-white/40 hover:text-slate-800 dark:hover:text-white hover:bg-white/30 dark:hover:bg-white/10 hover:scale-110 active:scale-95 transition-all"
+        title="Ulang Tutorial"
+      >
+        <HelpCircle className="w-5 h-5" />
+      </button>
+
       {/* Global Noise Overlay */}
       <div className="pointer-events-none fixed inset-0 z-50 opacity-[0.015] dark:opacity-[0.03] mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
 
@@ -435,7 +516,7 @@ export function PortalPage() {
           </div>
 
           {/* Modules Grid */}
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-6xl mx-auto tour-exco-modules">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 lg:gap-10">
               {EXCO_MODULES.filter(mod => mod.id !== 'kebajikan').map((mod, i, arr) => {
                 let badgeText;

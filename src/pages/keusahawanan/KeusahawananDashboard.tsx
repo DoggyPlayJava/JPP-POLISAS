@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowUpRight, Activity, Star, Eye, ShieldCheck, 
   TrendingUp, TrendingDown, Target, ShoppingBag, DollarSign,
-  PackageSearch, BellRing, Calculator, ExternalLink, CalendarDays, BarChart3
+  PackageSearch, BellRing, Calculator, ExternalLink, CalendarDays, BarChart3, HelpCircle
 } from 'lucide-react';
 import { 
   LineChart, Line, BarChart, Bar, ResponsiveContainer, XAxis, Tooltip as RechartsTooltip, YAxis,
@@ -39,6 +39,8 @@ interface StatData {
 import { useBusinessSwitcher } from '@/contexts/BusinessSwitcherContext';
 import { useBusinessData } from '@/hooks/useBusinessData';
 import { BusinessSwitcher } from '@/components/ui/BusinessSwitcher';
+import { useTour } from '@/hooks/useTour';
+import { SystemTour } from '@/components/ui/SystemTour';
 
 // --- Dashboard Component ---
 export function KeusahawananDashboard() {
@@ -48,6 +50,7 @@ export function KeusahawananDashboard() {
   const { myMemberships, isLoading: isMembershipsLoading } = useBusinessData();
   const navigate = useNavigate();
   const displayName = getMalaysianNickname(profile?.full_name);
+  const { runTour, startTour, closeTour } = useTour('KEUSAHAWANAN_DASHBOARD', !!profile);
 
   const [isLoading, setIsLoading] = useState(true);
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>(() => {
@@ -379,8 +382,13 @@ export function KeusahawananDashboard() {
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground flex items-center gap-3">
               Store Overview
+              <button onClick={startTour} className="w-8 h-8 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
+                <HelpCircle className="w-4 h-4" />
+              </button>
             </h1>
-            <BusinessSwitcher />
+            <div className="tour-business-switcher">
+              <BusinessSwitcher />
+            </div>
           </div>
           <p className="text-sm font-medium text-muted-foreground">
             Halo <span style={{ color }}>{displayName}</span>, ini prestasi bisnes anda hari ini.
@@ -390,7 +398,7 @@ export function KeusahawananDashboard() {
         {/* Quick Action Button - POS */}
         <button
           onClick={() => navigate('/keusahawanan/pos')}
-          className="group relative flex items-center justify-between sm:justify-start gap-4 px-6 py-4 rounded-3xl overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl w-full lg:w-auto flex-shrink-0"
+          className="tour-keusahawanan-quickpos group relative flex items-center justify-between sm:justify-start gap-4 px-6 py-4 rounded-3xl overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl w-full lg:w-auto flex-shrink-0"
           style={{ background: color }}
         >
           <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -429,11 +437,11 @@ export function KeusahawananDashboard() {
       )}
 
       {/* TOP CARDS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6">
+      <div className="tour-keusahawanan-stats grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6">
         
         {/* Total Revenue */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+          className="tour-sales-metric bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
           <div className="flex items-start justify-between mb-2">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500"><DollarSign className="w-4 h-4" /></div>
@@ -528,7 +536,7 @@ export function KeusahawananDashboard() {
         
         {/* Sales Analytics Line Chart */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-          className="lg:col-span-2 bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm flex flex-col min-h-[350px]">
+          className="tour-sales-chart lg:col-span-2 bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm flex flex-col min-h-[350px]">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-lg font-black text-foreground">Sales Analytics</h2>
@@ -762,7 +770,7 @@ export function KeusahawananDashboard() {
 
         {/* Low Stock Alert */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
-          className="bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm flex flex-col justify-between">
+          className="tour-low-stock bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm flex flex-col justify-between">
           <div>
              <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-black text-foreground">Low Stock Alert</h2>
@@ -798,6 +806,8 @@ export function KeusahawananDashboard() {
         </motion.div>
 
       </div>
+
+      <SystemTour run={runTour} onClose={closeTour} tourKey="KEUSAHAWANAN_DASHBOARD" />
     </div>
   );
 }

@@ -44,7 +44,7 @@ const KarnivalAdminResults    = lazy(() => import('./pages/karnival/admin/Karniv
 const NexusPage = lazy(() => import('./pages/NexusPage').then(m => ({ default: m.NexusPage })));
 const PortalPage = lazy(() => import('./pages/PortalPage').then(m => ({ default: m.PortalPage })));
 const NotifikasiPage = lazy(() => import('./pages/NotifikasiPage').then(m => ({ default: m.NotifikasiPage })));
-const IMapsPage = lazy(() => import('./pages/imaps/IMapsPage').then(m => ({ default: m.IMapsPage })));
+const PolyMapsPage = lazy(() => import('./pages/polymaps/PolyMapsPage').then(m => ({ default: m.PolyMapsPage })));
 // ── JPP HQ Portal ──
 const JppLayout = lazy(() => import('./pages/jpp/JppLayout').then(m => ({ default: m.JppLayout })));
 const JppHomePage = lazy(() => import('./pages/jpp/JppHomePage').then(m => ({ default: m.JppHomePage })));
@@ -52,12 +52,13 @@ const JppMembersPage = lazy(() => import('./pages/jpp/JppMembersPage').then(m =>
 const JppOverviewPage = lazy(() => import('./pages/jpp/JppOverviewPage').then(m => ({ default: m.JppOverviewPage })));
 const JppUnitDashboard = lazy(() => import('./pages/jpp/JppUnitDashboard').then(m => ({ default: m.JppUnitDashboard })));
 const AnnouncementsPage = lazy(() => import('./pages/jpp/AnnouncementsPage').then(m => ({ default: m.default || m.AnnouncementsPage })));
-const JppImapsAdmin = lazy(() => import('./pages/jpp/JppImapsAdmin').then(m => ({ default: m.JppImapsAdmin })));
+const JppPolyMapsAdmin = lazy(() => import('./pages/jpp/JppPolyMapsAdmin').then(m => ({ default: m.JppPolyMapsAdmin })));
 
 // ── Exco Reporting System ──
 const ExcoAktivitiWrapper = lazy(() => import('./pages/jpp/ExcoWrappers').then(m => ({ default: m.ExcoAktivitiWrapper })));
 const ExcoLaporanWrapper = lazy(() => import('./pages/jpp/ExcoWrappers').then(m => ({ default: m.ExcoLaporanWrapper })));
 const ExcoSemakanLaporanPage = lazy(() => import('./components/exco/ExcoSemakanLaporanPage').then(m => ({ default: m.ExcoSemakanLaporanPage })));
+const KeusahawananHubLanding = lazy(() => import('./pages/jpp/KeusahawananHubLanding').then(m => ({ default: m.KeusahawananHubLanding })));
 
 // ── e-Keusahawanan ──
 const KeusahawananLayout = lazy(() => import('./pages/keusahawanan/KeusahawananLayout').then(m => ({ default: m.KeusahawananLayout })));
@@ -156,6 +157,19 @@ const PolyRiderHome = lazy(() => import('./pages/polyrider/PolyRiderHome').then(
 const PolyRiderDashboard = lazy(() => import('./pages/polyrider/PolyRiderDashboard').then(m => ({ default: m.PolyRiderDashboard })));
 const PolyRiderAdminDashboard = lazy(() => import('./pages/polyrider/admin/PolyRiderAdminDashboard').then(m => ({ default: m.PolyRiderAdminDashboard })));
 
+// ── PolyTask (Ekonomi Gig) ──
+const PolyTaskLayout = lazy(() => import('./pages/polytask/PolyTaskLayout').then(m => ({ default: m.PolyTaskLayout })));
+const PolyTaskBoard = lazy(() => import('./pages/polytask/PolyTaskBoard').then(m => ({ default: m.PolyTaskBoard })));
+const PolyTaskMyJobs = lazy(() => import('./pages/polytask/PolyTaskMyJobs').then(m => ({ default: m.PolyTaskMyJobs })));
+const PolyTaskMyBids = lazy(() => import('./pages/polytask/PolyTaskMyBids').then(m => ({ default: m.PolyTaskMyBids })));
+const PolyTaskJobDetail = lazy(() => import('./pages/polytask/PolyTaskJobDetail').then(m => ({ default: m.PolyTaskJobDetail })));
+const PolyTaskAdmin = lazy(() => import('./pages/polytask/admin/PolyTaskAdmin').then(m => ({ default: m.PolyTaskAdmin })));
+
+// ── PolyServices ──
+const PolySuaraPage = lazy(() => import('./pages/polyservices/PolySuaraPage').then(m => ({ default: m.PolySuaraPage })));
+const PolyMatchPage = lazy(() => import('./pages/polyservices/PolyMatchPage').then(m => ({ default: m.PolyMatchPage })));
+const PolyServicesAdmin = lazy(() => import('./pages/jpp/PolyServicesAdmin').then(m => ({ default: m.PolyServicesAdmin })));
+
 // ── Global Modals (lazy-loaded, deferred after paint) ──
 const CompleteProfileModal = lazy(() => import('@/components/ui/CompleteProfileModal').then(m => ({ default: m.CompleteProfileModal })));
 const GlobalAnnouncementModal = lazy(() => import('@/components/GlobalAnnouncementModal').then(m => ({ default: m.GlobalAnnouncementModal })));
@@ -244,8 +258,8 @@ function AppRoutes() {
       <Route path="/launch" element={<LaunchVideo />} />
       <Route path="/kebajikan/statistik" element={<KebajikanStatsPage />} />
       <Route path="/klk/statistik" element={<KlkPublicStats />} />
-      {/* 🗺️ iMAPS — Fully public, no login required (anyone can view campus map) */}
-      <Route path="/imaps" element={<IMapsPage />} />
+      {/* 🗺️ POLYMAPS — Fully public, no login required (anyone can view campus map) */}
+      <Route path="/polymaps" element={<PolyMapsPage />} />
       {/* QR Program Attendance — standalone, redirect ke login diuruskan dalam page itu sendiri */}
       <Route path="/program/attend/:token" element={<ProgramAttendPage />} />
 
@@ -261,6 +275,10 @@ function AppRoutes() {
 
         {/* ⚙️ TETAPAN GLOBAL — standalone tanpa sidebar */}
         <Route path="/tetapan" element={<RequireApproval><SettingsPage /></RequireApproval>} />
+
+        {/* ── PolyServices — standalone tanpa sidebar ── */}
+        <Route path="/polysuara" element={<RequireApproval><PolySuaraPage /></RequireApproval>} />
+        <Route path="/polymatch" element={<RequireApproval><PolyMatchPage /></RequireApproval>} />
 
         {/* ✅ WRAP HALAMAN EXCO DALAM APPLAYOUT (ada sidebar) */}
         <Route element={<RequireApproval><AppLayout /></RequireApproval>}>
@@ -284,16 +302,18 @@ function AppRoutes() {
           <Route path="/jpp"                  element={<JppHomePage />} />
           <Route path="/jpp/members"          element={<JppMembersPage />} />
           <Route path="/jpp/overview"         element={<JppOverviewPage />} />
+          <Route path="/jpp/keusahawanan-hub" element={<KeusahawananHubLanding />} />
           <Route path="/jpp/unit/:unitCode"   element={<JppUnitDashboard />} />
           <Route path="/jpp/announcements"    element={<AnnouncementsPage />} />
           <Route path="/jpp/users"            element={<JppUsersPage />} />
           <Route path="/jpp/takwim"           element={<JppTakwimPage />} />
-          <Route path="/jpp/imaps"            element={<JppImapsAdmin />} />
+          <Route path="/jpp/polymaps"            element={<JppPolyMapsAdmin />} />
           <Route path="/jpp/demerit"          element={<DemeritManager sourceOverride="MANUAL" />} />
           <Route path="/jpp/logs"             element={<JppLogsPage />} />
           <Route path="/jpp/settings"         element={<JppSettingsPage />} />
           <Route path="/jpp/nexus"            element={<JppNexusPage />} />
           <Route path="/jpp/telemetry"       element={<JppTelemetryPage />} />
+          <Route path="/jpp/polyservices"     element={<PolyServicesAdmin />} />
           {/* ── Exco Universal Template Routes ── */}
           <Route path="/exco/:unitCode/aktiviti"          element={<ExcoAktivitiWrapper />} />
           <Route path="/exco/:unitCode/laporan"           element={<ExcoLaporanWrapper />} />
@@ -371,6 +391,20 @@ function AppRoutes() {
         <Route element={<RequireApproval><PolyRiderLayout /></RequireApproval>}>
           <Route path="/polyrider" element={<PolyRiderHome />} />
           <Route path="/polyrider/rider" element={<PolyRiderDashboard />} />
+        </Route>
+      </Route>
+
+      {/* ── PolyTask (Ekonomi Gig) ── */}
+      <Route element={<ProtectedRoute />}>
+        {/* Admin Route (No specific layout, standalone dashboard) */}
+        <Route path="/polytask/admin" element={<RequireApproval><PolyTaskAdmin /></RequireApproval>} />
+        
+        {/* User Routes (Wrapped in PolyTaskLayout) */}
+        <Route element={<RequireApproval><PolyTaskLayout /></RequireApproval>}>
+          <Route path="/polytask" element={<PolyTaskBoard />} />
+          <Route path="/polytask/my-jobs" element={<PolyTaskMyJobs />} />
+          <Route path="/polytask/my-bids" element={<PolyTaskMyBids />} />
+          <Route path="/polytask/job/:id" element={<PolyTaskJobDetail />} />
         </Route>
       </Route>
 

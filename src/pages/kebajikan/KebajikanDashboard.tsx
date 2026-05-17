@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   Inbox, AlertTriangle, Clock, CheckCircle2, TrendingUp,
   Users, ArrowUpRight, ChevronRight, Bell, HeartHandshake,
-  Zap, AlertCircle,
+  Zap, AlertCircle, HelpCircle
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { motion } from 'framer-motion';
@@ -19,6 +19,8 @@ import {
 } from '@/types';
 import { cn } from '@/lib/utils';
 import { hexToRgba } from '@/lib/utils';
+import { SystemTour } from '@/components/ui/SystemTour';
+import { useTour } from '@/hooks/useTour';
 
 const TEAL = KEBAJIKAN_THEME_COLOR;
 
@@ -31,6 +33,8 @@ export function KebajikanDashboard() {
   const [monthly, setMonthly] = useState<KebajikanMonthlyStats[]>([]);
   const [recent, setRecent]   = useState<KebajikanTicket[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const { runTour, startTour, closeTour } = useTour('KEBAJIKAN_DASHBOARD', !!profile);
 
   const name = profile?.full_name?.split(' ')[0] || 'Exco';
 
@@ -73,15 +77,23 @@ export function KebajikanDashboard() {
   return (
     <div className="p-8 max-w-7xl mx-auto min-h-screen relative">
       {/* Greeting */}
-      <div className="mb-10 relative z-10">
-        <motion.h1 initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-3xl font-black text-slate-50 mb-2 tracking-tight">
-          Selamat {getGreeting()},{name}! 👋
-        </motion.h1>
-        <p className="text-sm text-slate-400 font-medium">Berikut adalah ringkasan sistem aduan pelajar hari ini.</p>
+      <div className="mb-10 relative z-10 flex justify-between items-start">
+        <div>
+          <motion.h1 initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-3xl font-black text-slate-50 mb-2 tracking-tight">
+            Selamat {getGreeting()},{name}! 👋
+          </motion.h1>
+          <p className="text-sm text-slate-400 font-medium">Berikut adalah ringkasan sistem aduan pelajar hari ini.</p>
+        </div>
+        <button
+          onClick={startTour}
+          className="w-10 h-10 rounded-full bg-white/5 text-slate-400 hover:text-slate-200 border border-white/10 flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-transform"
+        >
+          <HelpCircle className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10 relative z-10">
+      <div className="tour-kebajikan-metrics grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10 relative z-10">
         {statCards.map((s, i) => (
           <motion.div key={s.label} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: i * 0.07 }}>
             <Link to={s.href} className="block group">
@@ -205,6 +217,8 @@ export function KebajikanDashboard() {
           </div>
         </div>
       )}
+
+      <SystemTour run={runTour} onClose={closeTour} tourKey="KEBAJIKAN_DASHBOARD" />
     </div>
   );
 }

@@ -194,7 +194,7 @@ export function JppLogsPage() {
     if (t.includes('kelab') || t.includes('karnival')) return 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20';
     if (t.includes('pos')) return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
     if (t.includes('polyrider') || t.includes('rider')) return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
-    if (t.includes('imaps') || t.includes('bangunan') || t.includes('lokasi')) return 'bg-sky-500/10 text-sky-400 border-sky-500/20';
+    if (t.includes('polymaps') || t.includes('bangunan') || t.includes('lokasi')) return 'bg-sky-500/10 text-sky-400 border-sky-500/20';
     if (t.includes('takwim') || t.includes('akademik')) return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
     if (t.includes('jpp') || t.includes('admin')) return 'bg-violet-500/10 text-violet-400 border-violet-500/20';
     if (t.includes('sistem') || t.includes('keusahawanan')) return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
@@ -364,7 +364,7 @@ export function JppLogsPage() {
         {/* ── Tabs ── */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-          {['Semua', 'Karnival/Kelab', 'Keusahawanan', 'Kebajikan', 'POS System', 'JPP Admin', 'PolyRider', 'iMaps', 'PolyMart', 'Takwim', 'Akademik'].map(tab => (
+          {['Semua', 'Karnival/Kelab', 'Keusahawanan', 'Kebajikan', 'POS System', 'JPP Admin', 'PolyRider', 'PolyMaps', 'PolyMart', 'Takwim', 'Akademik'].map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={cn('px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border',
                 activeTab === tab ? 'bg-white/10 text-white border-white/20' : 'text-white/40 border-transparent hover:text-white/60 hover:bg-white/5')}

@@ -4,7 +4,7 @@ import { differenceInDays, parseISO } from 'date-fns';
 import {
   Eye, CheckCircle2, XCircle, RefreshCw, Lock, Unlock, FileText,
   ExternalLink, Filter, MessageSquare, BookOpen, Users, Calendar,
-  Award, UploadCloud, Zap, AlertTriangle, Clock, Check, ChevronRight, Archive, Bot
+  Award, UploadCloud, Zap, AlertTriangle, Clock, Check, ChevronRight, Archive, Bot, HelpCircle
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,8 @@ import { cn } from '@/lib/utils';
 import PemantauanTakwimTab from '@/components/takwim/PemantauanTakwimTab';
 import { AiReviewModal } from '@/components/ai/AiReviewModal';
 import { sendNotificationToUser } from '@/lib/notifications';
+import { SystemTour } from '@/components/ui/SystemTour';
+import { useTour } from '@/hooks/useTour';
 
 // --- Types & Constants ---
 type ProgramStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'CONFIRMED' | 'PENDING_POSTMORTEM' | 'COMPLETED' | 'REQUEST_UNLOCK';
@@ -91,6 +93,7 @@ export function SemakanLaporanPage() {
 
   // ── Access Guard ──
   const { hasKppAccess } = useAuth();
+  const { runTour, startTour, closeTour } = useTour('EKPP_SEMAKAN', !!hasKppAccess);
 
   if (!hasKppAccess) {
     return (
@@ -397,10 +400,16 @@ export function SemakanLaporanPage() {
           <Button onClick={loadData} variant="outline" className="w-full sm:w-auto rounded-3xl gap-2 h-14 px-8 border-white/5 bg-white/5 hover:bg-white/10 text-white font-black tracking-widest uppercase text-[10px] backdrop-blur-sm transition-all hover:scale-105 active:scale-95">
             <RefreshCw className={cn("w-5 h-5", loading && "animate-spin")} /> Segarkan Data
           </Button>
+          <button
+            onClick={startTour}
+            className="w-14 h-14 rounded-full bg-blue-500/10 text-blue-400 shadow-lg border border-blue-500/20 flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-transform"
+          >
+            <HelpCircle className="w-6 h-6" />
+          </button>
         </div>
       </div>
 
-      <Tabs defaultValue="programs" className="w-full">
+      <Tabs defaultValue="programs" className="tour-semakan-menunggu w-full">
         <TabsList className="bg-muted/40 dark:bg-slate-900/40 backdrop-blur-xl p-2 rounded-[2.5rem] mb-12 w-full flex flex-col xl:flex-row h-auto border border-border shadow-inner gap-2">
           {[
             { value: 'programs', label: 'Pengurusan Program' },
@@ -883,6 +892,7 @@ export function SemakanLaporanPage() {
         programName={aiReviewProgramId?.name} 
       />
 
+      <SystemTour run={runTour} onClose={closeTour} tourKey="EKPP_SEMAKAN" />
     </div>
   );
 }

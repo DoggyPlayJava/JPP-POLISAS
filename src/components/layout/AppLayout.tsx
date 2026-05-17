@@ -108,7 +108,7 @@ export function AppLayout() {
             variant="ghost"
             size="icon"
             onClick={() => setIsSidebarOpen(true)}
-            className="mr-3 bg-muted/50 rounded-xl"
+            className="tour-mobile-hamburger mr-3 bg-muted/50 rounded-xl"
           >
             <Menu className="w-5 h-5" />
           </Button>

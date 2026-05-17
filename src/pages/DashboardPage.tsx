@@ -23,11 +23,13 @@ import { ClubSwitcher } from '@/components/ui/ClubSwitcher';
 import { AiAnalysisModal } from '@/components/ai/AiAnalysisModal';
 import { useAiAssistant } from '@/hooks/useAiAssistant';
 import { useAiSettings } from '@/contexts/AiSettingsContext';
-import { Bot, Sparkles } from 'lucide-react';
+import { Bot, Sparkles, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SystemTour } from '@/components/ui/SystemTour';
+import { useTour } from '@/hooks/useTour';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
@@ -143,6 +145,7 @@ export function DashboardPage() {
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
+  const { runTour, startTour, closeTour } = useTour('kelab_dashboard_tour', !!profile);
 
   // Derive state dari dashData
   const tasks     = dashData.tasks     || [];
@@ -178,10 +181,6 @@ export function DashboardPage() {
     }
   }, [profile, userClubIds, navigate]);
 
-
-
-
-  // Guna RPC atomic untuk elak race condition (CRIT-4 fix)
   const awardMerit = async (task: any, customPoints?: number) => {
     const pointsToAward = customPoints !== undefined ? customPoints : (task.merit_points || 0);
     if (pointsToAward === 0) return;
@@ -301,8 +300,42 @@ export function DashboardPage() {
 
   if (isLoading) return <DashboardSkeleton />;
 
+  // Setup tour steps dynamic untuk kelab
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const kelabTourSteps = [
+    {
+      target: 'body',
+      content: 'Selamat datang ke Dashboard Kelab & Persatuan! Ruang ini membolehkan anda memantau aktiviti, mengurus tugasan ahli, dan melihat statistik kelab anda.',
+      title: 'Modul Kelab 🏛️',
+      placement: 'center' as const,
+      disableBeacon: true,
+    },
+    {
+      target: isMobile ? '.tour-mobile-hamburger' : '.tour-kelab-sidebar',
+      content: isMobile ? 'Buka menu ini untuk mengakses senarai kelab, jadual aktiviti, dan laporan kelab.' : 'Di ruangan tepi ini, anda boleh menavigasi ke senarai kelab lain, jadual aktiviti, laporan, dan tetapan kelab.',
+      title: 'Menu Navigasi 🧭',
+      placement: isMobile ? 'bottom' as const : 'right' as const,
+    },
+    {
+      target: '.tour-kelab-stats',
+      content: 'Ini adalah metrik pantas. Anda boleh lihat jumlah tugasan yang belum selesai, jumlah ahli aktif, dan program kelab semasa.',
+      title: 'Statistik Prestasi 📊',
+      placement: 'bottom' as const,
+    },
+    {
+      target: '.tour-kelab-tasks',
+      content: 'Bahagian ini menunjukkan senarai tugasan ahli (untuk AJK) atau tugasan anda (untuk Ahli Biasa). Anda boleh serah tugasan di sini untuk dapatkan Merit!',
+      title: 'Pengurusan Tugasan ✅',
+      placement: 'top' as const,
+    }
+  ];
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="page-container space-y-10 pb-20">
+      <SystemTour
+        run={runTour}
+        onClose={closeTour}
+        steps={kelabTourSteps}
+      />
 
       {/* ── HEADER ── */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-card/40 p-5 sm:p-8 rounded-[2.5rem] border border-border/60 backdrop-blur-sm">
@@ -314,6 +347,9 @@ export function DashboardPage() {
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none">Papan <span className="gradient-text">Pemuka</span></h1>
         </div>
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto md:justify-end">
+          <Button onClick={startTour} variant="outline" size="icon" className="rounded-xl border-amber-500/30 text-amber-600 bg-amber-500/10 hover:bg-amber-500/20">
+            <HelpCircle className="w-5 h-5" />
+          </Button>
           <ClubSwitcher />
           <NotificationBell />
           {allowAiBudget && (isPresident || isMT || isAdvisor) && (
@@ -331,7 +367,7 @@ export function DashboardPage() {
       </header>
 
       {/* ── STAT CARDS ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="tour-kelab-stats grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {(isAdvisor || isPresident) && <StatCard label="Perlu Kelulusan" val={tasks.filter((t: any) => t.approval_status === 'WAITING').length} color="text-rose-600" icon={Clock} bg="bg-rose-500/10" />}
         <StatCard label="Ahli Aktif" val={members.length} color="text-primary" icon={Users} bg="bg-primary/10" />
         <StatCard label="Tugasan" val={tasks.length} color="text-amber-600" icon={Activity} bg="bg-amber-500/10" />
@@ -462,7 +498,7 @@ export function DashboardPage() {
             </Card>
           )}
 
-          <Card className="border-none shadow-xl rounded-[2.5rem] bg-card/70 backdrop-blur-md overflow-hidden">
+          <Card className="tour-kelab-tasks border-none shadow-xl rounded-[2.5rem] bg-card/70 backdrop-blur-md overflow-hidden">
             <CardHeader className="border-b border-border/40 bg-card/30 flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 sm:px-8 py-6 gap-4">
               <CardTitle className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2">
                 {taskView === 'active' ? (isNormalMember ? 'Tugasan Saya' : 'Senarai Tugasan') : 'Arkib Tugasan'}
