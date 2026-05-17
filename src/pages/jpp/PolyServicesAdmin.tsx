@@ -513,7 +513,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                 <p className="text-sm text-white/50">Perkataan dalam senarai ini akan digantikan secara automatik kepada *** sebelum dipaparkan di PolySuara.</p>
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input 
                   type="text" 
                   placeholder="Tambah perkataan kesat/lucah..."
@@ -524,7 +524,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                 />
                 <button
                   onClick={addCensoredWord}
-                  className="px-6 py-3 rounded-xl text-sm font-black text-white hover:opacity-90 transition-opacity whitespace-nowrap"
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-black text-white hover:opacity-90 transition-opacity whitespace-nowrap"
                   style={{ background: themeColor }}
                 >
                   Tambah
@@ -553,19 +553,19 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
             {/* Sentiment Dashboard */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
-                <div className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">Diterima/Selesai</div>
+                <div className="text-[10px] sm:text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1 break-words">Diterima / Selesai</div>
                 <div className="text-2xl font-black text-white">{suaraList.filter(s => s.status === 'ACKNOWLEDGED' || s.status === 'RESOLVED').length}</div>
               </div>
               <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
-                <div className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-1">Baru/Disiasat</div>
+                <div className="text-[10px] sm:text-xs font-bold text-amber-400 uppercase tracking-widest mb-1 break-words">Baru / Disiasat</div>
                 <div className="text-2xl font-black text-white">{suaraList.filter(s => s.status === 'NEW' || s.status === 'INVESTIGATING').length}</div>
               </div>
               <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4">
-                <div className="text-xs font-bold text-rose-400 uppercase tracking-widest mb-1">Dilaporkan (Flagged)</div>
+                <div className="text-[10px] sm:text-xs font-bold text-rose-400 uppercase tracking-widest mb-1 break-words">Dilaporkan (Flagged)</div>
                 <div className="text-2xl font-black text-white">{suaraList.filter(s => s.reports && s.reports.length > 0).length}</div>
               </div>
               <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-                <div className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Total Interaksi (Upvote)</div>
+                <div className="text-[10px] sm:text-xs font-bold text-blue-400 uppercase tracking-widest mb-1 break-words">Total Interaksi (Upvote)</div>
                 <div className="text-2xl font-black text-white">{suaraList.reduce((acc, curr) => acc + (curr.upvotes || 0), 0)}</div>
               </div>
             </div>
@@ -576,37 +576,37 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
             ) : (
               filteredSuara.map(suara => (
                 <div key={suara.id} className="bg-black/20 border border-white/5 rounded-2xl p-5 flex flex-col sm:flex-row gap-4 justify-between group hover:border-white/10 transition-colors">
-                  <div className="flex-1 relative">
-                    {/* Status Badge */}
-                    <div className="absolute -top-2 right-0 flex gap-2">
-                      {suara.is_pinned && <span className="bg-yellow-500/20 text-yellow-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1"><Pin className="w-3 h-3" /> Pinned</span>}
-                      {suara.status === 'NEW' && <span className="bg-slate-800 text-slate-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">Baru</span>}
-                      {suara.status === 'ACKNOWLEDGED' && <span className="bg-blue-500/20 text-blue-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1"><Check className="w-3 h-3"/> Diterima</span>}
-                      {suara.status === 'INVESTIGATING' && <span className="bg-amber-500/20 text-amber-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1"><Clock className="w-3 h-3"/> Disiasat</span>}
-                      {suara.status === 'RESOLVED' && <span className="bg-green-500/20 text-green-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1"><CheckCircle className="w-3 h-3"/> Selesai</span>}
-                    </div>
-
+                  <div className="flex-1">
                     <div className="flex flex-col mb-3">
-                       <div className="flex items-center gap-3 mb-2">
-                        {suara.is_hidden_by_community ? (
-                          <span className="bg-red-500/20 text-red-400 px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1 border border-red-500/50">
-                            🚨 MENUNGGU SEMAKAN (AUTO-HIDE)
+                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+                         <div className="flex flex-wrap items-center gap-3">
+                          {suara.is_hidden_by_community ? (
+                            <span className="bg-red-500/20 text-red-400 px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1 border border-red-500/50 shrink-0">
+                              🚨 MENUNGGU SEMAKAN (AUTO-HIDE)
+                            </span>
+                          ) : (
+                            <span className={cn(
+                              "px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest shrink-0",
+                              suara.is_approved ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+                            )}>
+                              {suara.is_approved ? "AKTIF" : "DISEMBUNYIKAN"}
+                            </span>
+                          )}
+                          <span className="text-[10px] text-white/40 font-bold tracking-widest uppercase shrink-0">
+                            {format(new Date(suara.created_at), 'dd MMM yyyy, HH:mm', { locale: ms })}
                           </span>
-                        ) : (
-                          <span className={cn(
-                            "px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest",
-                            suara.is_approved ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
-                          )}>
-                            {suara.is_approved ? "AKTIF" : "DISEMBUNYIKAN"}
+                          <span className="text-[10px] text-indigo-400 font-bold tracking-widest uppercase ml-auto sm:ml-0 bg-indigo-500/10 px-2 rounded-md shrink-0">
+                            {suara.profiles?.matric_no || 'UNKNOWN'}
                           </span>
-                        )}
-                        <span className="text-[10px] text-white/40 font-bold tracking-widest uppercase">
-                          {format(new Date(suara.created_at), 'dd MMM yyyy, HH:mm', { locale: ms })}
-                        </span>
-                        <span className="text-[10px] text-indigo-400 font-bold tracking-widest uppercase ml-auto sm:ml-0 bg-indigo-500/10 px-2 rounded-md">
-                          {suara.profiles?.matric_no || 'UNKNOWN'}
-                        </span>
-                      </div>
+                         </div>
+                         <div className="flex flex-wrap gap-2">
+                           {suara.is_pinned && <span className="bg-yellow-500/20 text-yellow-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><Pin className="w-3 h-3" /> Pinned</span>}
+                           {suara.status === 'NEW' && <span className="bg-slate-800 text-slate-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0">Baru</span>}
+                           {suara.status === 'ACKNOWLEDGED' && <span className="bg-blue-500/20 text-blue-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><Check className="w-3 h-3"/> Diterima</span>}
+                           {suara.status === 'INVESTIGATING' && <span className="bg-amber-500/20 text-amber-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><Clock className="w-3 h-3"/> Disiasat</span>}
+                           {suara.status === 'RESOLVED' && <span className="bg-green-500/20 text-green-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><CheckCircle className="w-3 h-3"/> Selesai</span>}
+                         </div>
+                       </div>
                       
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-slate-300">{suara.codename || 'Pelajar Anon'}</span>

@@ -597,7 +597,7 @@ export function PolySuaraPage() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 pt-6 relative z-10 pb-20">
+      <div className="max-w-2xl mx-auto px-4 pt-6 relative z-10 pb-32">
         <div className="mb-8 flex flex-col">
           <h1 className="text-4xl font-black text-white flex items-center gap-3 tracking-tight">
             Poly<span className="text-rose-500">Suara</span>
@@ -797,30 +797,32 @@ export function PolySuaraPage() {
                         {isTrending && (
                           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-rose-500/5 to-transparent pointer-events-none" />
                         )}
-                        <div className="absolute top-4 right-4 flex gap-2 z-10" data-html2canvas-ignore>
-                          {isTrending && <span className="bg-rose-500/20 text-rose-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 animate-pulse"><Flame className="w-3 h-3" /> Hangat</span>}
-                          {confession.is_pinned && <span className="bg-yellow-500/20 text-yellow-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1"><Pin className="w-3 h-3" /> Pinned</span>}
-                          {confession.status === 'NEW' && <span className="bg-slate-800 text-slate-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">Baru</span>}
-                          {confession.status === 'ACKNOWLEDGED' && <span className="bg-blue-500/20 text-blue-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1"><Check className="w-3 h-3"/> Diterima</span>}
-                          {confession.status === 'INVESTIGATING' && <span className="bg-amber-500/20 text-amber-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1"><Clock className="w-3 h-3"/> Disiasat</span>}
-                          {confession.status === 'RESOLVED' && <span className="bg-green-500/20 text-green-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1"><CheckCircle className="w-3 h-3"/> Selesai</span>}
-                        </div>
-
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", isMine ? "bg-rose-500/20" : "bg-slate-800")}>
-                            {isMine ? <UserCircle2 className="w-5 h-5 text-rose-500" /> : <Ghost className="w-5 h-5 text-slate-500" />}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h4 className="text-sm font-bold text-slate-200">{confession.codename || 'Pelajar Anon'}</h4>
-                              {isMine && <span className="bg-rose-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase" data-html2canvas-ignore>Milik Anda</span>}
-                              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md">
-                                {confession.category}
-                              </span>
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0", isMine ? "bg-rose-500/20" : "bg-slate-800")}>
+                              {isMine ? <UserCircle2 className="w-5 h-5 text-rose-500" /> : <Ghost className="w-5 h-5 text-slate-500" />}
                             </div>
-                            <p className="text-[10px] text-slate-500 uppercase tracking-wide mt-0.5">
-                              {formatDistanceToNow(new Date(confession.created_at), { addSuffix: true, locale: ms })}
-                            </p>
+                            <div className="flex flex-col">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h4 className="text-sm font-bold text-slate-200">{confession.codename || 'Pelajar Anon'}</h4>
+                                {isMine && <span className="bg-rose-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase shrink-0" data-html2canvas-ignore>Milik Anda</span>}
+                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md shrink-0">
+                                  {confession.category}
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-slate-500 uppercase tracking-wide mt-0.5">
+                                {formatDistanceToNow(new Date(confession.created_at), { addSuffix: true, locale: ms })}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2 shrink-0" data-html2canvas-ignore>
+                            {isTrending && <span className="bg-rose-500/20 text-rose-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 animate-pulse shrink-0"><Flame className="w-3 h-3" /> Hangat</span>}
+                            {confession.is_pinned && <span className="bg-yellow-500/20 text-yellow-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><Pin className="w-3 h-3" /> Pinned</span>}
+                            {confession.status === 'NEW' && <span className="bg-slate-800 text-slate-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0">Baru</span>}
+                            {confession.status === 'ACKNOWLEDGED' && <span className="bg-blue-500/20 text-blue-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><Check className="w-3 h-3"/> Diterima</span>}
+                            {confession.status === 'INVESTIGATING' && <span className="bg-amber-500/20 text-amber-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><Clock className="w-3 h-3"/> Disiasat</span>}
+                            {confession.status === 'RESOLVED' && <span className="bg-green-500/20 text-green-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><CheckCircle className="w-3 h-3"/> Selesai</span>}
                           </div>
                         </div>
 

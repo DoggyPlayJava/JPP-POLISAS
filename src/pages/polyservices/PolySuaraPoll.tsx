@@ -115,18 +115,18 @@ export function PolySuaraPoll({ poll, currentUserId }: PollProps) {
                 )} 
                 style={{ width: `${percentage}%` }}
               />
-              <div className="relative p-3 flex items-center justify-between z-10">
+              <div className="relative p-3 flex items-start justify-between z-10 gap-2">
                 <span className={cn(
-                  "text-sm font-medium",
+                  "text-sm font-medium flex-1 break-words text-left",
                   isVoted ? "text-rose-100" : "text-slate-300"
                 )}>
                   {opt.option_text}
                 </span>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-slate-500">
+                <div className="flex items-center gap-2 shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-slate-500 whitespace-nowrap">
                     {percentage}% ({votes})
                   </span>
-                  {isVoted && <CheckCircle2 className="w-4 h-4 text-rose-500" />}
+                  {isVoted && <CheckCircle2 className="w-4 h-4 text-rose-500 shrink-0" />}
                 </div>
               </div>
             </button>
