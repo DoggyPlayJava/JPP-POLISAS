@@ -900,13 +900,69 @@ app.post('/api/polysuara-new-confession-notify', requireWebhookSecret, async (re
             return res.status(200).send('Not an INSERT event.');
         }
 
-        const { author_id, category } = payload.record;
+        const { author_id, category, codename, content_preview } = payload.record;
 
         if (!author_id) {
             return res.status(400).json({ error: 'Missing author_id in webhook payload.' });
         }
 
         const confessionCategory = category || 'UMUM';
+
+        // ── Dynamic notification content ──────────────────────────────────────
+        const CATEGORY_META = {
+            UMUM:       { emoji: '💭', label: 'Umum' },
+            AKADEMIK:   { emoji: '📚', label: 'Akademik' },
+            FASILITI:   { emoji: '🏢', label: 'Fasiliti' },
+            KAMSIS:     { emoji: '🏠', label: 'Asrama' },
+            KAUNSELING: { emoji: '💙', label: 'Kaunseling' },
+        };
+
+        const HOOKS = {
+            UMUM: [
+                'Seseorang ada benda nak luahkan... 👀',
+                'Ada cerita baru dalam PolySuara 👻',
+                'Jom tengok apa yang orang luahkan hari ni',
+                'Ada yang berani luah perasaan 🔥',
+                'Curiosity killed the cat... tapi baca dulu 👀',
+            ],
+            AKADEMIK: [
+                'Ada confession pasal kehidupan akademik 📚',
+                'Rasa struggle sorang? Baca ni dulu 💪',
+                'Confession dari dunia buku dan peperiksaan...',
+                'Kau je ke rasa macam tu? Baca ni 👀',
+            ],
+            FASILITI: [
+                'Ada yang nak luah pasal kemudahan kolej 🏢',
+                'Confession fasiliti: ada yang kena tahu ni',
+                'Masalah fasiliti? Ada yang dah luahkan 🔧',
+            ],
+            KAMSIS: [
+                'Gossip asrama incoming 🏠👀',
+                'Cerita dari dalam asrama... 🌙',
+                'Ada confession dari penghuni asrama 🏠',
+                'Life asrama ni memang macam-macam 😅',
+            ],
+            KAUNSELING: [
+                'Seseorang perlukan sokongan anda 💙',
+                'Ada yang luah perasaan dengan berani 💪',
+                'Jangan rasa sorang... baca ni 🤍',
+                'Confession yang penuh perasaan 💙',
+            ],
+        };
+
+        const meta = CATEGORY_META[confessionCategory] || CATEGORY_META.UMUM;
+        const hooks = HOOKS[confessionCategory] || HOOKS.UMUM;
+        const hook = hooks[Math.floor(Math.random() * hooks.length)];
+
+        const ghost = codename || 'Hantu Tanpa Nama';
+        const preview = content_preview
+            ? content_preview.length > 80
+                ? content_preview.slice(0, 80) + '...'
+                : content_preview
+            : null;
+
+        const notifTitle = `${meta.emoji} ${ghost} baru luah sesuatu`;
+        const notifBody = preview || hook;
 
         const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:jpp@cipher-node.org';
         const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
@@ -944,8 +1000,8 @@ app.post('/api/polysuara-new-confession-notify', requireWebhookSecret, async (re
         }
 
         const pushPayload = JSON.stringify({
-            title: '👻 Luahan Baru di PolySuara',
-            body: `Ada confession baru dalam kategori ${confessionCategory}. Jom tengok!`,
+            title: notifTitle,
+            body: notifBody,
             icon: '/icon-192-maskable.png',
             badge: '/icon-192-maskable.png',
             tag: 'polysuara-new-confession',

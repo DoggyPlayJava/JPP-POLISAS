@@ -89,6 +89,9 @@ export function PolySuaraPage() {
   const [reportReason, setReportReason] = useState('');
   const [isReporting, setIsReporting] = useState(false);
 
+  // Limit reached modal
+  const [limitReachedModalOpen, setLimitReachedModalOpen] = useState(false);
+
   // Notification toggle (server-backed via polysuara_notif_optout table)
   // Default = ON (true). Jika user ada dalam opt-out table = OFF (false).
   const [polySuaraNotif, setPolySuaraNotif] = useState(true);
@@ -298,7 +301,11 @@ export function PolySuaraPage() {
       // — tidak perlu trigger manual dari frontend
     } catch (err: any) {
       console.error(err);
-      toast.error('Gagal menghantar luahan.');
+      if (err?.code === 'P0001' || err?.message?.includes('5/hari') || err?.message?.includes('5/jam')) {
+        setLimitReachedModalOpen(true);
+      } else {
+        toast.error('Gagal menghantar luahan.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -1093,6 +1100,50 @@ export function PolySuaraPage() {
                   >
                     {isReporting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                     Hantar Laporan
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Limit Reached Modal */}
+      <AnimatePresence>
+        {limitReachedModalOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setLimitReachedModalOpen(false)}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[200]"
+            />
+            <div className="fixed inset-0 flex items-center justify-center p-4 z-[201] pointer-events-none">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="w-full max-w-sm bg-slate-900 border border-rose-500/20 rounded-[2rem] shadow-2xl p-8 pointer-events-auto relative overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 to-indigo-500" />
+                <div className="flex justify-center mb-6">
+                  <div className="w-16 h-16 bg-rose-500/10 rounded-2xl flex items-center justify-center rotate-3 border border-rose-500/20">
+                    <Clock className="w-8 h-8 text-rose-500 -rotate-3" />
+                  </div>
+                </div>
+                <h3 className="text-2xl font-black text-white mb-3 text-center tracking-tight">
+                  Rehat Sekejap! 🛑
+                </h3>
+                <p className="text-sm text-slate-400 mb-8 text-center leading-relaxed">
+                  Anda telah mencapai had maksimum <strong className="text-white">5 luahan sejam</strong>. Kami menetapkan had ini untuk menjaga kualiti komuniti dan mengelakkan spam. Cuba lagi selepas 1 jam!
+                </p>
+                <div className="flex justify-center">
+                  <button
+                    onClick={() => setLimitReachedModalOpen(false)}
+                    className="w-full py-3.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-sm font-bold transition-all shadow-[0_0_20px_rgba(244,63,94,0.3)] hover:shadow-[0_0_30px_rgba(244,63,94,0.5)]"
+                  >
+                    Baik, Saya Faham
                   </button>
                 </div>
               </motion.div>
