@@ -24,9 +24,12 @@ function isSafeToAutoReload(pathname: string): boolean {
   );
 }
 
+// ── Module-level guard: betul-betul kekal merentasi render cycles & route changes ──
+// Ini lebih selamat dari useRef kerana ia tidak boleh di-reset oleh React
+let _updateHasBeenTriggered = false;
+
 export function PwaUpdater() {
   const location = useLocation();
-  const updateCalledRef = useRef(false);
 
   const {
     needRefresh: [needRefresh, setNeedRefresh],
@@ -42,15 +45,17 @@ export function PwaUpdater() {
       }, 1500);
 
       // ── Semakan berjadual setiap 5 MINIT ─────────────────────────────────
-      // Untuk app yang dibiarkan buka lama (cth: pelajar tinggal tab portal)
-      const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minit
+      const CHECK_INTERVAL = 5 * 60 * 1000;
       const intervalId = setInterval(() => {
-        r.update().catch((err) => console.warn('[PwaUpdater] Periodic update check failed:', err));
+        // Jangan semak kalau update dah dalam proses
+        if (!_updateHasBeenTriggered) {
+          r.update().catch((err) => console.warn('[PwaUpdater] Periodic update check failed:', err));
+        }
       }, CHECK_INTERVAL);
 
-      // ── Semak segera apabila pengguna fokus balik ke tab/PWA ─────────────
+      // ── Semak apabila pengguna fokus balik ke tab/PWA ─────────────────────
       const handleVisibilityChange = () => {
-        if (document.visibilityState === 'visible') {
+        if (document.visibilityState === 'visible' && !_updateHasBeenTriggered) {
           r.update().catch((err) => console.warn('[PwaUpdater] Visibility update check failed:', err));
         }
       };
@@ -58,7 +63,9 @@ export function PwaUpdater() {
 
       // ── Semak apabila pengguna reconnect dari offline ─────────────────────
       const handleOnline = () => {
-        r.update().catch((err) => console.warn('[PwaUpdater] Online update check failed:', err));
+        if (!_updateHasBeenTriggered) {
+          r.update().catch((err) => console.warn('[PwaUpdater] Online update check failed:', err));
+        }
       };
       window.addEventListener('online', handleOnline);
 
@@ -75,30 +82,38 @@ export function PwaUpdater() {
   });
 
   // ── Semak update apabila user navigate ke halaman lain ───────────────────
-  // Triggered setiap kali route bertukar
+  // DIPISAHKAN dari needRefresh effect — navigation TIDAK patut trigger update flow
   useEffect(() => {
-    if (!needRefresh) {
+    // Hanya semak kalau tiada update pending dan tiada update dalam proses
+    if (!needRefresh && !_updateHasBeenTriggered) {
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.ready
           .then((reg) => reg.update())
           .catch(() => {});
       }
     }
-  }, [location.pathname]);
+  }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Tindak balas apabila update tersedia (needRefresh = true) ────────────
-  // needRefresh jadi true bila SW baru dah install dan tunggu skipWaiting
+  // PENTING: location.pathname TIDAK ADA dalam deps — navigasi tidak patut
+  // re-trigger effect ini. Ini punca utama reload loop.
   useEffect(() => {
-    if (!needRefresh || updateCalledRef.current) return;
+    if (!needRefresh) return;
+
+    // Guard mutlak: kalau update dah dipanggil dalam sesi ini, BERHENTI
+    if (_updateHasBeenTriggered) return;
 
     const currentPath = location.pathname;
 
+    const triggerUpdate = () => {
+      _updateHasBeenTriggered = true; // Set module-level flag — kekal sampai reload
+      console.info('[PwaUpdater] Triggering SW update from path:', currentPath);
+      updateServiceWorker(true); // Hantar SKIP_WAITING → SW activate → reload
+    };
+
     // STRATEGI AGGRESIF: Auto-reload senyap di halaman selamat
     if (isSafeToAutoReload(currentPath)) {
-      updateCalledRef.current = true;
-      console.info('[PwaUpdater] Auto-updating SW on safe page:', currentPath);
-      // updateServiceWorker(true) hantar SKIP_WAITING ke SW, kemudian reload page
-      updateServiceWorker(true);
+      triggerUpdate();
       return;
     }
 
@@ -129,9 +144,8 @@ export function PwaUpdater() {
             </button>
             <button
               onClick={() => {
-                updateCalledRef.current = true;
                 toast.dismiss(t.id);
-                updateServiceWorker(true);
+                triggerUpdate();
               }}
               className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
             >
@@ -146,7 +160,12 @@ export function PwaUpdater() {
         className: 'min-w-[320px] !p-4',
       }
     );
-  }, [needRefresh, location.pathname]);
+
+  // ⚠️ SENGAJA: location.pathname TIDAK ada dalam deps.
+  // Kemasukan pathname menyebabkan effect ini run semula setiap kali user navigate,
+  // yang boleh trigger updateServiceWorker() berkali-kali → reload loop.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needRefresh]);
 
   return null;
 }

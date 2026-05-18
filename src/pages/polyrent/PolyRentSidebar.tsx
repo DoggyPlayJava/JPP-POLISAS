@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Home, Package, Heart, LogOut, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function PolyRentSidebar({ 
   isOpen, 
@@ -15,6 +16,7 @@ export function PolyRentSidebar({
   activeTab?: string;
 }) {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
 
   const handleNavigate = (action: () => void) => {
     onClose();
@@ -84,11 +86,14 @@ export function PolyRentSidebar({
 
             <div className="p-6 border-t border-slate-100 dark:border-white/5">
               <button 
-                onClick={() => handleNavigate(() => navigate('/portal'))}
+                onClick={() => handleNavigate(async () => {
+                  await signOut();
+                  navigate('/login');
+                })}
                 className="w-full py-4 rounded-2xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 font-bold flex items-center justify-center gap-2 transition-all active:scale-95"
               >
                 <LogOut className="w-5 h-5" />
-                Kembali ke Portal
+                Log Keluar
               </button>
             </div>
           </motion.div>

@@ -189,8 +189,8 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
       tindakan: act.tindakan || '',
       imageUrls: act.image_urls || [],
       qr_enabled: act.qr_enabled || false,
-      qr_open_at: act.qr_open_at ? act.qr_open_at.replace('Z','').substring(0,16) : '',
-      qr_close_at: act.qr_close_at ? act.qr_close_at.replace('Z','').substring(0,16) : '',
+      qr_open_at: act.qr_open_at ? act.qr_open_at.replace('Z', '').substring(0, 16) : '',
+      qr_close_at: act.qr_close_at ? act.qr_close_at.replace('Z', '').substring(0, 16) : '',
       merit_kelab: act.merit_kelab || 0,
       merit_eakademik: act.merit_eakademik || 0,
     });
@@ -290,7 +290,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
             .eq('program_id', actId)
             .eq('program_type', 'aktiviti')
             .maybeSingle();
-          
+
           if (!existing) {
             await supabase.from('merit_program_applications').insert({
               program_id: actId,
@@ -344,7 +344,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
         try {
           const d = parseISO(a.start_date);
           if (isValid(d)) m = format(d, 'MMMM yyyy', { locale: ms });
-        } catch {}
+        } catch { }
       }
       if (!grouped[m]) {
         grouped[m] = [];
@@ -658,7 +658,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
                       placeholder="0"
                       className="h-10 rounded-xl bg-muted/40 border-border/60 font-bold"
                     />
-                    <p className="text-[9px] text-muted-foreground/60">Akademik akan vouch, Kediaman luluskan</p>
+                    <p className="text-[9px] text-muted-foreground/60">Exco Kelab akan vouch, Exco Kediaman luluskan</p>
                   </div>
                 </div>
               </div>
@@ -714,9 +714,9 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
 
 // Card untuk setiap aktiviti kelab
 function ActivityKelabCard({ act, currentUserId, effectiveRole, onEdit, onDelete }: any) {
-  const statusCfg  = ACTIVITY_STATUS[act.status] || ACTIVITY_STATUS.perancangan;
+  const statusCfg = ACTIVITY_STATUS[act.status] || ACTIVITY_STATUS.perancangan;
   const priorityCfg = PRIORITY_CONFIG[act.priority] || PRIORITY_CONFIG.sederhana;
-  const isOwner    = act.user_id === currentUserId;
+  const isOwner = act.user_id === currentUserId;
   const [qrOpen, setQrOpen] = useState(false);
 
   const formatDate = (dateStr: string | null) => {
@@ -997,7 +997,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
         : await supabase.from('programs').insert([payload]);
       if (!res.error) {
         toast.success('Program disimpan.');
-        
+
         // --- Trigger Push Notification ---
         if (!editTarget) {
           try {
@@ -1013,7 +1013,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
             console.error("Gagal menghantar notifikasi push", e);
           }
         }
-        
+
         queryCache.invalidate('dashboard_');
         setDialogOpen(false);
         load();
@@ -1094,8 +1094,8 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
       pengarahProgram: act.pengarah_program || '',
       imageUrls: act.image_urls || [],
       qr_enabled: act.qr_enabled || false,
-      qr_open_at: act.qr_open_at ? act.qr_open_at.replace('Z','').substring(0,16) : '',
-      qr_close_at: act.qr_close_at ? act.qr_close_at.replace('Z','').substring(0,16) : '',
+      qr_open_at: act.qr_open_at ? act.qr_open_at.replace('Z', '').substring(0, 16) : '',
+      qr_close_at: act.qr_close_at ? act.qr_close_at.replace('Z', '').substring(0, 16) : '',
       merit_kelab: act.merit_kelab || 0,
       merit_eakademik: act.merit_eakademik || 0,
     });
@@ -1274,13 +1274,13 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between items-end mb-1">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-2 tracking-widest flex-1">Bajet (RM)</Label>
-                      <AIBudgetGenerator 
-                        initialTitle={form.title} 
-                        initialDescription={form.description} 
-                        onApplyBudget={(v) => setForm({...form, budget: v})} 
-                        disabled={saving} 
-                      />
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-2 tracking-widest flex-1">Bajet (RM)</Label>
+                    <AIBudgetGenerator
+                      initialTitle={form.title}
+                      initialDescription={form.description}
+                      onApplyBudget={(v) => setForm({ ...form, budget: v })}
+                      disabled={saving}
+                    />
                   </div>
                   <Input type="number" value={form.budget} onChange={e => setForm({ ...form, budget: e.target.value })}
                     className="rounded-3xl border-none bg-muted/30 h-14 font-bold px-6" placeholder="0.00" />
@@ -1526,156 +1526,156 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
 
   return (
     <>
-    <Card className={cn(
-      'rounded-[2.5rem] border-none transition-all duration-300',
-      isUrgent ? 'w-[300px] shrink-0 bg-card shadow-2xl ring-1 ring-rose-100 dark:ring-rose-900/50' : 'bg-card shadow-sm hover:shadow-xl',
-      isMini && 'opacity-80 hover:opacity-100',
-      isRejected && 'ring-1 ring-rose-200 dark:ring-rose-800/40'
-    )}>
-      <CardContent className={cn('p-7 space-y-5', isMini && 'p-5')}>
-        <div className="flex justify-between items-start">
-          <Badge className={cn(
-            'rounded-full px-3 py-1 text-[9px] font-black uppercase border-none',
-            isRejected ? 'bg-rose-500 text-white' :
-              isPastDeadline ? 'bg-rose-500 text-white' :
-                act.status === 'CONFIRMED' ? 'bg-emerald-500 text-white' :
-                  act.status === 'REQUEST_UNLOCK' ? 'bg-indigo-500 text-white' :
-                    'bg-muted text-muted-foreground'
-          )}>
-            {isRejectedKertasKerja ? '✕ Ditolak JPP' : isRejectedPostMortem ? '✕ Post-Mortem Ditolak' : isPastDeadline ? 'Masa Tamat' : act.status.replace(/_/g, ' ')}
-          </Badge>
-          {canManage && (
-            <div className="flex gap-1.5">
-              {(isPastDeadline || act.status === 'CONFIRMED') && (
-                <Button onClick={onUnlock} variant="ghost" size="icon"
-                  className="h-8 w-8 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" title="Mohon Buka Kunci Tarikh">
-                  <Unlock size={13} />
+      <Card className={cn(
+        'rounded-[2.5rem] border-none transition-all duration-300',
+        isUrgent ? 'w-[300px] shrink-0 bg-card shadow-2xl ring-1 ring-rose-100 dark:ring-rose-900/50' : 'bg-card shadow-sm hover:shadow-xl',
+        isMini && 'opacity-80 hover:opacity-100',
+        isRejected && 'ring-1 ring-rose-200 dark:ring-rose-800/40'
+      )}>
+        <CardContent className={cn('p-7 space-y-5', isMini && 'p-5')}>
+          <div className="flex justify-between items-start">
+            <Badge className={cn(
+              'rounded-full px-3 py-1 text-[9px] font-black uppercase border-none',
+              isRejected ? 'bg-rose-500 text-white' :
+                isPastDeadline ? 'bg-rose-500 text-white' :
+                  act.status === 'CONFIRMED' ? 'bg-emerald-500 text-white' :
+                    act.status === 'REQUEST_UNLOCK' ? 'bg-indigo-500 text-white' :
+                      'bg-muted text-muted-foreground'
+            )}>
+              {isRejectedKertasKerja ? '✕ Ditolak JPP' : isRejectedPostMortem ? '✕ Post-Mortem Ditolak' : isPastDeadline ? 'Masa Tamat' : act.status.replace(/_/g, ' ')}
+            </Badge>
+            {canManage && (
+              <div className="flex gap-1.5">
+                {(isPastDeadline || act.status === 'CONFIRMED') && (
+                  <Button onClick={onUnlock} variant="ghost" size="icon"
+                    className="h-8 w-8 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" title="Mohon Buka Kunci Tarikh">
+                    <Unlock size={13} />
+                  </Button>
+                )}
+                <Button variant="ghost" size="icon" onClick={onEdit}
+                  className="h-8 w-8 rounded-full bg-slate-50 dark:bg-muted/50 text-muted-foreground hover:bg-slate-200 dark:hover:bg-muted" title={isRejectedPostMortem ? "Muat Naik Semula Post-Mortem" : "Kemaskini"}>
+                  <Pencil size={13} />
                 </Button>
+                {act.status === 'DRAFT' && allowAddTakwim && (
+                  <Button variant="ghost" size="icon" onClick={onDelete}
+                    className="h-8 w-8 rounded-full bg-rose-50 dark:bg-rose-500/10 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-500/20" title="Padam Program">
+                    <Trash2 size={13} />
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <h3 className={cn('font-black text-foreground leading-tight',
+              isMini ? 'text-base line-clamp-1' : 'text-xl line-clamp-2')}>
+              {act.nama_program}
+            </h3>
+            {!isMini && act.tarikh_mula && (
+              <p className="text-[11px] font-bold text-muted-foreground flex items-center gap-1.5">
+                <Calendar size={12} className="text-muted-foreground/50" />
+                {act.tarikh_mula}
+              </p>
+            )}
+          </div>
+
+          {/* QR + MERIT BADGES */}
+          {(act.qr_enabled || act.merit_kelab > 0 || act.merit_eakademik > 0) && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {act.qr_enabled && (
+                <button
+                  onClick={() => setQrOpen(true)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/20 transition-colors"
+                >
+                  <QrCode size={10} />
+                  Jana QR
+                </button>
               )}
-              <Button variant="ghost" size="icon" onClick={onEdit}
-                className="h-8 w-8 rounded-full bg-slate-50 dark:bg-muted/50 text-muted-foreground hover:bg-slate-200 dark:hover:bg-muted" title={isRejectedPostMortem ? "Muat Naik Semula Post-Mortem" : "Kemaskini"}>
-                <Pencil size={13} />
+              {act.merit_kelab > 0 && (
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[9px] font-black uppercase text-amber-600">
+                  <Trophy size={9} />
+                  +{act.merit_kelab} Kelab
+                </span>
+              )}
+              {act.merit_eakademik > 0 && (
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase text-emerald-700">
+                  <Trophy size={9} />
+                  +{act.merit_eakademik} Rasmi
+                </span>
+              )}
+            </div>
+          )}
+
+          {act.jpp_remarks && (
+            <div className="p-3.5 bg-rose-50 dark:bg-rose-950/30 rounded-2xl border border-rose-100 dark:border-rose-900/50 flex items-start gap-2">
+              <Info size={13} className="text-rose-500 mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[9px] font-black uppercase text-rose-500 tracking-widest mb-0.5">Ulasan / Nota</p>
+                <p className="text-[10px] font-bold text-rose-700 dark:text-rose-300 italic break-words">{act.jpp_remarks}</p>
+              </div>
+            </div>
+          )}
+
+          <div className="pt-4 border-t border-border/50 flex items-center justify-between">
+            <div className="flex -space-x-1.5">
+              <div className={cn('w-7 h-7 rounded-full border-2 border-background flex items-center justify-center shadow-sm',
+                act.url_kertas_kerja ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground/40')}>
+                <FileText size={11} />
+              </div>
+              <div className={cn('w-7 h-7 rounded-full border-2 border-background flex items-center justify-center shadow-sm',
+                act.url_post_mortem ? 'bg-indigo-600 text-white' : 'bg-muted text-muted-foreground/40')}>
+                <Check size={11} />
+              </div>
+            </div>
+            {canManage && act.status === 'DRAFT' && (
+              <Button disabled={!act.url_kertas_kerja || isPastDeadline}
+                onClick={() => submitAction('PENDING_APPROVAL')}
+                className={cn('h-9 px-5 rounded-full font-black text-[10px] uppercase shadow-md transition-all',
+                  isPastDeadline ? 'bg-muted text-muted-foreground shadow-none' : 'bg-primary text-primary-foreground hover:brightness-110 active:scale-95')}>
+                {isPastDeadline ? <Lock size={11} className="mr-1" /> : <Send size={11} className="mr-1" />}
+                Hantar
               </Button>
-              {act.status === 'DRAFT' && allowAddTakwim && (
-                <Button variant="ghost" size="icon" onClick={onDelete}
-                  className="h-8 w-8 rounded-full bg-rose-50 dark:bg-rose-500/10 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-500/20" title="Padam Program">
-                  <Trash2 size={13} />
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-1.5">
-          <h3 className={cn('font-black text-foreground leading-tight',
-            isMini ? 'text-base line-clamp-1' : 'text-xl line-clamp-2')}>
-            {act.nama_program}
-          </h3>
-          {!isMini && act.tarikh_mula && (
-            <p className="text-[11px] font-bold text-muted-foreground flex items-center gap-1.5">
-              <Calendar size={12} className="text-muted-foreground/50" />
-              {act.tarikh_mula}
-            </p>
-          )}
-        </div>
-
-        {/* QR + MERIT BADGES */}
-        {(act.qr_enabled || act.merit_kelab > 0 || act.merit_eakademik > 0) && (
-          <div className="flex items-center gap-2 flex-wrap">
-            {act.qr_enabled && (
-              <button
-                onClick={() => setQrOpen(true)}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/20 transition-colors"
-              >
-                <QrCode size={10} />
-                Jana QR
-              </button>
             )}
-            {act.merit_kelab > 0 && (
-              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[9px] font-black uppercase text-amber-600">
-                <Trophy size={9} />
-                +{act.merit_kelab} Kelab
-              </span>
+            {canManage && act.status === 'CONFIRMED' && (
+              <Button disabled={!act.url_post_mortem}
+                onClick={() => submitAction('PENDING_POSTMORTEM')}
+                className="h-9 px-5 rounded-full font-black text-[10px] uppercase shadow-md transition-all bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95">
+                <Send size={11} className="mr-1" />
+                Hantar Post-Mortem
+              </Button>
             )}
-            {act.merit_eakademik > 0 && (
-              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase text-emerald-700">
-                <Trophy size={9} />
-                +{act.merit_eakademik} Rasmi
-              </span>
+            {canManage && act.status === 'PENDING_POSTMORTEM' && act.jpp_remarks && (
+              <Button disabled={!act.url_post_mortem}
+                onClick={() => submitAction('PENDING_POSTMORTEM')}
+                className="h-9 px-5 rounded-full font-black text-[10px] uppercase shadow-md transition-all bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95">
+                <Send size={11} className="mr-1" />
+                Hantar Semula
+              </Button>
             )}
           </div>
-        )}
+        </CardContent>
+      </Card>
 
-        {act.jpp_remarks && (
-          <div className="p-3.5 bg-rose-50 dark:bg-rose-950/30 rounded-2xl border border-rose-100 dark:border-rose-900/50 flex items-start gap-2">
-            <Info size={13} className="text-rose-500 mt-0.5 shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[9px] font-black uppercase text-rose-500 tracking-widest mb-0.5">Ulasan / Nota</p>
-              <p className="text-[10px] font-bold text-rose-700 dark:text-rose-300 italic break-words">{act.jpp_remarks}</p>
-            </div>
-          </div>
-        )}
-
-        <div className="pt-4 border-t border-border/50 flex items-center justify-between">
-          <div className="flex -space-x-1.5">
-            <div className={cn('w-7 h-7 rounded-full border-2 border-background flex items-center justify-center shadow-sm',
-              act.url_kertas_kerja ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground/40')}>
-              <FileText size={11} />
-            </div>
-            <div className={cn('w-7 h-7 rounded-full border-2 border-background flex items-center justify-center shadow-sm',
-              act.url_post_mortem ? 'bg-indigo-600 text-white' : 'bg-muted text-muted-foreground/40')}>
-              <Check size={11} />
-            </div>
-          </div>
-          {canManage && act.status === 'DRAFT' && (
-            <Button disabled={!act.url_kertas_kerja || isPastDeadline}
-              onClick={() => submitAction('PENDING_APPROVAL')}
-              className={cn('h-9 px-5 rounded-full font-black text-[10px] uppercase shadow-md transition-all',
-                isPastDeadline ? 'bg-muted text-muted-foreground shadow-none' : 'bg-primary text-primary-foreground hover:brightness-110 active:scale-95')}>
-              {isPastDeadline ? <Lock size={11} className="mr-1" /> : <Send size={11} className="mr-1" />}
-              Hantar
-            </Button>
-          )}
-          {canManage && act.status === 'CONFIRMED' && (
-            <Button disabled={!act.url_post_mortem}
-              onClick={() => submitAction('PENDING_POSTMORTEM')}
-              className="h-9 px-5 rounded-full font-black text-[10px] uppercase shadow-md transition-all bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95">
-              <Send size={11} className="mr-1" />
-              Hantar Post-Mortem
-            </Button>
-          )}
-          {canManage && act.status === 'PENDING_POSTMORTEM' && act.jpp_remarks && (
-            <Button disabled={!act.url_post_mortem}
-              onClick={() => submitAction('PENDING_POSTMORTEM')}
-              className="h-9 px-5 rounded-full font-black text-[10px] uppercase shadow-md transition-all bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95">
-              <Send size={11} className="mr-1" />
-              Hantar Semula
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-
-    {/* QR Modal */}
-    {act.qr_token && (
-      <QrCodeModal
-        open={qrOpen}
-        onClose={() => setQrOpen(false)}
-        program={{
-          id: act.id,
-          type: 'takwim',
-          title: act.nama_program,
-          qr_token: act.qr_token,
-          merit_kelab: act.merit_kelab,
-          merit_eakademik: act.merit_eakademik,
-          qr_open_at: act.qr_open_at,
-          qr_close_at: act.qr_close_at,
-          date: act.tarikh_mula,
-          venue: act.location,
-        }}
-      />
-    )}
-  </>);
+      {/* QR Modal */}
+      {act.qr_token && (
+        <QrCodeModal
+          open={qrOpen}
+          onClose={() => setQrOpen(false)}
+          program={{
+            id: act.id,
+            type: 'takwim',
+            title: act.nama_program,
+            qr_token: act.qr_token,
+            merit_kelab: act.merit_kelab,
+            merit_eakademik: act.merit_eakademik,
+            qr_open_at: act.qr_open_at,
+            qr_close_at: act.qr_close_at,
+            date: act.tarikh_mula,
+            venue: act.location,
+          }}
+        />
+      )}
+    </>);
 }
 
 function SectionHeader({ title, count, color, icon: Icon }: any) {

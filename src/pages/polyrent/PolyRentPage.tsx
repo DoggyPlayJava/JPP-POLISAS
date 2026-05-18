@@ -261,8 +261,8 @@ export function PolyRentPage() {
         
         {/* Top Navbar */}
         <div className="relative z-10 flex items-center justify-between p-4 px-6 max-w-7xl mx-auto mb-10">
-          <button onClick={() => navigate('/portal')} className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-colors border border-white/10">
-            <ChevronLeft className="w-5 h-5" />
+          <button onClick={() => setIsSidebarOpen(true)} className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-colors border border-white/10">
+            <Menu className="w-5 h-5" />
           </button>
           
           <div className="flex items-center gap-3">
@@ -597,7 +597,7 @@ export function PolyRentPage() {
           customLinks={{
             left: [
               { icon: Menu, label: 'Menu', onClick: () => setIsSidebarOpen(true) },
-              { icon: Home, label: 'Rumah', onClick: () => {}, isActive: true }
+              { icon: Home, label: 'Rumah', onClick: () => navigate('/portal'), isActive: false }
             ],
             right: [
               { icon: Calculator, label: 'Kira Bil', onClick: () => setIsCalculatorOpen(true) },
