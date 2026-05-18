@@ -46,7 +46,7 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
     susunan_bilik: '',
     kemudahan: '',
     ciri_ciri_dicari: '',
-    contact_info: profile?.phone || '', // Auto-pull but editable
+    contact_info: profile?.phone || '',
     enable_in_app_chat: true,
     image_files: [] as File[],
     latitude: 0,
@@ -130,7 +130,28 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Map pin handler — auto-calculate distance dari pin position
+  // Auto-detect zon KLK terdekat dari koordinat pin — senyap tanpa notif
+  const autoDetectKawasan = (lat: number, lng: number) => {
+    const kawasanWithCoords = kawasanList.filter(k => k.latitude && k.longitude);
+    if (kawasanWithCoords.length === 0) return;
+
+    let nearest = kawasanWithCoords[0];
+    let minDist = getDistanceFromLatLonInKm(lat, lng, parseFloat(nearest.latitude), parseFloat(nearest.longitude));
+
+    for (const k of kawasanWithCoords) {
+      const d = getDistanceFromLatLonInKm(lat, lng, parseFloat(k.latitude), parseFloat(k.longitude));
+      if (d < minDist) { minDist = d; nearest = k; }
+    }
+
+    // Auto-assign jika dalam radius 5km — senyap, user tak nampak
+    if (minDist <= 5) {
+      setFormData(prev => ({ ...prev, kawasan_id: nearest.id }));
+    } else {
+      setFormData(prev => ({ ...prev, kawasan_id: '' }));
+    }
+  };
+
+  // Map pin handler — auto-calculate distance + auto-detect zon
   const handleMapPin = (pos: [number, number]) => {
     const [lat, lng] = pos;
     const distance = getDistanceFromLatLonInKm(POLISAS_LAT, POLISAS_LNG, lat, lng);
@@ -140,6 +161,7 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
       longitude: lng,
       jarak_polisas_km: parseFloat(distance.toFixed(2)),
     }));
+    autoDetectKawasan(lat, lng);
   };
 
   // Auto-fill lokasi from reverse geocode (when pin dropped)
@@ -155,8 +177,8 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
     if (!profile) return;
     
     // Validations
-    if (!formData.title || !formData.lokasi || !formData.sewa_bulanan || !formData.contact_info || !formData.kawasan_id) {
-      toast.error('Sila lengkapkan semua medan wajib');
+    if (!formData.title || !formData.lokasi || !formData.sewa_bulanan || !formData.contact_info) {
+      toast.error('Sila lengkapkan semua medan wajib (Tajuk, Alamat, Sewa, Hubungi)');
       return;
     }
 
@@ -193,7 +215,7 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
         author_id: profile.id,
         title: formData.title,
         lokasi: formData.lokasi,
-        kawasan_id: formData.kawasan_id,
+        kawasan_id: formData.kawasan_id || null,
         jantina_prefer: formData.jantina_prefer,
         sewa_bulanan: parseFloat(formData.sewa_bulanan) || 0,
         deposit_awal: parseFloat(formData.deposit_awal) || 0,
@@ -473,27 +495,9 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Zon KLK (Kawasan) <span className="text-rose-500">*</span></label>
-                <select
-                  value={formData.kawasan_id}
-                  onChange={(e) => {
-                    handleInputChange('kawasan_id', e.target.value);
-                    const selectedKawasan = kawasanList.find(k => k.id === e.target.value);
-                    if (selectedKawasan && !formData.lokasi) {
-                      handleInputChange('lokasi', selectedKawasan.name);
-                    }
-                  }}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-teal-500/50 outline-none transition-all dark:text-white mb-4"
-                >
-                  <option value="">Pilih Kawasan KLK...</option>
-                  {kawasanList.map(k => (
-                    <option key={k.id} value={k.id}>{k.name}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-slate-500 mt-1 mb-4 flex items-center gap-1"><Info className="w-3 h-3"/> Rating keselamatan akan dipautkan kepada zon ini.</p>
 
-                {/* Alamat penuh — untuk display dalam listing */}
+
+              <div>
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Alamat Penuh <span className="text-rose-500">*</span></label>
                 <input
                   type="text"
