@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, MapPin, ChevronRight, ChevronLeft, Save, Loader2, Info, Plus, CheckCircle, Map, MessageCircle } from 'lucide-react';
+import { X, MapPin, ChevronRight, ChevronLeft, Save, Loader2, Info, Plus, CheckCircle, Map, MessageCircle, Navigation } from 'lucide-react';
+import { MapPicker } from '@/components/MapPicker';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -32,7 +33,6 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
   
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCalculatingDistance, setIsCalculatingDistance] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -130,45 +130,25 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSearchLocation = async () => {
-    if (!formData.lokasi.trim()) {
-      toast.error('Sila masukkan lokasi dahulu');
-      return;
-    }
-    
-    setIsCalculatingDistance(true);
-    try {
-      // Nominatim OSM Search API
-      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(formData.lokasi + ', Kuantan')}`, {
-        headers: {
-          'Accept-Language': 'en-US,en;q=0.9',
-          'User-Agent': 'PolyRent/1.0 (jpp.polisas.edu.my)'
-        }
-      });
-      const data = await response.json();
-      
-      if (data && data.length > 0) {
-        const lat = parseFloat(data[0].lat);
-        const lon = parseFloat(data[0].lon);
-        const distance = getDistanceFromLatLonInKm(POLISAS_LAT, POLISAS_LNG, lat, lon);
-        
-        setFormData(prev => ({
-          ...prev,
-          latitude: lat,
-          longitude: lon,
-          jarak_polisas_km: parseFloat(distance.toFixed(2))
-        }));
-        
-        toast.success(`Jarak anggaran ke POLISAS: ${distance.toFixed(1)} km`);
-      } else {
-        toast.error('Gagal mengesan koordinat lokasi tersebut. Sila cuba kata kunci lain.');
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error('Ralat sistem pemetaan.');
-    } finally {
-      setIsCalculatingDistance(false);
-    }
+  // Map pin handler — auto-calculate distance dari pin position
+  const handleMapPin = (pos: [number, number]) => {
+    const [lat, lng] = pos;
+    const distance = getDistanceFromLatLonInKm(POLISAS_LAT, POLISAS_LNG, lat, lng);
+    setFormData(prev => ({
+      ...prev,
+      latitude: lat,
+      longitude: lng,
+      jarak_polisas_km: parseFloat(distance.toFixed(2)),
+    }));
+  };
+
+  // Auto-fill lokasi from reverse geocode (when pin dropped)
+  const handleMapName = (name: string) => {
+    // Only auto-fill if user hasn't manually typed an address
+    setFormData(prev => ({
+      ...prev,
+      lokasi: prev.lokasi || name,
+    }));
   };
 
   const handleSubmit = async () => {
@@ -513,29 +493,39 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
                 </select>
                 <p className="text-xs text-slate-500 mt-1 mb-4 flex items-center gap-1"><Info className="w-3 h-3"/> Rating keselamatan akan dipautkan kepada zon ini.</p>
 
+                {/* Alamat penuh — untuk display dalam listing */}
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Alamat Penuh <span className="text-rose-500">*</span></label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Cth: No 12, Lorong Balok Makmur 1, Kuantan"
-                    value={formData.lokasi}
-                    onChange={(e) => handleInputChange('lokasi', e.target.value)}
-
-                    className="flex-1 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-teal-500/50 outline-none transition-all dark:text-white"
-                  />
-                  <button 
-                    onClick={handleSearchLocation}
-                    disabled={isCalculatingDistance || !formData.lokasi.trim()}
-                    className="px-4 py-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold hover:bg-slate-800 disabled:opacity-50 transition-colors flex items-center gap-2 whitespace-nowrap"
-                  >
-                    {isCalculatingDistance ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
-                    <span className="text-sm">Kira Jarak</span>
-                  </button>
-                </div>
-                <p className="text-xs text-slate-500 mt-1">Tekan "Kira Jarak" untuk mengira jarak kawasan ini ke POLISAS.</p>
+                <input
+                  type="text"
+                  placeholder="Cth: No 12, Lorong Kempadang Makmur 23, Taman Kempadang Makmur Fasa 2"
+                  value={formData.lokasi}
+                  onChange={(e) => handleInputChange('lokasi', e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-teal-500/50 outline-none transition-all dark:text-white"
+                />
+                <p className="text-xs text-slate-500 mt-1 mb-4">Alamat ini dipaparkan dalam iklan. Tidak digunakan untuk GPS.</p>
               </div>
 
-              {formData.jarak_polisas_km > 0 && (
+              {/* Map Pin Picker */}
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Pin Lokasi Rumah di Peta <span className="text-rose-500">*</span>
+                </label>
+                <p className="text-xs text-slate-500 mb-3 flex items-start gap-1.5">
+                  <Navigation className="w-3.5 h-3.5 mt-0.5 shrink-0 text-teal-500" />
+                  Ketik pada peta untuk letakkan pin di lokasi rumah. Jarak ke POLISAS dikira automatik.
+                </p>
+                <div className="h-64 rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10">
+                  <MapPicker
+                    position={formData.latitude && formData.longitude ? [formData.latitude, formData.longitude] : null}
+                    onPositionChange={handleMapPin}
+                    onNameChange={handleMapName}
+                    label="Rumah Sewa"
+                  />
+                </div>
+              </div>
+
+              {/* Jarak auto-result */}
+              {formData.jarak_polisas_km > 0 ? (
                 <div className="bg-teal-500/10 border border-teal-500/20 rounded-xl p-4 flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center">
                     <Map className="w-5 h-5 text-teal-600 dark:text-teal-400" />
@@ -544,6 +534,11 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
                     <h4 className="font-bold text-teal-900 dark:text-teal-100">Jarak ke POLISAS</h4>
                     <p className="text-teal-600 dark:text-teal-400 font-medium">{formData.jarak_polisas_km} KM</p>
                   </div>
+                </div>
+              ) : (
+                <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-3 flex items-start gap-2 text-xs text-amber-700 dark:text-amber-400">
+                  <Info className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>Sila pin lokasi pada peta di atas. Ini membantu pelajar melihat jarak anggaran ke POLISAS.</span>
                 </div>
               )}
             </motion.div>
