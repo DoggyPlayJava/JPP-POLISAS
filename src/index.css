@@ -221,6 +221,12 @@
   }
 }
 
+@keyframes refresh-bar {
+  0%   { transform: translateX(-100%); }
+  60%  { transform: translateX(150%); }
+  100% { transform: translateX(150%); }
+}
+
 /* ── SUPSAS Dark Theme Override ──────────────────────────────────
    Applied to <body> when on /supsas routes via SupsasLayout.
    This prevents the white flash before JS renders the dark layout.

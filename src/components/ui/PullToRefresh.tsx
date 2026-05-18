@@ -54,7 +54,7 @@ export function PullToRefresh({ onRefresh, children, className, disabled = false
 
     if (currentY >= THRESHOLD) {
       setIsRefreshing(true);
-      setCurrentY(50); // Hold position while refreshing
+      setCurrentY(0); // Reset pull position — content stays in place during refresh
       
       try {
         await onRefresh();
@@ -101,14 +101,17 @@ export function PullToRefresh({ onRefresh, children, className, disabled = false
         </div>
       </div>
 
-      {/* Main content wrapper */}
+      {/* Main content wrapper — ONLY translates during active pull gesture, NOT during background refresh */}
       <div 
         className={cn(
-          "w-full h-full transition-transform duration-200 will-change-transform",
-          !isPulling && "ease-out"
+          "w-full h-full will-change-transform",
+          isPulling && "transition-none",
+          !isPulling && "transition-transform duration-200 ease-out"
         )}
         style={{
-          transform: `translateY(${isRefreshing ? 50 : currentY}px)`
+          // Only translate during the physical pull gesture.
+          // When isRefreshing (background fetch), keep content in place to avoid flicker.
+          transform: isPulling ? `translateY(${currentY}px)` : 'translateY(0px)'
         }}
       >
         {children}

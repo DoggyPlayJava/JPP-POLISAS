@@ -138,7 +138,7 @@ export function DashboardPage() {
   const navigate = useNavigate();
 
   // ── OPTIMISED: Guna hook yang consolidate 8 queries → 1 RPC + cache ──
-  const { data: dashData, isLoading, fetchData: fetchDashboard, refresh } = useDashboardData();
+  const { data: dashData, isLoading, isRefreshing, fetchData: fetchDashboard, refresh } = useDashboardData();
 
   // State tempatan (bukan dari DB)
   const [taskView, setTaskView] = useState<'active' | 'archive'>('active');
@@ -331,6 +331,12 @@ export function DashboardPage() {
   ];
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="page-container space-y-10 pb-20">
+      {/* ── REFRESH INDICATOR (subtle bar, no skeleton flash) ── */}
+      {isRefreshing && (
+        <div className="fixed top-0 left-0 right-0 z-[9999] h-[3px] bg-primary/20 overflow-hidden">
+          <div className="h-full bg-primary animate-[shimmer_1s_ease-in-out_infinite]" style={{ width: '40%', animation: 'refresh-bar 1s ease-in-out infinite' }} />
+        </div>
+      )}
       <SystemTour
         run={runTour}
         onClose={closeTour}

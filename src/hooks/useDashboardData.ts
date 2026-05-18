@@ -42,6 +42,7 @@ export function useDashboardData() {
   const { user, profile, selectedClubId } = useAuth();
   const [data, setData] = useState<DashboardData>(EMPTY_DATA);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const clubId = selectedClubId ?? profile?.club_id;
@@ -61,7 +62,13 @@ export function useDashboardData() {
       }
     }
 
-    setIsLoading(true);
+    // Kalau dah ada data (refresh), jangan flash skeleton — guna isRefreshing
+    // Kalau tiada data lagi (initial load), tunjuk skeleton
+    if (data === EMPTY_DATA || data.members.length === 0 && data.tasks.length === 0) {
+      setIsLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
     setError(null);
 
     try {
@@ -172,6 +179,7 @@ export function useDashboardData() {
 
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   }, [clubId, user]);
 
@@ -192,5 +200,5 @@ export function useDashboardData() {
     fetchData(true);
   }, [fetchData, clubId, user]);
 
-  return { data, isLoading, error, fetchData, refresh };
+  return { data, isLoading, isRefreshing, error, fetchData, refresh };
 }

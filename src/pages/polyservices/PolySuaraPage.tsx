@@ -595,18 +595,25 @@ export function PolySuaraPage() {
                 try {
                   if (next) {
                     // Opt-IN: padam record dari opt-out table
-                    await supabase.from('polysuara_notif_optout').delete().eq('user_id', profile.id);
+                    const { error: delErr } = await supabase
+                      .from('polysuara_notif_optout')
+                      .delete()
+                      .eq('user_id', profile.id);
+                    if (delErr) throw delErr;
                     toast.success('Notifikasi PolySuara diaktifkan.');
                     if (!isSubscribed) requestPermission();
                   } else {
                     // Opt-OUT: tambah record ke opt-out table
-                    await supabase.from('polysuara_notif_optout').upsert({ user_id: profile.id }, { onConflict: 'user_id' });
+                    const { error: upsertErr } = await supabase
+                      .from('polysuara_notif_optout')
+                      .upsert({ user_id: profile.id }, { onConflict: 'user_id', ignoreDuplicates: true });
+                    if (upsertErr) throw upsertErr;
                     toast.success('Notifikasi PolySuara ditutup.');
                   }
                   setPolySuaraNotif(next);
-                } catch (err) {
+                } catch (err: any) {
                   console.error('[PolySuara Notif Toggle]', err);
-                  toast.error('Gagal menukar tetapan notifikasi.');
+                  toast.error(`Gagal menukar tetapan notifikasi: ${err?.message ?? 'Cuba lagi.'}`);
                 } finally {
                   setNotifToggleLoading(false);
                 }
