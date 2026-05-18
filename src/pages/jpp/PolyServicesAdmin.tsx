@@ -13,25 +13,36 @@ import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { IGStoryExportCard } from '@/components/polysuara/IGStoryExportCard';
 
-type Tab = 'POLYSUARA' | 'POLYMATCH' | 'ANALITIK';
+type Tab = 'POLYSUARA' | 'ANALITIK';
 
 import { Settings } from 'lucide-react';
 import { FeatureToggle } from '@/components/ui/FeatureToggle';
 
+import { useLocation } from 'react-router-dom';
+
 export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean }) {
   const { profile } = useAuth();
-  const [activeTab, setActiveTab] = useState<Tab | 'SETTINGS'>('POLYSUARA');
+  const location = useLocation();
+  
+  const [activeTab, setActiveTab] = useState<Tab | 'SETTINGS'>(() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get('tab');
+    if (tabParam === 'settings') return 'SETTINGS';
+    return 'POLYSUARA';
+  });
+  
   const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
   
   // Data States
   const [suaraList, setSuaraList] = useState<any[]>([]);
-  const [matchList, setMatchList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
   // Settings States
   const [modConfig, setModConfig] = useState({ report_threshold: 5, time_window_mins: 10 });
   const [savingConfig, setSavingConfig] = useState(false);
+  const [notifConfig, setNotifConfig] = useState({ upvote_threshold: 10, last_notified_at: null as string | null });
+  const [savingNotifConfig, setSavingNotifConfig] = useState(false);
 
   useEffect(() => {
     supabase.from('portal_settings')
@@ -42,12 +53,16 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
         if (data?.color) setThemeColor(data.color);
       });
 
-    // Fetch config
+    // Fetch moderation config
     supabase.from('polyservices_moderation_config').select('*').eq('id', 1).maybeSingle()
       .then(({ data }) => {
-        if (data) {
-          setModConfig({ report_threshold: data.report_threshold, time_window_mins: data.time_window_mins });
-        }
+        if (data) setModConfig({ report_threshold: data.report_threshold, time_window_mins: data.time_window_mins });
+      });
+
+    // Fetch notification config
+    supabase.from('polysuara_notif_state').select('upvote_threshold, last_notified_at').eq('id', 1).maybeSingle()
+      .then(({ data }) => {
+        if (data) setNotifConfig({ upvote_threshold: data.upvote_threshold ?? 10, last_notified_at: data.last_notified_at });
       });
   }, []);
 
@@ -63,7 +78,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
   };
 
   useEffect(() => {
-    if (activeTab === 'POLYSUARA' || activeTab === 'POLYMATCH' || activeTab === 'ANALITIK') {
+    if (activeTab === 'POLYSUARA' || activeTab === 'ANALITIK') {
       fetchData();
     }
     if (activeTab === 'SETTINGS' || activeTab === 'ANALITIK') {
@@ -115,6 +130,34 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
     }
   };
 
+  const saveNotifConfig = async () => {
+    setSavingNotifConfig(true);
+    try {
+      const { error } = await supabase.from('polysuara_notif_state')
+        .update({ upvote_threshold: notifConfig.upvote_threshold })
+        .eq('id', 1);
+      if (error) throw error;
+      toast.success('Tetapan notifikasi dikemaskini');
+    } catch (e: any) {
+      toast.error('Gagal kemaskini tetapan notifikasi');
+    } finally {
+      setSavingNotifConfig(false);
+    }
+  };
+
+  const resetNotifCooldown = async () => {
+    try {
+      const { error } = await supabase.from('polysuara_notif_state')
+        .update({ last_notified_at: null, last_confession_id: null })
+        .eq('id', 1);
+      if (error) throw error;
+      setNotifConfig(prev => ({ ...prev, last_notified_at: null }));
+      toast.success('Cooldown notifikasi ditetapkan semula');
+    } catch (e: any) {
+      toast.error('Gagal menetapkan semula cooldown');
+    }
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -132,20 +175,6 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
         }));
         
         setSuaraList(mappedData);
-      } else if (activeTab === 'POLYMATCH') {
-        const [matchRes, reportsRes] = await Promise.all([
-          supabase.from('polymatch_listings').select(`*, profiles:author_id(full_name, matric_no)`).order('created_at', { ascending: false }),
-          supabase.from('polyservices_reports').select('target_id, reason, created_at, profiles:reporter_id(matric_no)').eq('target_type', 'MATCH')
-        ]);
-        
-        if (matchRes.error) throw matchRes.error;
-        
-        const mappedData = (matchRes.data || []).map(item => ({
-          ...item,
-          reports: (reportsRes.data || []).filter(r => r.target_id === item.id)
-        }));
-        
-        setMatchList(mappedData);
       }
     } catch (err: any) {
       console.error(err);
@@ -216,17 +245,6 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
     }
   };
 
-  const handleDeleteMatch = async (id: string) => {
-    if (!window.confirm('Padam iklan PolyMatch ini secara kekal?')) return;
-    try {
-      const { error } = await supabase.from('polymatch_listings').delete().eq('id', id);
-      if (error) throw error;
-      toast.success('Iklan dipadam');
-      setMatchList(prev => prev.filter(item => item.id !== id));
-    } catch (err: any) {
-      toast.error('Gagal memadam iklan');
-    }
-  };
 
   const [replyModalOpen, setReplyModalOpen] = useState(false);
   const [replyTargetId, setReplyTargetId] = useState<string | null>(null);
@@ -353,11 +371,6 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 
-  const filteredMatch = matchList.filter(m => 
-    m.title.toLowerCase().includes(search.toLowerCase()) || 
-    m.description.toLowerCase().includes(search.toLowerCase()) ||
-    m.profiles?.matric_no?.toLowerCase().includes(search.toLowerCase())
-  );
 
   return (
     <div className={cn(
@@ -372,7 +385,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
             <ShieldAlert className="w-7 h-7" style={{ color: themeColor }} />
             Moderasi PolyServices
           </h1>
-          <p className="text-sm text-white/50 mt-1">Pantau dan urus kandungan pengguna untuk modul PolySuara dan PolyMatch.</p>
+          <p className="text-sm text-white/50 mt-1">Pantau dan urus kandungan pengguna untuk modul PolySuara.</p>
         </div>
       </div>
 
@@ -389,18 +402,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
           >
             PolySuara
           </button>
-          <button
-            onClick={() => setActiveTab('POLYMATCH')}
-            className={cn(
-              "flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
-              activeTab === 'POLYMATCH' ? "text-white shadow-lg" : "text-white/40 hover:text-white/80 hover:bg-white/5"
-            )}
-            style={{ background: activeTab === 'POLYMATCH' ? hexToRgba(themeColor, 0.2) : undefined }}
-          >
-            <Users className="w-4 h-4" />
-            <span className="hidden sm:inline">POLYMATCH</span>
-          </button>
-          
+
           <button
             onClick={() => setActiveTab('ANALITIK')}
             className={cn(
@@ -461,11 +463,6 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                   label="Modul PolySuara" 
                   description="Benarkan pelajar menghantar dan melihat confession" 
                 />
-                <FeatureToggle 
-                  moduleId="polymatch" 
-                  label="Modul PolyMatch" 
-                  description="Benarkan pelajar membuat iklan pencarian rakan/projek" 
-                />
               </div>
             </div>
 
@@ -506,6 +503,53 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
               </div>
             </div>
             
+            {/* Notification Settings */}
+            <div className="space-y-4 pt-6 border-t border-white/10">
+              <div className="space-y-2">
+                <h3 className="text-lg font-black text-white flex items-center gap-2">
+                  🔔 Tetapan Notifikasi PolySuara
+                </h3>
+                <p className="text-sm text-white/50">Kawal ambang (threshold) upvote untuk mencetuskan notifikasi push kepada pelajar. Max 1 notifikasi sejam. Jika tiada post layak dalam 3 jam, notifikasi akan dihantar untuk post terbaik walaupun di bawah threshold.</p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-white/70">Minimum Upvotes untuk Notifikasi</label>
+                <input
+                  type="number" min="1" max="100"
+                  value={notifConfig.upvote_threshold}
+                  onChange={(e) => setNotifConfig({ ...notifConfig, upvote_threshold: parseInt(e.target.value) || 10 })}
+                  className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30"
+                />
+                <p className="text-xs text-white/30">Sekarang: {notifConfig.upvote_threshold} upvotes. Cadangan: 5 (komuniti kecil), 10 (standard), 20 (komuniti aktif).</p>
+              </div>
+
+              {notifConfig.last_notified_at && (
+                <div className="bg-teal-500/10 border border-teal-500/20 rounded-xl p-3 text-sm text-teal-300">
+                  ✅ Notifikasi terakhir: <span className="font-bold">{new Date(notifConfig.last_notified_at).toLocaleString('ms-MY')}</span>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={saveNotifConfig}
+                  disabled={savingNotifConfig}
+                  className="flex-1 py-3 rounded-xl text-sm font-black text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                  style={{ background: themeColor }}
+                >
+                  {savingNotifConfig ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                  Simpan Threshold
+                </button>
+                <button
+                  onClick={resetNotifCooldown}
+                  className="px-4 py-3 rounded-xl text-sm font-black text-white/60 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2 border border-white/10"
+                  title="Reset cooldown supaya notifikasi boleh dihantar segera"
+                >
+                  <XCircle className="w-4 h-4" />
+                  Reset Cooldown
+                </button>
+              </div>
+            </div>
+
             {/* Sensor Words Management */}
             <div className="space-y-4 pt-6 border-t border-white/10">
               <div className="space-y-2">
@@ -818,17 +862,18 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                     <div className="flex items-start justify-between mb-3">
                       <span className={cn(
                         "px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5",
-                        match.category === 'PROJECT' ? "bg-teal-500/10 text-teal-400" : "bg-blue-500/10 text-blue-400"
+                        "bg-teal-500/10 text-teal-400"
                       )}>
-                        {match.category === 'PROJECT' ? <Users className="w-3 h-3" /> : <Home className="w-3 h-3" />}
-                        {match.category}
+                        <Home className="w-3 h-3" />
+                        SEWA
                       </span>
                       <span className="text-[10px] text-indigo-400 font-bold tracking-widest uppercase bg-indigo-500/10 px-2 rounded-md">
                         {match.profiles?.matric_no || 'UNKNOWN'}
                       </span>
                     </div>
                     <h3 className="text-white font-black text-lg mb-2">{match.title}</h3>
-                    <p className="text-white/60 text-sm line-clamp-2 mb-4">{match.description}</p>
+                    <p className="text-white/60 text-sm line-clamp-2 mb-2">Lokasi: {match.lokasi}</p>
+                    <p className="text-white/60 text-xs font-bold mb-4">RM{match.sewa_bulanan}/bulan • {match.jantina_prefer}</p>
                     
                     {match.reports && match.reports.length > 0 && (
                       <div className="mb-4 space-y-2 border-t border-white/5 pt-3">

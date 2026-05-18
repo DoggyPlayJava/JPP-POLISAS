@@ -25,6 +25,7 @@ const MODULE_FALLBACK: Record<NotificationModule, string> = {
   POLYRIDER:    '/polyrider',
   POLYTASK:     '/polytask',
   POLYSUARA:    '/polysuara',
+  POLYRENT:     '/polyrent',
 };
 
 function getNotifLink(notif: AppNotification): string | null {
@@ -46,6 +47,7 @@ const MODULE_CONFIG: Record<NotificationModule, { label: string; color: string; 
   POLYRIDER:    { label: 'PolyRider',    color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b' },
   POLYTASK:     { label: 'PolyTask',     color: '#a78bfa', bg: 'rgba(167,139,250,0.12)',  dot: '#a78bfa' },
   POLYSUARA:    { label: 'PolySuara',    color: '#f43f5e', bg: 'rgba(244,63,94,0.12)',    dot: '#f43f5e' },
+  POLYRENT:     { label: 'PolyRent',     color: '#34d399', bg: 'rgba(52,211,153,0.12)',   dot: '#34d399' },
 };
 
 function ModuleBadge({ module }: { module: NotificationModule }) {

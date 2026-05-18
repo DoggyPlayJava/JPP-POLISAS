@@ -455,22 +455,37 @@ export function KlkDashboard() {
           </div>
         </div>
 
-        {/* Quick Setting PolyRider */}
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
-          <Link
-            to="/polyrider-admin"
-            className="inline-flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 hover:border-emerald-500/40 hover:bg-emerald-500/15 transition-all group shadow-lg shadow-emerald-500/5"
-          >
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-              <Car className="w-5 h-5 text-emerald-400" />
-            </div>
-            <div className="text-left">
-              <p className="text-xs font-black text-emerald-300 uppercase tracking-widest">PolyRider HQ</p>
-              <p className="text-[10px] text-emerald-400/70 font-medium group-hover:text-emerald-400 transition-colors">Urus Rider & Tetapan</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-emerald-500/50 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all ml-2" />
-          </Link>
-        </motion.div>
+        <div className="flex gap-2">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
+            <Link
+              to="/klk/polyrent-admin"
+              className="inline-flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-teal-500/10 to-teal-500/5 border border-teal-500/20 hover:border-teal-500/40 hover:bg-teal-500/15 transition-all group shadow-lg shadow-teal-500/5"
+            >
+              <div className="w-10 h-10 rounded-xl bg-teal-500/20 flex items-center justify-center">
+                <Home className="w-5 h-5 text-teal-400" />
+              </div>
+              <div className="text-left">
+                <p className="text-xs font-black text-teal-300 uppercase tracking-widest">PolyRent</p>
+                <p className="text-[10px] text-teal-400/70 font-medium group-hover:text-teal-400 transition-colors">Moderasi Iklan</p>
+              </div>
+            </Link>
+          </motion.div>
+          {/* Quick Setting PolyRider */}
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.15 }}>
+            <Link
+              to="/polyrider-admin"
+              className="inline-flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 hover:border-emerald-500/40 hover:bg-emerald-500/15 transition-all group shadow-lg shadow-emerald-500/5"
+            >
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                <Car className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div className="text-left">
+                <p className="text-xs font-black text-emerald-300 uppercase tracking-widest">PolyRider HQ</p>
+                <p className="text-[10px] text-emerald-400/70 font-medium group-hover:text-emerald-400 transition-colors">Urus Rider & Tetapan</p>
+              </div>
+            </Link>
+          </motion.div>
+        </div>
       </div>
 
       {/* DB Not Ready Banner */}

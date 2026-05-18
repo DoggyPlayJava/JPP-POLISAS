@@ -139,6 +139,7 @@ const KlkPublicStats = lazy(() => import('./pages/klk/KlkPublicStats').then(m =>
 const KlkResidencyFormPage = lazy(() => import('./pages/klk/KlkResidencyFormPage').then(m => ({ default: m.KlkResidencyFormPage })));
 const KlkSettingsPage = lazy(() => import('./pages/klk/KlkSettingsPage').then(m => ({ default: m.KlkSettingsPage })));
 const KlkLayout = lazy(() => import('./pages/klk/KlkLayout').then(m => ({ default: m.KlkLayout })));
+const PolyRentAdmin = lazy(() => import('./pages/klk/PolyRentAdmin').then(m => ({ default: m.PolyRentAdmin })));
 
 
 const JppUsersPage = lazy(() => import('./pages/jpp/JppUsersPage').then(m => ({ default: m.JppUsersPage })));
@@ -167,7 +168,7 @@ const PolyTaskAdmin = lazy(() => import('./pages/polytask/admin/PolyTaskAdmin').
 
 // ── PolyServices ──
 const PolySuaraPage = lazy(() => import('./pages/polyservices/PolySuaraPage').then(m => ({ default: m.PolySuaraPage })));
-const PolyMatchPage = lazy(() => import('./pages/polyservices/PolyMatchPage').then(m => ({ default: m.PolyMatchPage })));
+const PolyRentPage = lazy(() => import('./pages/polyrent/PolyRentPage').then(m => ({ default: m.PolyRentPage })));
 const PolyServicesAdmin = lazy(() => import('./pages/jpp/PolyServicesAdmin').then(m => ({ default: m.PolyServicesAdmin })));
 
 // ── Global Modals (lazy-loaded, deferred after paint) ──
@@ -278,7 +279,7 @@ function AppRoutes() {
 
         {/* ── PolyServices — standalone tanpa sidebar ── */}
         <Route path="/polysuara" element={<RequireApproval><PolySuaraPage /></RequireApproval>} />
-        <Route path="/polymatch" element={<RequireApproval><PolyMatchPage /></RequireApproval>} />
+        <Route path="/polyrent" element={<RequireApproval><PolyRentPage /></RequireApproval>} />
 
         {/* ✅ WRAP HALAMAN EXCO DALAM APPLAYOUT (ada sidebar) */}
         <Route element={<RequireApproval><AppLayout /></RequireApproval>}>
@@ -382,6 +383,7 @@ function AppRoutes() {
         <Route element={<RequireApproval><KlkLayout /></RequireApproval>}>
           <Route path="/klk"         element={<KlkDashboard />} />
           <Route path="/klk/tetapan" element={<KlkSettingsPage />} />
+          <Route path="/klk/polyrent-admin" element={<PolyRentAdmin />} />
           <Route path="/polyrider-admin" element={<PolyRiderAdminDashboard />} />
         </Route>
       </Route>

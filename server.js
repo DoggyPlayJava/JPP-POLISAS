@@ -895,75 +895,125 @@ app.post('/api/polysuara-new-confession-notify', requireWebhookSecret, async (re
 
         const payload = req.body;
 
-        // Hanya proses INSERT events
-        if (payload.type !== 'INSERT') {
-            return res.status(200).send('Not an INSERT event.');
+        // Accept confession inserts and upvote milestones
+        const eventType = payload.type;
+        if (eventType !== 'INSERT' && eventType !== 'UPVOTE_MILESTONE') {
+            return res.status(200).send('Ignored event type.');
         }
 
-        const { author_id, category, codename, content_preview } = payload.record;
+        const now = new Date();
+        const ONE_HOUR_MS = 60 * 60 * 1000;
+        const THREE_HOURS_MS = 3 * ONE_HOUR_MS;
 
-        if (!author_id) {
-            return res.status(400).json({ error: 'Missing author_id in webhook payload.' });
+        // ── 1. Fetch state (threshold + last sent info) ───────────────────────
+        const { data: stateRow } = await supabaseAdmin
+            .from('polysuara_notif_state')
+            .select('last_notified_at, last_confession_id, upvote_threshold')
+            .eq('id', 1)
+            .single();
+
+        const upvoteThreshold = stateRow?.upvote_threshold ?? 10;
+        const lastNotified = stateRow?.last_notified_at ? new Date(stateRow.last_notified_at) : null;
+        const lastConfessionId = stateRow?.last_confession_id ?? null;
+        const msSinceLast = lastNotified ? (now - lastNotified) : Infinity;
+
+        // ── 2. Phase 1: Quality check — cari confession ≥ threshold dalam 1 jam
+        const { data: topPosts } = await supabaseAdmin
+            .from('polysuara_confessions')
+            .select('id, author_id, category, codename, content, upvotes')
+            .eq('is_hidden_by_community', false)
+            .eq('is_archived', false)
+            .gte('upvotes', upvoteThreshold)
+            .gte('created_at', new Date(now - ONE_HOUR_MS).toISOString())
+            .order('upvotes', { ascending: false })
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+
+        const qualifyingPost = topPosts?.[0] ?? null;
+
+        let confessionToNotify = null;
+        let notifReason = '';
+
+        if (qualifyingPost) {
+            // Jangan notif untuk post yang sama dua kali
+            if (qualifyingPost.id === lastConfessionId) {
+                console.log(`[polysuara-notify] Post ${qualifyingPost.id} dah dinotifkan sebelum ini. Skip.`);
+                return res.status(200).json({ success: true, sent: 0, skipped: 'already_notified_for_this_post' });
+            }
+            // 1-hour cooldown antara notifikasi
+            if (msSinceLast < ONE_HOUR_MS) {
+                const minLeft = Math.ceil((ONE_HOUR_MS - msSinceLast) / 60000);
+                console.log(`[polysuara-notify] Dalam cooldown 1 jam — ${minLeft} min lagi.`);
+                return res.status(200).json({ success: true, sent: 0, throttled: true, minutesLeft: minLeft });
+            }
+            confessionToNotify = qualifyingPost;
+            notifReason = 'quality_threshold';
+        } else {
+            // ── 3. Phase 2: 3-hour fallback ──────────────────────────────────
+            if (msSinceLast < THREE_HOURS_MS) {
+                const minLeft = Math.ceil((THREE_HOURS_MS - msSinceLast) / 60000);
+                console.log(`[polysuara-notify] Tiada post layak. Tunggu fallback — ${minLeft} min lagi.`);
+                return res.status(200).json({ success: true, sent: 0, waiting_fallback: true, minutesLeft: minLeft });
+            }
+
+            // 3+ jam tanpa notif — pilih confession terbaik dalam 3 jam terakhir
+            const { data: fallbackPosts } = await supabaseAdmin
+                .from('polysuara_confessions')
+                .select('id, author_id, category, codename, content, upvotes')
+                .eq('is_hidden_by_community', false)
+                .eq('is_archived', false)
+                .gte('created_at', new Date(now - THREE_HOURS_MS).toISOString())
+                .order('upvotes', { ascending: false })
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+            const fallbackPost = fallbackPosts?.[0] ?? null;
+
+            if (!fallbackPost) {
+                console.log('[polysuara-notify] Tiada confession dalam 3 jam terakhir. Silent skip.');
+                return res.status(200).json({ success: true, sent: 0, skipped: 'no_confessions_in_window' });
+            }
+
+            confessionToNotify = fallbackPost;
+            notifReason = 'fallback_3h';
         }
 
-        const confessionCategory = category || 'UMUM';
-
-        // ── Dynamic notification content ──────────────────────────────────────
+        // ── 4. Build dynamic notification content ────────────────────────────
         const CATEGORY_META = {
-            UMUM:       { emoji: '💭', label: 'Umum' },
-            AKADEMIK:   { emoji: '📚', label: 'Akademik' },
-            FASILITI:   { emoji: '🏢', label: 'Fasiliti' },
-            KAMSIS:     { emoji: '🏠', label: 'Asrama' },
-            KAUNSELING: { emoji: '💙', label: 'Kaunseling' },
+            UMUM:       { emoji: '💭' },
+            AKADEMIK:   { emoji: '📚' },
+            FASILITI:   { emoji: '🏢' },
+            KAMSIS:     { emoji: '🏠' },
+            KAUNSELING: { emoji: '💙' },
         };
 
         const HOOKS = {
-            UMUM: [
-                'Seseorang ada benda nak luahkan... 👀',
-                'Ada cerita baru dalam PolySuara 👻',
-                'Jom tengok apa yang orang luahkan hari ni',
-                'Ada yang berani luah perasaan 🔥',
-                'Curiosity killed the cat... tapi baca dulu 👀',
-            ],
-            AKADEMIK: [
-                'Ada confession pasal kehidupan akademik 📚',
-                'Rasa struggle sorang? Baca ni dulu 💪',
-                'Confession dari dunia buku dan peperiksaan...',
-                'Kau je ke rasa macam tu? Baca ni 👀',
-            ],
-            FASILITI: [
-                'Ada yang nak luah pasal kemudahan kolej 🏢',
-                'Confession fasiliti: ada yang kena tahu ni',
-                'Masalah fasiliti? Ada yang dah luahkan 🔧',
-            ],
-            KAMSIS: [
-                'Gossip asrama incoming 🏠👀',
-                'Cerita dari dalam asrama... 🌙',
-                'Ada confession dari penghuni asrama 🏠',
-                'Life asrama ni memang macam-macam 😅',
-            ],
-            KAUNSELING: [
-                'Seseorang perlukan sokongan anda 💙',
-                'Ada yang luah perasaan dengan berani 💪',
-                'Jangan rasa sorang... baca ni 🤍',
-                'Confession yang penuh perasaan 💙',
-            ],
+            UMUM:       ['Seseorang ada benda nak luahkan... 👀', 'Ada cerita baru dalam PolySuara 👻', 'Ada yang berani luah perasaan 🔥', 'Jom tengok apa yang tular hari ni'],
+            AKADEMIK:   ['Ada confession pasal kehidupan akademik 📚', 'Rasa struggle sorang? Baca ni dulu 💪', 'Kau je ke rasa macam tu? 👀'],
+            FASILITI:   ['Ada yang nak luah pasal kemudahan kolej 🏢', 'Masalah fasiliti? Ada yang dah luahkan 🔧'],
+            KAMSIS:     ['Gossip asrama incoming 🏠👀', 'Cerita dari dalam asrama... 🌙', 'Life asrama ni memang macam-macam 😅'],
+            KAUNSELING: ['Seseorang perlukan sokongan anda 💙', 'Jangan rasa sorang... baca ni 🤍'],
         };
 
-        const meta = CATEGORY_META[confessionCategory] || CATEGORY_META.UMUM;
-        const hooks = HOOKS[confessionCategory] || HOOKS.UMUM;
+        const cat = confessionToNotify.category || 'UMUM';
+        const meta = CATEGORY_META[cat] || CATEGORY_META.UMUM;
+        const hooks = HOOKS[cat] || HOOKS.UMUM;
         const hook = hooks[Math.floor(Math.random() * hooks.length)];
 
-        const ghost = codename || 'Hantu Tanpa Nama';
-        const preview = content_preview
-            ? content_preview.length > 80
-                ? content_preview.slice(0, 80) + '...'
-                : content_preview
+        const ghost = confessionToNotify.codename || 'Hantu Tanpa Nama';
+        const rawContent = confessionToNotify.content || '';
+        const preview = rawContent.length > 0
+            ? rawContent.length > 80 ? rawContent.slice(0, 80) + '...' : rawContent
             : null;
 
-        const notifTitle = `${meta.emoji} ${ghost} baru luah sesuatu`;
+        const isTrending = notifReason === 'quality_threshold';
+        const notifTitle = isTrending
+            ? `🔥 Trending di PolySuara (${confessionToNotify.upvotes} sokong)`
+            : `${meta.emoji} ${ghost} baru luah sesuatu`;
         const notifBody = preview || hook;
 
+        // ── 5. Setup VAPID ────────────────────────────────────────────────────
         const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:jpp@cipher-node.org';
         const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
         const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
@@ -974,13 +1024,13 @@ app.post('/api/polysuara-new-confession-notify', requireWebhookSecret, async (re
         }
         webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
 
-        // 1. Fetch opt-out users
+        // ── 6. Fetch opt-out list ─────────────────────────────────────────────
         const { data: optOutRows } = await supabaseAdmin
             .from('polysuara_notif_optout')
             .select('user_id');
         const optOutIds = new Set(optOutRows?.map(r => r.user_id) || []);
 
-        // 2. Fetch ALL push subscriptions (service role bypasses RLS)
+        // ── 7. Fetch all push subscriptions ──────────────────────────────────
         const { data: allSubs, error: subsError } = await supabaseAdmin
             .from('push_subscriptions')
             .select('id, user_id, endpoint, p256dh, auth');
@@ -990,15 +1040,16 @@ app.post('/api/polysuara-new-confession-notify', requireWebhookSecret, async (re
             return res.status(200).json({ success: true, sent: 0, message: 'Tiada subscription.' });
         }
 
-        // 3. Filter: exclude author + opted-out
+        // ── 8. Filter: exclude author + opted-out ─────────────────────────────
         const eligibleSubs = allSubs.filter(
-            sub => sub.user_id !== author_id && !optOutIds.has(sub.user_id)
+            sub => sub.user_id !== confessionToNotify.author_id && !optOutIds.has(sub.user_id)
         );
 
         if (eligibleSubs.length === 0) {
             return res.status(200).json({ success: true, sent: 0, message: 'Tiada subscriber eligible.' });
         }
 
+        // ── 9. Send in batches ────────────────────────────────────────────────
         const pushPayload = JSON.stringify({
             title: notifTitle,
             body: notifBody,
@@ -1013,19 +1064,17 @@ app.post('/api/polysuara-new-confession-notify', requireWebhookSecret, async (re
         let sent = 0;
         let failed = 0;
         const staleIds = [];
-
-        // Process in batches of 20
         const BATCH_SIZE = 20;
+
         for (let i = 0; i < eligibleSubs.length; i += BATCH_SIZE) {
             const batch = eligibleSubs.slice(i, i + BATCH_SIZE);
             await Promise.allSettled(
                 batch.map(async (sub) => {
-                    const subscription = {
-                        endpoint: sub.endpoint,
-                        keys: { p256dh: sub.p256dh, auth: sub.auth },
-                    };
                     try {
-                        await webpush.sendNotification(subscription, pushPayload);
+                        await webpush.sendNotification(
+                            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+                            pushPayload
+                        );
                         sent++;
                     } catch (e) {
                         failed++;
@@ -1035,14 +1084,22 @@ app.post('/api/polysuara-new-confession-notify', requireWebhookSecret, async (re
             );
         }
 
-        // Cleanup stale subscriptions
+        // ── 10. Cleanup stale subscriptions ──────────────────────────────────
         if (staleIds.length > 0) {
             await supabaseAdmin.from('push_subscriptions').delete().in('id', staleIds);
             console.log(`[polysuara-notify] Removed ${staleIds.length} stale subscription(s).`);
         }
 
-        console.log(`[polysuara-notify] "${confessionCategory}" → Sent: ${sent}/${eligibleSubs.length}, Failed: ${failed}, OptOut: ${optOutIds.size}`);
-        return res.status(200).json({ success: true, sent, failed, total: eligibleSubs.length });
+        // ── 11. Update state DULU sebelum return (anti-race-condition) ────────
+        // Kemaskini last_notified_at SEBELUM return supaya concurrent requests
+        // yang masih berjalan akan nampak state baru dan skip.
+        await supabaseAdmin
+            .from('polysuara_notif_state')
+            .update({ last_notified_at: now.toISOString(), last_confession_id: confessionToNotify.id })
+            .eq('id', 1);
+
+        console.log(`[polysuara-notify] [${notifReason}] "${cat}" (upvotes:${confessionToNotify.upvotes}) → Sent:${sent}/${eligibleSubs.length} Failed:${failed} OptOut:${optOutIds.size}`);
+        return res.status(200).json({ success: true, sent, failed, total: eligibleSubs.length, notifReason });
 
     } catch (error) {
         console.error('[polysuara-notify] Error:', error.message);

@@ -6,7 +6,7 @@
 import { supabase } from './supabase';
 import { API_BASE_URL } from './utils';
 
-export type NotificationModule = 'EKPP' | 'KEBAJIKAN' | 'AKADEMIK' | 'KEUSAHAWANAN' | 'JPP' | 'SYSTEM' | 'POLYMART' | 'KAMSIS' | 'KLK' | 'POLYRIDER' | 'POLYTASK' | 'POLYSUARA';
+export type NotificationModule = 'EKPP' | 'KEBAJIKAN' | 'AKADEMIK' | 'KEUSAHAWANAN' | 'JPP' | 'SYSTEM' | 'POLYMART' | 'KAMSIS' | 'KLK' | 'POLYRIDER' | 'POLYTASK' | 'POLYSUARA' | 'POLYRENT';
 
 export interface NotificationPayload {
   title: string;
@@ -384,14 +384,21 @@ export async function sendNotificationToClubMT(
   } catch (err) {}
 }
 
-// ─── Broadcast ke Exco KLK (Kediaman Luar Kampus & PolyRider) ───────────────
+// ─── Broadcast ke Exco KLS (Kediaman Luar Kampus — PolyRent & PolyRider) ────
+// Note: Unit code dalam DB adalah 'KLS' (bukan 'KLK')
 export async function sendNotificationToKLKExco(
+  payload: NotificationPayload
+): Promise<void> {
+  return sendNotificationToKLSExco(payload);
+}
+
+export async function sendNotificationToKLSExco(
   payload: NotificationPayload
 ): Promise<void> {
   try {
     const [excoByUnit, mtAssigned, superAdmins] = await Promise.all([
-      supabase.from('profiles').select('id').eq('role', 'JPP').eq('jpp_unit', 'KLK'),
-      supabase.from('jpp_mt_assignments').select('mt_user_id').eq('unit', 'KLK'),
+      supabase.from('profiles').select('id').eq('role', 'JPP').eq('jpp_unit', 'KLS'),
+      supabase.from('jpp_mt_assignments').select('mt_user_id').eq('unit', 'KLS'),
       supabase.from('profiles').select('id').eq('role', 'SUPER_ADMIN_JPP'),
     ]);
     const userIds = new Set<string>();
@@ -406,6 +413,14 @@ export async function sendNotificationToKLKExco(
     if (error) return;
     Array.from(userIds).forEach(uid => firePush(uid, payload).catch(() => {}));
   } catch (err) {}
+}
+
+// ─── Hantar notifikasi PolyRent kepada pengguna tertentu (Tuan Rumah / Pelajar) ─
+export async function sendPolyRentNotification(
+  user_id: string,
+  payload: Omit<NotificationPayload, 'module'>
+): Promise<void> {
+  return sendNotificationToUser(user_id, { ...payload, module: 'POLYRENT' });
 }
 
 // ─── Broadcast ke Semua PolyRider Aktif (Untuk Pesanan Baru) ───────────────

@@ -433,7 +433,80 @@ export const TOUR_STEPS: Record<string, Step[]> = {
     }
   ],
 
-  // 9. Modul Kafeteria
+  // 10. Modul PolyRent (Sewa Bilik/Rumah Pelajar)
+  POLYRENT_PAGE: [
+    {
+      target: 'body',
+      title: '🏠 Selamat Datang ke PolyRent!',
+      content: 'Platform sewa bilik eksklusif pelajar POLISAS. Cari bilik yang sesuai, simpan kegemaran anda, dan hubungi tuan rumah terus dalam aplikasi ini.',
+      placement: 'center',
+      disableBeacon: true,
+    },
+    {
+      target: '.tour-polyrent-search',
+      title: '🔍 Cari Bilik Dengan Pantas',
+      content: 'Taip nama kawasan atau jalan (cth: "Beserah", "Balok") untuk menapis senarai iklan dalam masa nyata.',
+      placement: 'bottom',
+      disableBeacon: true,
+    },
+    {
+      target: '.tour-polyrent-tabs',
+      title: '🔀 Dua Mod Pencarian',
+      content: '"Iklan Rumah" — tuan rumah yang iklankan bilik kosong. "Pelajar Mencari" — pelajar yang sedang mencari teman sewa atau bilik.',
+      placement: 'bottom',
+      disableBeacon: true,
+    },
+    {
+      target: '.tour-polyrent-filters',
+      title: '⚡ Tapis Ikut Keperluan',
+      content: 'Tapis iklan mengikut jantina yang diperlukan (Lelaki / Perempuan / Campuran), atau tekan ❤️ untuk melihat semua iklan yang telah anda simpan.',
+      placement: 'bottom',
+      disableBeacon: true,
+    },
+    {
+      target: '.tour-polyrent-card',
+      title: '📋 Kad Iklan Bilik',
+      content: 'Tekan pada mana-mana kad untuk melihat butiran penuh — gambar, kemudahan, jarak ke POLISAS, dan maklumat hubungi tuan rumah.',
+      placement: 'top',
+      disableBeacon: true,
+    },
+    {
+      target: '.tour-polyrent-wishlist',
+      title: '❤️ Simpan Iklan Kegemaran',
+      content: 'Tekan ikon hati untuk menyimpan iklan yang menarik. Senarai simpanan anda akan kekal walaupun anda tutup aplikasi.',
+      placement: 'top',
+      disableBeacon: true,
+    },
+    {
+      target: '.tour-polyrent-add',
+      title: '📢 Tuan Rumah? Iklankan Sekarang!',
+      content: 'Punya bilik kosong? Cipta iklan dalam masa 3 minit. Tetapkan harga, muat naik gambar, dan sambungkan dengan In-App Chat untuk pelajar hubungi anda terus.',
+      placement: 'bottom',
+      disableBeacon: true,
+    },
+    {
+      target: '.tour-polyrent-calculator',
+      title: '🧮 Kalkulator Sewa Bijak',
+      content: 'Tidak pasti berapa mampu bayar? Gunakan kalkulator ini untuk menganggar bajet sewa, utiliti, dan deposit awal dengan mudah.',
+      placement: 'bottom',
+      disableBeacon: true,
+    },
+    {
+      target: '.tour-polyrent-menu',
+      title: '⚙️ Urus Iklan Anda',
+      content: 'Buka menu untuk mengurus iklan yang anda terbitkan, kemaskini kekosongan bilik, atau tutup iklan yang sudah penuh.',
+      placement: 'top',
+      disableBeacon: true,
+    },
+    {
+      target: '.tour-help-button',
+      title: '✅ Anda Sudah Bersedia!',
+      content: 'Tutorial selesai. Jika perlukan bantuan lagi, tekan butang (?) ini untuk ulang panduan ini.',
+      placement: 'top',
+      disableBeacon: true,
+    },
+  ],
+
   // TODO: Halaman Kafeteria belum dibina sebagai page standalone.
   // Fungsi kafeteria diakses melalui PolyMaps (filter Kafe).
   // Selector akan ditambah apabila halaman KafeteriaPage dicipta.

@@ -444,7 +444,7 @@ export function KebajikanUnitDashboard() {
               />
               <QuickAction
                 label="Moderasi Awam"
-                description="Urus kandungan PolySuara & PolyMatch"
+                description="Urus kandungan PolySuara & PolyRent"
                 icon={ShieldAlert}
                 color={TEAL}
                 onClick={() => setTab('moderasi')}

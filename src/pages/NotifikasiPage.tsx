@@ -24,6 +24,7 @@ const MODULE_CONFIG: Record<NotificationModule, { label: string; color: string; 
   POLYRIDER:    { label: 'PolyRider',    color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b', emoji: '🏍️' },
   POLYTASK:     { label: 'PolyTask',     color: '#a78bfa', bg: 'rgba(167,139,250,0.12)',  dot: '#a78bfa', emoji: '📋' },
   POLYSUARA:    { label: 'PolySuara',    color: '#f43f5e', bg: 'rgba(244,63,94,0.12)',    dot: '#f43f5e', emoji: '👻' },
+  POLYRENT:     { label: 'PolyRent',     color: '#34d399', bg: 'rgba(52,211,153,0.12)',   dot: '#34d399', emoji: '🏡' },
 };
 
 const MODULE_FALLBACK: Record<NotificationModule, string> = {
@@ -39,6 +40,7 @@ const MODULE_FALLBACK: Record<NotificationModule, string> = {
   POLYRIDER:    '/polyrider',
   POLYTASK:     '/polytask',
   POLYSUARA:    '/polysuara',
+  POLYRENT:     '/polyrent',
 };
 
 function getNotifLink(notif: AppNotification): string | null {
@@ -64,7 +66,7 @@ function groupByDate(notifs: AppNotification[]): { label: string; items: AppNoti
 }
 
 // ─── Single Notif Row ──────────────────────────────────────────────────────────
-function NotifRow({ notif, onRead }: { notif: AppNotification; onRead: () => void }) {
+function NotifRow({ notif, onRead }: { notif: AppNotification; onRead: () => void; key?: React.Key }) {
   const isUnread = !notif.is_read;
   const cfg = MODULE_CONFIG[notif.module] ?? MODULE_CONFIG.SYSTEM;
   const hasLink = !!getNotifLink(notif);
@@ -132,7 +134,7 @@ function NotifRow({ notif, onRead }: { notif: AppNotification; onRead: () => voi
 }
 
 // ─── Module Filter Chip ────────────────────────────────────────────────────────
-const ALL_MODULES: NotificationModule[] = ['KEBAJIKAN', 'EKPP', 'AKADEMIK', 'KEUSAHAWANAN', 'JPP', 'SYSTEM', 'POLYMART', 'KAMSIS', 'KLK', 'POLYRIDER', 'POLYTASK', 'POLYSUARA'];
+const ALL_MODULES: NotificationModule[] = ['KEBAJIKAN', 'EKPP', 'AKADEMIK', 'KEUSAHAWANAN', 'JPP', 'SYSTEM', 'POLYMART', 'KAMSIS', 'KLK', 'POLYRIDER', 'POLYTASK', 'POLYSUARA', 'POLYRENT'];
 
 function FilterChip({
   module, active, count, onClick,
@@ -141,6 +143,7 @@ function FilterChip({
   active: boolean;
   count: number;
   onClick: () => void;
+  key?: React.Key;
 }) {
   const cfg = module === 'ALL' ? null : MODULE_CONFIG[module];
   return (
@@ -198,7 +201,7 @@ export function NotifikasiPage() {
 
   // Count per module
   const moduleCount = useMemo(() => {
-    const counts: Partial<Record<NotificationModule | 'ALL', number>> = { ALL: notifs.length };
+    const counts: Record<NotificationModule | 'ALL', number> = { ALL: notifs.length } as Record<NotificationModule | 'ALL', number>;
     for (const mod of ALL_MODULES) {
       counts[mod] = notifs.filter(n => n.module === mod).length;
     }
@@ -255,15 +258,18 @@ export function NotifikasiPage() {
               count={moduleCount.ALL ?? 0}
               onClick={() => setActiveModule('ALL')}
             />
-            {activeModules.map(mod => (
-              <FilterChip
-                key={mod}
-                module={mod}
-                active={activeModule === mod}
-                count={moduleCount[mod] ?? 0}
-                onClick={() => setActiveModule(mod)}
-              />
-            ))}
+            {activeModules.map(mod => {
+              const handleClick: () => void = () => setActiveModule(mod);
+              return (
+                <FilterChip
+                  key={mod}
+                  module={mod}
+                  active={activeModule === mod}
+                  count={moduleCount[mod] as number}
+                  onClick={handleClick}
+                />
+              );
+            })}
             {/* Unread toggle */}
             <button
               onClick={() => setShowUnreadOnly(v => !v)}
@@ -323,13 +329,16 @@ export function NotifikasiPage() {
                   </p>
                 </div>
                 {/* Notif rows */}
-                {group.items.map((n, i) => (
-                  <NotifRow
-                    key={n.id || `${group.label}-${i}`}
-                    notif={n}
-                    onRead={() => handleNotifClick(n)}
-                  />
-                ))}
+                {group.items.map((n: AppNotification, i: number) => {
+                  const handleRead: () => void = () => { handleNotifClick(n); };
+                  return (
+                    <NotifRow
+                      key={n.id || `${group.label}-${i}`}
+                      notif={n}
+                      onRead={handleRead}
+                    />
+                  );
+                })}
               </motion.div>
             ))}
           </AnimatePresence>
