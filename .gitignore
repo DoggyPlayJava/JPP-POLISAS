@@ -42,3 +42,4 @@ src/takwim_rasmi_workflow.md
 scratch/
 loadtest.js
 orientation-loadtest.js
+spike-test.js
