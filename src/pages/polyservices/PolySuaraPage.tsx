@@ -10,7 +10,7 @@ import html2canvas from 'html2canvas';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { BottomNav } from '@/components/layout/BottomNav';
-import { sendNotificationToKebajikanExco, broadcastPolySuaraNewConfession } from '@/lib/notifications';
+import { sendNotificationToKebajikanExco } from '@/lib/notifications';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { PolySuaraPoll } from './PolySuaraPoll';
 import { IGStoryExportCard } from '@/components/polysuara/IGStoryExportCard';
@@ -293,9 +293,9 @@ export function PolySuaraPage() {
       setShowPoll(false);
       setPollOptions(['', '']);
       fetchConfessions(0, true);
-
-      // Broadcast push notification kepada semua subscriber (fire-and-forget)
-      broadcastPolySuaraNewConfession(profile.id, postCategory).catch(console.error);
+      // Notification broadcast kini diurus oleh Supabase Database Webhook
+      // (server endpoint /api/polysuara-new-confession-notify)
+      // — tidak perlu trigger manual dari frontend
     } catch (err: any) {
       console.error(err);
       toast.error('Gagal menghantar luahan.');

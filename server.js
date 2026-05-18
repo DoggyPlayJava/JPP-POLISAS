@@ -881,37 +881,40 @@ app.post('/api/polyrider-notify', requireAuth, async (req, res) => {
 });
 
 // ==========================================
-// 6c. PolySuara Broadcast Push Notification
+// 6c. PolySuara New Confession Webhook Notification
+// Dicetuskan oleh Supabase Database Webhook pada INSERT
+// ke jadual `polysuara_confessions`.
 // Hantar push notification kepada SEMUA subscriber
 // yang BUKAN author dan BELUM opt-out.
 // Push-only (tiada insert ke jadual notifications)
 // untuk elak membanjiri DB dengan N rows per confession.
 // ==========================================
-const polySuaraBroadcastLimiter = createUserRateLimiter(
-    5,   // max 5 broadcast per 15 min per user (mencukupi — 1 per confession)
-    15,
-    'Terlalu banyak luahan. Sila cuba lagi selepas 15 minit.'
-);
-app.post('/api/polysuara-broadcast', requireAuth, polySuaraBroadcastLimiter, async (req, res) => {
+app.post('/api/polysuara-new-confession-notify', requireWebhookSecret, async (req, res) => {
     try {
         if (!supabaseAdmin) throw new Error('Supabase Admin Client not initialized.');
 
-        const { authorId, category } = req.body;
-        if (!authorId || !category) {
-            return res.status(400).json({ error: 'authorId dan category diperlukan.' });
+        const payload = req.body;
+
+        // Hanya proses INSERT events
+        if (payload.type !== 'INSERT') {
+            return res.status(200).send('Not an INSERT event.');
         }
 
-        // Security: pastikan authorId = authenticated user
-        if (req.user.id !== authorId) {
-            return res.status(403).json({ error: 'Forbidden: authorId mismatch.' });
+        const { author_id, category } = payload.record;
+
+        if (!author_id) {
+            return res.status(400).json({ error: 'Missing author_id in webhook payload.' });
         }
+
+        const confessionCategory = category || 'UMUM';
 
         const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:jpp@cipher-node.org';
         const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
         const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
 
         if (!vapidPublicKey || !vapidPrivateKey) {
-            throw new Error('VAPID keys belum dikonfigurasi.');
+            console.warn('[polysuara-notify] VAPID keys not configured. Skipping push.');
+            return res.status(200).json({ success: true, sent: 0, message: 'VAPID not configured.' });
         }
         webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
 
@@ -933,16 +936,16 @@ app.post('/api/polysuara-broadcast', requireAuth, polySuaraBroadcastLimiter, asy
 
         // 3. Filter: exclude author + opted-out
         const eligibleSubs = allSubs.filter(
-            sub => sub.user_id !== authorId && !optOutIds.has(sub.user_id)
+            sub => sub.user_id !== author_id && !optOutIds.has(sub.user_id)
         );
 
         if (eligibleSubs.length === 0) {
             return res.status(200).json({ success: true, sent: 0, message: 'Tiada subscriber eligible.' });
         }
 
-        const payload = JSON.stringify({
+        const pushPayload = JSON.stringify({
             title: '👻 Luahan Baru di PolySuara',
-            body: `Ada confession baru dalam kategori ${category}. Jom tengok!`,
+            body: `Ada confession baru dalam kategori ${confessionCategory}. Jom tengok!`,
             icon: '/icon-192-maskable.png',
             badge: '/icon-192-maskable.png',
             tag: 'polysuara-new-confession',
@@ -966,7 +969,7 @@ app.post('/api/polysuara-broadcast', requireAuth, polySuaraBroadcastLimiter, asy
                         keys: { p256dh: sub.p256dh, auth: sub.auth },
                     };
                     try {
-                        await webpush.sendNotification(subscription, payload);
+                        await webpush.sendNotification(subscription, pushPayload);
                         sent++;
                     } catch (e) {
                         failed++;
@@ -979,14 +982,14 @@ app.post('/api/polysuara-broadcast', requireAuth, polySuaraBroadcastLimiter, asy
         // Cleanup stale subscriptions
         if (staleIds.length > 0) {
             await supabaseAdmin.from('push_subscriptions').delete().in('id', staleIds);
-            console.log(`[polysuara-broadcast] Removed ${staleIds.length} stale subscription(s).`);
+            console.log(`[polysuara-notify] Removed ${staleIds.length} stale subscription(s).`);
         }
 
-        console.log(`[polysuara-broadcast] "${category}" → Sent: ${sent}/${eligibleSubs.length}, Failed: ${failed}, OptOut: ${optOutIds.size}`);
+        console.log(`[polysuara-notify] "${confessionCategory}" → Sent: ${sent}/${eligibleSubs.length}, Failed: ${failed}, OptOut: ${optOutIds.size}`);
         return res.status(200).json({ success: true, sent, failed, total: eligibleSubs.length });
 
     } catch (error) {
-        console.error('[polysuara-broadcast] Error:', error.message);
+        console.error('[polysuara-notify] Error:', error.message);
         return res.status(500).json({ error: error.message });
     }
 });
