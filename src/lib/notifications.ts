@@ -6,7 +6,7 @@
 import { supabase } from './supabase';
 import { API_BASE_URL } from './utils';
 
-export type NotificationModule = 'EKPP' | 'KEBAJIKAN' | 'AKADEMIK' | 'KEUSAHAWANAN' | 'JPP' | 'SYSTEM' | 'POLYMART' | 'KAMSIS' | 'KLK' | 'POLYRIDER' | 'POLYTASK';
+export type NotificationModule = 'EKPP' | 'KEBAJIKAN' | 'AKADEMIK' | 'KEUSAHAWANAN' | 'JPP' | 'SYSTEM' | 'POLYMART' | 'KAMSIS' | 'KLK' | 'POLYRIDER' | 'POLYTASK' | 'POLYSUARA';
 
 export interface NotificationPayload {
   title: string;
@@ -430,3 +430,29 @@ export async function sendNotificationToActivePolyRiders(
     userIds.forEach(uid => firePush(uid, payload).catch(() => {}));
   } catch (err) {}
 }
+
+// ─── Broadcast Push-Only ke pelajar yang subscribe PolySuara ──────────────────
+// Memanggil endpoint server /api/polysuara-broadcast yang menggunakan
+// supabaseAdmin (service role) untuk query semua push_subscriptions.
+// Push-only: Tidak insert ke jadual `notifications` untuk elak banjir DB.
+export async function broadcastPolySuaraNewConfession(
+  authorId: string,
+  category: string
+): Promise<void> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return;
+
+    await fetch(`${API_BASE_URL}/api/polysuara-broadcast`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ authorId, category }),
+    }).catch(err => console.error('[broadcastPolySuara] Fetch error:', err));
+  } catch (err) {
+    console.error('[broadcastPolySuaraNewConfession] Error:', err);
+  }
+}
+

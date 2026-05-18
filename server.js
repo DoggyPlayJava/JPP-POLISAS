@@ -881,6 +881,117 @@ app.post('/api/polyrider-notify', requireAuth, async (req, res) => {
 });
 
 // ==========================================
+// 6c. PolySuara Broadcast Push Notification
+// Hantar push notification kepada SEMUA subscriber
+// yang BUKAN author dan BELUM opt-out.
+// Push-only (tiada insert ke jadual notifications)
+// untuk elak membanjiri DB dengan N rows per confession.
+// ==========================================
+const polySuaraBroadcastLimiter = createUserRateLimiter(
+    5,   // max 5 broadcast per 15 min per user (mencukupi — 1 per confession)
+    15,
+    'Terlalu banyak luahan. Sila cuba lagi selepas 15 minit.'
+);
+app.post('/api/polysuara-broadcast', requireAuth, polySuaraBroadcastLimiter, async (req, res) => {
+    try {
+        if (!supabaseAdmin) throw new Error('Supabase Admin Client not initialized.');
+
+        const { authorId, category } = req.body;
+        if (!authorId || !category) {
+            return res.status(400).json({ error: 'authorId dan category diperlukan.' });
+        }
+
+        // Security: pastikan authorId = authenticated user
+        if (req.user.id !== authorId) {
+            return res.status(403).json({ error: 'Forbidden: authorId mismatch.' });
+        }
+
+        const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:jpp@cipher-node.org';
+        const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
+        const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+
+        if (!vapidPublicKey || !vapidPrivateKey) {
+            throw new Error('VAPID keys belum dikonfigurasi.');
+        }
+        webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+
+        // 1. Fetch opt-out users
+        const { data: optOutRows } = await supabaseAdmin
+            .from('polysuara_notif_optout')
+            .select('user_id');
+        const optOutIds = new Set(optOutRows?.map(r => r.user_id) || []);
+
+        // 2. Fetch ALL push subscriptions (service role bypasses RLS)
+        const { data: allSubs, error: subsError } = await supabaseAdmin
+            .from('push_subscriptions')
+            .select('id, user_id, endpoint, p256dh, auth');
+
+        if (subsError) throw new Error(subsError.message);
+        if (!allSubs || allSubs.length === 0) {
+            return res.status(200).json({ success: true, sent: 0, message: 'Tiada subscription.' });
+        }
+
+        // 3. Filter: exclude author + opted-out
+        const eligibleSubs = allSubs.filter(
+            sub => sub.user_id !== authorId && !optOutIds.has(sub.user_id)
+        );
+
+        if (eligibleSubs.length === 0) {
+            return res.status(200).json({ success: true, sent: 0, message: 'Tiada subscriber eligible.' });
+        }
+
+        const payload = JSON.stringify({
+            title: '👻 Luahan Baru di PolySuara',
+            body: `Ada confession baru dalam kategori ${category}. Jom tengok!`,
+            icon: '/icon-192-maskable.png',
+            badge: '/icon-192-maskable.png',
+            tag: 'polysuara-new-confession',
+            renotify: true,
+            requireInteraction: false,
+            data: { url: '/polysuara', link: '/polysuara', module: 'POLYSUARA', type: 'NEW_CONFESSION' },
+        });
+
+        let sent = 0;
+        let failed = 0;
+        const staleIds = [];
+
+        // Process in batches of 20
+        const BATCH_SIZE = 20;
+        for (let i = 0; i < eligibleSubs.length; i += BATCH_SIZE) {
+            const batch = eligibleSubs.slice(i, i + BATCH_SIZE);
+            await Promise.allSettled(
+                batch.map(async (sub) => {
+                    const subscription = {
+                        endpoint: sub.endpoint,
+                        keys: { p256dh: sub.p256dh, auth: sub.auth },
+                    };
+                    try {
+                        await webpush.sendNotification(subscription, payload);
+                        sent++;
+                    } catch (e) {
+                        failed++;
+                        if (e.statusCode === 410) staleIds.push(sub.id);
+                    }
+                })
+            );
+        }
+
+        // Cleanup stale subscriptions
+        if (staleIds.length > 0) {
+            await supabaseAdmin.from('push_subscriptions').delete().in('id', staleIds);
+            console.log(`[polysuara-broadcast] Removed ${staleIds.length} stale subscription(s).`);
+        }
+
+        console.log(`[polysuara-broadcast] "${category}" → Sent: ${sent}/${eligibleSubs.length}, Failed: ${failed}, OptOut: ${optOutIds.size}`);
+        return res.status(200).json({ success: true, sent, failed, total: eligibleSubs.length });
+
+    } catch (error) {
+        console.error('[polysuara-broadcast] Error:', error.message);
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+// ==========================================
 // 7. PolyRider SOS Alert Endpoint
 // Prioriti KRITIKAL: Dihantar kepada semua KLK & SUPER_ADMIN_JPP
 

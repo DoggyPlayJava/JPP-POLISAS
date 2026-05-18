@@ -22,6 +22,8 @@ const MODULE_CONFIG: Record<NotificationModule, { label: string; color: string; 
   KAMSIS:       { label: 'i-KAMSIS',     color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)',   dot: '#8B5CF6', emoji: '🏠' },
   KLK:          { label: 'KLK',          color: '#14b8a6', bg: 'rgba(20,184,166,0.12)',   dot: '#14b8a6', emoji: '🏢' },
   POLYRIDER:    { label: 'PolyRider',    color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b', emoji: '🏍️' },
+  POLYTASK:     { label: 'PolyTask',     color: '#a78bfa', bg: 'rgba(167,139,250,0.12)',  dot: '#a78bfa', emoji: '📋' },
+  POLYSUARA:    { label: 'PolySuara',    color: '#f43f5e', bg: 'rgba(244,63,94,0.12)',    dot: '#f43f5e', emoji: '👻' },
 };
 
 const MODULE_FALLBACK: Record<NotificationModule, string> = {
@@ -35,6 +37,8 @@ const MODULE_FALLBACK: Record<NotificationModule, string> = {
   KAMSIS:       '/dashboard',
   KLK:          '/klk',
   POLYRIDER:    '/polyrider',
+  POLYTASK:     '/polytask',
+  POLYSUARA:    '/polysuara',
 };
 
 function getNotifLink(notif: AppNotification): string | null {
@@ -128,7 +132,7 @@ function NotifRow({ notif, onRead }: { notif: AppNotification; onRead: () => voi
 }
 
 // ─── Module Filter Chip ────────────────────────────────────────────────────────
-const ALL_MODULES: NotificationModule[] = ['KEBAJIKAN', 'EKPP', 'AKADEMIK', 'KEUSAHAWANAN', 'JPP', 'SYSTEM', 'POLYMART', 'KAMSIS', 'KLK', 'POLYRIDER'];
+const ALL_MODULES: NotificationModule[] = ['KEBAJIKAN', 'EKPP', 'AKADEMIK', 'KEUSAHAWANAN', 'JPP', 'SYSTEM', 'POLYMART', 'KAMSIS', 'KLK', 'POLYRIDER', 'POLYTASK', 'POLYSUARA'];
 
 function FilterChip({
   module, active, count, onClick,

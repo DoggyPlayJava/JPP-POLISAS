@@ -10,7 +10,7 @@ import html2canvas from 'html2canvas';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { BottomNav } from '@/components/layout/BottomNav';
-import { sendNotificationToKebajikanExco } from '@/lib/notifications';
+import { sendNotificationToKebajikanExco, broadcastPolySuaraNewConfession } from '@/lib/notifications';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { PolySuaraPoll } from './PolySuaraPoll';
 import { IGStoryExportCard } from '@/components/polysuara/IGStoryExportCard';
@@ -89,10 +89,24 @@ export function PolySuaraPage() {
   const [reportReason, setReportReason] = useState('');
   const [isReporting, setIsReporting] = useState(false);
 
-  // Notification toggle
-  const [polySuaraNotif, setPolySuaraNotif] = useState(() => {
-    return localStorage.getItem('polysuara_notif') !== 'false';
-  });
+  // Notification toggle (server-backed via polysuara_notif_optout table)
+  // Default = ON (true). Jika user ada dalam opt-out table = OFF (false).
+  const [polySuaraNotif, setPolySuaraNotif] = useState(true);
+  const [notifToggleLoading, setNotifToggleLoading] = useState(false);
+
+  // Fetch notification preference from DB on mount
+  useEffect(() => {
+    if (!profile?.id) return;
+    supabase
+      .from('polysuara_notif_optout')
+      .select('user_id')
+      .eq('user_id', profile.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        // Jika record wujud = user telah opt-out = notif OFF
+        setPolySuaraNotif(!data);
+      });
+  }, [profile?.id]);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -279,6 +293,9 @@ export function PolySuaraPage() {
       setShowPoll(false);
       setPollOptions(['', '']);
       fetchConfessions(0, true);
+
+      // Broadcast push notification kepada semua subscriber (fire-and-forget)
+      broadcastPolySuaraNewConfession(profile.id, postCategory).catch(console.error);
     } catch (err: any) {
       console.error(err);
       toast.error('Gagal menghantar luahan.');
@@ -570,19 +587,33 @@ export function PolySuaraPage() {
           </button>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => {
+              disabled={notifToggleLoading}
+              onClick={async () => {
+                if (!profile?.id || notifToggleLoading) return;
                 const next = !polySuaraNotif;
-                setPolySuaraNotif(next);
-                localStorage.setItem('polysuara_notif', String(next));
-                if (next) {
-                  toast.success('Notifikasi PolySuara diaktifkan.');
-                  if (!isSubscribed) requestPermission();
-                } else {
-                  toast.success('Notifikasi PolySuara ditutup.');
+                setNotifToggleLoading(true);
+                try {
+                  if (next) {
+                    // Opt-IN: padam record dari opt-out table
+                    await supabase.from('polysuara_notif_optout').delete().eq('user_id', profile.id);
+                    toast.success('Notifikasi PolySuara diaktifkan.');
+                    if (!isSubscribed) requestPermission();
+                  } else {
+                    // Opt-OUT: tambah record ke opt-out table
+                    await supabase.from('polysuara_notif_optout').upsert({ user_id: profile.id }, { onConflict: 'user_id' });
+                    toast.success('Notifikasi PolySuara ditutup.');
+                  }
+                  setPolySuaraNotif(next);
+                } catch (err) {
+                  console.error('[PolySuara Notif Toggle]', err);
+                  toast.error('Gagal menukar tetapan notifikasi.');
+                } finally {
+                  setNotifToggleLoading(false);
                 }
               }}
               className={cn(
                 "w-9 h-9 rounded-full flex items-center justify-center transition-colors",
+                notifToggleLoading && "opacity-50 cursor-wait",
                 polySuaraNotif ? "bg-teal-500/20 text-teal-400" : "bg-white/5 text-white/40 hover:bg-white/10"
               )}
               title={polySuaraNotif ? "Notifikasi Aktif" : "Aktifkan Notifikasi"}
