@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import fs from 'fs';
 import multer from 'multer';
 import webpush from 'web-push';
 import { createClient } from '@supabase/supabase-js';
@@ -2369,17 +2370,89 @@ cron.schedule('*/5 * * * *', async () => {
 // Serve Static Frontend (Vite Build)
 // ==========================================
 // After building the Vite app, it outputs to 'dist'. We serve it here.
-app.use(express.static(path.join(__dirname, 'dist')));
+// OPTIMASI: Cache-Control untuk aset statik — browser tak perlu minta semula
+app.use(express.static(path.join(__dirname, 'dist'), {
+    maxAge: '1d',         // CSS/JS/images cache 1 hari
+    etag: true,           // Enable ETag untuk conditional requests
+    lastModified: true,
+    setHeaders: (res, filePath) => {
+        // Hashed assets (Vite adds hash) — cache lama
+        if (filePath.match(/\.(js|css)$/) && filePath.includes('assets')) {
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+        // index.html — jangan cache (supaya deploy baru terus nampak)
+        if (filePath.endsWith('index.html')) {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        }
+    },
+}));
+
+// OPTIMASI: Cache index.html dalam memori — elak disk I/O pada setiap request
+// Ini menyelesaikan isu 3% Express failure semasa peak 200 VU
+const INDEX_HTML_PATH = path.join(__dirname, 'dist', 'index.html');
+let cachedIndexHtml = null;
+try {
+    cachedIndexHtml = fs.readFileSync(INDEX_HTML_PATH, 'utf8');
+    console.log('[STARTUP] ✅ index.html cached in memory (' + Buffer.byteLength(cachedIndexHtml) + ' bytes)');
+} catch (err) {
+    console.warn('[STARTUP] ⚠️ index.html not found in dist/ — SPA fallback will use sendFile (slower)');
+}
 
 // SPA Fallback: Any route not matched by API or static files will return index.html
 app.use((req, res, next) => {
     if (req.method === 'GET' && !req.path.startsWith('/api/')) {
-        res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+        if (cachedIndexHtml) {
+            // Serve dari memory — ZERO disk I/O, boleh handle ribuan req/s
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.status(200).send(cachedIndexHtml);
+        } else {
+            res.sendFile(INDEX_HTML_PATH);
+        }
     } else {
         next();
     }
 });
 
-app.listen(port, () => {
-    console.log(`[JPP-POLISAS] Server is running on port ${port}`);
+// ==========================================
+// GRACEFUL SHUTDOWN & CRASH PROTECTION
+// ==========================================
+// Elakkan server mati senyap tanpa log — ini punca "crash" sebelum ini
+process.on('uncaughtException', (err) => {
+    console.error('\n🚨 [FATAL] Uncaught Exception:', err.message);
+    console.error(err.stack);
+    // Beri masa untuk log ditulis sebelum exit
+    setTimeout(() => process.exit(1), 1000);
 });
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('\n⚠️ [WARNING] Unhandled Promise Rejection:', reason);
+    // Jangan exit — biarkan server terus berjalan untuk rejection yang tidak kritikal
+});
+
+// Graceful shutdown — tutup connections dengan elok bila Ctrl+C atau restart
+const gracefulShutdown = (signal) => {
+    console.log(`\n🛑 [SHUTDOWN] Received ${signal}. Shutting down gracefully...`);
+    server.close(() => {
+        console.log('[SHUTDOWN] ✅ Server closed. Goodbye.');
+        process.exit(0);
+    });
+    // Paksa tutup selepas 10s jika ada connections yang degil
+    setTimeout(() => {
+        console.error('[SHUTDOWN] ❌ Forced exit after 10s timeout.');
+        process.exit(1);
+    }, 10000);
+};
+
+const server = app.listen(port, () => {
+    console.log(`[JPP-POLISAS] Server is running on port ${port}`);
+    console.log(`[JPP-POLISAS] Static cache: ${cachedIndexHtml ? 'ENABLED (in-memory)' : 'DISABLED (disk fallback)'}`);
+});
+
+// Tingkatkan connection limits untuk handle spike traffic orientasi
+server.keepAliveTimeout = 65000;   // Lebih tinggi dari default 5s
+server.headersTimeout = 66000;     // Mesti > keepAliveTimeout
+server.maxConnections = 0;         // Unlimited (biar OS handle)
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
