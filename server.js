@@ -2452,7 +2452,7 @@ const server = app.listen(port, () => {
 // Tingkatkan connection limits untuk handle spike traffic orientasi
 server.keepAliveTimeout = 65000;   // Lebih tinggi dari default 5s
 server.headersTimeout = 66000;     // Mesti > keepAliveTimeout
-server.maxConnections = 0;         // Unlimited (biar OS handle)
+// maxConnections: biarkan default Node.js (unlimited)
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
