@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { queryCache, CACHE_TTL } from '@/lib/cache';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,6 +47,24 @@ export function useDashboardData() {
 
   const clubId = selectedClubId ?? profile?.club_id;
 
+  // Ref untuk track sama ada dah ada data dimuatkan — selamat dipakai dalam closure
+  const hasDataRef = React.useRef(false);
+
+  // ── Check synchronous: Bila ada jpp_force_refresh flag (dari GlobalPullToUpdate),
+  // clear semua cache sebelum mana-mana useEffect fetch berlaku —
+  // Ini mencegah race condition di mana [clubId] effect fetch data lama dari cache
+  // sebelum [] effect sempat clear cache.
+  // useMemo dengan [] dijamin run semasa render, sebelum effects.
+  React.useMemo(() => {
+    try {
+      if (sessionStorage.getItem('jpp_force_refresh') === '1') {
+        sessionStorage.removeItem('jpp_force_refresh');
+        queryCache.clear();
+        hasDataRef.current = false;
+      }
+    } catch (_) { /* sessionStorage mungkin tidak tersedia (private browsing, etc.) */ }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const fetchData = useCallback(async (forceRefresh = false) => {
     if (!clubId || !user) return;
 
@@ -62,9 +80,9 @@ export function useDashboardData() {
       }
     }
 
-    // Kalau dah ada data (refresh), jangan flash skeleton — guna isRefreshing
-    // Kalau tiada data lagi (initial load), tunjuk skeleton
-    if (data === EMPTY_DATA || data.members.length === 0 && data.tasks.length === 0) {
+    // Kalau belum ada data (initial load) → tunjuk skeleton penuh
+    // Kalau dah ada data dalam sesi ini → guna isRefreshing (no flicker)
+    if (!hasDataRef.current) {
       setIsLoading(true);
     } else {
       setIsRefreshing(true);
@@ -167,6 +185,7 @@ export function useDashboardData() {
 
       // Simpan dalam cache (30 saat)
       queryCache.set(cacheKey, parsedData, CACHE_TTL.DASHBOARD);
+      hasDataRef.current = true; // Mark bahawa kita dah ada data
       setData(parsedData);
 
     } catch (err: any) {
@@ -182,6 +201,7 @@ export function useDashboardData() {
       setIsRefreshing(false);
     }
   }, [clubId, user]);
+
 
   // ── AUTO-REFRESH: Bila kelab berubah, buang cache lama dan fetch data baru ──
   useEffect(() => {

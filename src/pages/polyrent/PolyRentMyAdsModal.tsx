@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Package, Trash2, CheckCircle, Plus, Minus, Home, Loader2, Info, EyeOff } from 'lucide-react';
+import { X, Package, Trash2, CheckCircle, Plus, Minus, Home, Loader2, Info, EyeOff, Pencil, MessageCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -14,6 +14,11 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
   const [myListings, setMyListings] = useState<any[]>([]);
   const [myReverseAds, setMyReverseAds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Edit state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Record<string, any>>({});
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   useEffect(() => {
     if (isOpen && profile?.id) {
@@ -159,6 +164,54 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
     }
   };
 
+  // ── Edit helpers ──
+  const handleStartEdit = (listing: any) => {
+    setEditingId(listing.id);
+    setEditForm({
+      title: listing.title || '',
+      sewa_bulanan: String(listing.sewa_bulanan || ''),
+      deposit_awal: String(listing.deposit_awal || ''),
+      kemudahan: listing.kemudahan || '',
+      ciri_ciri_dicari: listing.ciri_ciri_dicari || '',
+      contact_info: listing.contact_info || '',
+      enable_in_app_chat: listing.enable_in_app_chat ?? true,
+      available_from: listing.available_from ? listing.available_from.split('T')[0] : '',
+    });
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    if (!editForm.title?.trim()) { toast.error('Tajuk iklan tidak boleh kosong'); return; }
+    if (!editForm.sewa_bulanan || isNaN(parseFloat(editForm.sewa_bulanan))) { toast.error('Sila masukkan harga sewa yang sah'); return; }
+
+    setIsSavingEdit(true);
+    try {
+      const { error } = await supabase
+        .from('polyrent_listings')
+        .update({
+          title: editForm.title.trim(),
+          sewa_bulanan: parseFloat(editForm.sewa_bulanan),
+          deposit_awal: parseFloat(editForm.deposit_awal) || 0,
+          kemudahan: editForm.kemudahan,
+          ciri_ciri_dicari: editForm.ciri_ciri_dicari,
+          contact_info: editForm.contact_info,
+          enable_in_app_chat: editForm.enable_in_app_chat,
+          available_from: editForm.available_from || null,
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      toast.success('Iklan berjaya dikemaskini! ✅');
+      setEditingId(null);
+      fetchMyAds();
+      onUpdateComplete();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || 'Gagal menyimpan perubahan');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -283,8 +336,22 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                             </div>
                           </div>
 
-                          {/* Status & Delete */}
+                          {/* Status, Edit & Delete */}
                           <div className="flex items-center gap-2 self-end sm:self-auto">
+                            {/* Edit button */}
+                            <button 
+                              onClick={() => editingId === listing.id ? setEditingId(null) : handleStartEdit(listing)}
+                              className={cn(
+                                "px-4 py-2.5 rounded-full font-bold text-xs flex items-center gap-1.5 transition-all",
+                                editingId === listing.id
+                                  ? "bg-indigo-500 text-white"
+                                  : "bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400"
+                              )}
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                              {editingId === listing.id ? 'Tutup Edit' : 'Edit'}
+                            </button>
+
                             <button 
                               onClick={() => handleToggleStatus(listing.id, listing.status)}
                               className={cn("px-4 py-2.5 rounded-full font-bold text-xs flex items-center gap-1.5 transition-all", listing.status === 'OPEN' ? "bg-slate-100 hover:bg-slate-200 text-slate-700" : "bg-emerald-500 text-white")}
@@ -302,6 +369,138 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
                           </div>
 
                         </div>
+
+                        {/* ── INLINE EDIT PANEL ── */}
+                        <AnimatePresence>
+                          {editingId === listing.id && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.25 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="border-t border-indigo-100 dark:border-indigo-500/20 pt-5 mt-1 space-y-4">
+                                <p className="text-xs font-black text-indigo-500 uppercase tracking-widest">✏️ Kemaskini Iklan</p>
+
+                                {/* Tajuk */}
+                                <div>
+                                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Tajuk Iklan</label>
+                                  <input
+                                    type="text"
+                                    value={editForm.title}
+                                    onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))}
+                                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/30 outline-none"
+                                  />
+                                </div>
+
+                                {/* Harga */}
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Sewa Bulanan (RM)</label>
+                                    <input
+                                      type="number"
+                                      value={editForm.sewa_bulanan}
+                                      onChange={e => setEditForm(p => ({ ...p, sewa_bulanan: e.target.value }))}
+                                      className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/30 outline-none"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Deposit Awal (RM)</label>
+                                    <input
+                                      type="number"
+                                      value={editForm.deposit_awal}
+                                      onChange={e => setEditForm(p => ({ ...p, deposit_awal: e.target.value }))}
+                                      className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/30 outline-none"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Kemudahan */}
+                                <div>
+                                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Kemudahan / Fasiliti</label>
+                                  <textarea
+                                    rows={2}
+                                    value={editForm.kemudahan}
+                                    onChange={e => setEditForm(p => ({ ...p, kemudahan: e.target.value }))}
+                                    placeholder="Cth: WiFi, Mesin basuh, Peti sejuk..."
+                                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/30 outline-none resize-none"
+                                  />
+                                </div>
+
+                                {/* Ciri-ciri */}
+                                <div>
+                                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Ciri-ciri Rakan Sewa Dicari</label>
+                                  <textarea
+                                    rows={2}
+                                    value={editForm.ciri_ciri_dicari}
+                                    onChange={e => setEditForm(p => ({ ...p, ciri_ciri_dicari: e.target.value }))}
+                                    placeholder="Cth: Pembersih, tidak merokok..."
+                                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/30 outline-none resize-none"
+                                  />
+                                </div>
+
+                                {/* Contact Info */}
+                                <div>
+                                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Nombor Telefon / WhatsApp</label>
+                                  <input
+                                    type="text"
+                                    value={editForm.contact_info}
+                                    onChange={e => setEditForm(p => ({ ...p, contact_info: e.target.value }))}
+                                    placeholder="Cth: 0123456789"
+                                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/30 outline-none"
+                                  />
+                                </div>
+
+                                {/* Available From + Chat Toggle */}
+                                <div className="grid grid-cols-2 gap-3 items-start">
+                                  <div>
+                                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Tarikh Kekosongan Bermula</label>
+                                    <input
+                                      type="date"
+                                      value={editForm.available_from}
+                                      onChange={e => setEditForm(p => ({ ...p, available_from: e.target.value }))}
+                                      className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/30 outline-none"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Benarkan In-App Chat</label>
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditForm(p => ({ ...p, enable_in_app_chat: !p.enable_in_app_chat }))}
+                                      className={`relative w-12 h-6 rounded-full transition-colors mt-1 ${
+                                        editForm.enable_in_app_chat ? 'bg-teal-500' : 'bg-slate-300 dark:bg-slate-700'
+                                      }`}
+                                    >
+                                      <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                                        editForm.enable_in_app_chat ? 'translate-x-6' : 'translate-x-0'
+                                      }`} />
+                                    </button>
+                                    <p className="text-[10px] text-slate-400 mt-1">{editForm.enable_in_app_chat ? 'Dibenarkan' : 'Dimatikan'}</p>
+                                  </div>
+                                </div>
+
+                                {/* Save / Cancel */}
+                                <div className="flex gap-2 pt-1">
+                                  <button
+                                    onClick={() => handleSaveEdit(listing.id)}
+                                    disabled={isSavingEdit}
+                                    className="flex-1 py-3 rounded-xl bg-indigo-500 text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-indigo-600 disabled:opacity-60 transition-colors"
+                                  >
+                                    {isSavingEdit ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                                    {isSavingEdit ? 'Menyimpan...' : '💾 Simpan Perubahan'}
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingId(null)}
+                                    className="px-5 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                  >
+                                    Batal
+                                  </button>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
 
                         {listing.kekosongan === 0 && listing.status === 'OPEN' && (
                           <div className="bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 p-3 rounded-xl flex items-start gap-2 text-xs">

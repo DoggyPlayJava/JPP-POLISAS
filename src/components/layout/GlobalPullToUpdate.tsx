@@ -87,7 +87,13 @@ export function GlobalPullToUpdate() {
           console.error("SW Update failed", err);
         }
         
-        // 2. Clear cache and Hard Reload to bypass browser caching
+        // 2. Set a flag so useDashboardData knows to force-refresh on next mount
+        // (prevents HMR module-level cache singleton from serving stale data)
+        try {
+          sessionStorage.setItem('jpp_force_refresh', '1');
+        } catch (_) { /* sessionStorage mungkin tidak tersedia */ }
+        
+        // 3. Hard Reload — clear semua React state + in-memory cache
         setTimeout(() => {
           window.location.reload();
         }, 1200); // Give enough time for the user to see the spinning animation
