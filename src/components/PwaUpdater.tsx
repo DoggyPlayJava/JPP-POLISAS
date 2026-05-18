@@ -36,12 +36,10 @@ export function PwaUpdater() {
       if (!r) return;
 
       // ── Semak SERTA-MERTA bila app dibuka (cold start / reload) ────────────
-      // Ini menutup "blind spot" di mana user boleh guna versi lama selama
-      // 5 minit penuh sebelum cek pertama berlaku. Delay 1s supaya SW
-      // selesai register dulu sebelum kita minta ia semak versi baru.
+      // Delay 1.5s supaya SW selesai register & activate dulu
       setTimeout(() => {
         r.update().catch((err) => console.warn('[PwaUpdater] Startup update check failed:', err));
-      }, 1000);
+      }, 1500);
 
       // ── Semakan berjadual setiap 5 MINIT ─────────────────────────────────
       // Untuk app yang dibiarkan buka lama (cth: pelajar tinggal tab portal)
@@ -64,9 +62,7 @@ export function PwaUpdater() {
       };
       window.addEventListener('online', handleOnline);
 
-      // Cleanup — tapi dalam useEffect ini tak ada cleanup hook,
-      // jadi guna window event supaya tidak leak memori bila komponen unmount
-      // (PwaUpdater adalah singleton yang hidup sepanjang hayat app)
+      // Cleanup
       return () => {
         clearInterval(intervalId);
         document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -79,31 +75,29 @@ export function PwaUpdater() {
   });
 
   // ── Semak update apabila user navigate ke halaman lain ───────────────────
-  // Ini ensures setiap page transition turut trigger semakan versi
+  // Triggered setiap kali route bertukar
   useEffect(() => {
-    // Triggered setiap kali route bertukar
-    // Tapi jangan semak kalau dah ada update yang belum diproses
     if (!needRefresh) {
-      // Hantar mesej ke SW untuk semak update (jika SW dah register)
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.ready
           .then((reg) => reg.update())
-          .catch(() => {}); // Senyap je kalau gagal
+          .catch(() => {});
       }
     }
   }, [location.pathname]);
 
-  // ── Tindak balas apabila update tersedia ─────────────────────────────────
+  // ── Tindak balas apabila update tersedia (needRefresh = true) ────────────
+  // needRefresh jadi true bila SW baru dah install dan tunggu skipWaiting
   useEffect(() => {
     if (!needRefresh || updateCalledRef.current) return;
 
     const currentPath = location.pathname;
 
-    // STRATEGI AGGRESIF: Auto-reload di semua halaman yang selamat
-    // tanpa perlu tanya user — UX lebih lancar untuk pelajar
+    // STRATEGI AGGRESIF: Auto-reload senyap di halaman selamat
     if (isSafeToAutoReload(currentPath)) {
       updateCalledRef.current = true;
       console.info('[PwaUpdater] Auto-updating SW on safe page:', currentPath);
+      // updateServiceWorker(true) hantar SKIP_WAITING ke SW, kemudian reload page
       updateServiceWorker(true);
       return;
     }

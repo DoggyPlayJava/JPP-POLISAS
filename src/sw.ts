@@ -14,6 +14,8 @@ const OFFLINE_URL = '/offline.html';
 clientsClaim();
 
 // Dengarkan arahan SKIP_WAITING daripada komponen PwaUpdater (butang Muat Semula)
+// Dengan registerType: 'prompt', ini wajib ada — tanpanya SW baru tidak akan activate
+// walaupun updateServiceWorker(true) dipanggil dari PwaUpdater.
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
