@@ -9,7 +9,8 @@ import { sendNotificationToUser } from '@/lib/notifications';
 import toast from 'react-hot-toast';
 import {
   Package, Clock, CheckCircle, XCircle, Truck, Star, Store,
-  ChevronRight, MessageCircle, Phone, X, RefreshCw, Bike,
+  ChevronRight, MessageCircle, Phone, X, RefreshCw,
+  CreditCard, Handshake, Upload, Image,
 } from 'lucide-react';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -42,11 +43,12 @@ interface Order {
     owner: { phone: string | null } | null;
   } | null;
   buyer: { phone: string | null } | null;
-  polyrider_jobs?: {
-    id: string;
-    status: string;
-    rider: { profiles: { full_name: string | null } | null } | null;
-  }[];
+  // Payment fields
+  payment_method: 'COD' | 'QR_ONLINE' | null;
+  payment_receipt_url: string | null;
+  payment_receipt_rejected: boolean;
+  payment_verified_at: string | null;
+  payment_deadline_at: string | null;
 }
 
 const STATUS_TABS: { key: OrderStatus | 'all'; label: string; emoji: string }[] = [
@@ -224,7 +226,53 @@ function OrderTimeline({ status, cancelReason }: { status: OrderStatus, cancelRe
   );
 }
 
-// ── Order Card ─────────────────────────────────────────────────────────────────
+// ── Receipt Upload Button ──────────────────────────────────────────────────────
+function ReceiptUploadButton({ orderId, onUploaded }: { orderId: string; onUploaded: () => void }) {
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.[0]) return;
+    setUploading(true);
+    try {
+      const file = e.target.files[0];
+      const { compressImage } = await import('@/lib/imageCompression');
+      const compressed = await compressImage(file);
+      const path = `receipts/${orderId}/${Date.now()}.${compressed.name.split('.').pop()}`;
+
+      const { error: upErr } = await supabase.storage.from('polymart-receipts').upload(path, compressed, {
+        upsert: true,
+        contentType: compressed.type,
+      });
+      if (upErr) throw upErr;
+
+      const { data: { publicUrl } } = supabase.storage.from('polymart-receipts').getPublicUrl(path);
+
+      const { error: updateErr } = await supabase.from('polymart_orders').update({
+        payment_receipt_url: publicUrl,
+        payment_receipt_rejected: false,
+        updated_at: new Date().toISOString(),
+      }).eq('id', orderId);
+
+      if (updateErr) throw updateErr;
+
+      toast.success('Resit berjaya dimuat naik!', { icon: '📸' });
+      onUploaded();
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal muat naik resit');
+    }
+    setUploading(false);
+  };
+
+  return (
+    <label className={`w-full flex items-center justify-center gap-2 h-11 rounded-xl border-2 border-dashed border-blue-500/30 bg-blue-500/5 text-blue-600 text-[11px] font-black cursor-pointer hover:bg-blue-500/10 transition-all ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+      <Upload className="w-4 h-4" />
+      {uploading ? 'Memuat naik...' : '📸 Muat Naik Resit Pembayaran'}
+      <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
+    </label>
+  );
+}
+
+
 function OrderCard({ order, onReview }: { order: Order; onReview: (o: Order) => void }) {
   const navigate = useNavigate();
   const cfg = STATUS_CONFIG[order.status];
@@ -280,34 +328,66 @@ function OrderCard({ order, onReview }: { order: Order; onReview: (o: Order) => 
         </div>
       </div>
 
+      {/* Payment method badge */}
+      {order.payment_method && (
+        <div className="px-3.5 pb-1">
+          <div className="flex items-center gap-2">
+            {order.payment_method === 'QR_ONLINE' ? (
+              <span className="flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600">
+                <CreditCard className="w-3 h-3" /> QR Online
+                {order.payment_verified_at
+                  ? <span className="text-emerald-600 ml-1">✔ Disahkan</span>
+                  : order.payment_receipt_url
+                    ? <span className="text-amber-600 ml-1">⏳ Menunggu Pengesahan</span>
+                    : <span className="text-rose-500 ml-1">⚠ Belum Bayar</span>
+                }
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">
+                <Handshake className="w-3 h-3" /> COD
+              </span>
+            )}
+            {order.payment_deadline_at && !order.payment_verified_at && order.status === 'PENDING' && (
+              <span className="text-[9px] text-rose-500 font-bold">
+                Had: {new Date(order.payment_deadline_at).toLocaleString('ms-MY', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Visual Timeline Tracker */}
       <OrderTimeline status={order.status} cancelReason={order.cancel_reason} />
+
+      {/* Receipt upload for QR payment — when PENDING and no receipt yet */}
+      {order.payment_method === 'QR_ONLINE' && order.status === 'PENDING' && !order.payment_verified_at && (
+        <div className="px-3.5 pb-3.5">
+          {order.payment_receipt_rejected && (
+            <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 mb-2">
+              <p className="text-[10px] font-black text-rose-600">⚠ Resit ditolak oleh vendor. Sila muat naik semula.</p>
+            </div>
+          )}
+          {order.payment_receipt_url && !order.payment_receipt_rejected ? (
+            <button onClick={() => navigate(`/polymart/bayar/${order.id}`)}
+              className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-600 text-[11px] font-black hover:bg-blue-500/10 transition-all">
+              <Image className="w-4 h-4 text-blue-500" />
+              <span>✅ Resit Dihantar — Lihat Butiran Bayaran</span>
+            </button>
+          ) : (
+            <button onClick={() => navigate(`/polymart/bayar/${order.id}`)}
+              className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border-2 border-dashed border-blue-500/30 bg-blue-500/5 text-blue-600 text-[11px] font-black hover:bg-blue-500/10 transition-all">
+              <Upload className="w-4 h-4" />
+              <span>📸 Selesaikan Pembayaran (Muat Naik Resit)</span>
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Actions */}
       {(order.status === 'CONFIRMED' || order.status === 'READY') && (
         <div className="px-3.5 pb-3.5 space-y-3">
-          {/* PolyRider Status & Action */}
-          {order.polyrider_jobs && order.polyrider_jobs.length > 0 ? (
-            <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-3 rounded-2xl flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Bike className="w-5 h-5 text-amber-600 dark:text-amber-500" />
-                <div>
-                  <p className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-500 tracking-wider">Status Rider</p>
-                  <p className="text-xs font-bold text-amber-900 dark:text-amber-100">{order.polyrider_jobs[0].status === 'PENDING' ? 'Mencari Rider...' : order.polyrider_jobs[0].status === 'ACCEPTED' ? `Rider Ditugaskan: ${order.polyrider_jobs[0].rider?.profiles?.full_name || 'Rider'}` : order.polyrider_jobs[0].status === 'IN_TRANSIT' ? 'Rider Dalam Perjalanan!' : order.polyrider_jobs[0].status === 'ARRIVED' ? 'Rider Tiba!' : order.polyrider_jobs[0].status}</p>
-                </div>
-              </div>
-              <button onClick={() => navigate('/polyrider')} className="px-3 py-1.5 bg-amber-500 text-white rounded-lg text-[10px] font-black shadow-sm">Jejak</button>
-            </div>
-          ) : (
-            <button onClick={() => navigate('/polyrider', { state: { polymartOrderId: order.id, pickup_name: biz?.name, dropoff_name: 'Lokasi Anda (Sila isi)' } })}
-              className="w-full flex items-center justify-center gap-1.5 h-10 rounded-xl bg-amber-500 text-white text-[11px] font-black shadow-sm hover:bg-amber-600 transition-colors">
-              <Bike className="w-4 h-4" />
-              <span>Panggil Rider untuk Hantar</span>
-            </button>
-          )}
-
           <div className="bg-white dark:bg-card p-4 rounded-2xl flex flex-col items-center justify-center border border-border/50 shadow-sm mx-auto max-w-[200px]">
-            <QRCode value={`${window.location.origin}/polymart/vendor?order=${order.id}`} size={120} className="dark:bg-white p-2 rounded-xl" />
+            <QRCode value={`${window.location.origin}/polymart/verify/${order.id}`} size={120} className="dark:bg-white p-2 rounded-xl" />
             <p className="text-[10px] text-center text-muted-foreground font-bold mt-3 leading-tight">
               Tunjuk QR ini kepada vendor semasa ambil pesanan
             </p>
@@ -351,17 +431,16 @@ export function PolyMartMyOrders() {
     if (showRefreshSpinner) setIsRefreshing(true);
     const { data } = await supabase.from('polymart_orders')
       .select(`
-        *,
+        id, quantity, unit_price, total_price, note, pickup_time, share_phone,
+        status, created_at, confirmed_at, ready_at, cancel_reason,
+        payment_method, payment_receipt_url, payment_receipt_rejected,
+        payment_verified_at, payment_deadline_at,
         business_products!product_id(id, name, image_url, category),
         keusahawanan_businesses!business_id(
           id, name, logo_url, polymart_contact_method,
           owner:profiles!owner_id(phone)
         ),
-        buyer:profiles!buyer_id(phone),
-        polyrider_jobs(
-          id, status, 
-          rider:polyrider_profiles(profiles(full_name))
-        )
+        buyer:profiles!buyer_id(phone)
       `)
       .eq('buyer_id', user.id)
       .order('created_at', { ascending: false });
@@ -394,6 +473,13 @@ export function PolyMartMyOrders() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [loadOrders]);
 
+  // Custom event listener for receipt upload refresh
+  useEffect(() => {
+    const handleRefresh = () => loadOrders();
+    window.addEventListener('polymart-refresh-orders', handleRefresh);
+    return () => window.removeEventListener('polymart-refresh-orders', handleRefresh);
+  }, [loadOrders]);
+
   // Realtime Auto-Refresh Subscription (DIKEKALKAN — sudah optimal, ada filter buyer_id)
   useEffect(() => {
     if (!user) return;
@@ -416,20 +502,8 @@ export function PolyMartMyOrders() {
       )
       .subscribe();
 
-    const polyriderChannel = supabase.channel('polymart-rider-tracking')
-      .on('postgres_changes', { 
-        event: 'UPDATE', schema: 'public', table: 'polyrider_jobs' 
-      }, (payload) => {
-        const updated = payload.new;
-        if (updated.polymart_order_id) {
-          loadOrders(); // Refetch to get updated nested PolyRider job status
-        }
-      })
-      .subscribe();
-
     return () => { 
       supabase.removeChannel(channel);
-      supabase.removeChannel(polyriderChannel); 
     };
   }, [user, loadOrders]);
 

@@ -1016,6 +1016,9 @@ useEffect(() => {
 
 PolyMart adalah marketplace dalam-app untuk pelajar POLISAS menjual dan membeli produk/perkhidmatan sesama sendiri.
 
+> [!NOTE]
+> **Mei 2026 — Integrasi PolyRider telah DIPUTUSKAN.** Modul PolyRider masih wujud secara berasingan, tetapi semua rujukan PolyRider (polyrider_jobs query, butang "Panggil Rider", Bike import) telah dibuang dari semua halaman PolyMart.
+
 ### 16.1 Jadual Database
 
 | Jadual | Fungsi |
@@ -1025,6 +1028,25 @@ PolyMart adalah marketplace dalam-app untuk pelajar POLISAS menjual dan membeli 
 | `polymart_reports` | Laporan aduan terhadap iklan |
 | `polymart_reviews` | Ulasan pembeli selepas transaksi selesai |
 
+#### Lajur Pembayaran Baru (Migration `52_polymart_online_payment.sql`)
+
+| Jadual | Lajur Baru | Jenis | Fungsi |
+|---|---|---|---|
+| `keusahawanan_businesses` | `online_payment_enabled` | `BOOLEAN DEFAULT false` | Aktifkan QR payment |
+| `keusahawanan_businesses` | `cod_enabled` | `BOOLEAN DEFAULT true` | Aktifkan COD |
+| `keusahawanan_businesses` | `payment_qr_url` | `TEXT` | URL gambar QR pembayaran |
+| `keusahawanan_businesses` | `payment_instructions` | `TEXT` | Arahan bank/pembayaran |
+| `keusahawanan_businesses` | `business_phone` | `TEXT` | No. telefon perniagaan |
+| `keusahawanan_businesses` | `payment_deadline_value` | `INT DEFAULT 24` | Nilai had masa pembayaran |
+| `keusahawanan_businesses` | `payment_deadline_unit` | `TEXT DEFAULT 'HOURS'` | Unit had masa (`HOURS`/`DAYS`/`WEEKS`) |
+| `business_products` | `online_payment_enabled` | `BOOLEAN DEFAULT NULL` | Override per-produk (NULL=ikut perniagaan) |
+| `polymart_orders` | `payment_method` | `TEXT DEFAULT 'COD'` | Kaedah pembayaran (`COD`/`QR_ONLINE`) |
+| `polymart_orders` | `payment_receipt_url` | `TEXT` | URL resit pembayaran |
+| `polymart_orders` | `payment_receipt_rejected` | `BOOLEAN DEFAULT false` | Resit ditolak oleh vendor |
+| `polymart_orders` | `payment_verified_at` | `TIMESTAMPTZ` | Masa pengesahan bayaran |
+| `polymart_orders` | `payment_verified_by` | `UUID` | Vendor yang sahkan bayaran |
+| `polymart_orders` | `payment_deadline_at` | `TIMESTAMPTZ` | Had masa auto-cancel |
+
 ### 16.2 Routes
 
 | Route | Komponen | Akses |
@@ -1033,25 +1055,25 @@ PolyMart adalah marketplace dalam-app untuk pelajar POLISAS menjual dan membeli 
 | `/polymart/produk/:id` | `PolyMartProductDetail` | Semua |
 | `/polymart/pesanan-saya` | `PolyMartMyOrders` | Authenticated |
 | `/polymart/vendor` | `PolyMartVendorDashboard` | Vendor (ada perniagaan aktif) |
+| `/polymart/verify/:orderId` | `PolyMartVerifyPickup` | Vendor (ahli perniagaan) — scan QR pickup |
+| `/polymart/bayar/:orderId` | `PolyMartPaymentPage` | Authenticated — muat naik resit QR (checkout portal) |
 | `/polymart/admin` | `PolyMartAdminPanel` | `hasKeusahawananAccess` atau `isSuperAdmin` |
 
-### 16.3 RBAC PolyMart
+### 16.3 Aliran Pembayaran Atas Talian (Online Payment)
 
-| Peranan | Akses |
-|---|---|
-| Pelawat (tidak login) | Boleh browse dan lihat produk sahaja |
-| Pelajar biasa | Boleh beli, buat pesanan, tulis review |
-| Vendor (owner/ahli perniagaan aktif) | Boleh list produk, urus pesanan masuk |
-| `hasKeusahawananAccess` / `isSuperAdmin` | Akses admin panel (moderasi, urus laporan) |
+Aliran pembayaran QR & pengesahan bersemuka (pickup):
+1. **Tetapan Perniagaan**: Vendor mengaktifkan QR online di *Urus Perniagaan Page* (Tab Ciri), memuat naik QR perniagaan, mengisi maklumat bank, dan menetapkan had masa pembayaran (cth. 24 jam).
+2. **Tempahan**: Pelanggan memilih kaedah `QR_ONLINE` semasa checkout. Pesanan dicipta dengan status `PENDING` dan `payment_deadline_at` dikira. Stok produk disimpan (`reserve_polymart_stock`).
+3. **Muat Naik Resit**: Pelanggan memuat naik bukti resit dalam tempoh had masa. Status pembayaran bertukar kepada *Menunggu Pengesahan*.
+4. **Pengesahan Pembayaran**: Vendor menyemak resit di *Vendor Dashboard* dan menekan "Sahkan Bayaran" (status pesanan menjadi `CONFIRMED`) atau "Tolak Resit" (pelanggan perlu muat naik semula).
+5. **Serahan & QR Scan**: Semasa pelanggan mengambil pesanan (status pesanan `READY`), mereka menunjukkan kod QR pesanan kepada vendor. Vendor mengimbas/membuka URL `/polymart/verify/:orderId` dan menekan "Tandakan Selesai" yang memanggil RPC `complete_polymart_order`. Ini secara automatik mengurangkan stok kekal, mengosongkan stok tempahan, merekod transaksi POS, dan menukar status pesanan kepada `COMPLETED`.
 
-### 16.4 Konteks Dalaman
+### 16.4 Pembatalan Automatik (Auto-Cancel) & Peringatan
 
-`PolyMartLayout.tsx` mengeksport konteks dalaman `usePolymart()` yang mengandungi:
-- `activeCategory` — penapis kategori aktif
-- `searchQuery` — query carian
-- `isVendor` — sama ada pengguna adalah vendor
-- `pendingVendorCount` — bilangan pesanan masuk yang belum diproses
-- `myActiveOrdersCount` — bilangan pesanan aktif pembeli
+Untuk mengekalkan kebersihan database dan mengelakkan stok "tersangkut" (deadlock) pada pesanan PENDING:
+- **Cron Server**: `server.js` menjalankan tugas `node-cron` setiap 15 minit.
+- **Auto-Cancel**: Cron memanggil RPC `cancel_expired_polymart_orders()` yang menukar status pesanan `PENDING` yang telah melepasi `payment_deadline_at` kepada `CANCELLED` dan memanggil `release_polymart_stock` untuk membebaskan semula stok yang ditempah.
+- **Notifikasi Peringatan**: Cron memanggil RPC `get_expiring_polymart_orders()` untuk mendapatkan senarai pesanan yang akan tamat dalam masa ~1 jam, kemudian menghantar push notification bertajuk `⏰ Pesanan Hampir Tamat Tempoh!` ke akaun pembeli.
 
 ### 16.5 Realtime (Pengecualian Dibenarkan)
 
@@ -1643,18 +1665,23 @@ Bagi mengawal selia jumlah pemandu dan mengenakan yuran bulanan (RM10), sistem P
 ## 26. Sistem Auth Loading & PWA Auto-Update — ⚠️ JANGAN ROSAK INI LAGI
 
 > [!CAUTION]
-> **Isu berulang — Mei 2026 (kali ke-2 difix):** Loading screen stuck bila buka website / navigate balik ke app. Bug ini muncul semula selepas refactor kerana developer tidak faham senibina tiga-lapisan yang sengaja dibina. **Baca seluruh bahagian ini sebelum sentuh `AuthContext.tsx`, `RouteGuards.tsx`, atau `PwaUpdater.tsx`.**
+> **Isu berulang — Mei 2026 (kali ke-3 difix):** Loading screen stuck, flickering/reload loop selepas deploy, dan amaran palsu "Internet lambat?". **Baca seluruh bahagian ini sebelum sentuh `AuthContext.tsx`, `RouteGuards.tsx`, `PwaUpdater.tsx`, `main.tsx`, atau `server.js` (bahagian static file serving).**
 
 ---
 
-### 26.1 Punca Loading Stuck — Diagnosis
+### 26.1 Punca Loading Stuck & Flickering — Diagnosis
 
-Isu loading stuck berlaku apabila mana-mana satu syarat ini gagal:
+Isu loading stuck / flickering berlaku apabila mana-mana satu syarat ini gagal:
 
 | Fail | Simptom | Punca |
 |---|---|---|
+| `main.tsx` | **Flickering / infinite reload loop** selepas deploy | `vite:preloadError` handler tanpa had retry |
 | `AuthContext.tsx` | `isLoading` kekal `true` selamanya | `safetyTimer` tidak di-cancel bila `onAuthStateChange` dah fire |
 | `RouteGuards.tsx` | Loading screen tidak hilang | `minDelayPassed` stuck, atau `isLoading` tidak resolve |
+| `RouteGuards.tsx` (PublicRoute) | **Stuck di HZ splash selamanya** | `profile === null` selepas loading selesai → tiada fallback |
+| `RouteGuards.tsx` (LoadingScreen) | **Amaran palsu "Internet lambat?"** | Amaran keluar 3s tetapi auth safety timer 4s |
+| `PwaUpdater.tsx` | **Reload loop** selepas deploy | `_updateHasBeenTriggered` reset setiap reload |
+| `server.js` | SW lama kekal 24 jam | `sw.js` dicache 1 hari oleh `express.static` |
 | `onAuthStateChange` vs `initialize()` | Race condition | Dua-dua path cuba set `isLoading=false` secara serentak |
 
 **Root cause paling biasa:** `onAuthStateChange` dan `initialize()` berlumba — `safetyTimer` tidak di-cancel walaupun auth sudah selesai, menyebabkan ia fire lambat dan set loading state yang dah expired.
@@ -1768,9 +1795,9 @@ Fail: `src/components/PwaUpdater.tsx`
 const SAFE_AUTO_RELOAD_PATHS = ['/', '/portal', '/jpp', '/polymart', ...];
 
 if (isSafeToAutoReload(currentPath)) {
-  updateServiceWorker(true); // ← Auto-reload terus, user tak perasan
+  triggerUpdate(); // ← Auto-reload (tertakluk kepada cooldown guard)
 } else {
-  toast(...); // ← Tanya user dulu (ada borang aktif)
+  showManualUpdateToast(); // ← Tanya user dulu (ada borang aktif)
 }
 ```
 
@@ -1778,7 +1805,23 @@ if (isSafeToAutoReload(currentPath)) {
 > **JANGAN** tukar interval `setInterval` ke lebih dari 5 minit (300,000ms). Sebelum ini ia 1 jam — menyebabkan pelajar guna versi lama seharian walaupun dah ada update di server.
 
 > [!WARNING]
-> **JANGAN** buang `updateCalledRef` guard. Tanpanya, `updateServiceWorker(true)` akan dipanggil berkali-kali dalam satu render cycle dan menyebabkan reload loop yang tidak henti.
+> **JANGAN** buang `_updateHasBeenTriggered` guard atau cooldown guard. Tanpanya, `updateServiceWorker(true)` akan dipanggil berkali-kali dan menyebabkan reload loop yang tidak henti.
+
+#### Cooldown Guard (Pemutus Litar Reload Loop):
+
+```typescript
+// Dalam triggerUpdate():
+const lastReload = parseInt(sessionStorage.getItem('pwa_last_reload_ts') || '0', 10);
+if (Date.now() - lastReload < 15_000) {
+  // Baru reload < 15s lalu → jangan auto-reload, tunjuk toast manual
+  showManualUpdateToast();
+  return;
+}
+sessionStorage.setItem('pwa_last_reload_ts', String(Date.now()));
+```
+
+> [!CAUTION]
+> **JANGAN** buang cooldown 15s ini. Ia adalah pemutus litar (circuit breaker) yang menghentikan reload loop apabila `_updateHasBeenTriggered` di-reset oleh reload. Tanpanya, SW lama → detect update → reload → SW lama lagi → loop.
 
 #### Cara tambah halaman ke `SAFE_AUTO_RELOAD_PATHS`:
 
@@ -1786,9 +1829,89 @@ Tambah path baharu ke dalam array `SAFE_AUTO_RELOAD_PATHS` dalam `PwaUpdater.tsx
 
 ---
 
-### 26.5 Senarai Semak — Sebelum Ubah Fail Auth/Loading
+### 26.5 Pengawal vite:preloadError — `main.tsx`
+
+Apabila deployment baharu dilancarkan, fail chunk lama dipadamkan dari server. Jika Service Worker masih menyajikan `index.html` lama yang merujuk chunk lama → 404 → `vite:preloadError` → reload → SW sajikan lama lagi → loop tanpa henti.
+
+```typescript
+window.addEventListener('vite:preloadError', () => {
+  const retries = parseInt(sessionStorage.getItem('vite_preload_retries') || '0', 10);
+  if (retries < 2) {
+    sessionStorage.setItem('vite_preload_retries', String(retries + 1));
+    window.location.reload(); // Cuba lagi (max 2x)
+  } else {
+    sessionStorage.removeItem('vite_preload_retries');
+    caches.keys().then(names => names.forEach(n => caches.delete(n)));
+    window.location.replace('/?t=' + Date.now()); // Hard redirect + bust cache
+  }
+});
+
+// Selepas app berjaya render:
+sessionStorage.removeItem('vite_preload_retries'); // Reset counter
+```
+
+> [!CAUTION]
+> **JANGAN** buang had 2 retry ini. Tanpanya, app akan reload tanpa henti sehingga user tutup tab secara paksa.
+
+---
+
+### 26.6 PublicRoute Fallback — `RouteGuards.tsx`
+
+Jika pengguna authenticated tetapi `profile` kekal `null` selepas `isLoading = false` (fetchProfile gagal), `PublicRoute` akan stuck di HZ splash screen selamanya. Fallback 3s redirect ke `/portal` menyelesaikan ini.
+
+```typescript
+if (profile === null) {
+  const fallbackTimer = setTimeout(() => {
+    navigate('/portal', { replace: true }); // Fallback selepas 3s
+  }, 3000);
+  return () => clearTimeout(fallbackTimer);
+}
+```
+
+> [!NOTE]
+> `/portal` (PortalPage) dibina dengan `profile?.` optional chaining di semua tempat — ia tidak crash walaupun profile belum dimuatkan sepenuhnya.
+
+---
+
+### 26.7 Server Cache Headers — `server.js`
+
+`sw.js` dan `registerSW.js` **WAJIB** no-cache supaya browser sentiasa dapat versi terbaru selepas deployment. Tanpa ini, browser cache SW lama sehingga 24 jam.
+
+```javascript
+const baseName = path.basename(filePath);
+if (baseName === 'sw.js' || baseName === 'registerSW.js') {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+}
+```
+
+> [!WARNING]
+> Guna `path.basename()` dan bukannya `filePath.endsWith()` kerana path separator berbeza antara Windows (`\`) dan Linux (`/`).
+
+---
+
+### 26.8 Amaran "Internet lambat?" — Timing
+
+Amaran muncul selepas **5000ms** (5 saat), iaitu 1 saat SELEPAS safety timer AuthContext (4s). Ini memastikan amaran hanya keluar jika app betul-betul stuck, bukan semasa boot biasa.
+
+```typescript
+useEffect(() => {
+  const timeout = setTimeout(() => setShowWarning(true), 5000);
+  return () => clearTimeout(timeout);
+}, []);
+```
+
+> [!CAUTION]
+> **JANGAN** turunkan nilai ini di bawah 4000ms (safety timer). Amaran akan muncul secara palsu semasa cold boot biasa dan mengelirukan pengguna.
+
+---
+
+### 26.9 Senarai Semak — Sebelum Ubah Fail Auth/Loading
 
 ```
+main.tsx:
+  [ ] vite:preloadError handler ADA dengan max 2 retries (sessionStorage)
+  [ ] sessionStorage.removeItem('vite_preload_retries') ADA selepas render berjaya
+
 AuthContext.tsx:
   [ ] safetyTimer masih 4000ms (atau lebih rendah)
   [ ] safetyTimerFired = true ADA dalam onAuthStateChange
@@ -1797,22 +1920,29 @@ AuthContext.tsx:
   [ ] setIsLoading(false) dipanggil di akhir onAuthStateChange handler
 
 RouteGuards.tsx:
+  [ ] LoadingScreen showWarning delay ≥ 5000ms (MESTI lebih dari safetyTimer 4s)
+  [ ] PublicRoute ada fallback timeout 3s untuk profile === null
   [ ] ProtectedRoute ada hardTimeoutRef dengan 8000ms
   [ ] hardTimeout di-cancel apabila isLoading jadi false
   [ ] sessionStorage 'hz_splash_seen' flag masih ada dan digunakan
 
 PwaUpdater.tsx:
+  [ ] Cooldown guard 15s ADA (sessionStorage 'pwa_last_reload_ts')
   [ ] setInterval dalam onRegistered TIDAK lebih dari 5 minit (300,000ms)
   [ ] visibilitychange listener ADA dan trigger r.update()
   [ ] window.online listener ADA dan trigger r.update()
   [ ] useEffect([location.pathname]) ADA untuk semak update bila navigate
-  [ ] updateCalledRef guard ADA untuk elak double-call
+  [ ] _updateHasBeenTriggered guard ADA untuk elak double-call
   [ ] SAFE_AUTO_RELOAD_PATHS ada semua halaman utama (bukan halaman borang)
+
+server.js:
+  [ ] sw.js dan registerSW.js ada Cache-Control: no-cache
+  [ ] Guna path.basename() untuk check (bukan endsWith)
 ```
 
 ---
 
-*Ditambah: Mei 2026 — Selepas isu loading stuck berlaku buat kali ke-2. Semoga kali ini kekal.*
+*Dikemas kini: Mei 2026 — Kali ke-3 difix. Tambah pengawal vite:preloadError, cooldown PwaUpdater, fallback PublicRoute, dan no-cache sw.js.*
 
 
 ---

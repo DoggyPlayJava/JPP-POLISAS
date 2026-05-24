@@ -9,7 +9,7 @@ function LoadingScreen() {
   const [showWarning, setShowWarning] = useState(false);
 
   useEffect(() => {
-    const timeout = setTimeout(() => setShowWarning(true), 3000);
+    const timeout = setTimeout(() => setShowWarning(true), 5000);
     return () => clearTimeout(timeout);
   }, []);
 
@@ -187,7 +187,15 @@ export function PublicRoute() {
 
     // Tiada redirect tersimpan — guna logik default berdasarkan role.
     // Tunggu profile dimuatkan sebelum buat keputusan role-based.
-    if (profile === null) return; // profile masih loading, tunggu render seterusnya
+    if (profile === null) {
+      // Profile gagal dimuatkan — beri 3s kelonggaran, kemudian fallback ke /portal
+      // Tanpa ini, user akan stuck di HZ splash screen selamanya jika fetchProfile gagal
+      const fallbackTimer = setTimeout(() => {
+        console.warn('[PublicRoute] Profile null after timeout — fallback to /portal');
+        navigate('/portal', { replace: true });
+      }, 3000);
+      return () => clearTimeout(fallbackTimer);
+    }
 
     if (profile?.role === 'SUPER_ADMIN_JPP' || profile?.role === 'JPP') {
       navigate('/jpp', { replace: true });

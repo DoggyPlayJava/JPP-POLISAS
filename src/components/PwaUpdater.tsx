@@ -105,7 +105,64 @@ export function PwaUpdater() {
 
     const currentPath = location.pathname;
 
+    // ── Extract toast UI supaya boleh dipanggil dari cooldown fallback ────
+    const showManualUpdateToast = () => {
+      toast(
+        (t) => (
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-100 dark:bg-blue-900/40 p-2 rounded-full text-blue-600 dark:text-blue-400">
+                <RefreshCw className="w-5 h-5 animate-spin" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-bold text-sm">Versi Baharu Tersedia</span>
+                <span className="text-xs opacity-80 normal-case tracking-normal">
+                  Sistem telah dikemas kini. Muat semula untuk fungsi terbaharu.
+                </span>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-1">
+              <button
+                onClick={() => {
+                  setNeedRefresh(false);
+                  toast.dismiss(t.id);
+                }}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+              >
+                Nanti
+              </button>
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  // Bypass cooldown untuk manual click — user sengaja nak reload
+                  _updateHasBeenTriggered = true;
+                  sessionStorage.setItem('pwa_last_reload_ts', String(Date.now()));
+                  updateServiceWorker(true);
+                }}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+              >
+                Muat Semula Sekarang
+              </button>
+            </div>
+          </div>
+        ),
+        {
+          duration: Infinity,
+          id: 'pwa-update-prompt',
+          className: 'min-w-[320px] !p-4',
+        }
+      );
+    };
+
     const triggerUpdate = () => {
+      // Cooldown guard — break reload loop jika baru reload < 15s lalu
+      const lastReload = parseInt(sessionStorage.getItem('pwa_last_reload_ts') || '0', 10);
+      if (Date.now() - lastReload < 15_000) {
+        console.warn('[PwaUpdater] Cooldown active — skipping auto-reload, showing toast instead');
+        showManualUpdateToast();
+        return;
+      }
+      sessionStorage.setItem('pwa_last_reload_ts', String(Date.now()));
       _updateHasBeenTriggered = true; // Set module-level flag — kekal sampai reload
       console.info('[PwaUpdater] Triggering SW update from path:', currentPath);
       updateServiceWorker(true); // Hantar SKIP_WAITING → SW activate → reload
@@ -118,48 +175,7 @@ export function PwaUpdater() {
     }
 
     // Di halaman yang ada borang/transaksi aktif — tanya user dahulu
-    toast(
-      (t) => (
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-100 dark:bg-blue-900/40 p-2 rounded-full text-blue-600 dark:text-blue-400">
-              <RefreshCw className="w-5 h-5 animate-spin" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-sm">Versi Baharu Tersedia</span>
-              <span className="text-xs opacity-80 normal-case tracking-normal">
-                Sistem telah dikemas kini. Muat semula untuk fungsi terbaharu.
-              </span>
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 mt-1">
-            <button
-              onClick={() => {
-                setNeedRefresh(false);
-                toast.dismiss(t.id);
-              }}
-              className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
-            >
-              Nanti
-            </button>
-            <button
-              onClick={() => {
-                toast.dismiss(t.id);
-                triggerUpdate();
-              }}
-              className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
-            >
-              Muat Semula Sekarang
-            </button>
-          </div>
-        </div>
-      ),
-      {
-        duration: Infinity,
-        id: 'pwa-update-prompt',
-        className: 'min-w-[320px] !p-4',
-      }
-    );
+    showManualUpdateToast();
 
   // ⚠️ SENGAJA: location.pathname TIDAK ada dalam deps.
   // Kemasukan pathname menyebabkan effect ini run semula setiap kali user navigate,

@@ -2375,6 +2375,86 @@ cron.schedule('0 3 * * *', async () => {
     }
 });
 
+// ── PolyMart: Auto-Cancel Expired Orders & Payment Reminders (Every 15 Min) ──
+cron.schedule('*/15 * * * *', async () => {
+    try {
+        if (!supabaseAdmin) { console.warn('[CRON] Supabase Admin not available, skipping PolyMart auto-cancel.'); return; }
+
+        // 1. Cancel expired orders
+        const { data: cancelCount, error } = await supabaseAdmin
+            .rpc('cancel_expired_polymart_orders');
+        if (error) {
+            console.error('[CRON] PolyMart auto-cancel RPC error:', error.message);
+        } else if (cancelCount > 0) {
+            console.log(`[CRON] Auto-cancelled ${cancelCount} expired PolyMart orders`);
+        }
+
+        // 2. Send reminder to orders expiring in ~1 hour
+        const { data: expiring } = await supabaseAdmin
+            .rpc('get_expiring_polymart_orders');
+        if (expiring && expiring.length > 0) {
+            const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
+            const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+            const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:jpp@cipher-node.org';
+            const hasVapid = vapidPublicKey && vapidPrivateKey;
+
+            if (hasVapid) {
+                webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+            }
+
+            for (const order of expiring) {
+                // In-app notification
+                await supabaseAdmin.from('notifications').insert({
+                    user_id: order.buyer_id,
+                    title: '⏰ Pesanan Hampir Tamat Tempoh!',
+                    message: `Pesanan ${order.product_name} akan auto-cancel dalam ~1 jam. Sila selesaikan bayaran.`,
+                    type: 'polymart_payment_reminder',
+                    module: 'POLYMART',
+                    link: '/polymart/pesanan-saya',
+                    reference_id: order.id,
+                });
+
+                // Web Push
+                if (hasVapid) {
+                    try {
+                        const { data: subs } = await supabaseAdmin
+                            .from('push_subscriptions')
+                            .select('endpoint, p256dh, auth')
+                            .eq('user_id', order.buyer_id);
+
+                        if (subs && subs.length > 0) {
+                            const pushPayload = JSON.stringify({
+                                title: '⏰ Pesanan Hampir Tamat Tempoh!',
+                                body: `Pesanan ${order.product_name} akan auto-cancel dalam ~1 jam. Sila selesaikan bayaran.`,
+                                icon: '/icon-192-maskable.png',
+                                badge: '/icon-192-maskable.png',
+                                tag: `polymart-expiry-${order.id}`,
+                                renotify: true,
+                                data: { url: '/polymart/pesanan-saya', link: '/polymart/pesanan-saya', module: 'POLYMART', type: 'polymart_payment_reminder' },
+                            });
+
+                            await Promise.allSettled(
+                                subs.map(s => {
+                                    const subscription = {
+                                        endpoint: s.endpoint,
+                                        keys: { p256dh: s.p256dh, auth: s.auth }
+                                    };
+                                    return webpush.sendNotification(subscription, pushPayload);
+                                })
+                            );
+                        }
+                    } catch (pushErr) {
+                        console.error(`[CRON] Failed to send push notification for order ${order.id}:`, pushErr.message);
+                    }
+                }
+            }
+            console.log(`[CRON] Sent ${expiring.length} PolyMart payment reminders`);
+        }
+    } catch (err) {
+        console.error('[CRON] PolyMart auto-cancel/reminder error:', err.message);
+    }
+});
+
 // ── Infrastructure Watchdog Cron (Every 5 Minutes) ────────────────────────────
 // Auto-detects crash precursors (WAL bloat, OOM risk) and sends emergency email.
 // Provides 2–4 hour warning window before potential OOM crash.
@@ -2609,6 +2689,12 @@ app.use(express.static(path.join(__dirname, 'dist'), {
         }
         // index.html — jangan cache (supaya deploy baru terus nampak)
         if (filePath.endsWith('index.html')) {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        }
+        // SW dan registerSW WAJIB no-cache supaya browser sentiasa dapat versi terbaru
+        // Guna path.basename() untuk elak isu path separator Windows vs Linux
+        const baseName = path.basename(filePath);
+        if (baseName === 'sw.js' || baseName === 'registerSW.js') {
             res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         }
     },

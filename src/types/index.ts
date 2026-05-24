@@ -469,6 +469,14 @@ export interface KeusahawananBusiness {
   registration_type?: string | null;
   registration_history?: any[];
   mentors?: { name: string; department: string }[];
+  // Payment settings (migration 52)
+  online_payment_enabled?: boolean;
+  cod_enabled?: boolean;
+  payment_qr_url?: string | null;
+  payment_instructions?: string | null;
+  business_phone?: string | null;
+  payment_deadline_value?: number;
+  payment_deadline_unit?: 'HOURS' | 'DAYS' | 'WEEKS';
   // Joined
   category?: KeusahawananCategory;
   owner?: { id: string; full_name: string; avatar_url?: string };
@@ -536,6 +544,13 @@ export interface BusinessProduct {
   total_cost:            number;
   cost_notes:            string | null;
   created_at:            string;
+  // PolyMart fields
+  publish_to_polymart?:    boolean;
+  polymart_location?:      string | null;
+  polymart_pickup_info?:   string | null;
+  polymart_published_at?:  string | null;
+  // Payment override per-product (NULL = ikut perniagaan)
+  online_payment_enabled?: boolean | null;
 }
 
 export interface PolymartCartItem {

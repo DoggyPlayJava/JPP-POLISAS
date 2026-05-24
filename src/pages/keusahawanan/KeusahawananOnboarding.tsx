@@ -24,7 +24,7 @@ export function KeusahawananOnboarding() {
   const [bDesc, setBDesc] = useState('');
   const [bCat, setBCat] = useState('');
   const [bSsm, setBSsm] = useState('');
-  const [bMentors, setBMentors] = useState<{name: string, department: string}[]>([{ name: '', department: '' }]);
+  const [bMentors, setBMentors] = useState<{name: string, department: string}[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   // Check state early: If user has reached the 2 active business limit, push them to dashboard
@@ -320,20 +320,18 @@ export function KeusahawananOnboarding() {
                     </div>
                     {bMentors.map((m, i) => (
                       <div key={i} className="flex flex-col gap-2 p-4 bg-white/5 border border-white/10 rounded-2xl relative group">
-                        {i > 0 && (
-                          <button type="button" onClick={() => setBMentors(bMentors.filter((_, idx) => idx !== i))}
-                            className="absolute top-2 right-2 text-white/30 hover:text-rose-400">
-                            Tutup
-                          </button>
-                        )}
-                        <Input required={i === 0} placeholder={i === 0 ? "Contoh: Dr. Ahmad Ali (Wajib)" : "Contoh: Dr. Ahmad Ali"} 
+                        <button type="button" onClick={() => setBMentors(bMentors.filter((_, idx) => idx !== i))}
+                          className="absolute top-2 right-2 text-white/30 hover:text-rose-400">
+                          Tutup
+                        </button>
+                        <Input placeholder="Contoh: Dr. Ahmad Ali" 
                           value={m.name} onChange={e => {
                             const newMentors = [...bMentors];
                             newMentors[i].name = e.target.value;
                             setBMentors(newMentors);
                           }}
                           className="bg-white/5 border-white/10 focus-visible:ring-amber-500 text-white placeholder:text-white/20 h-11 rounded-xl" />
-                        <Input required={i === 0} placeholder={i === 0 ? "Contoh: Jabatan Teknologi Maklumat (Wajib)" : "Contoh: Jabatan Teknologi Maklumat"} 
+                        <Input placeholder="Contoh: Jabatan Teknologi Maklumat" 
                           value={m.department} onChange={e => {
                             const newMentors = [...bMentors];
                             newMentors[i].department = e.target.value;

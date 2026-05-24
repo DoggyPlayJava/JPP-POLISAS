@@ -9,7 +9,8 @@ import { hexToRgba } from '@/lib/utils';
 import {
   Camera, Save, Users, ShieldCheck, Trash2, Check, X, Clock,
   Activity, Building2, ToggleLeft, ToggleRight, UserPlus, Logs,
-  Tag, Ticket, BadgePercent, Plus, Calendar, ShieldAlert, HelpCircle
+  Tag, Ticket, BadgePercent, Plus, Calendar, ShieldAlert, HelpCircle,
+  CreditCard, Handshake, Phone, Upload, Image,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useTour } from '@/hooks/useTour';
@@ -59,7 +60,7 @@ export function UrusPerniagaanPage() {
   const [useShiftSystem, setUseShiftSystem] = useState(false);
   const [regType, setRegType] = useState<'SSM' | 'PUSKEP'>('PUSKEP');
   const [ssmRegNumber, setSsmRegNumber] = useState('');
-  const [mentors, setMentors] = useState<{name: string, department: string}[]>([{ name: '', department: '' }]);
+  const [mentors, setMentors] = useState<{name: string, department: string}[]>([]);
 
   // Derived
   const businessId = selectedBusiness?.id;
@@ -83,6 +84,17 @@ export function UrusPerniagaanPage() {
   const [transferToId, setTransferToId] = useState('');
   const [isTransferring, setIsTransferring] = useState(false);
 
+  // PolyMart Payment Settings
+  const [onlinePayEnabled, setOnlinePayEnabled] = useState(false);
+  const [codEnabled, setCodEnabled] = useState(true);
+  const [paymentQrUrl, setPaymentQrUrl] = useState('');
+  const [paymentInstructions, setPaymentInstructions] = useState('');
+  const [businessPhone, setBusinessPhone] = useState('');
+  const [paymentDeadlineValue, setPaymentDeadlineValue] = useState(24);
+  const [paymentDeadlineUnit, setPaymentDeadlineUnit] = useState<'HOURS' | 'DAYS' | 'WEEKS'>('HOURS');
+  const [paymentSaving, setPaymentSaving] = useState(false);
+  const [qrUploading, setQrUploading] = useState(false);
+
   const fetchData = useCallback(async () => {
     if (!businessId) return;
     const { data: biz } = await supabase
@@ -98,7 +110,15 @@ export function UrusPerniagaanPage() {
     setUseShiftSystem(biz?.is_shift_enabled ?? false);
     setRegType(biz?.registration_type === 'SSM' ? 'SSM' : 'PUSKEP');
     setSsmRegNumber(biz?.ssm_registration_number || '');
-    setMentors(biz?.mentors && biz.mentors.length > 0 ? biz.mentors : [{ name: '', department: '' }]);
+    setMentors(biz?.mentors || []);
+    // Payment settings
+    setOnlinePayEnabled(biz?.online_payment_enabled ?? false);
+    setCodEnabled(biz?.cod_enabled ?? true);
+    setPaymentQrUrl(biz?.payment_qr_url || '');
+    setPaymentInstructions(biz?.payment_instructions || '');
+    setBusinessPhone(biz?.business_phone || '');
+    setPaymentDeadlineValue(biz?.payment_deadline_value ?? 24);
+    setPaymentDeadlineUnit(biz?.payment_deadline_unit ?? 'HOURS');
 
     const { data: mems } = await supabase
       .from('student_business_memberships')
@@ -223,7 +243,7 @@ export function UrusPerniagaanPage() {
        description,
        registration_type: finalRegType,
        ssm_registration_number: finalSsm,
-       mentors,
+       mentors: mentors.filter(m => m.name.trim() !== ''),
        registration_history: updatedHistory
     }).eq('id', businessId);
     await pos.writeLog(businessId, 'SETTINGS_UPDATED', 'Maklumat perniagaan dikemaskini.');
@@ -467,7 +487,7 @@ export function UrusPerniagaanPage() {
                 </div>
                 {mentors.map((m, i) => (
                   <div key={i} className="flex flex-col gap-4 p-4 rounded-2xl bg-muted/20 border border-border/50 relative group">
-                    {isOwner && i > 0 && (
+                    {isOwner && (
                       <button type="button" onClick={() => setMentors(mentors.filter((_, idx) => idx !== i))}
                         className="absolute top-3 right-3 text-muted-foreground/40 hover:text-rose-500">
                         Tutup
@@ -475,24 +495,24 @@ export function UrusPerniagaanPage() {
                     )}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Nama Mentor {i===0 && "(Wajib)"}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Nama Mentor</p>
                         <input type="text" value={m.name} onChange={e => {
                             const newM = [...mentors];
                             newM[i].name = e.target.value;
                             setMentors(newM);
                           }}
-                          placeholder={i===0 ? "Contoh: Dr. Ahmad Ali (Wajib)" : "Contoh: Dr. Ahmad Ali"}
+                          placeholder="Contoh: Dr. Ahmad Ali"
                           disabled={!isOwner}
                           className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all disabled:opacity-50" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Jabatan Mentor {i===0 && "(Wajib)"}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Jabatan Mentor</p>
                         <input type="text" value={m.department} onChange={e => {
                             const newM = [...mentors];
                             newM[i].department = e.target.value;
                             setMentors(newM);
                           }}
-                          placeholder={i===0 ? "Contoh: JTMK (Wajib)" : "Contoh: JTMK"}
+                          placeholder="Contoh: JTMK"
                           disabled={!isOwner}
                           className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all disabled:opacity-50" />
                       </div>
@@ -729,6 +749,172 @@ export function UrusPerniagaanPage() {
                     : <ToggleLeft className="w-8 h-8 text-muted-foreground/40" />}
                 </button>
               </div>
+            </div>
+
+            {/* ── PolyMart Payment Settings ── */}
+            <div className="rounded-[2rem] bg-card border border-border p-6 space-y-5">
+              <p className="text-[10px] font-black uppercase tracking-widest text-foreground flex items-center gap-2">
+                <CreditCard className="w-4 h-4" style={{ color }} /> Tetapan Pembayaran PolyMart
+              </p>
+              <p className="text-xs text-muted-foreground -mt-2">
+                Aktifkan pembayaran dalam talian untuk pesanan di PolyMart. Pelanggan akan nampak QR atau pilihan COD semasa checkout.
+              </p>
+
+              {/* QR Online toggle */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border/50">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-blue-500" />
+                    <p className="text-sm font-black text-foreground">💳 Pembayaran Online (QR)</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">Pelanggan bayar melalui QR dan upload resit sebagai bukti.</p>
+                </div>
+                <button onClick={() => {
+                    if (!isOwner) return;
+                    const newVal = !onlinePayEnabled;
+                    if (!newVal && !codEnabled) { toast.error('Mesti ada sekurang-kurangnya satu kaedah pembayaran aktif.'); return; }
+                    setOnlinePayEnabled(newVal);
+                  }}
+                  disabled={!isOwner}
+                  className="transition-transform active:scale-95 disabled:opacity-40">
+                  {onlinePayEnabled
+                    ? <ToggleRight className="w-8 h-8" style={{ color }} />
+                    : <ToggleLeft className="w-8 h-8 text-muted-foreground/40" />}
+                </button>
+              </div>
+
+              {/* COD toggle */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border/50">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Handshake className="w-4 h-4 text-amber-500" />
+                    <p className="text-sm font-black text-foreground">🤝 Bayar Bersemuka (COD)</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">Pelanggan bayar terus kepada vendor semasa ambil pesanan.</p>
+                </div>
+                <button onClick={() => {
+                    if (!isOwner) return;
+                    const newVal = !codEnabled;
+                    if (!newVal && !onlinePayEnabled) { toast.error('Mesti ada sekurang-kurangnya satu kaedah pembayaran aktif.'); return; }
+                    setCodEnabled(newVal);
+                  }}
+                  disabled={!isOwner}
+                  className="transition-transform active:scale-95 disabled:opacity-40">
+                  {codEnabled
+                    ? <ToggleRight className="w-8 h-8" style={{ color }} />
+                    : <ToggleLeft className="w-8 h-8 text-muted-foreground/40" />}
+                </button>
+              </div>
+
+              {/* QR Details — only show when online payment enabled */}
+              <AnimatePresence>
+                {onlinePayEnabled && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                    <div className="space-y-4 p-4 rounded-2xl bg-blue-500/5 border border-blue-500/15">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 flex items-center gap-2">
+                        <Image className="w-3.5 h-3.5" /> Maklumat QR Pembayaran
+                      </p>
+
+                      {/* QR image upload */}
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2">Gambar QR Pembayaran</p>
+                        <div className="flex items-start gap-4">
+                          {paymentQrUrl && (
+                            <img src={paymentQrUrl} alt="QR" className="w-24 h-24 rounded-xl border border-border/50 object-contain bg-white" />
+                          )}
+                          <label className={`flex items-center gap-2 h-10 px-4 rounded-xl text-xs font-black cursor-pointer transition-all border border-border/50 hover:bg-muted/50 ${qrUploading ? 'opacity-50' : ''}`}>
+                            <Upload className="w-4 h-4" />
+                            {qrUploading ? 'Memuat naik...' : paymentQrUrl ? 'Tukar QR' : 'Muat Naik QR'}
+                            <input type="file" accept="image/*" className="hidden" disabled={qrUploading} onChange={async (e) => {
+                              if (!e.target.files?.[0] || !businessId) return;
+                              setQrUploading(true);
+                              try {
+                                const file = e.target.files[0];
+                                const path = `payment-qr/${businessId}/${Date.now()}.${file.name.split('.').pop()}`;
+                                const { error: upErr } = await supabase.storage.from('keusahawanan-products').upload(path, file, { upsert: true, contentType: file.type });
+                                if (upErr) throw upErr;
+                                const { data: { publicUrl } } = supabase.storage.from('keusahawanan-products').getPublicUrl(path);
+                                setPaymentQrUrl(publicUrl);
+                                toast.success('QR dimuat naik!');
+                              } catch (err: any) { toast.error(err.message); }
+                              setQrUploading(false);
+                            }} />
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Bank details / instructions */}
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2">Arahan / Maklumat Bank (untuk pelanggan salin)</p>
+                        <textarea value={paymentInstructions} onChange={e => setPaymentInstructions(e.target.value)}
+                          placeholder="Contoh:
+Bank: Maybank
+No. Akaun: 1234567890
+Nama: Ahmad Bin Ali
+
+Sila masukkan ID Pesanan dalam rujukan pembayaran."
+                          className="w-full h-28 px-4 py-3 rounded-2xl text-xs font-medium outline-none bg-muted/30 border border-border/50 text-foreground resize-none placeholder:text-muted-foreground/40 focus:border-blue-500/50 transition-all" />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Phone */}
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2 flex items-center gap-1.5">
+                  <Phone className="w-3 h-3" /> No. Telefon Perniagaan
+                </p>
+                <input type="tel" value={businessPhone} onChange={e => setBusinessPhone(e.target.value)}
+                  placeholder="01X-XXXXXXX"
+                  className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
+                <p className="text-[9px] text-muted-foreground/40 mt-1 italic">Dipaparkan kepada pelanggan COD untuk penyelarasan bayaran.</p>
+              </div>
+
+              {/* Payment Deadline */}
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2">⏰ Had Masa Pembayaran</p>
+                <p className="text-xs text-muted-foreground mb-3">Pesanan akan auto-cancel jika pembayaran tidak disahkan dalam tempoh ini.</p>
+                <div className="flex gap-3">
+                  <input type="number" min={1} value={paymentDeadlineValue} onChange={e => setPaymentDeadlineValue(parseInt(e.target.value) || 1)}
+                    className="w-24 h-11 px-4 rounded-2xl text-sm font-black text-center outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all" />
+                  <select value={paymentDeadlineUnit} onChange={e => setPaymentDeadlineUnit(e.target.value as 'HOURS' | 'DAYS' | 'WEEKS')}
+                    className="flex-1 h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all">
+                    <option value="HOURS">Jam</option>
+                    <option value="DAYS">Hari</option>
+                    <option value="WEEKS">Minggu</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Save Payment Settings */}
+              {isOwner && (
+                <button onClick={async () => {
+                    if (!businessId) return;
+                    if (onlinePayEnabled && !paymentQrUrl) { toast.error('Sila muat naik gambar QR dahulu.'); return; }
+                    setPaymentSaving(true);
+                    const { error } = await supabase.from('keusahawanan_businesses').update({
+                      online_payment_enabled: onlinePayEnabled,
+                      cod_enabled: codEnabled,
+                      payment_qr_url: paymentQrUrl || null,
+                      payment_instructions: paymentInstructions || null,
+                      business_phone: businessPhone || null,
+                      payment_deadline_value: paymentDeadlineValue,
+                      payment_deadline_unit: paymentDeadlineUnit,
+                    }).eq('id', businessId);
+                    if (error) { toast.error('Gagal menyimpan: ' + error.message); }
+                    else {
+                      await pos.writeLog(businessId, 'SETTINGS_UPDATED', `Tetapan pembayaran PolyMart dikemaskini. Online QR: ${onlinePayEnabled ? 'ON' : 'OFF'}, COD: ${codEnabled ? 'ON' : 'OFF'}`);
+                      toast.success('Tetapan pembayaran disimpan!');
+                    }
+                    setPaymentSaving(false);
+                  }}
+                  disabled={paymentSaving}
+                  className="w-full h-11 rounded-2xl text-white text-xs font-black uppercase tracking-wider disabled:opacity-50 shadow-lg transition-all hover:brightness-110 active:scale-95 flex items-center justify-center gap-2"
+                  style={{ background: color }}>
+                  <Save className="w-4 h-4" /> {paymentSaving ? 'Menyimpan...' : 'Simpan Tetapan Pembayaran'}
+                </button>
+              )}
             </div>
 
             {/* Promotion management — only shown when promotions enabled */}

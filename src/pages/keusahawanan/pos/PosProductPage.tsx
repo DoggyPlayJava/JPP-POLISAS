@@ -11,7 +11,7 @@ import {
   Plus, Search, Edit2, Trash2, Package, AlertTriangle,
   Eye, EyeOff, X, Camera, ChevronDown, ChevronUp,
   TrendingUp, Layers, Lightbulb, BarChart3, Info,
-  DollarSign, ShoppingBag, HelpCircle
+  DollarSign, ShoppingBag, HelpCircle, CreditCard
 } from 'lucide-react';
 import { type BusinessProduct, type CostItem } from '@/types';
 import toast from 'react-hot-toast';
@@ -96,6 +96,8 @@ const EMPTY_FORM = {
   publish_to_polymart:  false,
   polymart_location:    '',
   polymart_pickup_info: '',
+  // Payment override per-product: null = ikut perniagaan, true/false = override
+  online_payment_override: null as boolean | null,
 };
 
 // ── Margin Logic ──────────────────────────────────────────────────────────────
@@ -660,9 +662,10 @@ export function PosProductPage() {
       cost_items: hasValidItems ? (rawItems as unknown as CostItem[]) : [],
       cost_notes: p.cost_notes || '',
       // PolyMart fields
-      publish_to_polymart:  (p as any).publish_to_polymart ?? false,
-      polymart_location:    (p as any).polymart_location ?? '',
-      polymart_pickup_info: (p as any).polymart_pickup_info ?? '',
+      publish_to_polymart:  p.publish_to_polymart ?? false,
+      polymart_location:    p.polymart_location ?? '',
+      polymart_pickup_info: p.polymart_pickup_info ?? '',
+      online_payment_override: p.online_payment_enabled ?? null,
     });
     setShowCost(true);
     setShowForm(true);
@@ -708,6 +711,7 @@ export function PosProductPage() {
       publish_to_polymart:  form.publish_to_polymart,
       polymart_location:    form.polymart_location.trim() || null,
       polymart_pickup_info: form.polymart_pickup_info.trim() || null,
+      online_payment_enabled: form.online_payment_override,
       ...(form.publish_to_polymart && !editId ? { polymart_published_at: new Date().toISOString() } : {}),
     };
 
@@ -1017,7 +1021,7 @@ export function PosProductPage() {
                   {/* ── PolyMart Section ── */}
                   <div className="space-y-3 rounded-2xl border p-3.5"
                     style={{ borderColor: form.publish_to_polymart ? 'rgba(245,158,11,0.35)' : 'hsl(var(--border)/0.5)', background: form.publish_to_polymart ? 'rgba(245,158,11,0.05)' : 'transparent' }}>
-                    <button onClick={() => setForm(f => ({ ...f, publish_to_polymart: !f.publish_to_polymart }))}
+                    <button type="button" onClick={() => setForm(f => ({ ...f, publish_to_polymart: !f.publish_to_polymart }))}
                       className="flex items-center gap-3 w-full">
                       <div className="w-10 h-5.5 rounded-full transition-colors relative"
                         style={{ background: form.publish_to_polymart ? '#f59e0b' : 'hsl(var(--muted))' }}>
@@ -1049,6 +1053,35 @@ export function PosProductPage() {
                         </motion.div>
                       </AnimatePresence>
                     )}
+
+                    {/* Online Payment Override per-Produk */}
+                    <div className="p-3 rounded-2xl bg-blue-500/5 border border-blue-500/15 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="w-3.5 h-3.5 text-blue-500" />
+                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-600/70">Pembayaran Online (QR) PolyMart</p>
+                      </div>
+                      <p className="text-[9px] text-muted-foreground/50 leading-relaxed">
+                        Override tetapan pembayaran perniagaan untuk produk ini sahaja (Berfungsi apabila disiarkan ke PolyMart).
+                        {selectedBusiness?.online_payment_enabled
+                          ? ' Perniagaan anda telah mengaktifkan QR Online.'
+                          : ' Perniagaan anda belum aktifkan QR Online di Urus Perniagaan.'}
+                      </p>
+                      <div className="flex rounded-xl overflow-hidden border border-border/50">
+                        {[
+                          { key: null,  label: '🏢 Ikut Perniagaan' },
+                          { key: true,  label: '✅ Aktif' },
+                          { key: false, label: '❌ Matikan' },
+                        ].map(opt => (
+                          <button key={String(opt.key)} type="button"
+                            onClick={() => setForm(f => ({ ...f, online_payment_override: opt.key as boolean | null }))}
+                            className="flex-1 py-2 text-[10px] font-black transition-all"
+                            style={form.online_payment_override === opt.key
+                              ? { background: 'rgba(59,130,246,0.12)', color: '#3b82f6', borderBottom: '2px solid #3b82f6' }
+                              : { color: 'hsl(var(--muted-foreground)/0.5)' }}
+                          >{opt.label}</button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Save */}

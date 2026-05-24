@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
   ArrowLeft, ShoppingBag, Search, Package, LayoutGrid,
-  Shield, Home, SlidersHorizontal, X, LogIn, ShoppingCart, HelpCircle
+  Shield, Home, SlidersHorizontal, X, LogIn, ShoppingCart, HelpCircle, Store, Plus
 } from 'lucide-react';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { BottomNav } from '@/components/layout/BottomNav';
@@ -151,111 +151,115 @@ export function PolyMartLayout() {
               </button>
 
               {/* Logo */}
-              {!showSearch && (
-                <motion.button
-                  initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
-                  onClick={() => { navigate('/polymart'); setActiveCategory('all'); }}
-                  className="flex items-center gap-2 shrink-0">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm"
-                    style={{ background: PM_GRADIENT }}>
-                    <ShoppingBag className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="leading-none">
-                    <p className="text-[13px] font-black text-foreground">PolyMart</p>
-                    <p className="text-[8px] font-bold tracking-widest uppercase" style={{ color: PM_ACCENT }}>marketplace</p>
-                  </div>
-                </motion.button>
-              )}
+              <motion.button
+                initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                onClick={() => { navigate('/polymart'); setActiveCategory('all'); }}
+                className="flex items-center gap-2 shrink-0">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm"
+                  style={{ background: PM_GRADIENT }}>
+                  <ShoppingBag className="w-4 h-4 text-white" />
+                </div>
+                <div className={`leading-none text-left ${!(hasKeusahawananAccess || isSuperAdmin) ? 'hidden sm:block' : ''}`}>
+                  <p className="text-[13px] font-black text-foreground">PolyMart</p>
+                  <p className="text-[8px] font-bold tracking-widest uppercase" style={{ color: PM_ACCENT }}>marketplace</p>
+                </div>
+              </motion.button>
 
-              {/* Search */}
-              {showSearch ? (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex items-center gap-2">
-                  <div className="flex-1 flex items-center gap-2 h-9 px-3 rounded-xl bg-muted/50 border border-border">
-                    <Search className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
-                    <input
-                      autoFocus value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      onKeyDown={e => e.key === 'Escape' && setShowSearch(false)}
-                      placeholder="Cari produk, kedai..."
-                      className="flex-1 text-[13px] bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
-                    />
-                  </div>
-                  <button onClick={() => { setShowSearch(false); setSearchQuery(''); }}
-                    className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-muted/60 transition-colors">
-                    <X className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                </motion.div>
-              ) : (
-                <button onClick={() => setShowSearch(true)}
-                  className="flex-1 flex items-center gap-2 h-9 px-3 rounded-xl bg-muted/40 border border-border/40 hover:border-border transition-colors">
+              {/* Search Bar for Non-JPP Users / Spacer for JPP */}
+              {!(hasKeusahawananAccess || isSuperAdmin) ? (
+                <div className="flex-1 flex items-center gap-2 h-9 px-3.5 rounded-full bg-muted/40 border border-border/45 hover:border-border/70 focus-within:border-amber-500/50 transition-colors">
                   <Search className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
-                  <span className="text-[12px] text-muted-foreground/50">Cari produk atau kedai...</span>
-                </button>
-              )}
-
-              {/* Right icons */}
-              {!showSearch && (
-                <div className="flex items-center gap-0.5 shrink-0">
-                  <button onClick={startTour}
-                    className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-amber-500/10 text-amber-500/70 hover:text-amber-500 transition-colors">
-                    <HelpCircle className="w-[18px] h-[18px]" />
-                  </button>
-
-                  {user ? (
-                    <>
-                      <button onClick={() => navigate('/polymart/troli')}
-                        className="tour-polymart-cart relative w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/60 transition-colors">
-                        <ShoppingCart className="w-[18px] h-[18px] text-muted-foreground" />
-                        {cartCount > 0 && (
-                          <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full text-white text-[7px] font-black flex items-center justify-center"
-                            style={{ background: PM_ACCENT }}>
-                            {cartCount > 9 ? '9+' : cartCount}
-                          </span>
-                        )}
-                      </button>
-
-                      <button onClick={() => navigate('/polymart/pesanan-saya')}
-                        className="relative w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/60 transition-colors">
-                        <Package className="w-[18px] h-[18px] text-muted-foreground" />
-                        {myActiveOrdersCount > 0 && (
-                          <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full text-white text-[7px] font-black flex items-center justify-center"
-                            style={{ background: PM_ACCENT }}>
-                            {myActiveOrdersCount > 9 ? '9+' : myActiveOrdersCount}
-                          </span>
-                        )}
-                      </button>
-
-                      {isVendor && (
-                        <button onClick={() => navigate('/polymart/vendor')}
-                          className="tour-polymart-vendor relative w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/60 transition-colors">
-                          <LayoutGrid className="w-[18px] h-[18px] text-muted-foreground" />
-                          {pendingVendorCount > 0 && (
-                            <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full bg-rose-500 text-white text-[7px] font-black flex items-center justify-center">
-                              {pendingVendorCount > 9 ? '9+' : pendingVendorCount}
-                            </span>
-                          )}
-                        </button>
-                      )}
-
-                      {(hasKeusahawananAccess || isSuperAdmin) && (
-                        <button onClick={() => navigate('/polymart/admin')}
-                          className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-amber-500/10 transition-colors">
-                          <Shield className="w-[17px] h-[17px]" style={{ color: PM_ACCENT }} />
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    /* Pelawat — tunjuk butang Log Masuk */
-                    <button
-                      onClick={() => navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`)}
-                      className="flex items-center gap-1.5 h-8 px-3 rounded-xl text-[11px] font-black text-white transition-all hover:brightness-110"
-                      style={{ background: PM_GRADIENT }}>
-                      <LogIn className="w-3.5 h-3.5" />
-                      <span>Log Masuk</span>
+                  <input
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Cari produk..."
+                    className="flex-1 text-[12px] bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
+                  />
+                  {searchQuery && (
+                    <button onClick={() => setSearchQuery('')} className="p-0.5 rounded-full hover:bg-muted shrink-0">
+                      <X className="w-3.5 h-3.5 text-muted-foreground" />
                     </button>
                   )}
                 </div>
+              ) : (
+                /* Spacer for JPP to push pills to the right side */
+                <div className="flex-1" />
               )}
+
+              {/* Right icons */}
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <button onClick={startTour}
+                  className="hidden sm:flex w-9 h-9 rounded-xl items-center justify-center hover:bg-amber-500/10 text-amber-500/70 hover:text-amber-500 transition-colors">
+                  <HelpCircle className="w-[18px] h-[18px]" />
+                </button>
+
+                {user ? (
+                  <>
+                    {/* Hide Cart on mobile since it is in BottomNav */}
+                    <button onClick={() => navigate('/polymart/troli')}
+                      className="tour-polymart-cart relative hidden sm:flex w-9 h-9 rounded-xl items-center justify-center hover:bg-muted/60 transition-colors">
+                      <ShoppingCart className="w-[18px] h-[18px] text-muted-foreground" />
+                      {cartCount > 0 && (
+                        <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full text-white text-[7px] font-black flex items-center justify-center"
+                          style={{ background: PM_ACCENT }}>
+                          {cartCount > 9 ? '9+' : cartCount}
+                        </span>
+                      )}
+                    </button>
+
+                    {/* Hide Orders on mobile since it is in BottomNav */}
+                    <button onClick={() => navigate('/polymart/pesanan-saya')}
+                      className="relative hidden sm:flex w-9 h-9 rounded-xl items-center justify-center hover:bg-muted/60 transition-colors">
+                      <Package className="w-[18px] h-[18px] text-muted-foreground" />
+                      {myActiveOrdersCount > 0 && (
+                        <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full text-white text-[7px] font-black flex items-center justify-center"
+                          style={{ background: PM_ACCENT }}>
+                          {myActiveOrdersCount > 9 ? '9+' : myActiveOrdersCount}
+                        </span>
+                      )}
+                    </button>
+
+                    {isVendor ? (
+                      <button onClick={() => navigate('/polymart/vendor')}
+                        className="tour-polymart-vendor relative h-9 px-3 rounded-full flex items-center gap-1.5 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 border border-amber-500/15 transition-all shrink-0 shadow-sm shadow-amber-500/5">
+                        <Store className="w-[15px] h-[15px]" />
+                        <span className="text-[10px] font-black uppercase tracking-wider">Kedai</span>
+                        {pendingVendorCount > 0 && (
+                          <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[8px] font-black flex items-center justify-center shadow-sm">
+                            {pendingVendorCount}
+                          </span>
+                        )}
+                      </button>
+                    ) : (
+                      /* Only show for regular users who are not JPP/Admins (to avoid clutter in JPP view) */
+                      !(hasKeusahawananAccess || isSuperAdmin) && (
+                        <button onClick={() => navigate('/keusahawanan/onboarding')}
+                          className="relative h-9 px-3 rounded-full flex items-center gap-1 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border border-emerald-500/15 transition-all shrink-0 shadow-sm shadow-emerald-500/5">
+                          <Plus className="w-3.5 h-3.5" />
+                          <span className="text-[10px] font-black uppercase tracking-wider hidden min-[380px]:inline">Mulai Bisnes</span>
+                        </button>
+                      )
+                    )}
+
+                    {(hasKeusahawananAccess || isSuperAdmin) && (
+                      <button onClick={() => navigate('/polymart/admin')}
+                        className="relative h-9 px-3 rounded-full flex items-center gap-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 border border-rose-500/15 transition-all shrink-0 shadow-sm shadow-rose-500/5">
+                        <Shield className="w-[15px] h-[15px]" />
+                        <span className="text-[10px] font-black uppercase tracking-wider">Admin</span>
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  /* Pelawat — tunjuk butang Log Masuk */
+                  <button
+                    onClick={() => navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`)}
+                    className="flex items-center gap-1.5 h-8 px-3 rounded-xl text-[11px] font-black text-white transition-all hover:brightness-110"
+                    style={{ background: PM_GRADIENT }}>
+                    <LogIn className="w-3.5 h-3.5" />
+                    <span>Log Masuk</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Category pills – only on homepage */}
@@ -351,7 +355,7 @@ export function PolyMartLayout() {
           <BottomNav 
             customLinks={{
               left: [
-                { icon: Home, label: 'Utama', onClick: () => navigate('/polymart'), isActive: isHome },
+                { icon: Home, label: 'Utama', onClick: () => navigate('/portal'), isActive: false },
                 { icon: Search, label: 'Cari', onClick: () => setShowMobileSearch(true), isActive: showMobileSearch }
               ],
               right: [

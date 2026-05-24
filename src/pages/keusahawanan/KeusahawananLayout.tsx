@@ -57,6 +57,7 @@ const navItems = [
   { icon: BarChart3,       label: 'Statistik',         href: '/keusahawanan/pos/stats',       jppOnly: false, ownerOnly: false, posSection: false },
   { icon: History,         label: 'Sejarah Transaksi', href: '/keusahawanan/pos/history',     jppOnly: false, ownerOnly: false, posSection: false },
   { icon: Settings2,       label: 'Urus Perniagaan',   href: '/keusahawanan/urus-perniagaan', jppOnly: false, ownerOnly: true,  posSection: false },
+  { icon: Store,           label: 'PolyMart Peniaga',  href: '/polymart/vendor',              jppOnly: false, ownerOnly: false, posSection: false },
   // Lain-lain
   { icon: Building2,       label: 'Sertai / Cipta Perniagaan', href: '/keusahawanan/onboarding',      jppOnly: false, ownerOnly: false, posSection: false },
 ];

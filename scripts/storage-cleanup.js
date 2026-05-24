@@ -46,6 +46,7 @@ const SCALAR_REFS = [
   { table: 'supsas_editions',     column: 'logo_url' },
   { table: 'supsas_kontingen',    column: 'logo_url' },
   { table: 'supsas_medal_tally',  column: 'logo_url' },
+  { table: 'polymart_orders',     column: 'payment_receipt_url' },
 ];
 
 // Array columns — need special handling with .contains()
@@ -71,6 +72,7 @@ const BUCKETS_TO_CLEAN = [
   { name: 'post-mortem',           subfolders: [''] },
   { name: 'receipts',              subfolders: [''] },
   { name: 'supsas-assets',         subfolders: [''] },
+  { name: 'polymart-receipts',     subfolders: [''] },
 ];
 
 /**
@@ -118,7 +120,7 @@ async function isFileReferenced(publicUrl, filePath) {
 }
 
 /**
- * List all files in a bucket/subfolder, handling pagination (1000 per page).
+ * List all files in a bucket/subfolder recursively, handling pagination (1000 per page) and subdirectories.
  */
 async function listAllFiles(bucket, folder) {
   const allFiles = [];
@@ -126,7 +128,7 @@ async function listAllFiles(bucket, folder) {
   const PAGE_SIZE = 1000;
 
   while (true) {
-    const { data, error } = await supabase.storage.from(bucket).list(folder, {
+    const { data, error } = await supabase.storage.from(bucket).list(folder || undefined, {
       limit: PAGE_SIZE,
       offset,
       sortBy: { column: 'name', order: 'asc' },
@@ -142,11 +144,17 @@ async function listAllFiles(bucket, folder) {
     // Filter out folder placeholders and actual sub-folders
     for (const item of data) {
       if (item.name === '.emptyFolderPlaceholder') continue;
-      if (item.id === null) continue; // This is a folder, not a file
-
-      // Build the full path relative to bucket root
+      
       const fullPath = folder ? `${folder}/${item.name}` : item.name;
-      allFiles.push(fullPath);
+
+      if (item.id === null) {
+        // This is a directory. Traverse recursively.
+        const subFiles = await listAllFiles(bucket, fullPath);
+        allFiles.push(...subFiles);
+      } else {
+        // This is a file.
+        allFiles.push(fullPath);
+      }
     }
 
     if (data.length < PAGE_SIZE) break; // Last page
@@ -156,6 +164,76 @@ async function listAllFiles(bucket, folder) {
   return allFiles;
 }
 
+/**
+ * Auto-delete receipt files older than 30 days from the polymart-receipts bucket
+ * and set their references (payment_receipt_url) in polymart_orders to null.
+ */
+async function cleanOldReceipts() {
+  console.log(`[Storage Cleanup] Checking for receipts older than 30 days to auto-delete...`);
+  
+  // Calculate threshold date (30 days ago)
+  const thresholdDate = new Date();
+  thresholdDate.setDate(thresholdDate.getDate() - 30);
+  const thresholdStr = thresholdDate.toISOString();
+
+  // Fetch orders older than 30 days with payment receipts
+  const { data: orders, error } = await supabase
+    .from('polymart_orders')
+    .select('id, payment_receipt_url')
+    .not('payment_receipt_url', 'is', null)
+    .lt('created_at', thresholdStr);
+
+  if (error) {
+    console.error(`[Storage Cleanup] Error fetching old orders with receipts:`, error.message);
+    return;
+  }
+
+  if (!orders || orders.length === 0) {
+    console.log(`[Storage Cleanup] No receipts older than 30 days found.`);
+    return;
+  }
+
+  console.log(`[Storage Cleanup] Found ${orders.length} orders with receipts older than 30 days.`);
+
+  let deletedCount = 0;
+  for (const order of orders) {
+    const receiptUrl = order.payment_receipt_url;
+    // Extract file path from publicUrl.
+    // Example: https://.../storage/v1/object/public/polymart-receipts/receipts/orderId/filename.png
+    const bucketMarker = 'polymart-receipts/';
+    const markerIndex = receiptUrl.indexOf(bucketMarker);
+    
+    if (markerIndex !== -1) {
+      const filePath = decodeURIComponent(receiptUrl.substring(markerIndex + bucketMarker.length));
+      console.log(`[Storage Cleanup] Deleting old receipt: ${filePath} for order ${order.id}`);
+      
+      const { error: deleteError } = await supabase.storage
+        .from('polymart-receipts')
+        .remove([filePath]);
+
+      if (deleteError) {
+        console.error(`[Storage Cleanup] Failed to delete receipt file ${filePath}:`, deleteError.message);
+      } else {
+        deletedCount++;
+      }
+    } else {
+      console.warn(`[Storage Cleanup] Could not extract storage file path from receipt URL: ${receiptUrl}`);
+    }
+
+    // Always nullify payment_receipt_url in DB to ensure consistency
+    const { error: updateError } = await supabase
+      .from('polymart_orders')
+      .update({ payment_receipt_url: null })
+      .eq('id', order.id);
+
+    if (updateError) {
+      console.error(`[Storage Cleanup] Failed to clear payment_receipt_url for order ${order.id}:`, updateError.message);
+    }
+  }
+
+  console.log(`[Storage Cleanup] Auto-deleted ${deletedCount} receipt files and updated database.`);
+}
+
 async function runCleanup() {
   if (!supabase) {
     console.warn("[Storage Cleanup] Skipped — Supabase client not initialized (missing env vars).");
@@ -163,6 +241,14 @@ async function runCleanup() {
   }
 
   console.log(`[Storage Cleanup] Started at ${new Date().toISOString()}`);
+  
+  // First run the 30-day receipt auto-cleanup
+  try {
+    await cleanOldReceipts();
+  } catch (err) {
+    console.error(`[Storage Cleanup] Error during cleanOldReceipts:`, err.message);
+  }
+
   let totalScanned = 0;
   let totalDeleted = 0;
   let totalKept = 0;

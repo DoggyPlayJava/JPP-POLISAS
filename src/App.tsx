@@ -82,6 +82,8 @@ const PolyMartMyOrders = lazy(() => import('./pages/polymart/PolyMartMyOrders').
 const PolyMartVendorDashboard = lazy(() => import('./pages/polymart/PolyMartVendorDashboard').then(m => ({ default: m.PolyMartVendorDashboard })));
 const PolyMartAdminPanel = lazy(() => import('./pages/polymart/PolyMartAdminPanel').then(m => ({ default: m.PolyMartAdminPanel })));
 const PolyMartCartPage = lazy(() => import('./pages/polymart/PolyMartCartPage').then(m => ({ default: m.PolyMartCartPage })));
+const PolyMartVerifyPickup = lazy(() => import('./pages/polymart/PolyMartVerifyPickup').then(m => ({ default: m.PolyMartVerifyPickup })));
+const PolyMartPaymentPage = lazy(() => import('./pages/polymart/PolyMartPaymentPage').then(m => ({ default: m.PolyMartPaymentPage })));
 
 // ── e-Akademik ──
 const AkademikLayout = lazy(() => import('./pages/akademik/AkademikLayout').then(m => ({ default: m.AkademikLayout })));
@@ -356,6 +358,8 @@ function AppRoutes() {
           <Route path="/polymart/troli"         element={<PolyMartCartPage />} />
           <Route path="/polymart/vendor"        element={<PolyMartVendorDashboard />} />
           <Route path="/polymart/admin"         element={<PolyMartAdminPanel />} />
+          <Route path="/polymart/verify/:orderId" element={<PolyMartVerifyPickup />} />
+          <Route path="/polymart/bayar/:orderId"  element={<PolyMartPaymentPage />} />
         </Route>
       </Route>
 

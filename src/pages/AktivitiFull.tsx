@@ -315,14 +315,17 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Padam aktiviti ini?')) return;
-    const { error } = await supabase.from('club_activities').delete().eq('id', id);
+    if (!confirm('Arkib aktiviti ini? Ia tidak akan dipadam secara kekal.')) return;
+    const { error } = await supabase
+      .from('club_activities')
+      .update({ is_archived: true })
+      .eq('id', id);
     if (!error) {
-      toast.success('Aktiviti dipadamkan.');
+      toast.success('Aktiviti diarkibkan.');
       queryCache.invalidate('dashboard_');
       load();
     }
-    else toast.error('Gagal memadam.');
+    else toast.error('Gagal mengarkibkan.');
   };
 
   const filtered = filterStatus === 'semua'
@@ -791,13 +794,23 @@ function ActivityKelabCard({ act, currentUserId, effectiveRole, onEdit, onDelete
           {(act.qr_enabled || act.merit_kelab > 0 || act.merit_eakademik > 0) && (
             <div className="flex items-center gap-2 flex-wrap">
               {act.qr_enabled && (
-                <button
-                  onClick={() => setQrOpen(true)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/20 transition-colors"
-                >
-                  <QrCode size={10} />
-                  Jana QR
-                </button>
+                act.qr_token ? (
+                  <button
+                    onClick={() => setQrOpen(true)}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/20 transition-colors"
+                  >
+                    <QrCode size={10} />
+                    Jana QR
+                  </button>
+                ) : (
+                  <span
+                    title="QR token belum dijana. Edit dan simpan semula aktiviti ini untuk jana token."
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted border border-border text-[9px] font-black uppercase tracking-widest text-muted-foreground cursor-not-allowed"
+                  >
+                    <QrCode size={10} />
+                    QR Tidak Sedia
+                  </span>
+                )
               )}
               {act.merit_kelab > 0 && (
                 <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[9px] font-black uppercase tracking-widest text-amber-600">
@@ -816,7 +829,7 @@ function ActivityKelabCard({ act, currentUserId, effectiveRole, onEdit, onDelete
         </CardContent>
       </Card>
 
-      {/* QR Modal */}
+      {/* QR Modal — hanya render jika token ada */}
       {act.qr_token && (
         <QrCodeModal
           open={qrOpen}
@@ -999,12 +1012,14 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
         toast.success('Program disimpan.');
 
         // --- Trigger Push Notification ---
-        if (!editTarget) {
+        // Hanya hantar notifikasi bila program dihantar (bukan DRAFT)
+        // untuk elak spam notifikasi semasa Exco masih dalam proses membuat draf.
+        if (!editTarget && form.status !== 'DRAFT') {
           try {
             const { sendNotificationToKppExco } = await import('@/lib/notifications');
             await sendNotificationToKppExco({
-              title: 'Kertas Kerja Baru (Takwim)',
-              message: `Draf program baru telah ditambah: ${form.title}.`,
+              title: 'Program Baru Dihantar Untuk Semakan',
+              message: `Program "${form.title}" telah dihantar untuk semakan JPP.`,
               type: 'DOCUMENT_UPLOAD',
               module: 'KPP',
               link: '/aktiviti'
@@ -1049,15 +1064,18 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
   };
 
   const handleDeleteProgram = async (actId: string) => {
-    if (!window.confirm('Padam draf program ini secara kekal? Tindakan ini tidak boleh diundur.')) return;
+    if (!window.confirm('Arkib draf program ini? Data tidak akan dipadam secara kekal.')) return;
     try {
       setSaving(true);
-      const { error } = await supabase.from('programs').delete().eq('id', actId);
+      const { error } = await supabase
+        .from('programs')
+        .update({ is_archived: true })
+        .eq('id', actId);
       if (error) throw error;
-      toast.success('Draf berjaya dipadam');
+      toast.success('Draf berjaya diarkibkan.');
       load();
     } catch (e: any) {
-      toast.error('Gagal memadam draf: ' + e.message);
+      toast.error('Gagal mengarkibkan draf: ' + e.message);
     } finally {
       setSaving(false);
     }
@@ -1583,13 +1601,23 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
           {(act.qr_enabled || act.merit_kelab > 0 || act.merit_eakademik > 0) && (
             <div className="flex items-center gap-2 flex-wrap">
               {act.qr_enabled && (
-                <button
-                  onClick={() => setQrOpen(true)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/20 transition-colors"
-                >
-                  <QrCode size={10} />
-                  Jana QR
-                </button>
+                act.qr_token ? (
+                  <button
+                    onClick={() => setQrOpen(true)}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/20 transition-colors"
+                  >
+                    <QrCode size={10} />
+                    Jana QR
+                  </button>
+                ) : (
+                  <span
+                    title="QR token belum dijana. Edit dan simpan semula program ini untuk jana token."
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted border border-border text-[9px] font-black uppercase tracking-widest text-muted-foreground cursor-not-allowed"
+                  >
+                    <QrCode size={10} />
+                    QR Tidak Sedia
+                  </span>
+                )
               )}
               {act.merit_kelab > 0 && (
                 <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[9px] font-black uppercase text-amber-600">

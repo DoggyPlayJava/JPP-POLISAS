@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePolymart, PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_EMOJI } from './PolyMartLayout';
 import { sendNotificationToBusinessVendor } from '@/lib/notifications';
 import toast from 'react-hot-toast';
-import { Trash2, Minus, Plus, Store, ArrowRight, ShoppingCart } from 'lucide-react';
+import { Trash2, Minus, Plus, Store, ArrowRight, ShoppingCart, CreditCard, Handshake } from 'lucide-react';
 
 interface CartItem {
   id: string;
@@ -20,10 +20,15 @@ interface CartItem {
     stock_quantity: number;
     reserved_stock: number;
     business_id: string;
+    online_payment_enabled: boolean | null;
     keusahawanan_businesses: {
       id: string;
       name: string;
       logo_url: string | null;
+      online_payment_enabled: boolean;
+      cod_enabled: boolean;
+      payment_deadline_value: number;
+      payment_deadline_unit: string;
     } | null;
   };
 }
@@ -37,9 +42,7 @@ export function PolyMartCartPage() {
   const [loading, setLoading] = useState(true);
   const [checkingOut, setCheckingOut] = useState<string | null>(null); // business_id
   const [pickupTime, setPickupTime] = useState<Record<string, string>>({});
-  const [deliveryMethod, setDeliveryMethod] = useState<Record<string, 'PICKUP' | 'POLYRIDER'>>({});
-  const [dropoffLocation, setDropoffLocation] = useState<Record<string, string>>({});
-  const [proposedPrice, setProposedPrice] = useState<Record<string, number>>({});
+  const [paymentMethods, setPaymentMethods] = useState<Record<string, 'COD' | 'QR_ONLINE'>>({});
 
   useEffect(() => {
     if (!user) {
@@ -56,8 +59,8 @@ export function PolyMartCartPage() {
       .select(`
         id, quantity,
         product:business_products (
-          id, name, price, image_url, category, stock_quantity, reserved_stock, business_id,
-          keusahawanan_businesses (id, name, logo_url)
+          id, name, price, image_url, category, stock_quantity, reserved_stock, business_id, online_payment_enabled,
+          keusahawanan_businesses (id, name, logo_url, online_payment_enabled, cod_enabled, payment_deadline_value, payment_deadline_unit)
         )
       `)
       .eq('buyer_id', user!.id)
@@ -90,22 +93,13 @@ export function PolyMartCartPage() {
       toast.error('Sila isi masa pesanan siap / ambil');
       return;
     }
-
-    const method = deliveryMethod[businessId] || 'PICKUP';
-    const riderFare = proposedPrice[businessId] || 3.00;
-    if (method === 'POLYRIDER') {
-      if (!dropoffLocation[businessId]?.trim()) {
-        toast.error('Sila isi lokasi penghantaran');
-        return;
-      }
-      if (riderFare < 1) {
-        toast.error('Harga tawaran rider minimum adalah RM 1.00');
-        return;
-      }
-    }
-
     const businessItems = items.filter(i => i.product.business_id === businessId);
     if (businessItems.length === 0) return;
+
+    const business = businessItems[0].product.keusahawanan_businesses;
+    const grpQrEnabled = businessItems.some(item => (item.product.online_payment_enabled ?? business?.online_payment_enabled) === true);
+    const grpCodEnabled = business?.cod_enabled !== false;
+    const selectedMethod = paymentMethods[businessId] || (grpQrEnabled && !grpCodEnabled ? 'QR_ONLINE' : 'COD');
 
     setCheckingOut(businessId);
     try {
@@ -119,16 +113,34 @@ export function PolyMartCartPage() {
       }
 
       // 2. Cipta pesanan
-      const ordersToInsert = businessItems.map(item => ({
-        product_id: item.product.id,
-        business_id: businessId,
-        buyer_id: user.id,
-        quantity: item.quantity,
-        unit_price: item.product.price,
-        pickup_time: time,
-        share_phone: true,
-        status: 'PENDING'
-      }));
+      const ordersToInsert = businessItems.map(item => {
+        const itemQrEnabled = (item.product.online_payment_enabled ?? business?.online_payment_enabled) === true;
+        const method = (selectedMethod === 'QR_ONLINE' && itemQrEnabled) ? 'QR_ONLINE' : 'COD';
+        
+        let paymentDeadlineAt: string | null = null;
+        if (method === 'QR_ONLINE') {
+          const deadlineVal = business?.payment_deadline_value ?? 24;
+          const deadlineUnit = business?.payment_deadline_unit ?? 'HOURS';
+          const now = new Date();
+          if (deadlineUnit === 'HOURS') now.setHours(now.getHours() + deadlineVal);
+          else if (deadlineUnit === 'DAYS') now.setDate(now.getDate() + deadlineVal);
+          else if (deadlineUnit === 'WEEKS') now.setDate(now.getDate() + deadlineVal * 7);
+          paymentDeadlineAt = now.toISOString();
+        }
+
+        return {
+          product_id: item.product.id,
+          business_id: businessId,
+          buyer_id: user.id,
+          quantity: item.quantity,
+          unit_price: item.product.price,
+          pickup_time: time,
+          share_phone: true,
+          status: 'PENDING',
+          payment_method: method,
+          payment_deadline_at: paymentDeadlineAt,
+        };
+      });
 
       const { data: insertedOrders, error: orderError } = await supabase
         .from('polymart_orders')
@@ -159,27 +171,18 @@ export function PolyMartCartPage() {
         });
       } catch (e) {}
 
-      // 5. PolyRider Integration
-      if (method === 'POLYRIDER') {
-        const dropoff = dropoffLocation[businessId]?.trim();
-        const business = businessItems[0].product.keusahawanan_businesses;
-        
-        await supabase.from('polyrider_jobs').insert({
-          student_id: user.id,
-          job_type: 'POLYMART_CUST',
-          pickup_name: business?.name || 'PolyMart Vendor',
-          dropoff_name: dropoff,
-          status: 'PENDING',
-          base_fare: riderFare,
-          proposed_price: riderFare
-        });
-      }
-
-      toast.success(method === 'POLYRIDER' ? 'Pesanan & Rider ditempah!' : 'Pesanan dihantar berjaya!', { icon: '🎉' });
+      toast.success('Pesanan dihantar berjaya!', { icon: '🎉' });
       
       // Update UI
       setItems(prev => prev.filter(i => i.product.business_id !== businessId));
       refetchCounts();
+
+      // Redirect based on payment method
+      if (selectedMethod === 'QR_ONLINE' && insertedOrders && insertedOrders.length > 0) {
+        navigate(`/polymart/bayar/${insertedOrders[0].id}`);
+      } else {
+        navigate('/polymart/pesanan-saya');
+      }
     } catch (err: any) {
       toast.error(err.message || 'Ralat semasa checkout');
     } finally {
@@ -228,6 +231,10 @@ export function PolyMartCartPage() {
             const business = groupItems[0].product.keusahawanan_businesses;
             const subtotal = groupItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
             
+            const qrEnabled = groupItems.some(item => (item.product.online_payment_enabled ?? business?.online_payment_enabled) === true);
+            const codEnabled = business?.cod_enabled !== false;
+            const currentMethod = paymentMethods[bizId] || (qrEnabled && !codEnabled ? 'QR_ONLINE' : 'COD');
+
             return (
               <motion.div
                 key={bizId}
@@ -300,84 +307,39 @@ export function PolyMartCartPage() {
                   })}
                 </div>
 
-                {/* Checkout Footer */}
-                <div className="p-4 bg-muted/10 border-t border-border/40 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-muted-foreground">
-                      Jumlah {deliveryMethod[bizId] === 'POLYRIDER' ? '(Termasuk Rider)' : '(Tanpa Caj Rider)'}
-                    </span>
-                    <span className="text-lg font-black" style={{ color: PM_ACCENT }}>
-                      RM {(subtotal + (deliveryMethod[bizId] === 'POLYRIDER' ? (proposedPrice[bizId] || 3) : 0)).toFixed(2)}
-                    </span>
-                  </div>
-
-                  <div className="bg-background rounded-xl p-3 border border-border/50">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Kaedah Pengambilan</p>
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => setDeliveryMethod(prev => ({ ...prev, [bizId]: 'PICKUP' }))}
-                        className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
-                          (deliveryMethod[bizId] || 'PICKUP') === 'PICKUP' 
-                            ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-500/20' 
-                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                        }`}>
-                        Ambil Sendiri
+                {/* Payment Selector */}
+                {qrEnabled && codEnabled && (
+                  <div className="px-4 py-3 border-t border-border/30 bg-muted/5 space-y-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Kaedah Pembayaran</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button type="button" onClick={() => setPaymentMethods(prev => ({ ...prev, [bizId]: 'QR_ONLINE' }))}
+                        className={`p-2.5 rounded-xl border flex items-center justify-center gap-2 transition-all ${currentMethod === 'QR_ONLINE' ? 'border-blue-500 bg-blue-500/5 text-blue-600' : 'border-border/40 hover:border-border text-muted-foreground'}`}>
+                        <CreditCard className="w-3.5 h-3.5" />
+                        <span className="text-[11px] font-black">💳 QR Online</span>
                       </button>
-                      <button 
-                        onClick={() => setDeliveryMethod(prev => ({ ...prev, [bizId]: 'POLYRIDER' }))}
-                        className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
-                          deliveryMethod[bizId] === 'POLYRIDER' 
-                            ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-500/20' 
-                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                        }`}>
-                        PolyRider
+                      <button type="button" onClick={() => setPaymentMethods(prev => ({ ...prev, [bizId]: 'COD' }))}
+                        className={`p-2.5 rounded-xl border flex items-center justify-center gap-2 transition-all ${currentMethod === 'COD' ? 'border-amber-500 bg-amber-500/5 text-amber-600' : 'border-border/40 hover:border-border text-muted-foreground'}`}>
+                        <Handshake className="w-3.5 h-3.5" />
+                        <span className="text-[11px] font-black">🤝 COD</span>
                       </button>
                     </div>
                   </div>
+                )}
 
-                  <AnimatePresence>
-                    {deliveryMethod[bizId] === 'POLYRIDER' && (
-                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                        <div className="space-y-4 pt-1 pb-2">
-                          <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2">Lokasi Penghantaran <span className="text-rose-400">*</span></p>
-                            <input 
-                              value={dropoffLocation[bizId] || ''} 
-                              onChange={e => setDropoffLocation(prev => ({ ...prev, [bizId]: e.target.value }))}
-                              placeholder="Cth: Kamsis A, Bilik 101"
-                              className="w-full h-10 px-3 rounded-xl text-xs outline-none bg-amber-500/5 border border-amber-500/20 text-foreground focus:border-amber-500/50 transition-all" 
-                            />
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2">Harga Tawaran Rider (RM) <span className="text-rose-400">*</span></p>
-                            <div className="flex items-center gap-2">
-                              <button onClick={() => setProposedPrice(prev => ({ ...prev, [bizId]: Math.max(1, (prev[bizId] || 3) - 0.5) }))}
-                                className="w-10 h-10 rounded-xl border border-border/60 flex items-center justify-center hover:bg-muted/50 transition-colors bg-background">
-                                <Minus className="w-4 h-4 text-muted-foreground" />
-                              </button>
-                              <input 
-                                type="number" min={1} step={0.5}
-                                value={proposedPrice[bizId] || 3.00}
-                                onChange={e => setProposedPrice(prev => ({ ...prev, [bizId]: parseFloat(e.target.value) || 0 }))}
-                                className="flex-1 h-10 px-3 rounded-xl text-center font-black text-amber-600 bg-amber-500/10 border border-amber-500/20 outline-none focus:border-amber-500/50 transition-all"
-                              />
-                              <button onClick={() => setProposedPrice(prev => ({ ...prev, [bizId]: (prev[bizId] || 3) + 0.5 }))}
-                                className="w-10 h-10 rounded-xl border border-border/60 flex items-center justify-center hover:bg-muted/50 transition-colors bg-background">
-                                <Plus className="w-4 h-4 text-muted-foreground" />
-                              </button>
-                            </div>
-                            <p className="text-[9px] text-muted-foreground/50 mt-1">Tambang bergantung kepada jarak dari gerai ke lokasi anda.</p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                {/* Checkout Footer */}
+                <div className="p-4 bg-muted/10 border-t border-border/40 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-muted-foreground">Jumlah</span>
+                    <span className="text-lg font-black" style={{ color: PM_ACCENT }}>
+                      RM {subtotal.toFixed(2)}
+                    </span>
+                  </div>
 
                   <div className="flex gap-2">
                     <input 
                       value={pickupTime[bizId] || ''} 
                       onChange={e => setPickupTime(prev => ({ ...prev, [bizId]: e.target.value }))}
-                      placeholder={deliveryMethod[bizId] === 'POLYRIDER' ? "Masa Rider Ambil (cth: 2.00 PM)" : "Masa Ambil (cth: 2.00 PM)"}
+                      placeholder="Masa Ambil (cth: 2.00 PM)"
                       className="flex-1 h-10 px-3 rounded-xl text-xs outline-none bg-background border border-border/50 text-foreground focus:border-amber-500/50" 
                     />
                     <button 

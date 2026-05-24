@@ -174,7 +174,7 @@ function BusinessDetailModal({
               <div className="space-y-3">
                 {business.mentors.map((m, i) => (
                   <div key={i} className="flex flex-col">
-                    <p className="text-sm font-black text-white">{m.name} {i === 0 && <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded ml-2 uppercase">Wajib</span>}</p>
+                    <p className="text-sm font-black text-white">{m.name}</p>
                     <p className="text-[11px] text-white/60">{m.department}</p>
                   </div>
                 ))}
