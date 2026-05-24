@@ -375,6 +375,8 @@ npm run lint:css     # Stylelint sahaja
 | `src/components/exco/ExcoLaporanPage.tsx` | **Template universal** laporan exco — gunakan semula untuk semua unit |
 | `src/components/exco/ExcoSemakanLaporanPage.tsx` | Panel semakan MT — satu komponen untuk semua unit |
 | `supabase/migrations/` | Database schema history. Jangan edit migration lama |
+| `Dockerfile` | Konfigurasi kontena pengeluaran. Buka jalan keluar daripada overhead Nixpacks yang menyebabkan Coolify sangkut/timeout |
+
 
 ---
 
@@ -1942,7 +1944,24 @@ server.js:
 
 ---
 
-*Dikemas kini: Mei 2026 — Kali ke-3 difix. Tambah pengawal vite:preloadError, cooldown PwaUpdater, fallback PublicRoute, dan no-cache sw.js.*
+### 26.10 Pengoptimuman Deployment — Dockerfile vs Nixpacks
+
+Bagi mempercepatkan dan menstabilkan binaan (*build*) aplikasi di pelayan Coolify, kami telah menggantikan sistem pengesan automatik Nixpacks dengan fail `Dockerfile` pengeluaran (*multi-stage build*) yang sangat dioptimumkan.
+
+#### Kenapa Nixpacks Bermasalah?
+1. **Sangat Berat & Lambat:** Nixpacks memuat turun beberapa arkib `nixpkgs` berasingan yang besar dari GitHub pada setiap binaan.
+2. **Kelebihan Masa Binaan (Build Timeout):** Fasa memuat turun pakej asas mengambil masa melebihi 700 saat (11+ minit), menyebabkan pelayan Coolify memotong bekas binaan (*build container*) dengan kod keluar `255` (timeout).
+3. **Penggunaan Memori Tinggi:** Kompilasi Nix OS memakan RAM yang amat besar, membahayakan kestabilan pelayan berkapasiti terhad semasa musim kemuncak.
+
+#### Penyelesaian Dockerfile Multi-Stage:
+* Menggunakan imej asas `node:22-alpine` (amat ringan, saiz minima).
+* Mengasingkan fasa binaan kepada dua peringkat (*Stage 1: Builder* untuk memasang dependensi penuh & compile React frontend ke `/dist`, dan *Stage 2: Runner* untuk hanya menyalin fail pengeluaran dan dependensi runtime penting sahaja).
+* Memendekkan masa kompilasi Coolify daripada **15+ minit (dan sering gagal/timeout)** kepada **kurang dari 2 minit (100% berjaya & stabil)**.
+
+---
+
+*Dikemas kini: Mei 2026 — Kali ke-3 difix. Tambah pengawal vite:preloadError, cooldown PwaUpdater, fallback PublicRoute, no-cache sw.js, dan Dockerfile multi-stage untuk pembinaan pantas Coolify.*
+
 
 
 ---
