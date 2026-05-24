@@ -901,7 +901,7 @@ function JppPortalSupernova() {
 }
 
 // ─── ModuleSlide ─────────────────────────────────────────────────────────────
-function ModuleSlide({ mod, idx, onActionTrigger }: { mod: typeof MODULES[0]; idx: number; onActionTrigger: () => void }) {
+function ModuleSlide({ mod, idx, onActionTrigger }: { mod: typeof MODULES[0]; idx: number; onActionTrigger: () => void; key?: React.Key }) {
   const [slam, setSlam] = useState(true);
   const Scenes = [
     PolyMapsScene,
@@ -927,11 +927,12 @@ function ModuleSlide({ mod, idx, onActionTrigger }: { mod: typeof MODULES[0]; id
 
   return (
     <motion.div 
-      initial={{ scale: 1.15, opacity: 0, filter: 'blur(10px)' }}
-      animate={{ scale: 1, opacity: 1, filter: 'blur(0px)' }}
-      exit={{ scale: 0.9, opacity: 0, filter: 'blur(10px)' }}
-      transition={{ duration: 0.6, ease: SE }}
+      initial={{ scale: 0.88, rotateY: 90, z: -400, opacity: 0, filter: 'blur(10px)' }}
+      animate={{ scale: 1, rotateY: 0, z: 0, opacity: 1, filter: 'blur(0px)' }}
+      exit={{ scale: 0.88, rotateY: -90, z: -400, opacity: 0, filter: 'blur(10px)' }}
+      transition={{ duration: 0.9, ease: SE }}
       className="absolute inset-0"
+      style={{ transformStyle: 'preserve-3d' }}
     >
       <AnimatePresence mode="wait">
         {slam ? (
@@ -1113,6 +1114,63 @@ function CinematicEnvelope({ gc, children }: CinematicEnvelopeProps) {
   );
 }
 
+// ─── Holographic 3D Building Extrusion Helper ───────────────────────────────
+function HoloBuildingBlock({ x, y, h = "2.2vw", w = "2.2vw", height = "3.2vw", color = "#0ea5e9" }: {
+  x: string; y: string; h?: string; w?: string; height?: string; color?: string; key?: React.Key;
+}) {
+  return (
+    <motion.div
+      initial={{ scaleY: 0, opacity: 0 }}
+      animate={{ scaleY: 1, opacity: 0.28 }}
+      transition={{ duration: 1.8, type: 'spring', stiffness: 90, damping: 14 }}
+      style={{
+        position: 'absolute',
+        left: x,
+        top: y,
+        width: w,
+        height: h,
+        transformStyle: 'preserve-3d',
+        transformOrigin: 'bottom center',
+        transform: 'translate(-50%, -50%)',
+      }}
+    >
+      {/* Front Face */}
+      <div 
+        className="absolute bottom-0 left-0 right-0 border-x border-t"
+        style={{
+          height: height,
+          borderColor: color,
+          background: `linear-gradient(to top, ${color}35, ${color}08)`,
+          transform: 'rotateX(-90deg)',
+          transformOrigin: 'bottom center',
+        }}
+      />
+      {/* Top Face */}
+      <div 
+        className="absolute border"
+        style={{
+          width: '100%',
+          height: '100%',
+          borderColor: color,
+          background: `${color}45`,
+          transform: `translateZ(${height})`
+        }}
+      />
+      {/* Right Face */}
+      <div 
+        className="absolute bottom-0 top-0 right-0 border-y border-r"
+        style={{
+          width: height,
+          borderColor: color,
+          background: `linear-gradient(to top, ${color}25, ${color}04)`,
+          transform: 'rotateY(90deg) rotateX(-90deg)',
+          transformOrigin: 'right center',
+        }}
+      />
+    </motion.div>
+  );
+}
+
 // ─── Scene: PolyMaps ──────────────────────────────────────────────────────────
 function PolyMapsScene({ mod }: SceneProps) {
   const [act, setAct] = useState(0);
@@ -1244,6 +1302,17 @@ function PolyMapsScene({ mod }: SceneProps) {
                 />
               </>
             )}
+
+              {/* 3D Holographic Architectural Building Extrusions */}
+              {act >= 1 && markers.map((m, idx) => (
+                <HoloBuildingBlock 
+                  key={`build-${idx}`} 
+                  x={m.x} 
+                  y={m.y} 
+                  height={m.active && act >= 3 ? "6.5vw" : "3.2vw"} 
+                  color={m.active && act >= 3 ? "#22d3ee" : "#0ea5e9"} 
+                />
+              ))}
 
               {/* Isometric Nodes & Labels */}
               {markers.map((m, idx) => {
@@ -3769,31 +3838,72 @@ function FloatAiChip({ show, message, pos="bottom-[14%] right-[4%]" }: { show:bo
   );
 }
 
-// ─── TheNumbers ──────────────────────────────────────────────────────────────
-function TheNumbers({ onTick }: { onTick: () => void }) {
-  const nums = [['10','Modul Bersepadu'],['1','Platform Tunggal'],['∞','Kemungkinan']];
-  const [val, setVal] = useState(0);
+// ─── SlotReel: Casino-Grade Mechanical Spinning Numbers ──────────────────────
+function SlotReel({ target, delay = 0, onComplete }: { target: string; delay?: number; onComplete?: () => void }) {
+  const [spins, setSpins] = useState<string[]>([]);
+  const isNumber = !isNaN(Number(target));
 
   useEffect(() => {
-    let cur = 0;
-    const iv = setInterval(() => {
-      cur += 1;
-      setVal(cur);
-      onTick(); // Trigger shake feedback on counting ticks
-      if (cur >= 10) clearInterval(iv);
-    }, 400);
-    return () => clearInterval(iv);
-  }, []);
+    if (!isNumber) {
+      setSpins([target]);
+      return;
+    }
+    const end = Number(target);
+    const sequence = Array.from({ length: 18 }, () => String(Math.floor(Math.random() * 10)));
+    sequence.push(String(end));
+    setSpins(sequence);
+  }, [target, isNumber]);
+
+  useEffect(() => {
+    if (spins.length > 1 && onComplete) {
+      const t = setTimeout(onComplete, delay * 1000 + 2200);
+      return () => clearTimeout(t);
+    }
+  }, [spins, delay, onComplete]);
+
+  if (spins.length === 0) return null;
 
   return (
-    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:0.6}} className="absolute inset-0 flex items-center justify-center bg-[#020205] overflow-hidden">
-      <div className="flex gap-[6vw] items-center z-10">
+    <div className="h-[10vw] overflow-hidden relative flex flex-col items-center">
+      <motion.div
+        animate={{ y: `-${(spins.length - 1) * 10}vw` }}
+        transition={{ duration: 2.2, ease: [0.16, 1, 0.3, 1], delay }}
+        className="flex flex-col"
+      >
+        {spins.map((val, idx) => (
+          <span 
+            key={idx} 
+            className="text-[10vw] font-black leading-none font-mono text-transparent bg-clip-text bg-gradient-to-b from-white to-indigo-200 drop-shadow-[0_0_40px_rgba(99,102,241,0.3)] h-[10vw] flex items-center justify-center"
+            style={{
+              filter: idx < spins.length - 1 ? 'blur(3px)' : 'none',
+              transform: 'translateZ(0)'
+            }}
+          >
+            {val}
+          </span>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+// ─── TheNumbers ──────────────────────────────────────────────────────────────
+function TheNumbers({ onTick }: { onTick: () => void; key?: React.Key }) {
+  const nums = [['10','Modul Bersepadu'],['1','Platform Tunggal'],['∞','Kemungkinan']];
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      exit={{ opacity: 0 }} 
+      transition={{ duration: 0.8 }} 
+      className="absolute inset-0 flex items-center justify-center bg-[#020205] overflow-hidden"
+    >
+      <div className="flex gap-[8vw] items-center z-10">
         {nums.map((n, i) => (
           <div key={i} className="flex flex-col items-center">
-            <h1 className="text-[10vw] font-black leading-none font-mono text-transparent bg-clip-text bg-gradient-to-b from-white to-white/40 drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]">
-              {i === 0 ? val : n[0]}
-            </h1>
-            <p className="text-[1.5vw] font-light text-white/50 tracking-widest uppercase mt-[1vw]">{n[1]}</p>
+            <SlotReel target={n[0]} delay={i * 0.4} onComplete={onTick} />
+            <p className="text-[1.3vw] font-light text-indigo-300/60 tracking-widest uppercase mt-[1.5vw]">{n[1]}</p>
           </div>
         ))}
       </div>
