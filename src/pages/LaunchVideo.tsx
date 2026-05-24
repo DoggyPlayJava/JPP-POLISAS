@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import { motion, AnimatePresence, useAnimation, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import QRCode from 'react-qr-code';
 
@@ -13,34 +13,40 @@ interface SceneProps {
 
 // ─── Cinematic Camera Rig & Parallax ─────────────────────────────────────────
 function CinematicCameraRig({ children, active = true }: { children: React.ReactNode; active?: boolean }) {
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  // Configure high-inertia spring curves to give camera weight and soft fluid drift
+  const springConfig = { mass: 1.2, stiffness: 80, damping: 20 };
+  const smoothX = useSpring(mouseX, springConfig);
+  const smoothY = useSpring(mouseY, springConfig);
+
+  const rotateY = useTransform(smoothX, [-0.5, 0.5], [8, -8]);
+  const rotateX = useTransform(smoothY, [-0.5, 0.5], [-8, 8]);
 
   useEffect(() => {
     if (!active) return;
     const handleMouseMove = (e: MouseEvent) => {
-      setMouse({
-        x: (e.clientX / window.innerWidth) - 0.5,
-        y: (e.clientY / window.innerHeight) - 0.5,
-      });
+      mouseX.set((e.clientX / window.innerWidth) - 0.5);
+      mouseY.set((e.clientY / window.innerHeight) - 0.5);
     };
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [active]);
+  }, [active, mouseX, mouseY]);
 
   return (
     <motion.div
       style={{
-        rotateY: mouse.x * 8, // Interactive cursor tilt
-        rotateX: -mouse.y * 8,
+        rotateY,
+        rotateX,
         transformStyle: 'preserve-3d',
       }}
       animate={{
-        // Continuous slow spatial drift
-        y: [0, -6, 0],
-        z: [0, 15, 0],
+        y: [0, -8, 0],
+        z: [0, 20, 0],
       }}
       transition={{
-        duration: 8,
+        duration: 10,
         repeat: Infinity,
         ease: 'easeInOut',
       }}
@@ -51,23 +57,107 @@ function CinematicCameraRig({ children, active = true }: { children: React.React
   );
 }
 
-// ─── Specular Glare / Light Sweep ───────────────────────────────────────────
+// ─── Specular Glare / Mouse-linked Real-time Reflection ──────────────────────
 function SpecularGlare() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [glare, setGlare] = useState({ x: 50, y: 50 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!ref.current) return;
+      const rect = ref.current.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      setGlare({ x, y });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-[2vw] z-30">
-      <motion.div
-        animate={{
-          x: ['-150%', '200%'],
+    <div 
+      ref={ref}
+      className="absolute inset-0 overflow-hidden pointer-events-none rounded-[inherit] z-30"
+    >
+      <div 
+        className="absolute w-[200%] h-[200%] -left-[50%] -top-[50%] pointer-events-none opacity-20 mix-blend-overlay"
+        style={{
+          background: `radial-gradient(circle 350px at ${glare.x}% ${glare.y}%, rgba(255,255,255,0.4) 0%, transparent 80%)`,
+          transition: 'background 0.1s ease-out',
         }}
-        transition={{
-          duration: 3.5,
-          repeat: Infinity,
-          repeatDelay: 5,
-          ease: 'easeInOut',
-        }}
-        className="w-[50%] h-[200%] bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-25deg] absolute -top-[50%]"
       />
     </div>
+  );
+}
+
+// ─── Cinematic Guide (Ghost Cursor) ──────────────────────────────────────────
+function GhostCursor({ act, scene }: { act: number; scene: 'maps' | 'suara' | 'rent' }) {
+  const coordinates = useMemo(() => {
+    if (scene === 'maps') {
+      return [
+        { x: '10vw', y: '50vh', click: false, pulse: false },
+        { x: '16vw', y: '5.5vw', click: true, pulse: true },
+        { x: '18vw', y: '9.2vw', click: true, pulse: true },
+        { x: '50vw', y: '26vh', click: false, pulse: false },
+        { x: '50vw', y: '73vh', click: true, pulse: true },
+        { x: '50vw', y: '73vh', click: false, pulse: false },
+      ];
+    }
+    if (scene === 'suara') {
+      return [
+        { x: '80vw', y: '50vh', click: false, pulse: false },
+        { x: '35vw', y: '30vh', click: false, pulse: false },
+        { x: '33vw', y: '48.5vh', click: true, pulse: true },
+        { x: '33vw', y: '75vh', click: false, pulse: false },
+        { x: '60vw', y: '48.5vh', click: true, pulse: true },
+        { x: '60vw', y: '48.5vh', click: false, pulse: false },
+      ];
+    }
+    if (scene === 'rent') {
+      return [
+        { x: '20vw', y: '80vh', click: false, pulse: false },
+        { x: '45vw', y: '5.5vw', click: true, pulse: true },
+        { x: '22vw', y: '24vh', click: false, pulse: false },
+        { x: '22vw', y: '35vh', click: true, pulse: true },
+        { x: '15vw', y: '24vh', click: true, pulse: true },
+        { x: '15vw', y: '24vh', click: false, pulse: false },
+      ];
+    }
+    return [{ x: '50vw', y: '50vh', click: false, pulse: false }];
+  }, [scene]);
+
+  const target = coordinates[Math.min(act, coordinates.length - 1)];
+
+  return (
+    <motion.div
+      animate={{
+        x: target.x,
+        y: target.y,
+        scale: target.click ? [1, 0.8, 1.2, 1] : 1,
+      }}
+      transition={{
+        duration: 1.4,
+        ease: [0.25, 1, 0.5, 1],
+      }}
+      className="fixed z-[9999] pointer-events-none w-[1.4vw] h-[1.4vw] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.8)] border border-white/20"
+      style={{
+        background: 'radial-gradient(circle, rgba(168,85,247,0.9) 0%, rgba(139,92,246,0.6) 60%, rgba(99,102,241,0.2) 100%)',
+        transform: 'translate(-50%, -50%)',
+      }}
+    >
+      <AnimatePresence>
+        {target.pulse && (
+          <motion.div
+            initial={{ scale: 0.5, opacity: 0.8 }}
+            animate={{ scale: 2.5, opacity: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+            className="absolute rounded-full border border-purple-400 w-full h-full"
+          />
+        )}
+      </AnimatePresence>
+      <div className="w-[0.4vw] h-[0.4vw] rounded-full bg-white shadow-[0_0_5px_#fff]" />
+    </motion.div>
   );
 }
 
@@ -275,22 +365,22 @@ export function LaunchVideo() {
 
     const tl = [
       setTimeout(() => { setPhase(1); triggerShake(); }, 8000),       // Supernova Warp Reveal
-      setTimeout(() => { setPhase(10); setModuleIdx(0); }, 12000),   // PolyMaps
-      setTimeout(() => doWipe(1), 24000),                            // PolySuara
-      setTimeout(() => doWipe(2), 36000),                            // PolyRent
-      setTimeout(() => doWipe(3), 48000),                            // E-Kebajikan
-      setTimeout(() => doWipe(4), 60000),                            // E-Keusahawanan
-      setTimeout(() => doWipe(5), 72000),                            // E-Akademik
-      setTimeout(() => doWipe(6), 84000),                            // PolyMart
-      setTimeout(() => doWipe(7), 96000),                            // Sistem Kelab
-      setTimeout(() => doWipe(8), 108000),                           // Karnival JPP
-      setTimeout(() => doWipe(9), 120000),                           // JPP HQ Portal
-      setTimeout(() => { setPhase(17); triggerShake(); }, 132000),   // Product Reveal
-      setTimeout(() => setPhase(18), 136000),                        // Modul Text
-      setTimeout(() => setPhase(19), 140000),                        // Fly Away
-      setTimeout(() => setPhase(20), 142000),                        // The Numbers
-      setTimeout(() => { setPhase(21); triggerShake(); }, 148000),   // Final Logo
-      setTimeout(() => setPhase(22), 154000),                        // Outro
+      setTimeout(() => { setPhase(10); setModuleIdx(0); }, 12000),   // PolyMaps (starts at 12s)
+      setTimeout(() => doWipe(1), 26000),                            // PolySuara (starts at 26s - 14s duration)
+      setTimeout(() => doWipe(2), 40000),                            // PolyRent (starts at 40s - 14s duration)
+      setTimeout(() => doWipe(3), 54000),                            // E-Kebajikan (starts at 54s - 14s duration)
+      setTimeout(() => doWipe(4), 66000),                            // E-Keusahawanan (starts at 66s - 12s duration)
+      setTimeout(() => doWipe(5), 78000),                            // E-Akademik (starts at 78s - 12s duration)
+      setTimeout(() => doWipe(6), 90000),                            // PolyMart (starts at 90s - 12s duration)
+      setTimeout(() => doWipe(7), 102000),                           // Sistem Kelab (starts at 102s - 12s duration)
+      setTimeout(() => doWipe(8), 114000),                           // Karnival JPP (starts at 114s - 12s duration)
+      setTimeout(() => doWipe(9), 126000),                           // JPP HQ Portal (starts at 126s - 12s duration)
+      setTimeout(() => { setPhase(17); triggerShake(); }, 138000),   // Product Reveal (starts at 138s - 12s duration)
+      setTimeout(() => setPhase(18), 142000),                        // Modul Text (starts at 142s)
+      setTimeout(() => setPhase(19), 146000),                        // Fly Away (starts at 146s)
+      setTimeout(() => setPhase(20), 148000),                        // The Numbers (starts at 148s)
+      setTimeout(() => { setPhase(21); triggerShake(); }, 154000),   // Final Logo (starts at 154s)
+      setTimeout(() => setPhase(22), 160000),                        // Outro (starts at 160s)
     ];
     return () => tl.forEach(clearTimeout);
   }, []);
@@ -500,7 +590,7 @@ export function LaunchVideo() {
           <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:0.3}} className="fixed bottom-3 left-3 z-[9999] flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/10">
             <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
             <span className="text-[10px] font-mono text-white/60 uppercase tracking-widest">
-              {currentLabelIndex+1}/15 — {LABELS[currentLabelIndex]}
+              {currentLabelIndex+1}/18 — {LABELS[currentLabelIndex]}
             </span>
           </motion.div>
         )}
@@ -549,6 +639,7 @@ export function LaunchVideo() {
 // ─── PhoneMockupIntro ────────────────────────────────────────────────────────
 function PhoneMockupIntro() {
   const [act, setAct] = useState(0);
+  const [clickLocation, setClickLocation] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const ts = [
@@ -558,106 +649,186 @@ function PhoneMockupIntro() {
     return () => ts.forEach(clearTimeout);
   }, []);
 
-  return (
-    <div className="absolute inset-0 flex items-center justify-center bg-[#020204] overflow-hidden" style={{perspective: '2000px'}}>
-      
-      {/* Glow */}
-      <motion.div animate={act >= 2 ? {opacity: 0} : {rotate:360, scale:[1, 1.1, 1], opacity:[0.1, 0.2, 0.1]}} transition={act >= 2 ? {duration: 1.5} : {duration:20, repeat:Infinity, ease:'linear'}} className="absolute w-[60vw] h-[60vw] bg-indigo-900 rounded-full blur-[150px]" />
-      <motion.div animate={act >= 2 ? {opacity: 0} : {rotate:-360, scale:[1, 1.2, 1], opacity:[0.05, 0.15, 0.05]}} transition={act >= 2 ? {duration: 1.5} : {duration:25, repeat:Infinity, ease:'linear'}} className="absolute w-[50vw] h-[50vw] bg-purple-900 rounded-full blur-[120px] mix-blend-screen" />
+  const handleTouchStart = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setClickLocation({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+  };
 
-      {/* Glass Phone */}
+  return (
+    <div className="absolute inset-0 flex items-center justify-center bg-[#020205] overflow-hidden" style={{ perspective: '2000px' }}>
+      
+      {/* Cinematic Cyber Nebula Glow */}
       <motion.div 
-        initial={{y:'100vh', rotateX:40, rotateY:-20, rotateZ:10, scale:0.7, opacity: 0, filter: 'blur(20px)'}}
+        animate={act >= 2 ? { opacity: 0, scale: 0.5 } : { rotate: 360, scale: [1, 1.15, 1], opacity: [0.15, 0.3, 0.15] }} 
+        transition={act >= 2 ? { duration: 1.2 } : { duration: 25, repeat: Infinity, ease: 'linear' }} 
+        className="absolute w-[75vw] h-[75vw] bg-gradient-to-tr from-indigo-900 via-purple-950/20 to-cyan-900 rounded-full blur-[160px]" 
+      />
+      <motion.div 
+        animate={act >= 2 ? { opacity: 0 } : { rotate: -360, scale: [1, 1.25, 1], opacity: [0.08, 0.22, 0.08] }} 
+        transition={act >= 2 ? { duration: 1.2 } : { duration: 30, repeat: Infinity, ease: 'linear' }} 
+        className="absolute w-[60vw] h-[60vw] bg-fuchsia-950 rounded-full blur-[130px] mix-blend-screen" 
+      />
+
+      {/* Holographic Concentric Security Lock Rings floating behind the phone */}
+      {act < 2 && (
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden z-0" style={{ transformStyle: 'preserve-3d', perspective: '1200px' }}>
+          {[1, 2, 3].map((ring) => (
+            <motion.div
+              key={ring}
+              initial={{ opacity: 0, scale: 0.2, rotateX: 65 }}
+              animate={{ 
+                opacity: act === 1 ? [0.1, 0.9, 0] : [0.1, 0.3, 0.1], 
+                scale: act === 1 ? ring * 2.8 : ring * 1.3,
+                rotateZ: ring % 2 === 0 ? 360 : -360,
+                rotateX: 62 + ring * 2
+              }}
+              transition={{
+                opacity: { duration: act === 1 ? 0.8 : 3, repeat: act === 1 ? 0 : Infinity },
+                scale: { duration: act === 1 ? 0.8 : 2.5, ease: 'easeOut' },
+                rotateZ: { duration: 10 + ring * 5, repeat: Infinity, ease: 'linear' }
+              }}
+              className="absolute rounded-full border-2 border-dashed"
+              style={{
+                width: `${ring * 20}vw`,
+                height: `${ring * 20}vw`,
+                borderColor: act === 1 ? '#22d3ee' : '#6366f1',
+                boxShadow: act === 1 
+                  ? '0 0 40px rgba(34,211,238,0.6), inset 0 0 40px rgba(34,211,238,0.3)' 
+                  : '0 0 25px rgba(99,102,241,0.2), inset 0 0 15px rgba(99,102,241,0.1)',
+                transformStyle: 'preserve-3d'
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Glass Phone Mockup with high end camera sweeping and drift */}
+      <motion.div 
+        initial={{ y: '100vh', rotateX: 55, rotateY: -35, rotateZ: 35, scale: 0.5, opacity: 0, filter: 'blur(20px)' }}
         animate={
           act >= 2
-            ? { y: '20vh', rotateX: 45, rotateY: 0, rotateZ: 0, scale: 0.85, opacity: 0, filter: 'blur(20px)' } 
+            ? { y: '-100vh', rotateX: -65, rotateY: 35, rotateZ: -35, scale: 0.4, opacity: 0, filter: 'blur(25px)' } 
             : {
-                y:[ '100vh', 0, 0, 0 ], 
-                rotateX:[20, 15, 20], 
-                rotateY:[-15, -5, -15], 
-                rotateZ:[-5, 0, -5], 
-                scale:[0.7, 1, 1, 1],
+                y: [ '100vh', 0, 0 ], 
+                rotateX: [ 45, 18, 16 ], 
+                rotateY: [ -25, -12, -10 ], 
+                rotateZ: [ 15, -4, -3 ], 
+                scale: [ 0.6, 1.02, 1 ],
                 opacity: 1,
                 filter: 'blur(0px)'
               }
         }
         transition={
           act >= 2
-            ? { duration: 1.2, ease: SE } 
+            ? { duration: 1.4, ease: [0.76, 0, 0.24, 1] } 
             : {
-                y: {duration:8, times:[0, 0.25, 0.85, 1], ease:'easeInOut'},
-                scale: {duration:8, times:[0, 0.25, 0.85, 1], ease:'easeInOut'},
-                opacity: {duration:1},
-                filter: {duration:1},
-                rotateX: {duration:10, repeat:Infinity, ease:'easeInOut'},
-                rotateY: {duration:15, repeat:Infinity, ease:'easeInOut'},
-                rotateZ: {duration:12, repeat:Infinity, ease:'easeInOut'},
+                y: { duration: 2.2, ease: [0.16, 1, 0.3, 1] },
+                scale: { duration: 2.2, ease: [0.16, 1, 0.3, 1] },
+                opacity: { duration: 1.2 },
+                filter: { duration: 1.2 },
+                rotateX: { duration: 8, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' },
+                rotateY: { duration: 9, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' },
+                rotateZ: { duration: 10, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' },
               }
         }
-        className="relative w-[24vw] h-[48vw] rounded-[3vw] bg-[#050508] border-[0.4vw] border-[#3a3a46] flex flex-col overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.9),_inset_0_0_20px_rgba(255,255,255,0.05)]"
-        style={{ transformStyle:'preserve-3d' }}
+        className="relative w-[23vw] h-[46vw] rounded-[2.8vw] bg-[#050508] border-[0.45vw] border-slate-700/80 flex flex-col overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.95),_inset_0_0_25px_rgba(255,255,255,0.06),_0_0_80px_rgba(99,102,241,0.15)] z-10"
+        style={{ transformStyle: 'preserve-3d' }}
       >
-        <div className="absolute top-[1.2vw] left-1/2 -translate-x-1/2 w-[7vw] h-[2vw] bg-black rounded-[1vw] z-50 flex items-center justify-end px-[0.5vw]">
-          <div className="w-[0.6vw] h-[0.6vw] bg-indigo-500/50 rounded-full" />
+        <div className="absolute top-[1.2vw] left-1/2 -translate-x-1/2 w-[7vw] h-[1.8vw] bg-black rounded-[1vw] z-50 flex items-center justify-end px-[0.5vw] border border-white/5 shadow-inner">
+          <div className="w-[0.5vw] h-[0.5vw] bg-indigo-500/80 rounded-full animate-pulse shadow-[0_0_5px_rgba(99,102,241,0.8)]" />
         </div>
 
         <SpecularGlare />
 
-        <div className="w-full h-full bg-[#030014] relative z-10 flex flex-col">
-          <div className="flex items-center justify-between px-[1.5vw] py-[4vw] border-b border-white/10 backdrop-blur-md bg-black/20">
+        {/* Futuristic glowing scanning overlay line sweeping down */}
+        {act === 0 && (
+          <motion.div 
+            initial={{ top: '-10%' }}
+            animate={{ top: ['0%', '100%'] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_15px_#22d3ee] z-30 pointer-events-none opacity-40"
+          />
+        )}
+
+        <div className="w-full h-full bg-[#020108] relative z-10 flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between px-[1.5vw] py-[3.5vw] border-b border-white/5 backdrop-blur-md bg-black/40">
             <div className="flex items-center gap-[0.5vw]">
-              <div className="w-[1.5vw] h-[1.5vw] rounded-sm bg-gradient-to-br from-indigo-500 to-purple-600" />
+              <div className="w-[1.4vw] h-[1.4vw] rounded-[0.4vw] bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[0.8vw] shadow-[0_0_10px_rgba(99,102,241,0.4)]">👑</div>
               <div className="flex flex-col">
                 <span className="text-[0.6vw] font-black leading-none text-white tracking-widest">JPP</span>
-                <span className="text-[0.4vw] font-bold leading-none text-white/50 tracking-widest">POLISAS</span>
+                <span className="text-[0.4vw] font-bold leading-none text-white/40 tracking-widest mt-[0.1vw]">POLISAS</span>
               </div>
             </div>
-            <div className="w-[4vw] h-[1.2vw] bg-indigo-600 rounded-full flex items-center justify-center">
-              <span className="text-[0.4vw] font-bold text-white uppercase tracking-widest">Login</span>
+            <div className="px-[0.8vw] py-[0.25vw] bg-indigo-600/20 border border-indigo-500/30 rounded-full flex items-center justify-center shadow-lg">
+              <span className="text-[0.45vw] font-black text-indigo-300 uppercase tracking-widest">V2.0 PRO</span>
             </div>
           </div>
 
-          <div className="flex flex-col items-center text-center mt-[8vw] px-[2vw]">
-            <span className="px-[1vw] py-[0.4vw] rounded-full border border-indigo-500/30 bg-indigo-500/10 text-[0.5vw] text-indigo-300 font-medium tracking-widest mb-[2vw]">
-              PORTAL RASMI V2.0
+          {/* Body Content */}
+          <div className="flex flex-col items-center text-center mt-[7vw] px-[2vw] flex-1">
+            <span className="px-[1vw] py-[0.35vw] rounded-full border border-indigo-500/20 bg-indigo-500/10 text-[0.5vw] text-indigo-300 font-black tracking-widest mb-[1.8vw] uppercase shadow-inner">
+              PORTAL RASMI PELAJAR
             </span>
-            <h1 className="text-[2.2vw] font-black leading-[1.1] tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white to-white/50 mb-[1.5vw]">
+            <h1 className="text-[2.1vw] font-black leading-[1.1] tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/60 mb-[1.2vw] uppercase">
               Suara Pelajar,<br/>Pemangkin<br/>Politeknik.
             </h1>
-            <p className="text-[0.8vw] leading-relaxed text-white/40 mb-[3vw]">
-              Platform digital pintar untuk menyatukan ekosistem JPP POLISAS.
+            <p className="text-[0.75vw] leading-relaxed text-white/40 mb-[2.5vw] font-light max-w-[90%]">
+              Platform digital pintar berprestasi tinggi untuk menyatukan ekosistem JPP POLISAS.
             </p>
             
-            <div className="w-full flex flex-col gap-[1vw]">
+            <div className="w-full flex flex-col gap-[0.8vw] mt-auto mb-[2.5vw]">
               <motion.div 
-                animate={act >= 1 ? { scale: 0.95, backgroundColor: "#e2e8f0" } : { scale: 1, backgroundColor: "#ffffff" }}
+                onMouseDown={handleTouchStart}
+                animate={act >= 1 ? { scale: 0.96, backgroundColor: "#e2e8f0", color: "#000" } : { scale: 1, backgroundColor: "#ffffff", color: "#000" }}
                 transition={{ duration: 0.2 }}
-                className="relative w-full py-[1vw] rounded-full flex items-center justify-center text-black font-bold text-[0.7vw] shadow-[0_0_20px_rgba(255,255,255,0.3)] overflow-hidden cursor-pointer"
+                className="relative w-full py-[1vw] rounded-full flex items-center justify-center font-black text-[0.7vw] shadow-[0_15px_30px_rgba(0,0,0,0.5),_0_0_20px_rgba(255,255,255,0.15)] overflow-hidden cursor-pointer"
               >
                 LOG MASUK PORTAL
+                
+                {/* Finger touch sparks explosion */}
                 <AnimatePresence>
                   {act >= 1 && (
                     <motion.div 
-                      initial={{ scale: 0, opacity: 0.5 }}
-                      animate={{ scale: 4, opacity: 0 }}
-                      transition={{ duration: 0.5, ease: "easeOut" }}
-                      className="absolute w-[4vw] h-[4vw] bg-black/20 rounded-full"
+                      initial={{ scale: 0, opacity: 0.8 }}
+                      animate={{ scale: 4.8, opacity: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.6, ease: "easeOut" }}
+                      className="absolute w-[3vw] h-[3vw] bg-cyan-400/40 rounded-full"
+                      style={{ left: clickLocation.x || '50%', top: clickLocation.y || '50%', transform: 'translate(-50%, -50%)', filter: 'blur(3px)' }}
                     />
                   )}
                 </AnimatePresence>
               </motion.div>
-              <div className="w-full py-[1vw] border border-white/20 rounded-full flex items-center justify-center text-white font-bold text-[0.7vw]">
+              
+              <div className="w-full py-[1vw] border border-white/10 bg-white/5 rounded-full flex items-center justify-center text-white/80 font-bold text-[0.7vw] hover:bg-white/10 transition-colors">
                 KETAHUI LANJUT
               </div>
             </div>
           </div>
 
-          <div className="absolute bottom-[-5vw] left-0 right-0 flex justify-center gap-[1vw] opacity-40">
-             <div className="w-[10vw] h-[15vw] bg-white/5 rounded-[1vw] border border-white/10" />
-             <div className="w-[10vw] h-[15vw] bg-white/5 rounded-[1vw] border border-white/10 mt-[2vw]" />
+          <div className="absolute bottom-[-6vw] left-0 right-0 flex justify-center gap-[1vw] opacity-15">
+             <div className="w-[10vw] h-[15vw] bg-white/5 rounded-[1.2vw] border border-white/10" />
+             <div className="w-[10vw] h-[15vw] bg-white/5 rounded-[1.2vw] border border-white/10 mt-[2vw]" />
           </div>
         </div>
       </motion.div>
+
+      {/* Screen flash on biometric touch unlock */}
+      <AnimatePresence>
+        {act === 1 && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.85, 0] }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6, times: [0, 0.15, 1], ease: 'easeOut' }}
+            className="absolute inset-0 bg-white z-50 pointer-events-none mix-blend-screen"
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -889,62 +1060,55 @@ function ParticleField({ gc }: { gc:string }) {
 // ─── HUD Corners ─────────────────────────────────────────────────────────────
 function HudCorners({ gc }: { gc:string }) {
   const corners = [
-    { style:{ top:'1vw',    left:'1vw'  }, bt:true,  bl:true  },
-    { style:{ top:'1vw',    right:'1vw' }, bt:true,  br:true  },
-    { style:{ bottom:'1vw', left:'1vw'  }, bb:true,  bl:true  },
-    { style:{ bottom:'1vw', right:'1vw' }, bb:true,  br:true  },
+    { style:{ top:'1.5vw',    left:'1.5vw'  }, bt:true,  bl:true  },
+    { style:{ top:'1.5vw',    right:'1.5vw' }, bt:true,  br:true  },
+    { style:{ bottom:'1.5vw', left:'1.5vw'  }, bb:true,  bl:true  },
+    { style:{ bottom:'1.5vw', right:'1.5vw' }, bb:true,  br:true  },
   ];
   return (
-    <>{corners.map((c,i)=>(
-      <motion.div key={i} className="absolute w-[2.5vw] h-[2.5vw] pointer-events-none z-40"
-        style={{...c.style,
-          borderTop:c.bt?`1px solid ${gc}44`:undefined, borderBottom:c.bb?`1px solid ${gc}44`:undefined,
-          borderLeft:c.bl?`1px solid ${gc}44`:undefined, borderRight:c.br?`1px solid ${gc}44`:undefined}}
-        initial={{opacity:0,scale:0.5}} animate={{opacity:0.6,scale:1}}
-        transition={{duration:0.8, ease:SE, delay:0.1+i*0.06}}/>
-    ))}</>
+    <>
+      {corners.map((c, i) => (
+        <motion.div 
+          key={i} 
+          className="absolute w-[1.5vw] h-[1.5vw] pointer-events-none z-40"
+          style={{
+            ...c.style,
+            borderTop: c.bt ? `2px solid ${gc}40` : undefined, 
+            borderBottom: c.bb ? `2px solid ${gc}40` : undefined,
+            borderLeft: c.bl ? `2px solid ${gc}40` : undefined, 
+            borderRight: c.br ? `2px solid ${gc}40` : undefined
+          }}
+          initial={{ opacity: 0, scale: 0.5 }} 
+          animate={{ opacity: 0.8, scale: 1 }}
+          transition={{ duration: 0.8, ease: SE, delay: 0.1 + i * 0.06 }}
+        />
+      ))}
+    </>
   );
 }
 
-// ─── Cinematic Envelope ───────────────────────────────────────────────────────
-function CinematicEnvelope({ gc, children }: { gc:string; children:React.ReactNode }) {
-  return (
-    <div className="absolute inset-0 bg-[#020406] overflow-hidden" style={{filter:'contrast(1.05) saturate(1.05)'}}>
-      {/* Breathing gradient auroras */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        <motion.div
-          animate={{
-            x: ['-15%', '20%', '-15%'],
-            y: ['-15%', '15%', '-15%'],
-            scale: [1, 1.15, 1],
-          }}
-          transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute w-[55vw] h-[55vw] rounded-full blur-[140px] opacity-[0.14]"
-          style={{ background: `radial-gradient(circle, ${gc} 0%, transparent 70%)`, left: '8%', top: '5%' }}
-        />
-        <motion.div
-          animate={{
-            x: ['15%', '-20%', '15%'],
-            y: ['15%', '-15%', '15%'],
-            scale: [1.15, 1, 1.15],
-          }}
-          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 2.5 }}
-          className="absolute w-[50vw] h-[50vw] rounded-full blur-[120px] opacity-[0.1]"
-          style={{ background: `radial-gradient(circle, #6366f1 0%, transparent 70%)`, right: '12%', bottom: '8%' }}
-        />
-      </div>
+// ─── Cinematic Envelope ──────────────────────────────────────────────────────
+interface CinematicEnvelopeProps {
+  gc: string;
+  children: React.ReactNode;
+}
 
+function CinematicEnvelope({ gc, children }: CinematicEnvelopeProps) {
+  return (
+    <div className="absolute inset-0 bg-[#020205] overflow-hidden flex items-center justify-center" style={{ transformStyle: 'preserve-3d' }}>
+      {/* Dynamic Background Elements */}
       <ParticleField gc={gc} />
-      <div className="relative z-10 w-full h-full">{children}</div>
-      <div className="absolute inset-0 pointer-events-none z-20"
-        style={{background:'radial-gradient(ellipse at 50% 45%, transparent 35%, rgba(0,0,0,0.85) 100%)'}}/>
-      <div className="absolute inset-0 pointer-events-none z-20"
-        style={{backgroundImage:'repeating-linear-gradient(0deg,rgba(0,0,0,0.04) 0,rgba(0,0,0,0.04) 1px,transparent 1px,transparent 4px)'}}/>
-      <motion.div className="absolute top-0 left-0 right-0 h-[1.5px] z-30"
-        initial={{scaleX:0,originX:0}} animate={{scaleX:1}}
-        transition={{duration:1.2, ease:SE, delay:0.1}}
-        style={{background:`linear-gradient(to right, transparent 0%, ${gc} 30%, ${gc} 70%, transparent 100%)`}}/>
       <HudCorners gc={gc} />
+      
+      {/* Ambient background glow */}
+      <div 
+        className="absolute w-[70vw] h-[70vw] rounded-full blur-[140px] opacity-15 pointer-events-none mix-blend-screen"
+        style={{
+          background: `radial-gradient(circle, ${gc}30 0%, transparent 70%)`,
+        }}
+      />
+      
+      {children}
     </div>
   );
 }
@@ -953,377 +1117,612 @@ function CinematicEnvelope({ gc, children }: { gc:string; children:React.ReactNo
 function PolyMapsScene({ mod }: SceneProps) {
   const [act, setAct] = useState(0);
   const [typedText, setTypedText] = useState("");
-  
+  const [slamShake, setSlamShake] = useState(false);
+
   useEffect(() => {
     const ts = [
-      setTimeout(() => setAct(1), 500),   // Glass card reveals
-      setTimeout(() => setAct(2), 2000),  // 3D Isometric Map Grid
-      setTimeout(() => setAct(3), 3500),  // Search typing simulation begins
-      setTimeout(() => setAct(4), 5500),  // Pin drops & path route starts drawing
-      setTimeout(() => setAct(5), 7500),  // Weather warning chip slides in
-      setTimeout(() => setAct(6), 9000),  // AI chip & overlay
-    ];
-    return () => ts.forEach(clearTimeout);
-  }, []);
-
-  useEffect(() => {
-    if (act < 3) return;
-    const searchStr = "Bilik Kuliah A301 (Blok C)";
-    let i = 0;
-    const interval = setInterval(() => {
-      setTypedText(searchStr.substring(0, i));
-      i++;
-      if (i > searchStr.length) clearInterval(interval);
-    }, 60);
-    return () => clearInterval(interval);
-  }, [act]);
-
-  const gc = mod.gc;
-
-  return (
-    <CinematicEnvelope gc={gc}>
-      <AnimatePresence>
-        {act >= 1 && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.92, y: 40 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 1.2, type: 'spring', bounce: 0.15 }}
-            className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
-            style={{ transformStyle: 'preserve-3d' }}
-          >
-            {/* Glassmorphic card */}
-            <div className="relative w-[75vw] h-[40vw] bg-black/35 backdrop-blur-2xl border border-white/10 rounded-[2vw] shadow-[0_50px_100px_rgba(0,0,0,0.85),inset_0_0_40px_rgba(255,255,255,0.03)] flex flex-col p-[2vw] overflow-hidden">
-              <SpecularGlare />
-
-              {/* Header */}
-              <div className="flex justify-between items-center mb-[1.5vw] border-b border-white/10 pb-[1vw]">
-                <div className="flex items-center gap-[1vw]">
-                  <div className="w-[3vw] h-[3vw] rounded-[0.8vw] bg-gradient-to-br from-sky-500/80 to-blue-600/80 flex items-center justify-center shadow-[0_0_20px_rgba(14,165,233,0.3)]">
-                    <span className="text-[1.5vw]">🗺️</span>
-                  </div>
-                  <div>
-                    <h2 className="text-[1.8vw] font-black tracking-tight text-white leading-none">PolyMaps POLISAS</h2>
-                    <p className="text-[0.8vw] text-sky-400/60 tracking-widest font-mono uppercase mt-[0.2vw]">Sistem Navigasi & Carian Laluan Kampus</p>
-                  </div>
-                </div>
-                {/* Weather widget */}
-                <AnimatePresence>
-                  {act >= 5 && (
-                    <motion.div 
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="flex items-center gap-[0.5vw] px-[1vw] py-[0.5vw] bg-sky-500/10 rounded-full border border-sky-500/20"
-                    >
-                      <span className="text-[1vw] animate-bounce">⛈️</span>
-                      <span className="text-[0.6vw] text-sky-300 font-bold tracking-widest uppercase font-mono">Cuaca Kuantan: Hujan Lebat</span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Two Column Layout */}
-              <div className="flex flex-1 gap-[1.5vw] overflow-hidden">
-                {/* Search & Navigation Info Panel */}
-                <div className="w-[22vw] flex flex-col gap-[1vw] z-10">
-                  {/* Search Box simulation */}
-                  <div className="bg-white/5 border border-white/10 rounded-[1vw] p-[1vw] flex flex-col gap-[0.5vw]">
-                    <span className="text-[0.6vw] text-white/40 uppercase tracking-wider font-bold">Cari Destinasi</span>
-                    <div className="h-[2.5vw] bg-black/40 border border-sky-500/30 rounded-[0.5vw] flex items-center px-[0.8vw] gap-[0.5vw] relative overflow-hidden">
-                      <span className="text-[0.8vw]">🔍</span>
-                      <span className="text-[0.8vw] text-white font-bold font-mono whitespace-nowrap">{typedText}</span>
-                      {act >= 3 && typedText.length < 26 && (
-                        <span className="w-[2px] h-[1.2vw] bg-sky-400 animate-pulse" />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Route Steps instructions */}
-                  <div className="flex-1 bg-white/5 border border-white/10 rounded-[1vw] p-[1vw] flex flex-col gap-[0.8vw]">
-                    <span className="text-[0.6vw] text-white/40 uppercase tracking-wider font-bold">Arahan Laluan</span>
-                    <div className="flex flex-col gap-[0.6vw] overflow-y-auto pr-[0.2vw] scrollbar-thin">
-                      <AnimatePresence>
-                        {act >= 4 && (
-                          <>
-                            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex gap-[0.5vw] items-start p-[0.5vw] bg-sky-500/10 rounded-[0.5vw] border border-sky-500/20">
-                              <span className="text-[1vw]">🚶‍♂️</span>
-                              <div>
-                                <p className="text-[0.75vw] text-white font-bold">Mula Berjalan Kaki</p>
-                                <p className="text-[0.6vw] text-white/50">Halakan langkah ke arah Blok C (120m)</p>
-                              </div>
-                            </motion.div>
-                            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }} className="flex gap-[0.5vw] items-start p-[0.5vw] bg-white/5 rounded-[0.5vw]">
-                              <span className="text-[1vw]">☂️</span>
-                              <div>
-                                <p className="text-[0.75vw] text-white font-bold">Laluan Hujan (Berbumbung)</p>
-                                <p className="text-[0.6vw] text-sky-300">Cuaca hujan dikesan: Sila gunakan laluan jejantas Blok A-B</p>
-                              </div>
-                            </motion.div>
-                            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1 }} className="flex gap-[0.5vw] items-start p-[0.5vw] bg-white/5 rounded-[0.5vw]">
-                              <span className="text-[1vw]">📍</span>
-                              <div>
-                                <p className="text-[0.75vw] text-white font-bold">Destinasi Akhir</p>
-                                <p className="text-[0.6vw] text-white/50">Naik ke Tingkat 3, Bilik A301 berada di sebelah kanan</p>
-                              </div>
-                            </motion.div>
-                          </>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 3D Map Grid Visualizer */}
-                <div className="flex-1 relative bg-black/40 border border-white/10 rounded-[1.5vw] flex items-center justify-center overflow-hidden" style={{ transformStyle: 'preserve-3d', perspective: '1200px' }}>
-                  <div className="absolute inset-0" style={{ backgroundImage: `radial-gradient(circle at center, ${gc}0f 0%, transparent 80%)` }} />
-                  
-                  {/* Grid Lines */}
-                  {act >= 2 && (
-                    <motion.div 
-                      initial={{ opacity: 0, rotateX: 60, rotateZ: 35, scale: 0.7 }}
-                      animate={act >= 4 ? { opacity: 1, rotateX: 52, rotateZ: 25, scale: 1.1 } : { opacity: 1, rotateX: 60, rotateZ: 35, scale: 0.9 }}
-                      transition={{ duration: 1.5, ease: SE }}
-                      className="absolute w-[35vw] h-[35vw] border border-white/10 relative"
-                      style={{ 
-                        transformStyle: 'preserve-3d',
-                        backgroundImage: `linear-gradient(${gc}15 1px, transparent 1px), linear-gradient(90deg, ${gc}15 1px, transparent 1px)`,
-                        backgroundSize: '2.5vw 2.5vw',
-                        boxShadow: `inset 0 0 50px rgba(0,0,0,0.8), 0 0 30px ${gc}15`
-                      }}
-                    >
-                      {/* Isometric styled campus buildings */}
-                      <div className="absolute top-[5vw] left-[4vw] w-[8vw] h-[6vw] bg-sky-500/10 border border-sky-500/30 rounded-[0.8vw]" style={{ transform: 'translateZ(1.5vw)' }}>
-                        <span className="absolute inset-0 flex items-center justify-center text-[0.65vw] text-sky-300/60 font-black tracking-widest uppercase">Blok A</span>
-                      </div>
-
-                      <div className="absolute top-[6vw] left-[18vw] w-[7vw] h-[7vw] bg-sky-500/10 border border-sky-500/30 rounded-[0.8vw]" style={{ transform: 'translateZ(1.5vw)' }}>
-                        <span className="absolute inset-0 flex items-center justify-center text-[0.65vw] text-sky-300/60 font-black tracking-widest uppercase">Blok B</span>
-                      </div>
-
-                      <div className="absolute top-[18vw] left-[10vw] w-[10vw] h-[8vw] bg-sky-500/15 border border-sky-500/40 rounded-[0.8vw]" style={{ transform: 'translateZ(2.5vw)', transformStyle: 'preserve-3d' }}>
-                        <span className="absolute inset-0 flex items-center justify-center text-[0.7vw] text-sky-400 font-black tracking-widest uppercase">Blok C (A301)</span>
-                      </div>
-
-                      {/* Route Path (animated drawing line) */}
-                      {act >= 4 && (
-                        <svg className="absolute inset-0 w-full h-full overflow-visible z-10 pointer-events-none" viewBox="0 0 500 500">
-                          <motion.path 
-                            d="M80,100 L220,120 L180,320 L230,320" 
-                            fill="none" 
-                            stroke={gc} 
-                            strokeWidth="4" 
-                            strokeLinecap="round"
-                            initial={{ pathLength: 0 }} 
-                            animate={{ pathLength: 1 }} 
-                            transition={{ duration: 2, ease: "easeInOut" }}
-                          />
-                          <motion.circle
-                            cx="80"
-                            cy="100"
-                            r="6"
-                            fill="#38bdf8"
-                            initial={{ scale: 0 }}
-                            animate={{ scale: [1, 1.8, 1] }}
-                            transition={{ repeat: Infinity, duration: 1.5 }}
-                          />
-                        </svg>
-                      )}
-
-                      {/* GPS User Indicator */}
-                      <div className="absolute top-[7.2vw] left-[5.6vw] w-[1.5vw] h-[1.5vw] flex items-center justify-center" style={{ transform: 'translateZ(2vw)' }}>
-                        <motion.div animate={{ scale: [1, 1.8, 1], opacity: [0.8, 0, 0.8] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute w-full h-full bg-sky-400 rounded-full" />
-                        <div className="w-[0.6vw] h-[0.6vw] bg-white rounded-full border border-sky-500 shadow-[0_0_10px_sky]" />
-                      </div>
-
-                      {/* Destination Target Drop Pin */}
-                      {act >= 4 && (
-                        <motion.div 
-                          initial={{ y: -100, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          transition={{ type: 'spring', bounce: 0.4 }}
-                          className="absolute top-[16.5vw] left-[10.5vw]"
-                          style={{ transform: 'translateZ(3.2vw) rotateX(-50deg)' }}
-                        >
-                          <span className="text-[2.2vw] filter drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">📍</span>
-                        </motion.div>
-                      )}
-                    </motion.div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <ModuleOverlay show={act>=6} num="Modul 01" name="PolyMaps" tagline={mod.tagline} gc={gc} pos="bottom-[8%] left-[4%]" />
-      <FloatAiChip show={act>=6} message="Kombinasi API cuaca langsung dan pemetaan kelas mempercepatkan langkah pelajar ke destinasi." />
-    </CinematicEnvelope>
-  );
-}
-
-// ─── Scene: PolySuara ─────────────────────────────────────────────────────────
-function PolySuaraScene({ mod }: SceneProps) {
-  const [act, setAct] = useState(0);
-  const [upvotes, setUpvotes] = useState(24);
-  const [downvotes, setDownvotes] = useState(2);
-  
-  useEffect(() => {
-    const ts = [
-      setTimeout(() => setAct(1), 500),   // Glass dashboard reveals
-      setTimeout(() => setAct(2), 2000),  // Upvotes ticks
-      setTimeout(() => setAct(3), 4200),  // Downvotes & community hide
-      setTimeout(() => setAct(4), 6500),  // Center card expands to IG Story style
-      setTimeout(() => setAct(5), 9000),  // AI chip & overlay
+      setTimeout(() => setAct(1), 500),   // UI / Birth of Campus Grid
+      setTimeout(() => setAct(2), 2200),  // Search typing "SC" (comet flight begins)
+      setTimeout(() => setAct(3), 4500),  // Precision GPS lock laser beam focus
+      setTimeout(() => setAct(4), 7000),  // Drawing neon routing line
+      setTimeout(() => {
+        setAct(5);
+        setSlamShake(true);
+        setTimeout(() => setSlamShake(false), 300); // tactile card slam shake
+      }, 10500), // High impact detail glass card slam
     ];
     return () => ts.forEach(clearTimeout);
   }, []);
 
   useEffect(() => {
     if (act < 2) return;
-    let val = 24;
+    const searchStr = "Student Center";
+    let i = 0;
     const interval = setInterval(() => {
-      val += 3;
-      if (val >= 89) {
-        setUpvotes(89);
-        clearInterval(interval);
-      } else {
-        setUpvotes(val);
-      }
-    }, 80);
+      setTypedText(searchStr.substring(0, i));
+      i++;
+      if (i > searchStr.length) clearInterval(interval);
+    }, 100);
     return () => clearInterval(interval);
   }, [act]);
 
   const gc = mod.gc;
 
+  const markers = [
+    { name: "KAFE JKE", x: "47%", y: "30%", active: false },
+    { name: "DEWAN MAKMUR", x: "50%", y: "38%", active: false },
+    { name: "JKE BLOK C", x: "57%", y: "39%", active: false },
+    { name: "JKE BLOK B", x: "56%", y: "34%", active: false },
+    { name: "JKE BLOK A", x: "55%", y: "29%", active: false },
+    { name: "ADMIN", x: "77%", y: "52%", active: false },
+    { name: "LIBRARY", x: "71%", y: "42%", active: false },
+    { name: "Student Center", x: "50%", y: "26%", active: true, code: "SC" },
+    { name: "MASJID SABAR", x: "11%", y: "63%", active: false },
+    { name: "KOOP", x: "22%", y: "39%", active: false },
+    { name: "GUARD IS", x: "72%", y: "11%", active: false },
+    { name: "HEP", x: "82%", y: "23%", active: false },
+  ];
+
   return (
     <CinematicEnvelope gc={gc}>
-      <AnimatePresence>
-        {act >= 1 && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.92, y: 40 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 1.2, type: 'spring', bounce: 0.15 }}
-            className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
-            style={{ transformStyle: 'preserve-3d' }}
-          >
-            {/* Main glass frame */}
-            <div className="relative w-[75vw] h-[40vw] bg-black/35 backdrop-blur-2xl border border-white/10 rounded-[2vw] shadow-[0_50px_100px_rgba(0,0,0,0.85),inset_0_0_40px_rgba(255,255,255,0.03)] flex p-[2vw] overflow-hidden gap-[2vw]">
-              <SpecularGlare />
+      <GhostCursor act={act} scene="maps" />
 
-              {/* Left Column: Feed simulation */}
-              <motion.div 
-                animate={act >= 4 ? { scale: 0.9, opacity: 0.4, x: '-5vw', filter: 'blur(3px)' } : { scale: 1, opacity: 1, x: 0 }}
-                transition={{ duration: 1, ease: SE }}
-                className="flex-1 flex flex-col gap-[1.2vw]"
-              >
-                {/* Header */}
-                <div className="border-b border-white/10 pb-[0.8vw]">
-                  <div className="flex items-center gap-[0.8vw]">
-                    <span className="text-[1.8vw]">📣</span>
-                    <div>
-                      <h2 className="text-[1.8vw] font-black tracking-tight text-white leading-none">PolySuara Feed</h2>
-                      <p className="text-[0.75vw] text-fuchsia-400 font-mono tracking-wider mt-[0.2vw]">Luahan Tanpa Nama & Undian Kampus</p>
+      {/* Concentric Birth Scanlines */}
+      {act === 1 && (
+        <motion.div 
+          initial={{ scale: 0, opacity: 0.8 }}
+          animate={{ scale: 4.5, opacity: 0 }}
+          transition={{ duration: 2.2, ease: "easeOut" }}
+          className="absolute rounded-full border-4 border-sky-500 w-[15vw] h-[15vw] pointer-events-none z-10"
+          style={{ filter: "drop-shadow(0 0 20px #0ea5e9)", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}
+        />
+      )}
+
+      <AnimatePresence>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95, filter: "blur(10px)", rotateX: 15 }}
+          animate={slamShake ? {
+            opacity: 1, scale: 0.98, rotateX: [0, 4, -4, 2, -2, 0], y: [0, 10, -10, 5, -5, 0], filter: "blur(0px)"
+          } : { opacity: 1, scale: 1, rotateX: 0, filter: "blur(0px)", y: 0 }}
+          transition={slamShake ? { duration: 0.3, ease: "linear" } : { duration: 1.5, ease: SE }}
+          className="absolute inset-[2.5%] rounded-[2vw] overflow-hidden border border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.85)] flex flex-col z-20"
+          style={{ background: "#010205", transformStyle: "preserve-3d" }}
+        >
+          {/* Dark Isometric Hologram Vector Grid */}
+          <motion.div 
+            style={{ rotateX: 52, rotateY: -8, rotateZ: -12, transformStyle: "preserve-3d" }}
+            animate={act >= 3 ? { scale: 1.15, rotateX: 45, rotateZ: -18, y: '3vw' } : { scale: 1, rotateX: 52, rotateZ: -12, y: 0 }}
+            transition={{ duration: 2, ease: SE }}
+            className="absolute inset-0 z-0 origin-center flex items-center justify-center opacity-85"
+          >
+            <div 
+              className="w-[140%] h-[140%] absolute"
+              style={{ 
+                backgroundImage: "linear-gradient(rgba(14,165,233,0.15) 1.5px, transparent 1.5px), linear-gradient(90deg, rgba(14,165,233,0.15) 1.5px, transparent 1.5px)",
+                backgroundSize: "2.5vw 2.5vw",
+                boxShadow: "inset 0 0 100px rgba(14,165,233,0.25)",
+                transformStyle: "preserve-3d"
+              }}
+            />
+            
+            {/* Radial glow focus behind maps */}
+            <div className="absolute w-[40vw] h-[40vw] bg-sky-500/10 rounded-full blur-[100px] mix-blend-screen" />
+
+            {/* Animated Glowing Neon Vectors Route Path with tracing supersonic comets */}
+            {act >= 4 && (
+              <>
+                <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full pointer-events-none z-20 overflow-visible" style={{ transformStyle: "preserve-3d" }}>
+                  <motion.path
+                    d="M 57,39 L 56,34 L 55,29 L 50,26" // Responsive percentage coordinates aligned to JKE Blok C -> B -> A -> SC
+                    fill="none"
+                    stroke="#38bdf8"
+                    strokeWidth="0.8" // Neat weight inside 100x100 viewBox
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 1.8, ease: "easeInOut" }}
+                    style={{ filter: "drop-shadow(0 0 2px #0ea5e9)" }}
+                  />
+                </svg>
+                
+                {/* Tracing Supersonic comets */}
+                <motion.div 
+                  initial={{ left: "57%", top: "39%", scale: 0, opacity: 0 }}
+                  animate={{ 
+                    left: ["57%", "56%", "55%", "50%"],
+                    top: ["39%", "34%", "29%", "26%"],
+                    scale: [0, 1.2, 1.2, 0],
+                    opacity: [0, 1, 1, 0]
+                  }}
+                  transition={{ duration: 1.8, ease: "easeInOut" }}
+                  className="w-[1vw] h-[1vw] rounded-full bg-cyan-300 absolute z-30"
+                  style={{
+                    filter: "drop-shadow(0 0 10px #22d3ee)",
+                    boxShadow: "0 0 20px #22d3ee",
+                    transform: "translate(-50%, -50%)"
+                  }}
+                />
+              </>
+            )}
+
+              {/* Isometric Nodes & Labels */}
+              {markers.map((m, idx) => {
+                const isSelected = m.active && act >= 3;
+                return (
+                  <motion.div
+                    key={m.name}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.3 + idx * 0.05, duration: 0.8, type: "spring" }}
+                    className="absolute flex flex-col items-center"
+                    style={{ left: m.x, top: m.y, transformStyle: "preserve-3d" }}
+                  >
+                    <div className="relative w-[1.5vw] h-[1.5vw] flex items-center justify-center">
+                      <motion.div 
+                        animate={isSelected ? { scale: [1, 2.8, 1], opacity: [0.8, 0, 0.8] } : {}}
+                        transition={{ repeat: Infinity, duration: 1.5 }}
+                        className={`absolute inset-0 rounded-full ${isSelected ? "bg-red-500" : "bg-sky-500/30"}`}
+                      />
+                      <div className={`w-[0.8vw] h-[0.8vw] rounded-full border-2 border-white shadow-lg ${isSelected ? "bg-red-500" : "bg-sky-400"}`} />
+                    </div>
+                    
+                    <div 
+                      className="mt-[0.3vw] px-[0.6vw] py-[0.2vw] rounded-[0.5vw] text-[0.5vw] font-black uppercase tracking-wider text-white shadow-md font-mono border"
+                      style={{ 
+                        background: "rgba(12,18,34,0.9)", 
+                        borderColor: isSelected ? "rgba(239,68,68,0.5)" : "rgba(14,165,233,0.2)"
+                      }}
+                    >
+                      {m.name}
+                    </div>
+                  </motion.div>
+                );
+              })}
+
+              {/* Precision GPS Laser Pillar Focus shooting up */}
+              {act >= 3 && (
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", duration: 1.2 }}
+                  className="absolute flex items-center justify-center"
+                  style={{ left: "50%", top: "26%", transformStyle: "preserve-3d" }}
+                >
+                  {/* Concentric rings */}
+                  {[1, 2, 3].map(r => (
+                    <motion.div 
+                      key={r}
+                      animate={{ rotate: 360, scale: [0.8, 1.3, 0.8], opacity: [0.3, 0.8, 0.3] }}
+                      transition={{ duration: 2 + r * 1.5, repeat: Infinity, ease: "linear" }}
+                      className="absolute rounded-full border border-dashed border-sky-400"
+                      style={{ width: `${r * 3}vw`, height: `${r * 3}vw`, transformStyle: "preserve-3d" }}
+                    />
+                  ))}
+                  {/* Light Pillar */}
+                  <div 
+                    className="absolute bottom-0 w-[0.2vw] bg-gradient-to-t from-sky-400 via-sky-400/40 to-transparent shadow-[0_0_25px_#38bdf8]"
+                    style={{ height: "30vw", transform: "rotateX(-90deg)", transformOrigin: "bottom center" }}
+                  />
+                </motion.div>
+              )}
+            </motion.div>
+
+            {/* Top Interactive Bar */}
+            <div className="absolute top-[1.5vw] inset-x-[2vw] z-30 flex flex-col gap-[0.8vw]">
+              <div className="flex items-center gap-[1vw] max-w-[28vw]">
+                <div className="w-[2.5vw] h-[2.5vw] rounded-full bg-slate-900/90 backdrop-blur-md border border-white/15 flex items-center justify-center text-white text-[1vw] shadow-lg">
+                  <span>☰</span>
+                </div>
+                
+                <div className="flex-1 h-[2.5vw] bg-[#0c1322]/90 backdrop-blur-md border border-white/15 rounded-full px-[1.2vw] flex items-center gap-[0.8vw] shadow-lg relative">
+                  <span className="text-[1vw] text-slate-400">🔍</span>
+                  <span className="text-[0.75vw] text-white font-bold font-mono">
+                    {typedText}
+                    {act === 1 && typedText.length < 14 && (
+                      <span className="w-[1.5px] h-[1vw] bg-sky-400 ml-[1px] inline-block animate-pulse" />
+                    )}
+                    {act < 1 && <span className="text-slate-400 font-sans font-normal">Cari kelas (Cth: A301, JKM)...</span>}
+                  </span>
+                </div>
+              </div>
+
+              {/* Category Pills (Active tab click feedback) */}
+              <div className="flex gap-[0.6vw] items-center">
+                {["Semua", "Kafe ☕", "Surau 🌙", "Tandas 💧"].map((tab, idx) => {
+                  const isKafeActive = idx === 1 && act >= 2;
+                  return (
+                    <motion.div 
+                      key={tab}
+                      animate={isKafeActive ? { scale: [1, 1.1, 1], backgroundColor: "#0ea5e9", color: "#fff" } : {}}
+                      className={`px-[1vw] py-[0.4vw] rounded-full text-[0.65vw] font-black uppercase tracking-wider shadow-md transition-all ${idx === 0 && act < 2 ? "bg-white text-slate-950" : isKafeActive ? "bg-sky-500 text-white" : "bg-slate-900/90 text-white/70 border border-white/10"}`}
+                    >
+                      {tab}
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Bottom 3D Glass Detail Modal (Card Slam) */}
+            <AnimatePresence>
+              {act >= 5 && (
+                <motion.div 
+                  initial={{ y: "150%", opacity: 0, scale: 0.85, rotateX: 30 }}
+                  animate={{ y: "0%", opacity: 1, scale: 1, rotateX: 0 }}
+                  exit={{ y: "150%", opacity: 0, scale: 0.85, rotateX: 30 }}
+                  transition={{ type: "spring", stiffness: 120, damping: 12 }}
+                  className="absolute bottom-[4.5vw] left-1/2 -translate-x-1/2 w-[24vw] bg-[#0c1322]/95 backdrop-blur-2xl border border-white/10 rounded-[1.5vw] shadow-[0_25px_50px_rgba(0,0,0,0.8)] p-[1.2vw] flex flex-col gap-[1vw] z-30"
+                  style={{ transformStyle: "preserve-3d" }}
+                >
+                  <SpecularGlare />
+                  
+                  <div className="h-[9vw] rounded-[1vw] bg-black/40 border border-white/5 flex flex-col items-center justify-center gap-[0.4vw] relative">
+                    <span className="text-[1.8vw] text-white/20">🖼️</span>
+                    <span className="text-[0.5vw] font-black text-white/30 uppercase tracking-widest">Tiada Imej Dron</span>
+                    <div className="px-[0.6vw] py-[0.2vw] rounded-full bg-white text-slate-950 text-[0.45vw] font-black uppercase tracking-wider">
+                      Dron
                     </div>
                   </div>
-                </div>
 
-                {/* Confession Cards list */}
-                <div className="flex-1 flex flex-col gap-[1vw] overflow-hidden">
-                  {/* Card 1 (Active) */}
-                  <div className="bg-white/5 border border-white/10 rounded-[1.2vw] p-[1.2vw] relative overflow-hidden flex flex-col justify-between">
-                    <div>
-                      <div className="flex justify-between items-center mb-[0.6vw]">
-                        <span className="px-[0.6vw] py-[0.2vw] rounded-full bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/30 text-[0.6vw] font-bold uppercase tracking-wider"># Akademik</span>
-                        <span className="text-[0.6vw] text-white/40 font-mono font-bold">Kucing Misteri · 5m lepas</span>
+                  <div>
+                    <h3 className="text-[1.2vw] font-black text-white leading-none">Student Center</h3>
+                    <p className="text-[0.65vw] text-sky-400 font-mono tracking-wider mt-[0.3vw]">Kod: SC</p>
+                  </div>
+
+                  <div className="flex gap-[0.6vw] items-center">
+                    <motion.button 
+                      whileTap={{ scale: 0.95 }}
+                      className="flex-1 py-[0.7vw] rounded-full bg-blue-600 hover:bg-blue-500 text-white font-black text-[0.7vw] tracking-wider uppercase flex items-center justify-center gap-[0.4vw] shadow-lg shadow-blue-500/25 border border-blue-400/25"
+                    >
+                      🚀 Mula Pandu Arah
+                    </motion.button>
+                    <div className="w-[2.2vw] h-[2.2vw] rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white text-[0.8vw]">
+                      🔗
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Simulated Bottom Nav Bar */}
+            <div className="absolute bottom-[1vw] left-1/2 -translate-x-1/2 z-30">
+              <div className="h-[3.2vw] bg-[#0c1322]/90 backdrop-blur-md border border-white/15 rounded-full px-[1.5vw] flex items-center gap-[1.8vw] shadow-2xl relative">
+                <span className="text-[0.9vw] text-white/40 cursor-pointer">☰</span>
+                <span className="text-[0.9vw] text-white/40 cursor-pointer">🏠</span>
+                <div className="w-[3.6vw] h-[3.6vw] rounded-full bg-[#0ea5e9] border-[3px] border-[#0c1322] flex items-center justify-center text-white text-[1.4vw] font-bold shadow-lg shadow-sky-500/30 cursor-pointer hover:scale-105 transition-all -translate-y-[0.6vw]">
+                  +
+                </div>
+                <span className="text-[0.9vw] text-white/40 cursor-pointer">🔳</span>
+                <span className="text-[0.9vw] text-white/40 cursor-pointer">👤</span>
+              </div>
+            </div>
+          </motion.div>
+      </AnimatePresence>
+
+      <ModuleOverlay show={act>=5} num="Modul 01" name="PolyMaps" tagline={mod.tagline} gc={gc} pos="bottom-[8%] left-[4%]" />
+      <FloatAiChip show={act>=5} message="Pemetaan satelit kampus sebenar berhubung secara langsung bagi pencarian kelas yang tepat." />
+    </CinematicEnvelope>
+  );
+}
+
+function PolySuaraScene({ mod }: SceneProps) {
+  const [act, setAct] = useState(0);
+  const [likes, setLikes] = useState([42, 18, 9]);
+  const [censorTrigger, setCensorTrigger] = useState(false);
+  const [showHeartSpark, setShowHeartSpark] = useState(false);
+  const [shockwave, setShockwave] = useState(false);
+
+  useEffect(() => {
+    const ts = [
+      setTimeout(() => setAct(1), 500),   // Stream cards reveal
+      setTimeout(() => {
+        setAct(2);
+        setLikes(prev => [43, prev[1], prev[2]]);
+        setShowHeartSpark(true);
+        setShockwave(true);
+        setTimeout(() => setShockwave(false), 800); // shockwave duration
+      }, 2200),  // Likes increment & heart pulse click (shockwave trigger)
+      setTimeout(() => setAct(3), 4500),  // Move down cursor
+      setTimeout(() => {
+        setAct(4);
+        setCensorTrigger(true);
+      }, 7000),  // Click card 2, trigger censor scanning bar & text glitch
+      setTimeout(() => setAct(5), 10000), // AI chip
+    ];
+    return () => ts.forEach(clearTimeout);
+  }, []);
+
+  const gc = mod.gc;
+
+  const posts = [
+    { 
+      name: "Panda Berani", 
+      own: true, 
+      time: "2 HARI YANG LALU", 
+      cat: "PARKIR", 
+      text: "Korang tahu tak dewan lama tepi JKE tu sebenarnya boleh buat parkir tambahan? Jauh gila kena menapak pagi-pagi dari padang 😭", 
+      l: likes[0],
+      lColor: "text-rose-500",
+    },
+    { 
+      name: "Kuda Lincah", 
+      own: false, 
+      time: "3 HARI YANG LALU", 
+      cat: "UMUM", 
+      text: censorTrigger 
+        ? "Dah kalau tak suka tu, habis semua benda lah nak dikritik ***... 😑 #polisas" 
+        : "Dah kalau tak suka tu, habis semua benda lah nak dikritik sial... 😑 #polisas", 
+      l: likes[1],
+      lColor: "text-white/40",
+    },
+    { 
+      name: "Kelinci Berdikari", 
+      own: false, 
+      time: "4 HARI YANG LALU", 
+      cat: "MAKANAN", 
+      text: "Ada sesiapa tahu kat mana nak cari makanan best waktu malam area Semambu ni? Lapar yakmat dooo", 
+      l: likes[2], 
+      lColor: "text-white/40",
+    },
+  ];
+
+  return (
+    <CinematicEnvelope gc={gc}>
+      <GhostCursor act={act} scene="suara" />
+      <ExplodingParticles active={showHeartSpark && act === 2} emoji="❤️" count={15} />
+
+      {/* Orbiting Crystal Background Elements (Abstract floating glass shapes) */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden" style={{ perspective: "1500px" }}>
+        {[...Array(6)].map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, z: -200 }}
+            animate={{
+              opacity: [0, 0.25, 0.25, 0],
+              z: [i * -100 - 200, i * -100 + 400],
+              rotateX: [0, 360],
+              rotateY: [0, 360],
+              x: [`${10 + i * 15}vw`, `${15 + i * 15}vw`],
+              y: [`${20 + (i % 2) * 30}vh`, `${15 + (i % 2) * 30}vh`],
+            }}
+            transition={{
+              duration: 25 + i * 5,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+            className="absolute w-[6vw] h-[6vw] rounded-[1vw] border border-fuchsia-500/20 bg-fuchsia-500/5 backdrop-blur-sm"
+            style={{ transformStyle: "preserve-3d" }}
+          />
+        ))}
+      </div>
+
+      <AnimatePresence>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, filter: "blur(10px)", rotateX: 15 }}
+            animate={{ opacity: 1, scale: 1, filter: "blur(0px)", rotateX: 0 }}
+            transition={{ duration: 1.2, ease: SE }}
+            className="absolute inset-[2.5%] rounded-[2vw] overflow-hidden border border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.85)] flex flex-col z-20"
+            style={{ background: "#04020b", transformStyle: "preserve-3d" }}
+          >
+            {/* Ambient Background Grid */}
+            <div className="absolute inset-0 z-0 opacity-20 pointer-events-none"
+              style={{
+                backgroundImage: "linear-gradient(rgba(217,70,239,0.1) 1.5px, transparent 1.5px), linear-gradient(90deg, rgba(217,70,239,0.1) 1.5px, transparent 1.5px)",
+                backgroundSize: "2vw 2vw",
+              }}
+            />
+
+            {/* Header */}
+            <div className="px-[2vw] py-[1.2vw] border-b border-white/5 bg-[#0b0717]/80 backdrop-blur-md flex justify-between items-center z-30">
+              <div className="flex items-center gap-[0.8vw]">
+                <span className="text-[1.5vw]">📣</span>
+                <div>
+                  <h2 className="text-[1.4vw] font-black text-white leading-none">PolySuara</h2>
+                  <p className="text-[0.7vw] text-fuchsia-400 font-mono tracking-widest uppercase mt-[0.2vw]">Anonymous Confession Board</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-[0.5vw] px-[0.8vw] py-[0.3vw] rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20">
+                <div className="w-[0.4vw] h-[0.4vw] bg-fuchsia-400 rounded-full animate-pulse shadow-[0_0_8px_#d946ef]" />
+                <span className="text-[0.55vw] text-fuchsia-300 font-bold uppercase tracking-wider font-mono">Modul Selamat</span>
+              </div>
+            </div>
+
+            {/* Confession Cards Deck Area */}
+            <div className="flex-1 flex items-center justify-center p-[2vw] relative z-10 gap-[2vw]" style={{ transformStyle: "preserve-3d" }}>
+              {posts.map((post, idx) => {
+                const isSwearCard = idx === 1;
+                const isFirstCard = idx === 0;
+                const isHovered = isFirstCard && act === 1;
+                const isCensoredActive = isSwearCard && censorTrigger;
+                
+                // Floating staggered loop animations for cards to make them feel organic and non-stiff
+                const floatY = [0, -8, 8, 0];
+                const floatRotateX = [0, 2, -2, 0];
+                const floatRotateY = [0, -2, 2, 0];
+                
+                return (
+                  <motion.div 
+                    key={idx}
+                    initial={{ y: 80, opacity: 0, rotateY: 25, z: -100 }}
+                    animate={
+                      shockwave 
+                        ? { 
+                            y: [0, -20, 15, -5, 0], 
+                            rotateX: [0, 15, -10, 5, 0], 
+                            rotateY: [0, -10, 12, -4, 0], 
+                            z: [0, 40, -20, 10, 0], 
+                            scale: [1, 0.95, 1.03, 1],
+                            opacity: 1,
+                          }
+                        : { 
+                            y: floatY, 
+                            rotateY: isHovered ? -15 : isSwearCard && act >= 4 ? 12 : floatRotateY,
+                            rotateX: isHovered ? 8 : floatRotateX,
+                            scale: isHovered ? 1.04 : 1,
+                            z: isHovered ? 50 : isSwearCard && act >= 4 ? 30 : 0,
+                            filter: act >= 4 && !isSwearCard ? "blur(3px) brightness(0.6)" : "blur(0px)",
+                            opacity: 1,
+                          }
+                    }
+                    transition={
+                      shockwave 
+                        ? { duration: 0.8, ease: "easeInOut" }
+                        : {
+                            y: { duration: 6 + idx * 1.5, repeat: Infinity, ease: "easeInOut" },
+                            rotateX: { duration: 7 + idx * 1.2, repeat: Infinity, ease: "easeInOut" },
+                            rotateY: { duration: 8 + idx * 1.1, repeat: Infinity, ease: "easeInOut" },
+                            default: { delay: idx * 0.2, type: "spring", stiffness: 100, damping: 15 }
+                          }
+                    }
+                    className={`w-[23vw] h-[24vw] rounded-[1.5vw] p-[1.5vw] flex flex-col justify-between relative border shadow-[0_15px_30px_rgba(0,0,0,0.5)] overflow-hidden ${
+                      isHovered 
+                        ? "border-fuchsia-500 bg-[#12071f]/85 shadow-[0_0_40px_rgba(217,70,239,0.25)]" 
+                        : isCensoredActive 
+                        ? "border-rose-500 bg-[#1f070f]/90 shadow-[0_0_40px_rgba(239,68,68,0.25)]" 
+                        : "border-white/10 bg-[#0e0717]/85"
+                    }`}
+                    style={{ transformStyle: "preserve-3d" }}
+                  >
+                    <SpecularGlare />
+
+                    {/* Glitched neon scanner bar sweeping across Card 2 */}
+                    {isSwearCard && act >= 4 && (
+                      <>
+                        <motion.div 
+                          initial={{ top: "0%" }}
+                          animate={{ top: ["0%", "100%", "0%"] }}
+                          transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                          className="absolute left-0 right-0 h-[4px] bg-rose-500 shadow-[0_0_20px_#ef4444] z-20 pointer-events-none"
+                        />
+                        {censorTrigger && (
+                          <motion.div
+                            initial={{ opacity: 0.8 }}
+                            animate={{ opacity: 0 }}
+                            transition={{ duration: 0.4, delay: 1.2 }}
+                            className="absolute inset-0 bg-rose-500/10 pointer-events-none z-10"
+                          />
+                        )}
+                      </>
+                    )}
+
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-[0.6vw]">
+                        <div className="w-[2vw] h-[2vw] rounded-full bg-gradient-to-tr from-fuchsia-500 to-purple-600 flex items-center justify-center text-[0.8vw]">
+                          👤
+                        </div>
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-[0.4vw]">
+                            <span className="text-[0.75vw] font-black text-white">{post.name}</span>
+                            {post.own && (
+                              <span className="px-[0.5vw] py-[0.1vw] rounded-full bg-fuchsia-500 text-white text-[0.45vw] font-black tracking-wide scale-90">
+                                MILIK ANDA
+                              </span>
+                            )}
+                            <span className="px-[0.5vw] py-[0.1vw] rounded-full bg-white/5 text-white/50 text-[0.45vw] font-mono tracking-wide scale-90 border border-white/10">
+                                {post.cat}
+                            </span>
+                          </div>
+                          <span className="text-[0.5vw] text-white/30 font-mono mt-[0.1vw]">{post.time}</span>
+                        </div>
                       </div>
-                      <p className="text-[0.9vw] text-white/80 leading-relaxed font-semibold">
-                        "Agak-agak result exam kalini keluar bila eh? Nervous gila nak tunggu pointer keluar. Wish me luck guys! 😭🤞"
+                      <div className="px-[0.5vw] py-[0.15vw] rounded bg-white/5 text-white/40 text-[0.5vw] font-bold tracking-widest font-mono border border-white/5">
+                        BARU
+                      </div>
+                    </div>
+
+                    {/* Confession Text Area */}
+                    <div className="my-[1.2vw] flex-1">
+                      <p className="text-[0.8vw] text-white/90 leading-relaxed font-medium">
+                        {isSwearCard && censorTrigger ? (
+                          <>
+                            Dah kalau tak suka tu, habis semua benda lah nak dikritik{" "}
+                            <motion.span 
+                              initial={{ scale: 0.8, filter: "blur(4px)" }}
+                              animate={{ 
+                                scale: [1, 1.4, 0.9, 1.1, 1], 
+                                color: ["#fff", "#f43f5e", "#ff007f", "#f43f5e"],
+                                filter: ["blur(4px)", "blur(0px)", "blur(2px)", "blur(0px)"]
+                              }}
+                              transition={{ duration: 0.5, times: [0, 0.2, 0.4, 0.7, 1] }}
+                              className="px-[0.4vw] py-[0.1vw] rounded bg-rose-950/40 border border-rose-500/40 text-rose-400 font-extrabold tracking-wider inline-block shadow-[0_0_10px_rgba(244,63,94,0.6)] font-mono"
+                            >
+                              [DITAPIS]
+                            </motion.span>{" "}
+                            ... 😑 #polisas
+                            {/* Text particle disintegration sparks */}
+                            <div className="absolute inset-0 pointer-events-none z-30 overflow-visible flex items-center justify-center">
+                              {[...Array(8)].map((_, pi) => (
+                                <motion.div
+                                  key={pi}
+                                  initial={{ x: 0, y: 0, scale: 0, opacity: 1 }}
+                                  animate={{
+                                    x: (Math.random() - 0.5) * 80,
+                                    y: (Math.random() - 0.5) * 80 - 20,
+                                    scale: Math.random() * 0.8 + 0.4,
+                                    opacity: 0,
+                                  }}
+                                  transition={{ duration: 0.9, delay: 0.1 * pi, ease: "easeOut" }}
+                                  className="absolute w-[3px] h-[3px] rounded-full bg-fuchsia-500 shadow-[0_0_8px_#d946ef]"
+                                />
+                              ))}
+                            </div>
+                          </>
+                        ) : post.text}
                       </p>
                     </div>
 
-                    <div className="flex gap-[1vw] mt-[1vw] border-t border-white/5 pt-[0.8vw]">
-                      <div className="flex items-center gap-[0.3vw] text-[0.75vw] text-fuchsia-400 font-black">
-                        <motion.span animate={act >= 2 ? { scale: [1, 1.4, 1] } : {}} className="text-[1vw]">👍</motion.span>
-                        <span>{upvotes}</span>
+                    {/* Likes & Footer */}
+                    <div className="flex justify-between items-center border-t border-white/5 pt-[0.8vw] mt-auto">
+                      <div className="flex items-center gap-[1.2vw] text-white/60">
+                        <div className="flex items-center gap-[0.4vw] cursor-pointer hover:text-rose-400">
+                          <motion.span 
+                            animate={idx === 0 && act >= 2 ? { scale: [1, 1.8, 1], rotate: [0, -15, 15, 0] } : {}}
+                            transition={{ duration: 0.5 }}
+                            className={`text-[1vw] ${post.lColor}`}
+                          >
+                            ❤️
+                          </motion.span>
+                          <motion.span 
+                            key={post.l}
+                            initial={{ y: 5, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            className="font-bold font-mono text-[0.75vw]"
+                          >
+                            {post.l}
+                          </motion.span>
+                        </div>
+                        <div className="flex items-center gap-[0.4vw] text-[0.75vw]">
+                          <span>💬</span>
+                          <span className="font-mono">{(idx * 3) + 2}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-[0.3vw] text-[0.75vw] text-white/40">
-                        <span>👎</span>
-                        <span>{downvotes}</span>
+                      
+                      <div className="text-[0.6vw] text-white/30 uppercase tracking-widest font-mono">
+                        JPP MODERASI
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
+                );
+              })}
+            </div>
 
-                  {/* Card 2 */}
-                  <div className="bg-white/5 border border-white/5 opacity-60 rounded-[1.2vw] p-[1vw]">
-                    <div className="flex justify-between items-center mb-[0.4vw]">
-                      <span className="px-[0.6vw] py-[0.1vw] rounded-full bg-white/5 text-white/60 text-[0.55vw] font-bold uppercase"># Kemudahan</span>
-                      <span className="text-[0.55vw] text-white/30 font-mono">Harimau Berani · 1j lepas</span>
-                    </div>
-                    <p className="text-[0.8vw] text-white/60 leading-relaxed">
-                      "Makanan dekat kiosk Blok B sedap betul harini! Terbaiklah abang niaga."
-                    </p>
-                  </div>
+            {/* Bottom Nav Simulation */}
+            <div className="absolute bottom-[1vw] left-1/2 -translate-x-1/2 z-30">
+              <div className="h-[3.2vw] bg-[#0c0817]/90 backdrop-blur-md border border-white/15 rounded-full px-[1.5vw] flex items-center gap-[1.8vw] shadow-2xl relative">
+                <span className="text-[0.9vw] text-white/40 cursor-pointer">☰</span>
+                <span className="text-[0.9vw] text-white/40 cursor-pointer">🏠</span>
+                <div className="w-[3.6vw] h-[3.6vw] rounded-full bg-[#d946ef] border-[3px] border-[#0c0817] flex items-center justify-center text-white text-[1.4vw] font-bold shadow-lg shadow-fuchsia-500/30 cursor-pointer hover:scale-105 transition-all -translate-y-[0.6vw]">
+                  +
                 </div>
-              </motion.div>
-
-              {/* Right Column: Dynamic IG Export focus */}
-              <div className="w-[28vw] relative flex items-center justify-center" style={{ transformStyle: 'preserve-3d' }}>
-                <AnimatePresence>
-                  {act >= 4 && (
-                    <motion.div 
-                      initial={{ scale: 0.6, rotateY: 50, rotateX: 20, opacity: 0, z: 200 }}
-                      animate={{ scale: 1, rotateY: -12, rotateX: 8, opacity: 1, z: 0 }}
-                      exit={{ scale: 0.6, rotateY: 50, opacity: 0 }}
-                      transition={{ duration: 1.2, type: 'spring', bounce: 0.2 }}
-                      className="absolute w-[20vw] h-[34vw] bg-gradient-to-br from-fuchsia-950/60 to-purple-900/60 border border-fuchsia-400/40 rounded-[1.8vw] shadow-[0_30px_60px_rgba(217,70,239,0.25)] flex flex-col p-[1.5vw] justify-between overflow-hidden"
-                      style={{ transformStyle: 'preserve-3d' }}
-                    >
-                      <SpecularGlare />
-                      <div className="absolute top-0 inset-x-0 h-[0.3vw] bg-gradient-to-r from-fuchsia-400 to-purple-400 animate-pulse" />
-
-                      {/* IG Story Style frame */}
-                      <div className="flex flex-col gap-[1vw]">
-                        <div className="flex items-center gap-[0.5vw] border-b border-white/10 pb-[0.8vw]">
-                          <div className="w-[2.2vw] h-[2.2vw] rounded-full bg-gradient-to-tr from-fuchsia-500 to-purple-600 flex items-center justify-center text-[1vw]">✦</div>
-                          <div>
-                            <p className="text-[0.75vw] text-white font-bold leading-none">PolySuara</p>
-                            <p className="text-[0.55vw] text-fuchsia-300 font-mono tracking-widest uppercase">IG STORY EXPORT</p>
-                          </div>
-                        </div>
-
-                        {/* Centered card mockup */}
-                        <div className="bg-black/40 border border-white/15 p-[1.2vw] rounded-[1vw] backdrop-blur-md">
-                          <p className="text-[0.85vw] font-semibold text-white/90 leading-relaxed">
-                            "Agak-agak result exam kalini keluar bila eh? Nervous gila nak tunggu pointer keluar. Wish me luck guys! 😭🤞"
-                          </p>
-                          <div className="flex justify-between items-center mt-[1vw] border-t border-white/5 pt-[0.6vw]">
-                            <span className="text-[0.55vw] text-fuchsia-400 font-bold uppercase">@jpp_polisas</span>
-                            <div className="flex gap-[0.5vw] text-[0.6vw] font-bold text-white/60">
-                              <span>👍 89 upvotes</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Footer Badge */}
-                      <div className="flex flex-col items-center justify-center text-center">
-                        <span className="text-[0.8vw] text-white/40 tracking-[0.3em] font-light uppercase">jpp.polisas.edu</span>
-                        <div className="px-[0.8vw] py-[0.3vw] rounded-full bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40 text-[0.55vw] font-bold uppercase mt-[0.5vw] tracking-wider">
-                          Kongsi ke IG Story
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <span className="text-[0.9vw] text-white/40 cursor-pointer">🔳</span>
+                <span className="text-[0.9vw] text-white/40 cursor-pointer">👤</span>
               </div>
-
             </div>
           </motion.div>
-        )}
       </AnimatePresence>
 
       <ModuleOverlay show={act>=5} num="Modul 02" name="PolySuara" tagline={mod.tagline} gc={gc} pos="bottom-[8%] left-[4%]" />
-      <FloatAiChip show={act>=5} message="Sistem Tapisan dan Karma Komuniti menyembunyikan luahan negatif secara automasi demi keselamatan ekosistem." />
+      <FloatAiChip show={act>=5} message="Aliran confession selamat dengan automasi penapis AI bagi menjamin keharmonian komuniti kampus." />
     </CinematicEnvelope>
   );
 }
@@ -1331,177 +1730,424 @@ function PolySuaraScene({ mod }: SceneProps) {
 // ─── Scene: PolyRent ─────────────────────────────────────────────────────────
 function PolyRentScene({ mod }: SceneProps) {
   const [act, setAct] = useState(0);
-  const [heartBurst, setHeartBurst] = useState(false);
-  const [calcProgress, setCalcProgress] = useState(0);
+  const [typedText, setTypedText] = useState("");
+  const [wishlistActive, setWishlistActive] = useState(false);
+  const [billValues, setBillValues] = useState([0, 0, 0]);
 
   useEffect(() => {
     const ts = [
-      setTimeout(() => setAct(1), 500),   // Glass panels reveal
-      setTimeout(() => setAct(2), 2200),  // verified badge sweeps
-      setTimeout(() => setAct(3), 4200),  // Calculator widget triggers & calculates
-      setTimeout(() => { setAct(4); setHeartBurst(true); }, 7000),  // Heart tap wish burst
-      setTimeout(() => setAct(5), 9000),  // AI chip & overlays
+      setTimeout(() => setAct(1), 500),   // UI interface load
+      setTimeout(() => setAct(2), 2200),  // Ghost cursor hovers Card 1 (tilt)
+      setTimeout(() => setAct(3), 4500),  // Clicks "Kira", split bill calculator slides up & knob rotates
+      setTimeout(() => { setAct(4); setWishlistActive(true); }, 7800),  // Clicks heart (wishlist explosion)
+      setTimeout(() => setAct(5), 10500), // AI assistant chip appears
     ];
     return () => ts.forEach(clearTimeout);
   }, []);
 
   useEffect(() => {
-    if (act < 3) return;
-    let val = 0;
-    const interval = setInterval(() => {
-      val += 5;
-      if (val >= 100) {
-        setCalcProgress(100);
-        clearInterval(interval);
-      } else {
-        setCalcProgress(val);
+    if (act < 3) {
+      setBillValues([0, 0, 0]);
+      return;
+    }
+    // Animate split bill dial ticking up elastically
+    const targets = [180, 20, 15];
+    let s = 0; let i = 0; let u = 0;
+    const iv = setInterval(() => {
+      s = Math.min(s + 10, targets[0]);
+      i = Math.min(i + 2, targets[1]);
+      u = Math.min(u + 1, targets[2]);
+      setBillValues([s, i, u]);
+      if (s >= targets[0] && i >= targets[1] && u >= targets[2]) {
+        clearInterval(iv);
       }
-    }, 40);
+    }, 45);
+    return () => clearInterval(iv);
+  }, [act]);
+
+  useEffect(() => {
+    if (act < 1) {
+      setTypedText("");
+      return;
+    }
+    const searchStr = "Beserah";
+    let i = 0;
+    const interval = setInterval(() => {
+      setTypedText(searchStr.substring(0, i));
+      i++;
+      if (i > searchStr.length) clearInterval(interval);
+    }, 120);
     return () => clearInterval(interval);
   }, [act]);
 
   const gc = mod.gc;
 
+  const listings = [
+    {
+      id: "rent-1",
+      title: "Bilik Master Dekat Polisas",
+      sewa_bulanan: 180,
+      lokasi: "Kawasan Semambu, Beserah",
+      jantina_prefer: "LELAKI",
+      kekosongan: 2,
+      total_kekosongan: 3,
+      tags: ["Pilihan Berbaloi", "Disahkan JPP"],
+      img: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?q=80&w=600&auto=format&fit=crop"
+    },
+    {
+      id: "rent-2",
+      title: "Rumah Teres Semi-D Pelajar",
+      sewa_bulanan: 150,
+      lokasi: "Taman Datuk Rashid",
+      jantina_prefer: "PEREMPUAN",
+      kekosongan: 1,
+      total_kekosongan: 4,
+      tags: ["Bilik Single", "Dekat Kedai"],
+      img: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?q=80&w=600&auto=format&fit=crop"
+    }
+  ];
+
+  // Self-contained Volumetric 3D bar component for premium physics
+  const Volumetric3DBar = ({ height, color, label }: { height: number; color: string; label: string }) => {
+    return (
+      <div className="flex flex-col items-center gap-[0.3vw]" style={{ transformStyle: 'preserve-3d' }}>
+        <div className="relative w-[1.4vw]" style={{ height: '6vw', transformStyle: 'preserve-3d' }}>
+          {/* Base Shadow */}
+          <div className="absolute bottom-0 w-full h-[0.4vw] rounded-full bg-black/50 blur-[2px] translate-y-[0.1vw]" />
+          
+          {/* Animated height cylinder */}
+          <motion.div 
+            initial={{ height: 0 }}
+            animate={{ height: `${height}vw` }}
+            transition={{ type: 'spring', stiffness: 85, damping: 11 }}
+            className="absolute bottom-0 w-full rounded-t-sm"
+            style={{ 
+              background: `linear-gradient(to top, ${color}ee, ${color}60)`,
+              transformStyle: 'preserve-3d',
+              boxShadow: `0 0 12px ${color}50`
+            }}
+          >
+            {/* Beveled Top Edge */}
+            <div 
+              className="absolute top-0 left-0 right-0 h-[0.3vw] rounded-full"
+              style={{ 
+                background: color,
+                transform: 'rotateX(-60deg) translateY(-0.15vw)',
+                transformOrigin: 'top center',
+                boxShadow: '0 -2px 5px rgba(255,255,255,0.4) inset'
+              }}
+            />
+          </motion.div>
+        </div>
+        <span className="text-[0.45vw] font-mono font-bold text-white/40 uppercase mt-[0.2vw]">{label}</span>
+      </div>
+    );
+  };
+
   return (
     <CinematicEnvelope gc={gc}>
-      <ExplodingParticles active={heartBurst} emoji="❤️" count={30} />
+      <GhostCursor act={act} scene="rent" />
+      <ExplodingParticles active={wishlistActive && act === 4} emoji="💖" count={25} />
 
+      {/* Architectural Real-Time Self-Building Wireframes */}
+      {act >= 1 && (
+        <svg viewBox="0 0 300 250" className="absolute w-[35vw] h-[25vw] left-[5%] top-[15vh] opacity-20 z-0 pointer-events-none overflow-visible">
+          <motion.path
+            d="M 50,150 L 150,100 L 250,150 L 150,200 Z" // Base floor
+            fill="none"
+            stroke="#06b6d4"
+            strokeWidth="1.5"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 2, ease: "easeInOut" }}
+          />
+          <motion.path
+            d="M 50,150 L 50,80 L 150,30 L 150,100" // Left wall
+            fill="none"
+            stroke="#06b6d4"
+            strokeWidth="1.5"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 2.2, delay: 0.3, ease: "easeInOut" }}
+          />
+          <motion.path
+            d="M 250,150 L 250,80 L 150,30" // Right wall
+            fill="none"
+            stroke="#06b6d4"
+            strokeWidth="1.5"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 2.2, delay: 0.3, ease: "easeInOut" }}
+          />
+          <motion.path
+            d="M 150,100 L 150,200 M 50,80 L 150,130 L 250,80" // Inner frames
+            fill="none"
+            stroke="#06b6d4"
+            strokeWidth="1"
+            strokeDasharray="4 4"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 2.5, delay: 0.5, ease: "easeInOut" }}
+          />
+        </svg>
+      )}
+
+      {/* Neon Currency Sparks Transfer */}
+      {act === 3 && (
+        <div className="absolute inset-0 pointer-events-none z-30">
+          {[...Array(12)].map((_, i) => (
+            <motion.div
+              key={i}
+              initial={{ x: "25vw", y: "45vh", scale: 0.5, opacity: 1 }}
+              animate={{
+                x: ["25vw", "72vw"],
+                y: ["45vh", `${30 + i * 2}vh`, "35vh"],
+                scale: [0.5, 1.2, 0.5],
+                opacity: [0, 1, 1, 0]
+              }}
+              transition={{
+                duration: 1.5,
+                delay: i * 0.1,
+                ease: "easeInOut"
+              }}
+              className="absolute w-[4px] h-[4px] rounded-full bg-cyan-400 shadow-[0_0_10px_#06b6d4]"
+            />
+          ))}
+        </div>
+      )}
+
+      {/* WhatsApp Green Laser Connection Tunnel */}
+      {act >= 3 && (
+        <div className="absolute inset-0 pointer-events-none z-30 overflow-visible">
+          <svg viewBox="0 0 100 100" className="absolute w-full h-full">
+            <motion.path
+              d="M 30,50 C 45,35 65,45 85,92" // Arc from rent card center to Whatsapp button
+              fill="none"
+              stroke="#22c55e"
+              strokeWidth="0.5" // Nice thin weight for 100x100 viewBox
+              strokeDasharray="1.5 1.5"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 0.6 }}
+              transition={{ duration: 1.8, ease: "easeInOut" }}
+              style={{ filter: "drop-shadow(0 0 2px #22c55e)" }}
+            />
+          </svg>
+          <motion.div
+            initial={{ left: "30%", top: "50%", scale: 0, opacity: 0 }}
+            animate={{
+              left: ["30%", "45%", "65%", "85%"],
+              top: ["50%", "35%", "45%", "92%"],
+              scale: [0, 1.2, 1.2, 0],
+              opacity: [0, 1, 1, 0]
+            }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut", repeatDelay: 1 }}
+            className="w-[1vw] h-[1vw] rounded-full bg-green-400 absolute"
+            style={{
+              filter: "drop-shadow(0 0 10px #22c55e)",
+              boxShadow: "0 0 20px #22c55e",
+              transform: "translate(-50%, -50%)"
+            }}
+          />
+        </div>
+      )}
+      
       <AnimatePresence>
-        {act >= 1 && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.92, y: 40 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 1.2, type: 'spring', bounce: 0.15 }}
-            className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
-            style={{ transformStyle: 'preserve-3d' }}
-          >
-            {/* Main glass workspace */}
-            <div className="relative w-[75vw] h-[40vw] bg-black/35 backdrop-blur-2xl border border-white/10 rounded-[2vw] shadow-[0_50px_100px_rgba(0,0,0,0.85),inset_0_0_40px_rgba(255,255,255,0.03)] flex p-[2vw] overflow-hidden gap-[2vw]">
-              <SpecularGlare />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
+          animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+          transition={{ duration: 1, ease: SE }}
+          className="absolute inset-[2.5%] rounded-[2vw] overflow-hidden border border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.85)] flex flex-col z-20"
+          style={{ background: "#030712", transformStyle: "preserve-3d" }}
+        >
+          {/* Cozy Blur Backdrop Layer representing screen vibe */}
+          <div className="absolute inset-0 z-0">
+            <div 
+              className="w-full h-full opacity-20 scale-105"
+              style={{ 
+                backgroundImage: `url('https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1000&auto=format&fit=crop')`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                filter: "blur(20px) brightness(0.4)",
+              }}
+            />
+          </div>
 
-              {/* Left Column: Airbnb style listing cards */}
-              <motion.div 
-                animate={act >= 3 ? { scale: 0.95, x: '-2vw', rotateY: 15 } : { scale: 1, x: 0, rotateY: 0 }}
-                transition={{ duration: 1, ease: SE }}
-                className="flex-1 flex flex-col gap-[1vw] relative"
-                style={{ transformStyle: 'preserve-3d' }}
-              >
-                <div className="border-b border-white/10 pb-[0.8vw]">
-                  <div className="flex items-center gap-[0.8vw]">
-                    <span className="text-[1.8vw]">🏠</span>
-                    <div>
-                      <h2 className="text-[1.8vw] font-black tracking-tight text-white leading-none">PolyRent Kediaman</h2>
-                      <p className="text-[0.75vw] text-cyan-400 font-mono tracking-wider mt-[0.2vw]">Bilik Sewa & Perkongsian Bil Pintar</p>
-                    </div>
-                  </div>
-                </div>
+          {/* Header */}
+          <div className="px-[2vw] py-[1.2vw] border-b border-white/5 bg-[#060c18]/80 backdrop-blur-md flex justify-between items-center z-30">
+            <div className="flex items-center gap-[0.8vw]">
+              <span className="text-[1.5vw]">🏠</span>
+              <div>
+                <h2 className="text-[1.4vw] font-black text-white leading-none font-sans">PolyRent</h2>
+                <p className="text-[0.7vw] text-cyan-400 font-mono tracking-widest uppercase mt-[0.2vw]">Cari Kawan Sewa. Lebih Jimat.</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-[1vw]">
+               {/* Search Box inside header */}
+               <div className="h-[2.2vw] bg-black/40 border border-cyan-500/30 rounded-[0.5vw] flex items-center px-[0.8vw] gap-[0.5vw] relative overflow-hidden">
+                 <span className="text-[0.8vw]">🔍</span>
+                 <span className="text-[0.7vw] text-white font-bold font-mono whitespace-nowrap">{typedText}</span>
+                 {act >= 1 && typedText.length < 7 && (
+                   <span className="w-[2px] h-[1vw] bg-cyan-400 animate-pulse" />
+                 )}
+               </div>
+            </div>
+          </div>
 
-                {/* Listing Card */}
-                <div className="bg-white/5 border border-white/10 rounded-[1.5vw] p-[1vw] flex flex-col justify-between h-[22vw] relative overflow-hidden">
-                  <SpecularGlare />
-                  
-                  {/* Image container representation */}
-                  <div className="h-[12vw] bg-[#141d24] rounded-[1vw] overflow-hidden relative flex items-center justify-center">
-                    <span className="text-[4vw]">🏢</span>
-                    
-                    {/* Verified Badge */}
-                    <AnimatePresence>
-                      {act >= 2 && (
-                        <motion.div 
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="absolute top-[0.8vw] left-[0.8vw] px-[0.8vw] py-[0.3vw] bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black text-[0.6vw] tracking-wider uppercase rounded-full shadow-[0_0_15px_rgba(245,158,11,0.5)] flex items-center gap-[0.2vw]"
-                        >
-                          <span>🛡️</span> Disahkan KLK
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+          {/* Main workspace layout */}
+          <div className="flex-1 flex gap-[2vw] p-[2vw] overflow-hidden z-10 relative">
+             {/* Left Column: Listings & Visualizations */}
+             <div className="flex-1 flex flex-col gap-[1vw]" style={{ transformStyle: 'preserve-3d' }}>
+               
+               {/* Mini 3D Volumetric Bar Chart overlaying map */}
+               <div className="bg-white/5 border border-white/10 rounded-[1.2vw] p-[1vw] flex items-center justify-between gap-[1vw]">
+                 <div className="flex flex-col gap-[0.2vw]">
+                   <span className="text-[0.55vw] text-cyan-400 font-mono font-bold uppercase tracking-wider">Unjuran Sewaan 2026</span>
+                   <h4 className="text-[0.8vw] font-bold text-white">Kos Sewa Purata Kampus</h4>
+                 </div>
+                 <div className="flex gap-[1vw] items-end">
+                   <Volumetric3DBar height={3.5} color="#06b6d4" label="Semambu" />
+                   <Volumetric3DBar height={5.2} color="#3b82f6" label="Beserah" />
+                   <Volumetric3DBar height={2.5} color="#10b981" label="T.D.Rashid" />
+                 </div>
+               </div>
 
-                    {/* Wishlist Heart */}
-                    <div className="absolute top-[0.8vw] right-[0.8vw] w-[2vw] h-[2vw] rounded-full bg-black/40 flex items-center justify-center">
-                      <motion.span 
-                        animate={heartBurst ? { scale: [1, 1.6, 1], color: '#ef4444' } : {}}
-                        className="text-[1.1vw] text-white"
-                      >
-                        ❤️
-                      </motion.span>
-                    </div>
-                  </div>
+               {/* Listings list */}
+               <div className="flex-1 flex gap-[1vw]">
+                 {listings.map((list, idx) => (
+                   <motion.div
+                     key={list.id}
+                     initial={{ opacity: 0, y: 30 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     transition={{ duration: 0.8, delay: idx * 0.2 }}
+                     whileHover={{ scale: 1.02, y: -4 }}
+                     className="flex-1 bg-white/5 border border-white/10 rounded-[1.2vw] p-[0.8vw] flex flex-col justify-between relative overflow-hidden"
+                     style={{ transformStyle: 'preserve-3d' }}
+                   >
+                     <SpecularGlare />
+                     <div className="h-[9vw] rounded-[0.8vw] overflow-hidden relative">
+                       <img src={list.img} alt={list.title} className="w-full h-full object-cover opacity-80" />
+                       
+                       {/* Verified badge */}
+                       {act >= 2 && list.id === "rent-1" && (
+                         <motion.div 
+                           initial={{ scale: 0, opacity: 0 }}
+                           animate={{ scale: 1, opacity: 1 }}
+                           className="absolute top-[0.6vw] left-[0.6vw] px-[0.6vw] py-[0.2vw] bg-cyan-500 text-black font-black text-[0.5vw] tracking-wider uppercase rounded-full shadow-[0_0_10px_rgba(6,182,212,0.4)]"
+                         >
+                           DISAHKAN JPP
+                         </motion.div>
+                       )}
 
-                  <div className="flex justify-between items-end mt-[0.8vw]">
-                    <div>
-                      <h3 className="text-[1.1vw] font-bold text-white leading-none">Taman Semambu Jaya</h3>
-                      <p className="text-[0.7vw] text-white/50 mt-[0.2vw]">Kekosongan: 2 Lelaki · Bilik Tengah</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[1.2vw] font-black text-cyan-400 leading-none">RM 180</p>
-                      <p className="text-[0.55vw] text-white/30 uppercase mt-[0.1vw]">Bulanan per Kepala</p>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
+                       <div className="absolute top-[0.6vw] right-[0.6vw] w-[1.6vw] h-[1.6vw] rounded-full bg-black/40 flex items-center justify-center">
+                         <motion.span 
+                           animate={wishlistActive && list.id === "rent-1" ? { scale: [1, 1.6, 1], color: '#ef4444' } : {}}
+                           className="text-[0.9vw] text-white"
+                         >
+                           ❤️
+                         </motion.span>
+                       </div>
+                     </div>
 
-              {/* Right Column: Smart Calculator break down */}
-              <div className="w-[28vw] flex flex-col justify-center gap-[1vw]" style={{ transformStyle: 'preserve-3d' }}>
+                     <div className="mt-[0.6vw]">
+                       <div className="flex gap-[0.4vw] mb-[0.3vw]">
+                         {list.tags.map((t, ti) => (
+                           <span key={ti} className="text-[0.45vw] px-[0.4vw] py-[0.1vw] rounded bg-cyan-500/10 text-cyan-300 font-mono font-bold uppercase">{t}</span>
+                         ))}
+                       </div>
+                       <h3 className="text-[0.8vw] font-bold text-white line-clamp-1">{list.title}</h3>
+                       <p className="text-[0.55vw] text-white/40">{list.lokasi}</p>
+                     </div>
+
+                     <div className="flex justify-between items-end mt-[0.6vw] pt-[0.6vw] border-t border-white/5">
+                       <div>
+                         <p className="text-[0.5vw] text-white/30 uppercase leading-none">preferensi</p>
+                         <p className="text-[0.6vw] text-cyan-300 font-bold uppercase font-mono mt-[0.1vw]">{list.jantina_prefer}</p>
+                       </div>
+                       <div className="text-right">
+                         <p className="text-[0.9vw] font-black text-cyan-400 font-mono leading-none">RM {list.sewa_bulanan}</p>
+                         <p className="text-[0.5vw] text-white/30 uppercase leading-none mt-[0.1vw]">sebulan</p>
+                       </div>
+                     </div>
+                   </motion.div>
+                 ))}
+               </div>
+
+             </div>
+
+             {/* Right Column: Smart Calculator & Bill Splitter */}
+             <div className="w-[24vw] flex flex-col justify-center" style={{ transformStyle: 'preserve-3d' }}>
                 <AnimatePresence>
                   {act >= 3 && (
                     <motion.div 
-                      initial={{ opacity: 0, y: 50, rotateX: -20 }}
-                      animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                      className="bg-black/45 border border-white/10 rounded-[1.8vw] p-[1.5vw] shadow-[0_30px_60px_rgba(6,182,212,0.15)] backdrop-blur-md flex flex-col gap-[1vw]"
+                      initial={{ opacity: 0, y: 50, rotateY: -15 }}
+                      animate={{ opacity: 1, y: 0, rotateY: -5 }}
+                      className="bg-black/45 border border-white/10 rounded-[1.5vw] p-[1.2vw] shadow-[0_30px_60px_rgba(6,182,212,0.15)] backdrop-blur-md flex flex-col gap-[0.8vw]"
                       style={{ transformStyle: 'preserve-3d' }}
                     >
-                      <div className="flex items-center justify-between border-b border-white/10 pb-[0.8vw]">
-                        <span className="text-[0.8vw] font-bold text-white flex items-center gap-[0.4vw]">🧮 Pembahagi Bil Pintar</span>
-                        <span className="text-[0.6vw] text-cyan-400 font-mono font-bold uppercase">Proses: {calcProgress}%</span>
+                      <div className="flex items-center justify-between border-b border-white/10 pb-[0.6vw]">
+                        <span className="text-[0.7vw] font-bold text-white flex items-center gap-[0.4vw]">🧮 Pembahagi Bil Pintar</span>
+                        <span className="text-[0.5vw] text-cyan-400 font-mono font-bold uppercase">Proses: {Math.round((billValues[0]/180)*100)}%</span>
                       </div>
 
                       {/* Items */}
-                      <div className="flex flex-col gap-[0.6vw]">
+                      <div className="flex flex-col gap-[0.5vw]">
                         {[
-                          { name: 'Sewa Bulanan (Rumah)', total: 540, share: 180, c: '#06b6d4' },
-                          { name: 'Internet (500Mbps)', total: 60, share: 20, c: '#3b82f6' },
-                          { name: 'Utiliti (Elektrik & Air)', total: 45, share: 15, c: '#10b981' }
+                          { name: 'Sewa Bulanan (Rumah)', total: 540, val: billValues[0], c: '#06b6d4' },
+                          { name: 'Internet (500Mbps)', total: 60, val: billValues[1], c: '#3b82f6' },
+                          { name: 'Utiliti (Elektrik & Air)', total: 45, val: billValues[2], c: '#10b981' }
                         ].map((bill, i) => (
-                          <div key={i} className="flex justify-between items-center p-[0.6vw] bg-white/5 rounded-[0.8vw] border border-white/5">
+                          <div key={i} className="flex justify-between items-center p-[0.5vw] bg-white/5 rounded-[0.8vw] border border-white/5">
                             <div>
-                              <p className="text-[0.75vw] text-white/80 font-semibold">{bill.name}</p>
-                              <p className="text-[0.55vw] text-white/30 font-mono">Jumlah Bil: RM {bill.total}</p>
+                              <p className="text-[0.65vw] text-white/80 font-semibold">{bill.name}</p>
+                              <p className="text-[0.5vw] text-white/30 font-mono">Jumlah Bil: RM {bill.total}</p>
                             </div>
                             <div className="text-right">
                               <motion.p 
-                                initial={{ opacity: 0 }} 
-                                animate={{ opacity: 1 }} 
-                                transition={{ delay: 0.5 + i*0.2 }}
-                                className="text-[0.9vw] font-bold"
+                                animate={act >= 3 ? { scale: [1, 1.15, 1] } : {}}
+                                transition={{ duration: 0.4, delay: 0.8 + i*0.1 }}
+                                className="text-[0.8vw] font-black font-mono leading-none"
                                 style={{ color: bill.c }}
                               >
-                                RM {bill.share}
+                                RM {bill.val}
                               </motion.p>
-                              <p className="text-[0.5vw] text-white/40">Kongsi 3 Pelajar</p>
+                              <p className="text-[0.5vw] text-white/30 font-mono">Kongsi 3 Pelajar</p>
                             </div>
                           </div>
                         ))}
                       </div>
 
-                      <div className="flex justify-between items-center mt-[0.5vw] pt-[0.8vw] border-t border-white/10">
-                        <span className="text-[0.8vw] text-white font-bold">Anggaran Bulanan</span>
+                      <div className="flex justify-between items-center mt-[0.3vw] pt-[0.6vw] border-t border-white/10">
+                        <span className="text-[0.7vw] text-white font-bold">Anggaran Bulanan</span>
                         <motion.span 
-                          initial={{ scale: 0.8 }} 
-                          animate={{ scale: 1 }} 
-                          className="text-[1.4vw] font-black text-cyan-400"
+                          className="text-[1.1vw] font-black text-cyan-400 font-mono"
                         >
-                          RM 215 / Pelajar
+                          RM {(billValues.reduce((a,b)=>a+b, 0))} / Pelajar
                         </motion.span>
                       </div>
+
+                      <button className="w-full py-[0.5vw] rounded bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-black text-[0.6vw] tracking-wider uppercase mt-[0.2vw] flex items-center justify-center gap-[0.3vw] shadow-lg border border-cyan-400/20">
+                        <span>💬</span> Hubungi Pemilik Sebutharga
+                      </button>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
 
             </div>
+
+            {/* Bottom Nav Capsule */}
+            <div className="absolute bottom-[1vw] left-1/2 -translate-x-1/2 z-30">
+              <div className="h-[3.2vw] bg-[#060c18]/90 backdrop-blur-md border border-white/15 rounded-full px-[1.5vw] flex items-center gap-[1.8vw] shadow-2xl relative">
+                <span className="text-[0.9vw] text-white/40 cursor-pointer">☰</span>
+                <span className="text-[0.9vw] text-white/40 cursor-pointer">🏠</span>
+                <div className="w-[3.6vw] h-[3.6vw] rounded-full bg-[#06b6d4] border-[3px] border-[#030712] flex items-center justify-center text-white text-[1.4vw] font-bold shadow-lg shadow-cyan-500/30 cursor-pointer hover:scale-105 transition-all -translate-y-[0.6vw]">
+                  +
+                </div>
+                <span className="text-[0.9vw] text-white/40 cursor-pointer">🔳</span>
+                <span className="text-[0.9vw] text-white/40 cursor-pointer">👤</span>
+              </div>
+            </div>
           </motion.div>
-        )}
       </AnimatePresence>
 
       <ModuleOverlay show={act>=5} num="Modul 03" name="PolyRent" tagline={mod.tagline} gc={gc} pos="bottom-[8%] left-[4%]" />
