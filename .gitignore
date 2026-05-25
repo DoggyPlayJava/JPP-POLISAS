@@ -45,3 +45,21 @@ orientation-loadtest.js
 spike-test.js
 doomsday-test.js
 public/rumah sewa.pdf
+
+# Remotion & Media Outputs
+.remotion/
+my-video/
+out/
+*.mp4
+*.webm
+*.wav
+*.mp3
+*.aac
+*.gif
+
+# Patch and temporary scripts
+patch_launch_video.js
+patch_launch_video.cjs
+
+
+

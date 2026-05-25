@@ -100,6 +100,7 @@ function OrderModal({
   onSuccess: () => void;
 }) {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const [qty,        setQty]        = useState(1);
   const [note,       setNote]       = useState('');
   const [pickupTime, setPickupTime] = useState('');

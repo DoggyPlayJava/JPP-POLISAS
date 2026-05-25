@@ -305,25 +305,41 @@ export function PolyMartPaymentPage() {
           <motion.div key="main" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             {/* Top Gateway Summary */}
             <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-card p-5 shadow-xl space-y-4">
-              {/* Timer Bar */}
-              {order.payment_deadline_at && !isExpired && (
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-amber-500/5 border border-amber-500/10">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-amber-500 animate-pulse" />
-                    <span className="text-xs font-bold text-foreground">Selesaikan bayaran dalam tempoh:</span>
+              {/* Receipt Uploaded Status vs Countdown Timer */}
+              {order.payment_receipt_url ? (
+                <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                    <Check className="w-4 h-4 text-emerald-500 animate-pulse" />
                   </div>
-                  <span className="text-sm font-black text-amber-600 font-mono tracking-wider">{timeLeft}</span>
-                </div>
-              )}
-
-              {isExpired && (
-                <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20">
-                  <AlertCircle className="w-5 h-5 text-rose-500 shrink-0" />
                   <div>
-                    <h4 className="text-xs font-black text-rose-600">Had Masa Pembayaran Tamat</h4>
-                    <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">Tempahan ini mungkin telah dibatalkan secara automatik oleh sistem.</p>
+                    <h4 className="text-xs font-black text-emerald-600">Bukti Pembayaran Dihantar</h4>
+                    <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                      Peti pemasa pembatalan automatik telah dibekukan. Menunggu pengesahan daripada pihak vendor.
+                    </p>
                   </div>
                 </div>
+              ) : (
+                <>
+                  {order.payment_deadline_at && !isExpired && (
+                    <div className="flex items-center justify-between p-3 rounded-2xl bg-amber-500/5 border border-amber-500/10">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-amber-500 animate-pulse" />
+                        <span className="text-xs font-bold text-foreground">Selesaikan bayaran dalam tempoh:</span>
+                      </div>
+                      <span className="text-sm font-black text-amber-600 font-mono tracking-wider">{timeLeft}</span>
+                    </div>
+                  )}
+
+                  {isExpired && (
+                    <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20">
+                      <AlertCircle className="w-5 h-5 text-rose-500 shrink-0" />
+                      <div>
+                        <h4 className="text-xs font-black text-rose-600">Had Masa Pembayaran Tamat</h4>
+                        <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">Tempahan ini mungkin telah dibatalkan secara automatik oleh sistem.</p>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Vendor & Amount Info */}

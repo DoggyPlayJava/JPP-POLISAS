@@ -47,6 +47,7 @@ const SCALAR_REFS = [
   { table: 'supsas_kontingen',    column: 'logo_url' },
   { table: 'supsas_medal_tally',  column: 'logo_url' },
   { table: 'polymart_orders',     column: 'payment_receipt_url' },
+  { table: 'keusahawanan_businesses', column: 'payment_qr_url' },
 ];
 
 // Array columns — need special handling with .contains()
