@@ -11,6 +11,7 @@ import {
   Package, CheckCircle, XCircle, Truck, Clock, Store,
   Phone, MessageCircle, ChevronDown, ChevronUp, AlertTriangle,
   TrendingUp, ShoppingBag, CreditCard, Handshake, Eye, Image,
+  Search, X,
 } from 'lucide-react';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -1084,6 +1085,29 @@ export function PolyMartVendorDashboard() {
           </p>
         </motion.div>
       )}
+
+      {/* Search Bar */}
+      <div className="relative flex items-center h-10 px-3.5 rounded-2xl bg-muted/30 border border-border/50 hover:border-border focus-within:border-amber-500/50 focus-within:bg-muted/40 transition-all duration-300">
+        <Search className="w-4 h-4 text-muted-foreground/45 shrink-0" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Cari nama pembeli, no. matrik, atau ID pesanan..."
+          className="w-full h-full px-2.5 text-xs font-semibold outline-none bg-transparent text-foreground placeholder:text-muted-foreground/30"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => {
+              setSearchQuery('');
+              window.history.replaceState({}, '', '/polymart/vendor');
+            }}
+            className="w-5 h-5 rounded-full flex items-center justify-center bg-muted hover:bg-rose-500/10 text-muted-foreground hover:text-rose-500 transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
 
       {/* Tab filter */}
       <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1 border-b border-border/30 mb-2">
