@@ -488,24 +488,39 @@ export function KeusahawananDashboard() {
           </p>
         </div>
 
-        {/* Quick Action Button - POS */}
-        <button
-          onClick={() => navigate('/keusahawanan/pos')}
-          className="tour-keusahawanan-quickpos group relative flex items-center justify-between sm:justify-start gap-4 px-6 py-4 rounded-3xl overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl w-full lg:w-auto flex-shrink-0"
-          style={{ background: color }}
-        >
-          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="flex items-center gap-4 relative z-10">
-            <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm shadow-sm text-white">
+        {/* Quick Action Bento Grid - Splits into POS and Catalog Management (Split in Half) */}
+        <div className="grid grid-cols-2 gap-3 w-full lg:w-[460px] xl:w-[500px] flex-shrink-0">
+          {/* Bento 1: POS Counter */}
+          <button
+            onClick={() => navigate('/keusahawanan/pos')}
+            className="tour-keusahawanan-quickpos group relative flex flex-col items-start justify-between gap-4 p-4 sm:p-5 rounded-3xl overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl w-full text-left"
+            style={{ background: color }}
+          >
+            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm shadow-sm text-white shrink-0 relative z-10">
               <Calculator className="w-5 h-5" />
             </div>
-            <div className="text-left">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-white/80">Akses Pantas</p>
-              <p className="text-lg font-black text-white leading-none mt-0.5">Kaunter Jualan (POS)</p>
+            <div className="min-w-0 relative z-10 mt-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-white/80 leading-none">Kaunter</p>
+              <p className="text-sm sm:text-base font-black text-white mt-1 leading-tight">Jualan (POS)</p>
             </div>
-          </div>
-          <ExternalLink className="w-5 h-5 text-white/50 group-hover:text-white transition-colors relative z-10 sm:hidden" />
-        </button>
+          </button>
+
+          {/* Bento 2: Product Catalog */}
+          <button
+            onClick={() => navigate('/keusahawanan/pos/products')}
+            className="group relative flex flex-col items-start justify-between gap-4 p-4 sm:p-5 rounded-3xl overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl w-full text-left border border-border/40 bg-card"
+          >
+            <div className="absolute inset-0 bg-muted/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center backdrop-blur-sm shadow-sm text-amber-500 shrink-0 border border-amber-500/10 relative z-10">
+              <PackageSearch className="w-5 h-5" />
+            </div>
+            <div className="min-w-0 relative z-10 mt-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 leading-none">Katalog Kedai</p>
+              <p className="text-sm sm:text-base font-black text-foreground mt-1 leading-tight">Tambah Produk</p>
+            </div>
+          </button>
+        </div>
       </motion.div>
 
       {/* Sertai Perniagaan Lain Banner */}
