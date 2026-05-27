@@ -87,7 +87,7 @@ function calcSubtotal(item: CostItem): number {
 
 const EMPTY_FORM = {
   name: '', description: '', price: '', category: 'Umum',
-  stock_quantity: '10', stock_alert_threshold: '5', is_available: true, image_url: '',
+  stock_quantity: '10', stock_alert_threshold: '5', is_available: true, image_url: '', image_urls: [] as string[],
   // Cost fields
   cost_mode: 'quick' as 'quick' | 'advanced',
   quick_cost: '',           // single total cost input
@@ -681,6 +681,7 @@ export function PosProductPage() {
       stock_alert_threshold: String(p.stock_alert_threshold),
       is_available: p.is_available,
       image_url: p.image_url || '',
+      image_urls: p.image_urls ?? [],
       cost_mode: hasValidItems ? 'advanced' : 'quick',
       quick_cost: hasValidItems ? '' : (p.total_cost > 0 ? String(p.total_cost) : ''),
       cost_items: hasValidItems ? (rawItems as unknown as CostItem[]) : [],
@@ -720,6 +721,38 @@ export function PosProductPage() {
     toast.success('Gambar dimuat naik!');
   };
 
+  const handleUploadAdditional = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.[0] || !businessId) return;
+    setUploading(true);
+    try {
+      const file = e.target.files[0];
+      const { compressImage } = await import('@/lib/imageCompression');
+      const compressedFile = await compressImage(file);
+      
+      const path = `${businessId}/${Date.now()}-${window.crypto.randomUUID()}.${compressedFile.name.split('.').pop()}`;
+      const { error } = await supabase.storage.from('keusahawanan-products').upload(path, compressedFile, { contentType: compressedFile.type });
+      if (error) { toast.error('Gagal muat naik: ' + error.message); return; }
+      const { data: { publicUrl } } = supabase.storage.from('keusahawanan-products').getPublicUrl(path);
+      
+      setForm(f => ({
+        ...f,
+        image_urls: [...(f.image_urls || []), publicUrl]
+      }));
+      toast.success('Gambar tambahan dimuat naik!');
+    } catch (err: any) {
+      toast.error('Ralat muat naik: ' + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveAdditionalImage = (idx: number) => {
+    setForm(f => ({
+      ...f,
+      image_urls: (f.image_urls || []).filter((_, i) => i !== idx)
+    }));
+  };
+
   const handleSave = async () => {
     if (!businessId) return;
     if (!form.name.trim()) { toast.error('Nama produk wajib diisi.'); return; }
@@ -735,6 +768,7 @@ export function PosProductPage() {
       stock_alert_threshold: parseInt(form.stock_alert_threshold) || 5,
       is_available:          form.is_available,
       image_url:             form.image_url || null,
+      image_urls:            form.image_urls,
       // Smart Product cost fields
       cost_items:  form.cost_mode === 'advanced' ? form.cost_items.filter(i => i.name.trim()) : [],
       total_cost:  derivedTotalCost,
@@ -973,19 +1007,62 @@ export function PosProductPage() {
                   {/* TAB 1: Jualan POS */}
                   {formStep === 1 && (
                     <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                      {/* Image upload */}
-                      <div className="relative group">
-                        <div className="aspect-video bg-muted/30 rounded-2xl overflow-hidden border border-border flex items-center justify-center">
-                          {form.image_url
-                            ? <img src={form.image_url} alt="preview" className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                            : <Package className="w-12 h-12 text-muted-foreground/20" />
-                          }
-                          <label className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-2xl gap-2">
-                            <Camera className="w-6 h-6 text-white" />
-                            <span className="text-[11px] font-black text-white">{uploading ? 'Memuat naik...' : 'Tukar Gambar'}</span>
-                            <input type="file" accept="image/*" className="hidden" onClick={e => e.stopPropagation()} onChange={handleUpload} disabled={uploading} />
-                          </label>
+                      {/* Premium Multi-Image Grid (Shopee Style) */}
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-2">Galeri Gambar Produk (Maks 5 Gambar)</p>
+                        <div className="grid grid-cols-5 gap-2">
+                          {/* Main Image Slot */}
+                          <div className="relative aspect-square rounded-xl overflow-hidden border border-amber-500/30 bg-muted/20 flex items-center justify-center group cursor-pointer">
+                            {form.image_url ? (
+                              <>
+                                <img src={form.image_url} alt="Main" className="w-full h-full object-cover" />
+                                <div className="absolute top-1 left-1 bg-amber-500 text-[7px] font-black text-white px-1 py-0.5 rounded uppercase">
+                                  Utama
+                                </div>
+                                <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                                  <Camera className="w-4 h-4 text-white" />
+                                  <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
+                                </label>
+                              </>
+                            ) : (
+                              <label className="w-full h-full flex flex-col items-center justify-center gap-1 cursor-pointer">
+                                <Plus className="w-4 h-4 text-muted-foreground/40" />
+                                <span className="text-[8px] font-bold text-muted-foreground/60">Utama</span>
+                                <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
+                              </label>
+                            )}
+                          </div>
+
+                          {/* Additional Image Slots (up to 4 more) */}
+                          {[0, 1, 2, 3].map((slotIdx) => {
+                            const imgUrl = (form.image_urls || [])[slotIdx];
+                            return (
+                              <div key={slotIdx} className="relative aspect-square rounded-xl overflow-hidden border border-border/50 bg-muted/20 flex items-center justify-center group">
+                                {imgUrl ? (
+                                  <>
+                                    <img src={imgUrl} alt={`Slot ${slotIdx + 1}`} className="w-full h-full object-cover" />
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveAdditionalImage(slotIdx)}
+                                      className="absolute top-1 right-1 w-4 h-4 bg-rose-500 text-white rounded-full flex items-center justify-center hover:bg-rose-600 transition-colors shadow-md"
+                                    >
+                                      <span className="text-[10px] leading-none font-bold">×</span>
+                                    </button>
+                                  </>
+                                ) : (
+                                  <label className="w-full h-full flex flex-col items-center justify-center gap-1 cursor-pointer hover:bg-muted/30 transition-colors">
+                                    <Camera className="w-4 h-4 text-muted-foreground/30" />
+                                    <span className="text-[8px] font-bold text-muted-foreground/40">Tambah</span>
+                                    <input type="file" accept="image/*" className="hidden" onChange={handleUploadAdditional} disabled={uploading} />
+                                  </label>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
+                        {uploading && (
+                          <p className="text-[9px] text-amber-500 font-semibold mt-1 animate-pulse">⏳ Sedang memuat naik gambar...</p>
+                        )}
                       </div>
 
                       {/* Basic Fields */}

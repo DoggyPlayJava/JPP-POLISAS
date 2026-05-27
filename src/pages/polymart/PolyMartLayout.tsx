@@ -176,7 +176,7 @@ export function PolyMartLayout() {
               {/* Back */}
               <button
                 onClick={() => isHome ? navigate(user ? '/portal' : '/') : navigate(-1)}
-                className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted/70 transition-colors shrink-0 group">
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center hover:bg-muted/70 transition-colors shrink-0 group">
                 <ArrowLeft className="w-[18px] h-[18px] text-muted-foreground group-hover:text-foreground transition-colors" />
               </button>
 
@@ -189,14 +189,22 @@ export function PolyMartLayout() {
                   style={{ background: PM_GRADIENT }}>
                   <ShoppingBag className="w-4 h-4 text-white" />
                 </div>
-                <div className={`leading-none text-left ${!(hasKeusahawananAccess || isSuperAdmin) ? 'hidden sm:block' : ''}`}>
+                <div className="leading-none text-left hidden sm:block">
                   <p className="text-[13px] font-black text-foreground">PolyMart</p>
                   <p className="text-[8px] font-bold tracking-widest uppercase" style={{ color: PM_ACCENT }}>marketplace</p>
                 </div>
               </motion.button>
 
-              {/* Search Bar for All Users */}
-              <div className="flex-1 flex items-center gap-2 h-9 px-3.5 rounded-full bg-muted/40 border border-border/45 hover:border-border/70 focus-within:border-amber-500/50 transition-colors">
+              {/* Search Bar - Desktop: Full Input, Mobile: Compact Trigger Button */}
+              <button
+                onClick={() => setShowMobileSearch(true)}
+                className="flex sm:hidden flex-1 items-center gap-2 h-8 px-3 rounded-full bg-muted/40 border border-border/45 text-muted-foreground/50 cursor-pointer"
+              >
+                <Search className="w-3.5 h-3.5 shrink-0" />
+                <span className="text-[12px] text-left truncate flex-1">Cari...</span>
+              </button>
+
+              <div className="hidden sm:flex flex-1 items-center gap-2 h-9 px-3.5 rounded-full bg-muted/40 border border-border/45 hover:border-border/70 focus-within:border-amber-500/50 transition-colors">
                 <Search className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
                 <input
                   value={searchQuery}
@@ -256,9 +264,12 @@ export function PolyMartLayout() {
                       <MessageCircle className="w-[18px] h-[18px] text-muted-foreground" />
                     </button>
 
+                    {/* Button: Kedai (if vendor) OR Admin (if non-vendor JPP/Admin) OR Mulai Bisnes (if regular non-vendor student) */}
                     {isVendor ? (
                       <button onClick={() => navigate('/polymart/vendor')}
-                        className="tour-polymart-vendor relative h-9 px-3 rounded-full flex items-center gap-1.5 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 border border-amber-500/15 transition-all shrink-0 shadow-sm shadow-amber-500/5">
+                        className="tour-polymart-vendor relative h-8 px-2.5 sm:h-9 sm:px-3.5 rounded-full flex items-center justify-center gap-1 sm:gap-1.5 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 border border-amber-500/15 transition-all shrink-0 shadow-sm shadow-amber-500/5 animate-in fade-in zoom-in duration-200"
+                        title="Kedai Saya"
+                      >
                         <Store className="w-[15px] h-[15px]" />
                         <span className="text-[10px] font-black uppercase tracking-wider">Kedai</span>
                         {pendingVendorCount > 0 && (
@@ -268,22 +279,24 @@ export function PolyMartLayout() {
                         )}
                       </button>
                     ) : (
-                      /* Only show for regular users who are not JPP/Admins (to avoid clutter in JPP view) */
-                      !(hasKeusahawananAccess || isSuperAdmin) && (
+                      /* Not a Vendor: Show Admin for JPP/Admins, or Mulai Bisnes with text for regular students */
+                      (hasKeusahawananAccess || isSuperAdmin) ? (
+                        <button onClick={() => navigate('/polymart/admin')}
+                          className="relative h-8 px-2.5 sm:h-9 sm:px-3.5 rounded-full flex items-center justify-center gap-1 sm:gap-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 border border-rose-500/15 transition-all shrink-0 shadow-sm shadow-rose-500/5 animate-in fade-in zoom-in duration-200"
+                          title="Panel Admin"
+                        >
+                          <Shield className="w-[15px] h-[15px]" />
+                          <span className="text-[10px] font-black uppercase tracking-wider">Admin</span>
+                        </button>
+                      ) : (
                         <button onClick={() => navigate('/keusahawanan/onboarding')}
-                          className="relative h-9 px-3 rounded-full flex items-center gap-1 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border border-emerald-500/15 transition-all shrink-0 shadow-sm shadow-emerald-500/5">
+                          className="relative h-8 px-2.5 sm:h-9 sm:px-3.5 rounded-full flex items-center justify-center gap-1 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border border-emerald-500/15 transition-all shrink-0 shadow-sm shadow-emerald-500/5 animate-in fade-in zoom-in duration-200"
+                          title="Mulai Bisnes"
+                        >
                           <Plus className="w-3.5 h-3.5" />
-                          <span className="text-[10px] font-black uppercase tracking-wider hidden min-[380px]:inline">Mulai Bisnes</span>
+                          <span className="text-[10px] font-black uppercase tracking-wider">Mulai Bisnes</span>
                         </button>
                       )
-                    )}
-
-                    {(hasKeusahawananAccess || isSuperAdmin) && (
-                      <button onClick={() => navigate('/polymart/admin')}
-                        className="relative h-9 px-3 rounded-full flex items-center gap-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 border border-rose-500/15 transition-all shrink-0 shadow-sm shadow-rose-500/5">
-                        <Shield className="w-[15px] h-[15px]" />
-                        <span className="text-[10px] font-black uppercase tracking-wider">Admin</span>
-                      </button>
                     )}
                   </>
                 ) : (

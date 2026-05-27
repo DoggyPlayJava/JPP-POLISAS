@@ -124,6 +124,7 @@ export function FloatingAiChat() {
   const [inboxList, setInboxList] = useState<any[]>([]);
   const [unreadTotal, setUnreadTotal] = useState(0);
   const [isInboxLoading, setIsInboxLoading] = useState(false);
+  const [inboxFilter, setInboxFilter] = useState<'all' | 'polymart' | 'polyrent' | 'kebajikan'>('all');
 
   // Detailed Inline Chat State
   const [selectedChat, setSelectedChat] = useState<any | null>(null);
@@ -565,6 +566,49 @@ export function FloatingAiChat() {
       console.warn('Failed to fetch unread counts:', e);
     }
   }, [profile?.id]);
+
+  const handleMarkAllAsRead = async () => {
+    if (!profile?.id) return;
+    const loadingToast = toast.loading('Menandakan semua mesej sebagai dibaca...');
+    try {
+      // 1. Fetch user's polymart conversations (implicitly filtered by RLS policies)
+      const { data: polymartConvs } = await supabase
+        .from('polymart_conversations')
+        .select('id');
+
+      const promises = [];
+
+      if (polymartConvs && polymartConvs.length > 0) {
+        const convIds = polymartConvs.map(c => c.id);
+        promises.push(
+          supabase
+            .from('polymart_messages')
+            .update({ is_read: true })
+            .in('conversation_id', convIds)
+            .neq('sender_id', profile.id)
+            .eq('is_read', false)
+        );
+      }
+
+      // 2. Mark receiver's polyrent messages as read
+      promises.push(
+        supabase
+          .from('polyrent_messages')
+          .update({ is_read: true })
+          .eq('receiver_id', profile.id)
+          .eq('is_read', false)
+      );
+
+      await Promise.all(promises);
+
+      // Refresh both unread counts and conversation items
+      await fetchInboxData();
+      toast.success('Semua mesej ditandakan sebagai dibaca!', { id: loadingToast });
+    } catch (e) {
+      console.error('Failed to mark all as read:', e);
+      toast.error('Gagal menandakan semua mesej sebagai dibaca', { id: loadingToast });
+    }
+  };
 
   // Poll unread counts every 60s when widget is closed
   useEffect(() => {
@@ -1211,7 +1255,7 @@ export function FloatingAiChat() {
               
               {/* Unread badge on closed FAB */}
               {unreadTotal > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-5.5 h-5.5 bg-rose-600 border-2 border-slate-950 rounded-full text-[9px] font-black text-white flex items-center justify-center animate-bounce">
+                <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] px-1 bg-rose-600 border-2 border-slate-950 rounded-full text-[9px] font-black text-white flex items-center justify-center animate-bounce shadow-md shadow-rose-600/30">
                   {unreadTotal}
                 </span>
               )}
@@ -1728,21 +1772,55 @@ export function FloatingAiChat() {
                   </div>
                 )}
 
-                {/* 2. Quick Action Shortcuts */}
+                {/* 2. Quick Action Shortcuts (Tapisan Inbox Dinamik) */}
                 <div className="flex items-center gap-2 shrink-0">
-                  <button onClick={() => { navigate('/kebajikan/buat-aduan'); setIsOpen(false); }} className="flex-1 bg-[#0d7377]/10 hover:bg-[#0d7377]/20 border border-[#0d7377]/25 text-[#0d7377] font-black text-[9px] uppercase tracking-widest py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors">
+                  <button
+                    onClick={() => setInboxFilter(prev => prev === 'kebajikan' ? 'all' : 'kebajikan')}
+                    className={`flex-1 font-black text-[9px] uppercase tracking-widest py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all duration-250 active:scale-95 ${
+                      inboxFilter === 'kebajikan'
+                        ? 'bg-[#0d7377] text-white shadow-md shadow-[#0d7377]/25 border border-[#0d7377]/20'
+                        : 'bg-[#0d7377]/10 hover:bg-[#0d7377]/20 border border-[#0d7377]/25 text-[#0d7377]'
+                    }`}
+                  >
                     <Shield size={11} /> + Aduan
                   </button>
-                  <button onClick={() => { navigate('/polymart'); setIsOpen(false); }} className="flex-1 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-500 font-black text-[9px] uppercase tracking-widest py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors">
+                  <button
+                    onClick={() => setInboxFilter(prev => prev === 'polymart' ? 'all' : 'polymart')}
+                    className={`flex-1 font-black text-[9px] uppercase tracking-widest py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all duration-250 active:scale-95 ${
+                      inboxFilter === 'polymart'
+                        ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25 border border-amber-500/20'
+                        : 'bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-500'
+                    }`}
+                  >
                     <Store size={11} /> PolyMart
                   </button>
-                  <button onClick={() => { navigate('/polyrent'); setIsOpen(false); }} className="flex-1 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/25 text-sky-500 font-black text-[9px] uppercase tracking-widest py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors">
+                  <button
+                    onClick={() => setInboxFilter(prev => prev === 'polyrent' ? 'all' : 'polyrent')}
+                    className={`flex-1 font-black text-[9px] uppercase tracking-widest py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all duration-250 active:scale-95 ${
+                      inboxFilter === 'polyrent'
+                        ? 'bg-sky-500 text-white shadow-md shadow-sky-500/25 border border-sky-500/20'
+                        : 'bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/25 text-sky-500'
+                    }`}
+                  >
                     <Home size={11} /> PolyRent
                   </button>
                 </div>
 
                 {/* Divider */}
                 <div className="h-px bg-border/40 shrink-0" />
+
+                {/* Subheader with Mark All as Read */}
+                <div className="flex items-center justify-between px-1 shrink-0">
+                  <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Mesej Terkini</span>
+                  {unreadTotal > 0 && (
+                    <button
+                      onClick={handleMarkAllAsRead}
+                      className="text-[9px] font-black text-indigo-400 hover:text-indigo-300 uppercase tracking-widest flex items-center gap-1 hover:underline transition-all"
+                    >
+                      Tanda Semua Dibaca
+                    </button>
+                  )}
+                </div>
 
                 {/* 3. Conversation List */}
                 <div className="flex-1 overflow-y-auto space-y-2 pr-1">
@@ -1751,14 +1829,69 @@ export function FloatingAiChat() {
                       <Loader2 className="w-5 h-5 animate-spin text-slate-500" />
                       <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Memuatkan Inbox...</p>
                     </div>
-                  ) : inboxList.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-48 gap-2 text-slate-500 text-center">
-                      <MessageSquare size={24} className="opacity-15" />
-                      <p className="text-[11px] font-bold text-muted-foreground">Tiada Sembang Aktif</p>
-                      <p className="text-[9px] text-muted-foreground/40 max-w-[200px]">Mulakan perbualan dalam modul PolyMart atau PolyRent, atau failkan aduan Kebajikan!</p>
-                    </div>
-                  ) : (
-                    inboxList.map((chat) => (
+                  ) : (() => {
+                    const filteredList = inboxList.filter(chat => inboxFilter === 'all' || chat.type === inboxFilter);
+                    if (filteredList.length === 0) {
+                      if (inboxFilter === 'polymart') {
+                        return (
+                          <div className="flex flex-col items-center justify-center min-h-[220px] gap-3 text-amber-500 text-center px-6 py-4 animate-in fade-in duration-200">
+                            <Store size={26} className="opacity-30" />
+                            <p className="text-[11px] font-black text-amber-500 uppercase tracking-widest leading-none">Tiada Sembang PolyMart</p>
+                            <p className="text-[10px] text-slate-400 leading-relaxed max-w-[240px] font-medium">
+                              Anda belum mula bersembang tentang produk. Layari kedai di <span className="font-black text-amber-500">PolyMart</span> untuk beli-belah & bersembang dengan peniaga!
+                            </p>
+                            <button
+                              onClick={() => { navigate('/polymart'); setIsOpen(false); }}
+                              className="mt-1 px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white font-black text-[9px] uppercase tracking-widest rounded-xl transition-all active:scale-95 shadow-md shadow-amber-500/25 border border-amber-500/20"
+                            >
+                              Ke PolyMart
+                            </button>
+                          </div>
+                        );
+                      }
+                      if (inboxFilter === 'polyrent') {
+                        return (
+                          <div className="flex flex-col items-center justify-center min-h-[220px] gap-3 text-sky-400 text-center px-6 py-4 animate-in fade-in duration-200">
+                            <Home size={26} className="opacity-30" />
+                            <p className="text-[11px] font-black text-sky-400 uppercase tracking-widest leading-none">Tiada Sembang PolyRent</p>
+                            <p className="text-[10px] text-slate-400 leading-relaxed max-w-[240px] font-medium">
+                              Tiada rekod sembang bilik sewa. Layari listings di <span className="font-black text-sky-400">PolyRent</span> untuk mencari kediaman & berhubung dengan tuan rumah!
+                            </p>
+                            <button
+                              onClick={() => { navigate('/polyrent'); setIsOpen(false); }}
+                              className="mt-1 px-5 py-2 bg-sky-500 hover:bg-sky-600 text-white font-black text-[9px] uppercase tracking-widest rounded-xl transition-all active:scale-95 shadow-md shadow-sky-500/25 border border-sky-500/20"
+                            >
+                              Ke PolyRent
+                            </button>
+                          </div>
+                        );
+                      }
+                      if (inboxFilter === 'kebajikan') {
+                        return (
+                          <div className="flex flex-col items-center justify-center min-h-[220px] gap-3 text-teal-400 text-center px-6 py-4 animate-in fade-in duration-200">
+                            <Shield size={26} className="opacity-30 text-[#0d7377]" />
+                            <p className="text-[11px] font-black text-[#0d7377] uppercase tracking-widest leading-none">Tiada Rekod Aduan</p>
+                            <p className="text-[10px] text-slate-400 leading-relaxed max-w-[240px] font-medium">
+                              Tiada rekod ulasan tiket kebajikan aktif. Pergi ke halaman <span className="font-black text-[#0d7377]">e-Kebajikan</span> untuk membuat aduan atau bantuan kebajikan baharu!
+                            </p>
+                            <button
+                              onClick={() => { navigate('/kebajikan/buat-aduan'); setIsOpen(false); }}
+                              className="mt-1 px-5 py-2 bg-[#0d7377] hover:bg-[#0d7377]/80 text-white font-black text-[9px] uppercase tracking-widest rounded-xl transition-all active:scale-95 shadow-md shadow-[#0d7377]/25 border border-[#0d7377]/20"
+                            >
+                              Buat Aduan
+                            </button>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div className="flex flex-col items-center justify-center h-48 gap-2 text-slate-500 text-center">
+                          <MessageSquare size={24} className="opacity-15" />
+                          <p className="text-[11px] font-bold text-muted-foreground">Tiada Sembang Aktif</p>
+                          <p className="text-[9px] text-muted-foreground/40 max-w-[200px]">Mulakan perbualan dalam modul PolyMart atau PolyRent, atau failkan aduan Kebajikan!</p>
+                        </div>
+                      );
+                    }
+                    return filteredList.map((chat) => (
                       <button
                         key={`${chat.type}-${chat.id}`}
                         onClick={() => { setSelectedChat(chat); fetchChatMessages(chat); }}
@@ -1784,8 +1917,8 @@ export function FloatingAiChat() {
                           </span>
                         )}
                       </button>
-                    ))
-                  )}
+                    ));
+                  })()}
                 </div>
               </div>
             ) : (

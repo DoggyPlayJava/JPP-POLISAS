@@ -495,9 +495,9 @@ function OrderModal({
                       buyer_id: user.id,
                       product_id: product.id,
                       quantity: qty,
-                      selected_variation: selectedVariation || null
+                      selected_variation: selectedVariation || ''
                     },
-                    { onConflict: 'buyer_id, product_id, COALESCE(selected_variation, \'\')' }
+                    { onConflict: 'buyer_id, product_id, selected_variation' }
                   );
                   setSubmitting(false);
                   if (error) {
@@ -570,6 +570,40 @@ export function PolyMartProductDetail() {
   const [reportReason, setReportReason] = useState('');
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const [vendorScore, setVendorScore] = useState<{ avg: number; total: number; completed: number; label: string; color: string } | null>(null);
+  const [isHoveringImage, setIsHoveringImage] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToImage = (idx: number) => {
+    setActiveImgIdx(idx);
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        left: idx * scrollContainerRef.current.clientWidth,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    const activeIdx = Math.round(container.scrollLeft / container.clientWidth);
+    if (activeIdx !== activeImgIdx && activeIdx >= 0) {
+      setActiveImgIdx(activeIdx);
+    }
+  };
+
+  useEffect(() => {
+    if (!product) return;
+    const allImages = [...(product.image_urls ?? []), ...(product.image_url ? [product.image_url] : [])]
+      .filter((v, i, a) => a.indexOf(v) === i);
+    if (allImages.length <= 1 || isHoveringImage) return;
+
+    const interval = setInterval(() => {
+      const nextIdx = (activeImgIdx + 1) % allImages.length;
+      scrollToImage(nextIdx);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [product, isHoveringImage, activeImgIdx]);
 
   const avgRating = reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
 
@@ -652,8 +686,8 @@ export function PolyMartProductDetail() {
     }
 
     const { error } = await supabase.from('polymart_cart_items').upsert(
-      { buyer_id: user.id, product_id: id, quantity: 1, selected_variation: null },
-      { onConflict: 'buyer_id, product_id, COALESCE(selected_variation, \'\')' }
+      { buyer_id: user.id, product_id: id, quantity: 1, selected_variation: '' },
+      { onConflict: 'buyer_id, product_id, selected_variation' }
     );
     if (error) {
       toast.error('Gagal tambah ke troli');
@@ -688,23 +722,42 @@ export function PolyMartProductDetail() {
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
+          onMouseEnter={() => setIsHoveringImage(true)}
+          onMouseLeave={() => setIsHoveringImage(false)}
           className="relative aspect-[4/3] rounded-3xl overflow-hidden"
           style={{ background: `linear-gradient(135deg, ${PM_LIGHT}, rgba(249,115,22,0.08))` }}>
           {(() => {
             const allImages = [...(product.image_urls ?? []), ...(product.image_url ? [product.image_url] : [])]
               .filter((v, i, a) => a.indexOf(v) === i); // deduplicate
-            const currentImg = allImages[activeImgIdx] || allImages[0];
             return (
               <>
-                {currentImg
-                  ? <img src={currentImg} alt={product.name} className="w-full h-full object-cover transition-opacity duration-300" loading="lazy" decoding="async" />
-                  : <div className="w-full h-full flex items-center justify-center text-[100px]">{emoji}</div>
-                }
+                <div 
+                  ref={scrollContainerRef}
+                  onScroll={handleScroll}
+                  className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide h-full w-full"
+                  style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}
+                >
+                  {allImages.length > 0 ? (
+                    allImages.map((img, i) => (
+                      <div key={i} className="w-full h-full shrink-0 snap-start snap-always">
+                        <img 
+                          src={img} 
+                          alt={`${product.name} ${i + 1}`} 
+                          className="w-full h-full object-cover select-none" 
+                          loading="lazy" 
+                          decoding="async" 
+                        />
+                      </div>
+                    ))
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[100px] select-none">{emoji}</div>
+                  )}
+                </div>
                 {/* Dot indicators for multi-image */}
                 {allImages.length > 1 && (
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/40 backdrop-blur-sm px-2.5 py-1.5 rounded-full">
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/40 backdrop-blur-sm px-2.5 py-1.5 rounded-full z-10">
                     {allImages.map((_, i) => (
-                      <button key={i} onClick={() => setActiveImgIdx(i)}
+                      <button key={i} onClick={() => scrollToImage(i)}
                         className={`w-2 h-2 rounded-full transition-all ${i === activeImgIdx ? 'bg-white scale-125' : 'bg-white/40 hover:bg-white/60'}`} />
                     ))}
                   </div>

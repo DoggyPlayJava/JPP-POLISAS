@@ -349,11 +349,42 @@ export function PolyMartCartPage() {
                     </span>
                   </div>
 
+                  {/* Cadangan Waktu Ambil */}
+                  <div className="space-y-1 mb-2.5">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
+                      Cadangan Waktu Ambil <span className="text-rose-400">*</span>
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        { label: '⚡ Segera', value: 'Segera (Bila-bila Siap)' },
+                        { label: '🌅 Rehat Pagi (10 AM)', value: 'Rehat Pagi (~10.00 AM)' },
+                        { label: '☀️ Tengah Hari (1 PM)', value: 'Tengah Hari (~1.00 PM)' },
+                        { label: '🌇 Petang (Lepas 4 PM)', value: 'Petang (Selepas 4.00 PM)' }
+                      ].map(sug => {
+                        const active = pickupTime[bizId] === sug.value;
+                        return (
+                          <button
+                            key={sug.value}
+                            type="button"
+                            onClick={() => setPickupTime(prev => ({ ...prev, [bizId]: sug.value }))}
+                            className="px-2.5 py-1 rounded-lg border text-[9px] font-bold transition-all active:scale-95 whitespace-nowrap"
+                            style={active
+                              ? { background: 'rgba(245,158,11,0.1)', borderColor: PM_ACCENT, color: PM_ACCENT }
+                              : { background: 'hsl(var(--muted)/0.3)', borderColor: 'hsl(var(--border)/0.5)', color: 'hsl(var(--muted-foreground))' }
+                            }
+                          >
+                            {sug.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   <div className="flex gap-2">
                     <input 
                       value={pickupTime[bizId] || ''} 
                       onChange={e => setPickupTime(prev => ({ ...prev, [bizId]: e.target.value }))}
-                      placeholder="Masa Ambil (cth: 2.00 PM)"
+                      placeholder="Atau taip waktu kustom sendiri..."
                       className="flex-1 h-10 px-3 rounded-xl text-xs outline-none bg-background border border-border/50 text-foreground focus:border-amber-500/50" 
                     />
                     <button 
