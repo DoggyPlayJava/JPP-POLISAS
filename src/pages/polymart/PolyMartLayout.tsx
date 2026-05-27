@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
   ArrowLeft, ShoppingBag, Search, Package, LayoutGrid,
-  Shield, Home, SlidersHorizontal, X, LogIn, ShoppingCart, HelpCircle, Store, Plus
+  Shield, Home, SlidersHorizontal, X, LogIn, ShoppingCart, HelpCircle, Store, Plus, Heart, MessageCircle
 } from 'lucide-react';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { BottomNav } from '@/components/layout/BottomNav';
@@ -68,7 +68,37 @@ export function PolyMartLayout() {
   const [myActiveOrdersCount, setMyActiveOrdersCount] = useState(0);
   const [cartCount, setCartCount] = useState(0);
   const [myBizIds, setMyBizIds] = useState<string[]>([]);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const { runTour, startTour, closeTour } = useTour('POLYMART_LAYOUT', !!user);
+
+  // Debounced search for live results inside mobile search overlay
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    const delay = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const { data, error } = await supabase
+          .from('business_products')
+          .select(`
+            id, name, price, image_url, category, is_available,
+            keusahawanan_businesses ( name )
+          `)
+          .eq('is_available', true)
+          .ilike('name', `%${searchQuery.trim()}%`)
+          .limit(5);
+        if (data) setSearchResults(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 250);
+    return () => clearTimeout(delay);
+  }, [searchQuery]);
 
   const isHome    = location.pathname === '/polymart' || location.pathname === '/polymart/';
   const isOrders  = location.pathname.includes('/pesanan-saya');
@@ -114,7 +144,7 @@ export function PolyMartLayout() {
     const sub = supabase.channel('polymart_vendor_orders_live')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'polymart_orders' }, (payload) => {
         const record = (payload.new && Object.keys(payload.new).length > 0) ? payload.new : payload.old;
-        if (record && myBizIds.includes(record.business_id)) {
+        if (record && myBizIds.includes((record as Record<string, any>).business_id)) {
            refetchCounts();
         }
       })
@@ -165,26 +195,21 @@ export function PolyMartLayout() {
                 </div>
               </motion.button>
 
-              {/* Search Bar for Non-JPP Users / Spacer for JPP */}
-              {!(hasKeusahawananAccess || isSuperAdmin) ? (
-                <div className="flex-1 flex items-center gap-2 h-9 px-3.5 rounded-full bg-muted/40 border border-border/45 hover:border-border/70 focus-within:border-amber-500/50 transition-colors">
-                  <Search className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
-                  <input
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    placeholder="Cari produk..."
-                    className="flex-1 text-[12px] bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
-                  />
-                  {searchQuery && (
-                    <button onClick={() => setSearchQuery('')} className="p-0.5 rounded-full hover:bg-muted shrink-0">
-                      <X className="w-3.5 h-3.5 text-muted-foreground" />
-                    </button>
-                  )}
-                </div>
-              ) : (
-                /* Spacer for JPP to push pills to the right side */
-                <div className="flex-1" />
-              )}
+              {/* Search Bar for All Users */}
+              <div className="flex-1 flex items-center gap-2 h-9 px-3.5 rounded-full bg-muted/40 border border-border/45 hover:border-border/70 focus-within:border-amber-500/50 transition-colors">
+                <Search className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+                <input
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Cari produk..."
+                  className="flex-1 text-[12px] bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
+                />
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery('')} className="p-0.5 rounded-full hover:bg-muted shrink-0">
+                    <X className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
+                )}
+              </div>
 
               {/* Right icons */}
               <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -217,6 +242,18 @@ export function PolyMartLayout() {
                           {myActiveOrdersCount > 9 ? '9+' : myActiveOrdersCount}
                         </span>
                       )}
+                    </button>
+
+                    {/* Wishlist */}
+                    <button onClick={() => navigate('/polymart/wishlist')}
+                      className="relative hidden sm:flex w-9 h-9 rounded-xl items-center justify-center hover:bg-rose-500/10 transition-colors">
+                      <Heart className="w-[18px] h-[18px] text-muted-foreground" />
+                    </button>
+
+                    {/* Chat */}
+                    <button onClick={() => window.dispatchEvent(new CustomEvent('open-inbox'))}
+                      className="relative hidden sm:flex w-9 h-9 rounded-xl items-center justify-center hover:bg-amber-500/10 transition-colors">
+                      <MessageCircle className="w-[18px] h-[18px] text-muted-foreground" />
                     </button>
 
                     {isVendor ? (
@@ -322,29 +359,97 @@ export function PolyMartLayout() {
                 </div>
               </div>
 
-              {/* Body: Categories */}
+              {/* Body: Conditional Categories or Live Search Results */}
               <div className="flex-1 overflow-y-auto p-5">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Penapis Kategori</p>
-                <div className="flex flex-col gap-2">
-                  {CATEGORY_LIST.map(cat => (
-                    <button
-                      key={cat.key}
-                      onClick={() => {
-                        setActiveCategory(cat.key);
-                        setShowMobileSearch(false);
-                        navigate('/polymart');
-                      }}
-                      className="flex items-center gap-3 px-4 py-3.5 rounded-[1.25rem] border border-border/40 transition-all hover:bg-muted/50"
-                      style={activeCategory === cat.key ? { background: PM_LIGHT, color: PM_ACCENT, borderColor: `${PM_ACCENT}40` } : {}}
-                    >
-                      <span className="text-lg">{cat.emoji}</span>
-                      <span className="text-sm font-bold flex-1 text-left">{cat.label}</span>
-                      {activeCategory === cat.key && (
-                        <div className="w-2 h-2 rounded-full" style={{ background: PM_ACCENT }} />
-                      )}
-                    </button>
-                  ))}
-                </div>
+                {!searchQuery.trim() ? (
+                  <>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Penapis Kategori</p>
+                    <div className="flex flex-col gap-2">
+                      {CATEGORY_LIST.map(cat => (
+                        <button
+                          key={cat.key}
+                          onClick={() => {
+                            setActiveCategory(cat.key);
+                            setShowMobileSearch(false);
+                            navigate('/polymart');
+                          }}
+                          className="flex items-center gap-3 px-4 py-3.5 rounded-[1.25rem] border border-border/40 transition-all hover:bg-muted/50"
+                          style={activeCategory === cat.key ? { background: PM_LIGHT, color: PM_ACCENT, borderColor: `${PM_ACCENT}40` } : {}}
+                        >
+                          <span className="text-lg">{cat.emoji}</span>
+                          <span className="text-sm font-bold flex-1 text-left">{cat.label}</span>
+                          {activeCategory === cat.key && (
+                            <div className="w-2 h-2 rounded-full" style={{ background: PM_ACCENT }} />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 flex items-center justify-between">
+                      <span>Hasil Carian Padanan</span>
+                      {isSearching && <span className="text-[9px] lowercase font-medium text-amber-500 animate-pulse">mencari...</span>}
+                    </p>
+
+                    {isSearching && searchResults.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-10 gap-3">
+                        <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                        <p className="text-xs text-muted-foreground/60 font-medium">Sedang mencari produk...</p>
+                      </div>
+                    ) : searchResults.length > 0 ? (
+                      <div className="space-y-2.5">
+                        {searchResults.map(prod => (
+                          <div
+                            key={prod.id}
+                            onClick={() => {
+                              setShowMobileSearch(false);
+                              navigate(`/polymart/produk/${prod.id}`);
+                            }}
+                            className="flex items-center gap-3 p-2.5 rounded-2xl border border-border bg-card shadow-xs active:scale-[0.98] transition-all cursor-pointer animate-in fade-in duration-200"
+                          >
+                            <div className="w-12 h-12 rounded-xl bg-muted/40 overflow-hidden border border-border shrink-0 flex items-center justify-center">
+                              {prod.image_url ? (
+                                <img src={prod.image_url} alt={prod.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <ShoppingBag className="w-5 h-5 text-muted-foreground/30" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0 text-left">
+                              <h4 className="text-xs font-bold text-foreground truncate leading-snug">{prod.name}</h4>
+                              <p className="text-[9px] text-muted-foreground/60 font-semibold mt-0.5 truncate flex items-center gap-1">
+                                <Store className="w-2.5 h-2.5" />
+                                {prod.keusahawanan_businesses?.name || 'Perniagaan Pelajar'}
+                              </p>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-xs font-black text-amber-500">RM {prod.price.toFixed(2)}</p>
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* View all search button */}
+                        <button
+                          onClick={() => {
+                            setShowMobileSearch(false);
+                            navigate('/polymart');
+                          }}
+                          className="w-full py-3 mt-2 rounded-2xl border border-dashed border-amber-500/30 text-[11px] font-black uppercase tracking-wider text-amber-500 hover:bg-amber-500/5 transition-all flex items-center justify-center gap-1.5"
+                        >
+                          <Search className="w-3.5 h-3.5" /> Lihat Semua Hasil Carian
+                        </button>
+                      </div>
+                    ) : (
+                      !isSearching && (
+                        <div className="text-center py-10 rounded-2xl border border-dashed border-border p-4">
+                          <ShoppingBag className="w-8 h-8 text-muted-foreground/20 mx-auto mb-2" />
+                          <p className="text-xs font-bold text-muted-foreground">Tiada hasil carian ditemui</p>
+                          <p className="text-[10px] text-muted-foreground/50 mt-1 leading-normal">Cuba ejaan atau produk lain seperti "baju", "air" atau "sambal".</p>
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -356,7 +461,7 @@ export function PolyMartLayout() {
             customLinks={{
               left: [
                 { icon: Home, label: 'Utama', onClick: () => navigate('/portal'), isActive: false },
-                { icon: Search, label: 'Cari', onClick: () => setShowMobileSearch(true), isActive: showMobileSearch }
+                { icon: Heart, label: 'Kegemaran', onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/wishlist')}`) : navigate('/polymart/wishlist'), isActive: location.pathname.includes('/polymart/wishlist') }
               ],
               right: [
                 { icon: ShoppingCart, label: 'Troli', onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/troli')}`) : navigate('/polymart/troli'), isActive: location.pathname.includes('/polymart/troli'), badge: cartCount },

@@ -14,6 +14,7 @@ import { sendNotificationToKebajikanExco } from '@/lib/notifications';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { PolySuaraPoll } from './PolySuaraPoll';
 import { IGStoryExportCard } from '@/components/polysuara/IGStoryExportCard';
+import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 const CATEGORIES = ['UMUM', 'AKADEMIK', 'FASILITI', 'KAMSIS', 'KAUNSELING'];
 const MAX_POLL_OPTIONS = 4;
@@ -1277,6 +1278,7 @@ export function PolySuaraPage() {
 
       {/* Include BottomNav to prevent the bottom from being cut off on mobile without navigation */}
       <BottomNav />
+      <FloatingAiChat />
     </div>
   );
 }

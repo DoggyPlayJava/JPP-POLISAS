@@ -18,6 +18,8 @@ const ADMIN_NAV = [
   { label: 'Tetapan Edisi',        path: '/supsas/admin/tetapan',  icon: Settings },
 ];
 
+import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
+
 export function SupsasAdminLayout() {
   const { profile, isSuperAdmin, isLoading } = useAuth();
   const { enableRealtime, disableRealtime } = useSupsas();
@@ -135,6 +137,8 @@ export function SupsasAdminLayout() {
           <Outlet />
         </main>
       </div>
+
+      <FloatingAiChat />
     </div>
   );
 }

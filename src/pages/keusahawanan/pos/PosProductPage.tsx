@@ -11,9 +11,10 @@ import {
   Plus, Search, Edit2, Trash2, Package, AlertTriangle,
   Eye, EyeOff, X, Camera, ChevronDown, ChevronUp,
   TrendingUp, Layers, Lightbulb, BarChart3, Info,
-  DollarSign, ShoppingBag, HelpCircle, CreditCard
+  DollarSign, ShoppingBag, HelpCircle, CreditCard,
+  Store, Sliders
 } from 'lucide-react';
-import { type BusinessProduct, type CostItem } from '@/types';
+import { type BusinessProduct, type CostItem, type ProductVariation } from '@/types';
 import toast from 'react-hot-toast';
 import { useTour } from '@/hooks/useTour';
 import { SystemTour } from '@/components/ui/SystemTour';
@@ -98,6 +99,14 @@ const EMPTY_FORM = {
   polymart_pickup_info: '',
   // Payment override per-product: null = ikut perniagaan, true/false = override
   online_payment_override: null as boolean | null,
+  
+  // Variations & Promotions
+  variations: [] as ProductVariation[],
+  sale_price: '',
+  sale_start_at: '',
+  sale_end_at: '',
+  is_preorder: false,
+  preorder_deadline: '',
 };
 
 // ── Margin Logic ──────────────────────────────────────────────────────────────
@@ -578,7 +587,7 @@ function PolymartAdsPromoBanner({ color }: { color: string }) {
       onClick={() => window.open(`https://wa.me/${adsPhone}?text=Hai Exco Keusahawanan, saya berminat untuk menempah slot Iklan/Penaja di PolyMart untuk tingkatkan jualan kedai saya!`, '_blank')}
     >
       <div className="flex items-start sm:items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0 border border-amber-500/30">
+<div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0 border border-amber-500/30">
           <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
         </div>
         <div>
@@ -614,6 +623,20 @@ export function PosProductPage() {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving]       = useState(false);
   const [showCost, setShowCost]   = useState(true);
+  const [formStep, setFormStep]   = useState<1 | 2 | 3>(1);
+
+  // Auto-kira stock_quantity jika terdapat variasi
+  useEffect(() => {
+    if (form.variations && form.variations.length > 0) {
+      const total = form.variations.reduce((sum, v) => sum + (v.stock || 0), 0);
+      setForm(f => {
+        if (f.stock_quantity !== String(total)) {
+          return { ...f, stock_quantity: String(total) };
+        }
+        return f;
+      });
+    }
+  }, [form.variations]);
 
   // Derived cost total
   const derivedTotalCost = (() => {
@@ -639,6 +662,7 @@ export function PosProductPage() {
   const openAdd = () => {
     setEditId(null);
     setForm(EMPTY_FORM);
+    setFormStep(1);
     setShowCost(true);
     setShowForm(true);
   };
@@ -666,7 +690,15 @@ export function PosProductPage() {
       polymart_location:    p.polymart_location ?? '',
       polymart_pickup_info: p.polymart_pickup_info ?? '',
       online_payment_override: p.online_payment_enabled ?? null,
+      // Variations & Promotions
+      variations: p.variations ?? [],
+      sale_price: p.sale_price ? String(p.sale_price) : '',
+      sale_start_at: p.sale_start_at ? p.sale_start_at.substring(0, 16) : '',
+      sale_end_at: p.sale_end_at ? p.sale_end_at.substring(0, 16) : '',
+      is_preorder: p.is_preorder ?? false,
+      preorder_deadline: p.preorder_deadline ? p.preorder_deadline.substring(0, 16) : '',
     });
+    setFormStep(1);
     setShowCost(true);
     setShowForm(true);
   };
@@ -712,6 +744,13 @@ export function PosProductPage() {
       polymart_location:    form.polymart_location.trim() || null,
       polymart_pickup_info: form.polymart_pickup_info.trim() || null,
       online_payment_enabled: form.online_payment_override,
+      // Variations & Promotions
+      variations: form.variations,
+      sale_price: form.sale_price ? parseFloat(form.sale_price) : null,
+      sale_start_at: form.sale_start_at ? new Date(form.sale_start_at).toISOString() : null,
+      sale_end_at: form.sale_end_at ? new Date(form.sale_end_at).toISOString() : null,
+      is_preorder: form.is_preorder,
+      preorder_deadline: form.is_preorder && form.preorder_deadline ? new Date(form.preorder_deadline).toISOString() : null,
       ...(form.publish_to_polymart && !editId ? { polymart_published_at: new Date().toISOString() } : {}),
     };
 
@@ -890,206 +929,507 @@ export function PosProductPage() {
                     <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center"><X className="w-4 h-4" /></button>
                   </div>
 
-                  {/* Image upload */}
-                  <div className="relative group">
-                    <div className="aspect-video bg-muted/30 rounded-2xl overflow-hidden border border-border flex items-center justify-center">
-                      {form.image_url
-                        ? <img src={form.image_url} alt="preview" className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                        : <Package className="w-12 h-12 text-muted-foreground/20" />
-                      }
-                      <label className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-2xl gap-2">
-                        <Camera className="w-6 h-6 text-white" />
-                        <span className="text-[11px] font-black text-white">{uploading ? 'Memuat naik...' : 'Tukar Gambar'}</span>
-                        <input type="file" accept="image/*" className="hidden" onClick={e => e.stopPropagation()} onChange={handleUpload} disabled={uploading} />
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Basic Fields */}
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Nama Produk</p>
-                    <input type="text" value={form.name}
-                      onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                      placeholder="Nasi Lemak Ayam"
-                      className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Stok Semasa</p>
-                      <input type="number" min="0" value={form.stock_quantity}
-                        onChange={e => setForm(f => ({ ...f, stock_quantity: e.target.value }))}
-                        placeholder="20"
-                        className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Had Amaran Stok</p>
-                      <input type="number" min="0" value={form.stock_alert_threshold}
-                        onChange={e => setForm(f => ({ ...f, stock_alert_threshold: e.target.value }))}
-                        placeholder="5"
-                        className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
-                      <p className="text-[9px] text-muted-foreground/40 mt-1 leading-tight">⚠️ Amaran muncul apabila stok ≤ nilai ini</p>
-                    </div>
-                  </div>
-
-                  {/* Category */}
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Kategori</p>
-                    <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-                      className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all">
-                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-
-                  {/* Description */}
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Penerangan (Pilihan)</p>
-                    <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                      placeholder="Penerangan ringkas produk..."
-                      className="w-full h-16 px-4 py-3 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground resize-none placeholder:text-muted-foreground/40 focus:border-border transition-all" />
-                  </div>
-
-                  {/* Divider */}
-                  <div className="h-px bg-border/40" />
-
-                  {/* ── Smart Pricing Section ── */}
-                  <div className="space-y-3">
-                    <button onClick={() => setShowCost(v => !v)}
-                      className="w-full flex items-center justify-between p-3 rounded-2xl bg-muted/20 hover:bg-muted/30 transition-colors border border-border/30">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: hexToRgba(color, 0.12) }}>
-                          <BarChart3 className="w-3.5 h-3.5" style={{ color }} />
-                        </div>
-                        <div className="text-left">
-                          <p className="text-xs font-black text-foreground">Smart Pricing</p>
-                          <p className="text-[9px] text-muted-foreground/50">Kos produk & analisis margin</p>
-                        </div>
-                      </div>
-                      {showCost ? <ChevronUp className="w-4 h-4 text-muted-foreground/40" /> : <ChevronDown className="w-4 h-4 text-muted-foreground/40" />}
-                    </button>
-
-                    <AnimatePresence>
-                      {showCost && (
-                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                          <div className="space-y-4 pt-1">
-                            {/* Selling price */}
-                            <div>
-                              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">
-                                Harga Jual (RM) <span className="text-rose-500">*</span>
-                              </p>
-                              <input type="number" min="0" step="0.01"
-                                value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
-                                placeholder="5.50"
-                                className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
+                  {/* Progress Step Indicator */}
+                  <div className="flex items-center justify-between my-2 bg-muted/20 p-3 rounded-2xl border border-border/30">
+                    {[
+                      { step: 1, label: 'Asas & Harga' },
+                      { step: 2, label: 'Variasi & Promo' },
+                      { step: 3, label: 'PolyMart & Simpan' }
+                    ].map((s, idx) => {
+                      const active = formStep === s.step;
+                      const done = formStep > s.step;
+                      return (
+                        <React.Fragment key={s.step}>
+                          <div className="flex items-center gap-1.5">
+                            <div
+                              className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all"
+                              style={active
+                                ? { background: color, color: 'white' }
+                                : done
+                                  ? { background: 'rgba(34,197,94,0.2)', color: '#22c55e' }
+                                  : { background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground)/0.5)' }
+                              }
+                            >
+                              {done ? '✓' : s.step}
                             </div>
-
-                            {/* Cost Builder */}
-                            <CostBuilder
-                              mode={form.cost_mode}
-                              onModeChange={m => setForm(f => ({ ...f, cost_mode: m }))}
-                              quickCost={form.quick_cost}
-                              onQuickCostChange={v => setForm(f => ({ ...f, quick_cost: v }))}
-                              items={form.cost_items}
-                              onItemsChange={items => setForm(f => ({ ...f, cost_items: items }))}
-                              costNotes={form.cost_notes}
-                              onCostNotesChange={v => setForm(f => ({ ...f, cost_notes: v }))}
-                              totalCost={derivedTotalCost}
-                              accent={color}
+                            <span
+                              className="text-[10px] font-black uppercase tracking-wider hidden sm:inline"
+                              style={active ? { color: color } : { color: 'hsl(var(--muted-foreground)/0.5)' }}
+                            >
+                              {s.label}
+                            </span>
+                          </div>
+                          {idx < 2 && (
+                            <div
+                              className="h-0.5 flex-1 mx-2 rounded transition-all"
+                              style={{ background: done ? '#22c55e' : 'hsl(var(--border))' }}
                             />
-
-                            {/* Margin Preview */}
-                            <MarginPreview price={priceNum} cost={derivedTotalCost} accent={color} />
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
                   </div>
 
-                  {/* Available toggle */}
-                  <button onClick={() => setForm(f => ({ ...f, is_available: !f.is_available }))}
-                    className="flex items-center gap-3 w-full p-3 rounded-xl bg-muted/30 hover:bg-muted/50 border border-border/50 transition-colors">
-                    <div className={`w-10 h-5.5 rounded-full transition-colors relative`}
-                      style={form.is_available ? { background: color } : { background: 'hsl(var(--muted))' }}>
-                      <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.is_available ? 'translate-x-5' : 'translate-x-0.5'}`} />
-                    </div>
-                    <span className="text-xs font-black text-foreground">
-                      {form.is_available ? 'Produk Aktif — Boleh Dijual' : 'Produk Tidak Aktif'}
-                    </span>
-                  </button>
+                  {/* TAB 1: Jualan POS */}
+                  {formStep === 1 && (
+                    <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                      {/* Image upload */}
+                      <div className="relative group">
+                        <div className="aspect-video bg-muted/30 rounded-2xl overflow-hidden border border-border flex items-center justify-center">
+                          {form.image_url
+                            ? <img src={form.image_url} alt="preview" className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                            : <Package className="w-12 h-12 text-muted-foreground/20" />
+                          }
+                          <label className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-2xl gap-2">
+                            <Camera className="w-6 h-6 text-white" />
+                            <span className="text-[11px] font-black text-white">{uploading ? 'Memuat naik...' : 'Tukar Gambar'}</span>
+                            <input type="file" accept="image/*" className="hidden" onClick={e => e.stopPropagation()} onChange={handleUpload} disabled={uploading} />
+                          </label>
+                        </div>
+                      </div>
 
-                  {/* ── PolyMart Section ── */}
-                  <div className="space-y-3 rounded-2xl border p-3.5"
-                    style={{ borderColor: form.publish_to_polymart ? 'rgba(245,158,11,0.35)' : 'hsl(var(--border)/0.5)', background: form.publish_to_polymart ? 'rgba(245,158,11,0.05)' : 'transparent' }}>
-                    <button type="button" onClick={() => setForm(f => ({ ...f, publish_to_polymart: !f.publish_to_polymart }))}
-                      className="flex items-center gap-3 w-full">
-                      <div className="w-10 h-5.5 rounded-full transition-colors relative"
-                        style={{ background: form.publish_to_polymart ? '#f59e0b' : 'hsl(var(--muted))' }}>
-                        <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.publish_to_polymart ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                      {/* Basic Fields */}
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Nama Produk</p>
+                        <input type="text" value={form.name}
+                          onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                          placeholder="Nasi Lemak Ayam"
+                          className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
                       </div>
-                      <div className="flex-1 text-left">
-                        <p className="text-xs font-black text-foreground">🛍️ Siarkan ke PolyMart</p>
-                        <p className="text-[9px] text-muted-foreground/50 font-medium">Paparan dalam marketplace pelajar</p>
+
+                      {/* Category Selector */}
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Kategori Produk</p>
+                        <select value={form.category}
+                          onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                          className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all">
+                          {CATEGORIES.map(cat => (
+                            <option key={cat} value={cat} className="bg-card text-foreground">{cat}</option>
+                          ))}
+                        </select>
                       </div>
-                    </button>
-                    {form.publish_to_polymart && (
-                      <AnimatePresence>
-                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }} className="space-y-2.5 overflow-hidden pt-1">
-                          <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Lokasi / Booth</p>
-                            <input value={form.polymart_location}
-                              onChange={e => setForm(f => ({ ...f, polymart_location: e.target.value }))}
-                              placeholder="cth: Kafeteria A, Kiosk B2..."
-                              className="w-full h-9 px-3 rounded-xl text-xs outline-none bg-background border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-amber-500/50 transition-all" />
+
+                      {/* Description Textarea */}
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Penerangan Produk (Pilihan)</p>
+                        <textarea value={form.description}
+                          onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                          placeholder="Huraikan keistimewaan produk anda, ramuan, saiz, atau cara penyediaan..."
+                          rows={2}
+                          className="w-full p-3 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all resize-none scrollbar-hide" />
+                      </div>
+
+
+
+                      {/* Smart Pricing Section */}
+                      <div className="space-y-3">
+                        <button type="button" onClick={() => setShowCost(v => !v)}
+                          className="w-full flex items-center justify-between p-3 rounded-2xl bg-muted/20 hover:bg-muted/30 transition-colors border border-border/30">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: hexToRgba(color, 0.12) }}>
+                              <BarChart3 className="w-3.5 h-3.5" style={{ color }} />
+                            </div>
+                            <div className="text-left">
+                              <p className="text-xs font-black text-foreground">Smart Pricing</p>
+                              <p className="text-[9px] text-muted-foreground/50">Kos produk & analisis margin</p>
+                            </div>
+                          </div>
+                          {showCost ? <ChevronUp className="w-4 h-4 text-muted-foreground/40" /> : <ChevronDown className="w-4 h-4 text-muted-foreground/40" />}
+                        </button>
+
+                        <AnimatePresence>
+                          {showCost && (
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                              <div className="space-y-4 pt-1">
+                                <div>
+                                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">
+                                    Harga Jual (RM) <span className="text-rose-500">*</span>
+                                  </p>
+                                  <input type="number" min="0" step="0.01"
+                                    value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
+                                    placeholder="5.50"
+                                    className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
+                                </div>
+
+                                <CostBuilder
+                                  mode={form.cost_mode}
+                                  onModeChange={m => setForm(f => ({ ...f, cost_mode: m }))}
+                                  quickCost={form.quick_cost}
+                                  onQuickCostChange={v => setForm(f => ({ ...f, quick_cost: v }))}
+                                  items={form.cost_items}
+                                  onItemsChange={items => setForm(f => ({ ...f, cost_items: items }))}
+                                  costNotes={form.cost_notes}
+                                  onCostNotesChange={v => setForm(f => ({ ...f, cost_notes: v }))}
+                                  totalCost={derivedTotalCost}
+                                  accent={color}
+                                />
+
+                                <MarginPreview price={priceNum} cost={derivedTotalCost} accent={color} />
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* TAB 2: Variasi & Promo */}
+                  {formStep === 2 && (
+                    <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                      {/* Variation Editor */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Variasi & Saiz</p>
+                          <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full font-bold text-muted-foreground">
+                            {form.variations.length} variasi
+                          </span>
+                        </div>
+                        
+                        {form.variations.length > 0 ? (
+                          <div className="space-y-2 border border-border/50 rounded-2xl p-3 bg-muted/10 max-h-48 overflow-y-auto scrollbar-hide">
+                            {form.variations.map((v, index) => (
+                              <div key={index} className="flex items-center justify-between bg-card p-2 rounded-xl border border-border shadow-sm">
+                                <span className="text-xs font-bold px-2 py-1 rounded bg-muted text-foreground">{v.name}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] text-muted-foreground mr-1">Stok:</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={v.stock}
+                                    onChange={e => {
+                                      const newStock = Math.max(0, parseInt(e.target.value) || 0);
+                                      setForm(f => ({
+                                        ...f,
+                                        variations: f.variations.map((item, idx) =>
+                                          idx === index ? { ...item, stock: newStock } : item
+                                        )
+                                      }));
+                                    }}
+                                    className="w-16 h-8 px-2 rounded-lg text-xs font-semibold outline-none bg-muted/30 border border-border text-foreground text-center"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setForm(f => ({
+                                        ...f,
+                                        variations: f.variations.filter((_, idx) => idx !== index)
+                                      }));
+                                    }}
+                                    className="w-7 h-7 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 flex items-center justify-center transition-colors"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3 p-3.5 bg-muted/20 rounded-2xl border border-border/40">
+                              <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Stok Semasa</p>
+                                <input type="number" min="0" value={form.stock_quantity}
+                                  onChange={e => setForm(f => ({ ...f, stock_quantity: e.target.value }))}
+                                  placeholder="20"
+                                  className="w-full h-10 px-4 rounded-xl text-sm font-semibold outline-none bg-card border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Had Amaran Stok</p>
+                                <input type="number" min="0" value={form.stock_alert_threshold}
+                                  onChange={e => setForm(f => ({ ...f, stock_alert_threshold: e.target.value }))}
+                                  placeholder="5"
+                                  className="w-full h-10 px-4 rounded-xl text-sm font-semibold outline-none bg-card border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
+                              </div>
+                            </div>
+                            <p className="text-[9.5px] text-muted-foreground/40 px-1 leading-tight flex items-start gap-1.5">
+                              <Info className="w-3.5 h-3.5 shrink-0 text-amber-500 mt-0.5" />
+                              <span>
+                                <strong>Stok Tunggal:</strong> Produk ini tiada variasi saiz/warna. Jika anda ingin menambah variasi, masukkan nama variasi di bawah untuk mengaktifkannya.
+                              </span>
+                            </p>
+                          </div>
+                        )}
+                        
+                        {/* Add new variation */}
+                        <div className="flex gap-2 bg-muted/20 p-2 rounded-2xl border border-border/30">
+                          <input
+                            type="text"
+                            id="new-var-name"
+                            placeholder="cth: S, M, L, Merah"
+                            className="flex-1 h-9 px-3 rounded-xl text-xs font-semibold outline-none bg-background border border-border text-foreground placeholder:text-muted-foreground/30 focus:border-border transition-all"
+                          />
+                          <input
+                            type="number"
+                            id="new-var-stock"
+                            placeholder="Stok"
+                            min="0"
+                            className="w-20 h-9 px-3 rounded-xl text-xs font-semibold outline-none bg-background border border-border text-foreground placeholder:text-muted-foreground/30 focus:border-border transition-all"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const nameEl = document.getElementById('new-var-name') as HTMLInputElement;
+                              const stockEl = document.getElementById('new-var-stock') as HTMLInputElement;
+                              const name = nameEl?.value.trim();
+                              const stock = parseInt(stockEl?.value) || 0;
+                              
+                              if (!name) {
+                                toast.error('Masukkan nama variasi.');
+                                return;
+                              }
+                              if (form.variations.some(v => v.name.toLowerCase() === name.toLowerCase())) {
+                                toast.error('Variasi ini sudah wujud.');
+                                return;
+                              }
+                              
+                              setForm(f => ({
+                                ...f,
+                                variations: [...f.variations, { name, stock }]
+                              }));
+                              
+                              if (nameEl) nameEl.value = '';
+                              if (stockEl) stockEl.value = '';
+                              toast.success(`Variasi ${name} ditambah!`);
+                            }}
+                            className="h-9 px-4 rounded-xl text-xs font-bold text-white uppercase tracking-wider transition-all hover:brightness-110"
+                            style={{ background: color }}
+                          >
+                            Tambah
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Flash Sale Promosi */}
+                      <div className="space-y-3 rounded-2xl border border-border p-3.5 bg-amber-500/5 border-amber-500/20">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 flex items-center gap-1.5">⚡ Kempen Flash Sale</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="col-span-2">
+                            <p className="text-[9px] text-muted-foreground/50 mb-1">Harga Promosi (RM)</p>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={form.sale_price}
+                              onChange={e => setForm(f => ({ ...f, sale_price: e.target.value }))}
+                              placeholder="cth: 3.50"
+                              className="w-full h-9 px-3 rounded-xl text-xs outline-none bg-background border border-border text-foreground focus:border-border transition-all"
+                            />
                           </div>
                           <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Waktu Operasi / Cara Ambil</p>
-                            <input value={form.polymart_pickup_info}
-                              onChange={e => setForm(f => ({ ...f, polymart_pickup_info: e.target.value }))}
-                              placeholder="cth: Isnin-Jumaat 8am-4pm..."
-                              className="w-full h-9 px-3 rounded-xl text-xs outline-none bg-background border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-amber-500/50 transition-all" />
+                            <p className="text-[9px] text-muted-foreground/50 mb-1">Tarikh Mula</p>
+                            <input
+                              type="datetime-local"
+                              value={form.sale_start_at}
+                              onChange={e => setForm(f => ({ ...f, sale_start_at: e.target.value }))}
+                              className="w-full h-9 px-3 rounded-xl text-xs outline-none bg-background border border-border text-foreground focus:border-border transition-all"
+                            />
                           </div>
-                        </motion.div>
-                      </AnimatePresence>
+                          <div>
+                            <p className="text-[9px] text-muted-foreground/50 mb-1">Tarikh Tamat</p>
+                            <input
+                              type="datetime-local"
+                              value={form.sale_end_at}
+                              onChange={e => setForm(f => ({ ...f, sale_end_at: e.target.value }))}
+                              className="w-full h-9 px-3 rounded-xl text-xs outline-none bg-background border border-border text-foreground focus:border-border transition-all"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* TAB 3: PolyMart & Rumusan Akhir */}
+                  {formStep === 3 && (
+                    <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                      <div className="space-y-3 rounded-2xl border p-4 transition-all duration-300"
+                        style={{
+                          borderColor: form.publish_to_polymart ? 'rgba(245,158,11,0.5)' : 'hsl(var(--border))',
+                          background: form.publish_to_polymart ? 'rgba(245,158,11,0.06)' : 'hsl(var(--muted)/0.15)'
+                        }}>
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${form.publish_to_polymart ? 'bg-amber-500/20 text-amber-500' : 'bg-muted text-muted-foreground/60'}`}>
+                              <Store className="w-5 h-5" />
+                            </div>
+                            <div className="text-left">
+                              <div className="flex items-center gap-2">
+                                <p className="text-xs font-black text-foreground">Siarkan ke PolyMart</p>
+                                <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider ${form.publish_to_polymart ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30' : 'bg-muted text-muted-foreground/50 border border-border'}`}>
+                                  {form.publish_to_polymart ? 'Aktif' : 'Nyahaktif'}
+                                </span>
+                              </div>
+                              <p className="text-[9px] text-muted-foreground/60 font-medium mt-0.5">Paparan & pembelian terus pelajar di Marketplace</p>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setForm(f => ({ ...f, publish_to_polymart: !f.publish_to_polymart }))}
+                            className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                            style={{ backgroundColor: form.publish_to_polymart ? '#f59e0b' : 'rgba(156, 163, 175, 0.3)' }}
+                          >
+                            <span className="sr-only">Siarkan ke PolyMart</span>
+                            <span
+                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                form.publish_to_polymart ? 'translate-x-5' : 'translate-x-0'
+                              }`}
+                            />
+                          </button>
+                        </div>
+                        {form.publish_to_polymart && (
+                          <AnimatePresence>
+                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }} className="space-y-2.5 overflow-hidden pt-1">
+                              <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Lokasi / Booth</p>
+                                <input value={form.polymart_location}
+                                  onChange={e => setForm(f => ({ ...f, polymart_location: e.target.value }))}
+                                  placeholder="cth: Kafeteria A, Kiosk B2..."
+                                  className="w-full h-9 px-3 rounded-xl text-xs outline-none bg-background border border-border text-foreground placeholder:text-muted-foreground/40 focus:border-amber-500/50 transition-all" />
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Waktu Operasi / Cara Ambil</p>
+                                <input value={form.polymart_pickup_info}
+                                  onChange={e => setForm(f => ({ ...f, polymart_pickup_info: e.target.value }))}
+                                  placeholder="cth: Isnin-Jumaat 8am-4pm..."
+                                  className="w-full h-9 px-3 rounded-xl text-xs outline-none bg-background border border-border text-foreground placeholder:text-muted-foreground/40 focus:border-amber-500/50 transition-all" />
+                              </div>
+                            </motion.div>
+                          </AnimatePresence>
+                        )}
+
+                        {/* Online Payment Override per-Produk */}
+                        <div className="p-3 rounded-2xl bg-blue-500/5 border border-blue-500/15 space-y-2 mt-2">
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="w-3.5 h-3.5 text-blue-500" />
+                            <p className="text-[10px] font-black uppercase tracking-widest text-blue-600/70">Pembayaran Online (QR) PolyMart</p>
+                          </div>
+                          <p className="text-[9px] text-muted-foreground/50 leading-relaxed">
+                            Override tetapan pembayaran perniagaan untuk produk ini sahaja (Berfungsi apabila disiarkan ke PolyMart).
+                            {selectedBusiness?.online_payment_enabled
+                              ? ' Perniagaan anda telah mengaktifkan QR Online.'
+                              : ' Perniagaan anda belum aktifkan QR Online di Urus Perniagaan.'}
+                          </p>
+                          <div className="flex rounded-xl overflow-hidden border border-border/50">
+                            {[
+                              { key: null,  label: '🏢 Ikut Perniagaan' },
+                              { key: true,  label: '✅ Aktif' },
+                              { key: false, label: '❌ Matikan' },
+                            ].map(opt => (
+                              <button key={String(opt.key)} type="button"
+                                onClick={() => setForm(f => ({ ...f, online_payment_override: opt.key as boolean | null }))}
+                                className="flex-1 py-2 text-[10px] font-black transition-all"
+                                style={form.online_payment_override === opt.key
+                                  ? { background: 'rgba(59,130,246,0.12)', color: '#3b82f6', borderBottom: '2px solid #3b82f6' }
+                                  : { color: 'hsl(var(--muted-foreground)/0.5)' }}
+                              >{opt.label}</button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Dynamic Final Stock Summary Card */}
+                      <div className="p-4 rounded-2xl bg-muted/30 border border-border/40 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 flex items-center gap-1.5">
+                            📊 Rumusan Stok Akhir
+                          </p>
+                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                            Muktamad (Langkah 3)
+                          </span>
+                        </div>
+
+                        {form.variations && form.variations.length > 0 ? (
+                          <div className="space-y-2.5">
+                            {/* Grid of variations */}
+                            <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto scrollbar-hide pr-1">
+                              {form.variations.map((v, idx) => {
+                                const isLow = v.stock <= (parseInt(form.stock_alert_threshold) || 5);
+                                return (
+                                  <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-card border border-border shadow-xs hover:border-border transition-colors">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <div className="w-2 h-2 rounded-full" style={{ background: isLow ? '#f59e0b' : color }} />
+                                      <span className="text-xs font-bold text-foreground truncate">{v.name}</span>
+                                    </div>
+                                    <span className={`text-xs font-black px-2 py-0.5 rounded-md ${isLow ? 'bg-amber-500/10 text-amber-500' : 'bg-muted text-muted-foreground'}`}>
+                                      {v.stock} unit
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            
+                            {/* Total summary info row */}
+                            <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-xs">
+                              <div>
+                                <p className="text-xs font-bold text-foreground">Total Stok Keseluruhan</p>
+                                <p className="text-[9px] text-muted-foreground/50">Hasil tambah {form.variations.length} variasi di atas</p>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-lg font-black text-transparent bg-clip-text" style={{ backgroundImage: `linear-gradient(135deg, ${color}, #eab308)` }}>
+                                  {form.stock_quantity} unit
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-xs">
+                            <div>
+                              <p className="text-xs font-bold text-foreground">Stok Produk Tunggal</p>
+                              <p className="text-[9px] text-muted-foreground/50">Tiada variasi atau saiz ditetapkan</p>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-base font-black" style={{ color }}>
+                                {form.stock_quantity} unit
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Navigation Button controls */}
+                  <div className="flex gap-2 pt-2">
+                    {formStep > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setFormStep(s => (s - 1) as any)}
+                        className="flex-1 h-12 rounded-2xl font-black text-xs uppercase tracking-wider border-2 border-border/60 hover:bg-muted/50 transition-all"
+                        style={{ color }}
+                      >
+                        Kembali
+                      </button>
                     )}
-
-                    {/* Online Payment Override per-Produk */}
-                    <div className="p-3 rounded-2xl bg-blue-500/5 border border-blue-500/15 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <CreditCard className="w-3.5 h-3.5 text-blue-500" />
-                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-600/70">Pembayaran Online (QR) PolyMart</p>
-                      </div>
-                      <p className="text-[9px] text-muted-foreground/50 leading-relaxed">
-                        Override tetapan pembayaran perniagaan untuk produk ini sahaja (Berfungsi apabila disiarkan ke PolyMart).
-                        {selectedBusiness?.online_payment_enabled
-                          ? ' Perniagaan anda telah mengaktifkan QR Online.'
-                          : ' Perniagaan anda belum aktifkan QR Online di Urus Perniagaan.'}
-                      </p>
-                      <div className="flex rounded-xl overflow-hidden border border-border/50">
-                        {[
-                          { key: null,  label: '🏢 Ikut Perniagaan' },
-                          { key: true,  label: '✅ Aktif' },
-                          { key: false, label: '❌ Matikan' },
-                        ].map(opt => (
-                          <button key={String(opt.key)} type="button"
-                            onClick={() => setForm(f => ({ ...f, online_payment_override: opt.key as boolean | null }))}
-                            className="flex-1 py-2 text-[10px] font-black transition-all"
-                            style={form.online_payment_override === opt.key
-                              ? { background: 'rgba(59,130,246,0.12)', color: '#3b82f6', borderBottom: '2px solid #3b82f6' }
-                              : { color: 'hsl(var(--muted-foreground)/0.5)' }}
-                          >{opt.label}</button>
-                        ))}
-                      </div>
-                    </div>
+                    
+                    {formStep < 3 ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // Validasi Langkah 1
+                          if (formStep === 1) {
+                            if (!form.name.trim()) { toast.error('Nama produk wajib diisi.'); return; }
+                            if (!form.price || parseFloat(form.price) < 0) { toast.error('Harga tidak sah.'); return; }
+                          }
+                          setFormStep(s => (s + 1) as any);
+                        }}
+                        className="flex-[2] h-12 rounded-2xl text-white font-black text-xs uppercase tracking-wider disabled:opacity-50 shadow-lg transition-all hover:brightness-110"
+                        style={{ background: color }}
+                      >
+                        Seterusnya
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="flex-[2] h-12 rounded-2xl text-white font-black text-xs uppercase tracking-wider disabled:opacity-50 shadow-lg transition-all hover:brightness-110"
+                        style={{ background: color }}
+                      >
+                        {saving ? 'Menyimpan...' : editId ? 'Kemaskini Produk' : 'Simpan Produk'}
+                      </button>
+                    )}
                   </div>
-
-                  {/* Save */}
-                  <button onClick={handleSave} disabled={saving}
-                    className="w-full h-12 rounded-2xl text-white text-xs font-black uppercase tracking-wider disabled:opacity-50 shadow-lg transition-all hover:brightness-110"
-                    style={{ background: color }}>
-                    {saving ? 'Menyimpan...' : editId ? 'Kemaskini Produk' : 'Tambah Produk'}
-                  </button>
                 </div>
               </motion.div>
             </div>

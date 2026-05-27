@@ -49,6 +49,10 @@ interface Order {
   payment_receipt_rejected: boolean;
   payment_verified_at: string | null;
   payment_deadline_at: string | null;
+  // Cancellation fields
+  cancellation_requested_at: string | null;
+  cancellation_reason: string | null;
+  selected_variation: string | null;
 }
 
 const STATUS_TABS: { key: OrderStatus | 'all'; label: string; emoji: string }[] = [
@@ -272,8 +276,114 @@ function ReceiptUploadButton({ orderId, onUploaded }: { orderId: string; onUploa
   );
 }
 
+// ── Cancel Modal ───────────────────────────────────────────────────────────────
+const CANCEL_REASONS = [
+  'Salah saiz / variasi',
+  'Salah pilih produk',
+  'Tak jadi beli',
+  'Harga berubah',
+  'Lain-lain',
+];
 
-function OrderCard({ order, onReview }: { order: Order; onReview: (o: Order) => void }) {
+function CancelModal({ order, onClose }: { order: Order; onClose: (cancelled: boolean) => void }) {
+  const { user } = useAuth();
+  const [reason, setReason] = useState('');
+  const [customReason, setCustomReason] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleCancel = async () => {
+    if (!user) return;
+    const finalReason = reason === 'Lain-lain' ? customReason || 'Lain-lain' : reason;
+    if (!finalReason) { toast.error('Sila pilih sebab pembatalan'); return; }
+
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase.rpc('buyer_cancel_polymart_order', {
+        p_order_id: order.id,
+        p_buyer_id: user.id,
+        p_reason: finalReason,
+      });
+      if (error) throw error;
+
+      const result = (data as any)?.result;
+      if (result === 'CANCELLED') {
+        toast.success('Pesanan berjaya dibatalkan');
+      } else if (result === 'CANCELLATION_REQUESTED') {
+        toast.success('Permintaan pembatalan dihantar kepada vendor');
+        // Notify vendor
+        if (order.keusahawanan_businesses?.id) {
+          const { data: bizData } = await supabase.from('keusahawanan_businesses')
+            .select('owner_id').eq('id', order.keusahawanan_businesses.id).single();
+          if (bizData?.owner_id) {
+            await sendNotificationToUser(bizData.owner_id, {
+              title: '⚠️ Permintaan Pembatalan',
+              message: `Pembeli meminta pembatalan pesanan ${order.business_products?.name}. Sebab: ${finalReason}`,
+              type: 'polymart_cancellation_request',
+              module: 'POLYMART',
+              link: '/keusahawanan/polymart',
+              reference_id: order.id,
+            });
+          }
+        }
+      }
+      onClose(true);
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal membatalkan pesanan');
+    }
+    setSubmitting(false);
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => onClose(false)} />
+      <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+        className="relative w-full sm:max-w-sm bg-card rounded-3xl border border-border/50 shadow-2xl p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-black text-foreground">Batalkan Pesanan</h3>
+          <button onClick={() => onClose(false)} className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-muted/60">
+            <X className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+        <p className="text-sm font-bold text-muted-foreground">{order.business_products?.name}</p>
+
+        {order.status === 'CONFIRMED' && (
+          <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
+            <p className="text-[10px] font-black text-amber-600">⚠ Pesanan sudah disahkan. Pembatalan memerlukan kelulusan vendor.</p>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <p className="text-[11px] font-black text-muted-foreground uppercase tracking-wider">Sebab Pembatalan</p>
+          {CANCEL_REASONS.map(r => (
+            <button key={r} onClick={() => setReason(r)}
+              className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-bold border transition-all ${
+                reason === r
+                  ? 'border-rose-500/50 bg-rose-500/10 text-rose-600'
+                  : 'border-border/50 bg-muted/20 text-foreground hover:bg-muted/40'
+              }`}>
+              {r}
+            </button>
+          ))}
+          {reason === 'Lain-lain' && (
+            <textarea value={customReason} onChange={e => setCustomReason(e.target.value)} rows={2}
+              placeholder="Nyatakan sebab..."
+              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 resize-none focus:border-rose-500/50 transition-all" />
+          )}
+        </div>
+
+        <button onClick={handleCancel} disabled={submitting || !reason}
+          className="w-full h-11 rounded-2xl text-white font-black text-sm bg-rose-500 hover:bg-rose-600 disabled:opacity-60 transition-colors">
+          {submitting ? 'Memproses...' : order.status === 'PENDING' ? '❌ Batalkan Sekarang' : '📩 Hantar Permintaan Batal'}
+        </button>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+
+function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: Order) => void; onCancel: (o: Order) => void }) {
+
   const navigate = useNavigate();
   const cfg = STATUS_CONFIG[order.status];
   const StatusIcon = cfg.icon;
@@ -324,6 +434,11 @@ function OrderCard({ order, onReview }: { order: Order; onReview: (o: Order) => 
             <p className="text-[10px] text-muted-foreground/50 flex items-center gap-1 mt-0.5">
               <Clock className="w-2.5 h-2.5" /> {order.pickup_time}
             </p>
+          )}
+          {order.selected_variation && (
+            <span className="inline-block mt-1 px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 text-[10px] font-black uppercase tracking-wider border border-indigo-500/20">
+              Saiz: {order.selected_variation}
+            </span>
           )}
         </div>
       </div>
@@ -402,6 +517,26 @@ function OrderCard({ order, onReview }: { order: Order; onReview: (o: Order) => 
         </div>
       )}
 
+      {/* Cancel button for PENDING or CONFIRMED orders */}
+      {(order.status === 'PENDING' || (order.status === 'CONFIRMED' && !order.cancellation_requested_at)) && (
+        <div className="px-3.5 pb-2">
+          <button onClick={() => onCancel(order)}
+            className="w-full h-9 rounded-xl text-[11px] font-black border border-rose-500/20 bg-rose-500/5 text-rose-500 hover:bg-rose-500/10 transition-all">
+            {order.status === 'PENDING' ? '❌ Batalkan Pesanan' : '📩 Minta Pembatalan'}
+          </button>
+        </div>
+      )}
+
+      {/* Cancellation request pending indicator */}
+      {order.cancellation_requested_at && order.status !== 'CANCELLED' && (
+        <div className="px-3.5 pb-2">
+          <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
+            <p className="text-[10px] font-black text-amber-600">⏳ Permintaan pembatalan dihantar. Menunggu kelulusan vendor...</p>
+            <p className="text-[9px] text-amber-500/60 mt-0.5">Sebab: {order.cancellation_reason}</p>
+          </div>
+        </div>
+      )}
+
       {order.status === 'COMPLETED' && (
         <div className="px-3.5 pb-3.5">
           <button onClick={() => onReview(order)}
@@ -424,6 +559,7 @@ export function PolyMartMyOrders() {
   const [lastRefreshed,  setLastRefreshed]  = useState<Date | null>(null);
   const [activeTab,      setActiveTab]      = useState<OrderStatus | 'all'>('all');
   const [reviewTarget,   setReviewTarget]   = useState<Order | null>(null);
+  const [cancelTarget,   setCancelTarget]   = useState<Order | null>(null);
   const [reviewedIds,    setReviewedIds]    = useState<Set<string>>(new Set());
 
   const loadOrders = useCallback(async (showRefreshSpinner = false) => {
@@ -435,6 +571,7 @@ export function PolyMartMyOrders() {
         status, created_at, confirmed_at, ready_at, cancel_reason,
         payment_method, payment_receipt_url, payment_receipt_rejected,
         payment_verified_at, payment_deadline_at,
+        cancellation_requested_at, cancellation_reason, selected_variation,
         business_products!product_id(id, name, image_url, category),
         keusahawanan_businesses!business_id(
           id, name, logo_url, polymart_contact_method,
@@ -445,7 +582,7 @@ export function PolyMartMyOrders() {
       .eq('buyer_id', user.id)
       .order('created_at', { ascending: false });
 
-    setOrders((data ?? []) as Order[]);
+    setOrders((data ?? []) as unknown as Order[]);
     setLastRefreshed(new Date());
 
     // Check which orders already have reviews
@@ -586,6 +723,7 @@ export function PolyMartMyOrders() {
                   key={order.id}
                   order={order}
                   onReview={o => !reviewedIds.has(o.id) && setReviewTarget(o)}
+                  onCancel={o => setCancelTarget(o)}
                 />
               ))}
             </AnimatePresence>
@@ -600,6 +738,18 @@ export function PolyMartMyOrders() {
             onClose={(submitted) => {
               if (submitted) setReviewedIds(s => new Set([...s, reviewTarget.id]));
               setReviewTarget(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {cancelTarget && (
+          <CancelModal
+            order={cancelTarget}
+            onClose={(cancelled) => {
+              setCancelTarget(null);
+              if (cancelled) loadOrders();
             }}
           />
         )}

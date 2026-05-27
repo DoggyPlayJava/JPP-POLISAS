@@ -34,6 +34,8 @@ interface StatData {
   topProducts: any[];
   activityHeatmap: any[];
   productHeatmap: ProductHeatmapRow[];
+  onlinePendingRevenue: number;
+  totalCashCollected: number;
 }
 
 import { useBusinessSwitcher } from '@/contexts/BusinessSwitcherContext';
@@ -76,6 +78,8 @@ export function KeusahawananDashboard() {
     topProducts: [],
     activityHeatmap: [],
     productHeatmap: [],
+    onlinePendingRevenue: 0,
+    totalCashCollected: 0,
   });
   useEffect(() => {
     async function fetchData() {
@@ -127,15 +131,16 @@ export function KeusahawananDashboard() {
 
           // POS: direct business_id — no session join needed
           supabase.from('business_transactions')
-            .select('created_at, total_amount, items')
+            .select('created_at, total_amount, items, invoice_number')
             .eq('business_id', businessId)
             .eq('status', 'COMPLETED')
             .gte('created_at', fetchStartDate.toISOString()),
 
           supabase.from('polymart_orders')
-            .select('created_at, total_price, unit_price, quantity, business_products(name)')
+            .select('created_at, total_price, unit_price, quantity, status, payment_method, business_products(name)')
             .eq('business_id', businessId)
-            .in('status', ['COMPLETED', 'READY', 'CONFIRMED'])
+            .in('status', ['CONFIRMED', 'READY']) // Exclude COMPLETED here to avoid double-counting!
+            .eq('payment_method', 'QR_ONLINE') // Filter only QR_ONLINE — cash/COD belum diterima
             .gte('created_at', fetchStartDate.toISOString()),
 
           supabase.from('business_expenses')
@@ -157,29 +162,32 @@ export function KeusahawananDashboard() {
             : Promise.resolve({ data: [] }),
         ]);
 
-        // Merge POS + PolyMart into unified array
-        // POS items DB format: { name, qty, product_id, unit_price, total_price }
-        const txs = [
-          ...(transactionsRes.data || []).map(t => ({
-            created_at: t.created_at,
-            total_amount: Number(t.total_amount || 0),
-            items: (Array.isArray(t.items) ? t.items : []).map((item: any) => ({
-              product_name: item.name || item.product_name || 'Produk',
-              quantity: item.qty ?? item.quantity ?? 1,
-            })),
+        // Process POS completed transactions
+        const completedTxs = (transactionsRes.data || []).map(t => ({
+          created_at: t.created_at,
+          total_amount: Number(t.total_amount || 0),
+          is_online: t.invoice_number?.startsWith('PM-'),
+          items: (Array.isArray(t.items) ? t.items : []).map((item: any) => ({
+            product_name: item.name || item.product_name || 'Produk',
+            quantity: item.qty ?? item.quantity ?? 1,
           })),
-          ...(polymartRes.data || []).map(p => ({
-            created_at: p.created_at,
-            total_amount: Number(p.total_price || (Number(p.unit_price) * Number(p.quantity)) || 0),
-            items: [{ product_name: (p.business_products as any)?.name || 'Produk PolyMart', quantity: p.quantity }],
-          })),
-        ];
+        }));
+
+        // Process PolyMart pending online orders (CONFIRMED/READY)
+        const pendingPmTxs = (polymartRes.data || []).map(p => ({
+          created_at: p.created_at,
+          total_amount: Number(p.total_price || (Number(p.unit_price) * Number(p.quantity)) || 0),
+          is_online: true,
+          items: [{ product_name: (p.business_products as any)?.name || 'Produk PolyMart', quantity: p.quantity }],
+        }));
         
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
         
         let monthRev = 0;
         let monthOrders = 0;
+        let onlinePendingRevenue = 0;
+        let monthPending = 0;
         
         const dailyRevMap: Record<string, number> = {};
         const dailyOrdMap: Record<string, number> = {};
@@ -200,62 +208,134 @@ export function KeusahawananDashboard() {
         const chartData: any[] = [];
         const monthNames = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogo', 'Sep', 'Okt', 'Nov', 'Dis'];
         const dayNames = ['Ahd', 'Isn', 'Sel', 'Rab', 'Kha', 'Jum', 'Sab'];
+        
         if (granularity === 'month') {
           const mRevMap: Record<string, number> = {};
+          const mOnlineCashMap: Record<string, number> = {};
           const mOrdMap: Record<string, number> = {};
           const cur = new Date(txStartDate);
           while (cur <= txEndDate) {
             const key = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`;
-            if (!mRevMap[key]) { mRevMap[key] = 0; mOrdMap[key] = 0; chartData.push({ name: monthNames[cur.getMonth()], key, sales: 0, orders: 0 }); }
+            if (!mRevMap[key]) {
+              mRevMap[key] = 0;
+              mOnlineCashMap[key] = 0;
+              mOrdMap[key] = 0;
+              chartData.push({ name: monthNames[cur.getMonth()], key, sales: 0, onlineCash: 0, orders: 0 });
+            }
             cur.setMonth(cur.getMonth() + 1);
           }
-          txs.forEach(tx => {
+          completedTxs.forEach(tx => {
             const d = new Date(tx.created_at);
             if (d >= txStartDate && d <= txEndDate) {
               const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-              if (mRevMap[k] !== undefined) { mRevMap[k] += tx.total_amount; mOrdMap[k] += 1; }
+              if (mRevMap[k] !== undefined) {
+                mRevMap[k] += tx.total_amount;
+                mOrdMap[k] += 1;
+                if (tx.is_online) {
+                  mOnlineCashMap[k] += tx.total_amount;
+                }
+              }
             }
           });
-          chartData.forEach(c => { c.sales = mRevMap[c.key]; c.orders = mOrdMap[c.key]; });
-        } else if (granularity === 'hour') {
-          const hRev: Record<number, number> = {}; const hOrd: Record<number, number> = {};
-          for (let i = 0; i < 24; i++) { hRev[i] = 0; hOrd[i] = 0; chartData.push({ name: `${i}:00`, hour: i, sales: 0, orders: 0 }); }
-          txs.forEach(tx => {
+          pendingPmTxs.forEach(tx => {
             const d = new Date(tx.created_at);
-            if (d >= txStartDate && d <= txEndDate) { hRev[d.getHours()] += tx.total_amount; hOrd[d.getHours()] += 1; }
+            if (d >= txStartDate && d <= txEndDate) {
+              const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+              if (mOnlineCashMap[k] !== undefined) {
+                mOnlineCashMap[k] += tx.total_amount;
+              }
+            }
           });
-          chartData.forEach(c => { c.sales = hRev[c.hour]; c.orders = hOrd[c.hour]; });
+          chartData.forEach(c => {
+            c.sales = mRevMap[c.key];
+            c.onlineCash = mOnlineCashMap[c.key];
+            c.orders = mOrdMap[c.key];
+          });
+        } else if (granularity === 'hour') {
+          const hRev: Record<number, number> = {};
+          const hOnlineCash: Record<number, number> = {};
+          const hOrd: Record<number, number> = {};
+          for (let i = 0; i < 24; i++) {
+            hRev[i] = 0;
+            hOnlineCash[i] = 0;
+            hOrd[i] = 0;
+            chartData.push({ name: `${i}:00`, hour: i, sales: 0, onlineCash: 0, orders: 0 });
+          }
+          completedTxs.forEach(tx => {
+            const d = new Date(tx.created_at);
+            if (d >= txStartDate && d <= txEndDate) {
+              hRev[d.getHours()] += tx.total_amount;
+              hOrd[d.getHours()] += 1;
+              if (tx.is_online) {
+                hOnlineCash[d.getHours()] += tx.total_amount;
+              }
+            }
+          });
+          pendingPmTxs.forEach(tx => {
+            const d = new Date(tx.created_at);
+            if (d >= txStartDate && d <= txEndDate) {
+              hOnlineCash[d.getHours()] += tx.total_amount;
+            }
+          });
+          chartData.forEach(c => {
+            c.sales = hRev[c.hour];
+            c.onlineCash = hOnlineCash[c.hour];
+            c.orders = hOrd[c.hour];
+          });
         } else {
-          const dRev: Record<string, number> = {}; const dOrd: Record<string, number> = {};
+          const dRev: Record<string, number> = {};
+          const dOnlineCash: Record<string, number> = {};
+          const dOrd: Record<string, number> = {};
           const cur = new Date(txStartDate);
           while (cur <= txEndDate) {
             const key = cur.toLocaleDateString('en-CA');
-            dRev[key] = 0; dOrd[key] = 0;
-            chartData.push({ name: daysDiff <= 7 ? dayNames[cur.getDay()] : `${cur.getDate()}/${cur.getMonth()+1}`, key, sales: 0, orders: 0 });
+            dRev[key] = 0;
+            dOnlineCash[key] = 0;
+            dOrd[key] = 0;
+            chartData.push({ name: daysDiff <= 7 ? dayNames[cur.getDay()] : `${cur.getDate()}/${cur.getMonth()+1}`, key, sales: 0, onlineCash: 0, orders: 0 });
             cur.setDate(cur.getDate() + 1);
           }
-          txs.forEach(tx => {
+          completedTxs.forEach(tx => {
             const d = new Date(tx.created_at);
             if (d >= txStartDate && d <= txEndDate) {
               const k = d.toLocaleDateString('en-CA');
-              if (dRev[k] !== undefined) { dRev[k] += tx.total_amount; dOrd[k] += 1; }
+              if (dRev[k] !== undefined) {
+                dRev[k] += tx.total_amount;
+                dOrd[k] += 1;
+                if (tx.is_online) {
+                  dOnlineCash[k] += tx.total_amount;
+                }
+              }
             }
           });
-          chartData.forEach(c => { c.sales = dRev[c.key]; c.orders = dOrd[c.key]; });
+          pendingPmTxs.forEach(tx => {
+            const d = new Date(tx.created_at);
+            if (d >= txStartDate && d <= txEndDate) {
+              const k = d.toLocaleDateString('en-CA');
+              if (dOnlineCash[k] !== undefined) {
+                dOnlineCash[k] += tx.total_amount;
+              }
+            }
+          });
+          chartData.forEach(c => {
+            c.sales = dRev[c.key];
+            c.onlineCash = dOnlineCash[c.key];
+            c.orders = dOrd[c.key];
+          });
         }
 
-        // Common processing
-        txs.forEach(tx => {
+        // Common processing for completed transactions
+        completedTxs.forEach(tx => {
           const txDate = new Date(tx.created_at);
           const dateStr = txDate.toLocaleDateString('en-CA');
           
           if (txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear) {
-            monthRev += Number(tx.total_amount || 0);
+            monthRev += tx.total_amount;
             monthOrders += 1;
           }
           
           if (dailyRevMap[dateStr] !== undefined) {
-            dailyRevMap[dateStr] += Number(tx.total_amount || 0);
+            dailyRevMap[dateStr] += tx.total_amount;
           }
 
           // Top Products within selected range
@@ -268,6 +348,17 @@ export function KeusahawananDashboard() {
                 productSales[name].count += (item.quantity || 1);
               }
             });
+          }
+        });
+
+        // Common processing for pending QR online orders
+        pendingPmTxs.forEach(tx => {
+          const txDate = new Date(tx.created_at);
+          if (txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear) {
+            monthPending += tx.total_amount;
+          }
+          if (txDate >= txStartDate && txDate <= txEndDate) {
+            onlinePendingRevenue += tx.total_amount;
           }
         });
 
@@ -299,6 +390,8 @@ export function KeusahawananDashboard() {
           monthlyTarget,
           topProducts,
           activityHeatmap: heatmap,
+          onlinePendingRevenue,
+          totalCashCollected: monthRev + monthPending,
           productHeatmap: (() => {
             // Build product x day matrix — always last 14 days
             const heatDays: string[] = [];
@@ -309,7 +402,7 @@ export function KeusahawananDashboard() {
             const heatStart = new Date(now); heatStart.setDate(now.getDate() - 13); heatStart.setHours(0,0,0,0);
             // product -> day -> {qty, revenue}
             const matrix: Record<string, Record<string, { qty: number; revenue: number }>> = {};
-            txs.forEach(tx => {
+            completedTxs.forEach(tx => {
               const txDate = new Date(tx.created_at);
               if (txDate < heatStart) return;
               const dateStr = txDate.toLocaleDateString('en-CA');
@@ -450,10 +543,19 @@ export function KeusahawananDashboard() {
             <Activity className="w-4 h-4 text-muted-foreground/30" />
           </div>
           <div className="flex items-end justify-between mt-4">
-            <div>
-              <p className="text-3xl font-black text-foreground">RM {data.revenue.toFixed(2)}</p>
-              <div className="flex items-center gap-1.5 mt-2 text-xs font-bold text-emerald-500">
-                <TrendingUp className="w-3.5 h-3.5" /> <span>+12%</span> <span className="text-muted-foreground font-medium ml-1">Dari bulan lepas</span>
+            <div className="flex-1">
+              <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60 mb-0.5">Jumlah Tunai Kasar (Tunai + Bank)</p>
+              <p className="text-3xl font-black text-foreground">RM {data.totalCashCollected.toFixed(2)}</p>
+              
+              <div className="flex flex-col gap-1.5 mt-3 pt-3 border-t border-border/30 text-[10px] font-bold text-muted-foreground">
+                <div className="flex justify-between">
+                  <span>🛍️ Jualan Selesai (Accrual):</span>
+                  <span className="text-foreground">RM {data.revenue.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>💳 Online Pending:</span>
+                  <span className="text-blue-500">RM {data.onlinePendingRevenue.toFixed(2)}</span>
+                </div>
               </div>
             </div>
             {/* Mini Chart */}
@@ -480,8 +582,8 @@ export function KeusahawananDashboard() {
           <div className="flex items-end justify-between mt-4">
             <div>
               <p className="text-3xl font-black text-foreground">{data.orders}</p>
-              <div className="flex items-center gap-1.5 mt-2 text-xs font-bold text-emerald-500">
-                <TrendingUp className="w-3.5 h-3.5" /> <span>+5%</span> <span className="text-muted-foreground font-medium ml-1">Dari bulan lepas</span>
+              <div className="flex items-center gap-1.5 mt-2 text-xs font-bold text-muted-foreground">
+                <span>Bulan ini</span>
               </div>
             </div>
             {/* Mini Chart */}
@@ -586,9 +688,13 @@ export function KeusahawananDashboard() {
                 <RechartsTooltip 
                   contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', background: 'hsl(var(--card))', color: 'hsl(var(--foreground))' }}
                   itemStyle={{ fontWeight: '900' }}
-                  formatter={(value) => [`RM ${value}`, 'Jualan']}
+                  formatter={(value, name) => [
+                    `RM ${Number(value).toFixed(2)}`,
+                    name === 'sales' ? 'Jualan Selesai' : 'Kutipan Online (Bank)'
+                  ]}
                 />
-                <Line type="monotone" dataKey="sales" stroke={color} strokeWidth={3} dot={false} activeDot={{ r: 6, fill: color, stroke: 'hsl(var(--background))', strokeWidth: 2 }} />
+                <Line type="monotone" dataKey="sales" stroke={color} strokeWidth={3} name="sales" dot={false} activeDot={{ r: 6, fill: color, stroke: 'hsl(var(--background))', strokeWidth: 2 }} />
+                <Line type="monotone" dataKey="onlineCash" stroke="#3b82f6" strokeWidth={3} name="onlineCash" dot={false} activeDot={{ r: 6, fill: '#3b82f6', stroke: 'hsl(var(--background))', strokeWidth: 2 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>

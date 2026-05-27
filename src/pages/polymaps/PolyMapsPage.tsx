@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { SystemTour } from '@/components/ui/SystemTour';
 import { useTour } from '@/hooks/useTour';
+import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -1420,6 +1421,7 @@ export function PolyMapsPage() {
       <BottomNav onOpenSidebar={() => setIsSidebarOpen(true)} forceShowDesktop={true} />
 
       <SystemTour run={runTour} onClose={closeTour} tourKey="POLYMAPS_PAGE" />
+      <FloatingAiChat />
     </div>
   );
 }

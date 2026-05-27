@@ -4,10 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { usePolymart, PM_ACCENT, PM_LIGHT, PM_GRADIENT, PM_GLOW, CATEGORY_EMOJI } from './PolyMartLayout';
 import { useAuth } from '@/contexts/AuthContext';
+import { type PolyAd } from '@/types';
 import {
   Star, ShoppingCart, Store, TrendingUp, Zap, ChevronRight, ChevronLeft,
-  Package, Clock, AlertCircle,
+  Package, Clock, AlertCircle, Heart,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface PolyProduct {
@@ -29,6 +31,11 @@ interface PolyProduct {
   } | null;
   avg_rating?: number;
   review_count?: number;
+  // Flash sale / pre-order
+  sale_price?: number | null;
+  sale_start_at?: string | null;
+  sale_end_at?: string | null;
+  is_preorder?: boolean;
 }
 
 interface PolyBusiness {
@@ -38,20 +45,9 @@ interface PolyBusiness {
   product_count?: number;
 }
 
-interface PolyAd {
-  id: string;
-  title: string;
-  image_url: string;
-  link_url?: string;
-  type: 'INTERNAL' | 'EXTERNAL';
-  status: 'DRAFT' | 'ACTIVE' | 'INACTIVE';
-  start_date?: string;
-  end_date?: string;
-  clicks: number;
-}
 
 // ── Product Card ───────────────────────────────────────────────────────────────
-function ProductCard({ product, index }: { product: PolyProduct; index: number }) {
+function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { product: PolyProduct; index: number; isWishlisted: boolean; onToggleWishlist: (id: string) => void }) {
   const navigate = useNavigate();
   const emoji = CATEGORY_EMOJI[product.category] ?? '📦';
   const isLowStock = product.stock_quantity > 0 && product.stock_quantity <= 5;
@@ -65,7 +61,7 @@ function ProductCard({ product, index }: { product: PolyProduct; index: number }
       transition={{ delay: index * 0.04, duration: 0.3 }}
       whileTap={{ scale: 0.97 }}
       onClick={() => navigate(`/polymart/produk/${product.id}`)}
-      className="group cursor-pointer rounded-2xl bg-card border border-border/60 overflow-hidden hover:border-amber-500/30 hover:shadow-lg transition-all duration-300"
+      className="relative group cursor-pointer rounded-2xl bg-card border border-border/60 overflow-hidden hover:border-amber-500/30 hover:shadow-lg transition-all duration-300"
       style={{ '--hover-shadow': PM_GLOW } as React.CSSProperties}
     >
       {/* Image / Placeholder */}
@@ -101,10 +97,33 @@ function ProductCard({ product, index }: { product: PolyProduct; index: number }
         )}
 
         {/* Category pill */}
-        <div className="absolute top-2 right-2 bg-black/40 backdrop-blur-sm text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full">
-          {product.category}
-        </div>
+        {!isLowStock && (
+          <div className="absolute top-2 left-2 bg-black/40 backdrop-blur-sm text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full z-10">
+            {product.category}
+          </div>
+        )}
+        {/* Flash sale badge */}
+        {product.sale_price && product.sale_start_at && product.sale_end_at &&
+          new Date() >= new Date(product.sale_start_at) && new Date() <= new Date(product.sale_end_at) && (
+          <div className="absolute bottom-2 left-2 bg-rose-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full animate-pulse">
+            ⚡ -{Math.round((1 - product.sale_price / product.price) * 100)}%
+          </div>
+        )}
+        {/* Pre-order badge */}
+        {product.is_preorder && (
+          <div className="absolute bottom-2 left-2 bg-indigo-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full">
+            📦 PRA-TEMPAH
+          </div>
+        )}
       </div>
+
+      {/* Wishlist heart */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onToggleWishlist(product.id); }}
+        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/80 dark:bg-black/50 backdrop-blur-sm flex items-center justify-center z-10 transition-all hover:scale-110"
+      >
+        <Heart className={`w-3.5 h-3.5 transition-all ${isWishlisted ? 'text-rose-500 fill-rose-500' : 'text-muted-foreground/50'}`} />
+      </button>
 
       {/* Info */}
       <div className="p-2.5 space-y-1">
@@ -121,9 +140,18 @@ function ProductCard({ product, index }: { product: PolyProduct; index: number }
 
         {/* Price + rating */}
         <div className="flex items-center justify-between pt-0.5">
-          <span className="text-[13px] font-black" style={{ color: PM_ACCENT }}>
-            RM {product.price.toFixed(2)}
-          </span>
+          {(() => {
+            const isOnSale = product.sale_price && product.sale_start_at && product.sale_end_at &&
+              new Date() >= new Date(product.sale_start_at) && new Date() <= new Date(product.sale_end_at);
+            return isOnSale ? (
+              <span className="text-[13px] font-black">
+                <span className="text-rose-500">RM {product.sale_price!.toFixed(2)}</span>
+                <span className="text-[10px] text-muted-foreground/50 line-through ml-1">RM {product.price.toFixed(2)}</span>
+              </span>
+            ) : (
+              <span className="text-[13px] font-black" style={{ color: PM_ACCENT }}>RM {product.price.toFixed(2)}</span>
+            );
+          })()}
           {avgRating && avgRating > 0 ? (
             <div className="flex items-center gap-0.5">
               <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
@@ -163,11 +191,16 @@ function BusinessCard({ biz }: { biz: PolyBusiness }) {
 function InFeedAdCard({ ad }: { ad: PolyAd }) {
   const navigate = useNavigate();
   
-  const handleClick = () => {
+  const handleClick = async () => {
     // Increment click asynchronously
-    supabase.rpc('increment_polymart_ad_click', { ad_id: ad.id }).catch(() => {
-      supabase.from('polymart_ads').update({ clicks: ad.clicks + 1 }).eq('id', ad.id).catch(() => {});
-    });
+    try {
+      const { error } = await supabase.rpc('increment_polymart_ad_click', { ad_id: ad.id });
+      if (error) {
+        await supabase.from('polymart_ads').update({ clicks: ad.clicks + 1 }).eq('id', ad.id);
+      }
+    } catch (e) {
+      console.warn('Ad click tracking failed', e);
+    }
     if (ad.link_url) {
       if (ad.link_url.startsWith('http')) window.open(ad.link_url, '_blank');
       else navigate(ad.link_url);
@@ -218,10 +251,14 @@ function HeroBanner({ totalProducts, totalVendors, ads }: { totalProducts: numbe
 
   const handleAdClick = async (ad: PolyAd) => {
     // Increment click asynchronously
-    supabase.rpc('increment_polymart_ad_click', { ad_id: ad.id }).catch(() => {
-      // Fallback if RPC doesn't exist: manually update
-      supabase.from('polymart_ads').update({ clicks: ad.clicks + 1 }).eq('id', ad.id).catch(() => {});
-    });
+    try {
+      const { error } = await supabase.rpc('increment_polymart_ad_click', { ad_id: ad.id });
+      if (error) {
+        await supabase.from('polymart_ads').update({ clicks: ad.clicks + 1 }).eq('id', ad.id);
+      }
+    } catch (e) {
+      console.warn('Ad click tracking failed', e);
+    }
     // Navigate
     if (ad.link_url) {
       if (ad.link_url.startsWith('http')) window.open(ad.link_url, '_blank');
@@ -335,6 +372,37 @@ export function PolyMartHome() {
     const params = new URLSearchParams(window.location.search);
     return params.get('vendor');
   });
+  const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
+
+  // Wishlist toggle
+  const toggleWishlist = async (productId: string) => {
+    if (!user) { toast.error('Sila log masuk untuk simpan ke wishlist'); return; }
+    const isCurrently = wishlistIds.has(productId);
+    // Optimistic update
+    setWishlistIds(prev => {
+      const next = new Set(prev);
+      isCurrently ? next.delete(productId) : next.add(productId);
+      return next;
+    });
+    if (isCurrently) {
+      const { error } = await supabase.from('polymart_wishlist').delete()
+        .eq('user_id', user.id).eq('product_id', productId);
+      if (error) {
+        setWishlistIds(prev => { const n = new Set(prev); n.add(productId); return n; });
+        toast.error('Gagal mengalih keluar dari wishlist');
+      }
+    } else {
+      const { error } = await supabase.from('polymart_wishlist').insert({
+        user_id: user.id, product_id: productId,
+      });
+      if (error) {
+        setWishlistIds(prev => { const n = new Set(prev); n.delete(productId); return n; });
+        if (!error.message.includes('duplicate')) toast.error('Gagal menyimpan ke wishlist');
+      } else {
+        toast.success('Disimpan ke wishlist ❤️', { duration: 1500 });
+      }
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -347,6 +415,7 @@ export function PolyMartHome() {
           .select(`
             id, name, description, price, category, image_url,
             stock_quantity, publish_to_polymart, is_available, business_id,
+            sale_price, sale_start_at, sale_end_at, is_preorder,
             keusahawanan_businesses!business_id(id, name, logo_url, polymart_contact_method, status)
           `)
           .eq('publish_to_polymart', true)
@@ -407,9 +476,16 @@ export function PolyMartHome() {
       });
       setBusinesses(Array.from(bizMap.values()));
       setLoading(false);
+
+      // Fetch wishlist if logged in
+      if (user) {
+        const { data: wl } = await supabase.from('polymart_wishlist')
+          .select('product_id').eq('user_id', user.id);
+        if (wl) setWishlistIds(new Set(wl.map(w => w.product_id)));
+      }
     };
     load();
-  }, []);
+  }, [user]);
 
   const inFeedAds = useMemo(() => {
     const now = new Date();
@@ -426,12 +502,51 @@ export function PolyMartHome() {
     if (vendorFilter) list = list.filter(p => p.keusahawanan_businesses?.id === vendorFilter);
     if (activeCategory !== 'all') list = list.filter(p => p.category === activeCategory);
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      list = list.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        (p.description ?? '').toLowerCase().includes(q) ||
-        (p.keusahawanan_businesses?.name ?? '').toLowerCase().includes(q)
-      );
+      const q = searchQuery.toLowerCase().trim();
+      const qWords = q.split(/\s+/);
+
+      // Simple fuzzy: check if string contains query OR if all query words appear (in any order)
+      const fuzzyMatch = (text: string): number => {
+        const t = text.toLowerCase();
+        // Exact substring = highest score
+        if (t.includes(q)) return 3;
+        // All words match individually (e.g. "baju hitam" matches "baju warna hitam")
+        if (qWords.every(w => t.includes(w))) return 2;
+        // At least half the words match
+        const matchCount = qWords.filter(w => t.includes(w)).length;
+        if (matchCount >= Math.ceil(qWords.length / 2)) return 1;
+        // Typo tolerance: check if any word is 1-2 chars different (simple distance)
+        const tWords = t.split(/\s+/);
+        for (const qw of qWords) {
+          for (const tw of tWords) {
+            if (qw.length >= 3 && tw.length >= 3) {
+              // Check if words share >60% characters
+              const shorter = Math.min(qw.length, tw.length);
+              let common = 0;
+              const twChars = [...tw];
+              for (const c of qw) {
+                const idx = twChars.indexOf(c);
+                if (idx >= 0) { common++; twChars.splice(idx, 1); }
+              }
+              if (common / shorter >= 0.6) return 0.5;
+            }
+          }
+        }
+        return 0;
+      };
+
+      // Score each product
+      const scored = list.map(p => {
+        const nameScore = fuzzyMatch(p.name) * 3;        // Name match = 3x weight
+        const descScore = fuzzyMatch(p.description ?? '') * 1;
+        const vendorScore = fuzzyMatch(p.keusahawanan_businesses?.name ?? '') * 1.5;
+        const catScore = fuzzyMatch(p.category) * 2;
+        return { p, score: nameScore + descScore + vendorScore + catScore };
+      });
+
+      list = scored.filter(s => s.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .map(s => s.p);
     }
     switch (sortBy) {
       case 'price_asc':  list.sort((a, b) => a.price - b.price); break;
@@ -554,7 +669,7 @@ export function PolyMartHome() {
                   return <InFeedAdCard key={`ad-${item.ad.id}`} ad={item.ad} />;
                 }
                 const p = item as PolyProduct;
-                return <ProductCard key={p.id} product={p} index={i} />;
+                return <ProductCard key={p.id} product={p} index={i} isWishlisted={wishlistIds.has(p.id)} onToggleWishlist={toggleWishlist} />;
               })}
             </motion.div>
           )}

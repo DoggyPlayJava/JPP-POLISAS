@@ -277,8 +277,8 @@ export function PosStatsPage() {
           <>
             {/* KPI cards — 5 items: tambah Untung Bersih */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-              <KPICard icon={DollarSign} label="Jualan Bersih" value={fmtRM(stats.totalRevenue)}
-                sub={stats.grossRevenue > stats.totalRevenue ? `Bruto: ${fmtRM(stats.grossRevenue)}` : undefined}
+              <KPICard icon={DollarSign} label="Tunai Kasar (Tunai+Bank)" value={fmtRM(stats.totalCashCollected)}
+                sub={`Selesai: ${fmtRM(stats.totalRevenue)} · Pending QR: ${fmtRM(stats.onlinePendingRevenue)}`}
                 color={color} delay={0.05} />
               <KPICard icon={Receipt} label="Transaksi" value={stats.transactionCount} color={color} delay={0.1} />
               <KPICard icon={Package} label="Unit Terjual" value={stats.unitsSold} color={color} delay={0.15} />
@@ -362,7 +362,7 @@ export function PosStatsPage() {
                   <div className="h-48 flex items-center justify-center text-sm text-muted-foreground/40 font-black">Tiada data.</div>
                 ) : (
                   <ResponsiveContainer width="100%" height={220}>
-                    <BarChart data={stats.dailySales} barSize={20}>
+                    <BarChart data={stats.dailySales} barSize={12}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.5)" vertical={false} />
                       <XAxis dataKey="date" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} tickFormatter={d => {
                         const dt = new Date(d);
@@ -371,10 +371,14 @@ export function PosStatsPage() {
                       <YAxis tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} tickFormatter={v => `RM${v}`} />
                       <Tooltip
                         contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 12, fontSize: 11 }}
-                        formatter={(v: number) => [`RM ${v.toFixed(2)}`, 'Jualan']}
+                        formatter={(v: number, name) => [
+                          `RM ${v.toFixed(2)}`,
+                          name === 'revenue' ? 'Jualan Selesai' : 'Kutipan Online (Bank)'
+                        ]}
                         labelFormatter={d => new Date(d).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short' })}
                       />
-                      <Bar dataKey="revenue" fill={color} radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="revenue" fill={color} name="revenue" radius={[3, 3, 0, 0]} />
+                      <Bar dataKey="onlineCash" fill="#3b82f6" name="onlineCash" radius={[3, 3, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}

@@ -11,6 +11,7 @@ import { Trash2, Minus, Plus, Store, ArrowRight, ShoppingCart, CreditCard, Hands
 interface CartItem {
   id: string;
   quantity: number;
+  selected_variation: string | null;
   product: {
     id: string;
     name: string;
@@ -21,6 +22,7 @@ interface CartItem {
     reserved_stock: number;
     business_id: string;
     online_payment_enabled: boolean | null;
+    variations: any[] | null;
     keusahawanan_businesses: {
       id: string;
       name: string;
@@ -57,9 +59,9 @@ export function PolyMartCartPage() {
     const { data, error } = await supabase
       .from('polymart_cart_items')
       .select(`
-        id, quantity,
+        id, quantity, selected_variation,
         product:business_products (
-          id, name, price, image_url, category, stock_quantity, reserved_stock, business_id, online_payment_enabled,
+          id, name, price, image_url, category, stock_quantity, reserved_stock, business_id, online_payment_enabled, variations,
           keusahawanan_businesses (id, name, logo_url, online_payment_enabled, cod_enabled, payment_deadline_value, payment_deadline_unit)
         )
       `)
@@ -67,7 +69,6 @@ export function PolyMartCartPage() {
       .order('created_at', { ascending: false });
 
     if (!error && data) {
-      // Cast the response because Supabase types might be imperfect with joins
       setItems(data as unknown as CartItem[]);
     }
     setLoading(false);
@@ -103,13 +104,14 @@ export function PolyMartCartPage() {
 
     setCheckingOut(businessId);
     try {
-      // 1. Tempah stok dahulu untuk setiap barang
+      // 1. Tempah stok dahulu untuk setiap barang dengan parameter variasi terpilih
       for (const item of businessItems) {
         const { error: reserveError } = await supabase.rpc('reserve_polymart_stock', {
           p_product_id: item.product.id,
-          p_quantity: item.quantity
+          p_quantity: item.quantity,
+          p_variation: item.selected_variation || null
         });
-        if (reserveError) throw new Error(`Stok tidak cukup untuk ${item.product.name}`);
+        if (reserveError) throw new Error(`Stok tidak cukup untuk ${item.product.name} (Variasi: ${item.selected_variation || 'Tiada'})`);
       }
 
       // 2. Cipta pesanan
@@ -139,6 +141,7 @@ export function PolyMartCartPage() {
           status: 'PENDING',
           payment_method: method,
           payment_deadline_at: paymentDeadlineAt,
+          selected_variation: item.selected_variation || null,
         };
       });
 
@@ -150,7 +153,11 @@ export function PolyMartCartPage() {
       if (orderError) {
         // Revert stok jika gagal
         for (const item of businessItems) {
-          await supabase.rpc('release_polymart_stock', { p_product_id: item.product.id, p_quantity: item.quantity });
+          await supabase.rpc('release_polymart_stock', {
+            p_product_id: item.product.id,
+            p_quantity: item.quantity,
+            p_variation: item.selected_variation || null
+          });
         }
         throw orderError;
       }
@@ -277,7 +284,14 @@ export function PolyMartCartPage() {
                         <div className="flex-1 min-w-0 flex flex-col justify-between">
                           <div>
                             <h4 className="text-xs font-black text-foreground leading-tight truncate">{item.product.name}</h4>
-                            <p className="text-sm font-black mt-0.5" style={{ color: PM_ACCENT }}>RM {item.product.price.toFixed(2)}</p>
+                            {item.selected_variation && (
+                              <div className="mt-1">
+                                <span className="text-[10px] text-amber-500 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded-md">
+                                  Saiz: {item.selected_variation}
+                                </span>
+                              </div>
+                            )}
+                            <p className="text-sm font-black mt-1" style={{ color: PM_ACCENT }}>RM {item.product.price.toFixed(2)}</p>
                           </div>
                           
                           <div className="flex items-center justify-between mt-2">

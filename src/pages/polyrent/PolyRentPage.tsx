@@ -10,7 +10,7 @@ import {
   Phone, Heart, Filter, Calculator, Map, List, CheckCircle2, Navigation, Menu, Users, MessageCircle, ShieldCheck, HelpCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { PolyRentForm } from './PolyRentForm';
 import { PolyRentCalculatorModal } from './PolyRentCalculatorModal';
@@ -18,9 +18,9 @@ import { PolyRentDetailModal } from './PolyRentDetailModal';
 import { PolyRentSidebar } from './PolyRentSidebar';
 import { PolyRentMyAdsModal } from './PolyRentMyAdsModal';
 import { PolyRentReverseForm } from './PolyRentReverseForm';
-import { PolyRentChatModal } from './PolyRentChatModal';
 import { useTour } from '@/hooks/useTour';
 import { SystemTour } from '@/components/ui/SystemTour';
+import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 const formatWhatsApp = (phone: string) => {
   if (!phone) return '';
@@ -54,7 +54,7 @@ export function PolyRentPage() {
   const [reverseAds, setReverseAds] = useState<any[]>([]);
   const [loadingReverse, setLoadingReverse] = useState(false);
   const [isReverseFormOpen, setIsReverseFormOpen] = useState(false);
-  const [chatUser, setChatUser] = useState<{ id: string, name: string } | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   
   // Modals
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -89,6 +89,29 @@ export function PolyRentPage() {
       }
     }
   }, [listings]);
+
+  // Automatic deep-linking listing detail popup
+  useEffect(() => {
+    const listingId = searchParams.get('listingId');
+    if (!listingId) return;
+
+    if (listings.length > 0) {
+      const found = listings.find(l => l.id === listingId);
+      if (found) {
+        setSelectedListing(found);
+      } else {
+        // Fetch from database in case listing is hidden/archive or outside typical active viewport
+        supabase
+          .from('polyrent_listings')
+          .select(`*, profiles:author_id ( full_name )`)
+          .eq('id', listingId)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (data) setSelectedListing(data);
+          });
+      }
+    }
+  }, [searchParams, listings]);
 
   const toggleWishlist = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -441,7 +464,20 @@ export function PolyRentPage() {
                            if (profile?.id === ad.student_id) {
                              toast('Ini adalah iklan anda sendiri', { icon: 'ℹ️' });
                            } else {
-                             setChatUser({ id: ad.student_id, name: ad.profiles?.full_name || 'Pelajar' });
+                             window.dispatchEvent(
+                               new CustomEvent('open-polyrent-chat', {
+                                 detail: {
+                                   partnerId: ad.student_id,
+                                   partnerName: ad.profiles?.full_name || 'Pelajar',
+                                   listing: {
+                                     id: ad.id,
+                                     title: `Bajet RM${ad.budget}: ${ad.lokasi_prefer || 'Mana-mana'}`,
+                                     sewa_bulanan: ad.budget,
+                                     image_url: undefined
+                                   }
+                                 }
+                               })
+                             );
                            }
                          }}
                          className="px-4 py-2 bg-teal-50 dark:bg-teal-500/10 hover:bg-teal-100 dark:hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 rounded-xl font-bold text-xs flex items-center gap-2 transition-colors"
@@ -543,7 +579,19 @@ export function PolyRentPage() {
               setListings(prev => prev.map(l => l.id === selectedListing.id ? { ...l, interested_count: (l.interested_count || 0) + 1 } : l));
             }}
             onOpenChat={(userId, userName) => {
-              setChatUser({ id: userId, name: userName });
+              if (profile?.id === userId) {
+                toast('Ini adalah iklan anda sendiri', { icon: 'ℹ️' });
+                return;
+              }
+              window.dispatchEvent(
+                new CustomEvent('open-polyrent-chat', {
+                  detail: {
+                    partnerId: userId,
+                    partnerName: userName,
+                    listing: selectedListing
+                  }
+                })
+              );
             }}
           />
         )}
@@ -577,13 +625,7 @@ export function PolyRentPage() {
         )}
       </AnimatePresence>
 
-      {/* DIRECT MESSAGING MODAL */}
-      <PolyRentChatModal
-        isOpen={!!chatUser}
-        onClose={() => setChatUser(null)}
-        receiverId={chatUser?.id || ''}
-        receiverName={chatUser?.name || ''}
-      />
+
 
       {/* CALCULATOR MODAL */}
       <PolyRentCalculatorModal 
@@ -612,6 +654,7 @@ export function PolyRentPage() {
 
       {/* INTERACTIVE TOUR */}
       <SystemTour run={runTour} onClose={closeTour} tourKey="POLYRENT_PAGE" />
+      <FloatingAiChat />
     </div>
   );
 }

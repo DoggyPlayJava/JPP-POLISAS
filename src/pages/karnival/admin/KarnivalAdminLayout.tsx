@@ -8,6 +8,8 @@ import {
   BarChart3, ArrowLeft, Loader2, Shield,
 } from 'lucide-react';
 
+import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
+
 export function KarnivalAdminLayout() {
   const { isKppExco, isSuperAdmin, isLoading: authLoading } = useAuth();
   const { enableRealtime, disableRealtime, isActive, votingOpen, edition } = useKarnival();
@@ -127,6 +129,8 @@ export function KarnivalAdminLayout() {
           <Outlet />
         </motion.div>
       </main>
+
+      <FloatingAiChat />
     </div>
   );
 }

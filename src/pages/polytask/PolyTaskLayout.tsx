@@ -8,6 +8,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { CreateJobModal } from '@/components/polytask/CreateJobModal';
 
+import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
+
 export function PolyTaskLayout() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -161,6 +163,7 @@ export function PolyTaskLayout() {
         onSuccess={() => window.location.reload()} 
       />
 
+      <FloatingAiChat />
     </div>
   );
 }

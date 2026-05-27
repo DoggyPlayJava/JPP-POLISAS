@@ -23,6 +23,7 @@ interface VerifyOrder {
   pickup_time: string | null;
   created_at: string;
   business_id: string;
+  selected_variation?: string | null;
   product: {
     id: string;
     name: string;
@@ -68,6 +69,7 @@ export function PolyMartVerifyPickup() {
         .select(`
           id, status, payment_method, payment_verified_at, payment_receipt_url,
           quantity, unit_price, total_price, note, pickup_time, created_at, business_id,
+          selected_variation,
           product:business_products!product_id(id, name, image_url, category),
           buyer:profiles!buyer_id(full_name, matric_no),
           business:keusahawanan_businesses!business_id(id, name)
@@ -247,7 +249,14 @@ export function PolyMartVerifyPickup() {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-black text-foreground leading-tight truncate">{order.product?.name ?? 'Produk'}</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">×{order.quantity} @ RM {order.unit_price.toFixed(2)}</p>
+            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+              <p className="text-xs text-muted-foreground">×{order.quantity} @ RM {order.unit_price.toFixed(2)}</p>
+              {order.selected_variation && (
+                <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-[9px] font-black text-amber-500">
+                  Saiz: {order.selected_variation}
+                </span>
+              )}
+            </div>
             <p className="text-base font-black mt-1" style={{ color: PM_ACCENT }}>RM {totalAmt.toFixed(2)}</p>
           </div>
         </div>

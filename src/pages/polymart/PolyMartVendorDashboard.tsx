@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { type PolyAd } from '@/types';
 import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, CATEGORY_EMOJI, usePolymart } from './PolyMartLayout';
 import { sendNotificationToUser } from '@/lib/notifications';
 import toast from 'react-hot-toast';
@@ -35,6 +36,9 @@ interface VendorOrder {
   payment_verified_at: string | null;
   payment_verified_by: string | null;
   payment_deadline_at: string | null;
+  selected_variation: string | null;
+  cancellation_requested_at: string | null;
+  cancellation_reason: string | null;
 }
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; bg: string }> = {
@@ -165,7 +169,14 @@ function VendorOrderCard({ order, onUpdate }: { order: VendorOrder; onUpdate: ()
             }
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-black text-foreground truncate">{order.business_products?.name}</p>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <p className="text-sm font-black text-foreground truncate">{order.business_products?.name}</p>
+              {order.selected_variation && (
+                <span className="px-1.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-[9px] font-black text-amber-500">
+                  Saiz: {order.selected_variation}
+                </span>
+              )}
+            </div>
             <p className="text-[10px] text-muted-foreground/60">×{order.quantity} • RM {(order.total_price ?? order.unit_price * order.quantity).toFixed(2)}</p>
             {order.pickup_time && (
               <p className="text-[10px] text-muted-foreground/50 flex items-center gap-1 mt-0.5">
@@ -209,6 +220,69 @@ function VendorOrderCard({ order, onUpdate }: { order: VendorOrder; onUpdate: ()
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Buyer Cancellation Request Banner */}
+        {order.cancellation_requested_at && order.status !== 'CANCELLED' && (
+          <div className="mt-3 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 space-y-2">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-rose-500" />
+              <p className="text-[11px] font-black text-rose-600">Pembeli Minta Pembatalan</p>
+            </div>
+            <p className="text-[10px] text-rose-500/70">Sebab: {order.cancellation_reason}</p>
+            <div className="flex gap-2">
+              <button onClick={async () => {
+                  setLoading(true);
+                  const { error } = await supabase.rpc('vendor_handle_cancellation', {
+                    p_order_id: order.id,
+                    p_vendor_id: profile?.id,
+                    p_action: 'approve',
+                  });
+                  if (error) { toast.error(error.message); setLoading(false); return; }
+                  if (order.buyer?.id) {
+                    await sendNotificationToUser(order.buyer.id, {
+                      title: '✅ Pembatalan Diluluskan',
+                      message: `Pesanan ${order.business_products?.name} telah dibatalkan seperti diminta.`,
+                      type: 'polymart_cancellation_approved',
+                      module: 'POLYMART',
+                      link: '/polymart/pesanan-saya',
+                      reference_id: order.id,
+                    });
+                  }
+                  toast.success('Pembatalan diluluskan');
+                  onUpdate();
+                  setLoading(false);
+                }} disabled={loading}
+                className="flex-1 h-9 rounded-xl text-[11px] font-black bg-rose-500 text-white hover:bg-rose-600 transition-colors disabled:opacity-60">
+                ✅ Luluskan Batal
+              </button>
+              <button onClick={async () => {
+                  setLoading(true);
+                  const { error } = await supabase.rpc('vendor_handle_cancellation', {
+                    p_order_id: order.id,
+                    p_vendor_id: profile?.id,
+                    p_action: 'reject',
+                  });
+                  if (error) { toast.error(error.message); setLoading(false); return; }
+                  if (order.buyer?.id) {
+                    await sendNotificationToUser(order.buyer.id, {
+                      title: '❌ Pembatalan Ditolak',
+                      message: `Permintaan pembatalan untuk ${order.business_products?.name} telah ditolak oleh vendor.`,
+                      type: 'polymart_cancellation_rejected',
+                      module: 'POLYMART',
+                      link: '/polymart/pesanan-saya',
+                      reference_id: order.id,
+                    });
+                  }
+                  toast.success('Permintaan pembatalan ditolak');
+                  onUpdate();
+                  setLoading(false);
+                }} disabled={loading}
+                className="flex-1 h-9 rounded-xl text-[11px] font-black border border-border/50 hover:bg-muted/50 transition-colors disabled:opacity-60">
+                ❌ Tolak
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Cancel form */}
         <AnimatePresence>
@@ -276,13 +350,18 @@ function VendorOrderCard({ order, onUpdate }: { order: VendorOrder; onUpdate: ()
             <div className="flex gap-2">
               <button onClick={async () => {
                   setLoading(true);
-                  await supabase.from('polymart_orders').update({
+                  const { error } = await supabase.from('polymart_orders').update({
                     payment_verified_at: new Date().toISOString(),
                     payment_verified_by: profile?.id,
                     status: 'CONFIRMED',
                     confirmed_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
                   }).eq('id', order.id);
+                  if (error) {
+                    toast.error('Gagal mengesahkan bayaran: ' + error.message);
+                    setLoading(false);
+                    return;
+                  }
                   if (order.buyer?.id) {
                     await sendNotificationToUser(order.buyer.id, {
                       title: '✅ Bayaran Disahkan!',
@@ -302,10 +381,15 @@ function VendorOrderCard({ order, onUpdate }: { order: VendorOrder; onUpdate: ()
               </button>
               <button onClick={async () => {
                   setLoading(true);
-                  await supabase.from('polymart_orders').update({
+                  const { error } = await supabase.from('polymart_orders').update({
                     payment_receipt_rejected: true,
                     updated_at: new Date().toISOString(),
                   }).eq('id', order.id);
+                  if (error) {
+                    toast.error('Gagal menolak resit: ' + error.message);
+                    setLoading(false);
+                    return;
+                  }
                   if (order.buyer?.id) {
                     await sendNotificationToUser(order.buyer.id, {
                       title: '⚠ Resit Ditolak',
@@ -583,13 +667,15 @@ export function PolyMartVendorDashboard() {
           status, created_at, business_id,
           payment_method, payment_receipt_url, payment_receipt_rejected,
           payment_verified_at, payment_verified_by, payment_deadline_at,
+          selected_variation,
+          cancellation_requested_at, cancellation_reason,
           business_products!product_id(id, name, image_url, category),
           buyer:profiles!buyer_id(id, full_name, matric_no, phone)
         `)
         .in('business_id', ids)
       .order('created_at', { ascending: false });
 
-    setOrders((data ?? []) as VendorOrder[]);
+    setOrders((data ?? []) as unknown as VendorOrder[]);
     setLoading(false);
   };
 

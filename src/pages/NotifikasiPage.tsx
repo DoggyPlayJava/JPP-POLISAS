@@ -9,6 +9,7 @@ import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 // ─── Module config ─────────────────────────────────────────────────────────────
 const MODULE_CONFIG: Record<NotificationModule, { label: string; color: string; bg: string; dot: string; emoji: string }> = {
@@ -347,6 +348,7 @@ export function NotifikasiPage() {
         {/* Bottom spacing */}
         <div className="h-16" />
       </div>
+      <FloatingAiChat />
     </div>
   );
 }

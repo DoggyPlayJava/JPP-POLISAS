@@ -272,11 +272,10 @@ export function PosSalesReportPDF({
         <View style={s.summaryGrid}>
           {/* Row 1 */}
           <View style={s.summaryCard}>
-            <Text style={s.summaryLabel}>Jualan Bersih</Text>
-            <Text style={[s.summaryValue, { color: themeColor }]}>{fmtRM(stats.totalRevenue)}</Text>
-            {stats.grossRevenue > stats.totalRevenue && (
-              <Text style={s.metaText}>Kasar: {fmtRM(stats.grossRevenue)}</Text>
-            )}
+            <Text style={s.summaryLabel}>Tunai Kasar (Tunai+Bank)</Text>
+            <Text style={[s.summaryValue, { color: themeColor }]}>{fmtRM((stats as any).totalCashCollected ?? stats.totalRevenue)}</Text>
+            <Text style={s.metaText}>Selesai: {fmtRM(stats.totalRevenue)}</Text>
+            <Text style={s.metaText}>Pending QR: {fmtRM((stats as any).onlinePendingRevenue ?? 0)}</Text>
           </View>
           <View style={s.summaryCard}>
             <Text style={s.summaryLabel}>Jumlah Perbelanjaan</Text>

@@ -28,6 +28,7 @@ import { KlkDynamicFieldRenderer } from '@/components/klk/KlkDynamicFieldRendere
 import { KawasanSearchSelect } from '@/components/klk/KawasanSearchSelect';
 import { getKlkAcademicYear } from '@/utils/klkUtils';
 import { BottomNav } from '@/components/layout/BottomNav';
+import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ProfileEditRequestSection — Permintaan pindaan matrik/semester (dalam Tab Profil Awam)
@@ -1327,6 +1328,7 @@ export function SettingsPage() {
 
     </motion.div>
     <BottomNav onOpenSidebar={() => setIsSidebarOpen(true)} />
+    <FloatingAiChat />
     </>
   );
 }

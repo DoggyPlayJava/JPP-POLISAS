@@ -23,6 +23,11 @@ import { PosScannerModal } from './PosScannerModal';
 
 const fmtRM = (v: number) => `RM ${v.toFixed(2)}`;
 
+function extractOrderId(text: string): string {
+  const match = text.match(/([a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12})/i);
+  return match ? match[1] : text;
+}
+
 // ── POS Access Denied ─────────────────────────────────────────────────────────
 
 function PosAccessDenied({ color }: { color: string }) {
@@ -344,18 +349,20 @@ export function PosOrderPage() {
   };
 
   // ── PolyMart Scan Handlers ────────────────────────────────────────────────
-  const handleScan = async (decodedText: string) => {
+  const handleScan = useCallback(async (decodedText: string) => {
     setShowScanner(false);
     setProcessing(true);
     try {
+      const cleanText = extractOrderId(decodedText);
       const { data, error } = await supabase
         .from('polymart_orders')
         .select(`
-          *,
+          id, quantity, unit_price, total_price, business_id, product_id,
+          payment_method, status, selected_variation,
           business_products ( id, name, price ),
-          buyer:user_id ( id, full_name )
+          buyer:profiles!buyer_id ( id, full_name )
         `)
-        .eq('id', decodedText)
+        .eq('id', cleanText)
         .single();
         
       if (error || !data) throw new Error('Pesanan tidak wujud');
@@ -368,7 +375,7 @@ export function PosOrderPage() {
     } finally {
       setProcessing(false);
     }
-  };
+  }, [businessId]);
 
   const handleCompletePolyMart = async () => {
     if (!scannedOrder) return;
@@ -768,7 +775,12 @@ export function PosOrderPage() {
       {/* PolyMart QR Scanner */}
       <AnimatePresence>
         {showScanner && (
-          <PosScannerModal onScan={handleScan} onClose={() => setShowScanner(false)} />
+          <PosScannerModal 
+            onScan={handleScan} 
+            onClose={() => setShowScanner(false)} 
+            businessId={businessId}
+            servedBy={profile?.id || ''}
+          />
         )}
       </AnimatePresence>
 
@@ -796,6 +808,11 @@ export function PosOrderPage() {
 
                 <div className="p-3 bg-muted/30 rounded-xl mb-4 text-sm font-bold border border-border/50">
                   <p className="text-muted-foreground">{scannedOrder.business_products?.name} x {scannedOrder.quantity}</p>
+                  {scannedOrder.selected_variation && (
+                    <span className="inline-block mt-1 px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-600 text-[10px] font-black uppercase tracking-wider border border-amber-500/20">
+                      Saiz: {scannedOrder.selected_variation}
+                    </span>
+                  )}
                   <p className="text-xl mt-1" style={{ color }}>{fmtRM(scannedOrder.total_price)}</p>
                 </div>
 

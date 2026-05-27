@@ -527,6 +527,12 @@ export interface CostItem {
   subtotal:             number;
 }
 
+export interface ProductVariation {
+  name: string;
+  stock: number;
+  reserved?: number;
+}
+
 export interface BusinessProduct {
   id:                    string;
   business_id:           string;
@@ -551,16 +557,38 @@ export interface BusinessProduct {
   polymart_published_at?:  string | null;
   // Payment override per-product (NULL = ikut perniagaan)
   online_payment_enabled?: boolean | null;
+  variations?:             ProductVariation[];
+  // Multi-image gallery (migration 91)
+  image_urls?:             string[];
+  // Flash sale / pre-order (migration 92)
+  sale_price?:             number | null;
+  sale_start_at?:          string | null;
+  sale_end_at?:            string | null;
+  is_preorder?:            boolean;
+  preorder_deadline?:      string | null;
+}
+
+export interface PolyAd {
+  id: string;
+  title: string;
+  image_url: string;
+  link_url?: string;
+  type: 'INTERNAL' | 'EXTERNAL';
+  status: 'DRAFT' | 'ACTIVE' | 'INACTIVE';
+  start_date?: string;
+  end_date?: string;
+  clicks: number;
 }
 
 export interface PolymartCartItem {
-  id:          string;
-  buyer_id:    string;
-  product_id:  string;
-  quantity:    number;
-  created_at:  string;
+  id:                  string;
+  buyer_id:            string;
+  product_id:          string;
+  quantity:            number;
+  selected_variation?: string | null;
+  created_at:          string;
   // Joined
-  product?:    BusinessProduct;
+  product?:            BusinessProduct;
 }
 
 export interface BusinessTransactionItem {
@@ -569,6 +597,7 @@ export interface BusinessTransactionItem {
   qty:         number;
   unit_price:  number;
   total_price: number;
+  variation?:  string | null;
 }
 
 export interface BusinessTransaction {

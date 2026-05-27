@@ -42,20 +42,23 @@ export interface ProcessTransactionPayload {
 }
 
 export interface StatsData {
-  totalRevenue:      number;  // jumlah selepas diskaun
+  totalRevenue:      number;  // jumlah selepas diskaun (accrual - completed only)
   grossRevenue:      number;  // jumlah sebelum diskaun
   totalDiscounts:    number;  // jumlah diskaun yang diberi
   transactionCount:  number;
   unitsSold:         number;
   averageOrderValue: number;
-  dailySales:        { date: string; revenue: number; count: number }[];
+  dailySales:        { date: string; revenue: number; onlineCash?: number; count: number }[];
   topProducts:       { name: string; revenue: number; units: number }[];
   // Ciri Komersial Baharu
   totalExpenses:          number;
   netProfit:              number;
   expensesByCategory:     { category: string; amount: number }[];
-  onlineRevenue:          number;
-  physicalRevenue:        number;
+  onlineRevenue:          number; // completed online only
+  physicalRevenue:        number; // completed physical only
+  onlinePendingRevenue:   number; // pending online QR (CONFIRMED/READY)
+  totalCashCollected:     number; // totalRevenue + onlinePendingRevenue
+  expenseItems?: { expense_date: string; description: string; category: string; amount: number }[];
 }
 
 // ── Main Hook ─────────────────────────────────────────────────────────────────
@@ -405,8 +408,8 @@ export function usePosData(businessId?: string, parentLoading = false) {
     const fromDate = from.toISOString().split('T')[0];
     const toDate   = now.toISOString().split('T')[0];
 
-    // Parallel query — transaksi dan perbelanjaan serentak
-    const [txnResult, expResult] = await Promise.all([
+    // Parallel query — transaksi, perbelanjaan, dan pesanan polymart online pending serentak
+    const [txnResult, expResult, polymartPendingResult] = await Promise.all([
       supabase
         .from('business_transactions')
         .select('total_amount, subtotal, discount_amount, items, created_at, invoice_number')
@@ -416,14 +419,23 @@ export function usePosData(businessId?: string, parentLoading = false) {
         .order('created_at'),
       supabase
         .from('business_expenses')
-        .select('amount, category')
+        .select('amount, category, expense_date, description')
         .eq('business_id', bId)
         .gte('expense_date', fromDate)
         .lte('expense_date', toDate),
+      supabase
+        .from('polymart_orders')
+        .select('total_price, unit_price, quantity, created_at, payment_method')
+        .eq('business_id', bId)
+        .in('status', ['CONFIRMED', 'READY'])
+        .eq('payment_method', 'QR_ONLINE') // Filter only QR_ONLINE — cash/COD belum diterima
+        .gte('created_at', fromIso)
+        .order('created_at'),
     ]);
 
     const safeArr     = txnResult.data ?? [];
     const safeExpArr  = expResult.data ?? [];
+    const safePmPending = polymartPendingResult?.data ?? [];
 
     // Net revenue (selepas diskaun) — nombor sebenar yang diterima
     const totalRevenue    = safeArr.reduce((s: number, t: any) => s + (t.total_amount ?? 0), 0);
@@ -433,17 +445,33 @@ export function usePosData(businessId?: string, parentLoading = false) {
     const totalDiscounts  = safeArr.reduce((s: number, t: any) => s + (t.discount_amount ?? 0), 0);
     const transactionCount = safeArr.length;
 
+    // Hitung kutipan pending atas talian
+    const onlinePendingRevenue = safePmPending.reduce(
+      (s: number, o: any) => {
+        const val = o.total_price !== null && o.total_price !== undefined
+          ? Number(o.total_price)
+          : (Number(o.unit_price ?? 0) * Number(o.quantity ?? 0));
+        return s + val;
+      },
+      0
+    );
+    const totalCashCollected = totalRevenue + onlinePendingRevenue;
+
     let unitsSold = 0;
     const productMap: Record<string, { name: string; revenue: number; units: number }> = {};
-    const dayMap:     Record<string, { revenue: number; count: number }> = {};
+    
+    // Map harian untuk sales (accrual selesai) dan onlineCash (cash basis)
+    const dayMap:     Record<string, { revenue: number; onlineCash: number; count: number }> = {};
 
     let onlineRevenue = 0;
     let physicalRevenue = 0;
 
+    // 1. Masukkan transaksi POS completed harian
     safeArr.forEach((t: any) => {
       const day = t.created_at.split('T')[0];
-      if (!dayMap[day]) dayMap[day] = { revenue: 0, count: 0 };
+      if (!dayMap[day]) dayMap[day] = { revenue: 0, onlineCash: 0, count: 0 };
       dayMap[day].revenue += t.total_amount ?? 0;
+      dayMap[day].onlineCash += t.total_amount ?? 0; // complete transaction is already cash collected
       dayMap[day].count   += 1;
 
       if (t.invoice_number?.startsWith('PM-')) {
@@ -460,9 +488,24 @@ export function usePosData(businessId?: string, parentLoading = false) {
       });
     });
 
+    // 2. Masukkan pending online harian ke dalam daily onlineCash harian
+    safePmPending.forEach((o: any) => {
+      const day = o.created_at.split('T')[0];
+      if (!dayMap[day]) dayMap[day] = { revenue: 0, onlineCash: 0, count: 0 };
+      const amt = o.total_price !== null && o.total_price !== undefined
+        ? Number(o.total_price)
+        : (Number(o.unit_price ?? 0) * Number(o.quantity ?? 0));
+      dayMap[day].onlineCash += amt;
+    });
+
     const dailySales = Object.entries(dayMap)
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, val]) => ({ date, ...val }));
+      .map(([date, val]) => ({
+        date,
+        revenue: val.revenue,
+        onlineCash: val.onlineCash,
+        count: val.count
+      }));
 
     const topProducts = Object.values(productMap)
       .sort((a, b) => b.revenue - a.revenue)
@@ -491,6 +534,9 @@ export function usePosData(businessId?: string, parentLoading = false) {
       expensesByCategory,
       onlineRevenue,
       physicalRevenue,
+      onlinePendingRevenue,
+      totalCashCollected,
+      expenseItems: safeExpArr,
     };
   }, []);
 
@@ -685,7 +731,7 @@ export function usePosData(businessId?: string, parentLoading = false) {
       });
       if (error) throw error;
       
-      await writeLog(bId, 'OWNERSHIP_TRANSFERRED', `Pemilikan perniagaan telah dipindahkan sepenuhnya kepada ${newOwnerName}.`);
+      await writeLog(bId, 'SETTINGS_UPDATED', `Pemilikan perniagaan telah dipindahkan sepenuhnya kepada ${newOwnerName}.`);
       toast.success('Pemilikan perniagaan berjaya dipindahkan!');
       return true;
     } catch (err: any) {

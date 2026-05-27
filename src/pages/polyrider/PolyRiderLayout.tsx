@@ -6,6 +6,8 @@ import { ShieldAlert } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { PolyRiderSuspended } from './PolyRiderSuspended';
 
+import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
+
 export function PolyRiderLayout() {
   const { user } = useAuth();
   const [isActive, setIsActive] = useState<boolean | null>(null);
@@ -58,6 +60,7 @@ export function PolyRiderLayout() {
           </div>
         </div>
         <BottomNav />
+        <FloatingAiChat />
       </div>
     );
   }
@@ -72,6 +75,7 @@ export function PolyRiderLayout() {
         <Outlet />
       </div>
       <BottomNav />
+      <FloatingAiChat />
     </div>
   );
 }

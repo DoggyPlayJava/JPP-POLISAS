@@ -1029,6 +1029,9 @@ PolyMart adalah marketplace dalam-app untuk pelajar POLISAS menjual dan membeli 
 | `polymart_orders` | Pesanan pembeli (status: `PENDING`→`CONFIRMED`→`READY`→`COMPLETED`/`CANCELLED`) |
 | `polymart_reports` | Laporan aduan terhadap iklan |
 | `polymart_reviews` | Ulasan pembeli selepas transaksi selesai |
+| `polymart_conversations` | Sesi perbualan sembang antara pembeli dan vendor perniagaan |
+| `polymart_messages` | Mesej dalam perbualan sembang polymart |
+| `polymart_wishlist` | Senarai hajat produk pilihan pembeli |
 
 #### Lajur Pembayaran Baru (Migration `52_polymart_online_payment.sql`)
 
@@ -1049,6 +1052,34 @@ PolyMart adalah marketplace dalam-app untuk pelajar POLISAS menjual dan membeli 
 | `polymart_orders` | `payment_verified_by` | `UUID` | Vendor yang sahkan bayaran |
 | `polymart_orders` | `payment_deadline_at` | `TIMESTAMPTZ` | Had masa auto-cancel |
 
+#### Ciri Promosi, Pra-Tempahan & Pembatalan (Mei 2026 Updates)
+
+| Jadual | Lajur Baru | Jenis | Fungsi |
+|---|---|---|---|
+| `business_products` | `image_urls` | `TEXT[] DEFAULT '{}'` | Sokongan berbilang gambar produk |
+| `business_products` | `sale_price` | `DECIMAL(10,2)` | Harga jualan promosi / kilat (flash sale) |
+| `business_products` | `sale_start_at` | `TIMESTAMPTZ` | Tarikh/masa mula promosi |
+| `business_products` | `sale_end_at` | `TIMESTAMPTZ` | Tarikh/masa tamat promosi |
+| `business_products` | `is_preorder` | `BOOLEAN DEFAULT false` | Status produk pra-tempah (pre-order) |
+| `business_products` | `preorder_deadline` | `TIMESTAMPTZ` | Had masa tempoh pra-tempah |
+| `polymart_orders` | `cancellation_requested_at` | `TIMESTAMPTZ` | Masa pembatalan dipohon oleh pembeli |
+| `polymart_orders` | `cancellation_reason` | `TEXT` | Alasan pembatalan oleh pembeli |
+| `polymart_orders` | `cancelled_at` | `TIMESTAMPTZ` | Tarikh pembatalan diluluskan/selesai |
+| `polymart_orders` | `cancelled_by` | `UUID` | ID profil yang membatalkan pesanan |
+
+#### Pengurusan Stok & Variasi Berasaskan JSONB (Mei 2026 Updates)
+
+Sistem variasi produk (saiz baju, warna, dll.) ditukar daripada senarai teks biasa (`TEXT[]`) kepada jenis data berstruktur `JSONB` bagi membolehkan penjejakan stok khusus bagi setiap variasi secara automatik.
+
+| Jadual | Lajur Baru | Jenis | Fungsi |
+|---|---|---|---|
+| `business_products` | `variations` | `JSONB` | Menyimpan array variasi: `[{"name": "S", "stock": 10, "reserved": 2}, ...]` |
+| `polymart_cart_items` | `selected_variation` | `TEXT` | Menyimpan variasi pilihan dalam troli (UNIQUE index `(buyer_id, product_id, COALESCE(selected_variation, ''))` membolehkan pelajar menambah pelbagai variasi bagi baju yang sama) |
+
+##### Mekanisme Pengiraan Stok
+1. **Auto-Sum UI**: Borang POS / PolyMart vendor secara automatik menjumlahkan semua stok variasi (cth: `S:5`, `M:10` -> Stok Semasa: `15`) dan mengunci ruangan input stok utama untuk mengelakkan ralat kemasukan.
+2. **Row Locking & Safe Update**: Semua RPC tempahan stok (`reserve_polymart_stock`), pelepasan stok (`release_polymart_stock`), dan penyelesaian pesanan (`complete_polymart_order`) memanggil helper function `update_product_variation_stock()` dengan mengunci baris produk (`FOR UPDATE`) bagi menghalang race condition.
+
 ### 16.2 Routes
 
 | Route | Komponen | Akses |
@@ -1056,6 +1087,7 @@ PolyMart adalah marketplace dalam-app untuk pelajar POLISAS menjual dan membeli 
 | `/polymart` | `PolyMartHome` | Semua (termasuk pelawat tanpa login) |
 | `/polymart/produk/:id` | `PolyMartProductDetail` | Semua |
 | `/polymart/pesanan-saya` | `PolyMartMyOrders` | Authenticated |
+| `/polymart/chat` | `PolyMartChat` | Authenticated — sembang langsung pembeli-vendor |
 | `/polymart/vendor` | `PolyMartVendorDashboard` | Vendor (ada perniagaan aktif) |
 | `/polymart/verify/:orderId` | `PolyMartVerifyPickup` | Vendor (ahli perniagaan) — scan QR pickup |
 | `/polymart/bayar/:orderId` | `PolyMartPaymentPage` | Authenticated — muat naik resit QR (checkout portal) |
@@ -1980,7 +2012,8 @@ Semua komponen utama mestilah dipetakan mengikut lapisan Z-Index yang ketat ini 
 4. **z-[130]**: Backdrop (Latar gelap) untuk mana-mana Sidebar Modul (JPP, KLK, Kebajikan, dll).
 5. **z-[140]**: Sidebar (Kandungan sebenar menu navigasi tepi). *Ini memastikan Sidebar yang ditarik dari tepi sentiasa menutup BottomNav.*
 6. **z-[999]**: Semua Pop-out Shadcn (Drawer, Dialog, Sheet, AlertDialog). *Ini memastikan sebarang tetingkap timbul sentiasa berada di atas komponen susun atur.*
-7. **z-[9999]**: Notifikasi eact-hot-toast (ditetapkan ke 	op-center) dan Penunjuk Mod Luar Talian (OfflineIndicator).
+7. **z-[9999]**: Notifikasi 
+eact-hot-toast (ditetapkan ke 	op-center) dan Penunjuk Mod Luar Talian (OfflineIndicator).
 
 ### Prestasi Navigasi (Mobile Performance)
 - **Elakkan React State untuk Scroll**: Gunakan Manipulasi DOM secara terus (

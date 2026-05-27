@@ -71,6 +71,8 @@ function ClaimInviteScreen() {
   );
 }
 
+import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
+
 // ─── Ketua Layout ─────────────────────────────────────────────
 export function KetuaLayout() {
   const { profile, isLoading: authLoading } = useAuth();
@@ -120,6 +122,8 @@ export function KetuaLayout() {
       <main className="px-4 max-w-4xl mx-auto">
         <Outlet context={{ myKontingen }} />
       </main>
+
+      <FloatingAiChat />
     </div>
   );
 }
