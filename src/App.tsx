@@ -68,6 +68,7 @@ const KeusahawananIdea = lazy(() => import('./pages/keusahawanan/KeusahawananPla
 const KeusahawananGeran = lazy(() => import('./pages/keusahawanan/KeusahawananPlaceholders').then(m => ({ default: m.KeusahawananGeran })));
 const KeusahawananLaporan = lazy(() => import('./pages/keusahawanan/KeusahawananPlaceholders').then(m => ({ default: m.KeusahawananLaporan })));
 const KeusahawananOnboarding = lazy(() => import('./pages/keusahawanan/KeusahawananOnboarding').then(m => ({ default: m.KeusahawananOnboarding })));
+const KeusahawananPoster = lazy(() => import('./pages/keusahawanan/KeusahawananPoster').then(m => ({ default: m.KeusahawananPoster })));
 const UrusPerniagaanPage = lazy(() => import('./pages/keusahawanan/UrusPerniagaanPage').then(m => ({ default: m.UrusPerniagaanPage })));
 const PosOrderPage = lazy(() => import('./pages/keusahawanan/pos/PosOrderPage').then(m => ({ default: m.PosOrderPage })));
 const PosProductPage = lazy(() => import('./pages/keusahawanan/pos/PosProductPage').then(m => ({ default: m.PosProductPage })));
@@ -329,6 +330,7 @@ function AppRoutes() {
 
         {/* ── e-Keusahawanan Onboarding (No Sidebar) ── */}
         <Route path="/keusahawanan/onboarding" element={<RequireApproval><KeusahawananOnboarding /></RequireApproval>} />
+        <Route path="/keusahawanan/poster" element={<RequireApproval><KeusahawananPoster /></RequireApproval>} />
 
         {/* ── e-Keusahawanan (prefix: /keusahawanan/) ── */}
         <Route element={<RequireApproval><KeusahawananLayout /></RequireApproval>}>

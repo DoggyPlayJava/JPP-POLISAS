@@ -281,6 +281,9 @@ import { supabase } from '@/lib/supabase';
 | `student_business_memberships`| Keahlian & hirarki perniagaan pelajar (role: `OWNER`/`MEMBER`, status: `PENDING`/`ACTIVE`/`REJECTED`)|
 | `ai_usage_logs` | Rekod penggunaan AI Nexus |
 | `notifications` | Notifikasi dalam app |
+| `polysuara_comments` | Ulasan/komen rahsia Tier-1 & Tier-2 bagi PolySuara |
+| `polysuara_comment_votes` | Log undian upvote/downvote ulasan PolySuara |
+| `polysuara_comment_reports` | Laporan penyalahgunaan ulasan PolySuara oleh pelajar |
 
 ### Logging:
 ```typescript
@@ -2081,3 +2084,55 @@ Bagi memastikan kelancaran logik pengelompokan (grouping) dan klasifikasi fasili
 - **Input Asal:** Dropdown <select> biasa yang menjadi sangat meleret.
 - **Naik Taraf (Datalist):** Ditukar menggunakan <input> bersama <datalist>. Pentadbir kini boleh *type-to-search* nama bangunan atau kod bangunan. Sistem akan secara proaktif menterjemahkan teks yang dipadankan kepada uilding_id di sebalik tabir.
 
+
+---
+
+## 19. Senibina Modul PolySuara Social Commenting Platform (e-Kebajikan) 💬
+
+> Ditambah: Mei 2026
+
+Modul PolySuara kini telah dinaik taraf daripada papan luahan sehala kepada **platform perbincangan sosial tanpa nama** yang interaktif. Pengguna boleh bertukar pendapat melalui sistem ulasan bertingkat (2-level comment nesting: confessions $\rightarrow$ comments $\rightarrow$ replies) dengan kawalan privasi bertaraf tinggi serta sistem moderasi pintar di bawah seliaan Exco Kebajikan.
+
+### 19.1 Skema Pangkalan Data & Trigger Unik
+Bagi menyokong perbincangan tanpa profil peribadi pelajar diceroboh, pangkalan data dibina dengan struktur rujukan silang yang selamat:
+- **`polysuara_comments`**: Menyimpan teks ulasan, sokongan untuk lampiran imej (`image_url`), status *soft-delete* (`is_deleted_by_moderator`), dan `parent_id` untuk menyokong sarangan Tier-2 (balas komen).
+- **`polysuara_comment_votes`**: Menyimpan data undian ulasan (`UPVOTE` / `DOWNVOTE`) bagi memastikan mutual exclusion (satu undi sahaja bagi setiap komen/pelajar).
+- **`polysuara_comment_reports`**: Menyimpan rekod laporan penyalahgunaan ulasan bagi tujuan audit moderasi.
+
+#### 🔐 Codenaming Tanpa Nama Terselubung (Thread-Scoped Hashing)
+Untuk mengelakkan pendedahan identiti di sebalik ulasan merentasi post berbeza (*student profiling*), sistem menggunakan trigger automatik `trg_polysuara_comment_codename`:
+1. **Original Poster (OP):** Jika pengomen adalah penulis confession asal, nama samarannya diselaraskan semula dengan mengekalkan nama samaran post ditambah dengan tag **`[Penulis]`** (cth: `Kucing Comel [Penulis]`).
+2. **Komen Pelajar Lain:** Jika pelajar lain yang mengomen, identiti mereka ditukar secara dinamik berasaskan MD5 hash komposit:
+   $$\text{Codename} = \text{"Anon-"} + \text{substring}(\text{md5}(\text{user\_id} + \text{confession\_id}), 1, 5)$$
+   *Kelebihan:* Nama samaran `Anon-XXXXX` kekal konsisten di dalam satu thread luahan (pelajar boleh berbincang dengan identiti konsisten di post tersebut) tetapi bertukar sepenuhnya kepada nama rawak lain di post luahan yang berbeza, menghalang sesiapa daripada mengumpul profil tingkah laku pelajar.
+3. **Trigger Penapisan Profaniti:** Pemasangan trigger `trg_censor_polysuara_comment` yang menggunakan semula fungsi `censor_polysuara_content()` memastikan setiap komen yang dihantar disaring terlebih dahulu daripada perkataan sensor sebelum disimpan dalam DB.
+
+### 19.2 Polisi Keselamatan (RLS) & RPC Atomik
+Sejajar dengan garis panduan prestasi tinggi dan beban 1,500 pengguna orientasi:
+- **Polisi Seleksi Terhad:** Polisi `polysuara_comment_votes` and `polysuara_comment_reports` mengehadkan select query strictly kepada `user_id = (SELECT auth.uid())`. Tiada sesiapa pun (termasuk frontend pembangun awam) boleh mengekstrak identiti siapa yang mengundi atau melaporkan sesuatu komen.
+- **RPC Voting `toggle_polysuara_comment_vote`:** Mengelakkan operasi gandaan frontend (*race conditions*). Panggilan atomik PostgreSQL ini mengurus pertukaran sokong/bantah, menyelaraskan kaunter cache ulasan, dan menguji threshold komuniti.
+- **Had Sembunyi Komuniti (Auto-Hide):**
+  - **Ulasan:** Disembunyikan secara automatik (`is_hidden_by_community = true`) sekiranya ulasan mendapat $\ge 5$ laporan unik ATAU mendapat downvote melebihi $70\%$ daripada jumlah undian (minimum 10 undian keseluruhan).
+  - **Confession:** Disembunyikan secara automatik sekiranya menerima downvote melebihi $60\%$ daripada 40 undian pertama awam.
+
+### 19.3 Integriti Front-End & Eskalasi Krisis Kebajikan
+- **Visual Nesting Premium:** Tier-2 (balasan) disusun di bawah Tier-1 dengan anjakan margin kiri (`pl-6`) disertakan garisan visual menegak kelabu kabur (`border-l border-slate-800 ml-5`) bagi menghasilkan kesinambungan mata yang premium.
+- **Sensitive Content Blur:** Komen yang ditandakan sebagai sensitif oleh pelajar semasa hantar akan diselimuti kabur spoiler (`SensitiveCommentContent`). Kandungan hanya akan didedahkan setelah pelajar menekan amaran tersebut secara manual.
+- **OP Highlight Badge:** Penulis luahan asal dibekalkan dengan lencana OP bergradien yang cantik (`bg-gradient-to-r from-rose-500 to-pink-500`) bagi memudahkan pelajar mengecam input tulen OP manakala nama samaran dibersihkan daripada teks plain `[Penulis]`.
+- **Tombstone Rendering:** Ulasan bertanda `is_deleted_by_moderator = true` mempamerkan kotak amaran kelabu gelap eksklusif manakala butang tindakan seperti undian, balasan, dan laporan disembunyikan.
+- **🚨 Butang Eskalasi Kebajikan ("Bantuan"):** Jika ulasan mengandungi unsur krisis mental atau kemudaratan fizikal, butang kecemasan membolehkan mana-mana pelajar menolak isyarat aduan kecemasan ke Exco Kebajikan secara rahsia. RPC database akan menandakan ulasan untuk disembunyikan dan menghantar notifikasi segera ke Exco menggunakan utiliti:
+  ```typescript
+  await sendNotificationToKebajikanExco({
+    title: '🚨 Kecemasan Ulasan PolySuara',
+    message: 'Pelajar melaporkan ulasan memerlukan tindakan kebajikan segera.',
+    type: 'ALERT',
+    module: 'KEBAJIKAN',
+    link: '/jpp/kebajikan'
+  });
+  ```
+
+### 19.4 Moderasi & Analisis Komposit (JPP Dashboard)
+- **Moderasi Komen:** Exco Kebajikan JPP mempunyai panel kawalan khusus di tab Moderasi `/jpp/polyservices`. Setiap ulasan yang disembunyikan oleh komuniti (auto-hide) or dilaporkan akan disenaraikan di bahagian atas untuk tindakan:
+  - **`Lepaskan`:** Memanggil RPC `restore_hidden_comment()` untuk menetapkan semula status `is_hidden_by_community` kepada false, membersihkan reports_count, dan memulihkan ulasan di feed awam.
+  - **`Padam`:** Memanggil RPC pintar `soft_or_hard_delete_polysuara_comment()` yang secara automatik memilih antara *Soft-Delete / Tombstone* (jika ulasan mempunyai jawapan Tier-2 di bawahnya) bagi mengekalkan kesinambungan topik perbincangan, atau melakukan *Hard-Delete* (jika tiada ulasan anak) untuk menjaga kebersihan pangkalan data.
+- **Analisis Sentimen Awan Kata (Word-Cloud):** Algoritma awan kata (`getWordCloud`) kini dinaik taraf untuk menggabungkan teks luahan confession berserta kandungan ulasan sosial yang aktif bagi membolehkan Exco menganalisis topik dan kebimbangan pelajar POLISAS secara menyeluruh dan holistik.

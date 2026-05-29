@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import toast from 'react-hot-toast';
-import { Send, Shield, AlertTriangle, MessageSquare, Flag, ThumbsDown, Flame, Lock, EyeOff, Search, Hash, Loader2, Image as ImageIcon, X, Pin, Check, ChevronLeft, Bell, BellRing, BarChart, XCircle, UserCircle2, CheckCircle, Clock, Share2, Ghost, Heart, Sparkles } from 'lucide-react';
+import { Send, Shield, AlertTriangle, MessageSquare, Flag, ThumbsDown, Flame, Lock, EyeOff, Search, Hash, Loader2, Image as ImageIcon, X, Pin, Check, ChevronLeft, Bell, BellRing, BarChart, XCircle, UserCircle2, CheckCircle, Clock, Share2, Ghost, Heart, Sparkles, MessageCircle, Eye, ShieldAlert } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +15,7 @@ import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { PolySuaraPoll } from './PolySuaraPoll';
 import { IGStoryExportCard } from '@/components/polysuara/IGStoryExportCard';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
+import ReactMarkdown from 'react-markdown';
 
 const CATEGORIES = ['UMUM', 'AKADEMIK', 'FASILITI', 'KAMSIS', 'KAUNSELING'];
 const MAX_POLL_OPTIONS = 4;
@@ -98,6 +99,25 @@ export function PolySuaraPage() {
   const [polySuaraNotif, setPolySuaraNotif] = useState(true);
   const [notifToggleLoading, setNotifToggleLoading] = useState(false);
 
+  // Comments (Ulasan) States
+  const [commentDrawerOpen, setCommentDrawerOpen] = useState(false);
+  const [activeConfessionForComments, setActiveConfessionForComments] = useState<any | null>(null);
+  const [comments, setComments] = useState<any[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [newCommentText, setNewCommentText] = useState('');
+  const [isSensitiveComment, setIsSensitiveComment] = useState(false);
+  const [replyingToCommentId, setReplyingToCommentId] = useState<string | null>(null);
+  const [replyCommentText, setReplyCommentText] = useState('');
+  const [submittingComment, setSubmittingComment] = useState(false);
+  const [commentSortBy, setCommentSortBy] = useState<'LATEST' | 'TOP'>('LATEST');
+  const [commentFile, setCommentFile] = useState<File | null>(null);
+  const [commentImagePreview, setCommentImagePreview] = useState<string | null>(null);
+  
+  // Comments votes tracking
+  const [commentUpvotes, setCommentUpvotes] = useState<Set<string>>(new Set());
+  const [commentDownvotes, setCommentDownvotes] = useState<Set<string>>(new Set());
+  const [escalatingCommentId, setEscalatingCommentId] = useState<string | null>(null);
+
   // Fetch notification preference from DB on mount
   useEffect(() => {
     if (!profile?.id) return;
@@ -118,6 +138,18 @@ export function PolySuaraPage() {
       if (file.type.startsWith('image/')) {
         setSelectedFile(file);
         setImagePreview(URL.createObjectURL(file));
+      } else {
+        toast.error('Sila muat naik format gambar sahaja.');
+      }
+    }
+  };
+
+  const handleCommentImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.type.startsWith('image/')) {
+        setCommentFile(file);
+        setCommentImagePreview(URL.createObjectURL(file));
       } else {
         toast.error('Sila muat naik format gambar sahaja.');
       }
@@ -182,7 +214,7 @@ export function PolySuaraPage() {
   const buildFeedQuery = (offset: number) => {
     let query = supabase
       .from('polysuara_confessions')
-      .select('id, content, category, upvotes, downvotes, created_at, official_reply, official_reply_at, responder:replied_by(full_name), status, codename, hashtags, author_reply, author_reply_at, image_url, is_pinned, polysuara_polls(id, is_multiple_choice, polysuara_poll_options(id, option_text, vote_count, polysuara_poll_votes(user_id)))')
+      .select('id, content, category, upvotes, downvotes, comments_count, created_at, official_reply, official_reply_at, responder:replied_by(full_name), status, codename, hashtags, author_reply, author_reply_at, image_url, is_pinned, polysuara_polls(id, is_multiple_choice, polysuara_poll_options(id, option_text, vote_count, polysuara_poll_votes(user_id)))')
       .eq('is_archived', false);
 
     if (sortBy === 'TRENDING') {
@@ -581,6 +613,232 @@ export function PolySuaraPage() {
     }
   };
 
+  // ==========================================
+  // COMMENTS / ULASAN LOGIC
+  // ==========================================
+  const fetchComments = async (confessionId: string) => {
+    setCommentsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('polysuara_comments')
+        .select('id, confession_id, parent_id, content, codename, is_jpp_official, is_sensitive, is_hidden_by_community, is_deleted_by_moderator, image_url, upvotes, downvotes, reports_count, created_at')
+        .eq('confession_id', confessionId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      
+      setComments(data || []);
+      
+      if (profile?.id) {
+        const { data: voteData } = await supabase
+          .from('polysuara_comment_votes')
+          .select('comment_id, vote_type')
+          .eq('user_id', profile.id);
+          
+        if (voteData) {
+          const ups = new Set<string>();
+          const downs = new Set<string>();
+          voteData.forEach((v: any) => {
+            if (v.vote_type === 'UPVOTE') ups.add(v.comment_id);
+            else downs.add(v.comment_id);
+          });
+          setCommentUpvotes(ups);
+          setCommentDownvotes(downs);
+        }
+      }
+    } catch (err) {
+      console.error('[Fetch Comments Error]', err);
+      toast.error('Gagal memuatkan ulasan.');
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  const handleAddComment = async (e: React.FormEvent, parentId: string | null = null) => {
+    e.preventDefault();
+    const text = parentId ? replyCommentText.trim() : newCommentText.trim();
+    if (!text || !profile || !activeConfessionForComments) return;
+
+    setSubmittingComment(true);
+    try {
+      let commentImageUrl = null;
+      if (parentId === null && commentFile) {
+        commentImageUrl = await processAndUploadImage(commentFile);
+      }
+
+      const { data, error } = await supabase
+        .from('polysuara_comments')
+        .insert({
+          confession_id: activeConfessionForComments.id,
+          user_id: profile.id,
+          parent_id: parentId,
+          content: text,
+          is_sensitive: parentId ? false : isSensitiveComment,
+          image_url: commentImageUrl
+        })
+        .select('id, confession_id, parent_id, content, codename, is_jpp_official, is_sensitive, is_hidden_by_community, is_deleted_by_moderator, image_url, upvotes, downvotes, reports_count, created_at')
+        .single();
+
+      if (error) throw error;
+
+      toast.success(parentId ? 'Balasan dihantar!' : 'Ulasan dikongsi!');
+      if (parentId) {
+        setReplyCommentText('');
+        setReplyingToCommentId(null);
+      } else {
+        setNewCommentText('');
+        setIsSensitiveComment(false);
+        setCommentFile(null);
+        setCommentImagePreview(null);
+      }
+      
+      setComments(prev => [...prev, data]);
+      
+      setConfessions(prev => prev.map(c => {
+        if (c.id === activeConfessionForComments.id) {
+          return {
+            ...c,
+            comments_count: (c.comments_count || 0) + 1
+          };
+        }
+        return c;
+      }));
+    } catch (err: any) {
+      console.error('[Add Comment Error]', err);
+      toast.error('Gagal menghantar ulasan.');
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  const handleCommentVote = async (commentId: string, voteType: 'UPVOTE' | 'DOWNVOTE') => {
+    if (!profile) return;
+    
+    const isUp = voteType === 'UPVOTE';
+    const hasUpvoted = commentUpvotes.has(commentId);
+    const hasDownvoted = commentDownvotes.has(commentId);
+
+    // Optimistic UI updates
+    setCommentUpvotes(prev => {
+      const next = new Set(prev);
+      if (isUp) {
+        if (hasUpvoted) next.delete(commentId);
+        else next.add(commentId);
+      } else {
+        next.delete(commentId);
+      }
+      return next;
+    });
+
+    setCommentDownvotes(prev => {
+      const next = new Set(prev);
+      if (!isUp) {
+        if (hasDownvoted) next.delete(commentId);
+        else next.add(commentId);
+      } else {
+        next.delete(commentId);
+      }
+      return next;
+    });
+
+    setComments(prev => prev.map(c => {
+      if (c.id === commentId) {
+        let ups = c.upvotes || 0;
+        let downs = c.downvotes || 0;
+        
+        if (isUp) {
+          if (hasUpvoted) ups--;
+          else {
+            ups++;
+            if (hasDownvoted) downs--;
+          }
+        } else {
+          if (hasDownvoted) downs--;
+          else {
+            downs++;
+            if (hasUpvoted) ups--;
+          }
+        }
+        
+        return { ...c, upvotes: ups, downvotes: downs };
+      }
+      return c;
+    }));
+
+    try {
+      const { data: justHidden, error } = await supabase.rpc('toggle_polysuara_comment_vote', {
+        p_comment_id: commentId,
+        p_vote_type: voteType
+      });
+
+      if (error) throw error;
+      
+      if (justHidden) {
+        setComments(prev => prev.filter(c => c.id !== commentId));
+        toast('Ulasan disembunyikan oleh komuniti', { icon: '🚨' });
+      }
+    } catch (err) {
+      console.error('[Comment Vote Error]', err);
+      toast.error('Gagal memproses undian.');
+      if (activeConfessionForComments) fetchComments(activeConfessionForComments.id);
+    }
+  };
+
+  const handleReportComment = async (commentId: string) => {
+    const reason = window.prompt('Sebab melaporkan ulasan ini (minimum 3 aksara):');
+    if (!reason || reason.trim().length < 3) {
+      if (reason != null) toast.error('Sebab laporan tidak sah.');
+      return;
+    }
+
+    try {
+      const { data: justHidden, error } = await supabase.rpc('report_polysuara_comment', {
+        p_comment_id: commentId,
+        p_reason: reason.trim()
+      });
+
+      if (error) throw error;
+
+      toast.success('Ulasan dilaporkan.');
+      if (justHidden) {
+        setComments(prev => prev.filter(c => c.id !== commentId));
+        toast('Ulasan disembunyikan untuk semakan.', { icon: '🚨' });
+      }
+    } catch (err: any) {
+      console.error('[Report Comment Error]', err);
+      toast.error(err.message || 'Gagal menghantar laporan.');
+    }
+  };
+
+  const handleEscalateComment = async (comment: any) => {
+    if (!window.confirm('Hantar laporan krisis/kebajikan kecemasan bagi ulasan ini ke Exco Kebajikan? Tindakan ini 100% rahsia.')) return;
+    
+    setEscalatingCommentId(comment.id);
+    try {
+      const { error } = await supabase.rpc('report_polysuara_comment', {
+        p_comment_id: comment.id,
+        p_reason: '🚨 KECEMASAN/KRISIS ESKALASI: Pelajar melaporkan ulasan ini memerlukan perhatian kecemasan Exco Kebajikan.'
+      });
+
+      if (error && !error.message?.includes('sudah melaporkan')) throw error;
+
+      await sendNotificationToKebajikanExco({
+        title: '🚨 Kecemasan Ulasan PolySuara',
+        message: `Pelajar melaporkan ulasan ("${comment.content.substring(0, 30)}...") memerlukan tindakan kebajikan segera.`,
+        type: 'ALERT',
+        module: 'KEBAJIKAN',
+        link: '/jpp/kebajikan'
+      });
+
+      toast.success('Bantuan Kebajikan telah disegerakan! Exco Kebajikan telah dimaklumkan secara sulit.', { duration: 5000 });
+    } catch (err) {
+      console.error('[Escalate Comment Error]', err);
+      toast.error('Gagal menghantar eskalasi kecemasan.');
+    } finally {
+      setEscalatingCommentId(null);
+    }
+  };
+
   return (
     <div className="min-h-[100dvh] bg-slate-950 pb-24 md:pb-6 relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-rose-500/10 blur-[100px] rounded-full pointer-events-none" />
@@ -903,9 +1161,20 @@ export function PolySuaraPage() {
                               <Shield className="w-4 h-4 text-teal-400" />
                               <span className="text-xs font-black text-teal-400 uppercase tracking-widest">Maklum Balas JPP</span>
                             </div>
-                            <p className="text-teal-50 text-sm leading-relaxed">
-                              {confession.official_reply}
-                            </p>
+                            <div className="text-teal-50 text-sm leading-relaxed">
+                              <ReactMarkdown 
+                                components={{
+                                  p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+                                  ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-2" {...props} />,
+                                  ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-2" {...props} />,
+                                  li: ({node, ...props}) => <li className="mb-1" {...props} />,
+                                  strong: ({node, ...props}) => <strong className="font-extrabold text-teal-300" {...props} />,
+                                  a: ({node, ...props}) => <a className="text-teal-300 underline hover:text-teal-200 transition-colors" target="_blank" rel="noopener noreferrer" {...props} />
+                                }}
+                              >
+                                {confession.official_reply}
+                              </ReactMarkdown>
+                            </div>
                             <div className="mt-2 text-[10px] text-teal-500/60 font-bold uppercase tracking-widest">
                               Oleh: {confession.responder?.full_name || 'Wakil JPP'} • {formatDistanceToNow(new Date(confession.official_reply_at), { addSuffix: true, locale: ms })}
                             </div>
@@ -959,6 +1228,19 @@ export function PolySuaraPage() {
                                 <ThumbsDown className={cn("w-4 h-4", userDownvotes.has(confession.id) && "fill-indigo-500")} />
                               </motion.div>
                               <span className="text-xs font-bold">{confession.downvotes || 0}</span>
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setActiveConfessionForComments(confession);
+                                fetchComments(confession.id);
+                                setCommentDrawerOpen(true);
+                              }}
+                              className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-500 hover:text-rose-400 transition-all group"
+                              title="Lihat Ulasan"
+                            >
+                              <MessageCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                              <span className="text-xs font-bold">{confession.comments_count || 0}</span>
                             </button>
                           </div>
 
@@ -1279,6 +1561,424 @@ export function PolySuaraPage() {
       {/* Include BottomNav to prevent the bottom from being cut off on mobile without navigation */}
       <BottomNav />
       <FloatingAiChat />
+
+      {/* Comments Drawer */}
+      <AnimatePresence>
+        {commentDrawerOpen && activeConfessionForComments && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setCommentDrawerOpen(false)}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[150]"
+            />
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-slate-900 border-t border-slate-800 rounded-t-[2.5rem] shadow-2xl z-[151] flex flex-col max-h-[85vh] overflow-hidden pointer-events-auto pb-6"
+            >
+              {/* Drawer drag indicator/Header */}
+              <div className="flex flex-col items-center py-4 border-b border-slate-800/50 shrink-0">
+                <div className="w-12 h-1 bg-slate-700 rounded-full mb-3 cursor-pointer" onClick={() => setCommentDrawerOpen(false)} />
+                <div className="flex items-center justify-between w-full px-6">
+                  <h3 className="text-lg font-black text-white flex items-center gap-2">
+                    <MessageCircle className="w-5 h-5 text-rose-500" />
+                    Ulasan Pelajar
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    {/* Sort Toggle */}
+                    <div className="flex bg-slate-950 rounded-lg p-0.5 border border-slate-800/80">
+                      <button
+                        onClick={() => setCommentSortBy('LATEST')}
+                        className={cn(
+                          "px-2.5 py-1 rounded-md text-[10px] font-bold transition-all",
+                          commentSortBy === 'LATEST' ? "bg-slate-800 text-white" : "text-slate-500 hover:text-white"
+                        )}
+                      >
+                        Terkini
+                      </button>
+                      <button
+                        onClick={() => setCommentSortBy('TOP')}
+                        className={cn(
+                          "px-2.5 py-1 rounded-md text-[10px] font-bold transition-all flex items-center gap-1",
+                          commentSortBy === 'TOP' ? "bg-rose-500/20 text-rose-400" : "text-slate-500 hover:text-white"
+                        )}
+                      >
+                        Terbaik
+                      </button>
+                    </div>
+
+                    <button 
+                      onClick={() => setCommentDrawerOpen(false)}
+                      className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors text-xs font-bold"
+                    >
+                      X
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Confession Preview */}
+              <div className="bg-slate-950/40 p-4 border-b border-slate-800/30 shrink-0 text-xs px-6">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Ghost className="w-3.5 h-3.5 text-rose-400" />
+                  <span className="font-bold text-slate-300">{activeConfessionForComments.codename || 'Pelajar Anon'}</span>
+                  <span className="bg-slate-800 text-[8px] font-black uppercase px-2 py-0.5 rounded text-slate-400">{activeConfessionForComments.category}</span>
+                </div>
+                <p className="text-slate-400 italic line-clamp-2">"{activeConfessionForComments.content}"</p>
+              </div>
+
+              {/* Comments Scrollable Feed */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {commentsLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-slate-500 gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin text-rose-500" />
+                    <p className="text-xs font-bold uppercase tracking-widest">Membaca maklum balas...</p>
+                  </div>
+                ) : comments.length === 0 ? (
+                  <div className="text-center py-12 text-slate-600">
+                    <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-20" />
+                    <p className="text-sm font-bold">Tiada Ulasan Lagi</p>
+                    <p className="text-xs text-slate-500 mt-0.5">Jadilah yang pertama menulis pendapat anda.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {comments
+                      .filter(c => !c.parent_id)
+                      .sort((a, b) => {
+                        if (commentSortBy === 'TOP') {
+                          const netA = (a.upvotes || 0) - (a.downvotes || 0);
+                          const netB = (b.upvotes || 0) - (b.downvotes || 0);
+                          if (netA !== netB) return netB - netA;
+                        }
+                        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+                      })
+                      .map(comment => {
+                        const replies = comments.filter(r => r.parent_id === comment.id);
+                        const isCommUpvoted = commentUpvotes.has(comment.id);
+                        const isCommDownvoted = commentDownvotes.has(comment.id);
+                        const isOP = comment.codename.includes('[Penulis]');
+                        const displayName = isOP ? comment.codename.replace(' [Penulis]', '') : comment.codename;
+
+                        return (
+                          <div key={comment.id} className="space-y-3">
+                            {/* Tier-1 Comment Card */}
+                            <div className={cn(
+                              "bg-slate-950/40 border border-slate-800/60 rounded-2xl p-4 transition-all hover:border-slate-800",
+                              comment.is_jpp_official && "border-teal-500/30 bg-teal-950/10"
+                            )}>
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <span className={cn(
+                                    "text-xs font-bold text-slate-200 flex items-center gap-1",
+                                    comment.is_jpp_official && "text-teal-400"
+                                  )}>
+                                    {comment.is_jpp_official ? <Shield className="w-3.5 h-3.5" /> : null}
+                                    {displayName}
+                                  </span>
+                                  {isOP && (
+                                    <span className="bg-gradient-to-r from-rose-500 to-pink-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1">
+                                      <UserCircle2 className="w-2.5 h-2.5" />
+                                      OP
+                                    </span>
+                                  )}
+                                  {comment.is_jpp_official && (
+                                    <span className="bg-teal-500/20 text-teal-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">JPP Official</span>
+                                  )}
+                                </div>
+                                <span className="text-[9px] text-slate-500">
+                                {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ms })}
+                              </span>
+                            </div>
+
+                            {/* Comment Content (With Sensitive Content Blur) */}
+                            {comment.is_deleted_by_moderator ? (
+                              <div className="bg-slate-950/60 border border-slate-800/40 p-3.5 rounded-xl flex items-center gap-2 text-xs text-slate-500 italic select-none">
+                                <ShieldAlert className="w-4 h-4 text-slate-600 shrink-0" />
+                                {comment.content}
+                              </div>
+                            ) : comment.is_sensitive ? (
+                              <SensitiveCommentContent content={comment.content} />
+                            ) : (
+                              <p className="text-sm text-slate-300 leading-relaxed break-words">{comment.content}</p>
+                            )}
+
+                            {comment.image_url && !comment.is_deleted_by_moderator && (
+                              <div className="mt-3 rounded-xl overflow-hidden border border-slate-800 bg-black/40 max-w-xs">
+                                <img 
+                                  src={comment.image_url} 
+                                  alt="Bukti Lampiran" 
+                                  className="w-full max-h-[160px] object-contain cursor-zoom-in hover:scale-[1.02] transition-transform" 
+                                  onClick={() => window.open(comment.image_url, '_blank')} 
+                                />
+                              </div>
+                            )}
+
+                            {/* Comment Action Buttons */}
+                            {!comment.is_deleted_by_moderator && (
+                              <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-800/40">
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => handleCommentVote(comment.id, 'UPVOTE')}
+                                    className={cn(
+                                      "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all",
+                                      isCommUpvoted ? "bg-rose-500/10 text-rose-500" : "hover:bg-slate-800 text-slate-500 hover:text-rose-400"
+                                    )}
+                                  >
+                                    <Heart className={cn("w-3.5 h-3.5", isCommUpvoted && "fill-rose-500")} />
+                                    {comment.upvotes || 0}
+                                  </button>
+                                  <button
+                                    onClick={() => handleCommentVote(comment.id, 'DOWNVOTE')}
+                                    className={cn(
+                                      "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all",
+                                      isCommDownvoted ? "bg-indigo-500/10 text-indigo-500" : "hover:bg-slate-800 text-slate-500 hover:text-indigo-400"
+                                    )}
+                                  >
+                                    <ThumbsDown className={cn("w-3.5 h-3.5", isCommDownvoted && "fill-indigo-500")} />
+                                    {comment.downvotes || 0}
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setReplyingToCommentId(comment.id);
+                                      setReplyCommentText('');
+                                    }}
+                                    className="text-[10px] font-bold text-slate-500 hover:text-white px-2.5 py-1 rounded-full hover:bg-slate-800 transition-colors flex items-center gap-1"
+                                  >
+                                    <MessageSquare className="w-3.5 h-3.5" /> Balas
+                                  </button>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => handleEscalateComment(comment)}
+                                    disabled={escalatingCommentId === comment.id}
+                                    className="text-[9px] font-black uppercase text-amber-500/70 hover:text-amber-400 bg-amber-500/5 hover:bg-amber-500/10 px-2.5 py-1 rounded-full transition-all flex items-center gap-1 border border-amber-500/10 shrink-0"
+                                    title="Eskalasi kecemasan ke Kebajikan (Rahsia)"
+                                  >
+                                    {escalatingCommentId === comment.id ? (
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                    ) : (
+                                      <ShieldAlert className="w-3 h-3" />
+                                    )}
+                                    Bantuan
+                                  </button>
+                                  <button
+                                    onClick={() => handleReportComment(comment.id)}
+                                    className="text-slate-600 hover:text-amber-500 transition-colors p-1"
+                                    title="Lapor ulasan"
+                                  >
+                                    <AlertTriangle className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Reply Input Form (Tier-1 Specific) */}
+                          {replyingToCommentId === comment.id && (
+                            <form onSubmit={(e) => handleAddComment(e, comment.id)} className="ml-6 p-3 bg-slate-950/60 border border-slate-800/40 rounded-xl flex gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                              <input
+                                type="text"
+                                placeholder={`Balas kepada ${comment.codename}...`}
+                                value={replyCommentText}
+                                onChange={(e) => setReplyCommentText(e.target.value)}
+                                className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-rose-500/50"
+                                maxLength={300}
+                                required
+                              />
+                              <button
+                                type="submit"
+                                disabled={!replyCommentText.trim() || submittingComment}
+                                className="bg-rose-500 disabled:bg-slate-800 text-white disabled:text-slate-500 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all shrink-0"
+                              >
+                                {submittingComment ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                                Balas
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setReplyingToCommentId(null)}
+                                className="text-slate-400 hover:text-white px-2 py-1.5 text-xs font-bold transition-all shrink-0"
+                              >
+                                Batal
+                              </button>
+                            </form>
+                          )}
+
+                          {/* Tier-2 Nested Replies Section */}
+                          {replies.length > 0 && (
+                            <div className="pl-6 space-y-2.5 relative border-l border-slate-800 ml-5">
+                              {replies.map(reply => {
+                                const isReplyUp = commentUpvotes.has(reply.id);
+                                const isReplyDown = commentDownvotes.has(reply.id);
+                                const isReplyOP = reply.codename.includes('[Penulis]');
+                                const displayReplyName = isReplyOP ? reply.codename.replace(' [Penulis]', '') : reply.codename;
+
+                                return (
+                                  <div key={reply.id} className={cn(
+                                    "bg-slate-950/20 border border-slate-900 rounded-2xl p-3.5 relative",
+                                    reply.is_jpp_official && "border-teal-500/20 bg-teal-950/5"
+                                  )}>
+                                    <div className="flex items-center justify-between mb-1.5">
+                                      <div className="flex items-center gap-1.5">
+                                        <span className={cn(
+                                          "text-xs font-bold text-slate-300 flex items-center gap-1",
+                                          reply.is_jpp_official && "text-teal-400"
+                                        )}>
+                                          {reply.is_jpp_official && <Shield className="w-3.5 h-3.5" />}
+                                          {displayReplyName}
+                                        </span>
+                                        {isReplyOP && (
+                                          <span className="bg-gradient-to-r from-rose-500 to-pink-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1">
+                                            <UserCircle2 className="w-2.5 h-2.5" />
+                                            OP
+                                          </span>
+                                        )}
+                                        {reply.is_jpp_official && (
+                                          <span className="bg-teal-500/20 text-teal-400 text-[8px] font-black px-1.5 py-0.5 rounded uppercase">JPP Official</span>
+                                        )}
+                                      </div>
+                                      <span className="text-[9px] text-slate-500">
+                                        {formatDistanceToNow(new Date(reply.created_at), { addSuffix: true, locale: ms })}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-slate-300 break-words leading-relaxed">{reply.content}</p>
+                                    
+                                    {/* Action Buttons for Tier 2 */}
+                                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-900/60">
+                                      <div className="flex items-center gap-1.5">
+                                        <button
+                                          onClick={() => handleCommentVote(reply.id, 'UPVOTE')}
+                                          className={cn(
+                                            "flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold transition-all",
+                                            isReplyUp ? "bg-rose-500/10 text-rose-500" : "hover:bg-slate-800 text-slate-500"
+                                          )}
+                                        >
+                                          <Heart className="w-3 h-3" />
+                                          {reply.upvotes || 0}
+                                        </button>
+                                        <button
+                                          onClick={() => handleCommentVote(reply.id, 'DOWNVOTE')}
+                                          className={cn(
+                                            "flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold transition-all",
+                                            isReplyDown ? "bg-indigo-500/10 text-indigo-500" : "hover:bg-slate-800 text-slate-500"
+                                          )}
+                                        >
+                                          <ThumbsDown className="w-3 h-3" />
+                                          {reply.downvotes || 0}
+                                        </button>
+                                      </div>
+                                      <button
+                                        onClick={() => handleReportComment(reply.id)}
+                                        className="text-slate-600 hover:text-amber-500 transition-colors p-1"
+                                        title="Lapor ulasan"
+                                      >
+                                        <AlertTriangle className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Comments Input Form Footer */}
+              <div className="p-4 border-t border-slate-800/50 bg-slate-900 shrink-0 px-6">
+                <form onSubmit={(e) => handleAddComment(e, null)} className="space-y-3">
+                  {commentImagePreview && (
+                    <div className="relative mb-2 w-20 h-20 rounded-lg overflow-hidden border border-slate-800 group animate-in fade-in zoom-in duration-200">
+                      <img src={commentImagePreview} alt="Pratonton" className="w-full h-full object-cover" />
+                      <button 
+                        type="button"
+                        onClick={() => { setCommentFile(null); setCommentImagePreview(null); }}
+                        className="absolute top-0.5 right-0.5 bg-black/60 p-1 rounded-full text-white hover:bg-rose-500 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="Tulis ulasan sulit anda..."
+                      value={newCommentText}
+                      onChange={(e) => setNewCommentText(e.target.value)}
+                      className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-rose-500/50 focus:ring-2 focus:ring-rose-500/10 transition-all"
+                      maxLength={300}
+                      required
+                    />
+                    
+                    {/* Camera/Image Selector Button */}
+                    <label className="cursor-pointer bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white p-3.5 rounded-xl transition-all flex items-center justify-center shrink-0">
+                      <ImageIcon className="w-4 h-4" />
+                      <input type="file" accept="image/*" onChange={handleCommentImageSelect} className="hidden" />
+                    </label>
+
+                    <button
+                      type="submit"
+                      disabled={!newCommentText.trim() || submittingComment}
+                      className="bg-rose-500 hover:bg-rose-600 disabled:bg-slate-800 text-white disabled:text-slate-500 p-3.5 rounded-xl font-bold transition-all shrink-0 flex items-center justify-center"
+                    >
+                      {submittingComment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  
+                  {/* Sensitive Comment Blur checkbox */}
+                  <div className="flex items-center justify-between px-1">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input 
+                        type="checkbox"
+                        checked={isSensitiveComment}
+                        onChange={(e) => setIsSensitiveComment(e.target.checked)}
+                        className="rounded border-slate-800 bg-slate-950 text-rose-500 focus:ring-rose-500/30"
+                      />
+                      <span className="text-[11px] font-bold text-slate-500 group-hover:text-slate-300 transition-colors uppercase tracking-wider flex items-center gap-1">
+                        <EyeOff className="w-3.5 h-3.5" />
+                        Tanda sebagai Sensitif (Blur)
+                      </span>
+                    </label>
+                    <span className="text-[10px] text-slate-500 font-medium">
+                      {300 - newCommentText.length} baki
+                    </span>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <BottomNav />
+      <FloatingAiChat />
+    </div>
+  );
+}
+
+function SensitiveCommentContent({ content }: { content: string }) {
+  const [revealed, setRevealed] = React.useState(false);
+  
+  if (revealed) {
+    return <p className="text-sm text-slate-300 leading-relaxed break-words animate-in fade-in duration-300">{content}</p>;
+  }
+
+  return (
+    <div 
+      onClick={() => setRevealed(true)}
+      className="bg-slate-950/60 border border-slate-800/80 p-3.5 rounded-xl cursor-pointer hover:bg-slate-950 transition-colors flex items-center gap-2 group"
+    >
+      <EyeOff className="w-4 h-4 text-rose-500/70 shrink-0 group-hover:scale-105 transition-transform" />
+      <span className="text-xs font-bold text-slate-500 group-hover:text-slate-300 transition-colors select-none">
+        Ulasan ini mengandungi kandungan sensitif. Klik untuk baca.
+      </span>
     </div>
   );
 }

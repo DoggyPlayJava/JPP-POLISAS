@@ -19,6 +19,7 @@ import { Settings } from 'lucide-react';
 import { FeatureToggle } from '@/components/ui/FeatureToggle';
 
 import { useLocation } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 
 export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean }) {
   const { profile } = useAuth();
@@ -37,6 +38,10 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
   const [suaraList, setSuaraList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+
+  // Comments Moderation States
+  const [reportedComments, setReportedComments] = useState<any[]>([]);
+  const [activeCommentsText, setActiveCommentsText] = useState<any[]>([]);
 
   // Settings States
   const [modConfig, setModConfig] = useState({ report_threshold: 5, time_window_mins: 10 });
@@ -162,9 +167,12 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
     setLoading(true);
     try {
       if (activeTab === 'POLYSUARA' || activeTab === 'ANALITIK') {
-        const [suaraRes, reportsRes] = await Promise.all([
+        const [suaraRes, reportsRes, reportedCommentsRes, commentReportsRes, activeCommentsRes] = await Promise.all([
           supabase.from('polysuara_confessions').select('id, content, category, upvotes, downvotes, created_at, official_reply, official_reply_at, status, codename, hashtags, author_reply, author_reply_at, image_url, is_pinned, is_approved, is_hidden_by_community, author_id, profiles:author_id(full_name, matric_no)').eq('is_archived', false).order('is_pinned', { ascending: false }).order('created_at', { ascending: false }).limit(500),
-          supabase.from('polyservices_reports').select('target_id, reason, created_at, profiles:reporter_id(matric_no)').eq('target_type', 'SUARA')
+          supabase.from('polyservices_reports').select('target_id, reason, created_at, profiles:reporter_id(matric_no)').eq('target_type', 'SUARA'),
+          supabase.from('polysuara_comments').select('id, confession_id, content, codename, is_hidden_by_community, upvotes, downvotes, reports_count, created_at, profiles:user_id(matric_no)').or('reports_count.gt.0,is_hidden_by_community.eq.true').order('created_at', { ascending: false }),
+          supabase.from('polysuara_comment_reports').select('comment_id, reason, profiles:reporter_id(matric_no)'),
+          supabase.from('polysuara_comments').select('content').eq('is_hidden_by_community', false).limit(1000)
         ]);
         
         if (suaraRes.error) throw suaraRes.error;
@@ -175,12 +183,53 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
         }));
         
         setSuaraList(mappedData);
+
+        const mappedComments = (reportedCommentsRes.data || []).map(comment => ({
+          ...comment,
+          reports: (commentReportsRes.data || []).filter(r => r.comment_id === comment.id)
+        }));
+        setReportedComments(mappedComments);
+        setActiveCommentsText(activeCommentsRes.data || []);
       }
     } catch (err: any) {
       console.error(err);
       toast.error('Gagal memuatkan data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRestoreComment = async (id: string) => {
+    try {
+      const { error } = await supabase.rpc('restore_hidden_comment', {
+        p_comment_id: id
+      });
+      if (error) throw error;
+      toast.success('Ulasan berjaya dipulihkan');
+      setReportedComments(prev => prev.filter(c => c.id !== id));
+    } catch (err: any) {
+      console.error(err);
+      toast.error('Gagal memulihkan ulasan');
+    }
+  };
+
+  const handleDeleteComment = async (id: string) => {
+    if (!window.confirm('Padam atau sembunyikan ulasan ini secara kekal? (Jika mempunyai balasan di bawahnya, ia akan disembunyikan menggunakan amaran tombstone bagi mengekalkan struktur perbualan)')) return;
+    try {
+      const { data: wasSoftDeleted, error } = await supabase.rpc('soft_or_hard_delete_polysuara_comment', {
+        p_comment_id: id
+      });
+      if (error) throw error;
+      
+      if (wasSoftDeleted) {
+        toast.success('Ulasan disembunyikan dengan selamat (tombstoned)');
+      } else {
+        toast.success('Ulasan dipadamkan secara kekal');
+      }
+      fetchData();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || 'Gagal memproses pemadaman ulasan');
     }
   };
 
@@ -285,8 +334,19 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
     const wordCounts: Record<string, number> = {};
     const dynamicProfanity = censoredWords.map(cw => cw.word.toLowerCase());
     
+    // Process confessions
     suaraList.forEach(s => {
       const words = s.content.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/);
+      words.forEach((w: string) => {
+        if (w.length > 3 && !STOP_WORDS.includes(w) && !dynamicProfanity.includes(w)) {
+          wordCounts[w] = (wordCounts[w] || 0) + 1;
+        }
+      });
+    });
+
+    // Process comments
+    activeCommentsText.forEach(c => {
+      const words = c.content.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/);
       words.forEach((w: string) => {
         if (w.length > 3 && !STOP_WORDS.includes(w) && !dynamicProfanity.includes(w)) {
           wordCounts[w] = (wordCounts[w] || 0) + 1;
@@ -614,6 +674,60 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
               </div>
             </div>
 
+            {/* Reported Comments Section */}
+            {reportedComments.length > 0 && (
+              <div className="bg-rose-500/5 border border-rose-500/20 rounded-[2rem] p-6 mb-6">
+                <h3 className="text-sm font-black text-rose-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5" />
+                  🚨 Ulasan Dilaporkan / Auto-Hide ({reportedComments.length})
+                </h3>
+                <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 no-scrollbar">
+                  {reportedComments.map(comment => (
+                    <div key={comment.id} className="bg-black/40 border border-white/5 rounded-xl p-4 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <span className="text-xs font-bold text-rose-300">{comment.codename}</span>
+                          <span className="text-[10px] text-white/40">{format(new Date(comment.created_at), 'dd MMM, HH:mm', { locale: ms })}</span>
+                          <span className="text-[9px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">
+                            Matrik: {comment.profiles?.matric_no || 'Anon'}
+                          </span>
+                          {comment.is_hidden_by_community && (
+                            <span className="bg-red-500/20 text-red-400 text-[8px] font-black px-2 py-0.5 rounded border border-red-500/30 uppercase">Auto-Hide</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-white/90 leading-relaxed mb-2 font-medium">"{comment.content}"</p>
+                        
+                        {/* Reasons for comment reports */}
+                        {comment.reports && comment.reports.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-1.5">
+                            {comment.reports.map((rep: any, index: number) => (
+                              <span key={index} className="text-[9px] text-amber-300 bg-amber-500/10 border border-amber-500/25 px-2 py-0.5 rounded" title={`Reporter: ${rep.profiles?.reporter_id || 'Anon'}`}>
+                                ⚠️ {rep.reason}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex gap-2 w-full sm:w-auto shrink-0 mt-2 sm:mt-0">
+                        <button
+                          onClick={() => handleRestoreComment(comment.id)}
+                          className="flex-1 sm:flex-none px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1"
+                        >
+                          <Check className="w-3.5 h-3.5" /> Lepaskan
+                        </button>
+                        <button
+                          onClick={() => handleDeleteComment(comment.id)}
+                          className="flex-1 sm:flex-none px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 border border-rose-500/20 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Padam
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-4">
             {filteredSuara.length === 0 ? (
               <div className="text-center py-20 text-white/40 font-bold uppercase tracking-widest text-xs">Tiada luahan ditemui.</div>
@@ -674,9 +788,20 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                           <Shield className="w-3.5 h-3.5 text-teal-400" />
                           <span className="text-[10px] font-black text-teal-400 uppercase tracking-widest">Maklum Balas JPP</span>
                         </div>
-                        <p className="text-teal-50/90 text-xs leading-relaxed">
-                          {suara.official_reply}
-                        </p>
+                        <div className="text-teal-50/90 text-xs leading-relaxed">
+                          <ReactMarkdown 
+                            components={{
+                              p: ({node, ...props}) => <p className="mb-1.5 last:mb-0" {...props} />,
+                              ul: ({node, ...props}) => <ul className="list-disc pl-4 mb-1.5" {...props} />,
+                              ol: ({node, ...props}) => <ol className="list-decimal pl-4 mb-1.5" {...props} />,
+                              li: ({node, ...props}) => <li className="mb-0.5" {...props} />,
+                              strong: ({node, ...props}) => <strong className="font-extrabold text-teal-300" {...props} />,
+                              a: ({node, ...props}) => <a className="text-teal-300 underline hover:text-teal-200 transition-colors" target="_blank" rel="noopener noreferrer" {...props} />
+                            }}
+                          >
+                            {suara.official_reply}
+                          </ReactMarkdown>
+                        </div>
                       </div>
                     )}
 
