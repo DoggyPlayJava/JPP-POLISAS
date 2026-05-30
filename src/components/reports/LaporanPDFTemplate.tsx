@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     gap: 70,                  // lebih ruang antara blok tandatangan
   },
-  signBox: { },
+  signBox: {},
   signRoleTitle: { fontSize: 12, marginBottom: 50, color: '#000000' }, // lebih ruang untuk tandatangan
   signLine: { borderBottomWidth: 1, borderBottomColor: '#000000', marginBottom: 8 },
   signText: { fontSize: 12, fontWeight: 'bold', color: '#000000', marginBottom: 4 },
@@ -183,25 +183,25 @@ interface LaporanPDFProps {
 // Sumber: Adobe/PDF spec Helvetica-Bold character widths
 // Ini SAMA dengan yang PDFKit gunakan dalam react-pdf — so lebar yang dikira = lebar yang dirender
 const HB: Record<string, number> = {
-  ' ':278, '!':333, '"':474, '#':556, '$':556, '%':889, '&':722, "'":238,
-  '(':333, ')':333, '*':389, '+':584, ',':278, '-':333, '.':278, '/':278,
-  '0':556, '1':556, '2':556, '3':556, '4':556, '5':556, '6':556, '7':556,
-  '8':556, '9':556, ':':333, ';':333, '<':584, '=':584, '>':584, '?':611,
-  'A':722, 'B':722, 'C':667, 'D':778, 'E':667, 'F':611, 'G':778, 'H':778,
-  'I':278, 'J':556, 'K':722, 'L':611, 'M':833, 'N':778, 'O':778, 'P':667,
-  'Q':778, 'R':722, 'S':667, 'T':667, 'U':778, 'V':722, 'W':1000,'X':722,
-  'Y':722, 'Z':667,
+  ' ': 278, '!': 333, '"': 474, '#': 556, '$': 556, '%': 889, '&': 722, "'": 238,
+  '(': 333, ')': 333, '*': 389, '+': 584, ',': 278, '-': 333, '.': 278, '/': 278,
+  '0': 556, '1': 556, '2': 556, '3': 556, '4': 556, '5': 556, '6': 556, '7': 556,
+  '8': 556, '9': 556, ':': 333, ';': 333, '<': 584, '=': 584, '>': 584, '?': 611,
+  'A': 722, 'B': 722, 'C': 667, 'D': 778, 'E': 667, 'F': 611, 'G': 778, 'H': 778,
+  'I': 278, 'J': 556, 'K': 722, 'L': 611, 'M': 833, 'N': 778, 'O': 778, 'P': 667,
+  'Q': 778, 'R': 722, 'S': 667, 'T': 667, 'U': 778, 'V': 722, 'W': 1000, 'X': 722,
+  'Y': 722, 'Z': 667,
 };
 // Helvetica Regular glyph widths (untuk role/unit 10pt)
 const HR: Record<string, number> = {
-  ' ':278, '!':278, '"':355, '#':556, '$':556, '%':889, '&':667, "'":222,
-  '(':333, ')':333, '*':389, '+':584, ',':278, '-':333, '.':278, '/':278,
-  '0':556, '1':556, '2':556, '3':556, '4':556, '5':556, '6':556, '7':556,
-  '8':556, '9':556, ':':278, ';':278, '<':584, '=':584, '>':584, '?':556,
-  'A':667, 'B':667, 'C':722, 'D':722, 'E':667, 'F':611, 'G':778, 'H':722,
-  'I':278, 'J':500, 'K':667, 'L':556, 'M':833, 'N':722, 'O':778, 'P':667,
-  'Q':778, 'R':722, 'S':667, 'T':611, 'U':722, 'V':667, 'W':944, 'X':667,
-  'Y':667, 'Z':611,
+  ' ': 278, '!': 278, '"': 355, '#': 556, '$': 556, '%': 889, '&': 667, "'": 222,
+  '(': 333, ')': 333, '*': 389, '+': 584, ',': 278, '-': 333, '.': 278, '/': 278,
+  '0': 556, '1': 556, '2': 556, '3': 556, '4': 556, '5': 556, '6': 556, '7': 556,
+  '8': 556, '9': 556, ':': 278, ';': 278, '<': 584, '=': 584, '>': 584, '?': 556,
+  'A': 667, 'B': 667, 'C': 722, 'D': 722, 'E': 667, 'F': 611, 'G': 778, 'H': 722,
+  'I': 278, 'J': 500, 'K': 667, 'L': 556, 'M': 833, 'N': 722, 'O': 778, 'P': 667,
+  'Q': 778, 'R': 722, 'S': 667, 'T': 611, 'U': 722, 'V': 667, 'W': 944, 'X': 667,
+  'Y': 667, 'Z': 611,
 };
 
 /** Kira lebar teks yang TEPAT berdasarkan glyph metrics Helvetica */
@@ -232,10 +232,10 @@ const calcBoxWidth = (lineWidth: number, ...otherTexts: (string | undefined | nu
 
 // ─── HARDCODED YDP (JPP POLISAS 2026) ────────────────────────────────────────
 
-const YDP_NAME      = 'MUHAMMAD AMIRUL HAKIMI BIN MOHD ZAWAWI';
-const YDP_TITLE     = 'YANG DI-PERTUA';
-const DEFAULT_JPP   = 'JAWATANKUASA PERWAKILAN PELAJAR';
-const DEFAULT_POLI  = 'POLITEKNIK SULTAN HAJI AHMAD SHAH';
+const YDP_NAME = 'MUHAMAD AMIRUL HAKIMI BIN MOHD ZAWAWI';
+const YDP_TITLE = 'YANG DI-PERTUA';
+const DEFAULT_JPP = 'JAWATANKUASA PERWAKILAN PELAJAR';
+const DEFAULT_POLI = 'POLITEKNIK SULTAN HAJI AHMAD SHAH';
 
 export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
   clubName,
@@ -256,12 +256,12 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
 
   // Tahun semasa untuk label JPP
   const currentYear = new Date().getFullYear();
-  const jppLabel    = `${jppOrgName} ${currentYear}`;
+  const jppLabel = `${jppOrgName} ${currentYear}`;
 
   // Pisah monthYear kepada bulan dan tahun (e.g. "APRIL 2026" → ["APRIL", "2026"])
   const parts = monthYear.toUpperCase().trim().split(/\s+/);
   const coverMonth = parts[0] ?? '';
-  const coverYear  = parts[1] ?? '';
+  const coverYear = parts[1] ?? '';
 
   return (
     <Document>
