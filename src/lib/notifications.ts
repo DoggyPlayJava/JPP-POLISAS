@@ -471,3 +471,28 @@ export async function broadcastPolySuaraNewConfession(
   }
 }
 
+// ─── Broadcast ke Semua Ahli JPP dan Super Admin (Untuk Laporan Tempat Hilang) ───
+export async function sendNotificationToJppAndSuperAdmin(
+  payload: NotificationPayload
+): Promise<void> {
+  try {
+    const [jppMembers, superAdmins] = await Promise.all([
+      supabase.from('profiles').select('id').eq('role', 'JPP'),
+      supabase.from('profiles').select('id').eq('role', 'SUPER_ADMIN_JPP'),
+    ]);
+    const userIds = new Set<string>();
+    jppMembers.data?.forEach(p => userIds.add(p.id));
+    superAdmins.data?.forEach(a => userIds.add(a.id));
+    
+    if (userIds.size === 0) return;
+    
+    const rows = Array.from(userIds).map(user_id => ({ user_id, ...payload, is_read: false }));
+    const { error } = await supabase.from('notifications').insert(rows);
+    if (error) return;
+    Array.from(userIds).forEach(uid => firePush(uid, payload).catch(() => {}));
+  } catch (err) {
+    console.error('[sendNotificationToJppAndSuperAdmin] Error:', err);
+  }
+}
+
+

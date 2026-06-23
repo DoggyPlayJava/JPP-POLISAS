@@ -92,12 +92,32 @@ interface Location {
   direction_text: string;
   search_tags: string;
   image_url?: string;
+  op_start?: string | null;
+  op_end?: string | null;
+}
+
+interface MissingReport {
+  id: string;
+  student_id: string;
+  room_code: string;
+  building_id?: string | null;
+  building_name_suggestion?: string | null;
+  floor_level?: number | null;
+  description?: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+  student?: {
+    id: string;
+    name: string;
+    matric_no: string;
+  } | null;
 }
 
 export function JppPolyMapsAdmin() {
-  const [activeTab, setActiveTab] = useState<'buildings' | 'locations'>('buildings');
+  const [activeTab, setActiveTab] = useState<'buildings' | 'locations' | 'reports'>('buildings');
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
+  const [reports, setReports] = useState<MissingReport[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [showBuildingModal, setShowBuildingModal] = useState(false);
@@ -111,22 +131,90 @@ export function JppPolyMapsAdmin() {
   
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState<Record<string, boolean>>({});
+  
+  const [activeReportId, setActiveReportId] = useState<string | null>(null);
+  const [isProcessingReport, setIsProcessingReport] = useState<Record<string, boolean>>({});
+
+  const rejectReport = async (reportId: string) => {
+    if (!window.confirm('Adakah anda pasti mahu menolak laporan ini?')) return;
+    
+    setIsProcessingReport(prev => ({ ...prev, [reportId]: true }));
+    try {
+      const { error } = await supabase
+        .from('imaps_missing_reports')
+        .update({ status: 'rejected' })
+        .eq('id', reportId);
+
+      if (error) throw error;
+
+      toast.success('Laporan berjaya ditolak.');
+      setReports(prev => prev.map(r => r.id === reportId ? { ...r, status: 'rejected' } : r));
+    } catch (err: any) {
+      console.error('Error rejecting report:', err);
+      toast.error('Gagal menolak laporan.');
+    } finally {
+      setIsProcessingReport(prev => ({ ...prev, [reportId]: false }));
+    }
+  };
+
+  const approveReport = (report: MissingReport) => {
+    setActiveReportId(report.id);
+    setCurrentLocation({
+      room_code: report.room_code,
+      floor_level: report.floor_level || 0,
+      building_id: report.building_id || undefined,
+      direction_text: report.description || ''
+    });
+    
+    if (report.building_id) {
+      const b = buildings.find(x => x.id === report.building_id);
+      if (b) setBuildingSearchText(`${b.name} (${b.code})`);
+    } else {
+      setBuildingSearchText(report.building_name_suggestion || '');
+    }
+    setShowLocationModal(true);
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: 'drone_image_url' | 'entrance_image_url' | 'floorplan_image_url' | 'image_url', isLocation = false) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsUploading(prev => ({...prev, [fieldName]: true}));
-    const toastId = toast.loading('Memuat naik imej...');
+    const toastId = toast.loading('Memproses imej...');
 
     try {
-      const fileExt = file.name.split('.').pop();
+      let fileToUpload = file;
+
+      // Handle HEIC/HEIF files dynamically
+      const isHeic = file.name.toLowerCase().endsWith('.heic') || 
+                     file.name.toLowerCase().endsWith('.heif') || 
+                     file.type === 'image/heic' || 
+                     file.type === 'image/heif';
+
+      if (isHeic) {
+        toast.loading('Menukar format HEIC ke JPEG...', { id: toastId });
+        const heic2any = (await import('heic2any')).default;
+        const convertedBlob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 });
+        const blobArray = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        fileToUpload = new File([blobArray], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg' });
+      }
+
+      // Handle compression using the shared helper
+      if (fileToUpload.type.startsWith('image/')) {
+        toast.loading('Mengompres imej...', { id: toastId });
+        const { compressImage } = await import('@/lib/imageCompression');
+        const compressedFile = await compressImage(fileToUpload);
+        fileToUpload = compressedFile;
+      }
+
+      const fileExt = fileToUpload.name.split('.').pop() || 'jpg';
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `polymaps/${fileName}`;
 
+      toast.loading('Memuat naik imej ke storage...', { id: toastId });
       const { error: uploadError } = await supabase.storage
         .from('imaps_assets')
-        .upload(filePath, file);
+        .upload(filePath, fileToUpload, { contentType: fileToUpload.type });
 
       if (uploadError) throw uploadError;
 
@@ -142,7 +230,7 @@ export function JppPolyMapsAdmin() {
       toast.success('Imej berjaya dimuat naik!', { id: toastId });
     } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error('Gagal memuat naik. Pastikan bucket imaps_assets wujud.', { id: toastId });
+      toast.error('Gagal memuat naik imej.', { id: toastId });
     } finally {
       setIsUploading(prev => ({...prev, [fieldName]: false}));
     }
@@ -159,22 +247,38 @@ export function JppPolyMapsAdmin() {
 
   useEffect(() => {
     fetchData();
+    const searchParams = new URLSearchParams(window.location.search);
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'reports') {
+      setActiveTab('reports');
+    }
   }, []);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [buildingsRes, locationsRes] = await Promise.all([
+      const [buildingsRes, locationsRes, reportsRes] = await Promise.all([
         supabase.from('imaps_buildings').select('*').order('name'),
-        supabase.from('imaps_locations').select('*').order('room_code')
+        supabase.from('imaps_locations').select('*').order('room_code'),
+        supabase.from('imaps_missing_reports').select(`
+          id, student_id, room_code, building_id, building_name_suggestion, floor_level, description, status, created_at,
+          student:student_id (
+            id,
+            name,
+            matric_no
+          )
+        `).order('created_at', { ascending: false })
       ]);
 
       if (buildingsRes.error) throw buildingsRes.error;
       if (locationsRes.error) throw locationsRes.error;
+      if (reportsRes.error) throw reportsRes.error;
 
       setBuildings(buildingsRes.data || []);
       setLocations(locationsRes.data || []);
+      setReports(reportsRes.data || []);
     } catch (error: any) {
+      console.error('Error fetching PolyMaps data:', error);
       toast.error('Gagal memuat turun data PolyMaps');
     } finally {
       setLoading(false);
@@ -283,9 +387,30 @@ export function JppPolyMapsAdmin() {
         if (error) throw error;
         
         toast.success(roomCodes.length > 1 ? `${roomCodes.length} Lokasi ditambah serentak` : 'Lokasi ditambah');
+
+        if (activeReportId) {
+          const { error: reportError } = await supabase
+            .from('imaps_missing_reports')
+            .update({ status: 'approved' })
+            .eq('id', activeReportId);
+          if (reportError) console.error("Gagal kemaskini status aduan:", reportError.message);
+
+          const reportObj = reports.find(r => r.id === activeReportId);
+          if (reportObj?.student_id) {
+            await supabase.from('notifications').insert({
+              user_id: reportObj.student_id,
+              title: 'Laporan Tempat Diluluskan',
+              message: `Tempat "${reportObj.room_code}" yang anda laporkan telah dimasukkan ke dalam peta. Terima kasih!`,
+              type: 'MAPS_REPORT_APPROVED',
+              module: 'AKADEMIK',
+              link: `/polymaps?room=${reportObj.room_code}`
+            });
+          }
+        }
       }
       setShowLocationModal(false);
       setCurrentLocation({});
+      setActiveReportId(null);
       const userId = (await supabase.auth.getUser()).data.user?.id;
       if (userId) logAuditAction({ actionType: currentLocation.id ? 'LOCATION_UPDATED' : 'LOCATION_ADDED', module: 'PolyMaps', entityId: currentLocation.id || currentLocation.room_code, description: `Lokasi ${currentLocation.id ? 'dikemaskini' : 'ditambah'}: ${currentLocation.room_code}`, actorId: userId });
       fetchData();
@@ -358,14 +483,14 @@ export function JppPolyMapsAdmin() {
             >
               <Plus className="w-4 h-4" /> Tambah Bangunan
             </button>
-          ) : (
+          ) : activeTab === 'locations' ? (
             <button
               onClick={() => { setCurrentLocation({}); setBuildingSearchText(''); setShowLocationModal(true); }}
               className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold tracking-wide transition-colors shadow-lg shadow-indigo-500/20"
             >
               <Plus className="w-4 h-4" /> Tambah Lokasi
             </button>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -389,6 +514,20 @@ export function JppPolyMapsAdmin() {
             )}
           >
             <Navigation className="w-4 h-4" /> Kelas / Lokasi
+          </button>
+          <button
+            onClick={() => setActiveTab('reports')}
+            className={cn(
+              "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg font-bold text-sm transition-all relative",
+              activeTab === 'reports' ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/70"
+            )}
+          >
+            <AlertCircle className="w-4 h-4" /> Laporan Tempat
+            {reports.filter(r => r.status === 'pending').length > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center shadow-md animate-pulse">
+                {reports.filter(r => r.status === 'pending').length}
+              </span>
+            )}
           </button>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
@@ -558,7 +697,7 @@ export function JppPolyMapsAdmin() {
             ))
           )}
         </div>
-      ) : (
+      ) : activeTab === 'locations' ? (
         <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -603,6 +742,86 @@ export function JppPolyMapsAdmin() {
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/10 bg-black/20 text-[10px] font-black uppercase tracking-widest text-white/40">
+                  <th className="p-4">Pelajar</th>
+                  <th className="p-4">Kod Kelas / Ruang</th>
+                  <th className="p-4">Cadangan Bangunan</th>
+                  <th className="p-4">Aras</th>
+                  <th className="p-4">Catatan</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4 text-right">Tindakan</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm font-medium text-white/70">
+                {reports.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-white/40 italic">Tiada laporan tempat hilang.</td>
+                  </tr>
+                ) : (
+                  reports.map(r => (
+                    <tr key={r.id} className="border-b border-white/[0.05] hover:bg-white/[0.02] transition-colors group">
+                      <td className="p-4">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-white">{r.student?.name || 'N/A'}</span>
+                          <span className="text-xs text-white/40">{r.student?.matric_no || 'N/A'}</span>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <span className="font-bold text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-md">{r.room_code}</span>
+                      </td>
+                      <td className="p-4">
+                        {r.building_id
+                          ? buildings.find(b => b.id === r.building_id)?.name || 'Unknown'
+                          : r.building_name_suggestion || '-'}
+                      </td>
+                      <td className="p-4">{r.floor_level === 0 ? 'G' : r.floor_level}</td>
+                      <td className="p-4 max-w-xs truncate text-white/50" title={r.description || ''}>
+                        {r.description || '-'}
+                      </td>
+                      <td className="p-4">
+                        <span className={cn(
+                          "text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border",
+                          r.status === 'pending' && "bg-amber-500/10 text-amber-400 border-amber-500/20",
+                          r.status === 'approved' && "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+                          r.status === 'rejected' && "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                        )}>
+                          {r.status === 'pending' ? 'Dalam Semakan' : r.status === 'approved' ? 'Diluluskan' : 'Ditolak'}
+                        </span>
+                      </td>
+                      <td className="p-4 text-right">
+                        {r.status === 'pending' ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              disabled={isProcessingReport[r.id]}
+                              onClick={() => approveReport(r)}
+                              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                            >
+                              Lulus & Tambah
+                            </button>
+                            <button
+                              disabled={isProcessingReport[r.id]}
+                              onClick={() => rejectReport(r.id)}
+                              className="px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                            >
+                              Tolak
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-white/30 text-xs">-</span>
+                        )}
                       </td>
                     </tr>
                   ))

@@ -1,0 +1,3 @@
+- [x] Seed default clubs via migration script
+- [x] Add club creation form to KppUnitDashboard settings
+- [x] Verify TypeScript types compilation and linting

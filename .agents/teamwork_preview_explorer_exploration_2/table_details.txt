@@ -1,0 +1,311 @@
+
+
+### Source: `20260525021000_fix_polyrider_profiles_ref.sql`
+```sql
+ALTER TABLE polyrider_saved_locations ENABLE TRIGGER trg_saved_locations_limit;
+```
+
+### Source: `20260525021000_fix_polyrider_profiles_ref.sql`
+```sql
+ALTER TABLE polytask_sos_logs ENABLE TRIGGER trg_audit_polyrider_sos;
+```
+
+### Source: `20260527162500_95_polymart_jsonb_variations.sql`
+```sql
+ALTER TABLE "public"."business_products" 
+ADD COLUMN "variations" JSONB DEFAULT '[]'::jsonb;
+```
+
+### Source: `20260527162700_97_fix_update_product_variation_stock_updated_at.sql`
+```sql
+ALTER TABLE "public"."polymart_cart_items" DROP CONSTRAINT IF EXISTS "uq_polymart_cart_item";
+```
+
+### Source: `20260527162700_97_fix_update_product_variation_stock_updated_at.sql`
+```sql
+ALTER TABLE "public"."polymart_cart_items" DROP CONSTRAINT IF EXISTS "uq_polymart_cart_item_variation_constraint";
+```
+
+### Source: `20260527162700_97_fix_update_product_variation_stock_updated_at.sql`
+```sql
+ALTER TABLE "public"."polymart_cart_items"
+ALTER COLUMN "selected_variation" SET DEFAULT '',
+ALTER COLUMN "selected_variation" SET NOT NULL;
+```
+
+### Source: `20260527162700_97_fix_update_product_variation_stock_updated_at.sql`
+```sql
+ALTER TABLE "public"."polymart_cart_items"
+ADD CONSTRAINT "uq_polymart_cart_item_variation_constraint" 
+UNIQUE USING INDEX "uq_polymart_cart_item_variation_v2";
+```
+
+### Source: `26_pembubaran_kohort.sql`
+```sql
+ALTER TABLE public.club_reports ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT FALSE;
+```
+
+### Source: `26_pembubaran_kohort.sql`
+```sql
+ALTER TABLE public.programs ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT FALSE;
+```
+
+### Source: `26_pembubaran_kohort.sql`
+```sql
+ALTER TABLE public.club_reports DROP CONSTRAINT IF EXISTS club_reports_submitted_by_fkey;
+```
+
+### Source: `26_pembubaran_kohort.sql`
+```sql
+ALTER TABLE public.programs DROP CONSTRAINT IF EXISTS programs_user_id_fkey;
+```
+
+### Source: `26_pembubaran_kohort.sql`
+```sql
+ALTER TABLE public.club_reports ALTER COLUMN submitted_by DROP NOT NULL;
+```
+
+### Source: `26_pembubaran_kohort.sql`
+```sql
+ALTER TABLE public.programs ALTER COLUMN user_id DROP NOT NULL;
+```
+
+### Source: `26_pembubaran_kohort.sql`
+```sql
+ALTER TABLE public.club_reports 
+  ADD CONSTRAINT club_reports_submitted_by_fkey 
+  FOREIGN KEY (submitted_by) REFERENCES public.profiles(id) ON DELETE SET NULL;
+```
+
+### Source: `26_pembubaran_kohort.sql`
+```sql
+ALTER TABLE public.programs 
+  ADD CONSTRAINT programs_user_id_fkey 
+  FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE SET NULL;
+```
+
+### Source: `28_polysuara_v5_features.sql`
+```sql
+CREATE TABLE IF NOT EXISTS public.polysuara_poll_options (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    poll_id UUID NOT NULL REFERENCES public.polysuara_polls(id) ON DELETE CASCADE,
+    option_text TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### Source: `28_polysuara_v5_features.sql`
+```sql
+CREATE TABLE IF NOT EXISTS public.polysuara_poll_votes (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    poll_id UUID NOT NULL REFERENCES public.polysuara_polls(id) ON DELETE CASCADE,
+    option_id UUID NOT NULL REFERENCES public.polysuara_poll_options(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(option_id, user_id) -- User can vote for the same option only once
+);
+```
+
+### Source: `28_polysuara_v5_features.sql`
+```sql
+CREATE TABLE IF NOT EXISTS public.polysuara_chat_messages (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    chat_id UUID NOT NULL REFERENCES public.polysuara_chats(id) ON DELETE CASCADE,
+    sender_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### Source: `30_business_shifts_system.sql`
+```sql
+ALTER TABLE keusahawanan_businesses 
+  ADD COLUMN IF NOT EXISTS is_shift_enabled BOOLEAN DEFAULT false;
+```
+
+### Source: `30_business_shifts_system.sql`
+```sql
+CREATE TABLE business_shifts (
+  id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id  uuid REFERENCES keusahawanan_businesses(id) ON DELETE CASCADE,
+  shift_date   date NOT NULL,
+  shift_hour   int  NOT NULL CHECK (shift_hour BETWEEN 8 AND 16),
+  assigned_to  uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  created_by   uuid REFERENCES profiles(id),
+  notes        text,
+  status       text DEFAULT 'SCHEDULED' CHECK (status IN ('SCHEDULED','PRESENT','ABSENT','SWAPPED')),
+  created_at   timestamptz DEFAULT now(),
+  UNIQUE(business_id, shift_date, shift_hour)
+);
+```
+
+### Source: `30_business_shifts_system.sql`
+```sql
+CREATE TABLE business_shift_swaps (
+  id            uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id   uuid REFERENCES keusahawanan_businesses(id) ON DELETE CASCADE,
+  shift_id      uuid REFERENCES business_shifts(id) ON DELETE CASCADE,
+  requested_by  uuid REFERENCES profiles(id),
+  swap_with     uuid REFERENCES profiles(id),
+  reason        text NOT NULL,
+  status        text DEFAULT 'PENDING' CHECK (status IN ('PENDING','ACCEPTED','REJECTED','CANCELLED')),
+  responded_by  uuid REFERENCES profiles(id),
+  responded_at  timestamptz,
+  created_at    timestamptz DEFAULT now()
+);
+```
+
+### Source: `30_business_shifts_system.sql`
+```sql
+CREATE TABLE business_sessions (
+  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id     uuid REFERENCES keusahawanan_businesses(id) ON DELETE CASCADE,
+  session_date    date NOT NULL,
+  opened_by       uuid REFERENCES profiles(id),
+  closed_by       uuid REFERENCES profiles(id),
+  opening_cash    numeric(10,2) NOT NULL DEFAULT 0,
+  closing_cash    numeric(10,2),
+  total_sales     numeric(10,2),
+  total_expenses  numeric(10,2) DEFAULT 0,
+  net_profit      numeric(10,2) GENERATED ALWAYS AS (
+                    closing_cash - opening_cash - total_expenses
+                  ) STORED,
+  opening_time    timestamptz,
+  closing_time    timestamptz,
+  opening_notes   text,
+  closing_notes   text,
+  status          text DEFAULT 'OPEN' CHECK (status IN ('OPEN','CLOSED')),
+  created_at      timestamptz DEFAULT now(),
+  UNIQUE(business_id, session_date)
+);
+```
+
+### Source: `38_karnival_v2.sql`
+```sql
+ALTER TABLE karnival_votes_v2 REPLICA IDENTITY FULL;
+```
+
+### Source: `46_takwim_kelab_kediaman.sql`
+```sql
+ALTER TABLE takwim_pusat ADD CONSTRAINT takwim_pusat_jenis_check
+  CHECK (jenis IN (
+    'AKADEMIK', 'JPP', 'KPP', 'KEUSAHAWANAN', 'KEBAJIKAN', 'SRK',
+    'AKADEMIK_EXCO', 'MULTIMEDIA', 'KLS', 'KOLAB', 'KK', 'CUTI_UMUM', 'LAIN',
+    'KELAB_KEDIAMAN'
+  ));
+```
+
+### Source: `51_polyrider_cancel_sos_appeals.sql`
+```sql
+ALTER TABLE public.polyrider_jobs ADD COLUMN IF NOT EXISTS cancelled_by UUID REFERENCES auth.users(id);
+```
+
+### Source: `51_polyrider_cancel_sos_appeals.sql`
+```sql
+ALTER TABLE public.polyrider_sos_logs ADD COLUMN IF NOT EXISTS false_alarm_notes TEXT;
+```
+
+### Source: `51_polyrider_cancel_sos_appeals.sql`
+```sql
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS polyrider_suspended_until TIMESTAMP WITH TIME ZONE;
+```
+
+### Source: `55_imaps_schema.sql`
+```sql
+CREATE TABLE IF NOT EXISTS public.imaps_locations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    building_id UUID NOT NULL REFERENCES public.imaps_buildings(id) ON DELETE CASCADE,
+    room_code TEXT NOT NULL,
+    floor_level INTEGER,
+    direction_text TEXT,
+    search_tags TEXT, -- e.g., "Makmal, Lab, Komputer, JTM" for better searching
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+### Source: `58_imaps_location_image.sql`
+```sql
+ALTER TABLE imaps_locations
+ADD COLUMN image_url TEXT;
+```
+
+### Source: `73_polytask_schema.sql`
+```sql
+CREATE TABLE IF NOT EXISTS public.polytask_jobs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    requester_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    category TEXT NOT NULL,
+    budget NUMERIC(10, 2) NOT NULL DEFAULT 0,
+    location TEXT NOT NULL,
+    deadline TIMESTAMPTZ NOT NULL,
+    status polytask_job_status NOT NULL DEFAULT 'OPEN',
+    assigned_tasker_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+### Source: `73_polytask_schema.sql`
+```sql
+CREATE TABLE IF NOT EXISTS public.polytask_bids (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    job_id UUID NOT NULL REFERENCES public.polytask_jobs(id) ON DELETE CASCADE,
+    tasker_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    bid_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
+    proposal_note TEXT,
+    status polytask_bid_status NOT NULL DEFAULT 'PENDING',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+### Source: `73_polytask_schema.sql`
+```sql
+CREATE TABLE IF NOT EXISTS public.polytask_reviews (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    job_id UUID NOT NULL REFERENCES public.polytask_jobs(id) ON DELETE CASCADE,
+    reviewer_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    reviewee_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+### Source: `add_merit_eakademik_to_club_activities.sql`
+```sql
+ALTER TABLE public.club_activities 
+ADD COLUMN IF NOT EXISTS qr_token text;
+```
+
+### Source: `add_merit_eakademik_to_club_activities.sql`
+```sql
+ALTER TABLE public.club_activities 
+ADD COLUMN IF NOT EXISTS qr_open_at timestamptz;
+```
+
+### Source: `add_merit_eakademik_to_club_activities.sql`
+```sql
+ALTER TABLE public.club_activities 
+ADD COLUMN IF NOT EXISTS qr_close_at timestamptz;
+```
+
+### Source: `add_merit_eakademik_to_club_activities.sql`
+```sql
+ALTER TABLE public.club_activities 
+ADD COLUMN IF NOT EXISTS pre_reg_enabled boolean DEFAULT false;
+```
+
+### Source: `rename_akademik_to_kpp_merit_vouch.sql`
+```sql
+ALTER TABLE public.merit_program_applications 
+  RENAME COLUMN akademik_reviewed_at TO kpp_reviewed_at;
+```
+
+### Source: `rename_akademik_to_kpp_merit_vouch.sql`
+```sql
+ALTER TABLE public.merit_program_applications 
+  RENAME COLUMN akademik_vouch_notes TO kpp_vouch_notes;
+```
+

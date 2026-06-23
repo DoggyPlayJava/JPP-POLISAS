@@ -280,7 +280,7 @@ export function CompleteProfileModal() {
       const isLeader  = registerMode === 'leader';
       const isStaff   = registerMode === 'staff';
       const isAdvisor = isStaff && staffRole === 'CLUB_ADVISOR';
-      const academikClubId = isStaff ? null : getAkademikClubId(jabatan as JabatanValue);
+      const academikClubId = isStaff ? null : getAkademikClubId(jabatan as JabatanValue, programmeCode);
       const roleToAssign   = isStaff ? staffRole : (isLeader ? leaderRole : 'CLUB_MEMBER');
       const initialStatus  = (isLeader || isAdvisor) ? 'PENDING' : 'APPROVED';
       // PENTING: Sentiasa gunakan nama yang dimasukkan pengguna. Jika kosong, guna

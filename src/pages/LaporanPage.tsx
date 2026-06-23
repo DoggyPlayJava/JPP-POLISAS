@@ -87,8 +87,8 @@ export function LaporanPage() {
 
   useEffect(() => {
     const checkSettings = async () => {
-      const { data: setting } = await supabase.from('system_settings').select('value').eq('key', 'allow_auto_pdf').single();
-      if (setting !== null) setAllowAutoPdf(setting.value);
+      const { data: setting } = await supabase.from('system_settings').select('value').eq('key', 'allow_auto_pdf').maybeSingle();
+      if (setting?.value != null) setAllowAutoPdf(setting.value);
     };
     checkSettings();
   }, []);

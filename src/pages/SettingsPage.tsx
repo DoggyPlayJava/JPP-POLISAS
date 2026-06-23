@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import { supabase } from '@/lib/supabase';
 import { sendEmail } from '@/lib/email';
 import { getSemesterInfo } from '@/types';
@@ -35,6 +36,7 @@ import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 // ─────────────────────────────────────────────────────────────────────────────
 function ProfileEditRequestSection() {
   const { user, profile } = useAuth();
+  const { intake1Month, intake2Month } = useAcademicSession();
   const [requests, setRequests] = React.useState<any[]>([]);
   const [loadingReqs, setLoadingReqs] = React.useState(true);
   const [submitting, setSubmitting] = React.useState(false);
@@ -43,7 +45,7 @@ function ProfileEditRequestSection() {
   const [reason, setReason] = React.useState('');
 
   const semInfo = profile?.intake_year
-    ? getSemesterInfo(profile.intake_year, profile.intake_period as 1 | 2, profile.programme_code === 'FTV', 7, 1, profile.semester_override)
+    ? getSemesterInfo(profile.intake_year, profile.intake_period as 1 | 2, profile.programme_code === 'FTV', intake1Month, intake2Month, profile.semester_override)
     : { semester: 0 };
 
   const fetchRequests = React.useCallback(async () => {
@@ -271,6 +273,7 @@ function ProfileEditRequestSection() {
 
 function KediamanSettingsSection() {
   const { user, profile, refetchProfile } = useAuth();
+  const { intake1Month, intake2Month } = useAcademicSession();
   const [step, setStep] = React.useState<'loading'|'choice'|'form'|'done'>('loading');
   const [existing, setExisting] = React.useState<any>(null);
   const [saving, setSaving] = React.useState(false);
@@ -305,7 +308,7 @@ function KediamanSettingsSection() {
         profile.intake_year,
         profile.intake_period as 1 | 2,
         profile.programme_code === 'FTV',
-        7, 1
+        intake1Month, intake2Month
       );
     }
     return { semester: 0, level: 'Junior' as const };

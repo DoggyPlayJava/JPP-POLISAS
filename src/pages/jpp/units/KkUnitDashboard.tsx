@@ -377,7 +377,7 @@ function TakwimKediamanTab() {
         .from('system_settings')
         .select('value')
         .eq('key', 'kk_theme_color')
-        .single(),
+        .maybeSingle(),
     ]);
     if (dataRes.error) { console.error(dataRes.error); toast.error('Gagal memuatkan takwim.'); }
     setItems((dataRes.data || []).map((tp: any) => ({

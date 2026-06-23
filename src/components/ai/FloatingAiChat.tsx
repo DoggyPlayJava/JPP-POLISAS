@@ -628,10 +628,11 @@ export function FloatingAiChat() {
   // Listen to open-polymart-chat event to open vendor chat directly inside floating chatbox
   useEffect(() => {
     const handleOpenPolymartChat = async (e: Event) => {
-      const customEvent = e as CustomEvent<{ businessId: string; product?: any }>;
+      const customEvent = e as CustomEvent<{ businessId: string; buyerId?: string; product?: any }>;
       const bizId = customEvent.detail.businessId;
+      const buyerId = customEvent.detail.buyerId || profile?.id;
       const prod = customEvent.detail.product;
-      if (!bizId || !profile?.id) return;
+      if (!bizId || !profile?.id || !buyerId) return;
 
       // Open the widget
       setIsOpen(true);
@@ -642,7 +643,7 @@ export function FloatingAiChat() {
         const { data: existingConvs } = await supabase
           .from('polymart_conversations')
           .select('id, buyer_id, vendor_business_id, last_message_at, created_at')
-          .eq('buyer_id', profile.id)
+          .eq('buyer_id', buyerId)
           .eq('vendor_business_id', bizId)
           .order('last_message_at', { ascending: false })
           .limit(1);
@@ -654,7 +655,7 @@ export function FloatingAiChat() {
           const { data: newConv, error } = await supabase
             .from('polymart_conversations')
             .insert({
-              buyer_id: profile.id,
+              buyer_id: buyerId,
               vendor_business_id: bizId
             })
             .select('id, buyer_id, vendor_business_id, last_message_at, created_at')
@@ -671,11 +672,26 @@ export function FloatingAiChat() {
           .eq('id', bizId)
           .maybeSingle();
 
+        // Fetch buyer profile name if logged-in user is vendor
+        let buyerName = 'Pembeli';
+        if (buyerId !== profile.id) {
+          const { data: buyerProfile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', buyerId)
+            .maybeSingle();
+          if (buyerProfile?.full_name) {
+            buyerName = buyerProfile.full_name;
+          }
+        }
+
+        const isUserBuyer = conv.buyer_id === profile.id;
+
         const enrichedChat = {
           id: conv.id,
           type: 'polymart',
-          title: biz?.name ?? 'Kedai PolyMart',
-          logoUrl: biz?.logo_url || null,
+          title: isUserBuyer ? (biz?.name ?? 'Kedai PolyMart') : buyerName,
+          logoUrl: isUserBuyer ? biz?.logo_url : null,
           lastMessage: '',
           updatedAt: conv.last_message_at || conv.created_at,
           unreadCount: 0,

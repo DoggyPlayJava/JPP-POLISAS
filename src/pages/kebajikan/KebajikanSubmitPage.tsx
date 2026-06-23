@@ -180,6 +180,10 @@ export function KebajikanSubmitPage() {
 
   const handleSubmit = async () => {
     if (!user || !form.category) return;
+    if (images.length === 0) {
+      alert("Sila muat naik sekurang-kurangnya 1 gambar sokongan.");
+      return;
+    }
     setSubmitting(true);
     try {
       // ─ Duplicate detection ─
@@ -550,7 +554,12 @@ export function KebajikanSubmitPage() {
 
                 {/* Image Upload */}
                 <div className="tour-aduan-gambar">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-2 block">Gambar Sokongan (maks. 3)</label>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-2 block">Gambar Sokongan (Wajib - min. 1, maks. 3) *</label>
+                  {images.length === 0 && (
+                    <p className="text-red-400 text-[10px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5" /> Sila muat naik sekurang-kurangnya 1 gambar/bukti aduan
+                    </p>
+                  )}
                   <div className="flex gap-3 flex-wrap">
                     {images.map((img, i) => (
                       <div key={i} className="relative w-24 h-24 rounded-2xl overflow-hidden border border-white/10 shadow-lg group">
@@ -577,9 +586,9 @@ export function KebajikanSubmitPage() {
 
             <Button
               onClick={() => setStep('PREVIEW')}
-              disabled={!form.full_name || !form.description}
+              disabled={!form.full_name || !form.description || images.length === 0}
               className="w-full h-14 text-sm font-black uppercase tracking-widest rounded-2xl mt-8 text-slate-950 disabled:opacity-30 transition-all hover:scale-[1.02] active:scale-[0.98]"
-              style={{ background: form.full_name && form.description ? TEAL : '#334155', boxShadow: form.full_name && form.description ? `0 0 32px ${hexToRgba(TEAL, 0.3)}` : 'none' }}
+              style={{ background: form.full_name && form.description && images.length > 0 ? TEAL : '#334155', boxShadow: form.full_name && form.description && images.length > 0 ? `0 0 32px ${hexToRgba(TEAL, 0.3)}` : 'none' }}
             >
               Semak Sebelum Hantar <ChevronRight className="w-5 h-5 ml-1.5" />
             </Button>
@@ -661,7 +670,7 @@ export function KebajikanSubmitPage() {
 
             <Button
               onClick={handleSubmit}
-              disabled={submitting}
+              disabled={submitting || images.length === 0}
               className="w-full h-12 text-sm font-black uppercase tracking-widest rounded-2xl mt-5 text-slate-900 transition-all"
               style={{ background: TEAL, boxShadow: `0 0 24px ${hexToRgba(TEAL, 0.3)}` }}
             >

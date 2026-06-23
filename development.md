@@ -193,5 +193,22 @@ Realtime:
 
 Notifications:
   [ ] Student-level code only inserts notifications for auth.uid() (self)
-  [ ] Cross-user notifications only in JPP/admin components
+  [ ] Cross-user notifications only in JPP-admin components
 ```
+
+---
+
+## 5. Database Access & MCP Helper Scripts
+
+This project uses a self-hosted Supabase database located on a private Tailscale network (`100.104.229.84`).
+
+### 5.1 Remote SQL Queries
+To query the database directly in a chat or command line without setting up local connections:
+- Run a query: `node scripts/db_query.js "YOUR SQL QUERY"`
+- Example: `node scripts/db_query.js "SELECT * FROM public.keusahawanan_businesses;"`
+
+### 5.2 Database Migrations
+To apply a migration file directly to the remote database:
+- Apply a migration: `node scripts/db_migrate.js "supabase/migrations/YOUR_MIGRATION_FILE.sql"`
+- Example: `node scripts/db_migrate.js "supabase/migrations/20260623164000_fix_polymart_auto_cancel_stock_release.sql"`
+

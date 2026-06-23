@@ -207,7 +207,7 @@ function AktivitiPopout({ open, onClose }: { open: boolean; onClose: () => void 
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export function KppUnitDashboard() {
-  const { isSuperAdmin, profile } = useAuth();
+  const { isSuperAdmin, profile, refreshClubs } = useAuth();
   const navigate = useNavigate();
 
   type KppSubTab = 'ringkasan' | 'rekod' | 'kelab' | 'merit-rasmi' | 'demerit' | 'tetapan';
@@ -216,6 +216,14 @@ export function KppUnitDashboard() {
   const [kppClubFilter, setKppClubFilter] = useState('ALL');
   
   const [kppLoading, setKppLoading] = useState(false);
+
+  // Ciri Tambah Kelab States
+  const [newClubName, setNewClubName] = useState('');
+  const [newClubShortName, setNewClubShortName] = useState('');
+  const [newClubCategory, setNewClubCategory] = useState<'Sukan' | 'Akademik' | 'Awam' | 'Kediaman'>('Akademik');
+  const [newClubColor, setNewClubColor] = useState('#8B1A1A');
+  const [newClubDesc, setNewClubDesc] = useState('');
+  const [addingClub, setAddingClub] = useState(false);
 
   // States
   const [settingsLoading, setSettingsLoading] = useState(false);
@@ -373,6 +381,45 @@ export function KppUnitDashboard() {
       toast.success(`Had keahlian: ${newLimit} kelab`, { id: toastId });
     } catch (e: any) {
       toast.error(e.message || 'Gagal kemaskini had', { id: toastId });
+    }
+  };
+
+  const handleCreateClub = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newClubName.trim() || !newClubShortName.trim()) {
+      toast.error('Sila isi nama kelab dan singkatan.');
+      return;
+    }
+
+    setAddingClub(true);
+    const toastId = toast.loading('Mendaftar kelab...');
+    try {
+      const { error } = await supabase.from('clubs').insert({
+        name: newClubName.trim(),
+        short_name: newClubShortName.trim(),
+        category: newClubCategory,
+        theme_color: newClubColor,
+        description: newClubDesc.trim() || null,
+        is_active: true
+      });
+
+      if (error) throw error;
+
+      toast.success('Kelab baharu berjaya didaftarkan!', { id: toastId });
+      setNewClubName('');
+      setNewClubShortName('');
+      setNewClubCategory('Akademik');
+      setNewClubColor('#8B1A1A');
+      setNewClubDesc('');
+
+      if (refreshClubs) {
+        await refreshClubs();
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || 'Gagal mendaftar kelab.', { id: toastId });
+    } finally {
+      setAddingClub(false);
     }
   };
 
@@ -801,6 +848,116 @@ export function KppUnitDashboard() {
                             +
                         </button>
                     </div>
+                </div>
+
+                {/* Form Tambah Kelab Baharu */}
+                <div className="p-6 rounded-[2rem] bg-card border border-border/50 space-y-6 hover:border-teal-500/20 transition-all mt-6 md:col-span-2">
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center border border-teal-500/20">
+                            <Building2 className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-base font-black text-foreground">Tambah Kelab Baharu</h2>
+                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Daftarkan persatuan atau kelab kokurikulum baharu</p>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleCreateClub} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Nama Penuh Kelab */}
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Nama Penuh Kelab</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={newClubName}
+                                    onChange={(e) => setNewClubName(e.target.value)}
+                                    placeholder="Cth: Kelab Sukan Elektronik POLISAS"
+                                    className="w-full h-11 px-4 rounded-xl border border-border/50 bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                                />
+                            </div>
+
+                            {/* Nama Singkatan */}
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Nama Singkatan / Kod</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={newClubShortName}
+                                    onChange={(e) => setNewClubShortName(e.target.value)}
+                                    placeholder="Cth: E-Sport"
+                                    className="w-full h-11 px-4 rounded-xl border border-border/50 bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                                />
+                            </div>
+
+                            {/* Kategori */}
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Kategori Kelab</label>
+                                <Select
+                                    value={newClubCategory}
+                                    onValueChange={(val: any) => setNewClubCategory(val)}
+                                >
+                                    <SelectTrigger className="h-11 rounded-xl border border-border/50 bg-background text-sm font-medium focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all">
+                                        <SelectValue placeholder="Pilih Kategori" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl">
+                                        <SelectItem value="Sukan" className="font-semibold">Sukan</SelectItem>
+                                        <SelectItem value="Akademik" className="font-semibold">Akademik</SelectItem>
+                                        <SelectItem value="Awam" className="font-semibold">Awam</SelectItem>
+                                        <SelectItem value="Kediaman" className="font-semibold">Kediaman</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Warna Tema */}
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Warna Tema Kelab</label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="color"
+                                        value={newClubColor}
+                                        onChange={(e) => setNewClubColor(e.target.value)}
+                                        className="w-12 h-11 rounded-xl border border-border/50 bg-background cursor-pointer p-1"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={newClubColor}
+                                        onChange={(e) => setNewClubColor(e.target.value)}
+                                        placeholder="#8B1A1A"
+                                        className="flex-1 h-11 px-4 rounded-xl border border-border/50 bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all uppercase"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Penerangan Kelab */}
+                            <div className="space-y-1.5 md:col-span-2">
+                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Penerangan Ringkas</label>
+                                <textarea
+                                    value={newClubDesc}
+                                    onChange={(e) => setNewClubDesc(e.target.value)}
+                                    placeholder="Terangkan serba sedikit tentang fokus atau fungsi kelab ini..."
+                                    className="w-full min-h-[80px] p-4 rounded-xl border border-border/50 bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-y"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end pt-2">
+                            <Button
+                                type="submit"
+                                disabled={addingClub}
+                                className="h-10 rounded-xl font-black text-xs uppercase tracking-widest text-white transition-all shadow-md px-6 bg-teal-600 hover:bg-teal-700 disabled:opacity-50"
+                            >
+                                {addingClub ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Mendaftar...
+                                    </>
+                                ) : (
+                                    'Daftar Kelab'
+                                )}
+                            </Button>
+                        </div>
+                    </form>
                 </div>
             </div>
           )}

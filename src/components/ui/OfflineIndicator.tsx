@@ -27,7 +27,7 @@ export function OfflineIndicator() {
       const timeout = setTimeout(() => controller.abort(), 5000);
 
       // Ping Supabase REST endpoint (lightest possible check)
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/system_settings?select=key&limit=1`, {
         method: 'HEAD',
         cache: 'no-store',
         signal: controller.signal,

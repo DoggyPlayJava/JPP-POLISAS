@@ -1,0 +1,4380 @@
+
+================================================================================
+FILE 1/97: 20260425132500_optimize_database.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+CREATE POLICY "Users can view own notifications" ON public.notifications
+FOR SELECT USING (user_id = (select auth.uid()));
+
+[Match]:
+CREATE POLICY "Users can update own notifications" ON public.notifications
+FOR UPDATE USING (user_id = (select auth.uid()));
+
+[Match]:
+CREATE POLICY "Student can read own memberships" ON public.student_club_memberships
+FOR SELECT USING (user_id = (select auth.uid()));
+
+[Match]:
+CREATE POLICY "Students can read own memberships" ON public.student_club_memberships
+FOR SELECT USING (user_id::text = (select auth.uid())::text);
+
+[Match]:
+CREATE POLICY "Student can request membership" ON public.student_club_memberships
+FOR INSERT WITH CHECK (user_id = (select auth.uid()) AND account_status = ANY (ARRAY['PENDING'::text, 'APPROVED'::text]));
+
+[Match]:
+CREATE POLICY "Students can apply to clubs" ON public.student_club_memberships
+FOR INSERT WITH CHECK (user_id = (select auth.uid()) AND account_status = 'PENDING'::text);
+
+[Match]:
+CREATE POLICY "Users can update own profile" ON public.profiles
+FOR UPDATE USING (id = (select auth.uid()));
+
+[Match]:
+CREATE POLICY "kb_ticket_select_own" ON public.kebajikan_tickets
+FOR SELECT USING (submitter_id = (select auth.uid()));
+
+[Match]:
+CREATE POLICY "kb_ticket_update_own" ON public.kebajikan_tickets
+FOR UPDATE USING (submitter_id = (select auth.uid()));
+
+[Match]:
+CREATE POLICY "Users can view their own programs" ON public.programs
+FOR SELECT USING (user_id = (select auth.uid()));
+
+[Match]:
+CREATE POLICY "Users can insert their own programs" ON public.programs
+FOR INSERT WITH CHECK (user_id = (select auth.uid()));
+
+[Match]:
+CREATE POLICY "Users can update their own programs" ON public.programs
+FOR UPDATE USING (user_id = (select auth.uid()));
+
+[Match]:
+CREATE POLICY "Users can delete their own programs" ON public.programs
+FOR DELETE USING (user_id = (select auth.uid()));
+
+
+================================================================================
+FILE 2/97: 20260425133500_fix_security_warnings.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+CREATE POLICY "Semua boleh tulis log" ON public.club_logs 
+FOR INSERT WITH CHECK (actor_id = (select auth.uid()));
+
+[Match]:
+CREATE POLICY "kb_notif_update_read" ON public.kebajikan_notifications 
+FOR UPDATE USING (
+  (target_user_id = (select auth.uid())) OR is_kebajikan_staff()
+) WITH CHECK (
+  (target_user_id = (select auth.uid())) OR is_kebajikan_staff()
+);
+
+
+================================================================================
+FILE 3/97: 20260429120653_personal_folders.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE akademik_folders ALTER COLUMN is_public SET DEFAULT false;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+CREATE POLICY akfol_select ON akademik_folders FOR SELECT USING (created_by = auth.uid());
+
+[Match]:
+CREATE POLICY akfol_insert ON akademik_folders FOR INSERT WITH CHECK (created_by = auth.uid());
+
+[Match]:
+CREATE POLICY akfol_update ON akademik_folders FOR UPDATE USING (created_by = auth.uid());
+
+[Match]:
+CREATE POLICY akfol_delete ON akademik_folders FOR DELETE USING (created_by = auth.uid());
+
+[Match]:
+CREATE POLICY akf_select ON akademik_files FOR SELECT USING (uploaded_by = auth.uid() OR owner_user_id = auth.uid());
+
+[Match]:
+CREATE POLICY akf_insert ON akademik_files FOR INSERT WITH CHECK (uploaded_by = auth.uid() OR owner_user_id = auth.uid());
+
+[Match]:
+CREATE POLICY akf_update ON akademik_files FOR UPDATE USING (uploaded_by = auth.uid() OR owner_user_id = auth.uid());
+
+[Match]:
+CREATE POLICY akf_delete ON akademik_files FOR DELETE USING (uploaded_by = auth.uid() OR owner_user_id = auth.uid());
+
+
+================================================================================
+FILE 4/97: 20260504231952_optimize_performance_rls.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+CREATE POLICY "karnival_votes_v2_admin_delete" ON public.karnival_votes_v2 FOR DELETE USING (
+  EXISTS ( SELECT 1 FROM profiles WHERE profiles.id = (select auth.uid()) AND (profiles.role = 'SUPER_ADMIN_JPP'::text OR profiles.role = 'JPP'::text OR profiles.jabatan = 'JPP'::text) )
+);
+
+[Match]:
+CREATE POLICY "karnival_votes_v2_admin_update" ON public.karnival_votes_v2 FOR UPDATE USING (
+  EXISTS ( SELECT 1 FROM profiles WHERE profiles.id = (select auth.uid()) AND (profiles.role = 'SUPER_ADMIN_JPP'::text OR profiles.role = 'JPP'::text OR profiles.jabatan = 'JPP'::text) )
+);
+
+[Match]:
+CREATE POLICY "karnival_votes_v2_delete_own" ON public.karnival_votes_v2 FOR DELETE USING (
+  (select auth.uid()) = voter_id
+);
+
+[Match]:
+CREATE POLICY "karnival_votes_v2_insert_self" ON public.karnival_votes_v2 FOR INSERT WITH CHECK (
+  (select auth.uid()) = voter_id AND EXISTS ( SELECT 1 FROM karnival_editions WHERE karnival_editions.id = karnival_votes_v2.edition_id AND karnival_editions.voting_enabled = true )
+);
+
+[Match]:
+CREATE POLICY "scm_select" ON public.student_club_memberships FOR SELECT USING (
+  (select auth.uid()) IS NOT NULL
+);
+
+[Match]:
+CREATE POLICY "kamsis_dynamic_fields_admin_all" ON public.kamsis_dynamic_fields FOR ALL USING (
+  EXISTS ( SELECT 1 FROM profiles WHERE profiles.id = (select auth.uid()) AND (profiles.role IN ('SUPER_ADMIN_JPP', 'STAFF') OR (profiles.role = 'JPP' AND profiles.jpp_unit = 'KK') OR (profiles.role = 'JPP' AND profiles.jpp_position IN ('YDP', 'YANG_DIPERTUA', 'NAIB_YDP'))) )
+);
+
+[Match]:
+CREATE POLICY "kamsis_applications_admin_all" ON public.kamsis_applications FOR ALL USING (
+  EXISTS ( SELECT 1 FROM profiles WHERE profiles.id = (select auth.uid()) AND (profiles.role IN ('SUPER_ADMIN_JPP', 'STAFF') OR (profiles.role = 'JPP' AND profiles.jpp_unit = 'KK') OR (profiles.role = 'JPP' AND profiles.jpp_position IN ('YDP', 'YANG_DIPERTUA', 'NAIB_YDP'))) )
+);
+
+[Match]:
+CREATE POLICY "kamsis_applications_insert_own" ON public.kamsis_applications FOR INSERT WITH CHECK (
+  user_id = (select auth.uid())
+);
+
+[Match]:
+CREATE POLICY "kamsis_applications_select_own" ON public.kamsis_applications FOR SELECT USING (
+  user_id = (select auth.uid())
+);
+
+[Match]:
+CREATE POLICY "kamsis_applications_update_own" ON public.kamsis_applications FOR UPDATE USING (
+  user_id = (select auth.uid())
+);
+
+[Match]:
+CREATE POLICY "akademik_cgpa_records_select" ON public.akademik_cgpa_records FOR SELECT USING (
+  user_id = (select auth.uid()) 
+  OR EXISTS ( SELECT 1 FROM profiles WHERE profiles.id = (select auth.uid()) AND profiles.role IN ('JPP', 'SUPER_ADMIN_JPP') )
+);
+
+[Match]:
+CREATE POLICY "akademik_cgpa_records_insert" ON public.akademik_cgpa_records FOR INSERT WITH CHECK (
+  user_id = (select auth.uid())
+);
+
+[Match]:
+CREATE POLICY "akademik_cgpa_records_update" ON public.akademik_cgpa_records FOR UPDATE USING (
+  user_id = (select auth.uid())
+);
+
+[Match]:
+CREATE POLICY "akademik_cgpa_records_delete" ON public.akademik_cgpa_records FOR DELETE USING (
+  user_id = (select auth.uid())
+);
+
+[Match]:
+CREATE POLICY "amc_insert" ON public.akademik_merit_config FOR INSERT WITH CHECK (
+  EXISTS ( SELECT 1 FROM profiles WHERE profiles.id = (select auth.uid()) AND profiles.role = 'SUPER_ADMIN_JPP' )
+);
+
+[Match]:
+CREATE POLICY "amc_update" ON public.akademik_merit_config FOR UPDATE USING (
+  EXISTS ( SELECT 1 FROM profiles WHERE profiles.id = (select auth.uid()) AND profiles.role = 'SUPER_ADMIN_JPP' )
+);
+
+[Match]:
+CREATE POLICY "amc_delete" ON public.akademik_merit_config FOR DELETE USING (
+  EXISTS ( SELECT 1 FROM profiles WHERE profiles.id = (select auth.uid()) AND profiles.role = 'SUPER_ADMIN_JPP' )
+);
+
+
+================================================================================
+FILE 5/97: 20260505235200_auto_sort_sijil_akademik.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 6/97: 20260510044608_add_db_telemetry_rpc.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 7/97: 20260512054626_59_performance_optimizations.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+CREATE POLICY aqt_insert ON public.akademik_qr_tokens FOR INSERT 
+WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = uid() AND profiles.role IN ('JPP', 'SUPER_ADMIN_JPP')));
+
+[Match]:
+CREATE POLICY aqt_update ON public.akademik_qr_tokens FOR UPDATE 
+USING (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = uid() AND profiles.role IN ('JPP', 'SUPER_ADMIN_JPP')));
+
+[Match]:
+CREATE POLICY aqt_delete ON public.akademik_qr_tokens FOR DELETE 
+USING (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = uid() AND profiles.role IN ('JPP', 'SUPER_ADMIN_JPP')));
+
+[Match]:
+CREATE POLICY asc_insert ON public.akademik_sijil_categories FOR INSERT 
+WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = uid() AND profiles.role = 'SUPER_ADMIN_JPP'));
+
+[Match]:
+CREATE POLICY asc_update ON public.akademik_sijil_categories FOR UPDATE 
+USING (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = uid() AND profiles.role = 'SUPER_ADMIN_JPP'));
+
+[Match]:
+CREATE POLICY asc_delete ON public.akademik_sijil_categories FOR DELETE 
+USING (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = uid() AND profiles.role = 'SUPER_ADMIN_JPP'));
+
+[Match]:
+CREATE POLICY aur_select ON public.akademik_unlock_requests FOR SELECT 
+USING (
+    user_id = uid() 
+    OR EXISTS (
+        SELECT 1 FROM profiles 
+        WHERE profiles.id = uid() 
+        AND (
+            profiles.role IN ('SUPER_ADMIN_JPP', 'ADMIN', 'JPP', 'CLUB_MT', 'MT') 
+        )
+    )
+);
+
+[Match]:
+CREATE POLICY aur_exco_insert ON public.akademik_unlock_requests FOR INSERT 
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM profiles 
+        WHERE profiles.id = uid() 
+        AND (
+            profiles.role = 'SUPER_ADMIN_JPP' 
+            OR (profiles.role = 'JPP' AND profiles.jpp_unit = 'AKADEMIK') 
+            OR profiles.role IN ('CLUB_MT', 'MT')
+        )
+    )
+);
+
+[Match]:
+CREATE POLICY aur_admin_update ON public.akademik_unlock_requests FOR UPDATE 
+USING (
+    EXISTS (
+        SELECT 1 FROM profiles 
+        WHERE profiles.id = uid() 
+        AND profiles.role IN ('SUPER_ADMIN_JPP', 'ADMIN', 'JPP', 'CLUB_MT', 'MT')
+    )
+);
+
+[Match]:
+CREATE POLICY aur_exco_delete ON public.akademik_unlock_requests FOR DELETE 
+USING (
+    EXISTS (
+        SELECT 1 FROM profiles 
+        WHERE profiles.id = uid() 
+        AND (
+            profiles.role = 'SUPER_ADMIN_JPP' 
+            OR (profiles.role = 'JPP' AND profiles.jpp_unit = 'AKADEMIK') 
+            OR profiles.role IN ('CLUB_MT', 'MT')
+        )
+    )
+);
+
+
+================================================================================
+FILE 8/97: 20260512060300_60_remove_unnecessary_realtime.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 9/97: 20260512061000_61_wal_monitoring_rpc.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 10/97: 20260518000000_update_polysuara_rate_limit.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+[Match]:
+CREATE TRIGGER trg_polysuara_hourly_limit
+BEFORE INSERT ON public.polysuara_confessions
+FOR EACH ROW EXECUTE FUNCTION public.check_polysuara_hourly_limit();
+
+--- RLS POLICIES ---
+
+================================================================================
+FILE 11/97: 20260518115654_polyrent_fasa1_availability.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE polyrent_listings
+ADD COLUMN IF NOT EXISTS available_from DATE DEFAULT CURRENT_DATE;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 12/97: 20260518120600_polyrent_fasa2.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+[Match]:
+CREATE TYPE polyrent_status AS ENUM ('OPEN', 'CLOSED', 'HIDDEN');
+
+[Match]:
+ALTER TYPE polyrent_status ADD VALUE IF NOT EXISTS 'SUSPENDED';
+
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+CREATE TABLE IF NOT EXISTS polyrent_location_reviews (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    kawasan_id UUID NOT NULL REFERENCES klk_kawasan(id) ON DELETE CASCADE,
+    reviewer_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    safety_rating INT NOT NULL CHECK (safety_rating >= 1 AND safety_rating <= 5),
+    facility_rating INT NOT NULL CHECK (facility_rating >= 1 AND facility_rating <= 5),
+    comment TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    -- Seorang pengguna hanya boleh review kawasan yang sama sekali sahaja
+    UNIQUE(kawasan_id, reviewer_id)
+);
+
+[Match]:
+ALTER TABLE polyrent_location_reviews ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE TABLE IF NOT EXISTS polyrent_reports (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    listing_id UUID NOT NULL REFERENCES polyrent_listings(id) ON DELETE CASCADE,
+    reporter_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    reason TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'REVIEWED', 'ACTION_TAKEN', 'REJECTED')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    -- Seorang pengguna hanya boleh lapor iklan yang sama sekali sahaja
+    UNIQUE(listing_id, reporter_id)
+);
+
+[Match]:
+ALTER TABLE polyrent_reports ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+[Match]:
+CREATE TRIGGER on_polyrent_report_inserted
+    AFTER INSERT ON polyrent_reports
+    FOR EACH ROW
+    EXECUTE FUNCTION polyrent_check_report_threshold();
+
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE polyrent_location_reviews ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Semua pengguna boleh baca review kawasan"
+    ON polyrent_location_reviews FOR SELECT
+    TO authenticated
+    USING (true);
+
+[Match]:
+CREATE POLICY "Pengguna boleh tambah review sendiri"
+    ON polyrent_location_reviews FOR INSERT
+    TO authenticated
+    WITH CHECK (auth.uid() = reviewer_id);
+
+[Match]:
+CREATE POLICY "Pengguna boleh update review sendiri"
+    ON polyrent_location_reviews FOR UPDATE
+    TO authenticated
+    USING (auth.uid() = reviewer_id);
+
+[Match]:
+CREATE POLICY "Pengguna boleh buang review sendiri"
+    ON polyrent_location_reviews FOR DELETE
+    TO authenticated
+    USING (auth.uid() = reviewer_id);
+
+[Match]:
+ALTER TABLE polyrent_reports ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Admin boleh baca semua report"
+    ON polyrent_reports FOR SELECT
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role IN ('ADMIN', 'SUPER_ADMIN_JPP', 'JPP')
+        )
+    );
+
+[Match]:
+CREATE POLICY "Pengguna boleh baca report sendiri"
+    ON polyrent_reports FOR SELECT
+    TO authenticated
+    USING (auth.uid() = reporter_id);
+
+[Match]:
+CREATE POLICY "Pengguna boleh tambah report"
+    ON polyrent_reports FOR INSERT
+    TO authenticated
+    WITH CHECK (auth.uid() = reporter_id);
+
+
+================================================================================
+FILE 13/97: 20260518121000_polyrent_fasa3.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+CREATE TABLE IF NOT EXISTS polyrent_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    listing_id UUID REFERENCES polyrent_listings(id) ON DELETE CASCADE,
+    sender_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    receiver_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+[Match]:
+ALTER TABLE polyrent_messages ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE TABLE IF NOT EXISTS polyrent_reverse_ads (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    budget NUMERIC NOT NULL,
+    kawasan_id UUID REFERENCES klk_kawasan(id) ON DELETE SET NULL,
+    jantina_prefer TEXT NOT NULL CHECK (jantina_prefer IN ('CAMPURAN', 'LELAKI', 'PEREMPUAN')),
+    description TEXT,
+    status TEXT NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'CLOSED')),
+    move_in_date DATE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+[Match]:
+ALTER TABLE polyrent_reverse_ads ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+[Match]:
+CREATE TRIGGER on_polyrent_reverse_ads_updated
+    BEFORE UPDATE ON polyrent_reverse_ads
+    FOR EACH ROW
+    EXECUTE FUNCTION handle_updated_at();
+
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE polyrent_messages ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Pengguna boleh baca mesej yang dihantar atau diterima"
+    ON polyrent_messages FOR SELECT
+    TO authenticated
+    USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
+
+[Match]:
+CREATE POLICY "Pengguna boleh hantar mesej"
+    ON polyrent_messages FOR INSERT
+    TO authenticated
+    WITH CHECK (auth.uid() = sender_id);
+
+[Match]:
+CREATE POLICY "Penerima boleh kemaskini status is_read"
+    ON polyrent_messages FOR UPDATE
+    TO authenticated
+    USING (auth.uid() = receiver_id)
+    WITH CHECK (auth.uid() = receiver_id);
+
+[Match]:
+ALTER TABLE polyrent_reverse_ads ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Semua orang boleh baca reverse ads yang OPEN"
+    ON polyrent_reverse_ads FOR SELECT
+    TO authenticated
+    USING (status = 'OPEN' OR auth.uid() = student_id);
+
+[Match]:
+CREATE POLICY "Pelajar boleh tambah reverse ad"
+    ON polyrent_reverse_ads FOR INSERT
+    TO authenticated
+    WITH CHECK (auth.uid() = student_id);
+
+[Match]:
+CREATE POLICY "Pelajar boleh update reverse ad sendiri"
+    ON polyrent_reverse_ads FOR UPDATE
+    TO authenticated
+    USING (auth.uid() = student_id);
+
+[Match]:
+CREATE POLICY "Pelajar boleh delete reverse ad sendiri"
+    ON polyrent_reverse_ads FOR DELETE
+    TO authenticated
+    USING (auth.uid() = student_id);
+
+
+================================================================================
+FILE 14/97: 20260525021000_fix_polyrider_profiles_ref.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE polyrider_saved_locations DISABLE TRIGGER trg_saved_locations_limit;
+
+[Match]:
+ALTER TABLE polyrider_saved_locations ENABLE TRIGGER trg_saved_locations_limit;
+
+[Match]:
+ALTER TABLE polytask_sos_logs DISABLE TRIGGER trg_audit_polyrider_sos;
+
+[Match]:
+ALTER TABLE polytask_sos_logs ENABLE TRIGGER trg_audit_polyrider_sos;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 15/97: 20260527154636_88_polymart_product_variations.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE "public"."business_products"
+ADD COLUMN IF NOT EXISTS "variations" TEXT[] DEFAULT '{}'::TEXT[];
+
+[Match]:
+ALTER TABLE "public"."polymart_orders"
+ADD COLUMN IF NOT EXISTS "selected_variation" TEXT DEFAULT NULL;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 16/97: 20260527161800_89_complete_order_idempotency_guard.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 17/97: 20260527162000_90_polymart_cancellation_flow.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE polymart_orders 
+ADD COLUMN IF NOT EXISTS cancellation_requested_at TIMESTAMPTZ,
+ADD COLUMN IF NOT EXISTS cancellation_reason TEXT,
+ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ,
+ADD COLUMN IF NOT EXISTS cancelled_by UUID REFERENCES profiles(id);
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 18/97: 20260527162100_91_product_multi_images.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE business_products 
+ADD COLUMN IF NOT EXISTS image_urls TEXT[] DEFAULT '{}'::TEXT[];
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 19/97: 20260527162200_92_flash_sale_preorder.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE business_products 
+ADD COLUMN IF NOT EXISTS sale_price DECIMAL(10,2),
+ADD COLUMN IF NOT EXISTS sale_start_at TIMESTAMPTZ,
+ADD COLUMN IF NOT EXISTS sale_end_at TIMESTAMPTZ,
+ADD COLUMN IF NOT EXISTS is_preorder BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS preorder_deadline TIMESTAMPTZ;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 20/97: 20260527162300_93_polymart_chat.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+CREATE TABLE IF NOT EXISTS polymart_conversations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  buyer_id UUID NOT NULL REFERENCES profiles(id),
+  vendor_business_id UUID NOT NULL REFERENCES keusahawanan_businesses(id),
+  order_id UUID REFERENCES polymart_orders(id),
+  last_message_at TIMESTAMPTZ DEFAULT now(),
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+[Match]:
+CREATE TABLE IF NOT EXISTS polymart_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  conversation_id UUID NOT NULL REFERENCES polymart_conversations(id) ON DELETE CASCADE,
+  sender_id UUID NOT NULL REFERENCES profiles(id),
+  content TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+[Match]:
+ALTER TABLE polymart_conversations ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE polymart_messages ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE polymart_conversations ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE polymart_messages ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "polymart_conversations_select" ON polymart_conversations
+FOR SELECT USING (
+  buyer_id = (SELECT auth.uid())
+  OR vendor_business_id IN (
+    SELECT id FROM keusahawanan_businesses WHERE owner_id = (SELECT auth.uid())
+    UNION
+    SELECT business_id FROM student_business_memberships WHERE user_id = (SELECT auth.uid()) AND status = 'ACTIVE'
+  )
+);
+
+[Match]:
+CREATE POLICY "polymart_conversations_insert" ON polymart_conversations
+FOR INSERT WITH CHECK (
+  buyer_id = (SELECT auth.uid())
+);
+
+[Match]:
+CREATE POLICY "polymart_messages_select" ON polymart_messages
+FOR SELECT USING (
+  conversation_id IN (
+    SELECT id FROM polymart_conversations
+    WHERE buyer_id = (SELECT auth.uid())
+    OR vendor_business_id IN (
+      SELECT id FROM keusahawanan_businesses WHERE owner_id = (SELECT auth.uid())
+      UNION
+      SELECT business_id FROM student_business_memberships WHERE user_id = (SELECT auth.uid()) AND status = 'ACTIVE'
+    )
+  )
+);
+
+[Match]:
+CREATE POLICY "polymart_messages_insert" ON polymart_messages
+FOR INSERT WITH CHECK (
+  sender_id = (SELECT auth.uid())
+  AND conversation_id IN (
+    SELECT id FROM polymart_conversations
+    WHERE buyer_id = (SELECT auth.uid())
+    OR vendor_business_id IN (
+      SELECT id FROM keusahawanan_businesses WHERE owner_id = (SELECT auth.uid())
+      UNION
+      SELECT business_id FROM student_business_memberships WHERE user_id = (SELECT auth.uid()) AND status = 'ACTIVE'
+    )
+  )
+);
+
+[Match]:
+CREATE POLICY "polymart_messages_update" ON polymart_messages
+FOR UPDATE USING (
+  -- Only recipient can update (mark as read), meaning user is not the sender
+  sender_id != (SELECT auth.uid())
+  AND conversation_id IN (
+    SELECT id FROM polymart_conversations
+    WHERE buyer_id = (SELECT auth.uid())
+    OR vendor_business_id IN (
+      SELECT id FROM keusahawanan_businesses WHERE owner_id = (SELECT auth.uid())
+      UNION
+      SELECT business_id FROM student_business_memberships WHERE user_id = (SELECT auth.uid()) AND status = 'ACTIVE'
+    )
+  )
+) WITH CHECK (
+  is_read = true
+);
+
+
+================================================================================
+FILE 21/97: 20260527162400_94_polymart_wishlist.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+CREATE TABLE IF NOT EXISTS polymart_wishlist (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id),
+  product_id UUID NOT NULL REFERENCES business_products(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id, product_id)
+);
+
+[Match]:
+ALTER TABLE polymart_wishlist ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE polymart_wishlist ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "polymart_wishlist_select" ON polymart_wishlist
+FOR SELECT USING (user_id = (SELECT auth.uid()));
+
+[Match]:
+CREATE POLICY "polymart_wishlist_insert" ON polymart_wishlist
+FOR INSERT WITH CHECK (user_id = (SELECT auth.uid()));
+
+[Match]:
+CREATE POLICY "polymart_wishlist_delete" ON polymart_wishlist
+FOR DELETE USING (user_id = (SELECT auth.uid()));
+
+
+================================================================================
+FILE 22/97: 20260527162500_95_polymart_jsonb_variations.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE "public"."business_products" 
+DROP COLUMN IF EXISTS "variations";
+
+[Match]:
+ALTER TABLE "public"."business_products" 
+ADD COLUMN "variations" JSONB DEFAULT '[]'::jsonb;
+
+[Match]:
+ALTER TABLE "public"."polymart_cart_items"
+ADD COLUMN IF NOT EXISTS "selected_variation" TEXT DEFAULT NULL;
+
+[Match]:
+ALTER TABLE "public"."polymart_cart_items" 
+DROP CONSTRAINT IF EXISTS "uq_polymart_cart_item";
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 23/97: 20260527162600_96_polymart_chat_uniqueness.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE polymart_conversations 
+ADD CONSTRAINT uq_polymart_convs_buyer_vendor UNIQUE (buyer_id, vendor_business_id);
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 24/97: 20260527162700_97_fix_update_product_variation_stock_updated_at.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE "public"."polymart_cart_items" DROP CONSTRAINT IF EXISTS "uq_polymart_cart_item";
+
+[Match]:
+ALTER TABLE "public"."polymart_cart_items" DROP CONSTRAINT IF EXISTS "uq_polymart_cart_item_variation_constraint";
+
+[Match]:
+ALTER TABLE "public"."polymart_cart_items"
+ALTER COLUMN "selected_variation" SET DEFAULT '',
+ALTER COLUMN "selected_variation" SET NOT NULL;
+
+[Match]:
+ALTER TABLE "public"."polymart_cart_items"
+ADD CONSTRAINT "uq_polymart_cart_item_variation_constraint" 
+UNIQUE USING INDEX "uq_polymart_cart_item_variation_v2";
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 25/97: 20260529224800_98_polysuara_social_comments.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polysuara_comments ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polysuara_comment_votes ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polysuara_comment_reports ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polysuara_confessions ADD COLUMN IF NOT EXISTS comments_count INTEGER DEFAULT 0;
+
+--- FUNCTIONS / TRIGGERS ---
+[Match]:
+CREATE TRIGGER trg_censor_polysuara_comment
+BEFORE INSERT OR UPDATE OF content ON public.polysuara_comments
+FOR EACH ROW EXECUTE FUNCTION public.censor_polysuara_content();
+
+[Match]:
+CREATE TRIGGER trg_polysuara_comment_codename
+BEFORE INSERT ON public.polysuara_comments
+FOR EACH ROW EXECUTE FUNCTION public.generate_polysuara_comment_codename();
+
+[Match]:
+CREATE TRIGGER trg_sync_polysuara_comment_count
+AFTER INSERT OR DELETE ON public.polysuara_comments
+FOR EACH ROW EXECUTE FUNCTION public.sync_polysuara_comment_count();
+
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE public.polysuara_comments ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polysuara_comment_votes ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polysuara_comment_reports ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Pelajar boleh baca ulasan" ON public.polysuara_comments
+    FOR SELECT USING (is_hidden_by_community = false);
+
+[Match]:
+CREATE POLICY "Pelajar boleh buat ulasan" ON public.polysuara_comments
+    FOR INSERT WITH CHECK ((SELECT auth.uid()) = user_id);
+
+[Match]:
+CREATE POLICY "JPP boleh urus ulasan" ON public.polysuara_comments
+    FOR ALL USING (public.is_jpp_admin((SELECT auth.uid()))) 
+    WITH CHECK (public.is_jpp_admin((SELECT auth.uid())));
+
+[Match]:
+CREATE POLICY "Pelajar boleh lihat undian ulasan sendiri" ON public.polysuara_comment_votes
+    FOR SELECT USING ((SELECT auth.uid()) = user_id);
+
+[Match]:
+CREATE POLICY "Pelajar boleh buat undian ulasan sendiri" ON public.polysuara_comment_votes
+    FOR INSERT WITH CHECK ((SELECT auth.uid()) = user_id);
+
+[Match]:
+CREATE POLICY "Pelajar boleh padam undian ulasan sendiri" ON public.polysuara_comment_votes
+    FOR DELETE USING ((SELECT auth.uid()) = user_id);
+
+[Match]:
+CREATE POLICY "JPP boleh urus undian ulasan" ON public.polysuara_comment_votes
+    FOR ALL USING (public.is_jpp_admin((SELECT auth.uid())));
+
+[Match]:
+CREATE POLICY "Pelajar boleh buat laporan ulasan" ON public.polysuara_comment_reports
+    FOR INSERT WITH CHECK ((SELECT auth.uid()) = reporter_id);
+
+[Match]:
+CREATE POLICY "JPP boleh urus laporan ulasan" ON public.polysuara_comment_reports
+    FOR ALL USING (public.is_jpp_admin((SELECT auth.uid())));
+
+
+================================================================================
+FILE 26/97: 20260529225900_99_polysuara_social_softdelete_images.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polysuara_comments 
+ADD COLUMN IF NOT EXISTS image_url TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS is_deleted_by_moderator BOOLEAN DEFAULT false;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 27/97: 26_pembubaran_kohort.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.club_activities ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT FALSE;
+
+[Match]:
+ALTER TABLE public.club_reports ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT FALSE;
+
+[Match]:
+ALTER TABLE public.programs ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT FALSE;
+
+[Match]:
+ALTER TABLE public.club_activities DROP CONSTRAINT IF EXISTS club_activities_user_id_fkey;
+
+[Match]:
+ALTER TABLE public.club_reports DROP CONSTRAINT IF EXISTS club_reports_submitted_by_fkey;
+
+[Match]:
+ALTER TABLE public.programs DROP CONSTRAINT IF EXISTS programs_user_id_fkey;
+
+[Match]:
+ALTER TABLE public.club_activities ALTER COLUMN user_id DROP NOT NULL;
+
+[Match]:
+ALTER TABLE public.club_reports ALTER COLUMN submitted_by DROP NOT NULL;
+
+[Match]:
+ALTER TABLE public.programs ALTER COLUMN user_id DROP NOT NULL;
+
+[Match]:
+ALTER TABLE public.club_activities 
+  ADD CONSTRAINT club_activities_user_id_fkey 
+  FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE SET NULL;
+
+[Match]:
+ALTER TABLE public.club_reports 
+  ADD CONSTRAINT club_reports_submitted_by_fkey 
+  FOREIGN KEY (submitted_by) REFERENCES public.profiles(id) ON DELETE SET NULL;
+
+[Match]:
+ALTER TABLE public.programs 
+  ADD CONSTRAINT programs_user_id_fkey 
+  FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE SET NULL;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 28/97: 27_pembubaran_kelab.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 29/97: 27_polysuara_v4_updates.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+[Match]:
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('polysuara_attachments', 'polysuara_attachments', true)
+ON CONFLICT (id) DO NOTHING;
+
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polysuara_confessions 
+  ADD COLUMN IF NOT EXISTS image_url TEXT,
+  ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT false;
+
+[Match]:
+ALTER TABLE public.polysuara_censored_words ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+[Match]:
+Create Trigger for Auto Censor (Regex Replace)
+CREATE OR REPLACE FUNCTION public.censor_polysuara_content()
+RETURNS TRIGGER AS $$
+DECLARE
+    rec RECORD;
+
+[Match]:
+CREATE TRIGGER trg_censor_polysuara
+BEFORE INSERT OR UPDATE OF content ON public.polysuara_confessions
+FOR EACH ROW EXECUTE FUNCTION public.censor_polysuara_content();
+
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE public.polysuara_confessions 
+  ADD COLUMN IF NOT EXISTS image_url TEXT,
+  ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT false;
+
+-- 2. Create polysuara_censored_words table
+CREATE TABLE IF NOT EXISTS public.polysuara_censored_words (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    word TEXT NOT NULL UNIQUE,
+    added_by UUID REFERENCES auth.users(id),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS for censored words
+ALTER TABLE public.polysuara_censored_words ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Allow public read censored words" 
+ON public.polysuara_censored_words FOR SELECT USING (true);
+
+[Match]:
+CREATE POLICY "Allow authenticated full access censored words" 
+ON public.polysuara_censored_words FOR ALL 
+USING (auth.role() = 'authenticated') 
+WITH CHECK (auth.role() = 'authenticated');
+
+[Match]:
+CREATE POLICY "Give public access to polysuara_attachments" ON storage.objects FOR SELECT USING (bucket_id = 'polysuara_attachments');
+
+[Match]:
+CREATE POLICY "Allow authenticated inserts to polysuara_attachments" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'polysuara_attachments' AND auth.role() = 'authenticated');
+
+
+================================================================================
+FILE 30/97: 28_keusahawanan_module.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+[Match]:
+CREATE TYPE keusahawanan_business_status AS ENUM ('PENDING_INTERVIEW', 'ACTIVE', 'REJECTED');
+
+[Match]:
+CREATE TYPE keusahawanan_membership_role AS ENUM ('OWNER', 'MEMBER');
+
+[Match]:
+CREATE TYPE keusahawanan_membership_status AS ENUM ('PENDING', 'ACTIVE', 'REJECTED');
+
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.keusahawanan_categories ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.keusahawanan_businesses ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.student_business_memberships ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE public.keusahawanan_categories ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.keusahawanan_businesses ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.student_business_memberships ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Public Read Access for Keusahawanan Categories" ON public.keusahawanan_categories FOR SELECT USING (true);
+
+[Match]:
+CREATE POLICY "Admin All Access for Keusahawanan Categories" ON public.keusahawanan_categories FOR ALL USING (
+  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'JPP'))
+);
+
+[Match]:
+CREATE POLICY "Public read active businesses" ON public.keusahawanan_businesses FOR SELECT USING (
+  status = 'ACTIVE' OR owner_id = auth.uid() OR 
+  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'JPP'))
+);
+
+[Match]:
+CREATE POLICY "Students can create business" ON public.keusahawanan_businesses FOR INSERT WITH CHECK (
+  auth.uid() = owner_id
+);
+
+[Match]:
+CREATE POLICY "Owners and Admins can update their business" ON public.keusahawanan_businesses FOR UPDATE USING (
+  auth.uid() = owner_id OR 
+  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'JPP'))
+);
+
+[Match]:
+CREATE POLICY "Users can see their own memberships or if they are admin" ON public.student_business_memberships FOR SELECT USING (
+  auth.uid() = user_id OR 
+  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'JPP')) OR
+  -- Active business owners can also see memberships of their business
+  EXISTS (SELECT 1 FROM keusahawanan_businesses b WHERE b.id = business_id AND b.owner_id = auth.uid())
+);
+
+[Match]:
+CREATE POLICY "Students can request to join" ON public.student_business_memberships FOR INSERT WITH CHECK (
+  auth.uid() = user_id
+);
+
+[Match]:
+CREATE POLICY "Owners and Admins can update memberships" ON public.student_business_memberships FOR UPDATE USING (
+  auth.uid() = user_id OR 
+  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'JPP')) OR
+  EXISTS (SELECT 1 FROM keusahawanan_businesses b WHERE b.id = business_id AND b.owner_id = auth.uid())
+);
+
+[Match]:
+CREATE POLICY "Owners and Admins can delete memberships" ON public.student_business_memberships FOR DELETE USING (
+  auth.uid() = user_id OR 
+  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'JPP')) OR
+  EXISTS (SELECT 1 FROM keusahawanan_businesses b WHERE b.id = business_id AND b.owner_id = auth.uid())
+);
+
+
+================================================================================
+FILE 31/97: 28_polysuara_v5_features.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polysuara_polls ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polysuara_poll_options ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polysuara_poll_votes ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polysuara_chats ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polysuara_chat_messages ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE public.polysuara_polls ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polysuara_poll_options ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polysuara_poll_votes ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Allow public read polls" ON public.polysuara_polls FOR SELECT USING (true);
+
+[Match]:
+CREATE POLICY "Allow authenticated insert polls" ON public.polysuara_polls FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+[Match]:
+CREATE POLICY "Allow public read poll options" ON public.polysuara_poll_options FOR SELECT USING (true);
+
+[Match]:
+CREATE POLICY "Allow authenticated insert poll options" ON public.polysuara_poll_options FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+[Match]:
+CREATE POLICY "Allow public read poll votes" ON public.polysuara_poll_votes FOR SELECT USING (true);
+
+[Match]:
+CREATE POLICY "Allow authenticated insert poll votes" ON public.polysuara_poll_votes FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+[Match]:
+CREATE POLICY "Allow authenticated delete own poll votes" ON public.polysuara_poll_votes FOR DELETE USING (auth.uid() = user_id);
+
+[Match]:
+ALTER TABLE public.polysuara_chats ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polysuara_chat_messages ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Allow users to read their own chats" ON public.polysuara_chats FOR SELECT USING (
+    auth.uid() = student_id OR 
+    auth.uid() = exco_id OR 
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('JPP', 'SUPER_ADMIN_JPP'))
+);
+
+[Match]:
+CREATE POLICY "Allow excos to insert chats" ON public.polysuara_chats FOR INSERT WITH CHECK (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('JPP', 'SUPER_ADMIN_JPP'))
+);
+
+[Match]:
+CREATE POLICY "Allow excos to update chats" ON public.polysuara_chats FOR UPDATE USING (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('JPP', 'SUPER_ADMIN_JPP'))
+);
+
+[Match]:
+CREATE POLICY "Allow users to read messages in their chats" ON public.polysuara_chat_messages FOR SELECT USING (
+    EXISTS (SELECT 1 FROM public.polysuara_chats c WHERE c.id = chat_id AND (c.student_id = auth.uid() OR c.exco_id = auth.uid() OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('JPP', 'SUPER_ADMIN_JPP'))))
+);
+
+[Match]:
+CREATE POLICY "Allow users to insert messages in open chats" ON public.polysuara_chat_messages FOR INSERT WITH CHECK (
+    EXISTS (SELECT 1 FROM public.polysuara_chats c WHERE c.id = chat_id AND c.status = 'OPEN' AND (c.student_id = auth.uid() OR c.exco_id = auth.uid()))
+);
+
+
+================================================================================
+FILE 32/97: 29_keusahawanan_products_bucket.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+[Match]:
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'keusahawanan-products',
+  'keusahawanan-products',
+  true, -- PUBLIC for logos and product images
+  5242880, -- 5MB limit
+  ARRAY['image/jpeg', 'image/png', 'image/webp']
+)
+ON CONFLICT (id) DO UPDATE SET 
+  public = true,
+  file_size_limit = 5242880,
+  allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/webp'];
+
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+CREATE POLICY "Public boleh lihat gambar produk dan logo"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'keusahawanan-products');
+
+[Match]:
+CREATE POLICY "Authenticated users boleh muat naik gambar"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'keusahawanan-products');
+
+[Match]:
+CREATE POLICY "Authenticated users boleh kemaskini gambar"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (bucket_id = 'keusahawanan-products');
+
+[Match]:
+CREATE POLICY "Authenticated users boleh padam gambar"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (bucket_id = 'keusahawanan-products');
+
+
+================================================================================
+FILE 33/97: 29_polysuara_auto_archive.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polysuara_confessions
+ADD COLUMN is_archived BOOLEAN DEFAULT false;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 34/97: 30_business_shifts_system.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE keusahawanan_businesses 
+  ADD COLUMN IF NOT EXISTS is_shift_enabled BOOLEAN DEFAULT false;
+
+[Match]:
+CREATE TABLE business_shifts (
+  id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id  uuid REFERENCES keusahawanan_businesses(id) ON DELETE CASCADE,
+  shift_date   date NOT NULL,
+  shift_hour   int  NOT NULL CHECK (shift_hour BETWEEN 8 AND 16),
+  assigned_to  uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  created_by   uuid REFERENCES profiles(id),
+  notes        text,
+  status       text DEFAULT 'SCHEDULED' CHECK (status IN ('SCHEDULED','PRESENT','ABSENT','SWAPPED')),
+  created_at   timestamptz DEFAULT now(),
+  UNIQUE(business_id, shift_date, shift_hour)
+);
+
+[Match]:
+CREATE TABLE business_shift_swaps (
+  id            uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id   uuid REFERENCES keusahawanan_businesses(id) ON DELETE CASCADE,
+  shift_id      uuid REFERENCES business_shifts(id) ON DELETE CASCADE,
+  requested_by  uuid REFERENCES profiles(id),
+  swap_with     uuid REFERENCES profiles(id),
+  reason        text NOT NULL,
+  status        text DEFAULT 'PENDING' CHECK (status IN ('PENDING','ACCEPTED','REJECTED','CANCELLED')),
+  responded_by  uuid REFERENCES profiles(id),
+  responded_at  timestamptz,
+  created_at    timestamptz DEFAULT now()
+);
+
+[Match]:
+CREATE TABLE business_sessions (
+  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id     uuid REFERENCES keusahawanan_businesses(id) ON DELETE CASCADE,
+  session_date    date NOT NULL,
+  opened_by       uuid REFERENCES profiles(id),
+  closed_by       uuid REFERENCES profiles(id),
+  opening_cash    numeric(10,2) NOT NULL DEFAULT 0,
+  closing_cash    numeric(10,2),
+  total_sales     numeric(10,2),
+  total_expenses  numeric(10,2) DEFAULT 0,
+  net_profit      numeric(10,2) GENERATED ALWAYS AS (
+                    closing_cash - opening_cash - total_expenses
+                  ) STORED,
+  opening_time    timestamptz,
+  closing_time    timestamptz,
+  opening_notes   text,
+  closing_notes   text,
+  status          text DEFAULT 'OPEN' CHECK (status IN ('OPEN','CLOSED')),
+  created_at      timestamptz DEFAULT now(),
+  UNIQUE(business_id, session_date)
+);
+
+[Match]:
+ALTER TABLE business_shifts ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE business_shift_swaps ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE business_sessions ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE keusahawanan_businesses 
+  ADD COLUMN IF NOT EXISTS is_shift_enabled BOOLEAN DEFAULT false;
+
+DROP TABLE IF EXISTS gerai_shift_swaps CASCADE;
+DROP TABLE IF EXISTS gerai_shifts CASCADE;
+DROP TABLE IF EXISTS gerai_sessions CASCADE;
+
+CREATE TABLE business_shifts (
+  id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id  uuid REFERENCES keusahawanan_businesses(id) ON DELETE CASCADE,
+  shift_date   date NOT NULL,
+  shift_hour   int  NOT NULL CHECK (shift_hour BETWEEN 8 AND 16),
+  assigned_to  uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  created_by   uuid REFERENCES profiles(id),
+  notes        text,
+  status       text DEFAULT 'SCHEDULED' CHECK (status IN ('SCHEDULED','PRESENT','ABSENT','SWAPPED')),
+  created_at   timestamptz DEFAULT now(),
+  UNIQUE(business_id, shift_date, shift_hour)
+);
+
+CREATE TABLE business_shift_swaps (
+  id            uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id   uuid REFERENCES keusahawanan_businesses(id) ON DELETE CASCADE,
+  shift_id      uuid REFERENCES business_shifts(id) ON DELETE CASCADE,
+  requested_by  uuid REFERENCES profiles(id),
+  swap_with     uuid REFERENCES profiles(id),
+  reason        text NOT NULL,
+  status        text DEFAULT 'PENDING' CHECK (status IN ('PENDING','ACCEPTED','REJECTED','CANCELLED')),
+  responded_by  uuid REFERENCES profiles(id),
+  responded_at  timestamptz,
+  created_at    timestamptz DEFAULT now()
+);
+
+CREATE TABLE business_sessions (
+  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id     uuid REFERENCES keusahawanan_businesses(id) ON DELETE CASCADE,
+  session_date    date NOT NULL,
+  opened_by       uuid REFERENCES profiles(id),
+  closed_by       uuid REFERENCES profiles(id),
+  opening_cash    numeric(10,2) NOT NULL DEFAULT 0,
+  closing_cash    numeric(10,2),
+  total_sales     numeric(10,2),
+  total_expenses  numeric(10,2) DEFAULT 0,
+  net_profit      numeric(10,2) GENERATED ALWAYS AS (
+                    closing_cash - opening_cash - total_expenses
+                  ) STORED,
+  opening_time    timestamptz,
+  closing_time    timestamptz,
+  opening_notes   text,
+  closing_notes   text,
+  status          text DEFAULT 'OPEN' CHECK (status IN ('OPEN','CLOSED')),
+  created_at      timestamptz DEFAULT now(),
+  UNIQUE(business_id, session_date)
+);
+
+CREATE OR REPLACE FUNCTION has_business_shift_access(b_id uuid)
+RETURNS boolean LANGUAGE sql STABLE AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM student_business_memberships
+    WHERE business_id = b_id 
+      AND user_id = auth.uid()
+      AND status = 'ACTIVE'
+  ) OR EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'ADMIN')
+  )
+$$;
+
+ALTER TABLE business_shifts ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE business_shift_swaps ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE business_sessions ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "business_shifts_access" ON business_shifts FOR ALL USING (has_business_shift_access(business_id));
+
+[Match]:
+CREATE POLICY "business_shift_swaps_access" ON business_shift_swaps FOR ALL USING (has_business_shift_access(business_id));
+
+[Match]:
+CREATE POLICY "business_sessions_access" ON business_sessions FOR ALL USING (has_business_shift_access(business_id));
+
+
+================================================================================
+FILE 35/97: 30_polysuara_downvote.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polysuara_confessions
+ADD COLUMN IF NOT EXISTS downvotes INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS is_hidden_by_community BOOLEAN DEFAULT false;
+
+[Match]:
+ALTER TABLE public.polysuara_downvotes ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE public.polysuara_confessions
+ADD COLUMN IF NOT EXISTS downvotes INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS is_hidden_by_community BOOLEAN DEFAULT false;
+
+-- 2. Create the downvotes tracking table
+CREATE TABLE IF NOT EXISTS public.polysuara_downvotes (
+    confession_id UUID NOT NULL REFERENCES public.polysuara_confessions(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    PRIMARY KEY (confession_id, user_id)
+);
+
+-- Index for querying user's downvotes (per §15.4: every FK needs an index)
+CREATE INDEX IF NOT EXISTS idx_polysuara_downvotes_user ON public.polysuara_downvotes(user_id);
+CREATE INDEX IF NOT EXISTS idx_polysuara_downvotes_confession ON public.polysuara_downvotes(confession_id);
+
+-- 3. RLS for Downvotes table (per §15.1: use (SELECT auth.uid()))
+ALTER TABLE public.polysuara_downvotes ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "polysuara_downvotes_select" ON public.polysuara_downvotes FOR SELECT
+  USING (true);
+
+[Match]:
+CREATE POLICY "polysuara_downvotes_insert" ON public.polysuara_downvotes FOR INSERT
+  WITH CHECK (user_id = (SELECT auth.uid()));
+
+[Match]:
+CREATE POLICY "polysuara_downvotes_delete" ON public.polysuara_downvotes FOR DELETE
+  USING (
+    user_id = (SELECT auth.uid())
+    OR is_jpp_admin((SELECT auth.uid()))
+  );
+
+[Match]:
+CREATE POLICY "polysuara_confessions_select" ON public.polysuara_confessions FOR SELECT
+  USING (
+    (is_approved = true AND is_hidden_by_community = false)
+    OR is_jpp_admin((SELECT auth.uid()))
+  );
+
+
+================================================================================
+FILE 36/97: 31_add_staff_details.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone TEXT;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 37/97: 32_create_polyrent_bucket.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+[Match]:
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('polyrent', 'polyrent', true)
+ON CONFLICT (id) DO NOTHING;
+
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+CREATE POLICY "Public Access Polyrent"
+ON storage.objects FOR SELECT
+USING ( bucket_id = 'polyrent' );
+
+[Match]:
+CREATE POLICY "Authenticated users can upload to polyrent"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK ( bucket_id = 'polyrent' );
+
+[Match]:
+CREATE POLICY "Users can update their own polyrent images"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING ( bucket_id = 'polyrent' AND auth.uid() = owner );
+
+[Match]:
+CREATE POLICY "Users can delete their own polyrent images"
+ON storage.objects FOR DELETE
+TO authenticated
+USING ( bucket_id = 'polyrent' AND auth.uid() = owner );
+
+
+================================================================================
+FILE 38/97: 32_system_announcements.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.system_announcements ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.user_announcement_responses ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE public.system_announcements ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Active system_announcements are viewable by everyone."
+    ON public.system_announcements FOR SELECT
+    USING (is_active = true);
+
+[Match]:
+CREATE POLICY "JPP and Super Admin can view all system announcements."
+    ON public.system_announcements FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role IN ('SUPER_ADMIN_JPP', 'JPP')
+        )
+    );
+
+[Match]:
+CREATE POLICY "JPP and Super Admin can manage system announcements"
+    ON public.system_announcements FOR ALL
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role IN ('SUPER_ADMIN_JPP', 'JPP')
+        )
+    )
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role IN ('SUPER_ADMIN_JPP', 'JPP')
+        )
+    );
+
+[Match]:
+ALTER TABLE public.user_announcement_responses ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Users can view own announcement responses"
+    ON public.user_announcement_responses FOR SELECT
+    USING (auth.uid() = user_id);
+
+[Match]:
+CREATE POLICY "Users can insert own announcement responses"
+    ON public.user_announcement_responses FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+[Match]:
+CREATE POLICY "JPP and Super Admin can view all announcement responses"
+    ON public.user_announcement_responses FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role IN ('SUPER_ADMIN_JPP', 'JPP')
+        )
+    );
+
+
+================================================================================
+FILE 39/97: 33_announcement_poster.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+[Match]:
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'announcements',
+  'announcements',
+  true, -- PUBLIC access for images
+  10485760, -- 10MB limit
+  ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+)
+ON CONFLICT (id) DO UPDATE SET 
+  public = true,
+  file_size_limit = 10485760,
+  allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+--- CREATE / ALTER TABLES ---
+[Match]:
+Alter Table
+ALTER TABLE public.system_announcements 
+  ADD COLUMN IF NOT EXISTS image_url TEXT,
+  ADD COLUMN IF NOT EXISTS icon_type TEXT DEFAULT 'INFO';
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+CREATE POLICY "Public can view announcement images"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'announcements');
+
+[Match]:
+CREATE POLICY "JPP can insert announcement images"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (
+  bucket_id = 'announcements'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('SUPER_ADMIN_JPP', 'JPP')
+  )
+);
+
+[Match]:
+CREATE POLICY "JPP can update announcement images"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (
+  bucket_id = 'announcements'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('SUPER_ADMIN_JPP', 'JPP')
+  )
+);
+
+[Match]:
+CREATE POLICY "JPP can delete announcement images"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+  bucket_id = 'announcements'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('SUPER_ADMIN_JPP', 'JPP')
+  )
+);
+
+
+================================================================================
+FILE 40/97: 33_transfer_business_ownership.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 41/97: 34_staff_registration_code.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 42/97: 35_security_jpp_profile_rpc.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 43/97: 36_supsas_schema.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+[Match]:
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('supsas-assets', 'supsas-assets', TRUE)
+ON CONFLICT (id) DO NOTHING;
+
+--- CREATE / ALTER TABLES ---
+[Match]:
+CREATE TABLE IF NOT EXISTS supsas_editions (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name          TEXT NOT NULL,                   -- "SUPSAS 2025"
+  tagline       TEXT,                            -- "Bersatu, Berjuang, Berjaya"
+  edition_year  INT NOT NULL,
+  start_date    DATE,
+  end_date      DATE,
+  is_active     BOOLEAN NOT NULL DEFAULT FALSE,  -- Hanya SATU yang aktif
+  logo_url      TEXT,
+  banner_url    TEXT,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+[Match]:
+CREATE TABLE IF NOT EXISTS supsas_kontingen (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  edition_id          UUID NOT NULL REFERENCES supsas_editions(id) ON DELETE CASCADE,
+  name                TEXT NOT NULL,             -- "Jabatan Teknologi Maklumat"
+  short_code          TEXT NOT NULL,             -- "JTM"
+  color               TEXT NOT NULL DEFAULT '#3B82F6', -- Warna rasmi kontinjen
+  logo_url            TEXT,
+  leader_id           UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- Ketua (pelajar biasa)
+  invite_code         TEXT UNIQUE,               -- Kod jemputan untuk claim ketua
+  invite_used         BOOLEAN NOT NULL DEFAULT FALSE,
+  is_active           BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (edition_id, short_code)
+);
+
+[Match]:
+CREATE TABLE IF NOT EXISTS supsas_sports (
+  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  edition_id            UUID NOT NULL REFERENCES supsas_editions(id) ON DELETE CASCADE,
+  name                  TEXT NOT NULL,           -- "Bola Sepak", "Badminton"
+  category              TEXT NOT NULL DEFAULT 'team', -- 'team' | 'individual'
+  gender                TEXT NOT NULL DEFAULT 'mixed', -- 'male' | 'female' | 'mixed'
+  format                TEXT NOT NULL DEFAULT 'knockout', -- 'knockout' | 'round_robin' | 'group_knockout'
+  icon                  TEXT NOT NULL DEFAULT 'Trophy', -- Lucide icon name
+  venue                 TEXT,
+  max_per_team          INT NOT NULL DEFAULT 11,
+  is_active             BOOLEAN NOT NULL DEFAULT TRUE,
+  sort_order            INT NOT NULL DEFAULT 0,
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+[Match]:
+CREATE TABLE IF NOT EXISTS supsas_participants (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  edition_id      UUID NOT NULL REFERENCES supsas_editions(id) ON DELETE CASCADE,
+  kontingen_id    UUID NOT NULL REFERENCES supsas_kontingen(id) ON DELETE CASCADE,
+  sport_id        UUID NOT NULL REFERENCES supsas_sports(id) ON DELETE CASCADE,
+  profile_id      UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  position        TEXT,                          -- "Kapten", "Pemain", "Cadangan"
+  jersey_number   INT,
+  is_confirmed    BOOLEAN NOT NULL DEFAULT FALSE,-- Disahkan oleh admin
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (sport_id, kontingen_id, profile_id)  -- Satu pelajar satu slot per sukan per pasukan
+);
+
+[Match]:
+CREATE TABLE IF NOT EXISTS supsas_fixtures (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  edition_id      UUID NOT NULL REFERENCES supsas_editions(id) ON DELETE CASCADE,
+  sport_id        UUID NOT NULL REFERENCES supsas_sports(id) ON DELETE CASCADE,
+  round           TEXT,                          -- "Separuh Akhir", "Akhir", "Kumpulan A"
+  match_number    INT,
+  kontingen_a_id  UUID REFERENCES supsas_kontingen(id) ON DELETE SET NULL,
+  kontingen_b_id  UUID REFERENCES supsas_kontingen(id) ON DELETE SET NULL,
+  match_date      DATE,
+  match_time      TIME,
+  venue           TEXT,
+  status          TEXT NOT NULL DEFAULT 'upcoming', -- 'upcoming'|'live'|'completed'|'postponed'
+  score_a         TEXT,                          -- Fleksibel: "3", "21", "10.2s"
+  score_b         TEXT,
+  winner_id       UUID REFERENCES supsas_kontingen(id) ON DELETE SET NULL,
+  notes           TEXT,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+[Match]:
+CREATE TABLE IF NOT EXISTS supsas_results (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  edition_id      UUID NOT NULL REFERENCES supsas_editions(id) ON DELETE CASCADE,
+  sport_id        UUID NOT NULL REFERENCES supsas_sports(id) ON DELETE CASCADE,
+  kontingen_id    UUID NOT NULL REFERENCES supsas_kontingen(id) ON DELETE CASCADE,
+  medal           TEXT,                          -- 'gold' | 'silver' | 'bronze'
+  position        INT,                           -- 1, 2, 3, 4...
+  notes           TEXT,
+  recorded_by     UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  recorded_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (sport_id, kontingen_id)
+);
+
+[Match]:
+ALTER TABLE supsas_editions    ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE supsas_kontingen   ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE supsas_sports      ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE supsas_participants ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE supsas_fixtures    ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE supsas_results     ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+[Match]:
+CREATE TRIGGER supsas_editions_updated_at    BEFORE UPDATE ON supsas_editions    FOR EACH ROW EXECUTE FUNCTION supsas_set_updated_at();
+
+[Match]:
+CREATE TRIGGER supsas_kontingen_updated_at   BEFORE UPDATE ON supsas_kontingen   FOR EACH ROW EXECUTE FUNCTION supsas_set_updated_at();
+
+[Match]:
+CREATE TRIGGER supsas_sports_updated_at      BEFORE UPDATE ON supsas_sports      FOR EACH ROW EXECUTE FUNCTION supsas_set_updated_at();
+
+[Match]:
+CREATE TRIGGER supsas_fixtures_updated_at    BEFORE UPDATE ON supsas_fixtures    FOR EACH ROW EXECUTE FUNCTION supsas_set_updated_at();
+
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE supsas_editions    ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE supsas_kontingen   ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE supsas_sports      ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE supsas_participants ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE supsas_fixtures    ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE supsas_results     ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "supsas_editions_public_read"  ON supsas_editions FOR SELECT USING (TRUE);
+
+[Match]:
+CREATE POLICY "supsas_editions_admin_write"  ON supsas_editions FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'SUPER_ADMIN_JPP'))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'SUPER_ADMIN_JPP'));
+
+[Match]:
+CREATE POLICY "supsas_kontingen_public_read" ON supsas_kontingen FOR SELECT USING (TRUE);
+
+[Match]:
+CREATE POLICY "supsas_kontingen_admin_write" ON supsas_kontingen FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'SUPER_ADMIN_JPP'))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'SUPER_ADMIN_JPP'));
+
+[Match]:
+CREATE POLICY "supsas_kontingen_leader_update" ON supsas_kontingen FOR UPDATE
+  USING (leader_id = auth.uid())
+  WITH CHECK (leader_id = auth.uid());
+
+[Match]:
+CREATE POLICY "supsas_sports_public_read"  ON supsas_sports FOR SELECT USING (TRUE);
+
+[Match]:
+CREATE POLICY "supsas_sports_jpp_write"    ON supsas_sports FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP','JPP')))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP','JPP')));
+
+[Match]:
+CREATE POLICY "supsas_participants_public_read" ON supsas_participants FOR SELECT USING (TRUE);
+
+[Match]:
+CREATE POLICY "supsas_participants_leader_write" ON supsas_participants FOR ALL
+  USING (EXISTS (SELECT 1 FROM supsas_kontingen WHERE id = kontingen_id AND leader_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM supsas_kontingen WHERE id = kontingen_id AND leader_id = auth.uid()));
+
+[Match]:
+CREATE POLICY "supsas_participants_admin_write" ON supsas_participants FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP','JPP')))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP','JPP')));
+
+[Match]:
+CREATE POLICY "supsas_fixtures_public_read" ON supsas_fixtures FOR SELECT USING (TRUE);
+
+[Match]:
+CREATE POLICY "supsas_fixtures_jpp_write"   ON supsas_fixtures FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP','JPP')))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP','JPP')));
+
+[Match]:
+CREATE POLICY "supsas_results_public_read" ON supsas_results FOR SELECT USING (TRUE);
+
+[Match]:
+CREATE POLICY "supsas_results_jpp_write"   ON supsas_results FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP','JPP')))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP','JPP')));
+
+[Match]:
+CREATE POLICY "supsas_assets_public_read"  ON storage.objects FOR SELECT USING (bucket_id = 'supsas-assets');
+
+[Match]:
+CREATE POLICY "supsas_assets_admin_upload" ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'supsas-assets' AND EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'JPP')
+  ));
+
+[Match]:
+CREATE POLICY "supsas_assets_admin_delete" ON storage.objects FOR DELETE
+  USING (bucket_id = 'supsas-assets' AND EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'JPP')
+  ));
+
+
+================================================================================
+FILE 44/97: 37_polymart_pos_sync.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE "public"."business_products"
+ADD COLUMN IF NOT EXISTS "reserved_stock" integer NOT NULL DEFAULT 0;
+
+[Match]:
+ALTER TABLE "public"."business_products"
+        ADD CONSTRAINT check_stock_reserved_logic CHECK (stock_quantity >= reserved_stock);
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 45/97: 38_karnival_v2.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+[Match]:
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('karnival-booths', 'karnival-booths', true, 5242880, ARRAY['image/jpeg','image/png','image/webp','image/gif'])
+ON CONFLICT (id) DO NOTHING;
+
+--- CREATE / ALTER TABLES ---
+[Match]:
+CREATE TABLE karnival_editions (
+  id                  UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  name                TEXT        NOT NULL,
+  tagline             TEXT,
+  edition_year        INTEGER     NOT NULL,
+  start_date          DATE,
+  end_date            DATE,
+  is_active           BOOLEAN     NOT NULL DEFAULT false,
+  voting_enabled      BOOLEAN     NOT NULL DEFAULT false,
+  results_published   BOOLEAN     NOT NULL DEFAULT false,
+  cover_image_url     TEXT,
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ DEFAULT NOW()
+);
+
+[Match]:
+ALTER TABLE karnival_editions ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE TABLE karnival_categories (
+  id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  edition_id  UUID        NOT NULL REFERENCES karnival_editions(id) ON DELETE CASCADE,
+  name        TEXT        NOT NULL,
+  description TEXT,
+  icon_emoji  TEXT        DEFAULT '🏆',
+  max_votes   INTEGER     NOT NULL DEFAULT 1,
+  sort_order  INTEGER     DEFAULT 0,
+  is_active   BOOLEAN     NOT NULL DEFAULT true,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+[Match]:
+ALTER TABLE karnival_categories ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE TABLE karnival_booths (
+  id            UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  edition_id    UUID        NOT NULL REFERENCES karnival_editions(id) ON DELETE CASCADE,
+  category_id   UUID        NOT NULL REFERENCES karnival_categories(id) ON DELETE CASCADE,
+  kelab_id      TEXT,
+  kelab_name    TEXT        NOT NULL,
+  booth_number  TEXT,
+  theme         TEXT,
+  description   TEXT,
+  image_url     TEXT,
+  is_active     BOOLEAN     NOT NULL DEFAULT true,
+  created_at    TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT unique_kelab_per_category UNIQUE NULLS NOT DISTINCT (kelab_id, category_id)
+);
+
+[Match]:
+ALTER TABLE karnival_booths ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE TABLE karnival_votes_v2 (
+  id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  edition_id  UUID        NOT NULL REFERENCES karnival_editions(id) ON DELETE CASCADE,
+  category_id UUID        NOT NULL REFERENCES karnival_categories(id) ON DELETE CASCADE,
+  booth_id    UUID        NOT NULL REFERENCES karnival_booths(id) ON DELETE CASCADE,
+  voter_id    UUID        NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  matric_no   TEXT,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT unique_voter_booth UNIQUE (voter_id, booth_id)
+);
+
+[Match]:
+ALTER TABLE karnival_votes_v2 REPLICA IDENTITY FULL;
+
+[Match]:
+ALTER TABLE karnival_votes_v2 ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE karnival_editions ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "karnival_editions_read_all" ON karnival_editions FOR SELECT USING (true);
+
+[Match]:
+CREATE POLICY "karnival_editions_write_kpp" ON karnival_editions FOR ALL
+  USING (auth.uid() IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+[Match]:
+ALTER TABLE karnival_categories ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "karnival_categories_read_all" ON karnival_categories FOR SELECT USING (true);
+
+[Match]:
+CREATE POLICY "karnival_categories_write_kpp" ON karnival_categories FOR ALL
+  USING (auth.uid() IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+[Match]:
+ALTER TABLE karnival_booths ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "karnival_booths_read_all" ON karnival_booths FOR SELECT USING (true);
+
+[Match]:
+CREATE POLICY "karnival_booths_write_kpp" ON karnival_booths FOR ALL
+  USING (auth.uid() IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+[Match]:
+ALTER TABLE karnival_votes_v2 REPLICA IDENTITY FULL;
+ALTER TABLE karnival_votes_v2 ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "karnival_votes_v2_read_all" ON karnival_votes_v2 FOR SELECT USING (true);
+
+[Match]:
+CREATE POLICY "karnival_votes_v2_insert_self" ON karnival_votes_v2 FOR INSERT
+  WITH CHECK (auth.uid() = voter_id AND EXISTS (SELECT 1 FROM karnival_editions WHERE id = edition_id AND voting_enabled = true));
+
+[Match]:
+CREATE POLICY "karnival_votes_v2_delete_own" ON karnival_votes_v2 FOR DELETE USING (auth.uid() = voter_id);
+
+[Match]:
+CREATE POLICY "karnival_votes_v2_admin_all" ON karnival_votes_v2 FOR ALL
+  USING (auth.uid() IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+[Match]:
+CREATE POLICY "karnival_booths_public_read" ON storage.objects FOR SELECT USING (bucket_id = 'karnival-booths');
+
+[Match]:
+CREATE POLICY "karnival_booths_kpp_upload"  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'karnival-booths' AND auth.uid() IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+[Match]:
+CREATE POLICY "karnival_booths_kpp_delete"  ON storage.objects FOR DELETE
+  USING (bucket_id = 'karnival-booths' AND auth.uid() IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+
+================================================================================
+FILE 46/97: 39_track_google_api_tokens.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 47/97: 40_program_attendance_system.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE programs
+      ADD COLUMN qr_token         UUID DEFAULT gen_random_uuid(),
+      ADD COLUMN qr_enabled       BOOLEAN DEFAULT false,
+      ADD COLUMN qr_open_at       TIMESTAMPTZ,
+      ADD COLUMN qr_close_at      TIMESTAMPTZ,
+      ADD COLUMN pre_reg_enabled  BOOLEAN DEFAULT false,
+      ADD COLUMN merit_kelab      INT DEFAULT 0,
+      ADD COLUMN merit_eakademik  INT DEFAULT 0;
+
+[Match]:
+ALTER TABLE programs ADD CONSTRAINT programs_qr_token_unique UNIQUE (qr_token);
+
+[Match]:
+ALTER TABLE club_activities
+      ADD COLUMN qr_token         UUID DEFAULT gen_random_uuid(),
+      ADD COLUMN qr_enabled       BOOLEAN DEFAULT false,
+      ADD COLUMN qr_open_at       TIMESTAMPTZ,
+      ADD COLUMN qr_close_at      TIMESTAMPTZ,
+      ADD COLUMN pre_reg_enabled  BOOLEAN DEFAULT false,
+      ADD COLUMN merit_kelab      INT DEFAULT 0;
+
+[Match]:
+ALTER TABLE club_activities ADD CONSTRAINT club_activities_qr_token_unique UNIQUE (qr_token);
+
+[Match]:
+CREATE TABLE IF NOT EXISTS program_attendees (
+  id               UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  program_id       UUID        NOT NULL,
+  program_type     TEXT        NOT NULL CHECK (program_type IN ('takwim', 'aktiviti')),
+  user_id          UUID        NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  status           TEXT        NOT NULL DEFAULT 'pre_registered'
+                               CHECK (status IN ('pre_registered','attended','absent','walk_in')),
+  registered_at    TIMESTAMPTZ DEFAULT NOW(),
+  checked_in_at    TIMESTAMPTZ,
+  check_in_method  TEXT        CHECK (check_in_method IN ('qr','manual')),
+  merit_kelab_credited  BOOLEAN DEFAULT false,
+  merit_rasmi_credited  BOOLEAN DEFAULT false,
+  created_at       TIMESTAMPTZ DEFAULT NOW(),
+
+  -- Cegah scan berganda: 1 user hanya boleh hadir 1 kali per program
+  CONSTRAINT unique_program_attendee UNIQUE (program_id, program_type, user_id)
+);
+
+[Match]:
+ALTER TABLE program_attendees ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE TABLE IF NOT EXISTS merit_program_applications (
+  id               UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  program_id       UUID        NOT NULL,
+  program_type     TEXT        NOT NULL CHECK (program_type IN ('takwim', 'aktiviti')),
+  program_title    TEXT,       -- cache nama program
+  applied_by       UUID        REFERENCES profiles(id),
+  merit_value      INT         NOT NULL CHECK (merit_value > 0),
+  justification    TEXT,
+
+  -- Status flow: pending → akademik_vouched/not_vouched → fully_approved/rejected
+  status           TEXT        NOT NULL DEFAULT 'pending'
+                               CHECK (status IN (
+                                 'pending',
+                                 'akademik_vouched',
+                                 'akademik_not_vouched',
+                                 'fully_approved',
+                                 'rejected'
+                               )),
+
+  -- Akademik review (Voucher/Supporter)
+  akademik_reviewer_id    UUID        REFERENCES profiles(id),
+  akademik_reviewed_at    TIMESTAMPTZ,
+  akademik_vouch_notes    TEXT,
+
+  -- Kediaman review (Kuasa Mutlak)
+  kediaman_reviewer_id    UUID        REFERENCES profiles(id),
+  kediaman_reviewed_at    TIMESTAMPTZ,
+  kediaman_notes          TEXT,
+  reject_reason           TEXT,
+
+  created_at       TIMESTAMPTZ DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ DEFAULT NOW()
+);
+
+[Match]:
+CREATE TABLE IF NOT EXISTS merit_review_log (
+  id               UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  application_id   UUID        NOT NULL REFERENCES merit_program_applications(id) ON DELETE CASCADE,
+  reviewer_id      UUID        REFERENCES profiles(id),
+  reviewer_unit    TEXT        NOT NULL CHECK (reviewer_unit IN ('AKADEMIK','KEDIAMAN')),
+  action           TEXT        NOT NULL CHECK (action IN ('vouched','not_vouched','approved','rejected')),
+  notes            TEXT,
+  created_at       TIMESTAMPTZ DEFAULT NOW()
+);
+
+[Match]:
+ALTER TABLE merit_program_applications ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE merit_review_log ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+[Match]:
+CREATE TRIGGER trg_auto_credit_kelab_merit
+  BEFORE INSERT OR UPDATE OF status
+  ON program_attendees
+  FOR EACH ROW
+  EXECUTE FUNCTION fn_auto_credit_kelab_merit();
+
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE programs
+      ADD COLUMN qr_token         UUID DEFAULT gen_random_uuid(),
+      ADD COLUMN qr_enabled       BOOLEAN DEFAULT false,
+      ADD COLUMN qr_open_at       TIMESTAMPTZ,
+      ADD COLUMN qr_close_at      TIMESTAMPTZ,
+      ADD COLUMN pre_reg_enabled  BOOLEAN DEFAULT false,
+      ADD COLUMN merit_kelab      INT DEFAULT 0,
+      ADD COLUMN merit_eakademik  INT DEFAULT 0;
+
+    -- Pastikan token unik
+    ALTER TABLE programs ADD CONSTRAINT programs_qr_token_unique UNIQUE (qr_token);
+
+    RAISE NOTICE 'Kolum QR & Merit ditambah ke jadual programs.';
+  ELSE
+    RAISE NOTICE 'Kolum QR sudah ada dalam programs, skip.';
+  END IF;
+END $$;
+
+-- ─── BAHAGIAN 2: Kolum QR & Merit untuk club_activities (Aktiviti Kelab) ─────
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='club_activities' AND column_name='qr_token') THEN
+    ALTER TABLE club_activities
+      ADD COLUMN qr_token         UUID DEFAULT gen_random_uuid(),
+      ADD COLUMN qr_enabled       BOOLEAN DEFAULT false,
+      ADD COLUMN qr_open_at       TIMESTAMPTZ,
+      ADD COLUMN qr_close_at      TIMESTAMPTZ,
+      ADD COLUMN pre_reg_enabled  BOOLEAN DEFAULT false,
+      ADD COLUMN merit_kelab      INT DEFAULT 0;
+    -- Nota: club_activities TIDAK ada merit_eakademik
+    -- Merit Rasmi untuk aktiviti kelab melalui merit_program_applications
+
+    ALTER TABLE club_activities ADD CONSTRAINT club_activities_qr_token_unique UNIQUE (qr_token);
+
+    RAISE NOTICE 'Kolum QR & Merit ditambah ke jadual club_activities.';
+  ELSE
+    RAISE NOTICE 'Kolum QR sudah ada dalam club_activities, skip.';
+  END IF;
+END $$;
+
+-- ─── BAHAGIAN 3: Jadual program_attendees ─────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS program_attendees (
+  id               UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  program_id       UUID        NOT NULL,
+  program_type     TEXT        NOT NULL CHECK (program_type IN ('takwim', 'aktiviti')),
+  user_id          UUID        NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  status           TEXT        NOT NULL DEFAULT 'pre_registered'
+                               CHECK (status IN ('pre_registered','attended','absent','walk_in')),
+  registered_at    TIMESTAMPTZ DEFAULT NOW(),
+  checked_in_at    TIMESTAMPTZ,
+  check_in_method  TEXT        CHECK (check_in_method IN ('qr','manual')),
+  merit_kelab_credited  BOOLEAN DEFAULT false,
+  merit_rasmi_credited  BOOLEAN DEFAULT false,
+  created_at       TIMESTAMPTZ DEFAULT NOW(),
+
+  -- Cegah scan berganda: 1 user hanya boleh hadir 1 kali per program
+  CONSTRAINT unique_program_attendee UNIQUE (program_id, program_type, user_id)
+);
+
+-- Indexes untuk prestasi query
+CREATE INDEX IF NOT EXISTS idx_pa_program      ON program_attendees(program_id, program_type);
+CREATE INDEX IF NOT EXISTS idx_pa_user         ON program_attendees(user_id);
+CREATE INDEX IF NOT EXISTS idx_pa_status       ON program_attendees(status);
+CREATE INDEX IF NOT EXISTS idx_pa_checked_in   ON program_attendees(checked_in_at) WHERE checked_in_at IS NOT NULL;
+
+-- ─── BAHAGIAN 4: RLS untuk program_attendees ─────────────────────────────────
+
+ALTER TABLE program_attendees ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Read all attendees" ON program_attendees
+      FOR SELECT USING ((select auth.uid()) IS NOT NULL);
+
+[Match]:
+CREATE POLICY "Self register attendee" ON program_attendees
+      FOR INSERT WITH CHECK ((select auth.uid()) = user_id);
+
+[Match]:
+CREATE POLICY "Manager update attendees" ON program_attendees
+      FOR UPDATE USING (
+        (select auth.uid()) IN (
+          SELECT id FROM profiles
+          WHERE role IN ('CLUB_PRESIDENT','CLUB_MT','SUPER_ADMIN_JPP','JPP')
+        )
+      );
+
+[Match]:
+ALTER TABLE merit_program_applications ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE merit_review_log ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Read merit applications" ON merit_program_applications
+      FOR SELECT USING ((select auth.uid()) IS NOT NULL);
+
+[Match]:
+CREATE POLICY "Club leaders apply merit" ON merit_program_applications
+      FOR INSERT WITH CHECK (
+        (select auth.uid()) IN (
+          SELECT id FROM profiles
+          WHERE role IN ('CLUB_PRESIDENT','CLUB_MT','SUPER_ADMIN_JPP','JPP')
+        )
+      );
+
+[Match]:
+CREATE POLICY "JPP update merit applications" ON merit_program_applications
+      FOR UPDATE USING (
+        (select auth.uid()) IN (
+          SELECT id FROM profiles WHERE role IN ('JPP','SUPER_ADMIN_JPP')
+        )
+      );
+
+[Match]:
+CREATE POLICY "Read review log" ON merit_review_log
+      FOR SELECT USING ((select auth.uid()) IS NOT NULL);
+
+[Match]:
+CREATE POLICY "JPP insert review log" ON merit_review_log
+      FOR INSERT WITH CHECK (
+        (select auth.uid()) IN (
+          SELECT id FROM profiles WHERE role IN ('JPP','SUPER_ADMIN_JPP')
+        )
+      );
+
+
+================================================================================
+FILE 48/97: 41_klk_public_stats_rpc.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 49/97: 42_check_email_registered.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 50/97: 43_get_auth_providers.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 51/97: 44_polymart_shopping_cart.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polymart_cart_items ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE public.polymart_cart_items ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Users can manage their own cart items" ON public.polymart_cart_items
+    FOR ALL
+    USING (buyer_id = (SELECT auth.uid()))
+    WITH CHECK (buyer_id = (SELECT auth.uid()));
+
+
+================================================================================
+FILE 52/97: 45_takwim_pusat.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+CREATE TABLE IF NOT EXISTS takwim_pusat (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  
+  -- Kategori entri
+  jenis TEXT NOT NULL CHECK (jenis IN (
+    'AKADEMIK',
+    'JPP',
+    'KPP',
+    'KEUSAHAWANAN',
+    'KEBAJIKAN',
+    'SRK',
+    'AKADEMIK_EXCO',
+    'MULTIMEDIA',
+    'KLS',
+    'KOLAB',
+    'KK',
+    'CUTI_UMUM',
+    'LAIN'
+  )),
+  
+  -- Butiran
+  tajuk TEXT NOT NULL,
+  catatan TEXT,
+  tarikh_mula DATE NOT NULL,
+  tarikh_tamat DATE,
+  bil_minggu INTEGER,
+  aktiviti TEXT,
+  
+  -- Warna custom (optional)
+  warna_custom TEXT,
+  
+  -- Sesi akademik
+  sesi TEXT DEFAULT '2026/2027',
+  
+  -- Exco module ownership (untuk RBAC frontend)
+  exco_module TEXT,
+  
+  -- Metadata
+  created_by UUID REFERENCES auth.users(id),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+[Match]:
+ALTER TABLE takwim_pusat ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE takwim_pusat ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "takwim_pusat_select" ON takwim_pusat
+  FOR SELECT TO authenticated USING (true);
+
+[Match]:
+CREATE POLICY "takwim_pusat_insert" ON takwim_pusat
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = created_by);
+
+[Match]:
+CREATE POLICY "takwim_pusat_update" ON takwim_pusat
+  FOR UPDATE TO authenticated
+  USING (auth.uid() = created_by);
+
+[Match]:
+CREATE POLICY "takwim_pusat_delete" ON takwim_pusat
+  FOR DELETE TO authenticated
+  USING (auth.uid() = created_by);
+
+
+================================================================================
+FILE 53/97: 46_reset_jpp_cohort.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 54/97: 46_takwim_kelab_kediaman.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE takwim_pusat DROP CONSTRAINT IF EXISTS takwim_pusat_jenis_check;
+
+[Match]:
+ALTER TABLE takwim_pusat ADD CONSTRAINT takwim_pusat_jenis_check
+  CHECK (jenis IN (
+    'AKADEMIK', 'JPP', 'KPP', 'KEUSAHAWANAN', 'KEBAJIKAN', 'SRK',
+    'AKADEMIK_EXCO', 'MULTIMEDIA', 'KLS', 'KOLAB', 'KK', 'CUTI_UMUM', 'LAIN',
+    'KELAB_KEDIAMAN'
+  ));
+
+[Match]:
+ALTER TABLE takwim_pusat ADD COLUMN IF NOT EXISTS kelab_kediaman_label TEXT;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 55/97: 47_optimize_new_modules_rls.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+CREATE POLICY "karnival_editions_write_kpp" ON karnival_editions FOR ALL
+  USING ((select auth.uid()) IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+[Match]:
+CREATE POLICY "karnival_categories_write_kpp" ON karnival_categories FOR ALL
+  USING ((select auth.uid()) IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+[Match]:
+CREATE POLICY "karnival_booths_write_kpp" ON karnival_booths FOR ALL
+  USING ((select auth.uid()) IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+[Match]:
+CREATE POLICY "karnival_votes_v2_insert_self" ON karnival_votes_v2 FOR INSERT
+  WITH CHECK ((select auth.uid()) = voter_id AND EXISTS (SELECT 1 FROM karnival_editions WHERE id = edition_id AND voting_enabled = true));
+
+[Match]:
+CREATE POLICY "karnival_votes_v2_delete_own" ON karnival_votes_v2 FOR DELETE USING ((select auth.uid()) = voter_id);
+
+[Match]:
+CREATE POLICY "karnival_votes_v2_admin_all" ON karnival_votes_v2 FOR ALL
+  USING ((select auth.uid()) IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+[Match]:
+CREATE POLICY "karnival_booths_kpp_upload"  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'karnival-booths' AND (select auth.uid()) IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+[Match]:
+CREATE POLICY "karnival_booths_kpp_delete"  ON storage.objects FOR DELETE
+  USING (bucket_id = 'karnival-booths' AND (select auth.uid()) IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+[Match]:
+CREATE POLICY "supsas_editions_admin_write"  ON supsas_editions FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role = 'SUPER_ADMIN_JPP'))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role = 'SUPER_ADMIN_JPP'));
+
+[Match]:
+CREATE POLICY "supsas_kontingen_admin_write" ON supsas_kontingen FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role = 'SUPER_ADMIN_JPP'))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role = 'SUPER_ADMIN_JPP'));
+
+[Match]:
+CREATE POLICY "supsas_kontingen_leader_update" ON supsas_kontingen FOR UPDATE
+  USING (leader_id = (select auth.uid()))
+  WITH CHECK (leader_id = (select auth.uid()));
+
+[Match]:
+CREATE POLICY "supsas_sports_jpp_write"    ON supsas_sports FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP','JPP')))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP','JPP')));
+
+[Match]:
+CREATE POLICY "supsas_participants_leader_write" ON supsas_participants FOR ALL
+  USING (EXISTS (SELECT 1 FROM supsas_kontingen WHERE id = kontingen_id AND leader_id = (select auth.uid())))
+  WITH CHECK (EXISTS (SELECT 1 FROM supsas_kontingen WHERE id = kontingen_id AND leader_id = (select auth.uid())));
+
+[Match]:
+CREATE POLICY "supsas_participants_admin_write" ON supsas_participants FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP','JPP')))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP','JPP')));
+
+[Match]:
+CREATE POLICY "supsas_fixtures_jpp_write"   ON supsas_fixtures FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP','JPP')))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP','JPP')));
+
+[Match]:
+CREATE POLICY "supsas_results_jpp_write"   ON supsas_results FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP','JPP')))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP','JPP')));
+
+[Match]:
+CREATE POLICY "supsas_assets_admin_upload" ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'supsas-assets' AND EXISTS (
+    SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP', 'JPP')
+  ));
+
+[Match]:
+CREATE POLICY "supsas_assets_admin_delete" ON storage.objects FOR DELETE
+  USING (bucket_id = 'supsas-assets' AND EXISTS (
+    SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP', 'JPP')
+  ));
+
+[Match]:
+CREATE POLICY "JPP and Super Admin can view all system announcements."
+    ON public.system_announcements FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles 
+            WHERE profiles.id = (select auth.uid()) 
+            AND profiles.role IN ('SUPER_ADMIN_JPP', 'JPP')
+        )
+    );
+
+[Match]:
+CREATE POLICY "JPP and Super Admin can manage system announcements"
+    ON public.system_announcements FOR ALL
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles 
+            WHERE profiles.id = (select auth.uid()) 
+            AND profiles.role IN ('SUPER_ADMIN_JPP', 'JPP')
+        )
+    )
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.profiles 
+            WHERE profiles.id = (select auth.uid()) 
+            AND profiles.role IN ('SUPER_ADMIN_JPP', 'JPP')
+        )
+    );
+
+[Match]:
+CREATE POLICY "Users can view own announcement responses"
+    ON public.user_announcement_responses FOR SELECT
+    USING ((select auth.uid()) = user_id);
+
+[Match]:
+CREATE POLICY "Users can insert own announcement responses"
+    ON public.user_announcement_responses FOR INSERT
+    WITH CHECK ((select auth.uid()) = user_id);
+
+[Match]:
+CREATE POLICY "JPP and Super Admin can view all announcement responses"
+    ON public.user_announcement_responses FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles 
+            WHERE profiles.id = (select auth.uid()) 
+            AND profiles.role IN ('SUPER_ADMIN_JPP', 'JPP')
+        )
+    );
+
+[Match]:
+CREATE POLICY "JPP can insert announcement images" ON storage.objects FOR INSERT TO authenticated
+WITH CHECK (
+  bucket_id = 'announcements'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = (select auth.uid())) IN ('SUPER_ADMIN_JPP', 'JPP')
+  )
+);
+
+[Match]:
+CREATE POLICY "JPP can update announcement images" ON storage.objects FOR UPDATE TO authenticated
+USING (
+  bucket_id = 'announcements'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = (select auth.uid())) IN ('SUPER_ADMIN_JPP', 'JPP')
+  )
+);
+
+[Match]:
+CREATE POLICY "JPP can delete announcement images" ON storage.objects FOR DELETE TO authenticated
+USING (
+  bucket_id = 'announcements'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = (select auth.uid())) IN ('SUPER_ADMIN_JPP', 'JPP')
+  )
+);
+
+
+================================================================================
+FILE 56/97: 48_polyrider_schema.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polyrider_profiles ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polyrider_zones ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polyrider_jobs ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polyrider_chats ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polyrider_sos_logs ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE public.polyrider_profiles ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polyrider_zones ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polyrider_jobs ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polyrider_chats ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polyrider_sos_logs ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Public can view active riders" ON public.polyrider_profiles
+    FOR SELECT USING (is_active = true);
+
+[Match]:
+CREATE POLICY "Riders can manage own profile" ON public.polyrider_profiles
+    FOR ALL USING (user_id = (SELECT auth.uid())) WITH CHECK (user_id = (SELECT auth.uid()));
+
+[Match]:
+CREATE POLICY "Admin can manage all rider profiles" ON public.polyrider_profiles
+    FOR ALL USING (public.is_klk_or_admin((SELECT auth.uid())));
+
+[Match]:
+CREATE POLICY "Anyone can read zones" ON public.polyrider_zones
+    FOR SELECT USING (true);
+
+[Match]:
+CREATE POLICY "Admin can manage zones" ON public.polyrider_zones
+    FOR ALL USING (public.is_klk_or_admin((SELECT auth.uid())));
+
+[Match]:
+CREATE POLICY "Students can manage own jobs" ON public.polyrider_jobs
+    FOR ALL USING (student_id = (SELECT auth.uid())) WITH CHECK (student_id = (SELECT auth.uid()));
+
+[Match]:
+CREATE POLICY "Riders can view pending and own jobs" ON public.polyrider_jobs
+    FOR SELECT USING (
+        status = 'PENDING' OR rider_id = (SELECT auth.uid())
+    );
+
+[Match]:
+CREATE POLICY "Riders can update own assigned jobs" ON public.polyrider_jobs
+    FOR UPDATE USING (
+        status = 'PENDING' OR rider_id = (SELECT auth.uid())
+    );
+
+[Match]:
+CREATE POLICY "Admin can view all jobs" ON public.polyrider_jobs
+    FOR SELECT USING (public.is_klk_or_admin((SELECT auth.uid())));
+
+[Match]:
+CREATE POLICY "Involved users can manage chats" ON public.polyrider_chats
+    FOR ALL USING (
+        sender_id = (SELECT auth.uid()) OR
+        job_id IN (
+            SELECT id FROM public.polyrider_jobs WHERE student_id = (SELECT auth.uid()) OR rider_id = (SELECT auth.uid())
+        )
+    ) WITH CHECK (
+        sender_id = (SELECT auth.uid())
+    );
+
+[Match]:
+CREATE POLICY "Users can create SOS logs" ON public.polyrider_sos_logs
+    FOR INSERT WITH CHECK (triggered_by = (SELECT auth.uid()));
+
+[Match]:
+CREATE POLICY "Users can view own SOS logs" ON public.polyrider_sos_logs
+    FOR SELECT USING (triggered_by = (SELECT auth.uid()));
+
+[Match]:
+CREATE POLICY "Admin can manage all SOS logs" ON public.polyrider_sos_logs
+    FOR ALL USING (public.is_klk_or_admin((SELECT auth.uid())));
+
+
+================================================================================
+FILE 57/97: 49_polyrider_bids.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polyrider_bids ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE public.polyrider_bids ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Public can view bids" 
+    ON public.polyrider_bids FOR SELECT 
+    USING (true);
+
+[Match]:
+CREATE POLICY "Riders can insert bids" 
+    ON public.polyrider_bids FOR INSERT 
+    WITH CHECK (rider_id = auth.uid());
+
+[Match]:
+CREATE POLICY "Admin can manage all bids"
+    ON public.polyrider_bids FOR ALL
+    USING (public.is_klk_or_admin(auth.uid()));
+
+[Match]:
+CREATE POLICY "Students can update bids for their jobs"
+    ON public.polyrider_bids FOR UPDATE
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.polyrider_jobs
+            WHERE polyrider_jobs.id = polyrider_bids.job_id
+            AND polyrider_jobs.student_id = auth.uid()
+        )
+    )
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.polyrider_jobs
+            WHERE polyrider_jobs.id = polyrider_bids.job_id
+            AND polyrider_jobs.student_id = auth.uid()
+        )
+    );
+
+
+================================================================================
+FILE 58/97: 50_polyrider_security_patch.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 59/97: 51_polymart_polyrider_integration.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polyrider_jobs
+ADD COLUMN IF NOT EXISTS polymart_order_id UUID REFERENCES public.polymart_orders(id) ON DELETE SET NULL;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 60/97: 51_polyrider_cancel_sos_appeals.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polyrider_jobs ADD COLUMN IF NOT EXISTS cancellation_reason TEXT;
+
+[Match]:
+ALTER TABLE public.polyrider_jobs ADD COLUMN IF NOT EXISTS cancelled_by UUID REFERENCES auth.users(id);
+
+[Match]:
+ALTER TABLE public.polyrider_sos_logs ADD COLUMN IF NOT EXISTS false_alarm BOOLEAN DEFAULT false;
+
+[Match]:
+ALTER TABLE public.polyrider_sos_logs ADD COLUMN IF NOT EXISTS false_alarm_notes TEXT;
+
+[Match]:
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS polyrider_penalty_count INT DEFAULT 0;
+
+[Match]:
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS polyrider_suspended_until TIMESTAMP WITH TIME ZONE;
+
+[Match]:
+ALTER TABLE public.polyrider_appeals ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE public.polyrider_jobs ADD COLUMN IF NOT EXISTS cancellation_reason TEXT;
+ALTER TABLE public.polyrider_jobs ADD COLUMN IF NOT EXISTS cancelled_by UUID REFERENCES auth.users(id);
+
+-- 2. Alter polyrider_sos_logs to add false alarm investigation fields
+ALTER TABLE public.polyrider_sos_logs ADD COLUMN IF NOT EXISTS false_alarm BOOLEAN DEFAULT false;
+ALTER TABLE public.polyrider_sos_logs ADD COLUMN IF NOT EXISTS false_alarm_notes TEXT;
+
+-- 3. Alter profiles to track penalty state (this applies to both students and riders)
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS polyrider_penalty_count INT DEFAULT 0;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS polyrider_suspended_until TIMESTAMP WITH TIME ZONE;
+
+-- 4. Create polyrider_appeals table
+CREATE TABLE IF NOT EXISTS public.polyrider_appeals (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    reason TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
+    admin_notes TEXT,
+    reviewed_by UUID REFERENCES public.profiles(id),
+    reviewed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Enable RLS for polyrider_appeals
+ALTER TABLE public.polyrider_appeals ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Users can view own appeals" ON public.polyrider_appeals
+    FOR SELECT USING (user_id = (SELECT auth.uid()));
+
+[Match]:
+CREATE POLICY "Users can create appeals" ON public.polyrider_appeals
+    FOR INSERT WITH CHECK (user_id = (SELECT auth.uid()));
+
+[Match]:
+CREATE POLICY "Admins can view appeals" ON public.polyrider_appeals
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles p 
+            WHERE p.id = (SELECT auth.uid()) 
+            AND (p.role IN ('SUPER_ADMIN_JPP', 'MT_OVERSEES', 'STAFF') OR (p.role = 'JPP' AND p.jpp_unit IN ('KLS', 'KEBAJIKAN')))
+        )
+    );
+
+[Match]:
+CREATE POLICY "Admins can manage appeals" ON public.polyrider_appeals
+    FOR UPDATE USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles p 
+            WHERE p.id = (SELECT auth.uid()) 
+            AND (p.role IN ('SUPER_ADMIN_JPP', 'MT_OVERSEES', 'STAFF') OR (p.role = 'JPP' AND p.jpp_unit = 'KLS'))
+        )
+    );
+
+
+================================================================================
+FILE 61/97: 52_polymart_online_payment.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+[Match]:
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('polymart-receipts', 'polymart-receipts', true)
+ON CONFLICT (id) DO NOTHING;
+
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.keusahawanan_businesses
+  ADD COLUMN IF NOT EXISTS online_payment_enabled BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS cod_enabled BOOLEAN DEFAULT true,
+  ADD COLUMN IF NOT EXISTS payment_qr_url TEXT DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS payment_instructions TEXT DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS business_phone TEXT DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS payment_deadline_value INT DEFAULT 24,
+  ADD COLUMN IF NOT EXISTS payment_deadline_unit TEXT DEFAULT 'HOURS'
+    CHECK (payment_deadline_unit IN ('HOURS', 'DAYS', 'WEEKS'));
+
+[Match]:
+ALTER TABLE public.business_products
+  ADD COLUMN IF NOT EXISTS online_payment_enabled BOOLEAN DEFAULT NULL;
+
+[Match]:
+ALTER TABLE public.polymart_orders
+  ADD COLUMN IF NOT EXISTS payment_method TEXT DEFAULT 'COD'
+    CHECK (payment_method IN ('COD', 'QR_ONLINE')),
+  ADD COLUMN IF NOT EXISTS payment_receipt_url TEXT DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS payment_receipt_rejected BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS payment_verified_at TIMESTAMPTZ DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS payment_verified_by UUID REFERENCES public.profiles(id),
+  ADD COLUMN IF NOT EXISTS payment_deadline_at TIMESTAMPTZ DEFAULT NULL;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+CREATE POLICY "polymart_receipts_insert_authenticated"
+  ON storage.objects FOR INSERT
+  TO authenticated
+  WITH CHECK (bucket_id = 'polymart-receipts');
+
+[Match]:
+CREATE POLICY "polymart_receipts_select_public"
+  ON storage.objects FOR SELECT
+  TO public
+  USING (bucket_id = 'polymart-receipts');
+
+
+================================================================================
+FILE 62/97: 52_polyrider_infrastructure_audit_fixes.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+CREATE POLICY "Riders can insert bids" ON polyrider_bids
+  FOR INSERT WITH CHECK (rider_id = (SELECT auth.uid()));
+
+[Match]:
+CREATE POLICY "Admin can manage all bids" ON polyrider_bids
+  FOR ALL USING (is_klk_or_admin((SELECT auth.uid())));
+
+[Match]:
+CREATE POLICY "Students can update bids for their jobs" ON polyrider_bids
+  FOR UPDATE
+  USING (EXISTS (
+    SELECT 1 FROM polyrider_jobs
+    WHERE polyrider_jobs.id = polyrider_bids.job_id
+      AND polyrider_jobs.student_id = (SELECT auth.uid())
+  ))
+  WITH CHECK (EXISTS (
+    SELECT 1 FROM polyrider_jobs
+    WHERE polyrider_jobs.id = polyrider_bids.job_id
+      AND polyrider_jobs.student_id = (SELECT auth.uid())
+  ));
+
+
+================================================================================
+FILE 63/97: 52_polyrider_job_expiry.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polyrider_jobs
+  ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;
+
+--- FUNCTIONS / TRIGGERS ---
+[Match]:
+CREATE TRIGGER trg_polyrider_job_expiry
+  BEFORE INSERT ON public.polyrider_jobs
+  FOR EACH ROW EXECUTE FUNCTION set_polyrider_job_expiry();
+
+--- RLS POLICIES ---
+
+================================================================================
+FILE 64/97: 53_polyrider_rider_location.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polyrider_jobs
+  ADD COLUMN IF NOT EXISTS rider_lat DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS rider_lng DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS rider_location_updated_at TIMESTAMPTZ;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 65/97: 54_polyrider_saved_locations.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polyrider_saved_locations ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+[Match]:
+CREATE TRIGGER trg_saved_locations_limit
+  BEFORE INSERT ON public.polyrider_saved_locations
+  FOR EACH ROW EXECUTE FUNCTION check_saved_locations_limit();
+
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE public.polyrider_saved_locations ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "saved_locations_owner_crud" ON public.polyrider_saved_locations
+  FOR ALL
+  USING  (user_id = (SELECT auth.uid()))
+  WITH CHECK (user_id = (SELECT auth.uid()));
+
+
+================================================================================
+FILE 66/97: 54_polytask_disputes_and_rating.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+[Match]:
+ALTER TYPE polytask_job_status ADD VALUE IF NOT EXISTS 'DISPUTED';
+
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polytask_disputes ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE public.polytask_disputes ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Users can view their own disputes"
+    ON public.polytask_disputes FOR SELECT
+    USING (auth.uid() = reporter_id);
+
+[Match]:
+CREATE POLICY "JPP admins can view all disputes"
+    ON public.polytask_disputes FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role IN ('JPP', 'SUPER_ADMIN_JPP')
+        )
+    );
+
+[Match]:
+CREATE POLICY "Users can create disputes"
+    ON public.polytask_disputes FOR INSERT
+    WITH CHECK (auth.uid() = reporter_id);
+
+[Match]:
+CREATE POLICY "JPP admins can update disputes"
+    ON public.polytask_disputes FOR UPDATE
+    USING (
+        EXISTS (
+            SELECT 1 FROM profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role IN ('JPP', 'SUPER_ADMIN_JPP')
+        )
+    );
+
+[Match]:
+CREATE POLICY "Anyone can view reviews"
+    ON public.polytask_reviews FOR SELECT
+    USING (true);
+
+[Match]:
+CREATE POLICY "Users can insert reviews"
+    ON public.polytask_reviews FOR INSERT
+    WITH CHECK (auth.uid() = reviewer_id);
+
+
+================================================================================
+FILE 67/97: 55_imaps_schema.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.imaps_buildings ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.imaps_locations ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE public.imaps_buildings ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.imaps_locations ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Allow public read access on imaps_buildings" 
+ON public.imaps_buildings FOR SELECT 
+USING (true);
+
+[Match]:
+CREATE POLICY "Allow public read access on imaps_locations" 
+ON public.imaps_locations FOR SELECT 
+USING (true);
+
+[Match]:
+CREATE POLICY "Allow superadmin full access on imaps_buildings"
+ON public.imaps_buildings FOR ALL
+USING (
+    (SELECT role FROM public.profiles WHERE id = (SELECT auth.uid())) IN ('JPP', 'super_admin')
+)
+WITH CHECK (
+    (SELECT role FROM public.profiles WHERE id = (SELECT auth.uid())) IN ('JPP', 'super_admin')
+);
+
+[Match]:
+CREATE POLICY "Allow superadmin full access on imaps_locations"
+ON public.imaps_locations FOR ALL
+USING (
+    (SELECT role FROM public.profiles WHERE id = (SELECT auth.uid())) IN ('JPP', 'super_admin')
+)
+WITH CHECK (
+    (SELECT role FROM public.profiles WHERE id = (SELECT auth.uid())) IN ('JPP', 'super_admin')
+);
+
+
+================================================================================
+FILE 68/97: 56_imaps_qol_update.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.imaps_buildings 
+ADD COLUMN is_facility BOOLEAN DEFAULT false,
+ADD COLUMN facility_type TEXT,
+ADD COLUMN op_start TIME,
+ADD COLUMN op_end TIME,
+ADD COLUMN floorplan_image_url TEXT,
+ADD COLUMN entrance_image_url TEXT;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 69/97: 57_imaps_storage_bucket.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+[Match]:
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+    'imaps_assets',
+    'imaps_assets',
+    true,
+    5242880, -- 5MB limit
+    ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']::text[]
+) ON CONFLICT (id) DO UPDATE SET public = true;
+
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+CREATE POLICY "Public View iMaps Assets" 
+ON storage.objects FOR SELECT 
+USING (bucket_id = 'imaps_assets');
+
+[Match]:
+CREATE POLICY "Auth Upload iMaps Assets" 
+ON storage.objects FOR INSERT 
+WITH CHECK (bucket_id = 'imaps_assets' AND auth.role() = 'authenticated');
+
+[Match]:
+CREATE POLICY "Auth Update iMaps Assets" 
+ON storage.objects FOR UPDATE 
+USING (bucket_id = 'imaps_assets' AND auth.role() = 'authenticated');
+
+[Match]:
+CREATE POLICY "Auth Delete iMaps Assets" 
+ON storage.objects FOR DELETE 
+USING (bucket_id = 'imaps_assets' AND auth.role() = 'authenticated');
+
+
+================================================================================
+FILE 70/97: 58_imaps_location_image.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE imaps_locations
+ADD COLUMN image_url TEXT;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 71/97: 58_polyrider_realtime.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 72/97: 59_imaps_rls_fix.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+CREATE POLICY "Allow superadmin full access on imaps_buildings"
+ON public.imaps_buildings FOR ALL
+USING (
+    (SELECT role FROM public.profiles WHERE id = (SELECT auth.uid())) IN ('JPP', 'SUPER_ADMIN_JPP', 'ADMIN')
+)
+WITH CHECK (
+    (SELECT role FROM public.profiles WHERE id = (SELECT auth.uid())) IN ('JPP', 'SUPER_ADMIN_JPP', 'ADMIN')
+);
+
+[Match]:
+CREATE POLICY "Allow superadmin full access on imaps_locations"
+ON public.imaps_locations FOR ALL
+USING (
+    (SELECT role FROM public.profiles WHERE id = (SELECT auth.uid())) IN ('JPP', 'SUPER_ADMIN_JPP', 'ADMIN')
+)
+WITH CHECK (
+    (SELECT role FROM public.profiles WHERE id = (SELECT auth.uid())) IN ('JPP', 'SUPER_ADMIN_JPP', 'ADMIN')
+);
+
+
+================================================================================
+FILE 73/97: 60_keusahawanan_registration_history.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.keusahawanan_businesses
+ADD COLUMN IF NOT EXISTS registration_history JSONB DEFAULT '[]'::jsonb;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 74/97: 61_keusahawanan_multiple_mentors.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.keusahawanan_businesses
+ADD COLUMN IF NOT EXISTS mentors JSONB DEFAULT '[]'::jsonb;
+
+[Match]:
+ALTER TABLE public.keusahawanan_businesses
+DROP COLUMN IF EXISTS mentor_name,
+DROP COLUMN IF EXISTS mentor_department;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 75/97: 62_imaps_location_operating_hours.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.imaps_locations 
+ADD COLUMN op_start TIME,
+ADD COLUMN op_end TIME;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 76/97: 63_merit_system_v2.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.merit_transactions 
+ADD COLUMN IF NOT EXISTS proof_url TEXT,
+ADD COLUMN IF NOT EXISTS academic_session TEXT,
+ADD COLUMN IF NOT EXISTS scan_location JSONB;
+
+[Match]:
+ALTER TABLE public.akademik_qr_scans 
+ADD COLUMN IF NOT EXISTS scan_location JSONB,
+ADD COLUMN IF NOT EXISTS verification_method TEXT;
+
+[Match]:
+ALTER TABLE public.akademik_qr_tokens 
+ADD COLUMN IF NOT EXISTS location_lat NUMERIC,
+ADD COLUMN IF NOT EXISTS location_lng NUMERIC,
+ADD COLUMN IF NOT EXISTS radius_meters INTEGER DEFAULT 150,
+ADD COLUMN IF NOT EXISTS verification_pin TEXT;
+
+[Match]:
+ALTER TABLE public.student_merit_cohorts ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.demerit_appeals ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE public.merit_transactions 
+ADD COLUMN IF NOT EXISTS proof_url TEXT,
+ADD COLUMN IF NOT EXISTS academic_session TEXT,
+ADD COLUMN IF NOT EXISTS scan_location JSONB;
+
+-- 2. Update akademik_qr_scans
+ALTER TABLE public.akademik_qr_scans 
+ADD COLUMN IF NOT EXISTS scan_location JSONB,
+ADD COLUMN IF NOT EXISTS verification_method TEXT;
+
+-- 3. Update akademik_qr_tokens
+ALTER TABLE public.akademik_qr_tokens 
+ADD COLUMN IF NOT EXISTS location_lat NUMERIC,
+ADD COLUMN IF NOT EXISTS location_lng NUMERIC,
+ADD COLUMN IF NOT EXISTS radius_meters INTEGER DEFAULT 150,
+ADD COLUMN IF NOT EXISTS verification_pin TEXT;
+
+-- 4. Create student_merit_cohorts
+CREATE TABLE IF NOT EXISTS public.student_merit_cohorts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    cohort_id TEXT NOT NULL,
+    total_merit INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.student_merit_cohorts ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Users can view own merit cohort history" 
+ON public.student_merit_cohorts FOR SELECT 
+USING (auth.uid() = user_id);
+
+[Match]:
+CREATE POLICY "Superadmin can manage merit cohorts" 
+ON public.student_merit_cohorts FOR ALL 
+USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE profiles.id = auth.uid() AND profiles.role = 'SUPERADMIN'
+  )
+);
+
+[Match]:
+ALTER TABLE public.demerit_appeals ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Users can view and create own appeals" 
+ON public.demerit_appeals FOR SELECT 
+USING (auth.uid() = user_id);
+
+[Match]:
+CREATE POLICY "Users can insert own appeals" 
+ON public.demerit_appeals FOR INSERT 
+WITH CHECK (auth.uid() = user_id AND status = 'PENDING');
+
+[Match]:
+CREATE POLICY "Admins/Exco can manage all appeals" 
+ON public.demerit_appeals FOR ALL 
+USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE profiles.id = auth.uid() AND profiles.role IN ('SUPERADMIN', 'STAFF', 'YDP', 'EXCO')
+  )
+);
+
+
+================================================================================
+FILE 77/97: 64_merit_archive_cohort.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 78/97: 65_add_appeal_proof_url.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.demerit_appeals
+ADD COLUMN IF NOT EXISTS proof_url TEXT;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 79/97: 66_fix_demerit_appeals_rls.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+CREATE POLICY "Admins/Exco can manage all appeals" 
+ON public.demerit_appeals FOR ALL 
+USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE profiles.id = auth.uid() AND profiles.role IN ('SUPER_ADMIN', 'SUPER_ADMIN_JPP', 'ADMIN', 'JPP')
+  )
+);
+
+
+================================================================================
+FILE 80/97: 67_fix_merit_system_audit.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.student_merit_cohorts
+  ADD COLUMN IF NOT EXISTS merit_kelab    INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS merit_akademik INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS merit_asrama   INTEGER NOT NULL DEFAULT 0;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+CREATE POLICY "Superadmin can manage merit cohorts"
+ON public.student_merit_cohorts FOR ALL
+USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE profiles.id = auth.uid()
+      AND profiles.role IN ('SUPER_ADMIN', 'SUPER_ADMIN_JPP')
+  )
+);
+
+[Match]:
+CREATE POLICY "Users can view own appeals"
+ON public.demerit_appeals FOR SELECT
+USING (
+  auth.uid() = user_id
+  OR
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE profiles.id = auth.uid()
+      AND profiles.role IN ('SUPER_ADMIN', 'SUPER_ADMIN_JPP', 'ADMIN', 'JPP')
+  )
+);
+
+
+================================================================================
+FILE 81/97: 68_guideline_compliance_audit.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+CREATE POLICY "demerit_appeals_select" ON public.demerit_appeals
+  FOR SELECT USING (
+    (SELECT auth.uid()) = user_id
+    OR EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = (SELECT auth.uid())
+        AND profiles.role IN ('SUPER_ADMIN', 'SUPER_ADMIN_JPP', 'ADMIN', 'JPP')
+    )
+  );
+
+[Match]:
+CREATE POLICY "demerit_appeals_insert" ON public.demerit_appeals
+  FOR INSERT WITH CHECK (
+    (SELECT auth.uid()) = user_id
+    AND status = 'PENDING'
+  );
+
+[Match]:
+CREATE POLICY "demerit_appeals_update" ON public.demerit_appeals
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = (SELECT auth.uid())
+        AND profiles.role IN ('SUPER_ADMIN', 'SUPER_ADMIN_JPP', 'ADMIN', 'JPP')
+    )
+  ) WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = (SELECT auth.uid())
+        AND profiles.role IN ('SUPER_ADMIN', 'SUPER_ADMIN_JPP', 'ADMIN', 'JPP')
+    )
+  );
+
+[Match]:
+CREATE POLICY "demerit_appeals_delete" ON public.demerit_appeals
+  FOR DELETE USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = (SELECT auth.uid())
+        AND profiles.role IN ('SUPER_ADMIN', 'SUPER_ADMIN_JPP')
+    )
+  );
+
+[Match]:
+CREATE POLICY "student_merit_cohorts_select" ON public.student_merit_cohorts
+  FOR SELECT USING (
+    (SELECT auth.uid()) = user_id
+    OR EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = (SELECT auth.uid())
+        AND profiles.role IN ('SUPER_ADMIN', 'SUPER_ADMIN_JPP')
+    )
+  );
+
+[Match]:
+CREATE POLICY "student_merit_cohorts_manage" ON public.student_merit_cohorts
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = (SELECT auth.uid())
+        AND profiles.role IN ('SUPER_ADMIN', 'SUPER_ADMIN_JPP')
+    )
+  );
+
+
+================================================================================
+FILE 82/97: 69_polymart_ads_schema_fix.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+[Match]:
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('polymart-ads', 'polymart-ads', true)
+ON CONFLICT (id) DO NOTHING;
+
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polymart_ads ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE public.polymart_ads ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Public can view active ads"
+    ON public.polymart_ads
+    FOR SELECT
+    USING (status = 'ACTIVE');
+
+[Match]:
+CREATE POLICY "Admin read polymart_ads"
+    ON public.polymart_ads
+    FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = (SELECT auth.uid())
+            AND (
+                p.role IN ('SUPER_ADMIN', 'JPP_ADMIN')
+                OR p.keusahawanan_access = TRUE
+            )
+        )
+    );
+
+[Match]:
+CREATE POLICY "Admin insert polymart_ads"
+    ON public.polymart_ads
+    FOR INSERT
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = (SELECT auth.uid())
+            AND (
+                p.role IN ('SUPER_ADMIN', 'JPP_ADMIN')
+                OR p.keusahawanan_access = TRUE
+            )
+        )
+    );
+
+[Match]:
+CREATE POLICY "Admin update polymart_ads"
+    ON public.polymart_ads
+    FOR UPDATE
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = (SELECT auth.uid())
+            AND (
+                p.role IN ('SUPER_ADMIN', 'JPP_ADMIN')
+                OR p.keusahawanan_access = TRUE
+            )
+        )
+    )
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = (SELECT auth.uid())
+            AND (
+                p.role IN ('SUPER_ADMIN', 'JPP_ADMIN')
+                OR p.keusahawanan_access = TRUE
+            )
+        )
+    );
+
+[Match]:
+CREATE POLICY "Admin delete polymart_ads"
+    ON public.polymart_ads
+    FOR DELETE
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = (SELECT auth.uid())
+            AND (
+                p.role IN ('SUPER_ADMIN', 'JPP_ADMIN')
+                OR p.keusahawanan_access = TRUE
+            )
+        )
+    );
+
+[Match]:
+CREATE POLICY "Admin can upload polymart ads images"
+    ON storage.objects
+    FOR INSERT
+    WITH CHECK (
+        bucket_id = 'polymart-ads'
+        AND EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = (SELECT auth.uid())
+            AND (
+                p.role IN ('SUPER_ADMIN', 'JPP_ADMIN')
+                OR p.keusahawanan_access = TRUE
+            )
+        )
+    );
+
+[Match]:
+CREATE POLICY "Public can view polymart ads images"
+    ON storage.objects
+    FOR SELECT
+    USING (bucket_id = 'polymart-ads');
+
+[Match]:
+CREATE POLICY "Admin can delete polymart ads images"
+    ON storage.objects
+    FOR DELETE
+    USING (
+        bucket_id = 'polymart-ads'
+        AND EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = (SELECT auth.uid())
+            AND (
+                p.role IN ('SUPER_ADMIN', 'JPP_ADMIN')
+                OR p.keusahawanan_access = TRUE
+            )
+        )
+    );
+
+
+================================================================================
+FILE 83/97: 70_flexible_login_and_duplicate_detection.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 84/97: 71_block_duplicate_matric_and_merge_tool.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 85/97: 72_delete_own_account.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 86/97: 73_polytask_schema.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+[Match]:
+CREATE TYPE polytask_job_status AS ENUM ('OPEN', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED');
+
+[Match]:
+CREATE TYPE polytask_bid_status AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED', 'WITHDRAWN');
+
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polytask_jobs ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polytask_bids ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polytask_reviews ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+[Match]:
+CREATE TRIGGER trigger_polytask_bid_acceptance
+    AFTER UPDATE ON public.polytask_bids
+    FOR EACH ROW
+    EXECUTE FUNCTION handle_polytask_bid_acceptance();
+
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE public.polytask_jobs ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polytask_bids ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polytask_reviews ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Semua pelajar boleh lihat tugasan OPEN" ON public.polytask_jobs
+    FOR SELECT USING (
+        status = 'OPEN' 
+        OR requester_id = (SELECT auth.uid()) 
+        OR assigned_tasker_id = (SELECT auth.uid())
+        OR is_jpp_admin((SELECT auth.uid()))
+    );
+
+[Match]:
+CREATE POLICY "Pelajar boleh cipta tugasan" ON public.polytask_jobs
+    FOR INSERT WITH CHECK (requester_id = (SELECT auth.uid()));
+
+[Match]:
+CREATE POLICY "Pelajar boleh kemaskini tugasan sendiri" ON public.polytask_jobs
+    FOR UPDATE USING (
+        requester_id = (SELECT auth.uid()) OR is_jpp_admin((SELECT auth.uid()))
+    ) WITH CHECK (
+        requester_id = (SELECT auth.uid()) OR is_jpp_admin((SELECT auth.uid()))
+    );
+
+[Match]:
+CREATE POLICY "Peminta boleh lihat bidaan untuk tugasannya" ON public.polytask_bids
+    FOR SELECT USING (
+        tasker_id = (SELECT auth.uid()) OR 
+        job_id IN (SELECT id FROM public.polytask_jobs WHERE requester_id = (SELECT auth.uid())) OR
+        is_jpp_admin((SELECT auth.uid()))
+    );
+
+[Match]:
+CREATE POLICY "Pelajar boleh bida jika tugasan OPEN" ON public.polytask_bids
+    FOR INSERT WITH CHECK (
+        tasker_id = (SELECT auth.uid()) AND
+        job_id IN (SELECT id FROM public.polytask_jobs WHERE status = 'OPEN')
+    );
+
+[Match]:
+CREATE POLICY "Tasker boleh tarik balik atau kemaskini bidaan" ON public.polytask_bids
+    FOR UPDATE USING (
+        tasker_id = (SELECT auth.uid()) AND status = 'PENDING'
+    ) WITH CHECK (
+        tasker_id = (SELECT auth.uid())
+    );
+
+[Match]:
+CREATE POLICY "Peminta boleh ACCEPT bidaan" ON public.polytask_bids
+    FOR UPDATE USING (
+        job_id IN (SELECT id FROM public.polytask_jobs WHERE requester_id = (SELECT auth.uid()) AND status = 'OPEN') AND status = 'PENDING'
+    ) WITH CHECK (
+        job_id IN (SELECT id FROM public.polytask_jobs WHERE requester_id = (SELECT auth.uid()))
+    );
+
+[Match]:
+CREATE POLICY "Semua boleh lihat review" ON public.polytask_reviews
+    FOR SELECT USING (true);
+
+[Match]:
+CREATE POLICY "Boleh tulis review untuk job yang siap" ON public.polytask_reviews
+    FOR INSERT WITH CHECK (
+        reviewer_id = (SELECT auth.uid()) AND
+        job_id IN (SELECT id FROM public.polytask_jobs WHERE status = 'COMPLETED')
+    );
+
+
+================================================================================
+FILE 87/97: 81_polytask_cancellation_rate.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.profiles
+ADD COLUMN IF NOT EXISTS polytask_cancellations INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS polytask_completed_bids INTEGER DEFAULT 0;
+
+--- FUNCTIONS / TRIGGERS ---
+[Match]:
+CREATE TRIGGER trigger_update_polytask_completion_metrics
+    AFTER UPDATE ON public.polytask_jobs
+    FOR EACH ROW
+    EXECUTE FUNCTION update_polytask_completion_metrics();
+
+[Match]:
+CREATE TRIGGER trigger_handle_polytask_cancellation
+    AFTER UPDATE ON public.polytask_bids
+    FOR EACH ROW
+    EXECUTE FUNCTION handle_polytask_cancellation();
+
+--- RLS POLICIES ---
+[Match]:
+CREATE POLICY "Tasker boleh tarik diri dari tugasan" ON public.polytask_jobs
+    FOR UPDATE USING (
+        assigned_tasker_id = (SELECT auth.uid()) AND status = 'IN_PROGRESS'
+    ) WITH CHECK (
+        -- membenarkan tasker set assigned_tasker_id = null
+        true
+    );
+
+[Match]:
+CREATE POLICY "Tasker boleh WITHDRAW bidaan yang sudah diterima" ON public.polytask_bids
+    FOR UPDATE USING (
+        tasker_id = (SELECT auth.uid()) AND status = 'ACCEPTED'
+    ) WITH CHECK (
+        tasker_id = (SELECT auth.uid())
+    );
+
+
+================================================================================
+FILE 88/97: 82_polytask_fasa_all.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polytask_reviews
+ADD COLUMN IF NOT EXISTS reviewer_role TEXT CHECK (reviewer_role IN ('REQUESTER', 'TASKER'));
+
+--- FUNCTIONS / TRIGGERS ---
+[Match]:
+CREATE TRIGGER trigger_check_polytask_bid_rate_limit
+    BEFORE INSERT ON public.polytask_bids
+    FOR EACH ROW
+    EXECUTE FUNCTION check_polytask_bid_rate_limit();
+
+[Match]:
+CREATE TRIGGER trigger_log_polytask_critical_actions
+    AFTER UPDATE ON public.polytask_jobs
+    FOR EACH ROW
+    EXECUTE FUNCTION log_polytask_critical_actions();
+
+--- RLS POLICIES ---
+
+================================================================================
+FILE 89/97: 83_polytask_proof_of_work.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+[Match]:
+INSERT INTO storage.buckets (id, name, public) VALUES ('polytask_proofs', 'polytask_proofs', true)
+ON CONFLICT (id) DO NOTHING;
+
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polytask_jobs
+ADD COLUMN IF NOT EXISTS proof_image_url TEXT;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+CREATE POLICY "Tasker boleh muat naik bukti kerja" ON public.polytask_jobs
+    FOR UPDATE USING (
+        assigned_tasker_id = (SELECT auth.uid()) AND status = 'IN_PROGRESS'
+    ) WITH CHECK (
+        assigned_tasker_id = (SELECT auth.uid())
+    );
+
+[Match]:
+CREATE POLICY "Semua boleh lihat bukti" ON storage.objects
+    FOR SELECT USING (bucket_id = 'polytask_proofs');
+
+[Match]:
+CREATE POLICY "Pelajar boleh upload bukti" ON storage.objects
+    FOR INSERT WITH CHECK (bucket_id = 'polytask_proofs' AND auth.uid() IS NOT NULL);
+
+
+================================================================================
+FILE 90/97: 84_polysuara_schema.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polysuara_confessions ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polysuara_upvotes ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE public.polysuara_confessions ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polysuara_upvotes ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Pelajar boleh baca luahan" ON public.polysuara_confessions
+    FOR SELECT USING (
+        is_approved = true
+    );
+
+[Match]:
+CREATE POLICY "Pelajar boleh buat luahan" ON public.polysuara_confessions
+    FOR INSERT WITH CHECK (
+        (SELECT auth.uid()) = author_id
+    );
+
+[Match]:
+CREATE POLICY "JPP boleh urus luahan" ON public.polysuara_confessions
+    FOR ALL USING (
+        is_jpp_admin((SELECT auth.uid()))
+    ) WITH CHECK (
+        is_jpp_admin((SELECT auth.uid()))
+    );
+
+[Match]:
+CREATE POLICY "Boleh lihat upvote" ON public.polysuara_upvotes
+    FOR SELECT USING (true);
+
+[Match]:
+CREATE POLICY "Boleh upvote" ON public.polysuara_upvotes
+    FOR INSERT WITH CHECK ((SELECT auth.uid()) = user_id);
+
+[Match]:
+CREATE POLICY "Boleh buang upvote sendiri" ON public.polysuara_upvotes
+    FOR DELETE USING ((SELECT auth.uid()) = user_id);
+
+
+================================================================================
+FILE 91/97: 84_polytask_v2_hotfix.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+[Match]:
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('polytask_proofs', 'polytask_proofs', true)
+ON CONFLICT (id) DO NOTHING;
+
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polytask_jobs
+ADD COLUMN IF NOT EXISTS proof_image_url TEXT;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+CREATE POLICY "Semua boleh lihat bukti polytask" ON storage.objects
+    FOR SELECT USING (bucket_id = 'polytask_proofs');
+
+[Match]:
+CREATE POLICY "Pelajar boleh upload bukti polytask" ON storage.objects
+    FOR INSERT WITH CHECK (bucket_id = 'polytask_proofs' AND auth.uid() IS NOT NULL);
+
+[Match]:
+CREATE POLICY "Tasker boleh muat naik bukti kerja" ON public.polytask_jobs
+    FOR UPDATE USING (
+        assigned_tasker_id = (SELECT auth.uid()) AND status = 'IN_PROGRESS'
+    ) WITH CHECK (
+        assigned_tasker_id = (SELECT auth.uid())
+    );
+
+[Match]:
+CREATE POLICY "Tasker boleh tarik diri dari tugasan" ON public.polytask_jobs
+    FOR UPDATE USING (
+        assigned_tasker_id = (SELECT auth.uid()) AND status = 'IN_PROGRESS'
+    ) WITH CHECK (
+        assigned_tasker_id = (SELECT auth.uid()) OR assigned_tasker_id IS NULL
+    );
+
+
+================================================================================
+FILE 92/97: 85_polymatch_schema.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polymatch_listings ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE public.polymatch_listings ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Semua boleh baca iklan aktif" ON public.polymatch_listings
+    FOR SELECT USING (
+        status = 'OPEN' 
+        OR (SELECT auth.uid()) = author_id
+    );
+
+[Match]:
+CREATE POLICY "Pengguna boleh cipta iklan" ON public.polymatch_listings
+    FOR INSERT WITH CHECK (
+        (SELECT auth.uid()) = author_id
+    );
+
+[Match]:
+CREATE POLICY "Pengguna boleh kemaskini iklan sendiri" ON public.polymatch_listings
+    FOR UPDATE USING (
+        (SELECT auth.uid()) = author_id
+    ) WITH CHECK (
+        (SELECT auth.uid()) = author_id
+    );
+
+[Match]:
+CREATE POLICY "Pengguna boleh padam iklan sendiri" ON public.polymatch_listings
+    FOR DELETE USING (
+        (SELECT auth.uid()) = author_id
+    );
+
+[Match]:
+CREATE POLICY "JPP boleh urus semua iklan" ON public.polymatch_listings
+    FOR ALL USING (
+        is_jpp_admin((SELECT auth.uid()))
+    ) WITH CHECK (
+        is_jpp_admin((SELECT auth.uid()))
+    );
+
+
+================================================================================
+FILE 93/97: 86_polyservices_moderation.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.polymatch_listings ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT true;
+
+[Match]:
+ALTER TABLE public.polyservices_moderation_config ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polyservices_reports ENABLE ROW LEVEL SECURITY;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+[Match]:
+ALTER TABLE public.polymatch_listings ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT true;
+
+-- Kemaskini RLS PolyMatch supaya hanya lihat yang di-approve
+DROP POLICY IF EXISTS "Semua boleh baca iklan aktif" ON public.polymatch_listings;
+CREATE POLICY "Semua boleh baca iklan aktif" ON public.polymatch_listings
+    FOR SELECT USING (
+        status = 'OPEN' 
+        AND is_approved = true
+        OR (SELECT auth.uid()) = author_id
+    );
+
+-- Jadual Laporan Pengguna (Reports)
+CREATE TABLE IF NOT EXISTS public.polyservices_reports (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    target_id UUID NOT NULL,
+    target_type VARCHAR(20) NOT NULL CHECK (target_type IN ('SUARA', 'MATCH')),
+    reporter_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    reason VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    CONSTRAINT unique_report_per_user UNIQUE (target_id, reporter_id)
+);
+
+ALTER TABLE public.polyservices_moderation_config ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+ALTER TABLE public.polyservices_reports ENABLE ROW LEVEL SECURITY;
+
+[Match]:
+CREATE POLICY "Semua boleh baca config moderasi" ON public.polyservices_moderation_config FOR SELECT USING (true);
+
+[Match]:
+CREATE POLICY "Hanya JPP boleh kemaskini config" ON public.polyservices_moderation_config FOR UPDATE USING (is_jpp_admin((SELECT auth.uid()))) WITH CHECK (is_jpp_admin((SELECT auth.uid())));
+
+[Match]:
+CREATE POLICY "Pelajar boleh buat report" ON public.polyservices_reports FOR INSERT WITH CHECK ((SELECT auth.uid()) = reporter_id);
+
+[Match]:
+CREATE POLICY "JPP boleh baca report" ON public.polyservices_reports FOR SELECT USING (is_jpp_admin((SELECT auth.uid())));
+
+
+================================================================================
+FILE 94/97: 87_polymart_auto_cancel_hotfix.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 95/97: add_merit_eakademik_to_club_activities.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.club_activities 
+ADD COLUMN IF NOT EXISTS merit_eakademik integer DEFAULT 0;
+
+[Match]:
+ALTER TABLE public.club_activities 
+ADD COLUMN IF NOT EXISTS merit_kelab integer DEFAULT 0;
+
+[Match]:
+ALTER TABLE public.club_activities 
+ADD COLUMN IF NOT EXISTS qr_enabled boolean DEFAULT false;
+
+[Match]:
+ALTER TABLE public.club_activities 
+ADD COLUMN IF NOT EXISTS qr_token text;
+
+[Match]:
+ALTER TABLE public.club_activities 
+ADD COLUMN IF NOT EXISTS qr_open_at timestamptz;
+
+[Match]:
+ALTER TABLE public.club_activities 
+ADD COLUMN IF NOT EXISTS qr_close_at timestamptz;
+
+[Match]:
+ALTER TABLE public.club_activities 
+ADD COLUMN IF NOT EXISTS pre_reg_enabled boolean DEFAULT false;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 96/97: quick_fix_pembubaran.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---
+
+================================================================================
+FILE 97/97: rename_akademik_to_kpp_merit_vouch.sql
+================================================================================
+
+--- CUSTOM TYPES / ENUMS / DOMAINS ---
+--- STORAGE BUCKETS ---
+--- CREATE / ALTER TABLES ---
+[Match]:
+ALTER TABLE public.merit_program_applications 
+  RENAME COLUMN akademik_reviewer_id TO kpp_reviewer_id;
+
+[Match]:
+ALTER TABLE public.merit_program_applications 
+  RENAME COLUMN akademik_reviewed_at TO kpp_reviewed_at;
+
+[Match]:
+ALTER TABLE public.merit_program_applications 
+  RENAME COLUMN akademik_vouch_notes TO kpp_vouch_notes;
+
+--- FUNCTIONS / TRIGGERS ---
+--- RLS POLICIES ---

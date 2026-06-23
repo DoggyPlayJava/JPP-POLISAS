@@ -1,0 +1,483 @@
+FILE: 20260425132500_optimize_database.sql
+  RLS POLICIEs: 'Users can view own notifications' on notifications, 'Users can update own notifications' on notifications, 'Student can read own memberships' on student_club_memberships, 'Students can read own memberships' on student_club_memberships, 'Student can request membership' on student_club_memberships, 'Students can apply to clubs' on student_club_memberships, 'Users can update own profile' on profiles, 'kb_ticket_select_own' on kebajikan_tickets, 'kb_ticket_update_own' on kebajikan_tickets, 'Users can view their own programs' on programs, 'Users can insert their own programs' on programs, 'Users can update their own programs' on programs, 'Users can delete their own programs' on programs
+
+FILE: 20260425133500_fix_security_warnings.sql
+  RLS POLICIEs: 'Semua boleh tulis log' on club_logs, 'kb_notif_update_read' on kebajikan_notifications
+
+FILE: 20260429120653_personal_folders.sql
+  ALTER TABLEs: akademik_folders
+  RLS POLICIEs: 'akfol_select ON akademik_folders FOR SELECT USING (created_by = auth.uid());
+CREATE POLICY akfol_insert ON akademik_folders FOR INSERT WITH CHECK (created_by = auth.uid());
+CREATE POLICY akfol_update ON akademik_folders FOR UPDATE USING (created_by = auth.uid());
+CREATE POLICY akfol_delete ON akademik_folders FOR DELETE USING (created_by = auth.uid());
+
+-- Create new strictly personal policies for akademik_files
+-- using uploaded_by since that's what the frontend currently populates
+CREATE POLICY akf_select ON akademik_files FOR SELECT USING (uploaded_by = auth.uid() OR owner_user_id = auth.uid());
+CREATE POLICY akf_insert ON akademik_files FOR INSERT WITH CHECK (uploaded_by = auth.uid() OR owner_user_id = auth.uid());
+CREATE POLICY akf_update ON akademik_files FOR UPDATE USING (uploaded_by = auth.uid() OR owner_user_id = auth.uid());
+CREATE POLICY akf_delete' on akademik_files
+
+FILE: 20260504231952_optimize_performance_rls.sql
+  RLS POLICIEs: 'karnival_votes_v2_admin_delete' on karnival_votes_v2, 'karnival_votes_v2_admin_update' on karnival_votes_v2, 'karnival_votes_v2_delete_own' on karnival_votes_v2, 'karnival_votes_v2_insert_self' on karnival_votes_v2, 'scm_select' on student_club_memberships, 'kamsis_dynamic_fields_admin_all' on kamsis_dynamic_fields, 'kamsis_applications_admin_all' on kamsis_applications, 'kamsis_applications_insert_own' on kamsis_applications, 'kamsis_applications_select_own' on kamsis_applications, 'kamsis_applications_update_own' on kamsis_applications, 'akademik_cgpa_records_select' on akademik_cgpa_records, 'akademik_cgpa_records_insert' on akademik_cgpa_records, 'akademik_cgpa_records_update' on akademik_cgpa_records, 'akademik_cgpa_records_delete' on akademik_cgpa_records, 'amc_insert' on akademik_merit_config, 'amc_update' on akademik_merit_config, 'amc_delete' on akademik_merit_config
+
+FILE: 20260505235200_auto_sort_sijil_akademik.sql
+  CREATE FUNCTIONs: auto_sort_pencapaian_file
+
+FILE: 20260512054626_59_performance_optimizations.sql
+  RLS POLICIEs: 'aqt_insert ON public.akademik_qr_tokens FOR INSERT 
+WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = uid() AND profiles.role IN ('JPP', 'SUPER_ADMIN_JPP')));
+
+CREATE POLICY aqt_update ON public.akademik_qr_tokens FOR UPDATE 
+USING (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = uid() AND profiles.role IN ('JPP', 'SUPER_ADMIN_JPP')));
+
+CREATE POLICY aqt_delete ON public.akademik_qr_tokens FOR DELETE 
+USING (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = uid() AND profiles.role IN ('JPP', 'SUPER_ADMIN_JPP')));
+
+-- akademik_sijil_categories
+-- Current policies:
+-- asc_modify (ALL) -> SUPER_ADMIN_JPP
+-- asc_select (SELECT) -> true
+-- Split asc_modify (ALL) into INSERT, UPDATE, DELETE to avoid overlapping SELECT
+
+DROP POLICY IF EXISTS asc_modify ON public.akademik_sijil_categories;
+
+CREATE POLICY asc_insert ON public.akademik_sijil_categories FOR INSERT 
+WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = uid() AND profiles.role = 'SUPER_ADMIN_JPP'));
+
+CREATE POLICY asc_update ON public.akademik_sijil_categories FOR UPDATE 
+USING (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = uid() AND profiles.role = 'SUPER_ADMIN_JPP'));
+
+CREATE POLICY asc_delete ON public.akademik_sijil_categories FOR DELETE 
+USING (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = uid() AND profiles.role = 'SUPER_ADMIN_JPP'));
+
+-- akademik_unlock_requests
+-- Current policies:
+-- aur_insert (INSERT) -> uid matches & MENUNGGU
+-- aur_select (SELECT) -> uid matches OR (SUPER_ADMIN_JPP, ADMIN, JPP)
+-- unlock_requests_exco_all (ALL) -> SUPER_ADMIN_JPP, JPP AKADEMIK, CLUB_MT, MT
+-- Since unlock_requests_exco_all gives ALL, it causes multiple permissive policies for SELECT (overlaps with aur_select) and INSERT (overlaps with aur_insert)
+-- Best approach is to drop unlock_requests_exco_all and split it into INSERT, UPDATE, DELETE, and merge its SELECT condition with aur_select
+
+DROP POLICY IF EXISTS unlock_requests_exco_all ON public.akademik_unlock_requests;
+DROP POLICY IF EXISTS aur_select ON public.akademik_unlock_requests;
+DROP POLICY IF EXISTS unlock_req_admin_update ON public.akademik_unlock_requests;
+
+CREATE POLICY aur_select ON public.akademik_unlock_requests FOR SELECT 
+USING (
+    user_id = uid() 
+    OR EXISTS (
+        SELECT 1 FROM profiles 
+        WHERE profiles.id = uid() 
+        AND (
+            profiles.role IN ('SUPER_ADMIN_JPP', 'ADMIN', 'JPP', 'CLUB_MT', 'MT') 
+        )
+    )
+);
+
+CREATE POLICY aur_exco_insert ON public.akademik_unlock_requests FOR INSERT 
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM profiles 
+        WHERE profiles.id = uid() 
+        AND (
+            profiles.role = 'SUPER_ADMIN_JPP' 
+            OR (profiles.role = 'JPP' AND profiles.jpp_unit = 'AKADEMIK') 
+            OR profiles.role IN ('CLUB_MT', 'MT')
+        )
+    )
+);
+
+-- Consolidated from unlock_req_admin_update + aur_exco_update
+CREATE POLICY aur_admin_update ON public.akademik_unlock_requests FOR UPDATE 
+USING (
+    EXISTS (
+        SELECT 1 FROM profiles 
+        WHERE profiles.id = uid() 
+        AND profiles.role IN ('SUPER_ADMIN_JPP', 'ADMIN', 'JPP', 'CLUB_MT', 'MT')
+    )
+);
+
+CREATE POLICY aur_exco_delete' on akademik_unlock_requests
+
+FILE: 20260512061000_61_wal_monitoring_rpc.sql
+  CREATE FUNCTIONs: get_database_health_metrics
+
+FILE: 20260518000000_update_polysuara_rate_limit.sql
+  CREATE FUNCTIONs: check_polysuara_hourly_limit
+  CREATE TRIGGERs: trg_polysuara_hourly_limit
+
+FILE: 20260518115654_polyrent_fasa1_availability.sql
+  ALTER TABLEs: polyrent_listings
+  CREATE FUNCTIONs: polyrent_get_average_rent
+
+FILE: 20260518120600_polyrent_fasa2.sql
+  CREATE TABLEs: polyrent_location_reviews, polyrent_reports
+  ALTER TABLEs: polyrent_location_reviews, polyrent_reports
+  CREATE TYPEs: polyrent_status
+  CREATE FUNCTIONs: polyrent_check_report_threshold
+  CREATE TRIGGERs: on_polyrent_report_inserted
+  RLS POLICIEs: 'Semua pengguna boleh baca review kawasan' on polyrent_location_reviews, 'Pengguna boleh tambah review sendiri' on polyrent_location_reviews, 'Pengguna boleh update review sendiri' on polyrent_location_reviews, 'Pengguna boleh buang review sendiri' on polyrent_location_reviews, 'Admin boleh baca semua report' on polyrent_reports, 'Pengguna boleh baca report sendiri' on polyrent_reports, 'Pengguna boleh tambah report' on polyrent_reports
+
+FILE: 20260518121000_polyrent_fasa3.sql
+  CREATE TABLEs: polyrent_messages, polyrent_reverse_ads
+  ALTER TABLEs: polyrent_messages, polyrent_reverse_ads
+  CREATE TRIGGERs: on_polyrent_reverse_ads_updated
+  RLS POLICIEs: 'Pengguna boleh baca mesej yang dihantar atau diterima' on polyrent_messages, 'Pengguna boleh hantar mesej' on polyrent_messages, 'Penerima boleh kemaskini status is_read' on polyrent_messages, 'Semua orang boleh baca reverse ads yang OPEN' on polyrent_reverse_ads, 'Pelajar boleh tambah reverse ad' on polyrent_reverse_ads, 'Pelajar boleh update reverse ad sendiri' on polyrent_reverse_ads, 'Pelajar boleh delete reverse ad sendiri' on polyrent_reverse_ads
+
+FILE: 20260525021000_fix_polyrider_profiles_ref.sql
+  ALTER TABLEs: polyrider_saved_locations, polytask_sos_logs
+  CREATE FUNCTIONs: delete_own_account, admin_merge_duplicate_accounts
+
+FILE: 20260527154636_88_polymart_product_variations.sql
+  CREATE FUNCTIONs: complete_polymart_order
+
+FILE: 20260527161800_89_complete_order_idempotency_guard.sql
+  CREATE FUNCTIONs: complete_polymart_order
+
+FILE: 20260527162000_90_polymart_cancellation_flow.sql
+  ALTER TABLEs: polymart_orders
+  CREATE FUNCTIONs: buyer_cancel_polymart_order, vendor_handle_cancellation
+
+FILE: 20260527162100_91_product_multi_images.sql
+  ALTER TABLEs: business_products
+
+FILE: 20260527162200_92_flash_sale_preorder.sql
+  ALTER TABLEs: business_products
+
+FILE: 20260527162300_93_polymart_chat.sql
+  CREATE TABLEs: polymart_conversations, polymart_messages
+  ALTER TABLEs: polymart_conversations, polymart_messages
+  RLS POLICIEs: 'polymart_conversations_select' on polymart_conversations, 'polymart_conversations_insert' on polymart_conversations, 'polymart_messages_select' on polymart_messages, 'polymart_messages_insert' on polymart_messages, 'polymart_messages_update' on polymart_messages
+
+FILE: 20260527162400_94_polymart_wishlist.sql
+  CREATE TABLEs: polymart_wishlist
+  ALTER TABLEs: polymart_wishlist
+  RLS POLICIEs: 'polymart_wishlist_select' on polymart_wishlist, 'polymart_wishlist_insert' on polymart_wishlist, 'polymart_wishlist_delete' on polymart_wishlist
+
+FILE: 20260527162500_95_polymart_jsonb_variations.sql
+  CREATE FUNCTIONs: update_product_variation_stock, reserve_polymart_stock, release_polymart_stock, complete_polymart_order, buyer_cancel_polymart_order, vendor_handle_cancellation
+
+FILE: 20260527162600_96_polymart_chat_uniqueness.sql
+  ALTER TABLEs: polymart_conversations
+
+FILE: 20260527162700_97_fix_update_product_variation_stock_updated_at.sql
+  CREATE FUNCTIONs: update_product_variation_stock, complete_polymart_order
+
+FILE: 20260529224800_98_polysuara_social_comments.sql
+  CREATE TABLEs: polysuara_comments, polysuara_comment_votes, polysuara_comment_reports
+  ALTER TABLEs: polysuara_comments, polysuara_comment_votes, polysuara_comment_reports, polysuara_confessions
+  CREATE FUNCTIONs: generate_polysuara_comment_codename, toggle_polysuara_comment_vote, report_polysuara_comment, restore_hidden_comment, sync_polysuara_comment_count
+  CREATE TRIGGERs: trg_censor_polysuara_comment, trg_polysuara_comment_codename, trg_sync_polysuara_comment_count
+  RLS POLICIEs: 'Pelajar boleh baca ulasan' on polysuara_comments, 'Pelajar boleh buat ulasan' on polysuara_comments, 'JPP boleh urus ulasan' on polysuara_comments, 'Pelajar boleh lihat undian ulasan sendiri' on polysuara_comment_votes, 'Pelajar boleh buat undian ulasan sendiri' on polysuara_comment_votes, 'Pelajar boleh padam undian ulasan sendiri' on polysuara_comment_votes, 'JPP boleh urus undian ulasan' on polysuara_comment_votes, 'Pelajar boleh buat laporan ulasan' on polysuara_comment_reports, 'JPP boleh urus laporan ulasan' on polysuara_comment_reports
+
+FILE: 20260529225900_99_polysuara_social_softdelete_images.sql
+  ALTER TABLEs: polysuara_comments
+  CREATE FUNCTIONs: soft_or_hard_delete_polysuara_comment
+
+FILE: 26_pembubaran_kohort.sql
+  ALTER TABLEs: club_activities, club_reports, programs
+  CREATE FUNCTIONs: rpc_pembubaran_kohort
+
+FILE: 27_pembubaran_kelab.sql
+  CREATE FUNCTIONs: rpc_pembubaran_kohort_kelab, rpc_pembersihan_akaun_lama, rpc_pembubaran_kohort
+
+FILE: 27_polysuara_v4_updates.sql
+  CREATE TABLEs: polysuara_censored_words
+  ALTER TABLEs: polysuara_confessions, polysuara_censored_words
+  CREATE FUNCTIONs: censor_polysuara_content
+  CREATE TRIGGERs: for, trg_censor_polysuara
+  STORAGE BUCKETs: polysuara_attachments
+  RLS POLICIEs: 'Allow public read censored words' on polysuara_censored_words, 'Allow authenticated full access censored words' on polysuara_censored_words, 'Give public access to polysuara_attachments' on storage, 'Allow authenticated inserts to polysuara_attachments' on storage
+
+FILE: 28_keusahawanan_module.sql
+  CREATE TABLEs: keusahawanan_categories, keusahawanan_businesses, student_business_memberships
+  ALTER TABLEs: keusahawanan_categories, keusahawanan_businesses, student_business_memberships
+  CREATE TYPEs: keusahawanan_business_status, keusahawanan_membership_role, keusahawanan_membership_status
+  RLS POLICIEs: 'Public Read Access for Keusahawanan Categories' on keusahawanan_categories, 'Admin All Access for Keusahawanan Categories' on keusahawanan_categories, 'Public read active businesses' on keusahawanan_businesses, 'Students can create business' on keusahawanan_businesses, 'Owners and Admins can update their business' on keusahawanan_businesses, 'Users can see their own memberships or if they are admin' on student_business_memberships, 'Students can request to join' on student_business_memberships, 'Owners and Admins can update memberships' on student_business_memberships, 'Owners and Admins can delete memberships' on student_business_memberships
+
+FILE: 28_polysuara_v5_features.sql
+  CREATE TABLEs: polysuara_polls, polysuara_poll_options, polysuara_poll_votes, polysuara_chats, polysuara_chat_messages
+  ALTER TABLEs: polysuara_polls, polysuara_poll_options, polysuara_poll_votes, polysuara_chats, polysuara_chat_messages
+  RLS POLICIEs: 'Allow public read polls' on polysuara_polls, 'Allow authenticated insert polls' on polysuara_polls, 'Allow public read poll options' on polysuara_poll_options, 'Allow authenticated insert poll options' on polysuara_poll_options, 'Allow public read poll votes' on polysuara_poll_votes, 'Allow authenticated insert poll votes' on polysuara_poll_votes, 'Allow authenticated delete own poll votes' on polysuara_poll_votes, 'Allow users to read their own chats' on polysuara_chats, 'Allow excos to insert chats' on polysuara_chats, 'Allow excos to update chats' on polysuara_chats, 'Allow users to read messages in their chats' on polysuara_chat_messages, 'Allow users to insert messages in open chats' on polysuara_chat_messages
+
+FILE: 29_keusahawanan_products_bucket.sql
+  STORAGE BUCKETs: keusahawanan-products
+  RLS POLICIEs: 'Public boleh lihat gambar produk dan logo' on storage, 'Authenticated users boleh muat naik gambar' on storage, 'Authenticated users boleh kemaskini gambar' on storage, 'Authenticated users boleh padam gambar' on storage
+
+FILE: 29_polysuara_auto_archive.sql
+  ALTER TABLEs: polysuara_confessions
+
+FILE: 30_business_shifts_system.sql
+  CREATE TABLEs: business_shifts, business_shift_swaps, business_sessions
+  ALTER TABLEs: keusahawanan_businesses, business_shifts, business_shift_swaps, business_sessions
+  CREATE FUNCTIONs: has_business_shift_access
+  RLS POLICIEs: 'business_shifts_access' on business_shifts, 'business_shift_swaps_access' on business_shift_swaps, 'business_sessions_access' on business_sessions
+
+FILE: 30_polysuara_downvote.sql
+  CREATE TABLEs: polysuara_downvotes
+  ALTER TABLEs: polysuara_confessions, polysuara_downvotes
+  CREATE FUNCTIONs: toggle_polysuara_downvote, toggle_polysuara_upvote, restore_hidden_confession
+  RLS POLICIEs: 'polysuara_downvotes_select' on polysuara_downvotes, 'polysuara_downvotes_insert' on polysuara_downvotes, 'polysuara_downvotes_delete' on polysuara_downvotes, 'polysuara_confessions_select' on polysuara_confessions
+
+FILE: 31_add_staff_details.sql
+  ALTER TABLEs: profiles
+
+FILE: 32_create_polyrent_bucket.sql
+  STORAGE BUCKETs: polyrent
+  RLS POLICIEs: 'Public Access Polyrent' on storage, 'Authenticated users can upload to polyrent' on storage, 'Users can update their own polyrent images' on storage, 'Users can delete their own polyrent images' on storage
+
+FILE: 32_system_announcements.sql
+  CREATE TABLEs: system_announcements, user_announcement_responses
+  ALTER TABLEs: system_announcements, user_announcement_responses
+  RLS POLICIEs: 'Active system_announcements are viewable by everyone.' on system_announcements, 'JPP and Super Admin can view all system announcements.' on system_announcements, 'JPP and Super Admin can manage system announcements' on system_announcements, 'Users can view own announcement responses' on user_announcement_responses, 'Users can insert own announcement responses' on user_announcement_responses, 'JPP and Super Admin can view all announcement responses' on user_announcement_responses
+
+FILE: 33_announcement_poster.sql
+  ALTER TABLEs: ALTER
+  STORAGE BUCKETs: announcements
+  RLS POLICIEs: 'Public can view announcement images' on storage, 'JPP can insert announcement images' on storage, 'JPP can update announcement images' on storage, 'JPP can delete announcement images' on storage
+
+FILE: 33_transfer_business_ownership.sql
+  CREATE FUNCTIONs: transfer_business_ownership
+
+FILE: 34_staff_registration_code.sql
+  CREATE FUNCTIONs: verify_staff_code
+
+FILE: 35_security_jpp_profile_rpc.sql
+  CREATE FUNCTIONs: update_jpp_member_profile, assign_jpp_member, toggle_jpp_role
+
+FILE: 36_supsas_schema.sql
+  CREATE TABLEs: supsas_editions, supsas_kontingen, supsas_sports, supsas_participants, supsas_fixtures, supsas_results
+  ALTER TABLEs: supsas_editions, supsas_kontingen, supsas_sports, supsas_participants, supsas_fixtures, supsas_results
+  CREATE FUNCTIONs: supsas_claim_invite_code, supsas_revoke_leader, supsas_set_updated_at
+  CREATE TRIGGERs: supsas_editions_updated_at, supsas_kontingen_updated_at, supsas_sports_updated_at, supsas_fixtures_updated_at
+  STORAGE BUCKETs: supsas-assets
+  RLS POLICIEs: 'supsas_editions_public_read' on supsas_editions, 'supsas_editions_admin_write' on supsas_editions, 'supsas_kontingen_public_read' on supsas_kontingen, 'supsas_kontingen_admin_write' on supsas_kontingen, 'supsas_kontingen_leader_update' on supsas_kontingen, 'supsas_sports_public_read' on supsas_sports, 'supsas_sports_jpp_write' on supsas_sports, 'supsas_participants_public_read' on supsas_participants, 'supsas_participants_leader_write' on supsas_participants, 'supsas_participants_admin_write' on supsas_participants, 'supsas_fixtures_public_read' on supsas_fixtures, 'supsas_fixtures_jpp_write' on supsas_fixtures, 'supsas_results_public_read' on supsas_results, 'supsas_results_jpp_write' on supsas_results, 'supsas_assets_public_read' on storage, 'supsas_assets_admin_upload' on storage, 'supsas_assets_admin_delete' on storage
+
+FILE: 37_polymart_pos_sync.sql
+  CREATE FUNCTIONs: reserve_polymart_stock, release_polymart_stock, complete_polymart_order
+
+FILE: 38_karnival_v2.sql
+  CREATE TABLEs: karnival_editions, karnival_categories, karnival_booths, karnival_votes_v2
+  ALTER TABLEs: karnival_editions, karnival_categories, karnival_booths, karnival_votes_v2
+  CREATE FUNCTIONs: get_karnival_booth_votes, get_my_karnival_votes_in_category
+  STORAGE BUCKETs: karnival-booths
+  RLS POLICIEs: 'karnival_editions_read_all' on karnival_editions, 'karnival_editions_write_kpp' on karnival_editions, 'karnival_categories_read_all' on karnival_categories, 'karnival_categories_write_kpp' on karnival_categories, 'karnival_booths_read_all' on karnival_booths, 'karnival_booths_write_kpp' on karnival_booths, 'karnival_votes_v2_read_all' on karnival_votes_v2, 'karnival_votes_v2_insert_self' on karnival_votes_v2, 'karnival_votes_v2_delete_own' on karnival_votes_v2, 'karnival_votes_v2_admin_all' on karnival_votes_v2, 'karnival_booths_public_read' on storage, 'karnival_booths_kpp_upload' on storage, 'karnival_booths_kpp_delete' on storage
+
+FILE: 39_track_google_api_tokens.sql
+  CREATE FUNCTIONs: increment_ai_google_tokens
+
+FILE: 40_program_attendance_system.sql
+  CREATE TABLEs: program_attendees, merit_program_applications, merit_review_log
+  ALTER TABLEs: programs, club_activities, program_attendees, merit_program_applications, merit_review_log
+  CREATE FUNCTIONs: fn_auto_credit_kelab_merit
+  CREATE TRIGGERs: trg_auto_credit_kelab_merit
+  RLS POLICIEs: 'Read all attendees' on program_attendees, 'Self register attendee' on program_attendees, 'Manager update attendees' on program_attendees, 'Read merit applications' on merit_program_applications, 'Club leaders apply merit' on merit_program_applications, 'JPP update merit applications' on merit_program_applications, 'Read review log' on merit_review_log, 'JPP insert review log' on merit_review_log
+
+FILE: 41_klk_public_stats_rpc.sql
+  CREATE FUNCTIONs: get_klk_public_stats
+
+FILE: 42_check_email_registered.sql
+  CREATE FUNCTIONs: check_email_registered
+
+FILE: 43_get_auth_providers.sql
+  CREATE FUNCTIONs: get_auth_providers
+
+FILE: 44_polymart_shopping_cart.sql
+  CREATE TABLEs: polymart_cart_items
+  ALTER TABLEs: polymart_cart_items
+  RLS POLICIEs: 'Users can manage their own cart items' on polymart_cart_items
+
+FILE: 45_takwim_pusat.sql
+  CREATE TABLEs: takwim_pusat
+  ALTER TABLEs: takwim_pusat
+  RLS POLICIEs: 'takwim_pusat_select' on takwim_pusat, 'takwim_pusat_insert' on takwim_pusat, 'takwim_pusat_update' on takwim_pusat, 'takwim_pusat_delete' on takwim_pusat
+
+FILE: 46_reset_jpp_cohort.sql
+  CREATE FUNCTIONs: reset_jpp_cohort, remove_jpp_member
+
+FILE: 46_takwim_kelab_kediaman.sql
+  ALTER TABLEs: takwim_pusat
+
+FILE: 47_optimize_new_modules_rls.sql
+  RLS POLICIEs: 'karnival_editions_write_kpp' on karnival_editions, 'karnival_categories_write_kpp' on karnival_categories, 'karnival_booths_write_kpp' on karnival_booths, 'karnival_votes_v2_insert_self' on karnival_votes_v2, 'karnival_votes_v2_delete_own' on karnival_votes_v2, 'karnival_votes_v2_admin_all' on karnival_votes_v2, 'karnival_booths_kpp_upload' on storage, 'karnival_booths_kpp_delete' on storage, 'supsas_editions_admin_write' on supsas_editions, 'supsas_kontingen_admin_write' on supsas_kontingen, 'supsas_kontingen_leader_update' on supsas_kontingen, 'supsas_sports_jpp_write' on supsas_sports, 'supsas_participants_leader_write' on supsas_participants, 'supsas_participants_admin_write' on supsas_participants, 'supsas_fixtures_jpp_write' on supsas_fixtures, 'supsas_results_jpp_write' on supsas_results, 'supsas_assets_admin_upload' on storage, 'supsas_assets_admin_delete' on storage, 'JPP and Super Admin can view all system announcements.' on system_announcements, 'JPP and Super Admin can manage system announcements' on system_announcements, 'Users can view own announcement responses' on user_announcement_responses, 'Users can insert own announcement responses' on user_announcement_responses, 'JPP and Super Admin can view all announcement responses' on user_announcement_responses, 'JPP can insert announcement images' on storage, 'JPP can update announcement images' on storage, 'JPP can delete announcement images' on storage
+
+FILE: 48_polyrider_schema.sql
+  CREATE TABLEs: polyrider_profiles, polyrider_zones, polyrider_jobs, polyrider_chats, polyrider_sos_logs
+  ALTER TABLEs: polyrider_profiles, polyrider_zones, polyrider_jobs, polyrider_chats, polyrider_sos_logs
+  CREATE FUNCTIONs: is_klk_or_admin, get_active_polyrider_count
+  RLS POLICIEs: 'Public can view active riders' on polyrider_profiles, 'Riders can manage own profile' on polyrider_profiles, 'Admin can manage all rider profiles' on polyrider_profiles, 'Anyone can read zones' on polyrider_zones, 'Admin can manage zones' on polyrider_zones, 'Students can manage own jobs' on polyrider_jobs, 'Riders can view pending and own jobs' on polyrider_jobs, 'Riders can update own assigned jobs' on polyrider_jobs, 'Admin can view all jobs' on polyrider_jobs, 'Involved users can manage chats' on polyrider_chats, 'Users can create SOS logs' on polyrider_sos_logs, 'Users can view own SOS logs' on polyrider_sos_logs, 'Admin can manage all SOS logs' on polyrider_sos_logs
+
+FILE: 49_polyrider_bids.sql
+  CREATE TABLEs: polyrider_bids
+  ALTER TABLEs: polyrider_bids
+  RLS POLICIEs: 'Public can view bids' on polyrider_bids, 'Riders can insert bids' on polyrider_bids, 'Admin can manage all bids' on polyrider_bids, 'Students can update bids for their jobs' on polyrider_bids
+
+FILE: 50_polyrider_security_patch.sql
+  CREATE FUNCTIONs: create_polyrider_job, get_active_polyrider_count, get_my_carpool_group_ids, is_klk_or_admin, lock_polyrider_carpool, respond_carpool_request, update_rider_avg_rating
+
+FILE: 51_polymart_polyrider_integration.sql
+  ALTER TABLEs: polyrider_jobs
+  CREATE FUNCTIONs: create_polyrider_job
+
+FILE: 51_polyrider_cancel_sos_appeals.sql
+  CREATE TABLEs: polyrider_appeals
+  ALTER TABLEs: polyrider_jobs, polyrider_sos_logs, profiles, polyrider_appeals
+  CREATE FUNCTIONs: cancel_polyrider_job, process_polyrider_appeal
+  RLS POLICIEs: 'Users can view own appeals' on polyrider_appeals, 'Users can create appeals' on polyrider_appeals, 'Admins can view appeals' on polyrider_appeals, 'Admins can manage appeals' on polyrider_appeals
+
+FILE: 52_polymart_online_payment.sql
+  ALTER TABLEs: keusahawanan_businesses, business_products, polymart_orders
+  CREATE FUNCTIONs: cancel_expired_polymart_orders, get_expiring_polymart_orders
+  STORAGE BUCKETs: polymart-receipts
+  RLS POLICIEs: 'polymart_receipts_insert_authenticated' on storage, 'polymart_receipts_select_public' on storage
+
+FILE: 52_polyrider_infrastructure_audit_fixes.sql
+  RLS POLICIEs: 'Riders can insert bids' on polyrider_bids, 'Admin can manage all bids' on polyrider_bids, 'Students can update bids for their jobs' on polyrider_bids
+
+FILE: 52_polyrider_job_expiry.sql
+  ALTER TABLEs: polyrider_jobs
+  CREATE FUNCTIONs: set_polyrider_job_expiry
+  CREATE TRIGGERs: trg_polyrider_job_expiry
+
+FILE: 53_polyrider_rider_location.sql
+  ALTER TABLEs: polyrider_jobs
+
+FILE: 54_polyrider_saved_locations.sql
+  CREATE TABLEs: polyrider_saved_locations
+  ALTER TABLEs: polyrider_saved_locations
+  CREATE FUNCTIONs: check_saved_locations_limit
+  CREATE TRIGGERs: trg_saved_locations_limit
+  RLS POLICIEs: 'saved_locations_owner_crud' on polyrider_saved_locations
+
+FILE: 54_polytask_disputes_and_rating.sql
+  CREATE TABLEs: polytask_disputes
+  ALTER TABLEs: polytask_disputes
+  RLS POLICIEs: 'Users can view their own disputes' on polytask_disputes, 'JPP admins can view all disputes' on polytask_disputes, 'Users can create disputes' on polytask_disputes, 'JPP admins can update disputes' on polytask_disputes, 'Anyone can view reviews' on polytask_reviews, 'Users can insert reviews' on polytask_reviews
+
+FILE: 55_imaps_schema.sql
+  CREATE TABLEs: imaps_buildings, imaps_locations
+  ALTER TABLEs: imaps_buildings, imaps_locations
+  RLS POLICIEs: 'Allow public read access on imaps_buildings' on imaps_buildings, 'Allow public read access on imaps_locations' on imaps_locations, 'Allow superadmin full access on imaps_buildings' on imaps_buildings, 'Allow superadmin full access on imaps_locations' on imaps_locations
+
+FILE: 56_imaps_qol_update.sql
+  ALTER TABLEs: imaps_buildings
+
+FILE: 57_imaps_storage_bucket.sql
+  STORAGE BUCKETs: imaps_assets
+  RLS POLICIEs: 'Public View iMaps Assets' on storage, 'Auth Upload iMaps Assets' on storage, 'Auth Update iMaps Assets' on storage, 'Auth Delete iMaps Assets' on storage
+
+FILE: 58_imaps_location_image.sql
+  ALTER TABLEs: imaps_locations
+
+FILE: 59_imaps_rls_fix.sql
+  RLS POLICIEs: 'Allow superadmin full access on imaps_buildings' on imaps_buildings, 'Allow superadmin full access on imaps_locations' on imaps_locations
+
+FILE: 60_keusahawanan_registration_history.sql
+  ALTER TABLEs: keusahawanan_businesses
+  CREATE FUNCTIONs: generate_puskep_reg_number
+
+FILE: 61_keusahawanan_multiple_mentors.sql
+  ALTER TABLEs: keusahawanan_businesses
+
+FILE: 62_imaps_location_operating_hours.sql
+  ALTER TABLEs: imaps_locations
+
+FILE: 63_merit_system_v2.sql
+  CREATE TABLEs: student_merit_cohorts, demerit_appeals
+  ALTER TABLEs: merit_transactions, akademik_qr_scans, akademik_qr_tokens, student_merit_cohorts, demerit_appeals
+  RLS POLICIEs: 'Users can view own merit cohort history' on student_merit_cohorts, 'Superadmin can manage merit cohorts' on student_merit_cohorts, 'Users can view and create own appeals' on demerit_appeals, 'Users can insert own appeals' on demerit_appeals, 'Admins/Exco can manage all appeals' on demerit_appeals
+
+FILE: 64_merit_archive_cohort.sql
+  CREATE FUNCTIONs: archive_merit_cohort
+
+FILE: 65_add_appeal_proof_url.sql
+  ALTER TABLEs: demerit_appeals
+
+FILE: 66_fix_demerit_appeals_rls.sql
+  RLS POLICIEs: 'Admins/Exco can manage all appeals' on demerit_appeals
+
+FILE: 67_fix_merit_system_audit.sql
+  ALTER TABLEs: student_merit_cohorts
+  CREATE FUNCTIONs: archive_merit_cohort, increment_merit_by_source
+  RLS POLICIEs: 'Superadmin can manage merit cohorts' on student_merit_cohorts, 'Users can view own appeals' on demerit_appeals
+
+FILE: 68_guideline_compliance_audit.sql
+  RLS POLICIEs: 'demerit_appeals_select' on demerit_appeals, 'demerit_appeals_insert' on demerit_appeals, 'demerit_appeals_update' on demerit_appeals, 'demerit_appeals_delete' on demerit_appeals, 'student_merit_cohorts_select' on student_merit_cohorts, 'student_merit_cohorts_manage' on student_merit_cohorts
+
+FILE: 69_polymart_ads_schema_fix.sql
+  CREATE TABLEs: polymart_ads
+  ALTER TABLEs: polymart_ads
+  CREATE FUNCTIONs: increment_polymart_ad_click
+  STORAGE BUCKETs: polymart-ads
+  RLS POLICIEs: 'Public can view active ads' on polymart_ads, 'Admin read polymart_ads' on polymart_ads, 'Admin insert polymart_ads' on polymart_ads, 'Admin update polymart_ads' on polymart_ads, 'Admin delete polymart_ads' on polymart_ads, 'Admin can upload polymart ads images' on storage, 'Public can view polymart ads images' on storage, 'Admin can delete polymart ads images' on storage
+
+FILE: 70_flexible_login_and_duplicate_detection.sql
+  CREATE FUNCTIONs: resolve_login_identifier, detect_duplicate_matric_accounts
+
+FILE: 71_block_duplicate_matric_and_merge_tool.sql
+  CREATE FUNCTIONs: check_matric_registered, admin_merge_duplicate_accounts
+
+FILE: 72_delete_own_account.sql
+  CREATE FUNCTIONs: delete_own_account
+
+FILE: 73_polytask_schema.sql
+  CREATE TABLEs: polytask_jobs, polytask_bids, polytask_reviews
+  ALTER TABLEs: polytask_jobs, polytask_bids, polytask_reviews
+  CREATE TYPEs: polytask_job_status, polytask_bid_status
+  CREATE FUNCTIONs: handle_polytask_bid_acceptance
+  CREATE TRIGGERs: trigger_polytask_bid_acceptance
+  RLS POLICIEs: 'Semua pelajar boleh lihat tugasan OPEN' on polytask_jobs, 'Pelajar boleh cipta tugasan' on polytask_jobs, 'Pelajar boleh kemaskini tugasan sendiri' on polytask_jobs, 'Peminta boleh lihat bidaan untuk tugasannya' on polytask_bids, 'Pelajar boleh bida jika tugasan OPEN' on polytask_bids, 'Tasker boleh tarik balik atau kemaskini bidaan' on polytask_bids, 'Peminta boleh ACCEPT bidaan' on polytask_bids, 'Semua boleh lihat review' on polytask_reviews, 'Boleh tulis review untuk job yang siap' on polytask_reviews
+
+FILE: 81_polytask_cancellation_rate.sql
+  ALTER TABLEs: profiles
+  CREATE FUNCTIONs: update_polytask_completion_metrics, handle_polytask_cancellation
+  CREATE TRIGGERs: trigger_update_polytask_completion_metrics, trigger_handle_polytask_cancellation
+  RLS POLICIEs: 'Tasker boleh tarik diri dari tugasan' on polytask_jobs, 'Tasker boleh WITHDRAW bidaan yang sudah diterima' on polytask_bids
+
+FILE: 82_polytask_fasa_all.sql
+  CREATE TABLEs: polytask_jobs_archive
+  ALTER TABLEs: polytask_reviews
+  CREATE FUNCTIONs: get_average_budget_by_category, archive_old_polytask_jobs, check_polytask_bid_rate_limit, log_polytask_critical_actions
+  CREATE TRIGGERs: trigger_check_polytask_bid_rate_limit, trigger_log_polytask_critical_actions
+
+FILE: 83_polytask_proof_of_work.sql
+  ALTER TABLEs: polytask_jobs
+  STORAGE BUCKETs: polytask_proofs
+  RLS POLICIEs: 'Tasker boleh muat naik bukti kerja' on polytask_jobs, 'Semua boleh lihat bukti' on storage, 'Pelajar boleh upload bukti' on storage
+
+FILE: 84_polysuara_schema.sql
+  CREATE TABLEs: polysuara_confessions, polysuara_upvotes
+  ALTER TABLEs: polysuara_confessions, polysuara_upvotes
+  CREATE FUNCTIONs: toggle_polysuara_upvote
+  RLS POLICIEs: 'Pelajar boleh baca luahan' on polysuara_confessions, 'Pelajar boleh buat luahan' on polysuara_confessions, 'JPP boleh urus luahan' on polysuara_confessions, 'Boleh lihat upvote' on polysuara_upvotes, 'Boleh upvote' on polysuara_upvotes, 'Boleh buang upvote sendiri' on polysuara_upvotes
+
+FILE: 84_polytask_v2_hotfix.sql
+  ALTER TABLEs: polytask_jobs
+  CREATE FUNCTIONs: update_polytask_completion_metrics, handle_polytask_cancellation, get_average_budget_by_category, archive_old_polytask_jobs, check_polytask_bid_rate_limit, log_polytask_critical_actions, is_polytask_admin, get_active_polytask_count, handle_polytask_bid_acceptance, process_polytask_appeal
+  STORAGE BUCKETs: polytask_proofs
+  RLS POLICIEs: 'Semua boleh lihat bukti polytask' on storage, 'Pelajar boleh upload bukti polytask' on storage, 'Tasker boleh muat naik bukti kerja' on polytask_jobs, 'Tasker boleh tarik diri dari tugasan' on polytask_jobs
+
+FILE: 85_polymatch_schema.sql
+  CREATE TABLEs: polymatch_listings
+  ALTER TABLEs: polymatch_listings
+  RLS POLICIEs: 'Semua boleh baca iklan aktif' on polymatch_listings, 'Pengguna boleh cipta iklan' on polymatch_listings, 'Pengguna boleh kemaskini iklan sendiri' on polymatch_listings, 'Pengguna boleh padam iklan sendiri' on polymatch_listings, 'JPP boleh urus semua iklan' on polymatch_listings
+
+FILE: 86_polyservices_moderation.sql
+  CREATE TABLEs: polyservices_moderation_config, polyservices_reports
+  ALTER TABLEs: polymatch_listings, polyservices_moderation_config, polyservices_reports
+  CREATE FUNCTIONs: submit_polyservices_report
+  RLS POLICIEs: 'Semua boleh baca iklan aktif' on polymatch_listings, 'Semua boleh baca config moderasi' on polyservices_moderation_config, 'Hanya JPP boleh kemaskini config' on polyservices_moderation_config, 'Pelajar boleh buat report' on polyservices_reports, 'JPP boleh baca report' on polyservices_reports
+
+FILE: 87_polymart_auto_cancel_hotfix.sql
+  CREATE FUNCTIONs: cancel_expired_polymart_orders
+
+FILE: add_merit_eakademik_to_club_activities.sql
+  ALTER TABLEs: club_activities
+
+FILE: quick_fix_pembubaran.sql
+  CREATE FUNCTIONs: rpc_pembubaran_kohort_kelab
+
+FILE: rename_akademik_to_kpp_merit_vouch.sql
+  ALTER TABLEs: merit_program_applications
+

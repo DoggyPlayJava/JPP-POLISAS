@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import { getSemesterInfo } from '@/types';
 import { useNavigate } from 'react-router-dom';
 import { useKlkDynamicFields } from '@/hooks/useKlkDynamicFields';
@@ -21,6 +22,7 @@ const KLS_COLOR = '#60A5FA';
 
 export function KlkResidencyModal() {
   const { profile, user } = useAuth();
+  const { intake1Month, intake2Month } = useAcademicSession();
   const navigate = useNavigate();
   const [show, setShow] = useState(false);
   const [step, setStep] = useState<'choice' | 'form' | 'done'>('choice');
@@ -59,7 +61,7 @@ export function KlkResidencyModal() {
       profile.intake_year,
       profile.intake_period as 1 | 2,
       profile.programme_code === 'FTV',
-      7, 1, profile.semester_override
+      intake1Month, intake2Month, profile.semester_override
     );
 
     // Hanya tanya mulai Sem 2
@@ -135,7 +137,7 @@ export function KlkResidencyModal() {
         profile.intake_year!,
         profile.intake_period as 1 | 2,
         profile.programme_code === 'FTV',
-        7, 1, profile.semester_override
+        intake1Month, intake2Month, profile.semester_override
       );
 
       // Soalan SEMUA (applies_to === 'SEMUA') perlu dijawab walaupun KAMSIS
@@ -186,7 +188,7 @@ export function KlkResidencyModal() {
         profile.intake_year!,
         profile.intake_period as 1 | 2,
         profile.programme_code === 'FTV',
-        7, 1, profile.semester_override
+        intake1Month, intake2Month, profile.semester_override
       );
 
       const { error } = await supabase.from('klk_student_residency').insert({

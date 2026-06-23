@@ -43,7 +43,7 @@ export function KamsisApplicationModal() {
         .from('system_settings')
         .select('value')
         .eq('key', 'kamsis_application_open')
-        .single();
+        .maybeSingle();
 
       if (setting?.value !== true && setting?.value !== 'true') {
         setChecking(false); return;

@@ -56,7 +56,7 @@ export function KelabPage() {
     const [{ data: clubData }, { data: memberData }, { data: setting }] = await Promise.all([
       supabase.from('clubs').select('*').order('name', { ascending: true }),
       supabase.from('student_club_memberships').select('*').eq('user_id', user.id),
-      supabase.from('system_settings').select('value').eq('key', 'max_clubs_per_student').single(),
+      supabase.from('system_settings').select('value').eq('key', 'max_clubs_per_student').maybeSingle(),
     ]);
     if (clubData) setClubs(clubData);
     if (memberData) setMyMemberships(memberData);

@@ -1,0 +1,4868 @@
+
+============================================================
+FILE: 01_arkib_rls.sql
+============================================================
+CREATE POLICY "JPP can read all programs"
+      ON programs FOR SELECT
+      USING (
+        auth.uid() IN (
+          SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP'
+        )
+      )
+    $policy$;
+
+CREATE POLICY "JPP can read all club_reports"
+      ON club_reports FOR SELECT
+      USING (
+        auth.uid() IN (
+          SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP'
+        )
+      )
+    $policy$;
+
+
+============================================================
+FILE: 02_role_hierarchy.sql
+============================================================
+CREATE OR REPLACE FUNCTION can_change_role(
+  actor_id UUID,        -- ID pengguna yang buat perubahan
+  target_id UUID,       -- ID ahli yang diubah
+  new_role  TEXT        -- Peranan baharu yang ingin ditetapkan
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER  -- Berjalan dengan kebenaran postgres, bukan user — selamat!
+SET search_path = public
+AS $$
+DECLARE
+  actor_role          TEXT;
+
+CREATE OR REPLACE FUNCTION log_role_change()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  actor_name TEXT;
+
+CREATE TRIGGER on_profile_role_change
+  AFTER UPDATE OF role ON profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION log_role_change();
+
+
+============================================================
+FILE: 03_multiclub.sql
+============================================================
+CREATE TABLE IF NOT EXISTS student_club_memberships (
+  id             UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id        UUID        NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  club_id        TEXT        NOT NULL,  -- Reference ke club_id (TEXT kerana ALL_CLUBS dalam frontend)
+  role           TEXT        NOT NULL   DEFAULT 'CLUB_MEMBER',
+  account_status TEXT        NOT NULL   DEFAULT 'PENDING'
+                             CHECK (account_status IN ('PENDING', 'APPROVED', 'REJECTED')),
+  is_primary     BOOLEAN     NOT NULL   DEFAULT FALSE,  -- Kelab utama (primary)
+  joined_at      TIMESTAMPTZ            DEFAULT NOW(),
+  created_at     TIMESTAMPTZ            DEFAULT NOW(),
+  updated_at     TIMESTAMPTZ            DEFAULT NOW(),
+
+  CONSTRAINT unique_student_club UNIQUE (user_id, club_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_scm_user_id   ON student_club_memberships(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_scm_club_id   ON student_club_memberships(club_id);
+
+CREATE INDEX IF NOT EXISTS idx_scm_status    ON student_club_memberships(account_status);
+
+CREATE POLICY "Student can read own memberships"
+    ON student_club_memberships FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "JPP can read all memberships"
+    ON student_club_memberships FOR SELECT
+    USING (auth.uid() IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP'));
+
+CREATE POLICY "Leaders can read club memberships"
+    ON student_club_memberships FOR SELECT
+    USING (
+      auth.uid() IN (
+        SELECT id FROM profiles
+        WHERE role IN ('CLUB_PRESIDENT', 'CLUB_ADVISOR')
+          AND profiles.club_id::text = student_club_memberships.club_id::text
+      )
+    );
+
+CREATE POLICY "Student can request membership"
+    ON student_club_memberships FOR INSERT
+    WITH CHECK (
+      auth.uid() = user_id
+      AND account_status = 'PENDING'
+      AND role = 'CLUB_MEMBER'
+    );
+
+CREATE POLICY "Leaders can approve or reject memberships"
+    ON student_club_memberships FOR UPDATE
+    USING (
+      auth.uid() IN (
+        SELECT id FROM profiles
+        WHERE role IN ('SUPER_ADMIN_JPP', 'CLUB_ADVISOR', 'CLUB_PRESIDENT')
+      )
+    )
+    WITH CHECK (
+      account_status IN ('APPROVED', 'REJECTED')
+    );
+
+CREATE OR REPLACE FUNCTION enforce_club_membership_limit()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  current_approved_count INT;
+
+CREATE TRIGGER check_club_membership_limit
+  BEFORE INSERT OR UPDATE OF account_status
+  ON student_club_memberships
+  FOR EACH ROW
+  EXECUTE FUNCTION enforce_club_membership_limit();
+
+CREATE OR REPLACE FUNCTION get_user_club_ids(p_user_id UUID)
+RETURNS TEXT[]
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE  -- Optimasi: hasil sama untuk input sama dalam 1 transaksi
+AS $$
+  SELECT ARRAY(
+    SELECT club_id 
+    FROM student_club_memberships
+    WHERE user_id = p_user_id 
+      AND account_status = 'APPROVED'
+    ORDER BY is_primary DESC, joined_at ASC
+  );
+
+
+============================================================
+FILE: 04_department_and_membership.sql
+============================================================
+CREATE POLICY "Students can apply to clubs"
+  ON student_club_memberships
+  FOR INSERT
+  WITH CHECK (auth.uid()::text = user_id::text);
+
+CREATE POLICY "Students can read own memberships"
+  ON student_club_memberships
+  FOR SELECT
+  USING (auth.uid()::text = user_id::text);
+
+CREATE POLICY "Leaders can approve memberships"
+  ON student_club_memberships
+  FOR UPDATE
+  USING (
+    auth.uid()::text IN (
+      SELECT id::text FROM profiles
+      WHERE role IN ('CLUB_PRESIDENT', 'CLUB_ADVISOR', 'CLUB_MT')
+        AND club_id::text = student_club_memberships.club_id::text
+    )
+    OR
+    -- Super Admin JPP boleh update semua
+    auth.uid()::text IN (
+      SELECT id::text FROM profiles WHERE role = 'SUPER_ADMIN_JPP'
+    )
+  );
+
+CREATE POLICY "JPP admin can read all memberships"
+  ON student_club_memberships
+  FOR SELECT
+  USING (
+    auth.uid()::text IN (
+      SELECT id::text FROM profiles WHERE role = 'SUPER_ADMIN_JPP'
+    )
+  );
+
+CREATE POLICY "Leaders can read club memberships"
+  ON student_club_memberships
+  FOR SELECT
+  USING (
+    auth.uid()::text IN (
+      SELECT id::text FROM profiles
+      WHERE role IN ('CLUB_PRESIDENT', 'CLUB_ADVISOR', 'CLUB_MT')
+        AND club_id::text = student_club_memberships.club_id::text
+    )
+  );
+
+
+============================================================
+FILE: 05_cascade_delete_fix.sql
+============================================================
+
+============================================================
+FILE: 06_add_matric_no.sql
+============================================================
+
+============================================================
+FILE: 07_fix_multiclub_rls.sql
+============================================================
+CREATE OR REPLACE FUNCTION get_user_approved_club_ids(p_uid UUID)
+RETURNS TEXT[]
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT ARRAY(
+    SELECT club_id
+    FROM student_club_memberships
+    WHERE user_id = p_uid
+      AND account_status = 'APPROVED'
+  );
+
+CREATE POLICY "Members can read fellow club memberships"
+  ON student_club_memberships FOR SELECT
+  USING (
+    club_id = ANY(get_user_approved_club_ids(auth.uid()))
+  );
+
+CREATE POLICY "Student can request membership"
+  ON student_club_memberships FOR INSERT
+  WITH CHECK (
+    auth.uid() = user_id
+    AND role = 'CLUB_MEMBER'
+    AND account_status IN ('PENDING', 'APPROVED')
+  );
+
+CREATE POLICY "Students can apply to clubs"
+  ON student_club_memberships FOR INSERT
+  WITH CHECK (auth.uid()::text = user_id::text);
+
+CREATE OR REPLACE FUNCTION get_dashboard_data(
+  p_club_id   TEXT,
+  p_user_id   UUID,
+  p_is_member BOOLEAN DEFAULT FALSE
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_club_uuid UUID;
+
+
+============================================================
+FILE: 08_dashboard_rpc.sql
+============================================================
+CREATE OR REPLACE FUNCTION get_dashboard_data(
+  p_club_id     TEXT,
+  p_user_id     UUID,
+  p_is_member   BOOLEAN DEFAULT FALSE
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+DECLARE
+  v_announcement  JSONB;
+
+
+============================================================
+FILE: 08b_performance_indexes.sql
+============================================================
+CREATE INDEX IF NOT EXISTS idx_profiles_club_status
+  ON profiles(club_id, account_status);
+
+CREATE INDEX IF NOT EXISTS idx_profiles_merit_desc
+  ON profiles(merit DESC NULLS LAST);
+
+CREATE INDEX IF NOT EXISTS idx_programs_club_status
+  ON programs(club_id, status);
+
+CREATE INDEX IF NOT EXISTS idx_programs_club_updated
+  ON programs(club_id, updated_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_club_archived
+  ON club_tasks(club_id, is_archived, due_date DESC);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_club_approval
+  ON club_tasks(club_id, approval_status);
+
+CREATE INDEX IF NOT EXISTS idx_activities_club_date
+  ON club_activities(club_id, start_date DESC);
+
+CREATE INDEX IF NOT EXISTS idx_activities_club_status
+  ON club_activities(club_id, status);
+
+CREATE INDEX IF NOT EXISTS idx_announcements_club_created
+  ON club_announcements(club_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_scm_user_approved
+  ON student_club_memberships(user_id, account_status)
+  WHERE account_status = 'APPROVED';
+
+CREATE INDEX IF NOT EXISTS idx_scm_club_approved
+  ON student_club_memberships(club_id, account_status)
+  WHERE account_status = 'APPROVED';
+
+
+============================================================
+FILE: 09_karnival_voting.sql
+============================================================
+CREATE TABLE IF NOT EXISTS karnival_votes (
+  id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  voter_id    UUID        NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  kelab_id    TEXT        NOT NULL,   -- club_id yang diundi
+  kelab_name  TEXT        NOT NULL,   -- nama kelab (untuk display)
+  matric_no   TEXT,                   -- no matrik pengundi (jejak)
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+
+  -- Satu pengundi = satu undi per kelab sahaja
+  CONSTRAINT unique_voter_kelab UNIQUE (voter_id, kelab_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_votes_kelab_id  ON karnival_votes(kelab_id);
+
+CREATE INDEX IF NOT EXISTS idx_votes_voter_id  ON karnival_votes(voter_id);
+
+CREATE INDEX IF NOT EXISTS idx_votes_created   ON karnival_votes(created_at DESC);
+
+CREATE POLICY "Anyone can read votes"
+    ON karnival_votes FOR SELECT
+    USING (true);
+
+CREATE POLICY "User can vote for themselves"
+    ON karnival_votes FOR INSERT
+    WITH CHECK (auth.uid() = voter_id);
+
+CREATE POLICY "User can delete own vote"
+    ON karnival_votes FOR DELETE
+    USING (auth.uid() = voter_id);
+
+CREATE POLICY "JPP Admin full access on votes"
+    ON karnival_votes FOR ALL
+    USING (
+      auth.uid() IN (
+        SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP'
+      )
+    );
+
+CREATE OR REPLACE FUNCTION get_vote_counts()
+RETURNS TABLE(kelab_id TEXT, kelab_name TEXT, total_votes BIGINT)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT
+    kelab_id,
+    kelab_name,
+    COUNT(*) AS total_votes
+  FROM karnival_votes
+  GROUP BY kelab_id, kelab_name
+  ORDER BY total_votes DESC;
+
+CREATE OR REPLACE FUNCTION has_voted_for(p_kelab_id TEXT)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM karnival_votes
+    WHERE voter_id = auth.uid()
+      AND kelab_id = p_kelab_id
+  );
+
+CREATE OR REPLACE FUNCTION get_my_votes()
+RETURNS TABLE(kelab_id TEXT, kelab_name TEXT, created_at TIMESTAMPTZ)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT kelab_id, kelab_name, created_at
+  FROM karnival_votes
+  WHERE voter_id = auth.uid()
+  ORDER BY created_at DESC;
+
+
+============================================================
+FILE: 10_security_hardening.sql
+============================================================
+CREATE POLICY "Students can apply to clubs"
+  ON student_club_memberships FOR INSERT
+  WITH CHECK (
+    auth.uid()::text = user_id::text
+    AND role = 'CLUB_MEMBER'
+    AND account_status = 'PENDING'
+  );
+
+CREATE OR REPLACE FUNCTION get_dashboard_data(
+  p_club_id     TEXT,
+  p_user_id     UUID,
+  p_is_member   BOOLEAN DEFAULT FALSE
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_announcement  JSONB;
+
+CREATE OR REPLACE FUNCTION enforce_club_membership_limit()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  current_approved_count INT;
+
+CREATE OR REPLACE FUNCTION change_member_role(
+  p_target_user_id UUID,
+  p_club_id        TEXT,
+  p_new_role       TEXT
+) 
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  caller_role TEXT;
+
+CREATE OR REPLACE FUNCTION approve_all_pending_memberships(
+  p_club_id TEXT
+) 
+RETURNS INT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  caller_role   TEXT;
+
+CREATE OR REPLACE FUNCTION increment_merit(
+  p_target_user_id UUID,
+  p_increment_value INT
+) 
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  -- Dalam kes p_increment_value negatif (demerit), pastikan nilai tak lebih rendah dari 0
+  UPDATE profiles
+  SET merit = GREATEST(COALESCE(merit, 0) + p_increment_value, 0)
+  WHERE id = p_target_user_id;
+
+
+============================================================
+FILE: 11_fasa3_security_rpc.sql
+============================================================
+CREATE OR REPLACE FUNCTION change_member_role(
+  p_actor_id    UUID,
+  p_target_id   UUID,
+  p_club_id     TEXT,
+  p_new_role    TEXT
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_actor_role   TEXT;
+
+CREATE OR REPLACE FUNCTION increment_merit(
+  target_user_id UUID,
+  delta INTEGER
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_current_merit INTEGER;
+
+
+============================================================
+FILE: 12_fasa4_rls_hardening.sql
+============================================================
+CREATE OR REPLACE FUNCTION is_club_leader(p_uid UUID, p_club_id TEXT)
+RETURNS BOOLEAN LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM student_club_memberships
+    WHERE user_id = p_uid AND club_id = p_club_id
+      AND account_status = 'APPROVED' AND role IN ('CLUB_PRESIDENT', 'CLUB_MT', 'CLUB_ADVISOR')
+  );
+
+CREATE OR REPLACE FUNCTION is_club_president(p_uid UUID, p_club_id TEXT)
+RETURNS BOOLEAN LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM student_club_memberships
+    WHERE user_id = p_uid AND club_id = p_club_id
+      AND account_status = 'APPROVED' AND role = 'CLUB_PRESIDENT'
+  );
+
+CREATE OR REPLACE FUNCTION is_jpp_admin(p_uid UUID)
+RETURNS BOOLEAN LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public AS $$
+  SELECT EXISTS (SELECT 1 FROM profiles WHERE id = p_uid AND role IN ('SUPER_ADMIN_JPP', 'ADMIN', 'JPP', 'SUPER_ADMIN'));
+
+CREATE POLICY "Manage_Committee_Membership_Based" ON club_committee FOR ALL
+  USING (is_club_leader(auth.uid(), club_committee.club_id::text) OR is_jpp_admin(auth.uid()));
+
+CREATE POLICY "Allow_Update_Club_Membership_Based" ON clubs FOR UPDATE
+  USING (is_club_president(auth.uid(), clubs.id::text) OR is_jpp_admin(auth.uid()))
+  WITH CHECK (is_club_president(auth.uid(), clubs.id::text) OR is_jpp_admin(auth.uid()));
+
+CREATE POLICY "Leaders_Can_Manage_Club_Memberships" ON student_club_memberships FOR UPDATE
+  USING (is_club_leader(auth.uid(), student_club_memberships.club_id::text) OR is_jpp_admin(auth.uid()))
+  WITH CHECK (account_status IN ('APPROVED', 'REJECTED', 'KICKED', 'RESIGN_PENDING'));
+
+CREATE POLICY "Leaders_Can_Read_Club_Memberships" ON student_club_memberships FOR SELECT
+  USING (is_club_leader(auth.uid(), student_club_memberships.club_id::text) OR is_jpp_admin(auth.uid()));
+
+CREATE POLICY "JPP_Full_Access_Programs" ON programs FOR ALL USING (is_jpp_admin(auth.uid()));
+
+CREATE POLICY "Leaders_Can_View_Club_Merit" ON merit_transactions FOR SELECT
+  USING (auth.uid() = user_id OR is_jpp_admin(auth.uid()));
+
+CREATE POLICY "Presidents_Can_Update_Club_Merit" ON profiles FOR UPDATE
+  USING (auth.uid() = id OR is_jpp_admin(auth.uid()));
+
+CREATE POLICY "Admins_Can_Update_Settings" ON system_settings FOR UPDATE
+  USING (is_jpp_admin(auth.uid())) WITH CHECK (is_jpp_admin(auth.uid()));
+
+CREATE POLICY "Members_View_Club_Logs" ON club_logs FOR SELECT
+  USING ((club_id)::text = ANY(get_user_approved_club_ids(auth.uid())) OR is_jpp_admin(auth.uid()));
+
+
+============================================================
+FILE: 13_fix_change_member_role_superadmin.sql
+============================================================
+CREATE OR REPLACE FUNCTION change_member_role(
+  p_actor_id    UUID,
+  p_target_id   UUID,
+  p_club_id     TEXT,
+  p_new_role    TEXT
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_actor_role   TEXT;
+
+
+============================================================
+FILE: 14_leave_club_rpc.sql
+============================================================
+CREATE OR REPLACE FUNCTION request_leave_club(p_club_id TEXT, p_is_primary BOOLEAN)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF p_is_primary THEN
+    -- Kelab utama (Akademik) - perlukan kelulusan Penasihat/Presiden
+    -- Menukar status kepada RESIGN_PENDING
+    UPDATE student_club_memberships
+    SET account_status = 'RESIGN_PENDING', updated_at = NOW()
+    WHERE user_id = auth.uid() AND club_id = p_club_id;
+
+
+============================================================
+FILE: 15_add_pengarah_program.sql
+============================================================
+
+============================================================
+FILE: 16_add_monthly_target.sql
+============================================================
+
+============================================================
+FILE: 16_takwim_holidays.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.takwim_holidays (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  nama_cuti TEXT NOT NULL,
+  tarikh_mula DATE NOT NULL,
+  created_by UUID REFERENCES auth.users(id),
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE POLICY "Everyone can view holidays"
+  ON public.takwim_holidays FOR SELECT USING (true);
+
+CREATE POLICY "JPP admin can manage holidays"
+  ON public.takwim_holidays FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM student_club_memberships
+      WHERE user_id = auth.uid() AND role = 'SUPER_ADMIN_JPP'
+    )
+  );
+
+
+============================================================
+FILE: 17_geomatik_to_akademik.sql
+============================================================
+CREATE OR REPLACE FUNCTION enforce_club_membership_limit()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  current_approved_count INT;
+
+
+============================================================
+FILE: 18_ai_rate_limiting.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.system_settings (
+  key text PRIMARY KEY,
+  value jsonb NOT NULL
+);
+
+CREATE POLICY "Everyone can read system_settings"
+        ON public.system_settings
+        FOR SELECT
+        TO authenticated
+        USING (true);
+
+CREATE POLICY "Admins can manage system_settings" 
+        ON public.system_settings 
+        FOR ALL 
+        TO authenticated 
+        USING (
+          EXISTS (
+            SELECT 1 FROM profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role = 'SUPER_ADMIN_JPP'
+          )
+        );
+
+CREATE OR REPLACE FUNCTION public.track_ai_usage()
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_user_id uuid;
+
+
+============================================================
+FILE: 19_ai_pro_rate_limiting.sql
+============================================================
+CREATE OR REPLACE FUNCTION public.track_ai_pro_usage(action text DEFAULT 'track')
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_user_id uuid;
+
+
+============================================================
+FILE: 20260425132500_optimize_database.sql
+============================================================
+CREATE INDEX IF NOT EXISTS idx_akademik_files_folder_id ON public.akademik_files(folder_id);
+
+CREATE INDEX IF NOT EXISTS idx_akademik_files_owner_user_id ON public.akademik_files(owner_user_id);
+
+CREATE INDEX IF NOT EXISTS idx_akademik_files_uploaded_by ON public.akademik_files(uploaded_by);
+
+CREATE INDEX IF NOT EXISTS idx_akademik_unlock_req_pencapaian ON public.akademik_unlock_requests(pencapaian_id);
+
+CREATE INDEX IF NOT EXISTS idx_akademik_unlock_req_user ON public.akademik_unlock_requests(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_asrama_recom_marked_by ON public.asrama_recommendations(marked_by);
+
+CREATE INDEX IF NOT EXISTS idx_kebajikan_notif_ticket ON public.kebajikan_notifications(ticket_id);
+
+CREATE INDEX IF NOT EXISTS idx_kebajikan_comments_author ON public.kebajikan_ticket_comments(author_id);
+
+CREATE INDEX IF NOT EXISTS idx_kebajikan_tickets_resolved_by ON public.kebajikan_tickets(resolved_by);
+
+CREATE INDEX IF NOT EXISTS idx_kebajikan_ticket_status_log_actor ON public.kebajikan_ticket_status_log(actor_id);
+
+CREATE INDEX IF NOT EXISTS idx_club_logs_club_id ON public.club_logs(club_id);
+
+CREATE INDEX IF NOT EXISTS idx_club_logs_actor_id ON public.club_logs(actor_id);
+
+CREATE INDEX IF NOT EXISTS idx_club_tasks_assigned_to ON public.club_tasks(assigned_to);
+
+CREATE INDEX IF NOT EXISTS idx_club_activities_user ON public.club_activities(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_clubs_president_id ON public.clubs(president_id);
+
+CREATE INDEX IF NOT EXISTS idx_polymart_orders_product_id ON public.polymart_orders(product_id);
+
+CREATE INDEX IF NOT EXISTS idx_polymart_reports_reviewed_by ON public.polymart_reports(reviewed_by);
+
+CREATE INDEX IF NOT EXISTS idx_business_transactions_served_by ON public.business_transactions(served_by);
+
+CREATE INDEX IF NOT EXISTS idx_business_pos_logs_actor ON public.business_pos_logs(actor_id);
+
+CREATE INDEX IF NOT EXISTS idx_supsas_fixtures_next_match ON public.supsas_fixtures(next_match_id);
+
+CREATE INDEX IF NOT EXISTS idx_task_submissions_task_id ON public.task_submissions(task_id);
+
+CREATE INDEX IF NOT EXISTS idx_task_submissions_user_id ON public.task_submissions(user_id);
+
+CREATE POLICY "Users can view own notifications" ON public.notifications
+FOR SELECT USING (user_id = (select auth.uid()));
+
+CREATE POLICY "Users can update own notifications" ON public.notifications
+FOR UPDATE USING (user_id = (select auth.uid()));
+
+CREATE POLICY "Student can read own memberships" ON public.student_club_memberships
+FOR SELECT USING (user_id = (select auth.uid()));
+
+CREATE POLICY "Students can read own memberships" ON public.student_club_memberships
+FOR SELECT USING (user_id::text = (select auth.uid())::text);
+
+CREATE POLICY "Student can request membership" ON public.student_club_memberships
+FOR INSERT WITH CHECK (user_id = (select auth.uid()) AND account_status = ANY (ARRAY['PENDING'::text, 'APPROVED'::text]));
+
+CREATE POLICY "Students can apply to clubs" ON public.student_club_memberships
+FOR INSERT WITH CHECK (user_id = (select auth.uid()) AND account_status = 'PENDING'::text);
+
+CREATE POLICY "Users can update own profile" ON public.profiles
+FOR UPDATE USING (id = (select auth.uid()));
+
+CREATE POLICY "kb_ticket_select_own" ON public.kebajikan_tickets
+FOR SELECT USING (submitter_id = (select auth.uid()));
+
+CREATE POLICY "kb_ticket_update_own" ON public.kebajikan_tickets
+FOR UPDATE USING (submitter_id = (select auth.uid()));
+
+CREATE POLICY "Users can view their own programs" ON public.programs
+FOR SELECT USING (user_id = (select auth.uid()));
+
+CREATE POLICY "Users can insert their own programs" ON public.programs
+FOR INSERT WITH CHECK (user_id = (select auth.uid()));
+
+CREATE POLICY "Users can update their own programs" ON public.programs
+FOR UPDATE USING (user_id = (select auth.uid()));
+
+CREATE POLICY "Users can delete their own programs" ON public.programs
+FOR DELETE USING (user_id = (select auth.uid()));
+
+
+============================================================
+FILE: 20260425133500_fix_security_warnings.sql
+============================================================
+CREATE POLICY "Semua boleh tulis log" ON public.club_logs 
+FOR INSERT WITH CHECK (actor_id = (select auth.uid()));
+
+CREATE POLICY "kb_notif_update_read" ON public.kebajikan_notifications 
+FOR UPDATE USING (
+  (target_user_id = (select auth.uid())) OR is_kebajikan_staff()
+) WITH CHECK (
+  (target_user_id = (select auth.uid())) OR is_kebajikan_staff()
+);
+
+
+============================================================
+FILE: 20260429120653_personal_folders.sql
+============================================================
+CREATE POLICY akfol_select ON akademik_folders FOR SELECT USING (created_by = auth.uid());
+
+CREATE POLICY akfol_insert ON akademik_folders FOR INSERT WITH CHECK (created_by = auth.uid());
+
+CREATE POLICY akfol_update ON akademik_folders FOR UPDATE USING (created_by = auth.uid());
+
+CREATE POLICY akfol_delete ON akademik_folders FOR DELETE USING (created_by = auth.uid());
+
+CREATE POLICY akf_select ON akademik_files FOR SELECT USING (uploaded_by = auth.uid() OR owner_user_id = auth.uid());
+
+CREATE POLICY akf_insert ON akademik_files FOR INSERT WITH CHECK (uploaded_by = auth.uid() OR owner_user_id = auth.uid());
+
+CREATE POLICY akf_update ON akademik_files FOR UPDATE USING (uploaded_by = auth.uid() OR owner_user_id = auth.uid());
+
+CREATE POLICY akf_delete ON akademik_files FOR DELETE USING (uploaded_by = auth.uid() OR owner_user_id = auth.uid());
+
+
+============================================================
+FILE: 20260504231952_optimize_performance_rls.sql
+============================================================
+CREATE POLICY "karnival_votes_v2_admin_delete" ON public.karnival_votes_v2 FOR DELETE USING (
+  EXISTS ( SELECT 1 FROM profiles WHERE profiles.id = (select auth.uid()) AND (profiles.role = 'SUPER_ADMIN_JPP'::text OR profiles.role = 'JPP'::text OR profiles.jabatan = 'JPP'::text) )
+);
+
+CREATE POLICY "karnival_votes_v2_admin_update" ON public.karnival_votes_v2 FOR UPDATE USING (
+  EXISTS ( SELECT 1 FROM profiles WHERE profiles.id = (select auth.uid()) AND (profiles.role = 'SUPER_ADMIN_JPP'::text OR profiles.role = 'JPP'::text OR profiles.jabatan = 'JPP'::text) )
+);
+
+CREATE POLICY "karnival_votes_v2_delete_own" ON public.karnival_votes_v2 FOR DELETE USING (
+  (select auth.uid()) = voter_id
+);
+
+CREATE POLICY "karnival_votes_v2_insert_self" ON public.karnival_votes_v2 FOR INSERT WITH CHECK (
+  (select auth.uid()) = voter_id AND EXISTS ( SELECT 1 FROM karnival_editions WHERE karnival_editions.id = karnival_votes_v2.edition_id AND karnival_editions.voting_enabled = true )
+);
+
+CREATE POLICY "scm_select" ON public.student_club_memberships FOR SELECT USING (
+  (select auth.uid()) IS NOT NULL
+);
+
+CREATE POLICY "kamsis_dynamic_fields_admin_all" ON public.kamsis_dynamic_fields FOR ALL USING (
+  EXISTS ( SELECT 1 FROM profiles WHERE profiles.id = (select auth.uid()) AND (profiles.role IN ('SUPER_ADMIN_JPP', 'STAFF') OR (profiles.role = 'JPP' AND profiles.jpp_unit = 'KK') OR (profiles.role = 'JPP' AND profiles.jpp_position IN ('YDP', 'YANG_DIPERTUA', 'NAIB_YDP'))) )
+);
+
+CREATE POLICY "kamsis_applications_admin_all" ON public.kamsis_applications FOR ALL USING (
+  EXISTS ( SELECT 1 FROM profiles WHERE profiles.id = (select auth.uid()) AND (profiles.role IN ('SUPER_ADMIN_JPP', 'STAFF') OR (profiles.role = 'JPP' AND profiles.jpp_unit = 'KK') OR (profiles.role = 'JPP' AND profiles.jpp_position IN ('YDP', 'YANG_DIPERTUA', 'NAIB_YDP'))) )
+);
+
+CREATE POLICY "kamsis_applications_insert_own" ON public.kamsis_applications FOR INSERT WITH CHECK (
+  user_id = (select auth.uid())
+);
+
+CREATE POLICY "kamsis_applications_select_own" ON public.kamsis_applications FOR SELECT USING (
+  user_id = (select auth.uid())
+);
+
+CREATE POLICY "kamsis_applications_update_own" ON public.kamsis_applications FOR UPDATE USING (
+  user_id = (select auth.uid())
+);
+
+CREATE INDEX IF NOT EXISTS idx_klk_sync_log_synced_by ON public.klk_sync_log(synced_by);
+
+CREATE POLICY "akademik_cgpa_records_select" ON public.akademik_cgpa_records FOR SELECT USING (
+  user_id = (select auth.uid()) 
+  OR EXISTS ( SELECT 1 FROM profiles WHERE profiles.id = (select auth.uid()) AND profiles.role IN ('JPP', 'SUPER_ADMIN_JPP') )
+);
+
+CREATE POLICY "akademik_cgpa_records_insert" ON public.akademik_cgpa_records FOR INSERT WITH CHECK (
+  user_id = (select auth.uid())
+);
+
+CREATE POLICY "akademik_cgpa_records_update" ON public.akademik_cgpa_records FOR UPDATE USING (
+  user_id = (select auth.uid())
+);
+
+CREATE POLICY "akademik_cgpa_records_delete" ON public.akademik_cgpa_records FOR DELETE USING (
+  user_id = (select auth.uid())
+);
+
+CREATE POLICY "amc_insert" ON public.akademik_merit_config FOR INSERT WITH CHECK (
+  EXISTS ( SELECT 1 FROM profiles WHERE profiles.id = (select auth.uid()) AND profiles.role = 'SUPER_ADMIN_JPP' )
+);
+
+CREATE POLICY "amc_update" ON public.akademik_merit_config FOR UPDATE USING (
+  EXISTS ( SELECT 1 FROM profiles WHERE profiles.id = (select auth.uid()) AND profiles.role = 'SUPER_ADMIN_JPP' )
+);
+
+CREATE POLICY "amc_delete" ON public.akademik_merit_config FOR DELETE USING (
+  EXISTS ( SELECT 1 FROM profiles WHERE profiles.id = (select auth.uid()) AND profiles.role = 'SUPER_ADMIN_JPP' )
+);
+
+
+============================================================
+FILE: 20260505235200_auto_sort_sijil_akademik.sql
+============================================================
+CREATE OR REPLACE FUNCTION auto_sort_pencapaian_file(p_pencapaian_id uuid)
+RETURNS void AS $$
+DECLARE
+  v_pencapaian record;
+
+
+============================================================
+FILE: 20260510044608_add_db_telemetry_rpc.sql
+============================================================
+
+============================================================
+FILE: 20260512054626_59_performance_optimizations.sql
+============================================================
+CREATE INDEX IF NOT EXISTS idx_polymart_cart_items_product_id ON public.polymart_cart_items(product_id);
+
+CREATE INDEX IF NOT EXISTS idx_polyrider_bids_rider_id ON public.polyrider_bids(rider_id);
+
+CREATE INDEX IF NOT EXISTS idx_profile_edit_requests_reviewed_by ON public.profile_edit_requests(reviewed_by);
+
+CREATE POLICY aqt_insert ON public.akademik_qr_tokens FOR INSERT 
+WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = uid() AND profiles.role IN ('JPP', 'SUPER_ADMIN_JPP')));
+
+CREATE POLICY aqt_update ON public.akademik_qr_tokens FOR UPDATE 
+USING (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = uid() AND profiles.role IN ('JPP', 'SUPER_ADMIN_JPP')));
+
+CREATE POLICY aqt_delete ON public.akademik_qr_tokens FOR DELETE 
+USING (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = uid() AND profiles.role IN ('JPP', 'SUPER_ADMIN_JPP')));
+
+CREATE POLICY asc_insert ON public.akademik_sijil_categories FOR INSERT 
+WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = uid() AND profiles.role = 'SUPER_ADMIN_JPP'));
+
+CREATE POLICY asc_update ON public.akademik_sijil_categories FOR UPDATE 
+USING (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = uid() AND profiles.role = 'SUPER_ADMIN_JPP'));
+
+CREATE POLICY asc_delete ON public.akademik_sijil_categories FOR DELETE 
+USING (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = uid() AND profiles.role = 'SUPER_ADMIN_JPP'));
+
+CREATE POLICY aur_select ON public.akademik_unlock_requests FOR SELECT 
+USING (
+    user_id = uid() 
+    OR EXISTS (
+        SELECT 1 FROM profiles 
+        WHERE profiles.id = uid() 
+        AND (
+            profiles.role IN ('SUPER_ADMIN_JPP', 'ADMIN', 'JPP', 'CLUB_MT', 'MT') 
+        )
+    )
+);
+
+CREATE POLICY aur_exco_insert ON public.akademik_unlock_requests FOR INSERT 
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM profiles 
+        WHERE profiles.id = uid() 
+        AND (
+            profiles.role = 'SUPER_ADMIN_JPP' 
+            OR (profiles.role = 'JPP' AND profiles.jpp_unit = 'AKADEMIK') 
+            OR profiles.role IN ('CLUB_MT', 'MT')
+        )
+    )
+);
+
+CREATE POLICY aur_admin_update ON public.akademik_unlock_requests FOR UPDATE 
+USING (
+    EXISTS (
+        SELECT 1 FROM profiles 
+        WHERE profiles.id = uid() 
+        AND profiles.role IN ('SUPER_ADMIN_JPP', 'ADMIN', 'JPP', 'CLUB_MT', 'MT')
+    )
+);
+
+CREATE POLICY aur_exco_delete ON public.akademik_unlock_requests FOR DELETE 
+USING (
+    EXISTS (
+        SELECT 1 FROM profiles 
+        WHERE profiles.id = uid() 
+        AND (
+            profiles.role = 'SUPER_ADMIN_JPP' 
+            OR (profiles.role = 'JPP' AND profiles.jpp_unit = 'AKADEMIK') 
+            OR profiles.role IN ('CLUB_MT', 'MT')
+        )
+    )
+);
+
+
+============================================================
+FILE: 20260512060300_60_remove_unnecessary_realtime.sql
+============================================================
+
+============================================================
+FILE: 20260512061000_61_wal_monitoring_rpc.sql
+============================================================
+CREATE OR REPLACE FUNCTION public.get_database_health_metrics()
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_catalog
+AS $$
+DECLARE
+    result jsonb;
+
+
+============================================================
+FILE: 20260518000000_update_polysuara_rate_limit.sql
+============================================================
+CREATE OR REPLACE FUNCTION public.check_polysuara_hourly_limit()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_count INT;
+
+CREATE TRIGGER trg_polysuara_hourly_limit
+BEFORE INSERT ON public.polysuara_confessions
+FOR EACH ROW EXECUTE FUNCTION public.check_polysuara_hourly_limit();
+
+
+============================================================
+FILE: 20260518115654_polyrent_fasa1_availability.sql
+============================================================
+CREATE OR REPLACE FUNCTION polyrent_get_average_rent(lokasi_query text)
+RETURNS numeric
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  avg_rent numeric;
+
+
+============================================================
+FILE: 20260518120600_polyrent_fasa2.sql
+============================================================
+CREATE TYPE polyrent_status AS ENUM ('OPEN', 'CLOSED', 'HIDDEN');
+
+CREATE TABLE IF NOT EXISTS polyrent_location_reviews (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    kawasan_id UUID NOT NULL REFERENCES klk_kawasan(id) ON DELETE CASCADE,
+    reviewer_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    safety_rating INT NOT NULL CHECK (safety_rating >= 1 AND safety_rating <= 5),
+    facility_rating INT NOT NULL CHECK (facility_rating >= 1 AND facility_rating <= 5),
+    comment TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    -- Seorang pengguna hanya boleh review kawasan yang sama sekali sahaja
+    UNIQUE(kawasan_id, reviewer_id)
+);
+
+CREATE POLICY "Semua pengguna boleh baca review kawasan"
+    ON polyrent_location_reviews FOR SELECT
+    TO authenticated
+    USING (true);
+
+CREATE POLICY "Pengguna boleh tambah review sendiri"
+    ON polyrent_location_reviews FOR INSERT
+    TO authenticated
+    WITH CHECK (auth.uid() = reviewer_id);
+
+CREATE POLICY "Pengguna boleh update review sendiri"
+    ON polyrent_location_reviews FOR UPDATE
+    TO authenticated
+    USING (auth.uid() = reviewer_id);
+
+CREATE POLICY "Pengguna boleh buang review sendiri"
+    ON polyrent_location_reviews FOR DELETE
+    TO authenticated
+    USING (auth.uid() = reviewer_id);
+
+CREATE TABLE IF NOT EXISTS polyrent_reports (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    listing_id UUID NOT NULL REFERENCES polyrent_listings(id) ON DELETE CASCADE,
+    reporter_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    reason TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'REVIEWED', 'ACTION_TAKEN', 'REJECTED')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    -- Seorang pengguna hanya boleh lapor iklan yang sama sekali sahaja
+    UNIQUE(listing_id, reporter_id)
+);
+
+CREATE POLICY "Admin boleh baca semua report"
+    ON polyrent_reports FOR SELECT
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role IN ('ADMIN', 'SUPER_ADMIN_JPP', 'JPP')
+        )
+    );
+
+CREATE POLICY "Pengguna boleh baca report sendiri"
+    ON polyrent_reports FOR SELECT
+    TO authenticated
+    USING (auth.uid() = reporter_id);
+
+CREATE POLICY "Pengguna boleh tambah report"
+    ON polyrent_reports FOR INSERT
+    TO authenticated
+    WITH CHECK (auth.uid() = reporter_id);
+
+CREATE OR REPLACE FUNCTION polyrent_check_report_threshold()
+RETURNS TRIGGER AS $$
+DECLARE
+    report_count INT;
+
+CREATE TRIGGER on_polyrent_report_inserted
+    AFTER INSERT ON polyrent_reports
+    FOR EACH ROW
+    EXECUTE FUNCTION polyrent_check_report_threshold();
+
+
+============================================================
+FILE: 20260518121000_polyrent_fasa3.sql
+============================================================
+CREATE TABLE IF NOT EXISTS polyrent_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    listing_id UUID REFERENCES polyrent_listings(id) ON DELETE CASCADE,
+    sender_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    receiver_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE POLICY "Pengguna boleh baca mesej yang dihantar atau diterima"
+    ON polyrent_messages FOR SELECT
+    TO authenticated
+    USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
+
+CREATE POLICY "Pengguna boleh hantar mesej"
+    ON polyrent_messages FOR INSERT
+    TO authenticated
+    WITH CHECK (auth.uid() = sender_id);
+
+CREATE POLICY "Penerima boleh kemaskini status is_read"
+    ON polyrent_messages FOR UPDATE
+    TO authenticated
+    USING (auth.uid() = receiver_id)
+    WITH CHECK (auth.uid() = receiver_id);
+
+CREATE TABLE IF NOT EXISTS polyrent_reverse_ads (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    budget NUMERIC NOT NULL,
+    kawasan_id UUID REFERENCES klk_kawasan(id) ON DELETE SET NULL,
+    jantina_prefer TEXT NOT NULL CHECK (jantina_prefer IN ('CAMPURAN', 'LELAKI', 'PEREMPUAN')),
+    description TEXT,
+    status TEXT NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'CLOSED')),
+    move_in_date DATE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE POLICY "Semua orang boleh baca reverse ads yang OPEN"
+    ON polyrent_reverse_ads FOR SELECT
+    TO authenticated
+    USING (status = 'OPEN' OR auth.uid() = student_id);
+
+CREATE POLICY "Pelajar boleh tambah reverse ad"
+    ON polyrent_reverse_ads FOR INSERT
+    TO authenticated
+    WITH CHECK (auth.uid() = student_id);
+
+CREATE POLICY "Pelajar boleh update reverse ad sendiri"
+    ON polyrent_reverse_ads FOR UPDATE
+    TO authenticated
+    USING (auth.uid() = student_id);
+
+CREATE POLICY "Pelajar boleh delete reverse ad sendiri"
+    ON polyrent_reverse_ads FOR DELETE
+    TO authenticated
+    USING (auth.uid() = student_id);
+
+CREATE TRIGGER on_polyrent_reverse_ads_updated
+    BEFORE UPDATE ON polyrent_reverse_ads
+    FOR EACH ROW
+    EXECUTE FUNCTION handle_updated_at();
+
+
+============================================================
+FILE: 20260525021000_fix_polyrider_profiles_ref.sql
+============================================================
+CREATE OR REPLACE FUNCTION delete_own_account()
+RETURNS VOID 
+LANGUAGE plpgsql 
+SECURITY DEFINER 
+SET search_path = public
+AS $$
+DECLARE
+  v_uid UUID;
+
+CREATE OR REPLACE FUNCTION admin_merge_duplicate_accounts(
+  p_primary_id UUID, p_secondary_id UUID
+) RETURNS JSONB 
+LANGUAGE plpgsql 
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_caller_role TEXT;
+
+
+============================================================
+FILE: 20260527154636_88_polymart_product_variations.sql
+============================================================
+CREATE OR REPLACE FUNCTION complete_polymart_order(
+  p_order_id UUID,
+  p_business_id UUID,
+  p_product_id UUID,
+  p_quantity INT,
+  p_unit_price DECIMAL,
+  p_payment_method TEXT,
+  p_served_by UUID
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_transaction_id UUID;
+
+
+============================================================
+FILE: 20260527161800_89_complete_order_idempotency_guard.sql
+============================================================
+CREATE OR REPLACE FUNCTION complete_polymart_order(
+  p_order_id UUID,
+  p_business_id UUID,
+  p_product_id UUID,
+  p_quantity INT,
+  p_unit_price DECIMAL,
+  p_payment_method TEXT,
+  p_served_by UUID
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_transaction_id UUID;
+
+
+============================================================
+FILE: 20260527162000_90_polymart_cancellation_flow.sql
+============================================================
+CREATE INDEX IF NOT EXISTS idx_polymart_orders_cancelled_by ON polymart_orders(cancelled_by);
+
+CREATE OR REPLACE FUNCTION buyer_cancel_polymart_order(
+  p_order_id UUID, 
+  p_buyer_id UUID, 
+  p_reason TEXT
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_order RECORD;
+
+CREATE OR REPLACE FUNCTION vendor_handle_cancellation(
+  p_order_id UUID,
+  p_vendor_id UUID,
+  p_action TEXT -- 'approve' or 'reject'
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_order RECORD;
+
+
+============================================================
+FILE: 20260527162100_91_product_multi_images.sql
+============================================================
+
+============================================================
+FILE: 20260527162200_92_flash_sale_preorder.sql
+============================================================
+
+============================================================
+FILE: 20260527162300_93_polymart_chat.sql
+============================================================
+CREATE TABLE IF NOT EXISTS polymart_conversations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  buyer_id UUID NOT NULL REFERENCES profiles(id),
+  vendor_business_id UUID NOT NULL REFERENCES keusahawanan_businesses(id),
+  order_id UUID REFERENCES polymart_orders(id),
+  last_message_at TIMESTAMPTZ DEFAULT now(),
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS polymart_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  conversation_id UUID NOT NULL REFERENCES polymart_conversations(id) ON DELETE CASCADE,
+  sender_id UUID NOT NULL REFERENCES profiles(id),
+  content TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_pm_conv_buyer ON polymart_conversations(buyer_id);
+
+CREATE INDEX IF NOT EXISTS idx_pm_conv_vendor ON polymart_conversations(vendor_business_id);
+
+CREATE INDEX IF NOT EXISTS idx_pm_conv_order ON polymart_conversations(order_id);
+
+CREATE INDEX IF NOT EXISTS idx_pm_msg_conv ON polymart_messages(conversation_id);
+
+CREATE INDEX IF NOT EXISTS idx_pm_msg_sender ON polymart_messages(sender_id);
+
+CREATE INDEX IF NOT EXISTS idx_pm_msg_created ON polymart_messages(created_at);
+
+CREATE POLICY "polymart_conversations_select" ON polymart_conversations
+FOR SELECT USING (
+  buyer_id = (SELECT auth.uid())
+  OR vendor_business_id IN (
+    SELECT id FROM keusahawanan_businesses WHERE owner_id = (SELECT auth.uid())
+    UNION
+    SELECT business_id FROM student_business_memberships WHERE user_id = (SELECT auth.uid()) AND status = 'ACTIVE'
+  )
+);
+
+CREATE POLICY "polymart_conversations_insert" ON polymart_conversations
+FOR INSERT WITH CHECK (
+  buyer_id = (SELECT auth.uid())
+);
+
+CREATE POLICY "polymart_messages_select" ON polymart_messages
+FOR SELECT USING (
+  conversation_id IN (
+    SELECT id FROM polymart_conversations
+    WHERE buyer_id = (SELECT auth.uid())
+    OR vendor_business_id IN (
+      SELECT id FROM keusahawanan_businesses WHERE owner_id = (SELECT auth.uid())
+      UNION
+      SELECT business_id FROM student_business_memberships WHERE user_id = (SELECT auth.uid()) AND status = 'ACTIVE'
+    )
+  )
+);
+
+CREATE POLICY "polymart_messages_insert" ON polymart_messages
+FOR INSERT WITH CHECK (
+  sender_id = (SELECT auth.uid())
+  AND conversation_id IN (
+    SELECT id FROM polymart_conversations
+    WHERE buyer_id = (SELECT auth.uid())
+    OR vendor_business_id IN (
+      SELECT id FROM keusahawanan_businesses WHERE owner_id = (SELECT auth.uid())
+      UNION
+      SELECT business_id FROM student_business_memberships WHERE user_id = (SELECT auth.uid()) AND status = 'ACTIVE'
+    )
+  )
+);
+
+CREATE POLICY "polymart_messages_update" ON polymart_messages
+FOR UPDATE USING (
+  -- Only recipient can update (mark as read), meaning user is not the sender
+  sender_id != (SELECT auth.uid())
+  AND conversation_id IN (
+    SELECT id FROM polymart_conversations
+    WHERE buyer_id = (SELECT auth.uid())
+    OR vendor_business_id IN (
+      SELECT id FROM keusahawanan_businesses WHERE owner_id = (SELECT auth.uid())
+      UNION
+      SELECT business_id FROM student_business_memberships WHERE user_id = (SELECT auth.uid()) AND status = 'ACTIVE'
+    )
+  )
+) WITH CHECK (
+  is_read = true
+);
+
+
+============================================================
+FILE: 20260527162400_94_polymart_wishlist.sql
+============================================================
+CREATE TABLE IF NOT EXISTS polymart_wishlist (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id),
+  product_id UUID NOT NULL REFERENCES business_products(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id, product_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_pm_wishlist_user ON polymart_wishlist(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_pm_wishlist_product ON polymart_wishlist(product_id);
+
+CREATE POLICY "polymart_wishlist_select" ON polymart_wishlist
+FOR SELECT USING (user_id = (SELECT auth.uid()));
+
+CREATE POLICY "polymart_wishlist_insert" ON polymart_wishlist
+FOR INSERT WITH CHECK (user_id = (SELECT auth.uid()));
+
+CREATE POLICY "polymart_wishlist_delete" ON polymart_wishlist
+FOR DELETE USING (user_id = (SELECT auth.uid()));
+
+
+============================================================
+FILE: 20260527162500_95_polymart_jsonb_variations.sql
+============================================================
+CREATE UNIQUE INDEX IF NOT EXISTS "uq_polymart_cart_item_variation" 
+ON "public"."polymart_cart_items" ("buyer_id", "product_id", COALESCE("selected_variation", ''));
+
+CREATE OR REPLACE FUNCTION update_product_variation_stock(
+  p_product_id UUID,
+  p_variation TEXT,
+  p_qty_change INT,
+  p_reserved_change INT
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_variations JSONB;
+
+CREATE OR REPLACE FUNCTION reserve_polymart_stock(
+  p_product_id UUID,
+  p_quantity INT,
+  p_variation TEXT DEFAULT NULL
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_current_stock INT;
+
+CREATE OR REPLACE FUNCTION release_polymart_stock(
+  p_product_id UUID,
+  p_quantity INT,
+  p_variation TEXT DEFAULT NULL
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  PERFORM update_product_variation_stock(p_product_id, p_variation, 0, -p_quantity);
+
+CREATE OR REPLACE FUNCTION complete_polymart_order(
+  p_order_id UUID,
+  p_business_id UUID,
+  p_product_id UUID,
+  p_quantity INT,
+  p_unit_price DECIMAL,
+  p_payment_method TEXT,
+  p_served_by UUID
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_transaction_id UUID;
+
+CREATE OR REPLACE FUNCTION buyer_cancel_polymart_order(
+  p_order_id UUID, 
+  p_buyer_id UUID, 
+  p_reason TEXT
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_order RECORD;
+
+CREATE OR REPLACE FUNCTION vendor_handle_cancellation(
+  p_order_id UUID,
+  p_vendor_id UUID,
+  p_action TEXT
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_order RECORD;
+
+
+============================================================
+FILE: 20260527162600_96_polymart_chat_uniqueness.sql
+============================================================
+
+============================================================
+FILE: 20260527162700_97_fix_update_product_variation_stock_updated_at.sql
+============================================================
+CREATE OR REPLACE FUNCTION public.update_product_variation_stock(
+  p_product_id uuid,
+  p_variation text,
+  p_qty_change integer,
+  p_reserved_change integer
+)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+  v_variations JSONB;
+
+CREATE OR REPLACE FUNCTION public.complete_polymart_order(
+  p_order_id UUID,
+  p_business_id UUID,
+  p_product_id UUID,
+  p_quantity INT,
+  p_unit_price DECIMAL,
+  p_payment_method TEXT,
+  p_served_by UUID
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_transaction_id UUID;
+
+CREATE UNIQUE INDEX IF NOT EXISTS "uq_polymart_cart_item_variation_v2" 
+ON "public"."polymart_cart_items" ("buyer_id", "product_id", "selected_variation");
+
+
+============================================================
+FILE: 20260529224800_98_polysuara_social_comments.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.polysuara_comments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    confession_id UUID NOT NULL REFERENCES public.polysuara_confessions(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    parent_id UUID REFERENCES public.polysuara_comments(id) ON DELETE CASCADE, -- Peringkat ke-2 (Balas Komen)
+    content TEXT NOT NULL CHECK (char_length(content) <= 300),
+    codename VARCHAR(100) NOT NULL,
+    is_jpp_official BOOLEAN DEFAULT false,
+    is_sensitive BOOLEAN DEFAULT false, -- Kesan Blur Sensitif
+    is_hidden_by_community BOOLEAN DEFAULT false, -- Community auto-hide
+    upvotes INTEGER DEFAULT 0,
+    downvotes INTEGER DEFAULT 0,
+    reports_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.polysuara_comment_votes (
+    comment_id UUID REFERENCES public.polysuara_comments(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    vote_type VARCHAR(10) NOT NULL CHECK (vote_type IN ('UPVOTE', 'DOWNVOTE')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    PRIMARY KEY (comment_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.polysuara_comment_reports (
+    comment_id UUID REFERENCES public.polysuara_comments(id) ON DELETE CASCADE,
+    reporter_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    reason TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    PRIMARY KEY (comment_id, reporter_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_comments_feed 
+ON public.polysuara_comments (confession_id, parent_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_comments_user_id ON public.polysuara_comments (user_id);
+
+CREATE INDEX IF NOT EXISTS idx_comments_parent_id ON public.polysuara_comments (parent_id) WHERE parent_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_comment_votes_comment_id ON public.polysuara_comment_votes (comment_id);
+
+CREATE INDEX IF NOT EXISTS idx_comment_votes_user_id ON public.polysuara_comment_votes (user_id);
+
+CREATE INDEX IF NOT EXISTS idx_comment_reports_comment_id ON public.polysuara_comment_reports (comment_id);
+
+CREATE INDEX IF NOT EXISTS idx_comment_reports_reporter_id ON public.polysuara_comment_reports (reporter_id);
+
+CREATE TRIGGER trg_censor_polysuara_comment
+BEFORE INSERT OR UPDATE OF content ON public.polysuara_comments
+FOR EACH ROW EXECUTE FUNCTION public.censor_polysuara_content();
+
+CREATE OR REPLACE FUNCTION public.generate_polysuara_comment_codename()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_confession_author_id UUID;
+
+CREATE TRIGGER trg_polysuara_comment_codename
+BEFORE INSERT ON public.polysuara_comments
+FOR EACH ROW EXECUTE FUNCTION public.generate_polysuara_comment_codename();
+
+CREATE POLICY "Pelajar boleh baca ulasan" ON public.polysuara_comments
+    FOR SELECT USING (is_hidden_by_community = false);
+
+CREATE POLICY "Pelajar boleh buat ulasan" ON public.polysuara_comments
+    FOR INSERT WITH CHECK ((SELECT auth.uid()) = user_id);
+
+CREATE POLICY "JPP boleh urus ulasan" ON public.polysuara_comments
+    FOR ALL USING (public.is_jpp_admin((SELECT auth.uid()))) 
+    WITH CHECK (public.is_jpp_admin((SELECT auth.uid())));
+
+CREATE POLICY "Pelajar boleh lihat undian ulasan sendiri" ON public.polysuara_comment_votes
+    FOR SELECT USING ((SELECT auth.uid()) = user_id);
+
+CREATE POLICY "Pelajar boleh buat undian ulasan sendiri" ON public.polysuara_comment_votes
+    FOR INSERT WITH CHECK ((SELECT auth.uid()) = user_id);
+
+CREATE POLICY "Pelajar boleh padam undian ulasan sendiri" ON public.polysuara_comment_votes
+    FOR DELETE USING ((SELECT auth.uid()) = user_id);
+
+CREATE POLICY "JPP boleh urus undian ulasan" ON public.polysuara_comment_votes
+    FOR ALL USING (public.is_jpp_admin((SELECT auth.uid())));
+
+CREATE POLICY "Pelajar boleh buat laporan ulasan" ON public.polysuara_comment_reports
+    FOR INSERT WITH CHECK ((SELECT auth.uid()) = reporter_id);
+
+CREATE POLICY "JPP boleh urus laporan ulasan" ON public.polysuara_comment_reports
+    FOR ALL USING (public.is_jpp_admin((SELECT auth.uid())));
+
+CREATE OR REPLACE FUNCTION public.toggle_polysuara_comment_vote(p_comment_id UUID, p_vote_type VARCHAR)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_user_id UUID;
+
+CREATE OR REPLACE FUNCTION public.report_polysuara_comment(p_comment_id UUID, p_reason TEXT)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_user_id UUID;
+
+CREATE OR REPLACE FUNCTION public.restore_hidden_comment(p_comment_id UUID)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    -- Hanya JPP dibenarkan memulihkan komen
+    IF NOT public.is_jpp_admin(auth.uid()) THEN
+        RAISE EXCEPTION 'Access denied';
+
+CREATE OR REPLACE FUNCTION public.sync_polysuara_comment_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        UPDATE public.polysuara_confessions 
+        SET comments_count = comments_count + 1 
+        WHERE id = NEW.confession_id;
+
+CREATE TRIGGER trg_sync_polysuara_comment_count
+AFTER INSERT OR DELETE ON public.polysuara_comments
+FOR EACH ROW EXECUTE FUNCTION public.sync_polysuara_comment_count();
+
+
+============================================================
+FILE: 20260529225900_99_polysuara_social_softdelete_images.sql
+============================================================
+CREATE OR REPLACE FUNCTION public.soft_or_hard_delete_polysuara_comment(p_comment_id UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_has_replies BOOLEAN;
+
+
+============================================================
+FILE: 20_ai_flash_rate_limiting.sql
+============================================================
+CREATE OR REPLACE FUNCTION public.track_ai_flash_usage(action text DEFAULT 'track')
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_user_id uuid;
+
+
+============================================================
+FILE: 21_ai_token_economy.sql
+============================================================
+CREATE OR REPLACE FUNCTION public.spend_ai_tokens(task_name text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_user_id uuid;
+
+
+============================================================
+FILE: 22_ai_ecosystem_bonus.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.ai_usage_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    task_name TEXT NOT NULL,
+    token_cost INTEGER NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE POLICY "Users can insert own ai logs" 
+ON public.ai_usage_logs FOR INSERT 
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Admins can view all ai logs"
+ON public.ai_usage_logs FOR SELECT
+USING (
+    EXISTS (
+        SELECT 1 FROM profiles 
+        WHERE profiles.id = auth.uid() 
+        AND profiles.role IN ('SUPER_ADMIN_JPP', 'ADMIN', 'JPP')
+    )
+);
+
+CREATE TABLE IF NOT EXISTS public.ai_tier_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    current_tier TEXT NOT NULL,
+    requested_tier TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
+    admin_notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE POLICY "Users can insert own tier requests"
+ON public.ai_tier_requests FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can view own tier requests"
+ON public.ai_tier_requests FOR SELECT
+USING (auth.uid() = user_id);
+
+CREATE POLICY "Admins can manage all tier requests"
+ON public.ai_tier_requests FOR ALL
+USING (
+    EXISTS (
+        SELECT 1 FROM profiles 
+        WHERE profiles.id = auth.uid() 
+        AND profiles.role IN ('SUPER_ADMIN_JPP', 'ADMIN', 'JPP')
+    )
+);
+
+CREATE OR REPLACE FUNCTION update_user_ai_tier(target_user_id UUID, new_tier TEXT)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    caller_role text;
+
+CREATE OR REPLACE FUNCTION spend_ai_tokens(task_name TEXT)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    user_balance integer;
+
+
+============================================================
+FILE: 23_pro_tier_payment.sql
+============================================================
+CREATE OR REPLACE FUNCTION update_user_ai_tier(target_user_id UUID, new_tier TEXT)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    caller_role text;
+
+
+============================================================
+FILE: 24_pro_tier_expiration_enforcer.sql
+============================================================
+CREATE OR REPLACE FUNCTION public.check_ai_tokens(task_name text DEFAULT NULL::text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+  v_user_id uuid;
+
+CREATE OR REPLACE FUNCTION public.spend_ai_tokens(task_name text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+    v_user_id uuid;
+
+
+============================================================
+FILE: 25_receipt_bucket.sql
+============================================================
+CREATE POLICY "Admin boleh lihat resit"
+ON storage.objects FOR SELECT
+TO authenticated
+USING (
+  bucket_id = 'receipts'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('SUPER_ADMIN_JPP', 'ADMIN', 'JPP')
+  )
+);
+
+CREATE POLICY "Admin boleh padam resit"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+  bucket_id = 'receipts'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('SUPER_ADMIN_JPP', 'ADMIN', 'JPP')
+  )
+);
+
+CREATE POLICY "Pelajar boleh masukkan resit sendiri"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (
+  bucket_id = 'receipts'
+  -- Ensures they upload to a folder matching their own user id:
+  AND (auth.uid()::text = (string_to_array(name, '/'))[1])
+);
+
+
+============================================================
+FILE: 26_pembubaran_kohort.sql
+============================================================
+CREATE OR REPLACE FUNCTION rpc_pembubaran_kohort()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    -- 1. Arkib laporan & aktiviti yang Diluluskan/Selesai/COMPLETED
+    UPDATE public.club_activities 
+    SET is_archived = TRUE 
+    WHERE status = 'selesai' AND is_archived = FALSE;
+
+
+============================================================
+FILE: 27_pembubaran_kelab.sql
+============================================================
+CREATE OR REPLACE FUNCTION rpc_pembubaran_kohort_kelab(target_club_id text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    -- 1. Arkib laporan & aktiviti yang Diluluskan/Selesai/COMPLETED untuk kelab khusus
+    UPDATE public.club_activities 
+    SET is_archived = TRUE 
+    WHERE status = 'selesai' AND is_archived = FALSE AND club_id = target_club_id::uuid;
+
+CREATE OR REPLACE FUNCTION rpc_pembersihan_akaun_lama()
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE 
+    deleted_count integer;
+
+CREATE OR REPLACE FUNCTION rpc_pembubaran_kohort()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    -- 1. Arkib laporan & aktiviti yang Diluluskan/Selesai/COMPLETED
+    UPDATE public.club_activities 
+    SET is_archived = TRUE 
+    WHERE status = 'selesai' AND is_archived = FALSE;
+
+
+============================================================
+FILE: 27_polysuara_v4_updates.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.polysuara_censored_words (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    word TEXT NOT NULL UNIQUE,
+    added_by UUID REFERENCES auth.users(id),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE POLICY "Allow public read censored words" 
+ON public.polysuara_censored_words FOR SELECT USING (true);
+
+CREATE POLICY "Allow authenticated full access censored words" 
+ON public.polysuara_censored_words FOR ALL 
+USING (auth.role() = 'authenticated') 
+WITH CHECK (auth.role() = 'authenticated');
+
+Create Trigger for Auto Censor (Regex Replace)
+CREATE OR REPLACE FUNCTION public.censor_polysuara_content()
+RETURNS TRIGGER AS $$
+DECLARE
+    rec RECORD;
+
+CREATE TRIGGER trg_censor_polysuara
+BEFORE INSERT OR UPDATE OF content ON public.polysuara_confessions
+FOR EACH ROW EXECUTE FUNCTION public.censor_polysuara_content();
+
+CREATE POLICY "Give public access to polysuara_attachments" ON storage.objects FOR SELECT USING (bucket_id = 'polysuara_attachments');
+
+CREATE POLICY "Allow authenticated inserts to polysuara_attachments" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'polysuara_attachments' AND auth.role() = 'authenticated');
+
+
+============================================================
+FILE: 28_keusahawanan_module.sql
+============================================================
+CREATE TYPE keusahawanan_business_status AS ENUM ('PENDING_INTERVIEW', 'ACTIVE', 'REJECTED');
+
+CREATE TYPE keusahawanan_membership_role AS ENUM ('OWNER', 'MEMBER');
+
+CREATE TYPE keusahawanan_membership_status AS ENUM ('PENDING', 'ACTIVE', 'REJECTED');
+
+CREATE TABLE IF NOT EXISTS public.keusahawanan_categories (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.keusahawanan_businesses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    description TEXT,
+    category_id UUID REFERENCES public.keusahawanan_categories(id) ON DELETE SET NULL,
+    owner_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+    status keusahawanan_business_status DEFAULT 'PENDING_INTERVIEW' NOT NULL,
+    interview_date TIMESTAMP WITH TIME ZONE,
+    logo_url TEXT,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.student_business_memberships (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+    business_id UUID REFERENCES public.keusahawanan_businesses(id) ON DELETE CASCADE NOT NULL,
+    role keusahawanan_membership_role DEFAULT 'MEMBER' NOT NULL,
+    status keusahawanan_membership_status DEFAULT 'PENDING' NOT NULL,
+    joined_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE(user_id, business_id)
+);
+
+CREATE POLICY "Public Read Access for Keusahawanan Categories" ON public.keusahawanan_categories FOR SELECT USING (true);
+
+CREATE POLICY "Admin All Access for Keusahawanan Categories" ON public.keusahawanan_categories FOR ALL USING (
+  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'JPP'))
+);
+
+CREATE POLICY "Public read active businesses" ON public.keusahawanan_businesses FOR SELECT USING (
+  status = 'ACTIVE' OR owner_id = auth.uid() OR 
+  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'JPP'))
+);
+
+CREATE POLICY "Students can create business" ON public.keusahawanan_businesses FOR INSERT WITH CHECK (
+  auth.uid() = owner_id
+);
+
+CREATE POLICY "Owners and Admins can update their business" ON public.keusahawanan_businesses FOR UPDATE USING (
+  auth.uid() = owner_id OR 
+  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'JPP'))
+);
+
+CREATE POLICY "Users can see their own memberships or if they are admin" ON public.student_business_memberships FOR SELECT USING (
+  auth.uid() = user_id OR 
+  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'JPP')) OR
+  -- Active business owners can also see memberships of their business
+  EXISTS (SELECT 1 FROM keusahawanan_businesses b WHERE b.id = business_id AND b.owner_id = auth.uid())
+);
+
+CREATE POLICY "Students can request to join" ON public.student_business_memberships FOR INSERT WITH CHECK (
+  auth.uid() = user_id
+);
+
+CREATE POLICY "Owners and Admins can update memberships" ON public.student_business_memberships FOR UPDATE USING (
+  auth.uid() = user_id OR 
+  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'JPP')) OR
+  EXISTS (SELECT 1 FROM keusahawanan_businesses b WHERE b.id = business_id AND b.owner_id = auth.uid())
+);
+
+CREATE POLICY "Owners and Admins can delete memberships" ON public.student_business_memberships FOR DELETE USING (
+  auth.uid() = user_id OR 
+  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'JPP')) OR
+  EXISTS (SELECT 1 FROM keusahawanan_businesses b WHERE b.id = business_id AND b.owner_id = auth.uid())
+);
+
+
+============================================================
+FILE: 28_polysuara_v5_features.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.polysuara_polls (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    confession_id UUID NOT NULL REFERENCES public.polysuara_confessions(id) ON DELETE CASCADE,
+    is_multiple_choice BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_polysuara_polls_confession_id ON public.polysuara_polls(confession_id);
+
+CREATE TABLE IF NOT EXISTS public.polysuara_poll_options (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    poll_id UUID NOT NULL REFERENCES public.polysuara_polls(id) ON DELETE CASCADE,
+    option_text TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_polysuara_poll_options_poll_id ON public.polysuara_poll_options(poll_id);
+
+CREATE TABLE IF NOT EXISTS public.polysuara_poll_votes (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    poll_id UUID NOT NULL REFERENCES public.polysuara_polls(id) ON DELETE CASCADE,
+    option_id UUID NOT NULL REFERENCES public.polysuara_poll_options(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(option_id, user_id) -- User can vote for the same option only once
+);
+
+CREATE INDEX IF NOT EXISTS idx_polysuara_poll_votes_poll_id ON public.polysuara_poll_votes(poll_id);
+
+CREATE POLICY "Allow public read polls" ON public.polysuara_polls FOR SELECT USING (true);
+
+CREATE POLICY "Allow authenticated insert polls" ON public.polysuara_polls FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Allow public read poll options" ON public.polysuara_poll_options FOR SELECT USING (true);
+
+CREATE POLICY "Allow authenticated insert poll options" ON public.polysuara_poll_options FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Allow public read poll votes" ON public.polysuara_poll_votes FOR SELECT USING (true);
+
+CREATE POLICY "Allow authenticated insert poll votes" ON public.polysuara_poll_votes FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Allow authenticated delete own poll votes" ON public.polysuara_poll_votes FOR DELETE USING (auth.uid() = user_id);
+
+CREATE TABLE IF NOT EXISTS public.polysuara_chats (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    confession_id UUID NOT NULL REFERENCES public.polysuara_confessions(id) ON DELETE CASCADE,
+    student_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    exco_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    status TEXT NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'CLOSED')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(confession_id) -- Only 1 active chat per confession
+);
+
+CREATE INDEX IF NOT EXISTS idx_polysuara_chats_confession_id ON public.polysuara_chats(confession_id);
+
+CREATE INDEX IF NOT EXISTS idx_polysuara_chats_student_id ON public.polysuara_chats(student_id);
+
+CREATE TABLE IF NOT EXISTS public.polysuara_chat_messages (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    chat_id UUID NOT NULL REFERENCES public.polysuara_chats(id) ON DELETE CASCADE,
+    sender_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_polysuara_chat_messages_chat_id ON public.polysuara_chat_messages(chat_id);
+
+CREATE POLICY "Allow users to read their own chats" ON public.polysuara_chats FOR SELECT USING (
+    auth.uid() = student_id OR 
+    auth.uid() = exco_id OR 
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('JPP', 'SUPER_ADMIN_JPP'))
+);
+
+CREATE POLICY "Allow excos to insert chats" ON public.polysuara_chats FOR INSERT WITH CHECK (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('JPP', 'SUPER_ADMIN_JPP'))
+);
+
+CREATE POLICY "Allow excos to update chats" ON public.polysuara_chats FOR UPDATE USING (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('JPP', 'SUPER_ADMIN_JPP'))
+);
+
+CREATE POLICY "Allow users to read messages in their chats" ON public.polysuara_chat_messages FOR SELECT USING (
+    EXISTS (SELECT 1 FROM public.polysuara_chats c WHERE c.id = chat_id AND (c.student_id = auth.uid() OR c.exco_id = auth.uid() OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('JPP', 'SUPER_ADMIN_JPP'))))
+);
+
+CREATE POLICY "Allow users to insert messages in open chats" ON public.polysuara_chat_messages FOR INSERT WITH CHECK (
+    EXISTS (SELECT 1 FROM public.polysuara_chats c WHERE c.id = chat_id AND c.status = 'OPEN' AND (c.student_id = auth.uid() OR c.exco_id = auth.uid()))
+);
+
+
+============================================================
+FILE: 29_keusahawanan_products_bucket.sql
+============================================================
+CREATE POLICY "Public boleh lihat gambar produk dan logo"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'keusahawanan-products');
+
+CREATE POLICY "Authenticated users boleh muat naik gambar"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'keusahawanan-products');
+
+CREATE POLICY "Authenticated users boleh kemaskini gambar"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (bucket_id = 'keusahawanan-products');
+
+CREATE POLICY "Authenticated users boleh padam gambar"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (bucket_id = 'keusahawanan-products');
+
+
+============================================================
+FILE: 29_polysuara_auto_archive.sql
+============================================================
+CREATE INDEX idx_polysuara_is_archived ON public.polysuara_confessions(is_archived);
+
+
+============================================================
+FILE: 30_business_shifts_system.sql
+============================================================
+CREATE TABLE business_shifts (
+  id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id  uuid REFERENCES keusahawanan_businesses(id) ON DELETE CASCADE,
+  shift_date   date NOT NULL,
+  shift_hour   int  NOT NULL CHECK (shift_hour BETWEEN 8 AND 16),
+  assigned_to  uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  created_by   uuid REFERENCES profiles(id),
+  notes        text,
+  status       text DEFAULT 'SCHEDULED' CHECK (status IN ('SCHEDULED','PRESENT','ABSENT','SWAPPED')),
+  created_at   timestamptz DEFAULT now(),
+  UNIQUE(business_id, shift_date, shift_hour)
+);
+
+CREATE TABLE business_shift_swaps (
+  id            uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id   uuid REFERENCES keusahawanan_businesses(id) ON DELETE CASCADE,
+  shift_id      uuid REFERENCES business_shifts(id) ON DELETE CASCADE,
+  requested_by  uuid REFERENCES profiles(id),
+  swap_with     uuid REFERENCES profiles(id),
+  reason        text NOT NULL,
+  status        text DEFAULT 'PENDING' CHECK (status IN ('PENDING','ACCEPTED','REJECTED','CANCELLED')),
+  responded_by  uuid REFERENCES profiles(id),
+  responded_at  timestamptz,
+  created_at    timestamptz DEFAULT now()
+);
+
+CREATE TABLE business_sessions (
+  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id     uuid REFERENCES keusahawanan_businesses(id) ON DELETE CASCADE,
+  session_date    date NOT NULL,
+  opened_by       uuid REFERENCES profiles(id),
+  closed_by       uuid REFERENCES profiles(id),
+  opening_cash    numeric(10,2) NOT NULL DEFAULT 0,
+  closing_cash    numeric(10,2),
+  total_sales     numeric(10,2),
+  total_expenses  numeric(10,2) DEFAULT 0,
+  net_profit      numeric(10,2) GENERATED ALWAYS AS (
+                    closing_cash - opening_cash - total_expenses
+                  ) STORED,
+  opening_time    timestamptz,
+  closing_time    timestamptz,
+  opening_notes   text,
+  closing_notes   text,
+  status          text DEFAULT 'OPEN' CHECK (status IN ('OPEN','CLOSED')),
+  created_at      timestamptz DEFAULT now(),
+  UNIQUE(business_id, session_date)
+);
+
+CREATE OR REPLACE FUNCTION has_business_shift_access(b_id uuid)
+RETURNS boolean LANGUAGE sql STABLE AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM student_business_memberships
+    WHERE business_id = b_id 
+      AND user_id = auth.uid()
+      AND status = 'ACTIVE'
+  ) OR EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'ADMIN')
+  )
+$$;
+
+CREATE POLICY "business_shifts_access" ON business_shifts FOR ALL USING (has_business_shift_access(business_id));
+
+CREATE POLICY "business_shift_swaps_access" ON business_shift_swaps FOR ALL USING (has_business_shift_access(business_id));
+
+CREATE POLICY "business_sessions_access" ON business_sessions FOR ALL USING (has_business_shift_access(business_id));
+
+
+============================================================
+FILE: 30_polysuara_downvote.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.polysuara_downvotes (
+    confession_id UUID NOT NULL REFERENCES public.polysuara_confessions(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    PRIMARY KEY (confession_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_polysuara_downvotes_user ON public.polysuara_downvotes(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_polysuara_downvotes_confession ON public.polysuara_downvotes(confession_id);
+
+CREATE POLICY "polysuara_downvotes_select" ON public.polysuara_downvotes FOR SELECT
+  USING (true);
+
+CREATE POLICY "polysuara_downvotes_insert" ON public.polysuara_downvotes FOR INSERT
+  WITH CHECK (user_id = (SELECT auth.uid()));
+
+CREATE POLICY "polysuara_downvotes_delete" ON public.polysuara_downvotes FOR DELETE
+  USING (
+    user_id = (SELECT auth.uid())
+    OR is_jpp_admin((SELECT auth.uid()))
+  );
+
+CREATE POLICY "polysuara_confessions_select" ON public.polysuara_confessions FOR SELECT
+  USING (
+    (is_approved = true AND is_hidden_by_community = false)
+    OR is_jpp_admin((SELECT auth.uid()))
+  );
+
+CREATE OR REPLACE FUNCTION public.toggle_polysuara_downvote(p_confession_id UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_user_id UUID;
+
+CREATE OR REPLACE FUNCTION public.toggle_polysuara_upvote(p_confession_id UUID)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_user_id UUID;
+
+CREATE OR REPLACE FUNCTION public.restore_hidden_confession(p_confession_id UUID)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_user_id UUID;
+
+
+============================================================
+FILE: 31_add_staff_details.sql
+============================================================
+
+============================================================
+FILE: 32_create_polyrent_bucket.sql
+============================================================
+CREATE POLICY "Public Access Polyrent"
+ON storage.objects FOR SELECT
+USING ( bucket_id = 'polyrent' );
+
+CREATE POLICY "Authenticated users can upload to polyrent"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK ( bucket_id = 'polyrent' );
+
+CREATE POLICY "Users can update their own polyrent images"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING ( bucket_id = 'polyrent' AND auth.uid() = owner );
+
+CREATE POLICY "Users can delete their own polyrent images"
+ON storage.objects FOR DELETE
+TO authenticated
+USING ( bucket_id = 'polyrent' AND auth.uid() = owner );
+
+
+============================================================
+FILE: 32_system_announcements.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.system_announcements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    content_body TEXT NOT NULL,
+    priority TEXT NOT NULL CHECK (priority IN ('EASY', 'MEDIUM', 'HIGH')),
+    target_audience TEXT NOT NULL CHECK (target_audience IN ('STUDENT', 'STAFF', 'ALL')),
+    action_url TEXT,
+    form_schema JSONB,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.user_announcement_responses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+    announcement_id UUID REFERENCES public.system_announcements(id) ON DELETE CASCADE NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('dismissed_permanently', 'completed')),
+    form_data JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE(user_id, announcement_id)
+);
+
+CREATE POLICY "Active system_announcements are viewable by everyone."
+    ON public.system_announcements FOR SELECT
+    USING (is_active = true);
+
+CREATE POLICY "JPP and Super Admin can view all system announcements."
+    ON public.system_announcements FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role IN ('SUPER_ADMIN_JPP', 'JPP')
+        )
+    );
+
+CREATE POLICY "JPP and Super Admin can manage system announcements"
+    ON public.system_announcements FOR ALL
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role IN ('SUPER_ADMIN_JPP', 'JPP')
+        )
+    )
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role IN ('SUPER_ADMIN_JPP', 'JPP')
+        )
+    );
+
+CREATE POLICY "Users can view own announcement responses"
+    ON public.user_announcement_responses FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own announcement responses"
+    ON public.user_announcement_responses FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "JPP and Super Admin can view all announcement responses"
+    ON public.user_announcement_responses FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role IN ('SUPER_ADMIN_JPP', 'JPP')
+        )
+    );
+
+
+============================================================
+FILE: 33_announcement_poster.sql
+============================================================
+CREATE POLICY "Public can view announcement images"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'announcements');
+
+CREATE POLICY "JPP can insert announcement images"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (
+  bucket_id = 'announcements'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('SUPER_ADMIN_JPP', 'JPP')
+  )
+);
+
+CREATE POLICY "JPP can update announcement images"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (
+  bucket_id = 'announcements'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('SUPER_ADMIN_JPP', 'JPP')
+  )
+);
+
+CREATE POLICY "JPP can delete announcement images"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+  bucket_id = 'announcements'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('SUPER_ADMIN_JPP', 'JPP')
+  )
+);
+
+
+============================================================
+FILE: 33_transfer_business_ownership.sql
+============================================================
+CREATE OR REPLACE FUNCTION transfer_business_ownership(p_business_id UUID, p_new_owner_id UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_current_owner_id UUID;
+
+
+============================================================
+FILE: 34_staff_registration_code.sql
+============================================================
+CREATE OR REPLACE FUNCTION verify_staff_code(p_code text)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_actual_code text;
+
+
+============================================================
+FILE: 35_security_jpp_profile_rpc.sql
+============================================================
+CREATE OR REPLACE FUNCTION update_jpp_member_profile(
+  p_target_id   UUID,
+  p_jpp_position TEXT,
+  p_jpp_unit    TEXT
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_actor_role      TEXT;
+
+CREATE OR REPLACE FUNCTION assign_jpp_member(
+  p_target_id    UUID,
+  p_jpp_position TEXT,
+  p_jpp_unit     TEXT
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_actor_role      TEXT;
+
+CREATE OR REPLACE FUNCTION toggle_jpp_role(
+  p_target_id UUID
+)
+RETURNS TEXT  -- Mengembalikan role baharu
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_actor_role     TEXT;
+
+
+============================================================
+FILE: 36_supsas_schema.sql
+============================================================
+CREATE TABLE IF NOT EXISTS supsas_editions (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name          TEXT NOT NULL,                   -- "SUPSAS 2025"
+  tagline       TEXT,                            -- "Bersatu, Berjuang, Berjaya"
+  edition_year  INT NOT NULL,
+  start_date    DATE,
+  end_date      DATE,
+  is_active     BOOLEAN NOT NULL DEFAULT FALSE,  -- Hanya SATU yang aktif
+  logo_url      TEXT,
+  banner_url    TEXT,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_supsas_active_edition
+  ON supsas_editions (is_active)
+  WHERE is_active = TRUE;
+
+CREATE TABLE IF NOT EXISTS supsas_kontingen (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  edition_id          UUID NOT NULL REFERENCES supsas_editions(id) ON DELETE CASCADE,
+  name                TEXT NOT NULL,             -- "Jabatan Teknologi Maklumat"
+  short_code          TEXT NOT NULL,             -- "JTM"
+  color               TEXT NOT NULL DEFAULT '#3B82F6', -- Warna rasmi kontinjen
+  logo_url            TEXT,
+  leader_id           UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- Ketua (pelajar biasa)
+  invite_code         TEXT UNIQUE,               -- Kod jemputan untuk claim ketua
+  invite_used         BOOLEAN NOT NULL DEFAULT FALSE,
+  is_active           BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (edition_id, short_code)
+);
+
+CREATE TABLE IF NOT EXISTS supsas_sports (
+  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  edition_id            UUID NOT NULL REFERENCES supsas_editions(id) ON DELETE CASCADE,
+  name                  TEXT NOT NULL,           -- "Bola Sepak", "Badminton"
+  category              TEXT NOT NULL DEFAULT 'team', -- 'team' | 'individual'
+  gender                TEXT NOT NULL DEFAULT 'mixed', -- 'male' | 'female' | 'mixed'
+  format                TEXT NOT NULL DEFAULT 'knockout', -- 'knockout' | 'round_robin' | 'group_knockout'
+  icon                  TEXT NOT NULL DEFAULT 'Trophy', -- Lucide icon name
+  venue                 TEXT,
+  max_per_team          INT NOT NULL DEFAULT 11,
+  is_active             BOOLEAN NOT NULL DEFAULT TRUE,
+  sort_order            INT NOT NULL DEFAULT 0,
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS supsas_participants (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  edition_id      UUID NOT NULL REFERENCES supsas_editions(id) ON DELETE CASCADE,
+  kontingen_id    UUID NOT NULL REFERENCES supsas_kontingen(id) ON DELETE CASCADE,
+  sport_id        UUID NOT NULL REFERENCES supsas_sports(id) ON DELETE CASCADE,
+  profile_id      UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  position        TEXT,                          -- "Kapten", "Pemain", "Cadangan"
+  jersey_number   INT,
+  is_confirmed    BOOLEAN NOT NULL DEFAULT FALSE,-- Disahkan oleh admin
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (sport_id, kontingen_id, profile_id)  -- Satu pelajar satu slot per sukan per pasukan
+);
+
+CREATE TABLE IF NOT EXISTS supsas_fixtures (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  edition_id      UUID NOT NULL REFERENCES supsas_editions(id) ON DELETE CASCADE,
+  sport_id        UUID NOT NULL REFERENCES supsas_sports(id) ON DELETE CASCADE,
+  round           TEXT,                          -- "Separuh Akhir", "Akhir", "Kumpulan A"
+  match_number    INT,
+  kontingen_a_id  UUID REFERENCES supsas_kontingen(id) ON DELETE SET NULL,
+  kontingen_b_id  UUID REFERENCES supsas_kontingen(id) ON DELETE SET NULL,
+  match_date      DATE,
+  match_time      TIME,
+  venue           TEXT,
+  status          TEXT NOT NULL DEFAULT 'upcoming', -- 'upcoming'|'live'|'completed'|'postponed'
+  score_a         TEXT,                          -- Fleksibel: "3", "21", "10.2s"
+  score_b         TEXT,
+  winner_id       UUID REFERENCES supsas_kontingen(id) ON DELETE SET NULL,
+  notes           TEXT,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS supsas_results (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  edition_id      UUID NOT NULL REFERENCES supsas_editions(id) ON DELETE CASCADE,
+  sport_id        UUID NOT NULL REFERENCES supsas_sports(id) ON DELETE CASCADE,
+  kontingen_id    UUID NOT NULL REFERENCES supsas_kontingen(id) ON DELETE CASCADE,
+  medal           TEXT,                          -- 'gold' | 'silver' | 'bronze'
+  position        INT,                           -- 1, 2, 3, 4...
+  notes           TEXT,
+  recorded_by     UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  recorded_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (sport_id, kontingen_id)
+);
+
+CREATE POLICY "supsas_editions_public_read"  ON supsas_editions FOR SELECT USING (TRUE);
+
+CREATE POLICY "supsas_editions_admin_write"  ON supsas_editions FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'SUPER_ADMIN_JPP'))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'SUPER_ADMIN_JPP'));
+
+CREATE POLICY "supsas_kontingen_public_read" ON supsas_kontingen FOR SELECT USING (TRUE);
+
+CREATE POLICY "supsas_kontingen_admin_write" ON supsas_kontingen FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'SUPER_ADMIN_JPP'))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'SUPER_ADMIN_JPP'));
+
+CREATE POLICY "supsas_kontingen_leader_update" ON supsas_kontingen FOR UPDATE
+  USING (leader_id = auth.uid())
+  WITH CHECK (leader_id = auth.uid());
+
+CREATE POLICY "supsas_sports_public_read"  ON supsas_sports FOR SELECT USING (TRUE);
+
+CREATE POLICY "supsas_sports_jpp_write"    ON supsas_sports FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP','JPP')))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP','JPP')));
+
+CREATE POLICY "supsas_participants_public_read" ON supsas_participants FOR SELECT USING (TRUE);
+
+CREATE POLICY "supsas_participants_leader_write" ON supsas_participants FOR ALL
+  USING (EXISTS (SELECT 1 FROM supsas_kontingen WHERE id = kontingen_id AND leader_id = auth.uid()))
+  WITH CHECK (EXISTS (SELECT 1 FROM supsas_kontingen WHERE id = kontingen_id AND leader_id = auth.uid()));
+
+CREATE POLICY "supsas_participants_admin_write" ON supsas_participants FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP','JPP')))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP','JPP')));
+
+CREATE POLICY "supsas_fixtures_public_read" ON supsas_fixtures FOR SELECT USING (TRUE);
+
+CREATE POLICY "supsas_fixtures_jpp_write"   ON supsas_fixtures FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP','JPP')))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP','JPP')));
+
+CREATE POLICY "supsas_results_public_read" ON supsas_results FOR SELECT USING (TRUE);
+
+CREATE POLICY "supsas_results_jpp_write"   ON supsas_results FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP','JPP')))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP','JPP')));
+
+CREATE OR REPLACE FUNCTION supsas_claim_invite_code(p_invite_code TEXT)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_kontingen supsas_kontingen%ROWTYPE;
+
+CREATE OR REPLACE FUNCTION supsas_revoke_leader(p_kontingen_id UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'SUPER_ADMIN_JPP') THEN
+    RAISE EXCEPTION 'Akses ditolak.';
+
+CREATE OR REPLACE FUNCTION supsas_set_updated_at()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN NEW.updated_at = NOW();
+
+CREATE TRIGGER supsas_editions_updated_at    BEFORE UPDATE ON supsas_editions    FOR EACH ROW EXECUTE FUNCTION supsas_set_updated_at();
+
+CREATE TRIGGER supsas_kontingen_updated_at   BEFORE UPDATE ON supsas_kontingen   FOR EACH ROW EXECUTE FUNCTION supsas_set_updated_at();
+
+CREATE TRIGGER supsas_sports_updated_at      BEFORE UPDATE ON supsas_sports      FOR EACH ROW EXECUTE FUNCTION supsas_set_updated_at();
+
+CREATE TRIGGER supsas_fixtures_updated_at    BEFORE UPDATE ON supsas_fixtures    FOR EACH ROW EXECUTE FUNCTION supsas_set_updated_at();
+
+CREATE POLICY "supsas_assets_public_read"  ON storage.objects FOR SELECT USING (bucket_id = 'supsas-assets');
+
+CREATE POLICY "supsas_assets_admin_upload" ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'supsas-assets' AND EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'JPP')
+  ));
+
+CREATE POLICY "supsas_assets_admin_delete" ON storage.objects FOR DELETE
+  USING (bucket_id = 'supsas-assets' AND EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'JPP')
+  ));
+
+
+============================================================
+FILE: 37_polymart_pos_sync.sql
+============================================================
+CREATE OR REPLACE FUNCTION reserve_polymart_stock(
+  p_product_id UUID,
+  p_quantity INT
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_current_stock INT;
+
+CREATE OR REPLACE FUNCTION release_polymart_stock(
+  p_product_id UUID,
+  p_quantity INT
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  UPDATE business_products
+  SET reserved_stock = GREATEST(0, reserved_stock - p_quantity)
+  WHERE id = p_product_id;
+
+CREATE OR REPLACE FUNCTION complete_polymart_order(
+  p_order_id UUID,
+  p_business_id UUID,
+  p_product_id UUID,
+  p_quantity INT,
+  p_unit_price DECIMAL,
+  p_payment_method TEXT,
+  p_served_by UUID
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_transaction_id UUID;
+
+
+============================================================
+FILE: 38_karnival_v2.sql
+============================================================
+CREATE TABLE karnival_editions (
+  id                  UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  name                TEXT        NOT NULL,
+  tagline             TEXT,
+  edition_year        INTEGER     NOT NULL,
+  start_date          DATE,
+  end_date            DATE,
+  is_active           BOOLEAN     NOT NULL DEFAULT false,
+  voting_enabled      BOOLEAN     NOT NULL DEFAULT false,
+  results_published   BOOLEAN     NOT NULL DEFAULT false,
+  cover_image_url     TEXT,
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE POLICY "karnival_editions_read_all" ON karnival_editions FOR SELECT USING (true);
+
+CREATE POLICY "karnival_editions_write_kpp" ON karnival_editions FOR ALL
+  USING (auth.uid() IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+CREATE TABLE karnival_categories (
+  id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  edition_id  UUID        NOT NULL REFERENCES karnival_editions(id) ON DELETE CASCADE,
+  name        TEXT        NOT NULL,
+  description TEXT,
+  icon_emoji  TEXT        DEFAULT '🏆',
+  max_votes   INTEGER     NOT NULL DEFAULT 1,
+  sort_order  INTEGER     DEFAULT 0,
+  is_active   BOOLEAN     NOT NULL DEFAULT true,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_karnival_categories_edition ON karnival_categories(edition_id);
+
+CREATE POLICY "karnival_categories_read_all" ON karnival_categories FOR SELECT USING (true);
+
+CREATE POLICY "karnival_categories_write_kpp" ON karnival_categories FOR ALL
+  USING (auth.uid() IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+CREATE TABLE karnival_booths (
+  id            UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  edition_id    UUID        NOT NULL REFERENCES karnival_editions(id) ON DELETE CASCADE,
+  category_id   UUID        NOT NULL REFERENCES karnival_categories(id) ON DELETE CASCADE,
+  kelab_id      TEXT,
+  kelab_name    TEXT        NOT NULL,
+  booth_number  TEXT,
+  theme         TEXT,
+  description   TEXT,
+  image_url     TEXT,
+  is_active     BOOLEAN     NOT NULL DEFAULT true,
+  created_at    TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT unique_kelab_per_category UNIQUE NULLS NOT DISTINCT (kelab_id, category_id)
+);
+
+CREATE INDEX idx_karnival_booths_edition  ON karnival_booths(edition_id);
+
+CREATE INDEX idx_karnival_booths_category ON karnival_booths(category_id);
+
+CREATE POLICY "karnival_booths_read_all" ON karnival_booths FOR SELECT USING (true);
+
+CREATE POLICY "karnival_booths_write_kpp" ON karnival_booths FOR ALL
+  USING (auth.uid() IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+CREATE TABLE karnival_votes_v2 (
+  id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  edition_id  UUID        NOT NULL REFERENCES karnival_editions(id) ON DELETE CASCADE,
+  category_id UUID        NOT NULL REFERENCES karnival_categories(id) ON DELETE CASCADE,
+  booth_id    UUID        NOT NULL REFERENCES karnival_booths(id) ON DELETE CASCADE,
+  voter_id    UUID        NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  matric_no   TEXT,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT unique_voter_booth UNIQUE (voter_id, booth_id)
+);
+
+CREATE INDEX idx_karnival_votes_v2_edition  ON karnival_votes_v2(edition_id);
+
+CREATE INDEX idx_karnival_votes_v2_category ON karnival_votes_v2(category_id);
+
+CREATE INDEX idx_karnival_votes_v2_booth    ON karnival_votes_v2(booth_id);
+
+CREATE INDEX idx_karnival_votes_v2_voter    ON karnival_votes_v2(voter_id);
+
+CREATE POLICY "karnival_votes_v2_read_all" ON karnival_votes_v2 FOR SELECT USING (true);
+
+CREATE POLICY "karnival_votes_v2_insert_self" ON karnival_votes_v2 FOR INSERT
+  WITH CHECK (auth.uid() = voter_id AND EXISTS (SELECT 1 FROM karnival_editions WHERE id = edition_id AND voting_enabled = true));
+
+CREATE POLICY "karnival_votes_v2_delete_own" ON karnival_votes_v2 FOR DELETE USING (auth.uid() = voter_id);
+
+CREATE POLICY "karnival_votes_v2_admin_all" ON karnival_votes_v2 FOR ALL
+  USING (auth.uid() IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+CREATE OR REPLACE FUNCTION get_karnival_booth_votes(p_edition_id UUID, p_category_id UUID)
+RETURNS TABLE(booth_id UUID, booth_name TEXT, booth_number TEXT, image_url TEXT, total_votes BIGINT)
+LANGUAGE sql SECURITY DEFINER SET search_path = public STABLE AS $$
+  SELECT b.id, b.kelab_name, b.booth_number, b.image_url, COUNT(v.id)
+  FROM karnival_booths b
+  LEFT JOIN karnival_votes_v2 v ON v.booth_id = b.id
+  WHERE b.edition_id = p_edition_id AND b.category_id = p_category_id AND b.is_active = true
+  GROUP BY b.id, b.kelab_name, b.booth_number, b.image_url
+  ORDER BY COUNT(v.id) DESC, b.kelab_name ASC;
+
+CREATE OR REPLACE FUNCTION get_my_karnival_votes_in_category(p_category_id UUID)
+RETURNS TABLE(booth_id UUID, created_at TIMESTAMPTZ)
+LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
+  SELECT v.booth_id, v.created_at FROM karnival_votes_v2 v
+  WHERE v.voter_id = auth.uid() AND v.category_id = p_category_id
+  ORDER BY v.created_at DESC;
+
+CREATE POLICY "karnival_booths_public_read" ON storage.objects FOR SELECT USING (bucket_id = 'karnival-booths');
+
+CREATE POLICY "karnival_booths_kpp_upload"  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'karnival-booths' AND auth.uid() IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+CREATE POLICY "karnival_booths_kpp_delete"  ON storage.objects FOR DELETE
+  USING (bucket_id = 'karnival-booths' AND auth.uid() IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+
+============================================================
+FILE: 39_track_google_api_tokens.sql
+============================================================
+CREATE OR REPLACE FUNCTION public.increment_ai_google_tokens(tokens_used integer)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_current bigint;
+
+
+============================================================
+FILE: 40_program_attendance_system.sql
+============================================================
+CREATE TABLE IF NOT EXISTS program_attendees (
+  id               UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  program_id       UUID        NOT NULL,
+  program_type     TEXT        NOT NULL CHECK (program_type IN ('takwim', 'aktiviti')),
+  user_id          UUID        NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  status           TEXT        NOT NULL DEFAULT 'pre_registered'
+                               CHECK (status IN ('pre_registered','attended','absent','walk_in')),
+  registered_at    TIMESTAMPTZ DEFAULT NOW(),
+  checked_in_at    TIMESTAMPTZ,
+  check_in_method  TEXT        CHECK (check_in_method IN ('qr','manual')),
+  merit_kelab_credited  BOOLEAN DEFAULT false,
+  merit_rasmi_credited  BOOLEAN DEFAULT false,
+  created_at       TIMESTAMPTZ DEFAULT NOW(),
+
+  -- Cegah scan berganda: 1 user hanya boleh hadir 1 kali per program
+  CONSTRAINT unique_program_attendee UNIQUE (program_id, program_type, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_pa_program      ON program_attendees(program_id, program_type);
+
+CREATE INDEX IF NOT EXISTS idx_pa_user         ON program_attendees(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_pa_status       ON program_attendees(status);
+
+CREATE INDEX IF NOT EXISTS idx_pa_checked_in   ON program_attendees(checked_in_at) WHERE checked_in_at IS NOT NULL;
+
+CREATE POLICY "Read all attendees" ON program_attendees
+      FOR SELECT USING ((select auth.uid()) IS NOT NULL);
+
+CREATE POLICY "Self register attendee" ON program_attendees
+      FOR INSERT WITH CHECK ((select auth.uid()) = user_id);
+
+CREATE POLICY "Manager update attendees" ON program_attendees
+      FOR UPDATE USING (
+        (select auth.uid()) IN (
+          SELECT id FROM profiles
+          WHERE role IN ('CLUB_PRESIDENT','CLUB_MT','SUPER_ADMIN_JPP','JPP')
+        )
+      );
+
+CREATE TABLE IF NOT EXISTS merit_program_applications (
+  id               UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  program_id       UUID        NOT NULL,
+  program_type     TEXT        NOT NULL CHECK (program_type IN ('takwim', 'aktiviti')),
+  program_title    TEXT,       -- cache nama program
+  applied_by       UUID        REFERENCES profiles(id),
+  merit_value      INT         NOT NULL CHECK (merit_value > 0),
+  justification    TEXT,
+
+  -- Status flow: pending → akademik_vouched/not_vouched → fully_approved/rejected
+  status           TEXT        NOT NULL DEFAULT 'pending'
+                               CHECK (status IN (
+                                 'pending',
+                                 'akademik_vouched',
+                                 'akademik_not_vouched',
+                                 'fully_approved',
+                                 'rejected'
+                               )),
+
+  -- Akademik review (Voucher/Supporter)
+  akademik_reviewer_id    UUID        REFERENCES profiles(id),
+  akademik_reviewed_at    TIMESTAMPTZ,
+  akademik_vouch_notes    TEXT,
+
+  -- Kediaman review (Kuasa Mutlak)
+  kediaman_reviewer_id    UUID        REFERENCES profiles(id),
+  kediaman_reviewed_at    TIMESTAMPTZ,
+  kediaman_notes          TEXT,
+  reject_reason           TEXT,
+
+  created_at       TIMESTAMPTZ DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_mpa_program ON merit_program_applications(program_id, program_type);
+
+CREATE INDEX IF NOT EXISTS idx_mpa_status  ON merit_program_applications(status);
+
+CREATE INDEX IF NOT EXISTS idx_mpa_applied ON merit_program_applications(applied_by);
+
+CREATE TABLE IF NOT EXISTS merit_review_log (
+  id               UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  application_id   UUID        NOT NULL REFERENCES merit_program_applications(id) ON DELETE CASCADE,
+  reviewer_id      UUID        REFERENCES profiles(id),
+  reviewer_unit    TEXT        NOT NULL CHECK (reviewer_unit IN ('AKADEMIK','KEDIAMAN')),
+  action           TEXT        NOT NULL CHECK (action IN ('vouched','not_vouched','approved','rejected')),
+  notes            TEXT,
+  created_at       TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_mrl_application ON merit_review_log(application_id);
+
+CREATE INDEX IF NOT EXISTS idx_mrl_reviewer    ON merit_review_log(reviewer_id);
+
+CREATE POLICY "Read merit applications" ON merit_program_applications
+      FOR SELECT USING ((select auth.uid()) IS NOT NULL);
+
+CREATE POLICY "Club leaders apply merit" ON merit_program_applications
+      FOR INSERT WITH CHECK (
+        (select auth.uid()) IN (
+          SELECT id FROM profiles
+          WHERE role IN ('CLUB_PRESIDENT','CLUB_MT','SUPER_ADMIN_JPP','JPP')
+        )
+      );
+
+CREATE POLICY "JPP update merit applications" ON merit_program_applications
+      FOR UPDATE USING (
+        (select auth.uid()) IN (
+          SELECT id FROM profiles WHERE role IN ('JPP','SUPER_ADMIN_JPP')
+        )
+      );
+
+CREATE POLICY "Read review log" ON merit_review_log
+      FOR SELECT USING ((select auth.uid()) IS NOT NULL);
+
+CREATE POLICY "JPP insert review log" ON merit_review_log
+      FOR INSERT WITH CHECK (
+        (select auth.uid()) IN (
+          SELECT id FROM profiles WHERE role IN ('JPP','SUPER_ADMIN_JPP')
+        )
+      );
+
+CREATE OR REPLACE FUNCTION fn_auto_credit_kelab_merit()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_merit  INT;
+
+CREATE TRIGGER trg_auto_credit_kelab_merit
+  BEFORE INSERT OR UPDATE OF status
+  ON program_attendees
+  FOR EACH ROW
+  EXECUTE FUNCTION fn_auto_credit_kelab_merit();
+
+
+============================================================
+FILE: 41_klk_public_stats_rpc.sql
+============================================================
+CREATE OR REPLACE FUNCTION get_klk_public_stats(academic_year_param text)
+RETURNS json
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_total_luar int;
+
+
+============================================================
+FILE: 42_check_email_registered.sql
+============================================================
+CREATE OR REPLACE FUNCTION check_email_registered(p_email text)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_exists boolean;
+
+
+============================================================
+FILE: 43_get_auth_providers.sql
+============================================================
+CREATE OR REPLACE FUNCTION get_auth_providers(p_email text)
+RETURNS text[]
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_providers text[];
+
+
+============================================================
+FILE: 44_polymart_shopping_cart.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.polymart_cart_items (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    buyer_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    product_id UUID NOT NULL REFERENCES public.business_products(id) ON DELETE CASCADE,
+    quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    -- Ensure a user can only have one row per product in their cart (upsert friendly)
+    CONSTRAINT uq_polymart_cart_item UNIQUE (buyer_id, product_id)
+);
+
+CREATE POLICY "Users can manage their own cart items" ON public.polymart_cart_items
+    FOR ALL
+    USING (buyer_id = (SELECT auth.uid()))
+    WITH CHECK (buyer_id = (SELECT auth.uid()));
+
+CREATE INDEX IF NOT EXISTS idx_polymart_cart_buyer ON public.polymart_cart_items(buyer_id);
+
+
+============================================================
+FILE: 45_takwim_pusat.sql
+============================================================
+CREATE TABLE IF NOT EXISTS takwim_pusat (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  
+  -- Kategori entri
+  jenis TEXT NOT NULL CHECK (jenis IN (
+    'AKADEMIK',
+    'JPP',
+    'KPP',
+    'KEUSAHAWANAN',
+    'KEBAJIKAN',
+    'SRK',
+    'AKADEMIK_EXCO',
+    'MULTIMEDIA',
+    'KLS',
+    'KOLAB',
+    'KK',
+    'CUTI_UMUM',
+    'LAIN'
+  )),
+  
+  -- Butiran
+  tajuk TEXT NOT NULL,
+  catatan TEXT,
+  tarikh_mula DATE NOT NULL,
+  tarikh_tamat DATE,
+  bil_minggu INTEGER,
+  aktiviti TEXT,
+  
+  -- Warna custom (optional)
+  warna_custom TEXT,
+  
+  -- Sesi akademik
+  sesi TEXT DEFAULT '2026/2027',
+  
+  -- Exco module ownership (untuk RBAC frontend)
+  exco_module TEXT,
+  
+  -- Metadata
+  created_by UUID REFERENCES auth.users(id),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE POLICY "takwim_pusat_select" ON takwim_pusat
+  FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "takwim_pusat_insert" ON takwim_pusat
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = created_by);
+
+CREATE POLICY "takwim_pusat_update" ON takwim_pusat
+  FOR UPDATE TO authenticated
+  USING (auth.uid() = created_by);
+
+CREATE POLICY "takwim_pusat_delete" ON takwim_pusat
+  FOR DELETE TO authenticated
+  USING (auth.uid() = created_by);
+
+CREATE INDEX IF NOT EXISTS idx_takwim_pusat_jenis ON takwim_pusat(jenis);
+
+CREATE INDEX IF NOT EXISTS idx_takwim_pusat_sesi ON takwim_pusat(sesi);
+
+CREATE INDEX IF NOT EXISTS idx_takwim_pusat_tarikh ON takwim_pusat(tarikh_mula);
+
+CREATE INDEX IF NOT EXISTS idx_takwim_pusat_created_by ON takwim_pusat(created_by);
+
+
+============================================================
+FILE: 46_reset_jpp_cohort.sql
+============================================================
+CREATE OR REPLACE FUNCTION reset_jpp_cohort()
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_actor_role      TEXT;
+
+CREATE OR REPLACE FUNCTION remove_jpp_member(
+  p_target_id UUID
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_actor_role      TEXT;
+
+
+============================================================
+FILE: 46_takwim_kelab_kediaman.sql
+============================================================
+CREATE INDEX IF NOT EXISTS idx_takwim_pusat_kelab_kediaman
+  ON takwim_pusat(kelab_kediaman_label) WHERE jenis = 'KELAB_KEDIAMAN';
+
+
+============================================================
+FILE: 47_optimize_new_modules_rls.sql
+============================================================
+CREATE POLICY "karnival_editions_write_kpp" ON karnival_editions FOR ALL
+  USING ((select auth.uid()) IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+CREATE POLICY "karnival_categories_write_kpp" ON karnival_categories FOR ALL
+  USING ((select auth.uid()) IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+CREATE POLICY "karnival_booths_write_kpp" ON karnival_booths FOR ALL
+  USING ((select auth.uid()) IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+CREATE POLICY "karnival_votes_v2_insert_self" ON karnival_votes_v2 FOR INSERT
+  WITH CHECK ((select auth.uid()) = voter_id AND EXISTS (SELECT 1 FROM karnival_editions WHERE id = edition_id AND voting_enabled = true));
+
+CREATE POLICY "karnival_votes_v2_delete_own" ON karnival_votes_v2 FOR DELETE USING ((select auth.uid()) = voter_id);
+
+CREATE POLICY "karnival_votes_v2_admin_all" ON karnival_votes_v2 FOR ALL
+  USING ((select auth.uid()) IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+CREATE POLICY "karnival_booths_kpp_upload"  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'karnival-booths' AND (select auth.uid()) IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+CREATE POLICY "karnival_booths_kpp_delete"  ON storage.objects FOR DELETE
+  USING (bucket_id = 'karnival-booths' AND (select auth.uid()) IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+
+CREATE POLICY "supsas_editions_admin_write"  ON supsas_editions FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role = 'SUPER_ADMIN_JPP'))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role = 'SUPER_ADMIN_JPP'));
+
+CREATE POLICY "supsas_kontingen_admin_write" ON supsas_kontingen FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role = 'SUPER_ADMIN_JPP'))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role = 'SUPER_ADMIN_JPP'));
+
+CREATE POLICY "supsas_kontingen_leader_update" ON supsas_kontingen FOR UPDATE
+  USING (leader_id = (select auth.uid()))
+  WITH CHECK (leader_id = (select auth.uid()));
+
+CREATE POLICY "supsas_sports_jpp_write"    ON supsas_sports FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP','JPP')))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP','JPP')));
+
+CREATE POLICY "supsas_participants_leader_write" ON supsas_participants FOR ALL
+  USING (EXISTS (SELECT 1 FROM supsas_kontingen WHERE id = kontingen_id AND leader_id = (select auth.uid())))
+  WITH CHECK (EXISTS (SELECT 1 FROM supsas_kontingen WHERE id = kontingen_id AND leader_id = (select auth.uid())));
+
+CREATE POLICY "supsas_participants_admin_write" ON supsas_participants FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP','JPP')))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP','JPP')));
+
+CREATE POLICY "supsas_fixtures_jpp_write"   ON supsas_fixtures FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP','JPP')))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP','JPP')));
+
+CREATE POLICY "supsas_results_jpp_write"   ON supsas_results FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP','JPP')))
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP','JPP')));
+
+CREATE POLICY "supsas_assets_admin_upload" ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'supsas-assets' AND EXISTS (
+    SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP', 'JPP')
+  ));
+
+CREATE POLICY "supsas_assets_admin_delete" ON storage.objects FOR DELETE
+  USING (bucket_id = 'supsas-assets' AND EXISTS (
+    SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP', 'JPP')
+  ));
+
+CREATE POLICY "JPP and Super Admin can view all system announcements."
+    ON public.system_announcements FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles 
+            WHERE profiles.id = (select auth.uid()) 
+            AND profiles.role IN ('SUPER_ADMIN_JPP', 'JPP')
+        )
+    );
+
+CREATE POLICY "JPP and Super Admin can manage system announcements"
+    ON public.system_announcements FOR ALL
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles 
+            WHERE profiles.id = (select auth.uid()) 
+            AND profiles.role IN ('SUPER_ADMIN_JPP', 'JPP')
+        )
+    )
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.profiles 
+            WHERE profiles.id = (select auth.uid()) 
+            AND profiles.role IN ('SUPER_ADMIN_JPP', 'JPP')
+        )
+    );
+
+CREATE POLICY "Users can view own announcement responses"
+    ON public.user_announcement_responses FOR SELECT
+    USING ((select auth.uid()) = user_id);
+
+CREATE POLICY "Users can insert own announcement responses"
+    ON public.user_announcement_responses FOR INSERT
+    WITH CHECK ((select auth.uid()) = user_id);
+
+CREATE POLICY "JPP and Super Admin can view all announcement responses"
+    ON public.user_announcement_responses FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles 
+            WHERE profiles.id = (select auth.uid()) 
+            AND profiles.role IN ('SUPER_ADMIN_JPP', 'JPP')
+        )
+    );
+
+CREATE POLICY "JPP can insert announcement images" ON storage.objects FOR INSERT TO authenticated
+WITH CHECK (
+  bucket_id = 'announcements'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = (select auth.uid())) IN ('SUPER_ADMIN_JPP', 'JPP')
+  )
+);
+
+CREATE POLICY "JPP can update announcement images" ON storage.objects FOR UPDATE TO authenticated
+USING (
+  bucket_id = 'announcements'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = (select auth.uid())) IN ('SUPER_ADMIN_JPP', 'JPP')
+  )
+);
+
+CREATE POLICY "JPP can delete announcement images" ON storage.objects FOR DELETE TO authenticated
+USING (
+  bucket_id = 'announcements'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = (select auth.uid())) IN ('SUPER_ADMIN_JPP', 'JPP')
+  )
+);
+
+
+============================================================
+FILE: 48_polyrider_schema.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.polyrider_profiles (
+    user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    vehicle_type TEXT NOT NULL CHECK (vehicle_type IN ('KERETA', 'MOTOR', 'LAIN-LAIN')),
+    plate_number TEXT NOT NULL,
+    license_url TEXT,
+    status TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED')),
+    license_expiry_date TIMESTAMP WITH TIME ZONE,
+    is_active BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    CONSTRAINT fk_polyrider_profiles_profiles FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS public.polyrider_zones (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    pickup_name TEXT NOT NULL,
+    dropoff_name TEXT NOT NULL,
+    base_fare NUMERIC(10,2) NOT NULL DEFAULT 1.50,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.polyrider_jobs (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    student_id UUID NOT NULL REFERENCES auth.users(id),
+    rider_id UUID REFERENCES public.polyrider_profiles(user_id),
+    job_type TEXT NOT NULL CHECK (job_type IN ('RIDE', 'FOOD', 'POLYMART_CUST', 'POLYMART_VENDOR')),
+    pickup_name TEXT NOT NULL,
+    dropoff_name TEXT NOT NULL,
+    pickup_lat NUMERIC(10,6),
+    pickup_lng NUMERIC(10,6),
+    dropoff_lat NUMERIC(10,6),
+    dropoff_lng NUMERIC(10,6),
+    status TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'ACCEPTED', 'ARRIVED', 'IN_TRANSIT', 'COMPLETED', 'CANCELLED', 'EMERGENCY')),
+    distance_km NUMERIC(10,2),
+    base_fare NUMERIC(10,2) DEFAULT 0,
+    bidaan_tambahan NUMERIC(10,2) DEFAULT 0,
+    proposed_price NUMERIC(10,2) NOT NULL, -- The final offered price
+    rider_lat NUMERIC(10,6),
+    rider_lng NUMERIC(10,6),
+    last_location_update TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.polyrider_chats (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    job_id UUID NOT NULL REFERENCES public.polyrider_jobs(id) ON DELETE CASCADE,
+    sender_id UUID NOT NULL REFERENCES auth.users(id),
+    message TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.polyrider_sos_logs (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    job_id UUID NOT NULL REFERENCES public.polyrider_jobs(id) ON DELETE CASCADE,
+    triggered_by UUID NOT NULL REFERENCES auth.users(id),
+    lat NUMERIC(10,6),
+    lng NUMERIC(10,6),
+    resolved BOOLEAN NOT NULL DEFAULT false,
+    resolved_by UUID REFERENCES auth.users(id),
+    resolved_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE INDEX idx_polyrider_jobs_status ON public.polyrider_jobs(status);
+
+CREATE INDEX idx_polyrider_jobs_student ON public.polyrider_jobs(student_id);
+
+CREATE INDEX idx_polyrider_jobs_rider ON public.polyrider_jobs(rider_id);
+
+CREATE INDEX idx_polyrider_profiles_active ON public.polyrider_profiles(is_active) WHERE is_active = true;
+
+CREATE INDEX idx_polyrider_chats_job ON public.polyrider_chats(job_id);
+
+CREATE OR REPLACE FUNCTION public.is_klk_or_admin(uid UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+    role_val TEXT;
+
+CREATE POLICY "Public can view active riders" ON public.polyrider_profiles
+    FOR SELECT USING (is_active = true);
+
+CREATE POLICY "Riders can manage own profile" ON public.polyrider_profiles
+    FOR ALL USING (user_id = (SELECT auth.uid())) WITH CHECK (user_id = (SELECT auth.uid()));
+
+CREATE POLICY "Admin can manage all rider profiles" ON public.polyrider_profiles
+    FOR ALL USING (public.is_klk_or_admin((SELECT auth.uid())));
+
+CREATE POLICY "Anyone can read zones" ON public.polyrider_zones
+    FOR SELECT USING (true);
+
+CREATE POLICY "Admin can manage zones" ON public.polyrider_zones
+    FOR ALL USING (public.is_klk_or_admin((SELECT auth.uid())));
+
+CREATE POLICY "Students can manage own jobs" ON public.polyrider_jobs
+    FOR ALL USING (student_id = (SELECT auth.uid())) WITH CHECK (student_id = (SELECT auth.uid()));
+
+CREATE POLICY "Riders can view pending and own jobs" ON public.polyrider_jobs
+    FOR SELECT USING (
+        status = 'PENDING' OR rider_id = (SELECT auth.uid())
+    );
+
+CREATE POLICY "Riders can update own assigned jobs" ON public.polyrider_jobs
+    FOR UPDATE USING (
+        status = 'PENDING' OR rider_id = (SELECT auth.uid())
+    );
+
+CREATE POLICY "Admin can view all jobs" ON public.polyrider_jobs
+    FOR SELECT USING (public.is_klk_or_admin((SELECT auth.uid())));
+
+CREATE POLICY "Involved users can manage chats" ON public.polyrider_chats
+    FOR ALL USING (
+        sender_id = (SELECT auth.uid()) OR
+        job_id IN (
+            SELECT id FROM public.polyrider_jobs WHERE student_id = (SELECT auth.uid()) OR rider_id = (SELECT auth.uid())
+        )
+    ) WITH CHECK (
+        sender_id = (SELECT auth.uid())
+    );
+
+CREATE POLICY "Users can create SOS logs" ON public.polyrider_sos_logs
+    FOR INSERT WITH CHECK (triggered_by = (SELECT auth.uid()));
+
+CREATE POLICY "Users can view own SOS logs" ON public.polyrider_sos_logs
+    FOR SELECT USING (triggered_by = (SELECT auth.uid()));
+
+CREATE POLICY "Admin can manage all SOS logs" ON public.polyrider_sos_logs
+    FOR ALL USING (public.is_klk_or_admin((SELECT auth.uid())));
+
+CREATE OR REPLACE FUNCTION public.get_active_polyrider_count()
+RETURNS INTEGER AS $$
+DECLARE
+    active_count INTEGER;
+
+
+============================================================
+FILE: 49_polyrider_bids.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.polyrider_bids (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    job_id UUID NOT NULL REFERENCES public.polyrider_jobs(id) ON DELETE CASCADE,
+    rider_id UUID NOT NULL REFERENCES public.polyrider_profiles(user_id) ON DELETE CASCADE,
+    bid_amount NUMERIC(10,2) NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING' CHECK(status IN ('PENDING', 'ACCEPTED', 'REJECTED')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE POLICY "Public can view bids" 
+    ON public.polyrider_bids FOR SELECT 
+    USING (true);
+
+CREATE POLICY "Riders can insert bids" 
+    ON public.polyrider_bids FOR INSERT 
+    WITH CHECK (rider_id = auth.uid());
+
+CREATE POLICY "Admin can manage all bids"
+    ON public.polyrider_bids FOR ALL
+    USING (public.is_klk_or_admin(auth.uid()));
+
+CREATE POLICY "Students can update bids for their jobs"
+    ON public.polyrider_bids FOR UPDATE
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.polyrider_jobs
+            WHERE polyrider_jobs.id = polyrider_bids.job_id
+            AND polyrider_jobs.student_id = auth.uid()
+        )
+    )
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.polyrider_jobs
+            WHERE polyrider_jobs.id = polyrider_bids.job_id
+            AND polyrider_jobs.student_id = auth.uid()
+        )
+    );
+
+
+============================================================
+FILE: 50_polyrider_security_patch.sql
+============================================================
+CREATE OR REPLACE FUNCTION public.create_polyrider_job(p_student_id uuid, p_pickup_name text, p_dropoff_name text, p_pickup_lat numeric DEFAULT NULL::numeric, p_pickup_lng numeric DEFAULT NULL::numeric, p_dropoff_lat numeric DEFAULT NULL::numeric, p_dropoff_lng numeric DEFAULT NULL::numeric, p_proposed_price numeric DEFAULT 3.0, p_is_carpool_open boolean DEFAULT false, p_join_group_id uuid DEFAULT NULL::uuid)
+ RETURNS SETOF polyrider_jobs
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path = public
+AS $function$
+DECLARE
+  v_job          polyrider_jobs%ROWTYPE;
+
+CREATE OR REPLACE FUNCTION public.get_active_polyrider_count()
+ RETURNS integer
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path = public
+AS $function$
+DECLARE
+    active_count INTEGER;
+
+CREATE OR REPLACE FUNCTION public.get_my_carpool_group_ids()
+ RETURNS uuid[]
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path = public
+AS $function$
+  SELECT ARRAY(
+    SELECT DISTINCT carpool_group_id 
+    FROM polyrider_jobs 
+    WHERE student_id = auth.uid()
+      AND carpool_group_id IS NOT NULL
+      AND status IN ('GATHERING', 'CARPOOL_REQUEST', 'PENDING')
+  );
+
+CREATE OR REPLACE FUNCTION public.is_klk_or_admin(uid uuid)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path = public
+AS $function$
+DECLARE
+    role_val TEXT;
+
+CREATE OR REPLACE FUNCTION public.lock_polyrider_carpool(p_group_id uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path = public
+AS $function$
+BEGIN
+  -- Change all accepted members from GATHERING to PENDING
+  UPDATE polyrider_jobs
+  SET status = 'PENDING', is_carpool_open = false
+  WHERE carpool_group_id = p_group_id AND status = 'GATHERING';
+
+CREATE OR REPLACE FUNCTION public.respond_carpool_request(p_request_id uuid, p_accept boolean)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path = public
+AS $function$
+DECLARE
+  v_group_id UUID;
+
+CREATE OR REPLACE FUNCTION public.update_rider_avg_rating()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path = public
+AS $function$
+BEGIN
+  IF NEW.student_rating IS NOT NULL AND (OLD.student_rating IS NULL OR OLD.student_rating != NEW.student_rating) THEN
+    UPDATE polyrider_profiles SET
+      avg_rating = (
+        SELECT ROUND(AVG(student_rating)::NUMERIC, 2)
+        FROM polyrider_jobs
+        WHERE rider_id = NEW.rider_id AND student_rating IS NOT NULL
+      ),
+      total_trips = (
+        SELECT COUNT(*) FROM polyrider_jobs
+        WHERE rider_id = NEW.rider_id AND status = 'COMPLETED'
+      )
+    WHERE user_id = NEW.rider_id;
+
+CREATE INDEX IF NOT EXISTS idx_polyrider_jobs_status ON public.polyrider_jobs(status);
+
+
+============================================================
+FILE: 51_polymart_polyrider_integration.sql
+============================================================
+CREATE INDEX IF NOT EXISTS idx_polyrider_jobs_polymart_order ON public.polyrider_jobs(polymart_order_id);
+
+CREATE OR REPLACE FUNCTION public.create_polyrider_job(
+    p_student_id uuid,
+    p_pickup_name text,
+    p_dropoff_name text,
+    p_pickup_lat numeric DEFAULT NULL::numeric,
+    p_pickup_lng numeric DEFAULT NULL::numeric,
+    p_dropoff_lat numeric DEFAULT NULL::numeric,
+    p_dropoff_lng numeric DEFAULT NULL::numeric,
+    p_proposed_price numeric DEFAULT 3.0,
+    p_is_carpool_open boolean DEFAULT false,
+    p_join_group_id uuid DEFAULT NULL::uuid,
+    p_job_type text DEFAULT 'RIDE',
+    p_polymart_order_id uuid DEFAULT NULL::uuid
+)
+ RETURNS SETOF polyrider_jobs
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path = public
+AS $function$
+DECLARE
+  v_job          polyrider_jobs%ROWTYPE;
+
+
+============================================================
+FILE: 51_polyrider_cancel_sos_appeals.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.polyrider_appeals (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    reason TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
+    admin_notes TEXT,
+    reviewed_by UUID REFERENCES public.profiles(id),
+    reviewed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE POLICY "Users can view own appeals" ON public.polyrider_appeals
+    FOR SELECT USING (user_id = (SELECT auth.uid()));
+
+CREATE POLICY "Users can create appeals" ON public.polyrider_appeals
+    FOR INSERT WITH CHECK (user_id = (SELECT auth.uid()));
+
+CREATE POLICY "Admins can view appeals" ON public.polyrider_appeals
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles p 
+            WHERE p.id = (SELECT auth.uid()) 
+            AND (p.role IN ('SUPER_ADMIN_JPP', 'MT_OVERSEES', 'STAFF') OR (p.role = 'JPP' AND p.jpp_unit IN ('KLS', 'KEBAJIKAN')))
+        )
+    );
+
+CREATE POLICY "Admins can manage appeals" ON public.polyrider_appeals
+    FOR UPDATE USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles p 
+            WHERE p.id = (SELECT auth.uid()) 
+            AND (p.role IN ('SUPER_ADMIN_JPP', 'MT_OVERSEES', 'STAFF') OR (p.role = 'JPP' AND p.jpp_unit = 'KLS'))
+        )
+    );
+
+CREATE OR REPLACE FUNCTION public.cancel_polyrider_job(p_job_id uuid, p_reason text)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path = public
+AS $function$
+DECLARE
+  v_user_id UUID := auth.uid();
+
+CREATE OR REPLACE FUNCTION public.process_polyrider_appeal(p_appeal_id uuid, p_approve boolean, p_notes text)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path = public
+AS $function$
+DECLARE
+  v_admin_id UUID := auth.uid();
+
+
+============================================================
+FILE: 52_polymart_online_payment.sql
+============================================================
+CREATE INDEX IF NOT EXISTS idx_polymart_orders_payment_verified_by
+  ON public.polymart_orders(payment_verified_by);
+
+CREATE INDEX IF NOT EXISTS idx_polymart_orders_pending_deadline
+  ON public.polymart_orders(payment_deadline_at)
+  WHERE status = 'PENDING' AND payment_verified_at IS NULL;
+
+CREATE OR REPLACE FUNCTION public.cancel_expired_polymart_orders()
+RETURNS INT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_count INT := 0;
+
+CREATE OR REPLACE FUNCTION public.get_expiring_polymart_orders()
+RETURNS TABLE(id UUID, buyer_id UUID, product_name TEXT, payment_deadline_at TIMESTAMPTZ)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT o.id, o.buyer_id,
+         COALESCE(p.name, 'Produk'),
+         o.payment_deadline_at
+  FROM polymart_orders o
+  LEFT JOIN business_products p ON p.id = o.product_id
+  WHERE o.status = 'PENDING'
+    AND o.payment_verified_at IS NULL
+    AND o.payment_deadline_at IS NOT NULL
+    AND o.payment_deadline_at BETWEEN NOW() + interval '55 minutes'
+                                   AND NOW() + interval '65 minutes';
+
+CREATE POLICY "polymart_receipts_insert_authenticated"
+  ON storage.objects FOR INSERT
+  TO authenticated
+  WITH CHECK (bucket_id = 'polymart-receipts');
+
+CREATE POLICY "polymart_receipts_select_public"
+  ON storage.objects FOR SELECT
+  TO public
+  USING (bucket_id = 'polymart-receipts');
+
+
+============================================================
+FILE: 52_polyrider_infrastructure_audit_fixes.sql
+============================================================
+CREATE POLICY "Riders can insert bids" ON polyrider_bids
+  FOR INSERT WITH CHECK (rider_id = (SELECT auth.uid()));
+
+CREATE POLICY "Admin can manage all bids" ON polyrider_bids
+  FOR ALL USING (is_klk_or_admin((SELECT auth.uid())));
+
+CREATE POLICY "Students can update bids for their jobs" ON polyrider_bids
+  FOR UPDATE
+  USING (EXISTS (
+    SELECT 1 FROM polyrider_jobs
+    WHERE polyrider_jobs.id = polyrider_bids.job_id
+      AND polyrider_jobs.student_id = (SELECT auth.uid())
+  ))
+  WITH CHECK (EXISTS (
+    SELECT 1 FROM polyrider_jobs
+    WHERE polyrider_jobs.id = polyrider_bids.job_id
+      AND polyrider_jobs.student_id = (SELECT auth.uid())
+  ));
+
+CREATE INDEX IF NOT EXISTS idx_polyrider_chats_sender
+  ON polyrider_chats(sender_id);
+
+CREATE INDEX IF NOT EXISTS idx_polyrider_sos_logs_job
+  ON polyrider_sos_logs(job_id);
+
+CREATE INDEX IF NOT EXISTS idx_polyrider_sos_logs_triggered_by
+  ON polyrider_sos_logs(triggered_by);
+
+CREATE INDEX IF NOT EXISTS idx_polyrider_sos_logs_resolved_by
+  ON polyrider_sos_logs(resolved_by);
+
+CREATE INDEX IF NOT EXISTS idx_polyrider_jobs_cancelled_by
+  ON polyrider_jobs(cancelled_by);
+
+CREATE INDEX IF NOT EXISTS idx_polyrider_appeals_user_id
+  ON polyrider_appeals(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_polyrider_appeals_reviewed_by
+  ON polyrider_appeals(reviewed_by);
+
+CREATE INDEX IF NOT EXISTS idx_polyrider_sos_contacts_user_id
+  ON polyrider_sos_contacts(user_id);
+
+
+============================================================
+FILE: 52_polyrider_job_expiry.sql
+============================================================
+CREATE INDEX IF NOT EXISTS idx_polyrider_jobs_expires_at
+  ON public.polyrider_jobs(expires_at)
+  WHERE status = 'PENDING';
+
+CREATE OR REPLACE FUNCTION set_polyrider_job_expiry()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Only set for new PENDING jobs that don't already have an expiry
+  IF (TG_OP = 'INSERT') AND NEW.status = 'PENDING' AND NEW.expires_at IS NULL THEN
+    NEW.expires_at := NOW() + INTERVAL '15 minutes';
+
+CREATE TRIGGER trg_polyrider_job_expiry
+  BEFORE INSERT ON public.polyrider_jobs
+  FOR EACH ROW EXECUTE FUNCTION set_polyrider_job_expiry();
+
+
+============================================================
+FILE: 53_polyrider_rider_location.sql
+============================================================
+CREATE INDEX IF NOT EXISTS idx_polyrider_jobs_rider_location
+  ON public.polyrider_jobs(id, rider_lat, rider_lng)
+  WHERE status = 'ACCEPTED' AND rider_lat IS NOT NULL;
+
+
+============================================================
+FILE: 54_polyrider_saved_locations.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.polyrider_saved_locations (
+  id          UUID          DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id     UUID          NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  label       TEXT          NOT NULL,
+  lat         DOUBLE PRECISION NOT NULL,
+  lng         DOUBLE PRECISION NOT NULL,
+  created_at  TIMESTAMPTZ   DEFAULT NOW()
+);
+
+CREATE POLICY "saved_locations_owner_crud" ON public.polyrider_saved_locations
+  FOR ALL
+  USING  (user_id = (SELECT auth.uid()))
+  WITH CHECK (user_id = (SELECT auth.uid()));
+
+CREATE INDEX IF NOT EXISTS idx_polyrider_saved_locations_user
+  ON public.polyrider_saved_locations(user_id);
+
+CREATE OR REPLACE FUNCTION check_saved_locations_limit()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF (
+    SELECT COUNT(*) FROM public.polyrider_saved_locations
+    WHERE user_id = NEW.user_id
+  ) >= 5 THEN
+    RAISE EXCEPTION 'Had maksimum 5 lokasi kegemaran telah dicapai.';
+
+CREATE TRIGGER trg_saved_locations_limit
+  BEFORE INSERT ON public.polyrider_saved_locations
+  FOR EACH ROW EXECUTE FUNCTION check_saved_locations_limit();
+
+
+============================================================
+FILE: 54_polytask_disputes_and_rating.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.polytask_disputes (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    job_id UUID REFERENCES public.polytask_jobs(id) ON DELETE CASCADE,
+    reporter_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    reason TEXT NOT NULL,
+    status TEXT DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'RESOLVED')),
+    admin_notes TEXT,
+    resolved_by UUID REFERENCES public.profiles(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    resolved_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE POLICY "Users can view their own disputes"
+    ON public.polytask_disputes FOR SELECT
+    USING (auth.uid() = reporter_id);
+
+CREATE POLICY "JPP admins can view all disputes"
+    ON public.polytask_disputes FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role IN ('JPP', 'SUPER_ADMIN_JPP')
+        )
+    );
+
+CREATE POLICY "Users can create disputes"
+    ON public.polytask_disputes FOR INSERT
+    WITH CHECK (auth.uid() = reporter_id);
+
+CREATE POLICY "JPP admins can update disputes"
+    ON public.polytask_disputes FOR UPDATE
+    USING (
+        EXISTS (
+            SELECT 1 FROM profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role IN ('JPP', 'SUPER_ADMIN_JPP')
+        )
+    );
+
+CREATE POLICY "Anyone can view reviews"
+    ON public.polytask_reviews FOR SELECT
+    USING (true);
+
+CREATE POLICY "Users can insert reviews"
+    ON public.polytask_reviews FOR INSERT
+    WITH CHECK (auth.uid() = reviewer_id);
+
+
+============================================================
+FILE: 55_imaps_schema.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.imaps_buildings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    code TEXT NOT NULL,
+    description TEXT,
+    center_lat NUMERIC(10, 8),
+    center_lng NUMERIC(11, 8),
+    drone_image_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.imaps_locations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    building_id UUID NOT NULL REFERENCES public.imaps_buildings(id) ON DELETE CASCADE,
+    room_code TEXT NOT NULL,
+    floor_level INTEGER,
+    direction_text TEXT,
+    search_tags TEXT, -- e.g., "Makmal, Lab, Komputer, JTM" for better searching
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE POLICY "Allow public read access on imaps_buildings" 
+ON public.imaps_buildings FOR SELECT 
+USING (true);
+
+CREATE POLICY "Allow public read access on imaps_locations" 
+ON public.imaps_locations FOR SELECT 
+USING (true);
+
+CREATE POLICY "Allow superadmin full access on imaps_buildings"
+ON public.imaps_buildings FOR ALL
+USING (
+    (SELECT role FROM public.profiles WHERE id = (SELECT auth.uid())) IN ('JPP', 'super_admin')
+)
+WITH CHECK (
+    (SELECT role FROM public.profiles WHERE id = (SELECT auth.uid())) IN ('JPP', 'super_admin')
+);
+
+CREATE POLICY "Allow superadmin full access on imaps_locations"
+ON public.imaps_locations FOR ALL
+USING (
+    (SELECT role FROM public.profiles WHERE id = (SELECT auth.uid())) IN ('JPP', 'super_admin')
+)
+WITH CHECK (
+    (SELECT role FROM public.profiles WHERE id = (SELECT auth.uid())) IN ('JPP', 'super_admin')
+);
+
+CREATE INDEX IF NOT EXISTS idx_imaps_locations_building_id ON public.imaps_locations(building_id);
+
+CREATE INDEX IF NOT EXISTS idx_imaps_locations_room_code ON public.imaps_locations(room_code);
+
+
+============================================================
+FILE: 56_imaps_qol_update.sql
+============================================================
+
+============================================================
+FILE: 57_imaps_storage_bucket.sql
+============================================================
+CREATE POLICY "Public View iMaps Assets" 
+ON storage.objects FOR SELECT 
+USING (bucket_id = 'imaps_assets');
+
+CREATE POLICY "Auth Upload iMaps Assets" 
+ON storage.objects FOR INSERT 
+WITH CHECK (bucket_id = 'imaps_assets' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Auth Update iMaps Assets" 
+ON storage.objects FOR UPDATE 
+USING (bucket_id = 'imaps_assets' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Auth Delete iMaps Assets" 
+ON storage.objects FOR DELETE 
+USING (bucket_id = 'imaps_assets' AND auth.role() = 'authenticated');
+
+
+============================================================
+FILE: 58_imaps_location_image.sql
+============================================================
+
+============================================================
+FILE: 58_polyrider_realtime.sql
+============================================================
+
+============================================================
+FILE: 59_imaps_rls_fix.sql
+============================================================
+CREATE POLICY "Allow superadmin full access on imaps_buildings"
+ON public.imaps_buildings FOR ALL
+USING (
+    (SELECT role FROM public.profiles WHERE id = (SELECT auth.uid())) IN ('JPP', 'SUPER_ADMIN_JPP', 'ADMIN')
+)
+WITH CHECK (
+    (SELECT role FROM public.profiles WHERE id = (SELECT auth.uid())) IN ('JPP', 'SUPER_ADMIN_JPP', 'ADMIN')
+);
+
+CREATE POLICY "Allow superadmin full access on imaps_locations"
+ON public.imaps_locations FOR ALL
+USING (
+    (SELECT role FROM public.profiles WHERE id = (SELECT auth.uid())) IN ('JPP', 'SUPER_ADMIN_JPP', 'ADMIN')
+)
+WITH CHECK (
+    (SELECT role FROM public.profiles WHERE id = (SELECT auth.uid())) IN ('JPP', 'SUPER_ADMIN_JPP', 'ADMIN')
+);
+
+
+============================================================
+FILE: 60_keusahawanan_registration_history.sql
+============================================================
+CREATE OR REPLACE FUNCTION public.generate_puskep_reg_number()
+ RETURNS text
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+  current_year TEXT;
+
+
+============================================================
+FILE: 61_keusahawanan_multiple_mentors.sql
+============================================================
+
+============================================================
+FILE: 62_imaps_location_operating_hours.sql
+============================================================
+
+============================================================
+FILE: 63_merit_system_v2.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.student_merit_cohorts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    cohort_id TEXT NOT NULL,
+    total_merit INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE POLICY "Users can view own merit cohort history" 
+ON public.student_merit_cohorts FOR SELECT 
+USING (auth.uid() = user_id);
+
+CREATE POLICY "Superadmin can manage merit cohorts" 
+ON public.student_merit_cohorts FOR ALL 
+USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE profiles.id = auth.uid() AND profiles.role = 'SUPERADMIN'
+  )
+);
+
+CREATE TABLE IF NOT EXISTS public.demerit_appeals (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    transaction_id UUID REFERENCES public.merit_transactions(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    appeal_reason TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
+    reviewed_by UUID REFERENCES public.profiles(id),
+    reviewed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE POLICY "Users can view and create own appeals" 
+ON public.demerit_appeals FOR SELECT 
+USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own appeals" 
+ON public.demerit_appeals FOR INSERT 
+WITH CHECK (auth.uid() = user_id AND status = 'PENDING');
+
+CREATE POLICY "Admins/Exco can manage all appeals" 
+ON public.demerit_appeals FOR ALL 
+USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE profiles.id = auth.uid() AND profiles.role IN ('SUPERADMIN', 'STAFF', 'YDP', 'EXCO')
+  )
+);
+
+
+============================================================
+FILE: 64_merit_archive_cohort.sql
+============================================================
+CREATE OR REPLACE FUNCTION public.archive_merit_cohort(p_cohort_id TEXT)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    -- 1. Archive the current total_merit into student_merit_cohorts for users with merit != 0
+    INSERT INTO public.student_merit_cohorts (user_id, cohort_id, total_merit)
+    SELECT id, p_cohort_id, merit
+    FROM public.profiles
+    WHERE merit != 0;
+
+
+============================================================
+FILE: 65_add_appeal_proof_url.sql
+============================================================
+
+============================================================
+FILE: 66_fix_demerit_appeals_rls.sql
+============================================================
+CREATE POLICY "Admins/Exco can manage all appeals" 
+ON public.demerit_appeals FOR ALL 
+USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE profiles.id = auth.uid() AND profiles.role IN ('SUPER_ADMIN', 'SUPER_ADMIN_JPP', 'ADMIN', 'JPP')
+  )
+);
+
+
+============================================================
+FILE: 67_fix_merit_system_audit.sql
+============================================================
+CREATE OR REPLACE FUNCTION public.archive_merit_cohort(p_cohort_id TEXT)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    -- 1. Archive full breakdown into student_merit_cohorts
+    INSERT INTO public.student_merit_cohorts (
+      user_id, cohort_id, total_merit, merit_kelab, merit_akademik, merit_asrama
+    )
+    SELECT id, p_cohort_id, merit,
+           COALESCE(merit_kelab, 0),
+           COALESCE(merit_akademik, 0),
+           COALESCE(merit_asrama, 0)
+    FROM public.profiles
+    WHERE merit != 0 OR merit_kelab != 0 OR merit_akademik != 0 OR merit_asrama != 0;
+
+CREATE POLICY "Superadmin can manage merit cohorts"
+ON public.student_merit_cohorts FOR ALL
+USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE profiles.id = auth.uid()
+      AND profiles.role IN ('SUPER_ADMIN', 'SUPER_ADMIN_JPP')
+  )
+);
+
+CREATE OR REPLACE FUNCTION public.increment_merit_by_source(p_uid uuid, p_delta integer, p_src text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE public.profiles
+  SET
+    merit          = COALESCE(merit, 0) + p_delta,
+    merit_kelab    = CASE WHEN p_src IN ('KELAB', 'PROGRAM')
+                         THEN COALESCE(merit_kelab, 0) + p_delta
+                         ELSE merit_kelab END,
+    merit_akademik = CASE WHEN p_src = 'AKADEMIK'
+                         THEN COALESCE(merit_akademik, 0) + p_delta
+                         ELSE merit_akademik END,
+    merit_asrama   = CASE WHEN p_src = 'QR_SCAN'
+                         THEN COALESCE(merit_asrama, 0) + p_delta
+                         ELSE merit_asrama END
+  WHERE id = p_uid;
+
+CREATE POLICY "Users can view own appeals"
+ON public.demerit_appeals FOR SELECT
+USING (
+  auth.uid() = user_id
+  OR
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE profiles.id = auth.uid()
+      AND profiles.role IN ('SUPER_ADMIN', 'SUPER_ADMIN_JPP', 'ADMIN', 'JPP')
+  )
+);
+
+
+============================================================
+FILE: 68_guideline_compliance_audit.sql
+============================================================
+CREATE POLICY "demerit_appeals_select" ON public.demerit_appeals
+  FOR SELECT USING (
+    (SELECT auth.uid()) = user_id
+    OR EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = (SELECT auth.uid())
+        AND profiles.role IN ('SUPER_ADMIN', 'SUPER_ADMIN_JPP', 'ADMIN', 'JPP')
+    )
+  );
+
+CREATE POLICY "demerit_appeals_insert" ON public.demerit_appeals
+  FOR INSERT WITH CHECK (
+    (SELECT auth.uid()) = user_id
+    AND status = 'PENDING'
+  );
+
+CREATE POLICY "demerit_appeals_update" ON public.demerit_appeals
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = (SELECT auth.uid())
+        AND profiles.role IN ('SUPER_ADMIN', 'SUPER_ADMIN_JPP', 'ADMIN', 'JPP')
+    )
+  ) WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = (SELECT auth.uid())
+        AND profiles.role IN ('SUPER_ADMIN', 'SUPER_ADMIN_JPP', 'ADMIN', 'JPP')
+    )
+  );
+
+CREATE POLICY "demerit_appeals_delete" ON public.demerit_appeals
+  FOR DELETE USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = (SELECT auth.uid())
+        AND profiles.role IN ('SUPER_ADMIN', 'SUPER_ADMIN_JPP')
+    )
+  );
+
+CREATE POLICY "student_merit_cohorts_select" ON public.student_merit_cohorts
+  FOR SELECT USING (
+    (SELECT auth.uid()) = user_id
+    OR EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = (SELECT auth.uid())
+        AND profiles.role IN ('SUPER_ADMIN', 'SUPER_ADMIN_JPP')
+    )
+  );
+
+CREATE POLICY "student_merit_cohorts_manage" ON public.student_merit_cohorts
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = (SELECT auth.uid())
+        AND profiles.role IN ('SUPER_ADMIN', 'SUPER_ADMIN_JPP')
+    )
+  );
+
+CREATE INDEX IF NOT EXISTS idx_demerit_appeals_user_id
+  ON public.demerit_appeals(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_demerit_appeals_transaction_id
+  ON public.demerit_appeals(transaction_id);
+
+CREATE INDEX IF NOT EXISTS idx_student_merit_cohorts_user_id
+  ON public.student_merit_cohorts(user_id);
+
+
+============================================================
+FILE: 69_polymart_ads_schema_fix.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.polymart_ads (
+    id           UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+    title        TEXT        NOT NULL,
+    image_url    TEXT        NOT NULL,
+    link_url     TEXT,
+    type         TEXT        NOT NULL DEFAULT 'INTERNAL' CHECK (type IN ('INTERNAL', 'EXTERNAL')),
+    status       TEXT        NOT NULL DEFAULT 'DRAFT'    CHECK (status IN ('DRAFT', 'ACTIVE', 'INACTIVE')),
+    start_date   TIMESTAMPTZ,
+    end_date     TIMESTAMPTZ,
+    clicks       INTEGER     NOT NULL DEFAULT 0,
+    created_by   UUID        REFERENCES auth.users(id) ON DELETE SET NULL,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE POLICY "Public can view active ads"
+    ON public.polymart_ads
+    FOR SELECT
+    USING (status = 'ACTIVE');
+
+CREATE POLICY "Admin read polymart_ads"
+    ON public.polymart_ads
+    FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = (SELECT auth.uid())
+            AND (
+                p.role IN ('SUPER_ADMIN', 'JPP_ADMIN')
+                OR p.keusahawanan_access = TRUE
+            )
+        )
+    );
+
+CREATE POLICY "Admin insert polymart_ads"
+    ON public.polymart_ads
+    FOR INSERT
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = (SELECT auth.uid())
+            AND (
+                p.role IN ('SUPER_ADMIN', 'JPP_ADMIN')
+                OR p.keusahawanan_access = TRUE
+            )
+        )
+    );
+
+CREATE POLICY "Admin update polymart_ads"
+    ON public.polymart_ads
+    FOR UPDATE
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = (SELECT auth.uid())
+            AND (
+                p.role IN ('SUPER_ADMIN', 'JPP_ADMIN')
+                OR p.keusahawanan_access = TRUE
+            )
+        )
+    )
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = (SELECT auth.uid())
+            AND (
+                p.role IN ('SUPER_ADMIN', 'JPP_ADMIN')
+                OR p.keusahawanan_access = TRUE
+            )
+        )
+    );
+
+CREATE POLICY "Admin delete polymart_ads"
+    ON public.polymart_ads
+    FOR DELETE
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = (SELECT auth.uid())
+            AND (
+                p.role IN ('SUPER_ADMIN', 'JPP_ADMIN')
+                OR p.keusahawanan_access = TRUE
+            )
+        )
+    );
+
+CREATE OR REPLACE FUNCTION public.increment_polymart_ad_click(ad_id UUID)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    UPDATE public.polymart_ads
+    SET clicks = clicks + 1
+    WHERE id = ad_id
+    AND status = 'ACTIVE';
+
+CREATE INDEX IF NOT EXISTS idx_polymart_ads_status     ON public.polymart_ads(status);
+
+CREATE INDEX IF NOT EXISTS idx_polymart_ads_created_by ON public.polymart_ads(created_by);
+
+CREATE INDEX IF NOT EXISTS idx_polymart_ads_dates      ON public.polymart_ads(start_date, end_date);
+
+CREATE POLICY "Admin can upload polymart ads images"
+    ON storage.objects
+    FOR INSERT
+    WITH CHECK (
+        bucket_id = 'polymart-ads'
+        AND EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = (SELECT auth.uid())
+            AND (
+                p.role IN ('SUPER_ADMIN', 'JPP_ADMIN')
+                OR p.keusahawanan_access = TRUE
+            )
+        )
+    );
+
+CREATE POLICY "Public can view polymart ads images"
+    ON storage.objects
+    FOR SELECT
+    USING (bucket_id = 'polymart-ads');
+
+CREATE POLICY "Admin can delete polymart ads images"
+    ON storage.objects
+    FOR DELETE
+    USING (
+        bucket_id = 'polymart-ads'
+        AND EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = (SELECT auth.uid())
+            AND (
+                p.role IN ('SUPER_ADMIN', 'JPP_ADMIN')
+                OR p.keusahawanan_access = TRUE
+            )
+        )
+    );
+
+
+============================================================
+FILE: 70_flexible_login_and_duplicate_detection.sql
+============================================================
+CREATE OR REPLACE FUNCTION resolve_login_identifier(p_identifier TEXT)
+RETURNS TABLE(email TEXT, match_type TEXT, match_count INT)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_clean TEXT;
+
+CREATE OR REPLACE FUNCTION detect_duplicate_matric_accounts()
+RETURNS TABLE(
+  matric_no TEXT,
+  account_count BIGINT,
+  accounts JSONB
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  -- Auth guard: hanya SUPER_ADMIN_JPP atau JPP boleh akses
+  IF NOT EXISTS (
+    SELECT 1 FROM profiles 
+    WHERE id = auth.uid() 
+    AND role IN ('SUPER_ADMIN_JPP', 'JPP')
+  ) THEN
+    RAISE EXCEPTION 'Akses Ditolak: Hanya JPP Admin boleh lihat data ini.';
+
+
+============================================================
+FILE: 71_block_duplicate_matric_and_merge_tool.sql
+============================================================
+CREATE OR REPLACE FUNCTION check_matric_registered(p_matric_no TEXT)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_count INT;
+
+CREATE OR REPLACE FUNCTION admin_merge_duplicate_accounts(
+  p_primary_id UUID,
+  p_secondary_id UUID
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_caller_role TEXT;
+
+CREATE INDEX akan gagal.
+-- 
+-- Sebab itu kita wrap dalam DO block dengan EXCEPTION handler.
+-- ------------------------------------------------------------
+DO $$
+BEGIN
+  -- Cuba buat unique index
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_matric_no_unique 
+    ON profiles (UPPER(matric_no)) 
+    WHERE matric_no IS NOT NULL AND matric_no != '';
+
+
+============================================================
+FILE: 72_delete_own_account.sql
+============================================================
+CREATE OR REPLACE FUNCTION public.delete_own_account()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  -- Check if the user is authenticated
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+
+
+============================================================
+FILE: 73_polytask_schema.sql
+============================================================
+CREATE TYPE polytask_job_status AS ENUM ('OPEN', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED');
+
+CREATE TYPE polytask_bid_status AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED', 'WITHDRAWN');
+
+CREATE TABLE IF NOT EXISTS public.polytask_jobs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    requester_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    category TEXT NOT NULL,
+    budget NUMERIC(10, 2) NOT NULL DEFAULT 0,
+    location TEXT NOT NULL,
+    deadline TIMESTAMPTZ NOT NULL,
+    status polytask_job_status NOT NULL DEFAULT 'OPEN',
+    assigned_tasker_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.polytask_bids (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    job_id UUID NOT NULL REFERENCES public.polytask_jobs(id) ON DELETE CASCADE,
+    tasker_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    bid_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
+    proposal_note TEXT,
+    status polytask_bid_status NOT NULL DEFAULT 'PENDING',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.polytask_reviews (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    job_id UUID NOT NULL REFERENCES public.polytask_jobs(id) ON DELETE CASCADE,
+    reviewer_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    reviewee_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_polytask_jobs_requester ON public.polytask_jobs(requester_id);
+
+CREATE INDEX IF NOT EXISTS idx_polytask_jobs_status ON public.polytask_jobs(status);
+
+CREATE INDEX IF NOT EXISTS idx_polytask_bids_job_id ON public.polytask_bids(job_id);
+
+CREATE INDEX IF NOT EXISTS idx_polytask_bids_tasker_id ON public.polytask_bids(tasker_id);
+
+CREATE POLICY "Semua pelajar boleh lihat tugasan OPEN" ON public.polytask_jobs
+    FOR SELECT USING (
+        status = 'OPEN' 
+        OR requester_id = (SELECT auth.uid()) 
+        OR assigned_tasker_id = (SELECT auth.uid())
+        OR is_jpp_admin((SELECT auth.uid()))
+    );
+
+CREATE POLICY "Pelajar boleh cipta tugasan" ON public.polytask_jobs
+    FOR INSERT WITH CHECK (requester_id = (SELECT auth.uid()));
+
+CREATE POLICY "Pelajar boleh kemaskini tugasan sendiri" ON public.polytask_jobs
+    FOR UPDATE USING (
+        requester_id = (SELECT auth.uid()) OR is_jpp_admin((SELECT auth.uid()))
+    ) WITH CHECK (
+        requester_id = (SELECT auth.uid()) OR is_jpp_admin((SELECT auth.uid()))
+    );
+
+CREATE POLICY "Peminta boleh lihat bidaan untuk tugasannya" ON public.polytask_bids
+    FOR SELECT USING (
+        tasker_id = (SELECT auth.uid()) OR 
+        job_id IN (SELECT id FROM public.polytask_jobs WHERE requester_id = (SELECT auth.uid())) OR
+        is_jpp_admin((SELECT auth.uid()))
+    );
+
+CREATE POLICY "Pelajar boleh bida jika tugasan OPEN" ON public.polytask_bids
+    FOR INSERT WITH CHECK (
+        tasker_id = (SELECT auth.uid()) AND
+        job_id IN (SELECT id FROM public.polytask_jobs WHERE status = 'OPEN')
+    );
+
+CREATE POLICY "Tasker boleh tarik balik atau kemaskini bidaan" ON public.polytask_bids
+    FOR UPDATE USING (
+        tasker_id = (SELECT auth.uid()) AND status = 'PENDING'
+    ) WITH CHECK (
+        tasker_id = (SELECT auth.uid())
+    );
+
+CREATE POLICY "Peminta boleh ACCEPT bidaan" ON public.polytask_bids
+    FOR UPDATE USING (
+        job_id IN (SELECT id FROM public.polytask_jobs WHERE requester_id = (SELECT auth.uid()) AND status = 'OPEN') AND status = 'PENDING'
+    ) WITH CHECK (
+        job_id IN (SELECT id FROM public.polytask_jobs WHERE requester_id = (SELECT auth.uid()))
+    );
+
+CREATE POLICY "Semua boleh lihat review" ON public.polytask_reviews
+    FOR SELECT USING (true);
+
+CREATE POLICY "Boleh tulis review untuk job yang siap" ON public.polytask_reviews
+    FOR INSERT WITH CHECK (
+        reviewer_id = (SELECT auth.uid()) AND
+        job_id IN (SELECT id FROM public.polytask_jobs WHERE status = 'COMPLETED')
+    );
+
+CREATE OR REPLACE FUNCTION handle_polytask_bid_acceptance()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Only trigger when a bid status changes to 'ACCEPTED'
+    IF NEW.status = 'ACCEPTED' AND OLD.status != 'ACCEPTED' THEN
+        
+        -- 1. Tolak bidaan lain
+        UPDATE public.polytask_bids 
+        SET status = 'REJECTED' 
+        WHERE job_id = NEW.job_id AND id != NEW.id;
+
+CREATE TRIGGER trigger_polytask_bid_acceptance
+    AFTER UPDATE ON public.polytask_bids
+    FOR EACH ROW
+    EXECUTE FUNCTION handle_polytask_bid_acceptance();
+
+
+============================================================
+FILE: 81_polytask_cancellation_rate.sql
+============================================================
+CREATE OR REPLACE FUNCTION update_polytask_completion_metrics()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.status = 'COMPLETED' AND OLD.status != 'COMPLETED' THEN
+        -- Tambah +1 pada polytask_completed_bids untuk tasker yang berjaya siapkan kerja
+        IF NEW.assigned_tasker_id IS NOT NULL THEN
+            UPDATE public.profiles
+            SET polytask_completed_bids = polytask_completed_bids + 1
+            WHERE id = NEW.assigned_tasker_id;
+
+CREATE TRIGGER trigger_update_polytask_completion_metrics
+    AFTER UPDATE ON public.polytask_jobs
+    FOR EACH ROW
+    EXECUTE FUNCTION update_polytask_completion_metrics();
+
+CREATE POLICY "Tasker boleh tarik diri dari tugasan" ON public.polytask_jobs
+    FOR UPDATE USING (
+        assigned_tasker_id = (SELECT auth.uid()) AND status = 'IN_PROGRESS'
+    ) WITH CHECK (
+        -- membenarkan tasker set assigned_tasker_id = null
+        true
+    );
+
+CREATE POLICY "Tasker boleh WITHDRAW bidaan yang sudah diterima" ON public.polytask_bids
+    FOR UPDATE USING (
+        tasker_id = (SELECT auth.uid()) AND status = 'ACCEPTED'
+    ) WITH CHECK (
+        tasker_id = (SELECT auth.uid())
+    );
+
+CREATE OR REPLACE FUNCTION handle_polytask_cancellation()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.status = 'WITHDRAWN' AND OLD.status = 'ACCEPTED' THEN
+        -- Tambah +1 pada cancellation_count
+        UPDATE public.profiles
+        SET polytask_cancellations = polytask_cancellations + 1
+        WHERE id = NEW.tasker_id;
+
+CREATE TRIGGER trigger_handle_polytask_cancellation
+    AFTER UPDATE ON public.polytask_bids
+    FOR EACH ROW
+    EXECUTE FUNCTION handle_polytask_cancellation();
+
+
+============================================================
+FILE: 82_polytask_fasa_all.sql
+============================================================
+CREATE OR REPLACE FUNCTION get_average_budget_by_category(p_category TEXT)
+RETURNS NUMERIC AS $$
+DECLARE
+    avg_budget NUMERIC;
+
+CREATE TABLE IF NOT EXISTS public.polytask_jobs_archive (
+    id UUID PRIMARY KEY,
+    requester_id UUID,
+    title TEXT,
+    description TEXT,
+    category TEXT,
+    budget NUMERIC,
+    location TEXT,
+    deadline TIMESTAMPTZ,
+    status TEXT,
+    assigned_tasker_id UUID,
+    created_at TIMESTAMPTZ,
+    updated_at TIMESTAMPTZ,
+    archived_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE OR REPLACE FUNCTION archive_old_polytask_jobs()
+RETURNS void AS $$
+BEGIN
+    -- Salin ke arkib
+    INSERT INTO public.polytask_jobs_archive (id, requester_id, title, description, category, budget, location, deadline, status, assigned_tasker_id, created_at, updated_at)
+    SELECT id, requester_id, title, description, category, budget, location, deadline, status, assigned_tasker_id, created_at, updated_at
+    FROM public.polytask_jobs
+    WHERE status IN ('COMPLETED', 'CANCELLED') 
+    AND updated_at < NOW() - INTERVAL '3 months';
+
+CREATE OR REPLACE FUNCTION check_polytask_bid_rate_limit()
+RETURNS TRIGGER AS $$
+DECLARE
+    recent_bids_count INT;
+
+CREATE TRIGGER trigger_check_polytask_bid_rate_limit
+    BEFORE INSERT ON public.polytask_bids
+    FOR EACH ROW
+    EXECUTE FUNCTION check_polytask_bid_rate_limit();
+
+CREATE OR REPLACE FUNCTION log_polytask_critical_actions()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Jika Tasker tarik diri
+    IF NEW.status = 'OPEN' AND OLD.status = 'IN_PROGRESS' AND OLD.assigned_tasker_id IS NOT NULL AND NEW.assigned_tasker_id IS NULL THEN
+        INSERT INTO public.admin_audit_logs (actor_id, action_type, table_name, record_id, old_data, new_data)
+        VALUES (OLD.assigned_tasker_id, 'UPDATE', 'polytask_jobs', OLD.id::TEXT, row_to_json(OLD), row_to_json(NEW));
+
+CREATE TRIGGER trigger_log_polytask_critical_actions
+    AFTER UPDATE ON public.polytask_jobs
+    FOR EACH ROW
+    EXECUTE FUNCTION log_polytask_critical_actions();
+
+
+============================================================
+FILE: 83_polytask_proof_of_work.sql
+============================================================
+CREATE POLICY "Tasker boleh muat naik bukti kerja" ON public.polytask_jobs
+    FOR UPDATE USING (
+        assigned_tasker_id = (SELECT auth.uid()) AND status = 'IN_PROGRESS'
+    ) WITH CHECK (
+        assigned_tasker_id = (SELECT auth.uid())
+    );
+
+CREATE POLICY "Semua boleh lihat bukti" ON storage.objects
+    FOR SELECT USING (bucket_id = 'polytask_proofs');
+
+CREATE POLICY "Pelajar boleh upload bukti" ON storage.objects
+    FOR INSERT WITH CHECK (bucket_id = 'polytask_proofs' AND auth.uid() IS NOT NULL);
+
+
+============================================================
+FILE: 84_polysuara_schema.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.polysuara_confessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    author_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    category VARCHAR(50) DEFAULT 'UMUM',
+    upvotes INTEGER DEFAULT 0,
+    is_approved BOOLEAN DEFAULT true, -- JPP boleh tukar ke false jika ada unsur toksik
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.polysuara_upvotes (
+    confession_id UUID REFERENCES public.polysuara_confessions(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    PRIMARY KEY (confession_id, user_id)
+);
+
+CREATE POLICY "Pelajar boleh baca luahan" ON public.polysuara_confessions
+    FOR SELECT USING (
+        is_approved = true
+    );
+
+CREATE POLICY "Pelajar boleh buat luahan" ON public.polysuara_confessions
+    FOR INSERT WITH CHECK (
+        (SELECT auth.uid()) = author_id
+    );
+
+CREATE POLICY "JPP boleh urus luahan" ON public.polysuara_confessions
+    FOR ALL USING (
+        is_jpp_admin((SELECT auth.uid()))
+    ) WITH CHECK (
+        is_jpp_admin((SELECT auth.uid()))
+    );
+
+CREATE POLICY "Boleh lihat upvote" ON public.polysuara_upvotes
+    FOR SELECT USING (true);
+
+CREATE POLICY "Boleh upvote" ON public.polysuara_upvotes
+    FOR INSERT WITH CHECK ((SELECT auth.uid()) = user_id);
+
+CREATE POLICY "Boleh buang upvote sendiri" ON public.polysuara_upvotes
+    FOR DELETE USING ((SELECT auth.uid()) = user_id);
+
+CREATE OR REPLACE FUNCTION toggle_polysuara_upvote(p_confession_id UUID)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_user_id UUID;
+
+
+============================================================
+FILE: 84_polytask_v2_hotfix.sql
+============================================================
+CREATE POLICY "Semua boleh lihat bukti polytask" ON storage.objects
+    FOR SELECT USING (bucket_id = 'polytask_proofs');
+
+CREATE POLICY "Pelajar boleh upload bukti polytask" ON storage.objects
+    FOR INSERT WITH CHECK (bucket_id = 'polytask_proofs' AND auth.uid() IS NOT NULL);
+
+CREATE POLICY "Tasker boleh muat naik bukti kerja" ON public.polytask_jobs
+    FOR UPDATE USING (
+        assigned_tasker_id = (SELECT auth.uid()) AND status = 'IN_PROGRESS'
+    ) WITH CHECK (
+        assigned_tasker_id = (SELECT auth.uid())
+    );
+
+CREATE OR REPLACE FUNCTION update_polytask_completion_metrics()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.status = 'COMPLETED' AND OLD.status != 'COMPLETED' THEN
+        IF NEW.assigned_tasker_id IS NOT NULL THEN
+            UPDATE public.profiles
+            SET polytask_completed_bids = polytask_completed_bids + 1
+            WHERE id = NEW.assigned_tasker_id;
+
+CREATE OR REPLACE FUNCTION handle_polytask_cancellation()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.status = 'WITHDRAWN' AND OLD.status = 'ACCEPTED' THEN
+        UPDATE public.profiles
+        SET polytask_cancellations = polytask_cancellations + 1
+        WHERE id = NEW.tasker_id;
+
+CREATE OR REPLACE FUNCTION get_average_budget_by_category(p_category TEXT)
+RETURNS NUMERIC AS $$
+DECLARE avg_budget NUMERIC;
+
+CREATE OR REPLACE FUNCTION archive_old_polytask_jobs()
+RETURNS void AS $$
+BEGIN
+    INSERT INTO public.polytask_jobs_archive (id, requester_id, title, description, category, budget, location, deadline, status, assigned_tasker_id, created_at, updated_at)
+    SELECT id, requester_id, title, description, category, budget, location, deadline, status, assigned_tasker_id, created_at, updated_at
+    FROM public.polytask_jobs
+    WHERE status IN ('COMPLETED', 'CANCELLED') AND updated_at < NOW() - INTERVAL '3 months';
+
+CREATE OR REPLACE FUNCTION check_polytask_bid_rate_limit()
+RETURNS TRIGGER AS $$
+DECLARE recent_bids_count INT;
+
+CREATE OR REPLACE FUNCTION log_polytask_critical_actions()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.status = 'OPEN' AND OLD.status = 'IN_PROGRESS' AND OLD.assigned_tasker_id IS NOT NULL AND NEW.assigned_tasker_id IS NULL THEN
+        INSERT INTO public.admin_audit_logs (actor_id, action_type, table_name, record_id, old_data, new_data)
+        VALUES (OLD.assigned_tasker_id, 'UPDATE', 'polytask_jobs', OLD.id::TEXT, row_to_json(OLD), row_to_json(NEW));
+
+CREATE OR REPLACE FUNCTION is_polytask_admin(uid uuid)
+RETURNS boolean AS $$
+BEGIN
+    RETURN EXISTS(SELECT 1 FROM public.profiles WHERE id = uid AND role IN ('JPP', 'SUPER_ADMIN_JPP'));
+
+CREATE OR REPLACE FUNCTION get_active_polytask_count()
+RETURNS integer AS $$
+BEGIN
+    RETURN (SELECT count(*)::integer FROM public.polytask_jobs WHERE status IN ('OPEN', 'IN_PROGRESS'));
+
+CREATE OR REPLACE FUNCTION handle_polytask_bid_acceptance()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+    IF NEW.status = 'ACCEPTED' AND OLD.status != 'ACCEPTED' THEN
+        UPDATE public.polytask_bids SET status = 'REJECTED' WHERE job_id = NEW.job_id AND id != NEW.id;
+
+CREATE OR REPLACE FUNCTION process_polytask_appeal(p_appeal_id uuid, p_approve boolean, p_notes text DEFAULT NULL)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('MAJLIS_TERTINGGI','EXCO_KEBAJIKAN','EXCO_KAMSIS','EXCO_KEUSAHAWANAN','DEVELOPER')) THEN
+    RAISE EXCEPTION 'Unauthorized';
+
+CREATE POLICY "Tasker boleh tarik diri dari tugasan" ON public.polytask_jobs
+    FOR UPDATE USING (
+        assigned_tasker_id = (SELECT auth.uid()) AND status = 'IN_PROGRESS'
+    ) WITH CHECK (
+        assigned_tasker_id = (SELECT auth.uid()) OR assigned_tasker_id IS NULL
+    );
+
+
+============================================================
+FILE: 85_polymatch_schema.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.polymatch_listings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    author_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    category VARCHAR(50) NOT NULL CHECK (category IN ('PROJECT', 'ROOMMATE')),
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    contact_info VARCHAR(255) NOT NULL,
+    tags TEXT[] DEFAULT '{}',
+    status VARCHAR(50) DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'CLOSED')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE POLICY "Semua boleh baca iklan aktif" ON public.polymatch_listings
+    FOR SELECT USING (
+        status = 'OPEN' 
+        OR (SELECT auth.uid()) = author_id
+    );
+
+CREATE POLICY "Pengguna boleh cipta iklan" ON public.polymatch_listings
+    FOR INSERT WITH CHECK (
+        (SELECT auth.uid()) = author_id
+    );
+
+CREATE POLICY "Pengguna boleh kemaskini iklan sendiri" ON public.polymatch_listings
+    FOR UPDATE USING (
+        (SELECT auth.uid()) = author_id
+    ) WITH CHECK (
+        (SELECT auth.uid()) = author_id
+    );
+
+CREATE POLICY "Pengguna boleh padam iklan sendiri" ON public.polymatch_listings
+    FOR DELETE USING (
+        (SELECT auth.uid()) = author_id
+    );
+
+CREATE POLICY "JPP boleh urus semua iklan" ON public.polymatch_listings
+    FOR ALL USING (
+        is_jpp_admin((SELECT auth.uid()))
+    ) WITH CHECK (
+        is_jpp_admin((SELECT auth.uid()))
+    );
+
+
+============================================================
+FILE: 86_polyservices_moderation.sql
+============================================================
+CREATE TABLE IF NOT EXISTS public.polyservices_moderation_config (
+    id INTEGER PRIMARY KEY DEFAULT 1,
+    report_threshold INTEGER DEFAULT 5,
+    time_window_mins INTEGER DEFAULT 10,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    CONSTRAINT single_row CHECK (id = 1)
+);
+
+CREATE POLICY "Semua boleh baca iklan aktif" ON public.polymatch_listings
+    FOR SELECT USING (
+        status = 'OPEN' 
+        AND is_approved = true
+        OR (SELECT auth.uid()) = author_id
+    );
+
+CREATE TABLE IF NOT EXISTS public.polyservices_reports (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    target_id UUID NOT NULL,
+    target_type VARCHAR(20) NOT NULL CHECK (target_type IN ('SUARA', 'MATCH')),
+    reporter_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    reason VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    CONSTRAINT unique_report_per_user UNIQUE (target_id, reporter_id)
+);
+
+CREATE POLICY "Semua boleh baca config moderasi" ON public.polyservices_moderation_config FOR SELECT USING (true);
+
+CREATE POLICY "Hanya JPP boleh kemaskini config" ON public.polyservices_moderation_config FOR UPDATE USING (is_jpp_admin((SELECT auth.uid()))) WITH CHECK (is_jpp_admin((SELECT auth.uid())));
+
+CREATE POLICY "Pelajar boleh buat report" ON public.polyservices_reports FOR INSERT WITH CHECK ((SELECT auth.uid()) = reporter_id);
+
+CREATE POLICY "JPP boleh baca report" ON public.polyservices_reports FOR SELECT USING (is_jpp_admin((SELECT auth.uid())));
+
+CREATE OR REPLACE FUNCTION submit_polyservices_report(
+    p_target_id UUID,
+    p_target_type VARCHAR,
+    p_reason VARCHAR
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_reporter_id UUID;
+
+
+============================================================
+FILE: 87_polymart_auto_cancel_hotfix.sql
+============================================================
+CREATE OR REPLACE FUNCTION public.cancel_expired_polymart_orders()
+RETURNS INT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_count INT := 0;
+
+
+============================================================
+FILE: add_merit_eakademik_to_club_activities.sql
+============================================================
+
+============================================================
+FILE: quick_fix_pembubaran.sql
+============================================================
+
+============================================================
+FILE: rename_akademik_to_kpp_merit_vouch.sql
+============================================================

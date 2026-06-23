@@ -9,6 +9,7 @@ import {
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import { getSemesterInfo } from '@/types';
 import { PolymartServiceModal } from '../portal/PolymartServiceModal';
 
@@ -34,6 +35,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const { isSuperAdmin, isJppMember, profile } = useAuth();
+  const { intake1Month, intake2Month } = useAcademicSession();
   const navigate = useNavigate();
   const location = useLocation();
   const navRef = useRef<HTMLDivElement>(null);
@@ -102,7 +104,7 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
   };
 
   const semInfo = profile?.intake_year
-    ? getSemesterInfo(profile.intake_year, profile.intake_period as 1 | 2, profile.programme_code === 'FTV', 7, 1, profile.semester_override)
+    ? getSemesterInfo(profile.intake_year, profile.intake_period as 1 | 2, profile.programme_code === 'FTV', intake1Month, intake2Month, profile.semester_override)
     : { semester: 0 };
   const isKlkEligible = semInfo.semester >= 2;
 
@@ -413,7 +415,7 @@ function NavIconButton({ icon: Icon, label, isActive, onClick, badge, theme }: N
         "flex items-center justify-center gap-1.5 h-10 rounded-full transition-all duration-300 active:scale-95 relative",
         isActive 
           ? cn("px-3.5", t.pillBg, t.color) 
-          : "w-10 text-slate-400 hover:text-slate-700 dark:text-white/50 dark:hover:text-white/90"
+          : "w-10 text-slate-600 hover:text-slate-900 dark:text-white/50 dark:hover:text-white/90"
       )}
     >
       <motion.div layout className="flex items-center justify-center">

@@ -353,8 +353,14 @@ export const JABATAN_SEARCH_TERMS: Record<JabatanValue, string> = {
 };
 
 // Fungsi pembantu untuk mencari ID kelab yang sah pada masa nyata (runtime)
-export const getAkademikClubId = (jabatan: JabatanValue): string | null => {
-  const keyword = JABATAN_SEARCH_TERMS[jabatan];
+export const getAkademikClubId = (jabatan: JabatanValue, programmeCode?: string | null): string | null => {
+  let keyword = JABATAN_SEARCH_TERMS[jabatan];
+  
+  // Geomatik students (DGU) belong to Geosas club instead of PePKa
+  if (jabatan === 'awam' && programmeCode === 'DGU') {
+    keyword = 'Geosas';
+  }
+  
   if (!keyword) return null;
   
   const club = ALL_CLUBS.find(c => 

@@ -1,0 +1,465 @@
+### Source: `27_polysuara_v4_updates.sql`
+```sql
+CREATE POLICY "Give public access to polysuara_attachments" ON storage.objects FOR SELECT USING (bucket_id = 'polysuara_attachments');
+```
+============================================================
+
+### Source: `27_polysuara_v4_updates.sql`
+```sql
+CREATE POLICY "Allow authenticated inserts to polysuara_attachments" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'polysuara_attachments' AND auth.role() = 'authenticated');
+```
+============================================================
+
+### Source: `29_keusahawanan_products_bucket.sql`
+```sql
+CREATE POLICY "Public boleh lihat gambar produk dan logo"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'keusahawanan-products');
+```
+============================================================
+
+### Source: `29_keusahawanan_products_bucket.sql`
+```sql
+CREATE POLICY "Authenticated users boleh muat naik gambar"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'keusahawanan-products');
+```
+============================================================
+
+### Source: `29_keusahawanan_products_bucket.sql`
+```sql
+CREATE POLICY "Authenticated users boleh kemaskini gambar"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (bucket_id = 'keusahawanan-products');
+```
+============================================================
+
+### Source: `29_keusahawanan_products_bucket.sql`
+```sql
+CREATE POLICY "Authenticated users boleh padam gambar"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (bucket_id = 'keusahawanan-products');
+```
+============================================================
+
+### Source: `32_create_polyrent_bucket.sql`
+```sql
+CREATE POLICY "Public Access Polyrent"
+ON storage.objects FOR SELECT
+USING ( bucket_id = 'polyrent' );
+```
+============================================================
+
+### Source: `32_create_polyrent_bucket.sql`
+```sql
+CREATE POLICY "Authenticated users can upload to polyrent"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK ( bucket_id = 'polyrent' );
+```
+============================================================
+
+### Source: `32_create_polyrent_bucket.sql`
+```sql
+CREATE POLICY "Users can update their own polyrent images"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING ( bucket_id = 'polyrent' AND auth.uid() = owner );
+```
+============================================================
+
+### Source: `32_create_polyrent_bucket.sql`
+```sql
+CREATE POLICY "Users can delete their own polyrent images"
+ON storage.objects FOR DELETE
+TO authenticated
+USING ( bucket_id = 'polyrent' AND auth.uid() = owner );
+```
+============================================================
+
+### Source: `33_announcement_poster.sql`
+```sql
+CREATE POLICY "Public can view announcement images"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'announcements');
+```
+============================================================
+
+### Source: `33_announcement_poster.sql`
+```sql
+CREATE POLICY "JPP can insert announcement images"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (
+  bucket_id = 'announcements'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('SUPER_ADMIN_JPP', 'JPP')
+  )
+);
+```
+============================================================
+
+### Source: `33_announcement_poster.sql`
+```sql
+CREATE POLICY "JPP can update announcement images"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (
+  bucket_id = 'announcements'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('SUPER_ADMIN_JPP', 'JPP')
+  )
+);
+```
+============================================================
+
+### Source: `33_announcement_poster.sql`
+```sql
+CREATE POLICY "JPP can delete announcement images"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+  bucket_id = 'announcements'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('SUPER_ADMIN_JPP', 'JPP')
+  )
+);
+```
+============================================================
+
+### Source: `36_supsas_schema.sql`
+```sql
+CREATE POLICY "supsas_assets_public_read"  ON storage.objects FOR SELECT USING (bucket_id = 'supsas-assets');
+```
+============================================================
+
+### Source: `36_supsas_schema.sql`
+```sql
+CREATE POLICY "supsas_assets_admin_upload" ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'supsas-assets' AND EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'JPP')
+  ));
+```
+============================================================
+
+### Source: `36_supsas_schema.sql`
+```sql
+CREATE POLICY "supsas_assets_admin_delete" ON storage.objects FOR DELETE
+  USING (bucket_id = 'supsas-assets' AND EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('SUPER_ADMIN_JPP', 'JPP')
+  ));
+```
+============================================================
+
+### Source: `38_karnival_v2.sql`
+```sql
+CREATE POLICY "karnival_booths_public_read" ON storage.objects FOR SELECT USING (bucket_id = 'karnival-booths');
+```
+============================================================
+
+### Source: `38_karnival_v2.sql`
+```sql
+CREATE POLICY "karnival_booths_kpp_upload"  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'karnival-booths' AND auth.uid() IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+```
+============================================================
+
+### Source: `38_karnival_v2.sql`
+```sql
+CREATE POLICY "karnival_booths_kpp_delete"  ON storage.objects FOR DELETE
+  USING (bucket_id = 'karnival-booths' AND auth.uid() IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+```
+============================================================
+
+### Source: `47_optimize_new_modules_rls.sql`
+```sql
+DROP POLICY IF EXISTS "karnival_booths_kpp_upload"  ON storage.objects;
+```
+============================================================
+
+### Source: `47_optimize_new_modules_rls.sql`
+```sql
+DROP POLICY IF EXISTS "karnival_booths_kpp_delete"  ON storage.objects;
+```
+============================================================
+
+### Source: `47_optimize_new_modules_rls.sql`
+```sql
+DROP POLICY IF EXISTS "supsas_assets_admin_upload" ON storage.objects;
+```
+============================================================
+
+### Source: `47_optimize_new_modules_rls.sql`
+```sql
+DROP POLICY IF EXISTS "supsas_assets_admin_delete" ON storage.objects;
+```
+============================================================
+
+### Source: `47_optimize_new_modules_rls.sql`
+```sql
+DROP POLICY IF EXISTS "JPP can insert announcement images" ON storage.objects;
+```
+============================================================
+
+### Source: `47_optimize_new_modules_rls.sql`
+```sql
+DROP POLICY IF EXISTS "JPP can update announcement images" ON storage.objects;
+```
+============================================================
+
+### Source: `47_optimize_new_modules_rls.sql`
+```sql
+DROP POLICY IF EXISTS "JPP can delete announcement images" ON storage.objects;
+```
+============================================================
+
+### Source: `47_optimize_new_modules_rls.sql`
+```sql
+CREATE POLICY "karnival_booths_kpp_upload"  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'karnival-booths' AND (select auth.uid()) IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+```
+============================================================
+
+### Source: `47_optimize_new_modules_rls.sql`
+```sql
+CREATE POLICY "karnival_booths_kpp_delete"  ON storage.objects FOR DELETE
+  USING (bucket_id = 'karnival-booths' AND (select auth.uid()) IN (SELECT id FROM profiles WHERE role = 'SUPER_ADMIN_JPP' OR (role = 'JPP' AND jpp_unit = 'KPP')));
+```
+============================================================
+
+### Source: `47_optimize_new_modules_rls.sql`
+```sql
+CREATE POLICY "supsas_assets_admin_upload" ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'supsas-assets' AND EXISTS (
+    SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP', 'JPP')
+  ));
+```
+============================================================
+
+### Source: `47_optimize_new_modules_rls.sql`
+```sql
+CREATE POLICY "supsas_assets_admin_delete" ON storage.objects FOR DELETE
+  USING (bucket_id = 'supsas-assets' AND EXISTS (
+    SELECT 1 FROM profiles WHERE id = (select auth.uid()) AND role IN ('SUPER_ADMIN_JPP', 'JPP')
+  ));
+```
+============================================================
+
+### Source: `47_optimize_new_modules_rls.sql`
+```sql
+CREATE POLICY "JPP can insert announcement images" ON storage.objects FOR INSERT TO authenticated
+WITH CHECK (
+  bucket_id = 'announcements'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = (select auth.uid())) IN ('SUPER_ADMIN_JPP', 'JPP')
+  )
+);
+```
+============================================================
+
+### Source: `47_optimize_new_modules_rls.sql`
+```sql
+CREATE POLICY "JPP can update announcement images" ON storage.objects FOR UPDATE TO authenticated
+USING (
+  bucket_id = 'announcements'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = (select auth.uid())) IN ('SUPER_ADMIN_JPP', 'JPP')
+  )
+);
+```
+============================================================
+
+### Source: `47_optimize_new_modules_rls.sql`
+```sql
+CREATE POLICY "JPP can delete announcement images" ON storage.objects FOR DELETE TO authenticated
+USING (
+  bucket_id = 'announcements'
+  AND (
+    (SELECT role FROM public.profiles WHERE id = (select auth.uid())) IN ('SUPER_ADMIN_JPP', 'JPP')
+  )
+);
+```
+============================================================
+
+### Source: `52_polymart_online_payment.sql`
+```sql
+CREATE POLICY "polymart_receipts_insert_authenticated"
+  ON storage.objects FOR INSERT
+  TO authenticated
+  WITH CHECK (bucket_id = 'polymart-receipts');
+```
+============================================================
+
+### Source: `52_polymart_online_payment.sql`
+```sql
+CREATE POLICY "polymart_receipts_select_public"
+  ON storage.objects FOR SELECT
+  TO public
+  USING (bucket_id = 'polymart-receipts');
+```
+============================================================
+
+### Source: `57_imaps_storage_bucket.sql`
+```sql
+DROP POLICY IF EXISTS "Public View iMaps Assets" ON storage.objects;
+```
+============================================================
+
+### Source: `57_imaps_storage_bucket.sql`
+```sql
+DROP POLICY IF EXISTS "Auth Upload iMaps Assets" ON storage.objects;
+```
+============================================================
+
+### Source: `57_imaps_storage_bucket.sql`
+```sql
+DROP POLICY IF EXISTS "Auth Update iMaps Assets" ON storage.objects;
+```
+============================================================
+
+### Source: `57_imaps_storage_bucket.sql`
+```sql
+DROP POLICY IF EXISTS "Auth Delete iMaps Assets" ON storage.objects;
+```
+============================================================
+
+### Source: `57_imaps_storage_bucket.sql`
+```sql
+CREATE POLICY "Public View iMaps Assets" 
+ON storage.objects FOR SELECT 
+USING (bucket_id = 'imaps_assets');
+```
+============================================================
+
+### Source: `57_imaps_storage_bucket.sql`
+```sql
+CREATE POLICY "Auth Upload iMaps Assets" 
+ON storage.objects FOR INSERT 
+WITH CHECK (bucket_id = 'imaps_assets' AND auth.role() = 'authenticated');
+```
+============================================================
+
+### Source: `57_imaps_storage_bucket.sql`
+```sql
+CREATE POLICY "Auth Update iMaps Assets" 
+ON storage.objects FOR UPDATE 
+USING (bucket_id = 'imaps_assets' AND auth.role() = 'authenticated');
+```
+============================================================
+
+### Source: `57_imaps_storage_bucket.sql`
+```sql
+CREATE POLICY "Auth Delete iMaps Assets" 
+ON storage.objects FOR DELETE 
+USING (bucket_id = 'imaps_assets' AND auth.role() = 'authenticated');
+```
+============================================================
+
+### Source: `69_polymart_ads_schema_fix.sql`
+```sql
+DROP POLICY IF EXISTS "Admin can upload polymart ads images" ON storage.objects;
+```
+============================================================
+
+### Source: `69_polymart_ads_schema_fix.sql`
+```sql
+DROP POLICY IF EXISTS "Public can view polymart ads images" ON storage.objects;
+```
+============================================================
+
+### Source: `69_polymart_ads_schema_fix.sql`
+```sql
+DROP POLICY IF EXISTS "Admin can delete polymart ads images" ON storage.objects;
+```
+============================================================
+
+### Source: `69_polymart_ads_schema_fix.sql`
+```sql
+CREATE POLICY "Admin can upload polymart ads images"
+    ON storage.objects
+    FOR INSERT
+    WITH CHECK (
+        bucket_id = 'polymart-ads'
+        AND EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = (SELECT auth.uid())
+            AND (
+                p.role IN ('SUPER_ADMIN', 'JPP_ADMIN')
+                OR p.keusahawanan_access = TRUE
+            )
+        )
+    );
+```
+============================================================
+
+### Source: `69_polymart_ads_schema_fix.sql`
+```sql
+CREATE POLICY "Public can view polymart ads images"
+    ON storage.objects
+    FOR SELECT
+    USING (bucket_id = 'polymart-ads');
+```
+============================================================
+
+### Source: `69_polymart_ads_schema_fix.sql`
+```sql
+CREATE POLICY "Admin can delete polymart ads images"
+    ON storage.objects
+    FOR DELETE
+    USING (
+        bucket_id = 'polymart-ads'
+        AND EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = (SELECT auth.uid())
+            AND (
+                p.role IN ('SUPER_ADMIN', 'JPP_ADMIN')
+                OR p.keusahawanan_access = TRUE
+            )
+        )
+    );
+```
+============================================================
+
+### Source: `83_polytask_proof_of_work.sql`
+```sql
+CREATE POLICY "Semua boleh lihat bukti" ON storage.objects
+    FOR SELECT USING (bucket_id = 'polytask_proofs');
+```
+============================================================
+
+### Source: `83_polytask_proof_of_work.sql`
+```sql
+CREATE POLICY "Pelajar boleh upload bukti" ON storage.objects
+    FOR INSERT WITH CHECK (bucket_id = 'polytask_proofs' AND auth.uid() IS NOT NULL);
+```
+============================================================
+
+### Source: `84_polytask_v2_hotfix.sql`
+```sql
+DROP POLICY IF EXISTS "Semua boleh lihat bukti" ON storage.objects;
+```
+============================================================
+
+### Source: `84_polytask_v2_hotfix.sql`
+```sql
+DROP POLICY IF EXISTS "Pelajar boleh upload bukti" ON storage.objects;
+```
+============================================================
+
+### Source: `84_polytask_v2_hotfix.sql`
+```sql
+CREATE POLICY "Semua boleh lihat bukti polytask" ON storage.objects
+    FOR SELECT USING (bucket_id = 'polytask_proofs');
+```
+============================================================
+
+### Source: `84_polytask_v2_hotfix.sql`
+```sql
+CREATE POLICY "Pelajar boleh upload bukti polytask" ON storage.objects
+    FOR INSERT WITH CHECK (bucket_id = 'polytask_proofs' AND auth.uid() IS NOT NULL);
+```
+============================================================
+

@@ -908,7 +908,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
       if (data) setActivities(data);
     }
 
-    const { data: settingData } = await supabase.from('system_settings').select('value').eq('key', 'allow_add_takwim').single();
+    const { data: settingData } = await supabase.from('system_settings').select('value').eq('key', 'allow_add_takwim').maybeSingle();
     if (settingData !== null) setAllowAddTakwim(settingData.value);
 
     setLoading(false);

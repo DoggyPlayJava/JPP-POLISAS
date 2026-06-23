@@ -271,11 +271,13 @@ import { supabase } from '@/lib/supabase';
 | Jadual | Fungsi |
 |---|---|
 | `profiles` | Data pengguna + global role + JPP position/unit |
+| `profile_edit_requests` | Permintaan pindaan data profil pelajar (no. matrik & semester) |
 | `clubs` | Senarai kelab & persatuan |
 | `student_club_memberships` | Keahlian per-kelab (role varies per club) |
 | `club_activities` | Aktiviti kelab |
 | `club_reports` | Laporan bulanan kelab |
 | `club_logs` | Audit log semua tindakan kelab |
+| `admin_audit_logs` | Log audit semua tindakan admin / exco JPP secara terpusat |
 | `jpp_mt_assignments` | MT yang oversee unit exco tertentu |
 | `keusahawanan_businesses`| Profil perniagaan e-Keusahawanan pelajar |
 | `student_business_memberships`| Keahlian & hirarki perniagaan pelajar (role: `OWNER`/`MEMBER`, status: `PENDING`/`ACTIVE`/`REJECTED`)|
@@ -284,6 +286,7 @@ import { supabase } from '@/lib/supabase';
 | `polysuara_comments` | Ulasan/komen rahsia Tier-1 & Tier-2 bagi PolySuara |
 | `polysuara_comment_votes` | Log undian upvote/downvote ulasan PolySuara |
 | `polysuara_comment_reports` | Laporan penyalahgunaan ulasan PolySuara oleh pelajar |
+| `polysuara_notif_optout` | Rekod pilihan keluar (opt-out) notifikasi PolySuara |
 
 ### Logging:
 ```typescript
@@ -367,6 +370,8 @@ npm run lint:css     # Stylelint sahaja
 
 | Fail | Mengapa Kritikal |
 |---|---|
+| `final_schema.sql` | Consolidated database schema. Golden source to recreate database from scratch |
+| `DATABASE_BLUEPRINT.md` | Comprehensive database architecture blueprint and Dual-RBAC documentation |
 | `src/contexts/AuthContext.tsx` | Seluruh RBAC sistem. Bug di sini = security hole |
 | `src/lib/supabase.ts` | Client singleton. Jangan buat instance baru |
 | `src/lib/driveUpload.ts` | Routing storan hibrid. Silap = data tersalah simpan |
@@ -565,6 +570,14 @@ try {
 Jika anda menambah sistem exco baharu dan memerlukan ikon/warna lencana (badge) yang khusus:
 1. Tambah jenis baharu dalam `NotificationModule` di `src/lib/notifications.ts`.
 2. Daftar warna lalai, pautan, dan ikon di dalam `MODULE_CONFIG` dan `MODULE_FALLBACK` dalam `src/components/ui/NotificationBell.tsx`.
+
+### 14.5 Pangkalan Data & Polisi Keselamatan push_subscriptions
+Jadual `push_subscriptions` digunakan untuk menyimpan token Push Notification bagi peranti pelajar. Jadual ini tertakluk kepada kawalan keselamatan dan keperluan indeks berikut:
+- **Indeks Unik (user_id, endpoint)**: Wajib dipasang (`push_subscriptions_user_endpoint_idx`) bagi menyokong sintaks `ON CONFLICT (user_id, endpoint)` semasa melakukan `upsert` daripada frontend.
+- **Indeks Kunci Asing (user_id)**: Wajib dipasang (`push_subscriptions_user_id_idx`) ke atas lajur kunci asing yang merujuk kepada `profiles(id)`.
+- **Polisi RLS (Row Level Security)**:
+  - **SELECT**: Menggunakan `(SELECT auth.uid()) IS NOT NULL` bagi membolehkan mana-mana pengguna berdaftar memanggil utiliti client-side untuk membaca token peranti bagi menghantar push notification.
+  - **INSERT / UPDATE / DELETE**: Dihadkan hanya kepada pemilik rekod (`user_id = (SELECT auth.uid())`) atau mana-mana pentadbir dengan peranan `SUPER_ADMIN_JPP`, `ADMIN`, atau `JPP`.
 
 ---
 
@@ -2136,3 +2149,34 @@ Sejajar dengan garis panduan prestasi tinggi dan beban 1,500 pengguna orientasi:
   - **`Lepaskan`:** Memanggil RPC `restore_hidden_comment()` untuk menetapkan semula status `is_hidden_by_community` kepada false, membersihkan reports_count, dan memulihkan ulasan di feed awam.
   - **`Padam`:** Memanggil RPC pintar `soft_or_hard_delete_polysuara_comment()` yang secara automatik memilih antara *Soft-Delete / Tombstone* (jika ulasan mempunyai jawapan Tier-2 di bawahnya) bagi mengekalkan kesinambungan topik perbincangan, atau melakukan *Hard-Delete* (jika tiada ulasan anak) untuk menjaga kebersihan pangkalan data.
 - **Analisis Sentimen Awan Kata (Word-Cloud):** Algoritma awan kata (`getWordCloud`) kini dinaik taraf untuk menggabungkan teks luahan confession berserta kandungan ulasan sosial yang aktif bagi membolehkan Exco menganalisis topik dan kebimbangan pelajar POLISAS secara menyeluruh dan holistik.
+
+### 19.5 Penambahbaikan Sistem Poll & Notifikasi (v5.1)
+- **Kolum Cache `vote_count`**: Diperkenalkan pada jadual `polysuara_poll_options` bagi menyimpan jumlah undi secara terus. Kemaskini dijalankan secara automatik menggunakan trigger `trg_sync_poll_vote_count` apabila undian ditambah/dibuang.
+- **RPC `toggle_polysuara_poll_vote`**: Menguruskan transaksi undian poll secara atomic, mengelakkan perlumbaan syarat (race conditions) dan menguruskan pilihan tunggal (single-choice) dengan menyingkirkan undian lama secara automatik.
+- **Jadual `polysuara_notif_optout`**: Menyimpan senarai pengguna yang memilih untuk tidak menerima notifikasi baharu daripada PolySuara.
+- **Jadual `polysuara_notif_state`**: Menyimpan konfigurasi notifikasi PolySuara (seperti had threshold upvote dan maklumat penjejakan cooldown bagi post luahan trending).
+- **Trigger Webhook Notifikasi**: Trigger `trg_polysuara_new_confession_notify` dipasang pada jadual `polysuara_confessions` (AFTER INSERT) untuk memanggil API webhook secara tidak-menyinkron (asynchronous) menerusi fungsi `supabase_functions.http_request` menggunakan `pg_net` extension.
+- **Pelekatan RLS `polysuara_poll_votes`**: Menggantikan dasar awam kepada dasar berasaskan pengguna di mana pelajar hanya boleh membaca undian sendiri `user_id = (SELECT auth.uid())` bagi melindungi privasi dan kerahsiaan pilihan.
+- **Indeks Kolum FK**: Indeks `idx_polysuara_poll_votes_user_id` and `idx_polysuara_poll_votes_option_id` ditambah untuk mematuhi peraturan indeks asing demi prestasi optimal.
+
+## 20. Senibina Pindaan Profil Pelajar (profile_edit_requests) 📋
+Modul ini membenarkan pelajar memohon perubahan maklumat kritikal (seperti No. Matrik atau Semester semasa) untuk disemak dan diluluskan secara manual oleh Majlis Perwakilan Pelajar (JPP) / Majlis Tertinggi (MT) demi mengekalkan kualiti data.
+
+### 20.1 Pangkalan Data & Logik RLS
+- **Jadual `profile_edit_requests`**: Menyimpan perincian permohonan dengan status flow `PENDING` $\rightarrow$ `APPROVED` / `REJECTED`.
+- **Dasar Row-Level Security (RLS)**:
+  - Pelajar hanya dibenarkan menghantar (`INSERT`) dan melihat (`SELECT`) permohonan milik mereka sendiri (`user_id = (SELECT auth.uid())`).
+  - Ahli JPP dan SUPER_ADMIN_JPP dibenarkan melihat (`SELECT`) dan mengemaskini (`UPDATE`) mana-mana permohonan.
+- **Trigger `trg_profile_edit_requests_reviewed_at`**: Automatik menetapkan tarikh kelulusan/penolakan (`reviewed_at`) apabila status berubah dari `PENDING`.
+- **Indeks Prestasi**: Indeks `idx_profile_edit_requests_user_id` dan `idx_profile_edit_requests_reviewed_by` memastikan carian pantas mengikut profil pengguna dan pemeriksa JPP.
+
+## 21. Log Audit Terpusat (admin_audit_logs & system_logs) 🛡️
+Bagi tujuan keselamatan dan pemantauan salah guna kuasa pentadbir/exco JPP, sistem merekodkan setiap tindakan pentadbir secara terpusat.
+
+### 21.1 Skema & RLS
+- **Jadual `admin_audit_logs`**: Menyimpan maklumat terperinci log seperti jenis tindakan (`action_type`), exco unit (`module`), dan entiti yang terkesan.
+- **RLS**: strictly disekat untuk carian awam. Hanya pengguna bertaraf `JPP` atau `SUPER_ADMIN_JPP` sahaja dibenarkan membaca rekod log (`Allow select admin_audit_logs for admins`).
+- **Pandangan `system_logs` (View)**: VIEW ini menggabungkan audit log dari `admin_audit_logs` dan `club_logs` menggunakan `UNION ALL`. Ia menapis paparan menggunakan klausa `WHERE EXISTS` agar hanya boleh diakses oleh exco bertaraf JPP/SUPER_ADMIN_JPP.
+
+
+

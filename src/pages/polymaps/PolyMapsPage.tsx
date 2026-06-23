@@ -8,11 +8,13 @@ import {
   Search, Navigation, MapPin, Building2, Layers, Clock, X, Menu, 
   ChevronDown, ChevronRight, Share2, Coffee, Moon, Droplets, 
   CreditCard, BookOpen, ImageIcon, Map as MapIcon, DoorOpen,
-  CloudRain, Sun, HelpCircle
+  CloudRain, Sun, HelpCircle, Loader2
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { sendNotificationToJppAndSuperAdmin } from '@/lib/notifications';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { SystemTour } from '@/components/ui/SystemTour';
 import { useTour } from '@/hooks/useTour';
@@ -215,9 +217,74 @@ export function PolyMapsPage() {
   const [hasZoomedToNavigation, setHasZoomedToNavigation] = useState(false);
   // Follow mode: true = map follows user; false = user panned away (show re-center button)
   const [isFollowingUser, setIsFollowingUser] = useState(false);
-  // Run device detection once on mount
+  const { user, profile } = useAuth();
   const isLowEnd = React.useRef(isLowEndDevice()).current;
-  
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [reportForm, setReportForm] = useState({
+    room_code: '',
+    building_id: '',
+    building_name_suggestion: '',
+    floor_level: '0',
+    description: ''
+  });
+
+  const handleOpenReportModal = () => {
+    setReportForm({
+      room_code: searchQuery,
+      building_id: '',
+      building_name_suggestion: '',
+      floor_level: '0',
+      description: ''
+    });
+    setIsReportModalOpen(true);
+  };
+
+  const handleReportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error('Sila log masuk untuk membuat aduan.');
+      return;
+    }
+    if (!reportForm.room_code.trim()) {
+      toast.error('Sila isi nama tempat.');
+      return;
+    }
+
+    setIsSubmittingReport(true);
+    try {
+      const { error } = await supabase.from('imaps_missing_reports').insert({
+        student_id: user.id,
+        room_code: reportForm.room_code,
+        building_id: reportForm.building_id && reportForm.building_id !== 'new' ? reportForm.building_id : null,
+        building_name_suggestion: reportForm.building_id === 'new' ? reportForm.building_name_suggestion : null,
+        floor_level: parseInt(reportForm.floor_level, 10),
+        description: reportForm.description,
+        status: 'pending'
+      });
+
+      if (error) throw error;
+
+      // Hantar notifikasi kepada JPP
+      const studentName = profile?.name || 'Pelajar';
+      await sendNotificationToJppAndSuperAdmin({
+        title: 'Laporan Tempat Hilang Baru',
+        message: `${studentName} melaporkan tempat hilang: "${reportForm.room_code}"`,
+        type: 'MAPS_MISSING_REPORT',
+        module: 'JPP',
+        link: '/jpp/polymaps?tab=reports'
+      });
+
+      toast.success('Aduan berjaya dihantar! Terima kasih atas bantuan anda.');
+      setIsReportModalOpen(false);
+    } catch (err: any) {
+      console.error('Error submitting report:', err);
+      toast.error('Gagal menghantar aduan.');
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeSidebarTab, setActiveSidebarTab] = useState<'akademik' | 'fasiliti'>('akademik');
   const [expandedZone, setExpandedZone] = useState<string | null>(null);
@@ -761,6 +828,25 @@ export function PolyMapsPage() {
                     </div>
                   </button>
                 ))}
+              </motion.div>
+            )}
+
+            {searchResults.length === 0 && searchQuery.trim() !== '' && !isSearching && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-4 text-center space-y-3"
+              >
+                <p className="text-slate-500 dark:text-slate-400 text-xs font-bold leading-normal">
+                  Tidak jumpa tempat yang anda cari?
+                </p>
+                <button
+                  onClick={handleOpenReportModal}
+                  className="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-4 rounded-xl text-[10px] uppercase tracking-wider transition-colors shadow-md active:scale-95"
+                >
+                  Maklumkan kepada JPP
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -1411,6 +1497,149 @@ export function PolyMapsPage() {
               className="max-w-full max-h-[85vh] object-contain rounded-lg"
             />
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── MISSING LOCATION REPORT MODAL ── */}
+      <AnimatePresence>
+        {isReportModalOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsReportModalOpen(false)}
+              className="fixed inset-0 z-[2000] bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="fixed inset-x-4 top-1/2 -translate-y-1/2 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-md z-[2001] bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[85vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
+                <div>
+                  <h3 className="text-lg font-black text-slate-800 dark:text-white">Lapor Tempat Hilang</h3>
+                  <p className="text-xs font-bold text-slate-500 font-sans">Bantu JPP kemaskini peta kampus</p>
+                </div>
+                <button
+                  onClick={() => setIsReportModalOpen(false)}
+                  className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleReportSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                    Nama Tempat / Kelas / Ruang
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={reportForm.room_code}
+                    onChange={(e) => setReportForm(prev => ({ ...prev, room_code: e.target.value }))}
+                    placeholder="Contoh: A302, Makmal CAD 2"
+                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-800 dark:text-white placeholder:text-slate-400 outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                    Cadangan Bangunan / Blok
+                  </label>
+                  <select
+                    value={reportForm.building_id}
+                    onChange={(e) => setReportForm(prev => ({ ...prev, building_id: e.target.value, building_name_suggestion: e.target.value === 'new' ? '' : prev.building_name_suggestion }))}
+                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-rose-500 transition-all"
+                  >
+                    <option value="">-- Pilih Bangunan (Jika Tahu) --</option>
+                    {allBuildings.map(b => (
+                      <option key={b.id} value={b.id}>
+                        {b.name} ({b.code})
+                      </option>
+                    ))}
+                    <option value="new">Lain-lain / Bangunan Baru</option>
+                  </select>
+                </div>
+
+                {reportForm.building_id === 'new' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                  >
+                    <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                      Nama Bangunan Baru / Cadangan
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={reportForm.building_name_suggestion}
+                      onChange={(e) => setReportForm(prev => ({ ...prev, building_name_suggestion: e.target.value }))}
+                      placeholder="Masukkan nama bangunan/blok"
+                      className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-800 dark:text-white placeholder:text-slate-400 outline-none focus:border-rose-500 transition-all"
+                    />
+                  </motion.div>
+                )}
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                    Aras (Tingkat)
+                  </label>
+                  <select
+                    value={reportForm.floor_level}
+                    onChange={(e) => setReportForm(prev => ({ ...prev, floor_level: e.target.value }))}
+                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-800 dark:text-white outline-none focus:border-rose-500 transition-all"
+                  >
+                    <option value="0">Aras Bawah (Ground Floor)</option>
+                    <option value="1">Aras 1</option>
+                    <option value="2">Aras 2</option>
+                    <option value="3">Aras 3</option>
+                    <option value="4">Aras 4</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                    Catatan Tambahan (Landmark / Kedudukan)
+                  </label>
+                  <textarea
+                    value={reportForm.description}
+                    onChange={(e) => setReportForm(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Contoh: Sebelah lif utama, berdekatan bilik pensyarah JTM"
+                    rows={3}
+                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-800 dark:text-white placeholder:text-slate-400 outline-none focus:border-rose-500 transition-all resize-none font-bold"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsReportModalOpen(false)}
+                    className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-colors active:scale-95"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingReport}
+                    className="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-md flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                  >
+                    {isSubmittingReport ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        Hantar...
+                      </>
+                    ) : (
+                      'Hantar Aduan'
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 

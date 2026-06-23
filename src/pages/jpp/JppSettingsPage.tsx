@@ -593,7 +593,8 @@ export function JppSettingsPage() {
                                             onClick={async () => {
                                                 setSavingIntake(true);
                                                 try {
-                                                    await supabase.from('system_settings').update({ value: intake1Month }).eq('key', 'intake_1_month');
+                                                    const { error } = await supabase.from('system_settings').upsert({ key: 'intake_1_month', value: intake1Month }, { onConflict: 'key' });
+                                                    if (error) throw error;
                                                     toast.success(`Intake 1 dikemaskini: ${MONTH_NAMES[intake1Month]}`);
                                                 } catch { toast.error('Gagal simpan.'); }
                                                 finally { setSavingIntake(false); }
@@ -623,7 +624,8 @@ export function JppSettingsPage() {
                                             onClick={async () => {
                                                 setSavingIntake(true);
                                                 try {
-                                                    await supabase.from('system_settings').update({ value: intake2Month }).eq('key', 'intake_2_month');
+                                                    const { error } = await supabase.from('system_settings').upsert({ key: 'intake_2_month', value: intake2Month }, { onConflict: 'key' });
+                                                    if (error) throw error;
                                                     toast.success(`Intake 2 dikemaskini: ${MONTH_NAMES[intake2Month]}`);
                                                 } catch { toast.error('Gagal simpan.'); }
                                                 finally { setSavingIntake(false); }

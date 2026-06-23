@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panduan & Cheatsheet PolyMap JPP</title>
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Design Tokens */
+    :root {
+      --bg-dark: #06080c;
+      --card-bg: rgba(15, 23, 42, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --primary: #38bdf8;      /* Sky Blue */
+      --secondary: #6366f1;    /* Indigo */
+      --success: #10b981;      /* Emerald */
+      --warning: #f59e0b;      /* Amber */
+      --danger: #ef4444;       /* Rose Red */
+      --glow: rgba(56, 189, 248, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header Styles */
+    header {
+      background: rgba(6, 8, 12, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-badge {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 0 15px var(--glow);
+    }
+
+    .title-group h1 {
+      font-size: 1.15rem;
+      font-weight: 900;
+      letter-spacing: -0.025em;
+    }
+
+    .title-group p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    button.btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 0.6rem 1.2rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    button.btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    button.btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border: none;
+      color: white;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    }
+
+    button.btn-primary:hover {
+      background: linear-gradient(135deg, #58c0f5, #5558e6);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+    }
+
+    /* Layout Wrapper */
+    .deck-container {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 75px);
+      position: relative;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      width: 360px;
+      border-right: 1px solid var(--card-border);
+      background: rgba(10, 12, 18, 0.95);
+      padding: 1.25rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .nav-item {
+      padding: 0.75rem 0.85rem;
+      border-radius: 12px;
+      background: transparent;
+      border: 1px solid transparent;
+      text-align: left;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-main);
+    }
+
+    .nav-item.active {
+      background: rgba(56, 189, 248, 0.08);
+      border-color: rgba(56, 189, 248, 0.2);
+      color: var(--primary);
+    }
+
+    .nav-num {
+      font-size: 0.7rem;
+      font-weight: 800;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.15rem 0.35rem;
+      border-radius: 6px;
+      margin-top: 0.15rem;
+    }
+
+    .nav-item.active .nav-num {
+      background: var(--primary);
+      color: #0b0d12;
+    }
+
+    .nav-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .nav-title {
+      font-weight: 700;
+      font-size: 0.82rem;
+    }
+
+    .nav-subtitle {
+      font-size: 0.7rem;
+      opacity: 0.7;
+      margin-top: 0.15rem;
+    }
+
+    /* Main Slides Viewport */
+    .viewport {
+      flex: 1;
+      padding: 3rem;
+      overflow-y: auto;
+      background: radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Slides Content */
+    .slide-card {
+      width: 100%;
+      max-width: 950px;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      padding: 3rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+      display: none;
+      animation: fadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .slide-card.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Typography */
+    .slide-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--primary);
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      margin-bottom: 1.25rem;
+    }
+
+    .slide-title {
+      font-size: 2.25rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.25rem;
+      background: linear-gradient(to right, #ffffff, #e5e7eb, #9ca3af);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .slide-desc {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+    }
+
+    /* Bento Grid Layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-cols: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-cols: 1fr 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    .bento-card {
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 1.5rem;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .bento-card:hover {
+      background: rgba(255, 255, 255, 0.035);
+      border-color: rgba(255, 255, 255, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .card-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+    }
+
+    .icon-primary { background: rgba(56, 189, 248, 0.12); color: var(--primary) !important; }
+    .icon-secondary { background: rgba(99, 102, 241, 0.12); color: var(--secondary) !important; }
+    .icon-success { background: rgba(16, 185, 129, 0.12); color: var(--success) !important; }
+    .icon-warning { background: rgba(245, 158, 11, 0.12); color: var(--warning) !important; }
+    .icon-danger { background: rgba(239, 68, 68, 0.12); color: var(--danger) !important; }
+
+    .bento-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: white;
+    }
+
+    .bento-text {
+      font-size: 0.8rem;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+
+    /* Lists and Code Highlights */
+    ul.check-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    ul.check-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      line-height: 1.5;
+    }
+
+    ul.check-list li i-lucide {
+      color: var(--success);
+      margin-top: 0.15rem;
+      flex-shrink: 0;
+    }
+
+    code.tag-code {
+      color: var(--primary);
+      font-weight: 800;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 0.15rem 0.4rem;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Table Styles */
+    .table-container {
+      width: 100%;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.82rem;
+    }
+
+    th {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 1.1rem;
+      font-weight: 800;
+      color: white;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    td {
+      padding: 1.1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+      line-height: 1.4;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.55rem;
+      font-size: 0.68rem;
+      font-weight: 800;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-primary { background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.2); color: var(--primary); }
+    .badge-secondary { background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.2); color: var(--secondary); }
+    .badge-success { background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.2); color: var(--success); }
+
+    /* Flow Step List */
+    .flow-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .flow-step {
+      display: flex;
+      gap: 1.25rem;
+    }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 900;
+      color: white;
+      flex-shrink: 0;
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
+    }
+
+    .step-content h4 {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 0.25rem;
+    }
+
+    .step-content p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Print / PDF Styles */
+    @media print {
+      body {
+        background-color: white !important;
+        color: #111827 !important;
+        overflow: visible !important;
+      }
+      
+      header, .sidebar, .btn-group {
+        display: none !important;
+      }
+
+      .deck-container {
+        display: block !important;
+        height: auto !important;
+      }
+
+      .viewport {
+        padding: 0 !important;
+        background: none !important;
+        display: block !important;
+      }
+
+      .slide-card {
+        display: block !important;
+        page-break-after: always;
+        break-after: page;
+        box-shadow: none !important;
+        border: 2px solid #e5e7eb !important;
+        background: white !important;
+        color: #111827 !important;
+        padding: 2.5rem !important;
+        margin-bottom: 3rem !important;
+        max-width: 100% !important;
+        border-radius: 0 !important;
+        opacity: 1 !important;
+        transform: none !important;
+      }
+
+      .slide-title {
+        background: none !important;
+        -webkit-text-fill-color: initial !important;
+        color: #111827 !important;
+        border-bottom: 2px solid #111827 !important;
+        padding-bottom: 0.5rem !important;
+      }
+
+      .slide-desc, .bento-text, .step-content p, td {
+        color: #374151 !important;
+      }
+
+      .bento-card {
+        border: 1px solid #d1d5db !important;
+        background: #f9fafb !important;
+      }
+
+      .bento-title, .step-content h4, th {
+        color: #111827 !important;
+      }
+
+      .badge {
+        border: 1px solid #d1d5db !important;
+      }
+      .badge-primary { color: #0369a1 !important; background: #e0f2fe !important; }
+      .badge-success { color: #15803d !important; background: #dcfce7 !important; }
+      
+      .table-container {
+        border: 1px solid #d1d5db !important;
+        background: white !important;
+      }
+      
+      th {
+        background: #f3f4f6 !important;
+        border-bottom: 1px solid #d1d5db !important;
+      }
+      
+      td {
+        border-bottom: 1px solid #e5e7eb !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <header class="no-print">
+    <div class="logo-container">
+      <div class="logo-badge">
+        <i data-lucide="map"></i>
+      </div>
+      <div class="title-group">
+        <h1>Panduan PolyMap JPP</h1>
+        <p>Panduan Slaid & Cheatsheet Pengurusan Fasiliti POLISAS</p>
+      </div>
+    </div>
+    
+    <div class="btn-group">
+      <button class="btn" onclick="prevSlide()"><i data-lucide="chevron-left"></i> Sebelum</button>
+      <button class="btn" onclick="nextSlide()">Seterusnya <i data-lucide="chevron-right"></i></button>
+      <button class="btn btn-primary" onclick="window.print()"><i data-lucide="printer"></i> Cetak PDF (A4)</button>
+    </div>
+  </header>
+
+  <!-- Interactive Area -->
+  <div class="deck-container">
+    
+    <!-- Sidebar Navigation -->
+    <div class="sidebar no-print">
+      <button class="nav-item active" onclick="goToSlide(0)">
+        <span class="nav-num">01</span>
+        <div class="nav-details">
+          <span class="nav-title">Akses Portal Admin</span>
+          <span class="nav-subtitle">Langkah Masuk & Kebenaran</span>
+        </div>
+      </button>
+      <button class="nav-item" onclick="goToSlide(1)">
+        <span class="nav-num">02</span>
+        <div class="nav-details">
+          <span class="nav-title">Struktur Asas Peta</span>
+          <span class="nav-subtitle">Perbezaan Bangunan vs Bilik</span>
+        </div>
+      </button>
+      <button class="nav-item" onclick="goToSlide(2)">
+        <span class="nav-num">03</span>
+        <div class="nav-details">
+          <span class="nav-title">Bangunan: Pin GPS & Zon</span>
+          <span class="nav-subtitle">Mengguna Peta Google Satelit</span>
+        </div>
+      </button>
+      <button class="nav-item" onclick="goToSlide(3)">
+        <span class="nav-num">04</span>
+        <div class="nav-details">
+          <span class="nav-title">Bangunan: Waktu & Imej</span>
+          <span class="nav-subtitle">Kategori & 3 Jenis Gambar</span>
+        </div>
+      </button>
+      <button class="nav-item" onclick="goToSlide(4)">
+        <span class="nav-num">05</span>
+        <div class="nav-details">
+          <span class="nav-title">Bilik: Aras & Pukal</span>
+          <span class="nav-subtitle">Batch Insert & Kod Aras</span>
+        </div>
+      </button>
+      <button class="nav-item" onclick="goToSlide(5)">
+        <span class="nav-num">06</span>
+        <div class="nav-details">
+          <span class="nav-title">Bilik: Panduan Arah</span>
+          <span class="nav-subtitle">Format Arahan Langkah Demi Langkah</span>
+        </div>
+      </button>
+      <button class="nav-item" onclick="goToSlide(6)">
+        <span class="nav-num">07</span>
+        <div class="nav-details">
+          <span class="nav-title">Tag Carian & Gambar</span>
+          <span class="nav-subtitle">Kata Kunci Utama & iPhone HEIC</span>
+        </div>
+      </button>
+      <button class="nav-item" onclick="goToSlide(7)">
+        <span class="nav-num">08</span>
+        <div class="nav-details">
+          <span class="nav-title">Amaran Keras & Audit Log</span>
+          <span class="nav-subtitle">Jejak Penyunting & Ujian Akhir</span>
+        </div>
+      </button>
+      <button class="nav-item" onclick="goToSlide(8)">
+        <span class="nav-num">09</span>
+        <div class="nav-details">
+          <span class="nav-title">Kategori Fasiliti (Wajib Tepat!)</span>
+          <span class="nav-subtitle">Nilai Tepat Untuk Butang Pintas</span>
+        </div>
+      </button>
+      <button class="nav-item" onclick="goToSlide(9)">
+        <span class="nav-num">10</span>
+        <div class="nav-details">
+          <span class="nav-title">Bagaimana Pelajar Nampak Data</span>
+          <span class="nav-subtitle">Sidebar, Tab Imej & Pautan Kongsi</span>
+        </div>
+      </button>
+      <button class="nav-item" onclick="goToSlide(10)">
+        <span class="nav-num">11</span>
+        <div class="nav-details">
+          <span class="nav-title">Sistem Navigasi GPS Pelajar</span>
+          <span class="nav-subtitle">Cuaca, 30m, Langkah Dalaman</span>
+        </div>
+      </button>
+      <button class="nav-item" onclick="goToSlide(11)">
+        <span class="nav-num">12</span>
+        <div class="nav-details">
+          <span class="nav-title">Penamaan & Kesilapan Lazim</span>
+          <span class="nav-subtitle">FAQ & Panduan Nama Betul</span>
+        </div>
+      </button>
+      <button class="nav-item" onclick="goToSlide(12)">
+        <span class="nav-num">13</span>
+        <div class="nav-details">
+          <span class="nav-title">Senarai Semak Penuh</span>
+          <span class="nav-subtitle">Checklist Sebelum Serah</span>
+        </div>
+      </button>
+    </div>
+
+    <!-- Content Viewport -->
+    <main class="viewport">
+      
+      <!-- Slide 1: Welcome / Access -->
+      <section class="slide-card active" id="slide-0">
+        <span class="slide-tag"><i data-lucide="key"></i> SLAID 1 — CARA AKSES</span>
+        <h2 class="slide-title">Bagaimana Cara Masuk ke Portal Admin?</h2>
+        <p class="slide-desc">Sistem pengurusan peta PolyMap dikunci dan dihadkan. Hanya pengguna yang mempunyai kebenaran akaun JPP sahaja yang boleh mendaftar dan mengubah data:</p>
+        
+        <div class="flow-steps">
+          <div class="flow-step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <h4>Log Masuk Akaun JPP</h4>
+              <p>Pastikan anda log masuk ke sistem POLISAS menggunakan e-mel dan kata laluan akaun JPP yang telah didaftarkan. Akaun pelajar biasa tidak akan dapat melihat menu ini.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <h4>Cari di Menu Bar Sisi (Sidebar)</h4>
+              <p>Setelah log masuk, lihat menu di bar sisi kiri anda. Di bawah Portal JPP, cari dan klik ikon peta bertulis <strong>"Pentadbiran PolyMaps"</strong>.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <h4>Pautan Pintas URL</h4>
+              <p>Anda juga boleh mengakses halaman pengurusan peta ini secara terus dengan melayari pautan URL: <code>/jpp/polymaps</code> pada pelayar web anda.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 2: Asas Struktur -->
+      <section class="slide-card" id="slide-1">
+        <span class="slide-tag"><i data-lucide="sparkles"></i> SLAID 2 — STRUKTUR DATA</span>
+        <h2 class="slide-title">Asas Struktur Peta PolyMap</h2>
+        <p class="slide-desc">Sistem ini dibina berasaskan hierarki dua peringkat. Memahami perbezaan ini mengelakkan ahli JPP mendaftar "bilik tandas" sebagai "bangunan baru" secara silap:</p>
+        
+        <div class="grid-2">
+          <div class="bento-card">
+            <div class="card-icon icon-primary">
+              <i data-lucide="building-2"></i>
+            </div>
+            <h3 class="bento-title">A. Peringkat Bangunan (Building)</h3>
+            <p class="bento-text">Struktur utama di atas peta satelit yang mempunyai koordinat GPS (Latitude/Longitude). Ia mengandungi gambar dron, gambar pintu utama, dan pelan lantai.<br><strong>Contoh:</strong> <em>Blok A (JKE), Pusat Pelajar, Perpustakaan</em>.</p>
+          </div>
+          <div class="bento-card">
+            <div class="card-icon icon-secondary">
+              <i data-lucide="navigation"></i>
+            </div>
+            <h3 class="bento-title">B. Peringkat Bilik / Lokasi (Location)</h3>
+            <p class="bento-text">Fasiliti atau bilik khusus yang <strong>berada di dalam</strong> sesebuah bangunan induk. Ia diletakkan di aras tertentu dan dipautkan ke bangunan induk.<br><strong>Contoh:</strong> <em>Tandas Lelaki Aras G Blok A, Surau Perempuan Blok B</em>.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: Bangunan 1 -->
+      <section class="slide-card" id="slide-2">
+        <span class="slide-tag"><i data-lucide="map-pin"></i> SLAID 3 — PIN GPS & KUMPULAN ZON</span>
+        <h2 class="slide-title">Penetapan GPS Satelit & Pengurusan Zon</h2>
+        <p class="slide-desc">Pendaftaran bangunan baru memerlukan penetapan pin GPS yang tepat. Panel admin menyediakan peta Google Satelit untuk memudahkan kerja anda:</p>
+        
+        <div class="grid-2">
+          <div class="bento-card">
+            <div class="card-icon icon-primary">
+              <i data-lucide="mouse-pointer"></i>
+            </div>
+            <h3 class="bento-title">Sentuh Peta Untuk Menjatuhkan Pin (Pinning)</h3>
+            <p class="bento-text">Anda tidak perlu meneka koordinat. Di peta Google Satelit admin:<br>
+              • Bangunan sedia ada dipaparkan sebagai <strong>bulatan merah</strong>.<br>
+              • Lalukan tetikus (hover) untuk melihat kod bangunan sedia ada bagi mengelak bertindih.<br>
+              • Klik di mana-mana kawasan satelit untuk meletakkan penanda biru. Koordinat <strong>Latitude</strong> & <strong>Longitude</strong> akan diisi secara automatik!
+            </p>
+          </div>
+          <div class="bento-card">
+            <div class="card-icon icon-secondary">
+              <i data-lucide="zoom-in"></i>
+            </div>
+            <h3 class="bento-title">Kesan Ketiadaan Nama Zon (Zone Name)</h3>
+            <p class="bento-text"><strong>Zon</strong> bertujuan mengumpulkan bangunan berdekatan (cth: <em>Zon JKE</em>).<br>
+              • <strong>Tingkah Laku Peta Pelajar:</strong> Apabila pelajar mengezum keluar (zoom < 18), semua bangunan dalam satu zon akan disembunyikan untuk mengelak serabut, dan hanya nama zon dipaparkan.<br>
+              • Jika anda membiarkan <code>Nama Zon</code> kosong, bangunan tersebut akan sentiasa dipaparkan pada semua tahap zum, menyebabkan peta kelihatan tidak kemas!
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: Bangunan 2 -->
+      <section class="slide-card" id="slide-3">
+        <span class="slide-tag"><i data-lucide="clock"></i> SLAID 4 — OPERASI & GAMBAR BANGUNAN</span>
+        <h2 class="slide-title">Status Operasi Dinamik & 3 Jenis Gambar</h2>
+        <p class="slide-desc">Bangunan utama mempunyai fungsi waktu operasi dinamik dan sokongan tiga jenis gambar berbeza:</p>
+        
+        <div class="grid-2">
+          <div class="bento-card">
+            <div class="card-icon icon-warning">
+              <i data-lucide="toggle-right"></i>
+            </div>
+            <h3 class="bento-title">Fasiliti Utama & Waktu Operasi</h3>
+            <p class="bento-text">Jika bangunan tersebut adalah pusat kemudahan (cth: Kafe, Surau Utama), tandakan kotak <strong>'Bangunan ini adalah Fasiliti Utama'</strong>.<br>
+              • Masukkan Waktu Buka (<code>op_start</code>) dan Tutup (<code>op_end</code>).<br>
+              • Pelajar akan melihat tag warna secara automatik: <strong style="color:var(--success)">BUKA</strong> (hijau) atau <strong style="color:var(--warning)">TUTUP</strong> (merah) berdasarkan waktu telefon pintar mereka.
+            </p>
+          </div>
+          <div class="bento-card">
+            <div class="card-icon icon-accent">
+              <i data-lucide="image"></i>
+            </div>
+            <h3 class="bento-title">Tiga Gambar Bangunan</h3>
+            <p class="bento-text">Setiap bangunan menyokong 3 gambar khusus yang akan dipaparkan dalam bentuk tab (tabs) pada profil bangunan pelajar:<br>
+              1. <strong>Imej Dron (Drone Image):</strong> Gambar udara bangunan utama.<br>
+              2. <strong>Pelan Lantai (Floorplan):</strong> Gambar rajah laluan dalaman tingkat.<br>
+              3. <strong>Pintu Masuk (Entrance):</strong> Foto fizikal pintu masuk/lobi.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: Lokasi 1 -->
+      <section class="slide-card" id="slide-4">
+        <span class="slide-tag"><i data-lucide="layers"></i> SLAID 5 — NOMBOR ARAS & DAFTAR PUKAL BILIK</span>
+        <h2 class="slide-title">Tetapan Aras & Kuasa Kemasukan Pukal</h2>
+        <p class="slide-desc">Ketika mendaftarkan bilik/kelas di panel <strong>Kelas / Lokasi</strong>, sistem menyediakan cara pantas untuk mendaftar banyak bilik sekaligus:</p>
+        
+        <div class="grid-2">
+          <div class="bento-card">
+            <div class="card-icon icon-primary">
+              <i data-lucide="hash"></i>
+            </div>
+            <h3 class="bento-title">Piawaian Nombor Aras (Floor Level)</h3>
+            <p class="bento-text">Jangan menulis nama aras seperti "Tingkat G" atau "First Floor" di dalam kotak input nombor aras. Gunakan integer mudah berikut:<br>
+              • <code>0</code> = Aras Bawah (Ground Floor)<br>
+              • <code>1</code> = Tingkat 1<br>
+              • <code>2</code> = Tingkat 2<br>
+              <em>Sistem pelajar menggunakan nombor ini untuk mengisih kedudukan bilik dalam menu bangunan secara tersusun.</em>
+            </p>
+          </div>
+          <div class="bento-card">
+            <div class="card-icon icon-success">
+              <i data-lucide="copy-check"></i>
+            </div>
+            <h3 class="bento-title">Kemasukan Pukal (Bulk Insert)</h3>
+            <p class="bento-text">Jika anda mahu menambah 10 bilik kuliah serentak di aras yang sama di Blok A:<br>
+              • Taip kod bilik dipisahkan dengan koma di kotak Kod Bilik: <code>A301, A302, A303, A304, A305</code>.<br>
+              • Sistem akan membahagikan nama tersebut dan terus memasukkan 5 rekod berasingan secara automatik di database dengan sekali simpan!
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Lokasi 2 -->
+      <section class="slide-card" id="slide-5">
+        <span class="slide-tag"><i data-lucide="corner-down-right"></i> SLAID 6 — PANDUAN ARAH DALAM BANGUNAN</span>
+        <h2 class="slide-title">Format Panduan Arah Langkah-Demi-Langkah</h2>
+        <p class="slide-desc">Apabila pelajar mencari bilik kelas, mereka memerlukan panduan arah bertulis. Panel admin PolyMaps menyokong paparan senarai langkah yang tersusun:</p>
+        
+        <div class="grid-2">
+          <div class="bento-card" style="grid-column: span 2;">
+            <div class="card-icon icon-accent">
+              <i data-lucide="keyboard"></i>
+            </div>
+            <h3 class="bento-title">Gunakan Kunci 'Enter' Untuk Membuat Langkah Baru</h3>
+            <p class="bento-text" style="margin-bottom: 1rem;">Di kotak teks panduan arah, sistem akan menukar setiap baris baharu (new line) kepada paparan tersusun di aplikasi pelajar. Sentiasa tulis panduan anda seperti format di bawah:</p>
+            <div style="background: rgba(0,0,0,0.4); padding: 1rem; border-radius: 12px; font-family: monospace; font-size: 0.85rem; border: 1px solid var(--card-border); line-height: 1.5; color: #a855f7;">
+              1. Masuk dari pintu utama Blok JKE.<br>
+              2. Naik tangga di sebelah pejabat jabatan ke Tingkat 1.<br>
+              3. Belok kanan di lorong makmal.<br>
+              4. Bilik kuliah berada di hujung sekali sebelah kanan.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Tags & Gambar -->
+      <section class="slide-card" id="slide-6">
+        <span class="slide-tag"><i data-lucide="tags"></i> SLAID 7 — KATA KUNCI & PENUKAR GAMBAR IPHONE</span>
+        <h2 class="slide-title">Fungsi Tag Carian & Muat Naik Gambar HEIC</h2>
+        <p class="slide-desc">Menguruskan carian yang fleksibel dan muat naik media secara cekap tanpa menjejaskan prestasi aplikasi:</p>
+        
+        <div class="grid-2">
+          <div class="bento-card">
+            <div class="card-icon icon-warning">
+              <i data-lucide="search"></i>
+            </div>
+            <h3 class="bento-title">Sistem Penapis Butang Pintas (Tags Carian)</h3>
+            <p class="bento-text">Pelajar menapis kemudahan melalui 3 butang pintas (Surau, Tandas, Kafe). Supaya bilik dalaman anda tersenarai, anda <strong>wajib</strong> mengisi kotak <code>Tags Carian</code> dengan kata kunci yang betul (dipisahkan koma):<br>
+              • 🕌 <strong>Surau:</strong> Tag carian mesti mengandungi <code>surau</code> atau <code>solat</code>.<br>
+              • 🚾 <strong>Tandas:</strong> Tag carian mesti mengandungi <code>tandas</code> atau <code>toilet</code>.<br>
+              • 🍽️ <strong>Kafe:</strong> Tag carian mesti mengandungi <code>kafe</code>, <code>cafe</code>, atau <code>kantin</code>.
+            </p>
+          </div>
+          <div class="bento-card">
+            <div class="card-icon icon-success">
+              <i data-lucide="refresh-cw"></i>
+            </div>
+            <h3 class="bento-title">Sokongan Gambar iPhone (.heic)</h3>
+            <p class="bento-text">Gambar bilik yang diambil menggunakan peranti Apple/iPhone biasanya berformat HEIC/HEIF yang tidak disokong oleh pelayar web Android/Windows.<br>
+              <strong>Fungsi Automatik Admin:</strong> Apabila anda memilih fail <code>.heic</code>, sistem admin akan menukarnya ke <code>.jpg</code> dan memampatkan saiznya secara automatik untuk memastikan kelajuan muat turun yang pantas bagi pengguna.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: Audit Logs & Amaran -->
+      <section class="slide-card" id="slide-7">
+        <span class="slide-tag" style="color:var(--danger); background:rgba(239, 68, 68, 0.08); border-color:rgba(239, 68, 68, 0.15);"><i data-lucide="shield-alert"></i> SLAID 8 — AMARAN KERAS & AUDIT</span>
+        <h2 class="slide-title" style="background: linear-gradient(to right, #ff8a8a, #ef4444); -webkit-background-clip: text;">Amaran Penting & Sistem Jejak Audit</h2>
+        <p class="slide-desc">Kerja pengeditan peta ini melibatkan pangkalan data langsung yang memberi kesan kepada pelajar. Sila patuhi amaran keras ini:</p>
+        
+        <div class="grid-2">
+          <div class="bento-card" style="border-color: rgba(239, 68, 68, 0.3);">
+            <div class="card-icon icon-danger">
+              <i data-lucide="trash-2"></i>
+            </div>
+            <h3 class="bento-title" style="color:var(--danger)">Bahaya Memadam Bangunan</h3>
+            <p class="bento-text">Apabila anda menekan butang <strong>Padam</strong> (ikon tong sampah) pada sesuatu bangunan, sistem akan memadam bangunan itu beserta **SEMUA kelas, bilik, surau, dan tandas di dalamnya secara kekal**!<br>
+              • Guna butang **Edit** (ikon pensel) jika hanya mahu menukar nama atau gambar.<br>
+              • Hanya gunakan butang padam jika bangunan itu benar-benar runtuh atau tidak lagi wujud di POLISAS.
+            </p>
+          </div>
+          <div class="bento-card">
+            <div class="card-icon icon-primary">
+              <i data-lucide="file-text"></i>
+            </div>
+            <h3 class="bento-title">Jejak Audit JPP (Audit Logs)</h3>
+            <p class="bento-text">Sistem ini dilengkapi dengan penjejak audit keselamatan.<br>
+              Setiap kali anda **Menambah, Mengemas kini, atau Memadam** data bangunan dan bilik, sistem akan merekodkan nama penyunting, masa tindakan, dan ID akaun JPP anda di dalam log pentadbiran.<br>
+              <em>Sila bertanggungjawab ke atas setiap data yang anda uruskan!</em>
+            </p>
+          </div>
+          <div class="bento-card" style="grid-column: span 2; border-color: rgba(16, 185, 129, 0.3);">
+            <div class="card-icon icon-success" style="float:left; margin-right: 1rem;">
+              <i data-lucide="check-square"></i>
+            </div>
+            <h3 class="bento-title" style="color:var(--success)">Langkah Ujian Akhir Sebelum Selesai</h3>
+            <p class="bento-text">Selepas menambah data: Buka pelayar web mod Inkognito (sebagai akaun pelajar biasa) → Pergi ke halaman utama PolyMaps → Cuba taip nama bilik yang baru anda masukkan di bar carian → Klik penapis pintas Tandas/Surau/Kafe → Uji butang navigasi GPS untuk memastikan garisan biru dan pengiraan Walking ETA berfungsi dengan betul.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 9: Kategori Fasiliti -->
+      <section class="slide-card" id="slide-8">
+        <span class="slide-tag" style="color:var(--warning); background:rgba(245, 158, 11, 0.08); border-color:rgba(245, 158, 11, 0.15);"><i data-lucide="filter"></i> SLAID 9 — KATEGORI FASILITI (KRITIKAL)</span>
+        <h2 class="slide-title">Nilai Kategori Fasiliti Yang Tepat Untuk Butang Pintas</h2>
+        <p class="slide-desc">Di peta pelajar, terdapat <strong>3 butang penapis pintas</strong> di bahagian atas: Kafe ☕, Surau 🕌, Tandas 💧. Butang-butang ini <strong>hanya berfungsi</strong> jika anda mengisi <code>Kategori Fasiliti</code> dengan nilai yang tepat semasa mendaftar bangunan:</p>
+        
+        <div class="table-container" style="overflow-x: auto; margin-top: 1.5rem;">
+          <table style="width:100%; border-collapse: collapse; font-size: 0.85rem;">
+            <thead>
+              <tr style="border-bottom: 2px solid var(--card-border);">
+                <th style="padding: 0.75rem 1rem; text-align:left; font-weight: 800; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.1em;">Butang Penapis</th>
+                <th style="padding: 0.75rem 1rem; text-align:left; font-weight: 800; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.1em;">Nilai Yang WAJIB Ditaip</th>
+                <th style="padding: 0.75rem 1rem; text-align:left; font-weight: 800; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.1em;">❌ Nilai Yang SALAH</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid var(--card-border);">
+                <td style="padding: 0.75rem 1rem;">☕ Kafe</td>
+                <td style="padding: 0.75rem 1rem;"><code style="background:rgba(16,185,129,0.15); color:#10b981; padding:2px 6px; border-radius:4px;">Kafe</code> atau <code style="background:rgba(16,185,129,0.15); color:#10b981; padding:2px 6px; border-radius:4px;">cafe</code></td>
+                <td style="padding: 0.75rem 1rem; color: var(--danger);">Cafeteria, Kantin, Makan, Restoran</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--card-border);">
+                <td style="padding: 0.75rem 1rem;">🕌 Surau</td>
+                <td style="padding: 0.75rem 1rem;"><code style="background:rgba(16,185,129,0.15); color:#10b981; padding:2px 6px; border-radius:4px;">Surau</code></td>
+                <td style="padding: 0.75rem 1rem; color: var(--danger);">Masjid, Musolla, Tempat Solat</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--card-border);">
+                <td style="padding: 0.75rem 1rem;">💧 Tandas</td>
+                <td style="padding: 0.75rem 1rem;"><code style="background:rgba(16,185,129,0.15); color:#10b981; padding:2px 6px; border-radius:4px;">Tandas</code> atau <code style="background:rgba(16,185,129,0.15); color:#10b981; padding:2px 6px; border-radius:4px;">Toilet</code></td>
+                <td style="padding: 0.75rem 1rem; color: var(--danger);">WC, Washroom, Bilik Air</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid-2" style="margin-top: 1.5rem;">
+          <div class="bento-card" style="border-color: rgba(245, 158, 11, 0.3);">
+            <div class="card-icon icon-warning">
+              <i data-lucide="alert-triangle"></i>
+            </div>
+            <h3 class="bento-title" style="color:var(--warning)">Perhatian Penting!</h3>
+            <p class="bento-text">Tandas mempunyai kelakuan istimewa: pin-nya <strong>tersembunyi secara lalai</strong> di atas peta pelajar. Pin tandas hanya akan muncul apabila pelajar menekan butang penapis 💧 Tandas. Ini adalah untuk mengelakkan peta kelihatan sesak dengan terlalu banyak marker.</p>
+          </div>
+          <div class="bento-card">
+            <div class="card-icon icon-primary">
+              <i data-lucide="list"></i>
+            </div>
+            <h3 class="bento-title">Cadangan Penggunaan (Datalist)</h3>
+            <p class="bento-text">Kotak <code>Kategori Fasiliti</code> mempunyai fungsi cadangan automatik (datalist). Ia akan menyenaraikan kategori sedia ada dari bangunan lain. <strong>Pilih dari senarai cadangan</strong> supaya anda tidak tersilap ejaan! Jika tiada cadangan yang sesuai, anda boleh taip sendiri — tapi pastikan ejaan tepat.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 10: Student Side View -->
+      <section class="slide-card" id="slide-9">
+        <span class="slide-tag"><i data-lucide="eye"></i> SLAID 10 — PANDANGAN PELAJAR</span>
+        <h2 class="slide-title">Bagaimana Pelajar Melihat Data Yang Anda Masukkan</h2>
+        <p class="slide-desc">Sebelum anda mengurus data, anda perlu faham bagaimana pelajar melihat dan menggunakan maklumat yang anda masukkan. Ini membantu anda mengisi setiap medan dengan betul:</p>
+        
+        <div class="grid-2">
+          <div class="bento-card">
+            <div class="card-icon icon-secondary">
+              <i data-lucide="panel-left"></i>
+            </div>
+            <h3 class="bento-title">Panel Direktori Pelajar (Sidebar Kiri)</h3>
+            <p class="bento-text">Pelajar boleh membuka menu ☰ untuk melihat senarai lengkap bangunan. Ia mempunyai 2 tab:<br>
+              • <strong>Zon / Jabatan:</strong> Bangunan dikumpulkan mengikut <code>Nama Zon</code>. Pelajar boleh klik zon untuk kembangkan senarai bangunan di dalamnya.<br>
+              • <strong>Fasiliti Utama:</strong> Bangunan dikumpulkan mengikut <code>Kategori Fasiliti</code> (cth: semua Kafe, semua Surau). Hanya bangunan yang ditandakan "Fasiliti Utama" akan muncul di sini.<br>
+              <em style="color:var(--warning)">⚠️ Jika Nama Zon kosong dan bukan fasiliti, bangunan tersebut akan muncul sebagai item "terapung" tanpa kumpulan!</em>
+            </p>
+          </div>
+          <div class="bento-card">
+            <div class="card-icon icon-accent">
+              <i data-lucide="image"></i>
+            </div>
+            <h3 class="bento-title">4 Tab Imej Bangunan/Bilik</h3>
+            <p class="bento-text">Apabila pelajar klik sebuah bangunan, kad maklumat bawah akan muncul dengan tab-tab gambar:<br>
+              1. <strong>Dron</strong> — sentiasa tampil (gambar udara bangunan).<br>
+              2. <strong>Depan</strong> — hanya jika anda muat naik Gambar Pintu Masuk.<br>
+              3. <strong>Lantai</strong> — hanya jika anda muat naik Pelan Lantai. Boleh dizum penuh!<br>
+              4. <strong>Bilik</strong> — hanya muncul jika pelajar memilih bilik <em>yang mempunyai gambar pintu bilik</em>.<br>
+              <em>Tab yang tiada gambar akan disembunyikan sepenuhnya — jadi sangat penting untuk muat naik gambar!</em>
+            </p>
+          </div>
+          <div class="bento-card">
+            <div class="card-icon icon-success">
+              <i data-lucide="share-2"></i>
+            </div>
+            <h3 class="bento-title">Pautan Kongsi & Deep Link</h3>
+            <p class="bento-text">Pada kad maklumat bangunan, terdapat butang <strong>Kongsi</strong> (ikon share). Apabila ditekan, ia menyalin pautan terus (deep link) ke papan keratan telefon pelajar:<br>
+              • Format bangunan: <code>?b=building_id</code><br>
+              • Format bilik: <code>?room=room_id</code><br>
+              Pelajar boleh kongsikan pautan ini kepada rakan di WhatsApp/Telegram, dan rakan yang membuka pautan akan terus dibawa ke bangunan/bilik tersebut pada peta. <strong>Ini berguna untuk ujian anda juga!</strong>
+            </p>
+          </div>
+          <div class="bento-card">
+            <div class="card-icon icon-primary">
+              <i data-lucide="search"></i>
+            </div>
+            <h3 class="bento-title">Bar Carian Pelajar</h3>
+            <p class="bento-text">Pelajar boleh menaip di bar carian atas. Sistem akan mencari padanan dari:<br>
+              • <strong>Nama Bangunan</strong> (cth: "Jabatan Kejuruteraan")<br>
+              • <strong>Kod Bangunan</strong> (cth: "JKE")<br>
+              • <strong>Kod Bilik</strong> (cth: "A301")<br>
+              • <strong>Tags Carian</strong> (cth: "makmal komputer")<br>
+              Carian mempunyai debounce 0.5 saat — ia menunggu pelajar berhenti menaip sebelum mencari. Jika butang penapis (Kafe/Surau/Tandas) aktif, hasil diisih mengikut <em>jarak terdekat dari lokasi GPS pelajar</em>.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 11: Navigation GPS System -->
+      <section class="slide-card" id="slide-10">
+        <span class="slide-tag"><i data-lucide="navigation"></i> SLAID 11 — SISTEM NAVIGASI GPS PELAJAR</span>
+        <h2 class="slide-title">Aliran Navigasi Penuh & Paparan Cuaca</h2>
+        <p class="slide-desc">Apabila pelajar menekan "Mula Pandu Arah" pada kad bangunan, sistem memasuki mod navigasi dua fasa. Fahami aliran ini supaya anda dapat menulis panduan arah yang berkesan:</p>
+        
+        <div class="flow-steps">
+          <div class="flow-step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <h4>Fasa Luaran — Menuju ke Bangunan</h4>
+              <p>Sistem meminta kebenaran GPS dan memaparkan garisan putus-putus biru dari lokasi pelajar ke bangunan destinasi. ETA (Estimated Time of Arrival) dikira mengikut kelajuan berjalan 4.5 km/j. Peta mengikut lokasi pelajar secara automatik (follow mode). Jika pelajar seret peta manual, butang "Kembali ke lokasi saya" muncul.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <h4>Amaran Cuaca Automatik (> 200m)</h4>
+              <p>Jika jarak pelajar melebihi 200 meter DAN cuaca di Kuantan sedang hujan atau panas (≥ 32°C), sistem akan memaparkan kotak amaran kuning: <em>"Cuaca sekarang sedang hujan/agak panas. Pastikan bawa payung!"</em>. Data cuaca diambil dari <strong>Open Meteo API</strong> secara automatik — anda tidak perlu konfigurasi apa-apa.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <h4>Ambang 30 Meter — Panduan Dalaman Terbuka</h4>
+              <p>Panduan langkah dalaman (yang anda tulis di kotak "Panduan Arah Spesifik") <strong>hanya muncul</strong> apabila pelajar berada dalam radius 30 meter dari bangunan, ATAU apabila pelajar menekan butang "Seterusnya" secara manual. Ini memastikan pelajar tidak keliru membaca arahan dalaman ketika masih jauh.</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">4</div>
+            <div class="step-content">
+              <h4>Fasa Dalaman — Langkah Demi Langkah</h4>
+              <p>Selepas memasuki radius 30m, panduan arah anda akan dipaparkan dengan bar progres segmen (segmented progress bar). Pelajar boleh tekan "Seterusnya" dan "Kembali" untuk bergerak antara langkah. Setiap tekanan butang memberi getaran haptic (vibrate) pada telefon sebagai maklum balas sentuhan. Inilah sebab mengapa anda perlu menulis panduan arah dengan baris baharu (Enter) bagi setiap langkah!</p>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="step-num">5</div>
+            <div class="step-content">
+              <h4>Pautan Google Maps (Untuk Pemandu)</h4>
+              <p>Di bawah butang "Mula Pandu Arah", terdapat pautan "Memandu dari luar kampus? Buka Google Maps". Pautan ini akan membuka Google Maps dengan koordinat GPS bangunan sebagai destinasi — berguna untuk ibu bapa atau pengunjung yang memandu ke POLISAS.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 12: Naming Conventions & FAQ -->
+      <section class="slide-card" id="slide-11">
+        <span class="slide-tag"><i data-lucide="message-circle-question"></i> SLAID 12 — PANDUAN PENAMAAN & KESILAPAN LAZIM</span>
+        <h2 class="slide-title">Cara Menamakan Bangunan & Kesilapan Yang Sering Berlaku</h2>
+        <p class="slide-desc">Panduan ini membantu ahli JPP memahami piawaian penamaan dan mengelak kesilapan lazim yang telah berlaku sebelum ini:</p>
+        
+        <div class="grid-2">
+          <div class="bento-card" style="grid-column: span 2;">
+            <div class="card-icon icon-primary">
+              <i data-lucide="pencil-line"></i>
+            </div>
+            <h3 class="bento-title">Panduan Penamaan Yang Betul</h3>
+            <div class="table-container" style="overflow-x: auto; margin-top: 0.75rem;">
+              <table style="width:100%; border-collapse: collapse; font-size: 0.8rem;">
+                <thead>
+                  <tr style="border-bottom: 2px solid var(--card-border);">
+                    <th style="padding: 0.6rem 0.75rem; text-align:left; font-weight: 800; text-transform: uppercase; font-size: 0.65rem;">Medan</th>
+                    <th style="padding: 0.6rem 0.75rem; text-align:left; font-weight: 800; text-transform: uppercase; font-size: 0.65rem;">✅ Contoh Betul</th>
+                    <th style="padding: 0.6rem 0.75rem; text-align:left; font-weight: 800; text-transform: uppercase; font-size: 0.65rem;">❌ Contoh Salah</th>
+                    <th style="padding: 0.6rem 0.75rem; text-align:left; font-weight: 800; text-transform: uppercase; font-size: 0.65rem;">Sebab</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom: 1px solid var(--card-border);">
+                    <td style="padding: 0.6rem 0.75rem;">Nama Bangunan</td>
+                    <td style="padding: 0.6rem 0.75rem; color: var(--success);">Jabatan Kejuruteraan Elektrik</td>
+                    <td style="padding: 0.6rem 0.75rem; color: var(--danger);">JKE, jab. Kej. Elektrik</td>
+                    <td style="padding: 0.6rem 0.75rem;">Tulis nama penuh; singkatan masuk di Kod</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid var(--card-border);">
+                    <td style="padding: 0.6rem 0.75rem;">Kod Bangunan</td>
+                    <td style="padding: 0.6rem 0.75rem; color: var(--success);">JKE</td>
+                    <td style="padding: 0.6rem 0.75rem; color: var(--danger);">Jabatan Kej. Elektrik</td>
+                    <td style="padding: 0.6rem 0.75rem;">Kod mestilah singkatan pendek 2-5 huruf</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid var(--card-border);">
+                    <td style="padding: 0.6rem 0.75rem;">Nama Zon</td>
+                    <td style="padding: 0.6rem 0.75rem; color: var(--success);">JKE</td>
+                    <td style="padding: 0.6rem 0.75rem; color: var(--danger);">Zon JKE, Zon A, Zone 1</td>
+                    <td style="padding: 0.6rem 0.75rem;">Peta sudah tulis "Zon" di depan; jadi taip nama sahaja</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid var(--card-border);">
+                    <td style="padding: 0.6rem 0.75rem;">Kod Bilik</td>
+                    <td style="padding: 0.6rem 0.75rem; color: var(--success);">A301</td>
+                    <td style="padding: 0.6rem 0.75rem; color: var(--danger);">Bilik A301, bilik kuliah 301</td>
+                    <td style="padding: 0.6rem 0.75rem;">Ringkas sahaja; pelajar akan cari "A301"</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 0.6rem 0.75rem;">Tags Carian</td>
+                    <td style="padding: 0.6rem 0.75rem; color: var(--success);">makmal komputer, lab IT, JTM</td>
+                    <td style="padding: 0.6rem 0.75rem; color: var(--danger);">makmal</td>
+                    <td style="padding: 0.6rem 0.75rem;">Masukkan pelbagai variasi yang pelajar mungkin cari</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="bento-card" style="border-color: rgba(239, 68, 68, 0.3);">
+            <div class="card-icon icon-danger">
+              <i data-lucide="x-circle"></i>
+            </div>
+            <h3 class="bento-title" style="color:var(--danger)">Kesilapan #1: Daftar Tandas Sebagai Bangunan</h3>
+            <p class="bento-text">Tandas dalam bangunan <strong>bukan bangunan baru</strong>. Ia sepatutnya didaftarkan sebagai <em>Lokasi/Bilik</em> di bawah bangunan induknya. Contoh: Tandas Lelaki Aras G Blok A → Daftar sebagai Lokasi di dalam "Blok A" dengan kod "Tandas Lelaki Aras G" dan tag carian "tandas, toilet".</p>
+          </div>
+          <div class="bento-card" style="border-color: rgba(239, 68, 68, 0.3);">
+            <div class="card-icon icon-danger">
+              <i data-lucide="x-circle"></i>
+            </div>
+            <h3 class="bento-title" style="color:var(--danger)">Kesilapan #2: Zon Nama Berbeza Untuk Kawasan Sama</h3>
+            <p class="bento-text">Jika bangunan JKE sudah mempunyai zon "JKE", jangan masukkan bangunan bersebelahan dengan zon "Zon JKE" atau "jke" (huruf kecil). Nama zon <strong>mesti 100% sama</strong> supaya sistem mengelompokkan mereka bersama. Gunakan dropdown cadangan zon sedia ada untuk mengelakkan kesilapan ejaan!</p>
+          </div>
+          <div class="bento-card">
+            <div class="card-icon icon-warning">
+              <i data-lucide="alert-triangle"></i>
+            </div>
+            <h3 class="bento-title">Kesilapan #3: Waktu Operasi Tanpa Tanda Fasiliti</h3>
+            <p class="bento-text">Jika anda mengisi waktu buka/tutup pada bangunan tanpa menandakan suis "Bangunan ini adalah Fasiliti Utama", waktu tersebut <strong>tidak akan dipaparkan</strong> kepada pelajar. Sentiasa pastikan suis fasiliti dihidupkan terlebih dahulu!</p>
+          </div>
+          <div class="bento-card">
+            <div class="card-icon icon-primary">
+              <i data-lucide="image-off"></i>
+            </div>
+            <h3 class="bento-title">Kesilapan #4: Gambar Terlalu Besar / Bukan Format Betul</h3>
+            <p class="bento-text">Sistem memampatkan gambar secara automatik sebelum muat naik. Namun, jangan muat naik video atau PDF di ruang gambar. Format yang diterima: <code>.jpg</code>, <code>.png</code>, <code>.webp</code>, <code>.heic</code>. Anda juga boleh pilih "Atau paste URL..." untuk memasukkan URL gambar terus tanpa muat naik.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 13: Comprehensive Checklist -->
+      <section class="slide-card" id="slide-12">
+        <span class="slide-tag" style="color:var(--success); background:rgba(16, 185, 129, 0.08); border-color:rgba(16, 185, 129, 0.15);"><i data-lucide="clipboard-check"></i> SLAID 13 — SENARAI SEMAK PENUH</span>
+        <h2 class="slide-title" style="background: linear-gradient(to right, #10b981, #38bdf8); -webkit-background-clip: text;">Checklist Lengkap Sebelum Data Disahkan</h2>
+        <p class="slide-desc">Gunakan senarai semak ini <strong>setiap kali</strong> selepas menambah atau mengemaskini data bangunan dan bilik. Cetak halaman ini untuk semakan fizikal:</p>
+        
+        <div class="grid-2">
+          <div class="bento-card" style="grid-column: span 2;">
+            <div class="card-icon icon-success">
+              <i data-lucide="building-2"></i>
+            </div>
+            <h3 class="bento-title" style="color:var(--success)">A. Senarai Semak Bangunan</h3>
+            <div style="font-size: 0.85rem; line-height: 2; margin-top: 0.5rem;">
+              <p>☐ Nama bangunan ditulis penuh dan betul (bukan singkatan)</p>
+              <p>☐ Kod bangunan pendek dan tepat (2-5 huruf)</p>
+              <p>☐ Pin GPS sudah diletakkan pada bumbung bangunan yang betul di peta satelit</p>
+              <p>☐ Nama Zon diisi (sama persis dengan bangunan lain dalam kawasan sama)</p>
+              <p>☐ Sekurang-kurangnya Gambar Dron (drone image) dimuat naik</p>
+              <p>☐ Gambar Pelan Lantai dimuat naik (jika ada)</p>
+              <p>☐ Gambar Pintu Masuk dimuat naik (jika ada)</p>
+              <p>☐ Jika fasiliti: suis "Fasiliti Utama" dihidupkan</p>
+              <p>☐ Jika fasiliti: Kategori diisi dengan nilai tepat (Kafe/Surau/Tandas)</p>
+              <p>☐ Jika fasiliti: Waktu Buka dan Tutup diisi dalam format 24 jam</p>
+              <p>☐ Penerangan ringkas diisi (pilihan tetapi sangat digalakkan)</p>
+            </div>
+          </div>
+          <div class="bento-card" style="grid-column: span 2;">
+            <div class="card-icon icon-secondary">
+              <i data-lucide="navigation"></i>
+            </div>
+            <h3 class="bento-title" style="color:var(--secondary)">B. Senarai Semak Bilik / Lokasi</h3>
+            <div style="font-size: 0.85rem; line-height: 2; margin-top: 0.5rem;">
+              <p>☐ Bangunan induk dipilih dengan betul dari dropdown</p>
+              <p>☐ Kod bilik ditulis ringkas dan tepat (cth: A301, bukan "Bilik A301")</p>
+              <p>☐ Aras (floor level) menggunakan nombor integer: 0=Bawah, 1=Tingkat 1, dst.</p>
+              <p>☐ Panduan arah dalaman ditulis dengan baris baharu (Enter) untuk setiap langkah</p>
+              <p>☐ Panduan arah bermula dari pintu masuk bangunan (bukan dari luar)</p>
+              <p>☐ Tags Carian diisi dengan pelbagai variasi nama (dipisahkan koma)</p>
+              <p>☐ Tags Carian untuk tandas mengandungi "tandas" atau "toilet"</p>
+              <p>☐ Tags Carian untuk surau mengandungi "surau" atau "solat"</p>
+              <p>☐ Tags Carian untuk kafe mengandungi "kafe", "cafe", atau "kantin"</p>
+              <p>☐ Gambar pintu bilik dimuat naik (jika ada — sangat membantu pelajar baru!)</p>
+            </div>
+          </div>
+          <div class="bento-card" style="grid-column: span 2; border-color: rgba(56, 189, 248, 0.3);">
+            <div class="card-icon icon-primary">
+              <i data-lucide="check-circle"></i>
+            </div>
+            <h3 class="bento-title" style="color:var(--primary)">C. Ujian Akhir Wajib (Sebelum Diluluskan)</h3>
+            <div style="font-size: 0.85rem; line-height: 2; margin-top: 0.5rem;">
+              <p>☐ Buka peta PolyMaps dalam mod Incognito (bukan akaun JPP anda)</p>
+              <p>☐ Taip nama bilik di bar carian → sahkan ia muncul dalam hasil carian</p>
+              <p>☐ Klik hasil carian → sahkan peta zoom in ke bangunan yang betul</p>
+              <p>☐ Semak gambar muncul pada tab Dron / Depan / Lantai / Bilik</p>
+              <p>☐ Tekan butang penapis Kafe/Surau/Tandas → sahkan fasiliti anda tersenarai</p>
+              <p>☐ Buka Panel Direktori (menu ☰) → sahkan bangunan terletak di zon yang betul</p>
+              <p>☐ Tekan "Mula Pandu Arah" → sahkan garisan biru muncul ke destinasi</p>
+              <p>☐ Tekan butang Kongsi (share) → paste pautan di tab baru → sahkan ia membuka bangunan yang betul</p>
+              <p>☐ Jika ada waktu operasi, sahkan tag BUKA/TUTUP muncul dengan warna yang betul</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide-card');
+    const navItems = document.querySelectorAll('.nav-item');
+
+    function goToSlide(index) {
+      if (index < 0 || index >= slides.length) return;
+      
+      // Update Slide Cards
+      slides[currentSlide].classList.remove('active');
+      slides[index].classList.add('active');
+      
+      // Update Sidebar Navs
+      navItems[currentSlide].classList.remove('active');
+      navItems[index].classList.add('active');
+      
+      currentSlide = index;
+
+      // Scroll sidebar item into view
+      navItems[currentSlide].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function nextSlide() {
+      if (currentSlide < slides.length - 1) {
+        goToSlide(currentSlide + 1);
+      } else {
+        goToSlide(0); // Loop back
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        goToSlide(currentSlide - 1);
+      } else {
+        goToSlide(slides.length - 1); // Loop to last
+      }
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'Space') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        prevSlide();
+      }
+    });
+  </script>
+</body>
+</html>

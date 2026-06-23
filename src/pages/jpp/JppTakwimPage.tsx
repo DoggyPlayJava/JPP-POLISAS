@@ -94,7 +94,7 @@ export function JppTakwimPage() {
   useEffect(() => {
     toBase64(LOGO_POLISAS_URL).then(setLogoPolisas);
     // Load saved theme color
-    supabase.from('system_settings').select('value').eq('key', 'jpp_theme_color').single()
+    supabase.from('system_settings').select('value').eq('key', 'jpp_theme_color').maybeSingle()
       .then(({ data }) => {
         if (data?.value) {
           let c = data.value;

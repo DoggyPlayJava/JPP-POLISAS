@@ -5,17 +5,19 @@ import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import { getSemesterInfo } from '@/types';
 
 export function PolyMapsModal() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const { profile } = useAuth();
+  const { intake1Month, intake2Month } = useAcademicSession();
 
   useEffect(() => {
     // Only show for Sem 1 users
     if (profile?.intake_year) {
-      const semInfo = getSemesterInfo(profile.intake_year, profile.intake_period as 1 | 2, profile.programme_code === 'FTV', 7, 1, profile.semester_override);
+      const semInfo = getSemesterInfo(profile.intake_year, profile.intake_period as 1 | 2, profile.programme_code === 'FTV', intake1Month, intake2Month, profile.semester_override);
       if (semInfo.semester !== 1) return;
     }
 
@@ -25,7 +27,7 @@ export function PolyMapsModal() {
       const timer = setTimeout(() => setIsOpen(true), 2000);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [profile, intake1Month, intake2Month]);
 
   const handleClose = () => {
     setIsOpen(false);

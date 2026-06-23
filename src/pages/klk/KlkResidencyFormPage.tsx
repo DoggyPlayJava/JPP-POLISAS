@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import { getSemesterInfo, JABATAN_LIST } from '@/types';
 import { useNavigate } from 'react-router-dom';
 import { useKlkDynamicFields } from '@/hooks/useKlkDynamicFields';
@@ -18,6 +19,7 @@ import { getKlkAcademicYear } from '@/utils/klkUtils';
 
 export function KlkResidencyFormPage() {
   const { profile, user } = useAuth();
+  const { intake1Month, intake2Month } = useAcademicSession();
   const navigate = useNavigate();
   const [step, setStep] = useState<'choice' | 'form' | 'done'>('choice');
   const [loading, setLoading] = useState(false);
@@ -35,7 +37,7 @@ export function KlkResidencyFormPage() {
   const { fields: dynamicFields, kawasanList } = useKlkDynamicFields(isLuarStep);
   const academicYear = getKlkAcademicYear();
   const semInfo = profile?.intake_year
-    ? getSemesterInfo(profile.intake_year, profile.intake_period as 1 | 2, profile.programme_code === 'FTV', 7, 1, profile.semester_override)
+    ? getSemesterInfo(profile.intake_year, profile.intake_period as 1 | 2, profile.programme_code === 'FTV', intake1Month, intake2Month, profile.semester_override)
     : { semester: 0, level: 'Junior' as const };
 
   const jabatanLabel = JABATAN_LIST.find(j => j.value === profile?.department)?.label ?? profile?.department ?? '—';
