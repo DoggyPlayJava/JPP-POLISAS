@@ -312,6 +312,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const initialize = async () => {
       try {
+        if (localStorage.getItem('use_mock_auth') === 'true') {
+          console.log('🚧 [AuthContext] Using Developer Mock Bypass');
+          const mockUser = {
+            id: '00000000-0000-0000-0000-000000000000',
+            email: 'dev@polisas.edu.my',
+            user_metadata: { full_name: 'DEVELOPER BYPASS' }
+          } as any;
+          
+          const mockProfile: Profile = {
+            id: '00000000-0000-0000-0000-000000000000',
+            email: 'dev@polisas.edu.my',
+            full_name: 'DEVELOPER BYPASS',
+            role: 'SUPER_ADMIN_JPP',
+            account_status: 'APPROVED',
+            club_id: '00000000-0000-0000-0000-000000000001',
+            jpp_position: 'YDP',
+            jpp_unit: 'HQ',
+            phone: '0123456789',
+            matric_no: 'MOCK-DEV-0000',
+            department: 'JPP',
+            programme_code: 'DEV',
+            intake_year: 2026,
+            intake_period: 1
+          };
+          
+          setUser(mockUser);
+          setProfile(mockProfile);
+          setSession({ user: mockUser, access_token: 'mock-token' } as any);
+          
+          // Set mock club lists and memberships
+          setUserClubIds(['00000000-0000-0000-0000-000000000001']);
+          setUserMemberships([{ club_id: '00000000-0000-0000-0000-000000000001', role: 'SUPER_ADMIN_JPP', is_primary: true }]);
+          setSelectedClubIdState('00000000-0000-0000-0000-000000000001');
+          
+          clearTimeout(safetyTimer);
+          setIsLoading(false);
+          return;
+        }
+
         // B. Jika URL adalah recovery link, tunggu onAuthStateChange handle —
         //    JANGAN panggil getSession() dulu kerana ia akan set user sebagai
         //    "authenticated biasa" sebelum PASSWORD_RECOVERY event fire.
@@ -323,8 +362,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // A+C: Jalankan refreshClubs dan getSession SECARA SELARI untuk jimat masa
         const [, { data: { session: initialSession } }] = await Promise.all([
-          refreshClubs(),
-          supabase.auth.getSession(),
+          refreshClubs().catch(() => {}), // prevent crash if DB is offline
+          supabase.auth.getSession().catch(() => ({ data: { session: null } })),
         ]);
 
         if (isMounted) {
@@ -349,6 +388,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         if (!isMounted) return;
+        if (localStorage.getItem('use_mock_auth') === 'true') return; // Skip if in mock mode
 
         // ✅ Bila onAuthStateChange fire, batalkan safety timer — auth dah siap
         safetyTimerFired = true;
@@ -404,7 +444,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     setIsLoading(true);
-    await supabase.auth.signOut();
+    const wasMock = localStorage.getItem('use_mock_auth') === 'true';
+    localStorage.removeItem('use_mock_auth');
+    
+    if (!wasMock) {
+      try {
+        await supabase.auth.signOut();
+      } catch (err) {
+        console.warn('Sign out failed:', err);
+      }
+    }
     
     // SECURITY: Clear offline caches to prevent cross-session data leaks
     if ('caches' in window) {

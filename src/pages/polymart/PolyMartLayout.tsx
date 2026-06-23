@@ -81,6 +81,14 @@ export function PolyMartLayout() {
     const delay = setTimeout(async () => {
       setIsSearching(true);
       try {
+        if (localStorage.getItem('use_mock_auth') === 'true') {
+          setSearchResults([
+            { id: 'mock-prod-1', name: 'Nasi Lemak Ayam Goreng', price: 5.5, image_url: null, category: 'Makanan', keusahawanan_businesses: { name: 'Kedai Mock Cik Jah' } },
+            { id: 'mock-prod-2', name: 'Kopi Ais Kaw', price: 3.0, image_url: null, category: 'Minuman', keusahawanan_businesses: { name: 'Kedai Mock Cik Jah' } }
+          ]);
+          setIsSearching(false);
+          return;
+        }
         const { data, error } = await supabase
           .from('business_products')
           .select(`
@@ -107,6 +115,27 @@ export function PolyMartLayout() {
 
   const refetchCounts = useCallback(async () => {
     if (!user) return;
+    if (localStorage.getItem('use_mock_auth') === 'true') {
+      setMyActiveOrdersCount(1);
+      setCartCount(2);
+      
+      const stored = localStorage.getItem('mock_vendor_orders');
+      let pendingCount = 14;
+      let bizIds = ['e489a087-46d2-4030-aeb1-ae7b1ba00ee3', '4b3a5eb4-1299-460f-addf-7105e7f2e58a'];
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          pendingCount = parsed.filter((o: any) => o.status === 'PENDING').length;
+          bizIds = [...new Set<string>(parsed.map((o: any) => o.business_id))];
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      setMyBizIds(bizIds);
+      setIsVendor(true);
+      setPendingVendorCount(pendingCount);
+      return;
+    }
     const [buyerRes, vendorRes, bizRes, cartRes] = await Promise.all([
       supabase.from('polymart_orders').select('id', { count: 'exact', head: true })
         .eq('buyer_id', user.id).in('status', ['PENDING', 'CONFIRMED', 'READY']),
@@ -469,20 +498,22 @@ export function PolyMartLayout() {
         </AnimatePresence>
 
         {/* ── Mobile Bottom Nav (Global Standardized) ── */}
-        <div className="tour-polymart-mobile-nav">
-          <BottomNav 
-            customLinks={{
-              left: [
-                { icon: Home, label: 'Utama', onClick: () => navigate('/portal'), isActive: false },
-                { icon: Heart, label: 'Kegemaran', onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/wishlist')}`) : navigate('/polymart/wishlist'), isActive: location.pathname.includes('/polymart/wishlist') }
-              ],
-              right: [
-                { icon: ShoppingCart, label: 'Troli', onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/troli')}`) : navigate('/polymart/troli'), isActive: location.pathname.includes('/polymart/troli'), badge: cartCount },
-                { icon: Package, label: 'Pesanan', onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/pesanan-saya')}`) : navigate('/polymart/pesanan-saya'), isActive: isOrders, badge: myActiveOrdersCount }
-              ]
-            }}
-          />
-        </div>
+        {!(location.pathname.includes('/polymart/vendor') || location.pathname.includes('/polymart/admin')) && (
+          <div className="tour-polymart-mobile-nav">
+            <BottomNav 
+              customLinks={{
+                left: [
+                  { icon: Home, label: 'Utama', onClick: () => navigate('/portal'), isActive: false },
+                  { icon: Heart, label: 'Kegemaran', onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/wishlist')}`) : navigate('/polymart/wishlist'), isActive: location.pathname.includes('/polymart/wishlist') }
+                ],
+                right: [
+                  { icon: ShoppingCart, label: 'Troli', onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/troli')}`) : navigate('/polymart/troli'), isActive: location.pathname.includes('/polymart/troli'), badge: cartCount },
+                  { icon: Package, label: 'Pesanan', onClick: () => !user ? navigate(`/login?redirect=${encodeURIComponent('/polymart/pesanan-saya')}`) : navigate('/polymart/pesanan-saya'), isActive: isOrders, badge: myActiveOrdersCount }
+                ]
+              }}
+            />
+          </div>
+        )}
         
         {/* Global Floating AI Chat */}
         <FloatingAiChat />

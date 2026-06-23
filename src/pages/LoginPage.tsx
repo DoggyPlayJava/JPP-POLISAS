@@ -846,6 +846,18 @@ export function LoginPage() {
                       <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5 bg-white rounded-full p-0.5" />
                       Teruskan dengan Google
                     </Button>
+
+                    {import.meta.env.DEV && (
+                      <Button type="button" onClick={() => {
+                        localStorage.setItem('use_mock_auth', 'true');
+                        toast.success('Pintasan Developer diaktifkan!');
+                        setTimeout(() => window.location.href = '/portal', 500);
+                      }}
+                        className="w-full h-12 rounded-xl border border-dashed border-rose-500/50 bg-rose-500/5 hover:bg-rose-500/10 text-rose-500 font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all shadow-sm active:scale-[0.98]">
+                        <Sparkles className="w-4 h-4 text-rose-500" />
+                        Pintas Log Masuk (Dev Mode)
+                      </Button>
+                    )}
                   </div>
                 )}
               </form>
