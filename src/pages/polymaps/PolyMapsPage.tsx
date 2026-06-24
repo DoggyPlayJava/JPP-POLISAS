@@ -266,7 +266,7 @@ export function PolyMapsPage() {
       if (error) throw error;
 
       // Hantar notifikasi kepada JPP
-      const studentName = profile?.name || 'Pelajar';
+      const studentName = profile?.full_name || 'Pelajar';
       await sendNotificationToJppAndSuperAdmin({
         title: 'Laporan Tempat Hilang Baru',
         message: `${studentName} melaporkan tempat hilang: "${reportForm.room_code}"`,

@@ -108,7 +108,7 @@ interface MissingReport {
   created_at: string;
   student?: {
     id: string;
-    name: string;
+    full_name: string;
     matric_no: string;
   } | null;
 }
@@ -264,7 +264,7 @@ export function JppPolyMapsAdmin() {
           id, student_id, room_code, building_id, building_name_suggestion, floor_level, description, status, created_at,
           student:student_id (
             id,
-            name,
+            full_name,
             matric_no
           )
         `).order('created_at', { ascending: false })
@@ -775,7 +775,7 @@ export function JppPolyMapsAdmin() {
                     <tr key={r.id} className="border-b border-white/[0.05] hover:bg-white/[0.02] transition-colors group">
                       <td className="p-4">
                         <div className="flex flex-col">
-                          <span className="font-bold text-white">{r.student?.name || 'N/A'}</span>
+                          <span className="font-bold text-white">{r.student?.full_name || 'N/A'}</span>
                           <span className="text-xs text-white/40">{r.student?.matric_no || 'N/A'}</span>
                         </div>
                       </td>
