@@ -8,7 +8,8 @@ import {
   Search, Navigation, MapPin, Building2, Layers, Clock, X, Menu, 
   ChevronDown, ChevronRight, Share2, Coffee, Moon, Droplets, 
   CreditCard, BookOpen, ImageIcon, Map as MapIcon, DoorOpen,
-  CloudRain, Sun, HelpCircle, Loader2
+  CloudRain, Sun, HelpCircle, Loader2, Umbrella, CornerUpLeft, 
+  CornerUpRight, Compass
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
@@ -161,6 +162,19 @@ function calculateDistanceInMeters(lat1: number, lon1: number, lat2: number, lon
   return R * c;
 }
 
+function calculateBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const phi1 = lat1 * Math.PI / 180;
+  const phi2 = lat2 * Math.PI / 180;
+  const deltaLambda = (lon2 - lon1) * Math.PI / 180;
+
+  const y = Math.sin(deltaLambda) * Math.cos(phi2);
+  const x = Math.cos(phi1) * Math.sin(phi2) -
+            Math.sin(phi1) * Math.cos(phi2) * Math.cos(deltaLambda);
+  
+  let bearing = Math.atan2(y, x) * 180 / Math.PI;
+  return (bearing + 360) % 360; // Normalize to 0-360
+}
+
 interface Building {
   id: string;
   name: string;
@@ -180,7 +194,7 @@ interface GraphNode {
   lat: number;
   lng: number;
   key: string;
-  neighbors: Map<string, number>;
+  neighbors: Map<string, { distance: number; isCovered: boolean } | number>;
 }
 
 function findShortestPath(
@@ -188,7 +202,8 @@ function findShortestPath(
   startLat: number,
   startLng: number,
   endLat: number,
-  endLng: number
+  endLng: number,
+  preferCovered: boolean = false
 ): [number, number][] | null {
   if (nodesMap.size === 0) return null;
 
@@ -215,7 +230,7 @@ function findShortestPath(
   const tempStartKey = "temp_start";
   const tempEndKey = "temp_end";
 
-  const neighborsCopy = new Map<string, Map<string, number>>();
+  const neighborsCopy = new Map<string, Map<string, { distance: number; isCovered: boolean } | number>>();
   for (const [key, node] of nodesMap.entries()) {
     neighborsCopy.set(key, new Map(node.neighbors));
   }
@@ -261,8 +276,19 @@ function findShortestPath(
 
     const neighbors = neighborsCopy.get(currentKey);
     if (neighbors) {
-      for (const [neighborKey, weight] of neighbors.entries()) {
+      for (const [neighborKey, edgeVal] of neighbors.entries()) {
         if (visited.has(neighborKey)) continue;
+        
+        let weight = 0;
+        if (typeof edgeVal === 'number') {
+          weight = edgeVal;
+        } else if (edgeVal && typeof edgeVal === 'object') {
+          weight = edgeVal.distance;
+          if (preferCovered && !edgeVal.isCovered) {
+            weight *= 8.0; // Apply 8x penalty to uncovered path segments
+          }
+        }
+        
         const alt = minD + weight;
         if (alt < (distances.get(neighborKey) ?? Infinity)) {
           distances.set(neighborKey, alt);
@@ -370,13 +396,40 @@ export function PolyMapsPage() {
   
   const [allBuildings, setAllBuildings] = useState<Building[]>([]);
   const [allLocations, setAllLocations] = useState<Location[]>([]);
-  const [walkways, setWalkways] = useState<{ id: string; name: string; coordinates: [number, number][] }[]>([]);
+
+  const [activeBuilding, setActiveBuilding] = useState<Building | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [hasArrivedManual, setHasArrivedManual] = useState(false);
+  const [hasZoomedToNavigation, setHasZoomedToNavigation] = useState(false);
+  // Follow mode: true = map follows user; false = user panned away (show re-center button)
+  const [isFollowingUser, setIsFollowingUser] = useState(false);
+  const { user, profile } = useAuth();
+  const isLowEnd = React.useRef(isLowEndDevice()).current;
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [reportForm, setReportForm] = useState({
+    room_code: '',
+    building_id: '',
+    building_name_suggestion: '',
+    floor_level: '0',
+    description: ''
+  });
+
+  const [walkways, setWalkways] = useState<{ id: string; name: string; coordinates: [number, number][]; is_covered?: boolean; is_blocked?: boolean }[]>([]);
   const [heading, setHeading] = useState<number | null>(null);
+  const [preferCovered, setPreferCovered] = useState(false);
+  const [showTbtSteps, setShowTbtSteps] = useState(false);
 
   const graph = useMemo(() => {
     const nodesMap = new Map<string, GraphNode>();
     
     walkways.forEach(w => {
+      if (w.is_blocked) return; // Skip blocked walkways
+
       w.coordinates.forEach((coord, i) => {
         const lat = coord[0];
         const lng = coord[1];
@@ -387,7 +440,7 @@ export function PolyMapsPage() {
             lat,
             lng,
             key,
-            neighbors: new Map<string, number>()
+            neighbors: new Map<string, { distance: number; isCovered: boolean } | number>()
           });
         }
         
@@ -398,9 +451,10 @@ export function PolyMapsPage() {
           const prevKey = `${prevLat.toFixed(6)},${prevLng.toFixed(6)}`;
           
           const d = calculateDistanceInMeters(prevLat, prevLng, lat, lng);
+          const isCovered = w.is_covered || false;
           
-          nodesMap.get(prevKey)?.neighbors.set(key, d);
-          nodesMap.get(key)?.neighbors.set(prevKey, d);
+          nodesMap.get(prevKey)?.neighbors.set(key, { distance: d, isCovered });
+          nodesMap.get(key)?.neighbors.set(prevKey, { distance: d, isCovered });
         }
       });
     });
@@ -413,7 +467,7 @@ export function PolyMapsPage() {
         
         const d = calculateDistanceInMeters(nodeA.lat, nodeA.lng, nodeB.lat, nodeB.lng);
         if (d <= 8.0) {
-          nodeA.neighbors.set(nodeB.key, d);
+          nodeA.neighbors.set(nodeB.key, d); // Junction bridge (uncovered plain distance)
           nodeB.neighbors.set(nodeA.key, d);
         }
       }
@@ -429,11 +483,12 @@ export function PolyMapsPage() {
         userLocation[0],
         userLocation[1],
         activeBuilding.center_lat,
-        activeBuilding.center_lng
+        activeBuilding.center_lng,
+        preferCovered
       );
     }
     return null;
-  }, [isNavigating, userLocation, activeBuilding, graph]);
+  }, [isNavigating, userLocation, activeBuilding, graph, preferCovered]);
 
   const navigationStats = useMemo(() => {
     if (!userLocation || !activeBuilding?.center_lat) {
@@ -460,8 +515,111 @@ export function PolyMapsPage() {
     }
   }, [userLocation, activeBuilding, shortestPath]);
 
+  const findWalkwayNameForSegment = (lat1: number, lng1: number, lat2: number, lng2: number): string => {
+    for (const w of walkways) {
+      for (let i = 1; i < w.coordinates.length; i++) {
+        const p1 = w.coordinates[i-1];
+        const p2 = w.coordinates[i];
+        const matchForward = (Math.abs(p1[0] - lat1) < 1e-6 && Math.abs(p1[1] - lng1) < 1e-6 &&
+                              Math.abs(p2[0] - lat2) < 1e-6 && Math.abs(p2[1] - lng2) < 1e-6);
+        const matchBackward = (Math.abs(p1[0] - lat2) < 1e-6 && Math.abs(p1[1] - lng2) < 1e-6 &&
+                               Math.abs(p2[0] - lat1) < 1e-6 && Math.abs(p2[1] - lng1) < 1e-6);
+        if (matchForward || matchBackward) {
+          return w.name;
+        }
+      }
+    }
+    return "Laluan Kampus";
+  };
+
+  const navigationSteps = useMemo(() => {
+    if (!shortestPath || shortestPath.length < 2) return [];
+
+    const steps: { instruction: string; distance: number; isCovered: boolean }[] = [];
+    
+    let currentWalkwayName = findWalkwayNameForSegment(
+      shortestPath[0][0], shortestPath[0][1],
+      shortestPath[1][0], shortestPath[1][1]
+    );
+    
+    const firstSegmentWalkway = walkways.find(w => w.name === currentWalkwayName);
+    let isCurrentCovered = firstSegmentWalkway?.is_covered || false;
+
+    let segmentDistance = calculateDistanceInMeters(
+      shortestPath[0][0], shortestPath[0][1],
+      shortestPath[1][0], shortestPath[1][1]
+    );
+    
+    let lastBearing = calculateBearing(
+      shortestPath[0][0], shortestPath[0][1],
+      shortestPath[1][0], shortestPath[1][1]
+    );
+
+    let accumulatedDistance = segmentDistance;
+
+    for (let i = 2; i < shortestPath.length; i++) {
+      const pPrev = shortestPath[i-2];
+      const pCurr = shortestPath[i-1];
+      const pNext = shortestPath[i];
+
+      const segmentWalkway = findWalkwayNameForSegment(pCurr[0], pCurr[1], pNext[0], pNext[1]);
+      const segmentWalkwayObj = walkways.find(w => w.name === segmentWalkway);
+      const isSegmentCovered = segmentWalkwayObj?.is_covered || false;
+
+      const currentBearing = calculateBearing(pCurr[0], pCurr[1], pNext[0], pNext[1]);
+      const bearingDiff = (currentBearing - lastBearing + 540) % 360 - 180;
+      
+      const dist = calculateDistanceInMeters(pCurr[0], pCurr[1], pNext[0], pNext[1]);
+
+      const isTurn = Math.abs(bearingDiff) > 25;
+      const isWalkwayChange = segmentWalkway !== currentWalkwayName;
+      const isCoveredChange = isSegmentCovered !== isCurrentCovered;
+
+      if (isTurn || isWalkwayChange || isCoveredChange) {
+        let turnText = "Ikuti";
+        if (steps.length > 0 && isTurn) {
+          if (bearingDiff >= 25 && bearingDiff < 110) {
+            turnText = "Belok kanan ke";
+          } else if (bearingDiff >= 110) {
+            turnText = "Belok tajam ke kanan ke";
+          } else if (bearingDiff <= -25 && bearingDiff > -110) {
+            turnText = "Belok kiri ke";
+          } else {
+            turnText = "Belok tajam ke kiri ke";
+          }
+        }
+        steps.push({
+          instruction: `${turnText} ${currentWalkwayName}${isCurrentCovered ? ' (Berbumbung)' : ''}`,
+          distance: Math.round(accumulatedDistance),
+          isCovered: isCurrentCovered
+        });
+
+        currentWalkwayName = segmentWalkway;
+        isCurrentCovered = isSegmentCovered;
+        accumulatedDistance = dist;
+      } else {
+        accumulatedDistance += dist;
+      }
+      lastBearing = currentBearing;
+    }
+
+    steps.push({
+      instruction: `Teruskan ke destinasi melalui ${currentWalkwayName}${isCurrentCovered ? ' (Berbumbung)' : ''}`,
+      distance: Math.round(accumulatedDistance),
+      isCovered: isCurrentCovered
+    });
+
+    steps.push({
+      instruction: `Anda telah sampai ke destinasi: ${activeBuilding?.name || 'Destinasi'}`,
+      distance: 0,
+      isCovered: false
+    });
+
+    return steps;
+  }, [shortestPath, walkways, activeBuilding]);
+
   const getPathDistanceAndETA = (startLat: number, startLng: number, endLat: number, endLng: number) => {
-    const path = findShortestPath(graph, startLat, startLng, endLat, endLng);
+    const path = findShortestPath(graph, startLat, startLng, endLat, endLng, preferCovered);
     if (path && path.length > 0) {
       let totalDistance = 0;
       for (let i = 1; i < path.length; i++) {
@@ -496,28 +654,6 @@ export function PolyMapsPage() {
       }
     }
   };
-  
-  const [activeBuilding, setActiveBuilding] = useState<Building | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
-
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
-  const [isLocating, setIsLocating] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
-  const [hasArrivedManual, setHasArrivedManual] = useState(false);
-  const [hasZoomedToNavigation, setHasZoomedToNavigation] = useState(false);
-  // Follow mode: true = map follows user; false = user panned away (show re-center button)
-  const [isFollowingUser, setIsFollowingUser] = useState(false);
-  const { user, profile } = useAuth();
-  const isLowEnd = React.useRef(isLowEndDevice()).current;
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
-  const [reportForm, setReportForm] = useState({
-    room_code: '',
-    building_id: '',
-    building_name_suggestion: '',
-    floor_level: '0',
-    description: ''
-  });
 
   const handleOpenReportModal = () => {
     setReportForm({
@@ -613,6 +749,13 @@ export function PolyMapsPage() {
         }
       }).catch(e => console.log('Weather fetch failed', e));
   }, []);
+
+  useEffect(() => {
+    if (weather?.isRaining) {
+      setPreferCovered(true);
+      toast.success('Hari hujan! Mod laluan berbumbung diaktifkan secara automatik.', { id: 'rain-toggle-toast' });
+    }
+  }, [weather?.isRaining]);
 
   useEffect(() => {
     const zoneMap: Record<string, Building[]> = {};
@@ -1221,14 +1364,31 @@ export function PolyMapsPage() {
             <MapFollower lat={userLocation[0]} lng={userLocation[1]} isLowEnd={isLowEnd} />
           )}
 
-          {/* Render walkways as light-grey dashed trails */}
-          {walkways.map((w, idx) => (
-            <Polyline
-              key={`walkway-${w.id || idx}`}
-              positions={w.coordinates}
-              pathOptions={{ color: '#64748b', weight: 2.5, dashArray: '5, 8', opacity: 0.5 }}
-            />
-          ))}
+          {/* Render walkways with covered & blocked styles */}
+          {walkways.map((w, idx) => {
+            let color = '#64748b'; // standard grey
+            let weight = 2.5;
+            let dashArray = '5, 8';
+            let opacity = 0.5;
+            if (w.is_blocked) {
+              color = '#ef4444'; // red
+              weight = 3;
+              dashArray = '3, 6';
+              opacity = 0.6;
+            } else if (w.is_covered) {
+              color = '#10b981'; // emerald green
+              weight = 3;
+              dashArray = undefined; // solid line for covered
+              opacity = 0.6;
+            }
+            return (
+              <Polyline
+                key={`walkway-${w.id || idx}`}
+                positions={w.coordinates}
+                pathOptions={{ color, weight, dashArray, opacity }}
+              />
+            );
+          })}
 
           {userLocation && (
             <Marker position={userLocation} icon={getUserIcon(heading)}>
@@ -1516,125 +1676,221 @@ export function PolyMapsPage() {
                   >
                     Tamat
                   </button>
-                </div>
-
-                {/* Inject Step-By-Step Directions into Active Navigation */}
-                {selectedLocation && selectedLocation.direction_text && (
-                  <div className="bg-white/10 rounded-2xl p-3 border border-white/10 mt-1">
-                    <div className="flex gap-3">
-                      <Navigation className="w-4 h-4 text-white/70 shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        {(() => {
-                          const distanceMeters = userLocation && activeBuilding?.center_lat
-                            ? calculateDistanceInMeters(userLocation[0], userLocation[1], activeBuilding.center_lat, activeBuilding.center_lng)
-                            : null;
-                          
-                          // Admin bypass removed — use manual "Seterusnya" button or GPS proximity (<= 30m)
-                          const hasArrived = hasArrivedManual || (distanceMeters !== null && distanceMeters <= 30);
-
-                          if (!hasArrived) {
-                            return (
-                              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                                <span className="text-[9px] font-black uppercase tracking-widest text-white/50 mb-1 block">
-                                  Langkah Luaran (Menuju Bangunan)
-                                </span>
-                                <p className="text-sm font-bold text-white leading-relaxed mb-3">
-                                  Sila ikuti panduan arah pada peta untuk tiba di bangunan ini terlebih dahulu. Panduan dalaman akan dibuka automatik jika jarak &lt; 30m, atau teruskan manual.
-                                </p>
-
-                                {distanceMeters !== null && distanceMeters > 200 && weather && (weather.isRaining || weather.isHot) && (
-                                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 mb-3 flex items-start gap-3">
-                                    <div className="p-1.5 bg-amber-500/20 rounded-lg text-amber-400 shrink-0 mt-0.5">
-                                      {weather.isRaining ? <CloudRain className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-                                    </div>
-                                    <div>
-                                      <p className="text-xs font-bold text-amber-400 mb-0.5">Jarak Agak Jauh ({(distanceMeters / 1000).toFixed(1)}km)</p>
-                                      <p className="text-[10px] text-amber-500/80 leading-snug">
-                                        Cuaca sekarang {weather.isRaining ? 'sedang hujan' : 'agak panas'}. Pastikan anda bawa payung untuk berjalan ke destinasi!
-                                      </p>
-                                    </div>
-                                  </div>
-                                )}
-
-                                <div className="flex justify-end pt-3 border-t border-white/10">
-                                  <button 
-                                    onClick={() => setHasArrivedManual(true)}
-                                    className="text-xs font-bold text-white bg-white/10 hover:bg-white/20 px-4 py-2.5 rounded-xl transition-colors flex items-center gap-1.5"
-                                  >
-                                    Seterusnya <Navigation className="w-3 h-3 rotate-90" />
-                                  </button>
-                                </div>
-                              </motion.div>
-                            );
-                          }
-
-                          const steps = selectedLocation.direction_text.split(/\r?\n/).filter(s => s.trim().length > 0);
-                          const isMultiStep = steps.length > 1;
-
-                          return isMultiStep ? (
-                            <div className="flex flex-col">
-                              {/* Segmented Progress Bar */}
-                              <div className="flex gap-1.5 mb-3 w-full">
-                                {steps.map((_, idx) => (
-                                  <div key={idx} className="h-1 rounded-full flex-1 bg-white/20 overflow-hidden">
-                                    <motion.div 
-                                      className="h-full bg-white"
-                                      initial={false}
-                                      animate={{ 
-                                        width: idx <= currentStep ? '100%' : '0%' 
-                                      }}
-                                      transition={{ duration: 0.3 }}
-                                    />
-                                  </div>
-                                ))}
-                              </div>
-
-                              <motion.div key={currentStep} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
-                                <span className="text-[9px] font-black uppercase tracking-widest text-white/50 mb-1 block">
-                                  Langkah Dalaman ({currentStep + 1} / {steps.length})
-                                </span>
-                                <p className="text-sm font-bold text-white leading-relaxed min-h-[40px]">
-                                  {steps[currentStep]}
-                                </p>
-                                <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/10">
-                                  <button 
-                                    disabled={currentStep === 0} 
-                                    onClick={() => {
-                                      if (navigator.vibrate) navigator.vibrate(30);
-                                      setCurrentStep(prev => prev - 1);
-                                    }}
-                                    className="text-xs font-bold text-white/70 disabled:opacity-30 transition-opacity px-3 py-1.5 -ml-3"
-                                  >
-                                    Kembali
-                                  </button>
-                                  <button 
-                                    disabled={currentStep === steps.length - 1} 
-                                    onClick={() => {
-                                      if (navigator.vibrate) navigator.vibrate(50);
-                                      setCurrentStep(prev => prev + 1);
-                                    }}
-                                    className="text-xs font-bold text-white bg-white/10 hover:bg-white/20 rounded-lg disabled:opacity-30 disabled:bg-transparent transition-colors px-4 py-1.5"
-                                  >
-                                    Seterusnya
-                                  </button>
-                                </div>
-                              </motion.div>
-                            </div>
-                          ) : (
-                            <div>
-                              <span className="text-[9px] font-black uppercase tracking-widest text-white/50 mb-1 block">
-                                Panduan Dalaman
-                              </span>
-                              <p className="text-sm font-bold text-white leading-relaxed">
-                                {selectedLocation.direction_text}
-                              </p>
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    </div>
+                </div>                {/* Weather alert warning / covered suggestion */}
+                {weather?.isRaining && (
+                  <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-2xl p-2.5 flex items-center gap-2 text-emerald-100 text-xs mt-1">
+                    <CloudRain className="w-4 h-4 shrink-0 text-emerald-300 animate-bounce" />
+                    <span>Hujan dikesan! Laluan berbumbung diutamakan secara automatik.</span>
                   </div>
                 )}
+
+                {/* Prefer Covered Walkway Toggle */}
+                <div className="flex items-center justify-between bg-white/10 rounded-2xl p-3 border border-white/10 mt-1">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 bg-white/10 rounded-lg text-white">
+                      <Umbrella className="w-4 h-4 text-emerald-300" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-white">Utamakan Laluan Berbumbung</p>
+                      <p className="text-[10px] text-blue-200">Elakkan hujan & panas di kampus</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (navigator.vibrate) navigator.vibrate(20);
+                      setPreferCovered(!preferCovered);
+                    }}
+                    className={cn(
+                      "w-10 h-6 rounded-full p-1 transition-colors duration-200 focus:outline-none flex items-center",
+                      preferCovered ? "bg-emerald-400" : "bg-white/25"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "w-4 h-4 rounded-full bg-white transition-transform duration-200 shadow-sm",
+                        preferCovered ? "translate-x-4" : "translate-x-0"
+                      )}
+                    />
+                  </button>
+                </div>
+
+                {/* Directions Section */}
+                {(() => {
+                  const distanceMeters = userLocation && activeBuilding?.center_lat
+                    ? calculateDistanceInMeters(userLocation[0], userLocation[1], activeBuilding.center_lat, activeBuilding.center_lng)
+                    : null;
+                  
+                  const hasArrived = hasArrivedManual || (distanceMeters !== null && distanceMeters <= 30);
+                  const hasIndoorDirections = selectedLocation && selectedLocation.direction_text;
+
+                  // If they have arrived AND we have indoor directions, show the Indoor (Langkah Dalaman) card
+                  if (hasIndoorDirections && hasArrived) {
+                    const steps = selectedLocation.direction_text.split(/\r?\n/).filter(s => s.trim().length > 0);
+                    const isMultiStep = steps.length > 1;
+
+                    return (
+                      <div className="bg-white/10 rounded-2xl p-3 border border-white/10 mt-1">
+                        <div className="flex gap-3">
+                          <DoorOpen className="w-4 h-4 text-emerald-300 shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            {isMultiStep ? (
+                              <div className="flex flex-col">
+                                {/* Segmented Progress Bar */}
+                                <div className="flex gap-1.5 mb-3 w-full">
+                                  {steps.map((_, idx) => (
+                                    <div key={idx} className="h-1 rounded-full flex-1 bg-white/20 overflow-hidden">
+                                      <motion.div 
+                                        className="h-full bg-white"
+                                        initial={false}
+                                        animate={{ 
+                                          width: idx <= currentStep ? '100%' : '0%' 
+                                        }}
+                                        transition={{ duration: 0.3 }}
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <motion.div key={currentStep} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
+                                  <span className="text-[9px] font-black uppercase tracking-widest text-emerald-300 mb-1 block">
+                                    Langkah Dalaman ({currentStep + 1} / {steps.length})
+                                  </span>
+                                  <p className="text-sm font-bold text-white leading-relaxed min-h-[40px]">
+                                    {steps[currentStep]}
+                                  </p>
+                                  <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/10">
+                                    <button 
+                                      disabled={currentStep === 0} 
+                                      onClick={() => {
+                                        if (navigator.vibrate) navigator.vibrate(30);
+                                        setCurrentStep(prev => prev - 1);
+                                      }}
+                                      className="text-xs font-bold text-white/70 disabled:opacity-30 transition-opacity px-3 py-1.5 -ml-3"
+                                    >
+                                      Kembali
+                                    </button>
+                                    <button 
+                                      disabled={currentStep === steps.length - 1} 
+                                      onClick={() => {
+                                        if (navigator.vibrate) navigator.vibrate(50);
+                                        setCurrentStep(prev => prev + 1);
+                                      }}
+                                      className="text-xs font-bold text-white bg-white/10 hover:bg-white/20 rounded-lg disabled:opacity-30 disabled:bg-transparent transition-colors px-4 py-1.5"
+                                    >
+                                      Seterusnya
+                                    </button>
+                                  </div>
+                                </motion.div>
+                              </div>
+                            ) : (
+                              <div>
+                                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-300 mb-1 block">
+                                  Panduan Dalaman
+                                </span>
+                                <p className="text-sm font-bold text-white leading-relaxed">
+                                  {selectedLocation.direction_text}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Otherwise, show external walkways navigation (Dijkstra Turn-by-Turn list) and hasArrived toggle if needed
+                  return (
+                    <div className="flex flex-col gap-2 mt-1">
+                      {/* External Walkways Turn-by-Turn Card */}
+                      {navigationSteps.length > 0 && (
+                        <div className="bg-white/10 rounded-2xl border border-white/10 overflow-hidden">
+                          <button
+                            onClick={() => {
+                              if (navigator.vibrate) navigator.vibrate(25);
+                              setShowTbtSteps(!showTbtSteps);
+                            }}
+                            className="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors text-left focus:outline-none"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Compass className="w-4 h-4 text-blue-200 shrink-0" />
+                              <span className="text-xs font-bold text-white">Langkah Perjalanan ({navigationSteps.length - 1} langkah)</span>
+                            </div>
+                            {showTbtSteps ? (
+                              <ChevronDown className="w-4 h-4 text-white/70" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4 text-white/70" />
+                            )}
+                          </button>
+                          
+                          <AnimatePresence>
+                            {showTbtSteps && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="border-t border-white/10 max-h-48 overflow-y-auto px-3 py-2 space-y-2.5 bg-black/15 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
+                              >
+                                {navigationSteps.map((step, idx) => {
+                                  // Determine step icon
+                                  let stepIcon = <Navigation className="w-3.5 h-3.5 text-blue-300 rotate-90" />;
+                                  if (step.instruction.toLowerCase().includes('kanan')) {
+                                    stepIcon = <CornerUpRight className="w-3.5 h-3.5 text-emerald-400" />;
+                                  } else if (step.instruction.toLowerCase().includes('kiri')) {
+                                    stepIcon = <CornerUpLeft className="w-3.5 h-3.5 text-rose-400" />;
+                                  } else if (step.instruction.toLowerCase().includes('sampai') || step.instruction.toLowerCase().includes('destinasi')) {
+                                    stepIcon = <MapPin className="w-3.5 h-3.5 text-blue-400" />;
+                                  }
+
+                                  return (
+                                    <div key={idx} className="flex gap-2.5 items-start text-xs">
+                                      <div className="p-1 bg-white/10 rounded-md shrink-0 mt-0.5">
+                                        {stepIcon}
+                                      </div>
+                                      <div className="flex-1">
+                                        <p className="font-semibold text-white leading-tight">{step.instruction}</p>
+                                        {step.distance > 0 && (
+                                          <p className="text-[10px] text-blue-200 mt-0.5 flex items-center gap-1.5">
+                                            <span>Jalan terus {step.distance}m</span>
+                                            {step.isCovered && (
+                                              <span className="inline-flex items-center gap-0.5 px-1 py-0.2 bg-emerald-500/20 text-emerald-300 rounded text-[8px] font-black uppercase">
+                                                <Umbrella className="w-2.5 h-2.5" /> Berbumbung
+                                              </span>
+                                            )}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      )}
+
+                      {/* Manual "Seterusnya" for indoor entrance */}
+                      {hasIndoorDirections && !hasArrived && (
+                        <div className="bg-white/10 rounded-2xl p-3 border border-white/10 flex flex-col gap-2">
+                          <p className="text-xs text-white leading-relaxed">
+                            Panduan dalaman bilik akan dibuka secara automatik apabila anda berada &lt; 30m dari bangunan.
+                          </p>
+                          <div className="flex justify-between items-center pt-2 border-t border-white/10">
+                            <span className="text-[10px] font-bold text-white/60">Jarak ke bangunan: {distanceMeters !== null ? `${Math.round(distanceMeters)}m` : 'mengira...'}</span>
+                            <button 
+                              onClick={() => {
+                                if (navigator.vibrate) navigator.vibrate(40);
+                                setHasArrivedManual(true);
+                              }}
+                              className="text-xs font-bold text-white bg-white/20 hover:bg-white/30 px-3.5 py-1.5 rounded-xl transition-colors flex items-center gap-1"
+                            >
+                              Seterusnya <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </motion.div>
             )}
           </AnimatePresence>

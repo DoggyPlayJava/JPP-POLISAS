@@ -67,6 +67,21 @@ function LocationPickerMap({ lat, lng, onChange, existingBuildings }: { lat: num
   );
 }
 
+function calculateDistanceInMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371e3; // metres
+  const phi1 = lat1 * Math.PI/180;
+  const phi2 = lat2 * Math.PI/180;
+  const dPhi = (lat2 - lat1) * Math.PI/180;
+  const dLambda = (lon2 - lon1) * Math.PI/180;
+
+  const a = Math.sin(dPhi / 2) * Math.sin(dPhi / 2) +
+          Math.cos(phi1) * Math.cos(phi2) *
+          Math.sin(dLambda / 2) * Math.sin(dLambda / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
+}
+
 function WalkwayDrawingMap({
   points,
   onChange,
@@ -77,14 +92,38 @@ function WalkwayDrawingMap({
   points: [number, number][],
   onChange: (points: [number, number][]) => void,
   isDrawing: boolean,
-  existingWalkways: { name: string; coordinates: [number, number][] }[],
+  existingWalkways: { name: string; coordinates: [number, number][]; is_covered?: boolean; is_blocked?: boolean }[],
   existingBuildings: Building[]
 }) {
   const MapEvents = () => {
     useMapEvents({
       click(e) {
         if (!isDrawing) return;
-        onChange([...points, [e.latlng.lat, e.latlng.lng]]);
+        
+        const clickLat = e.latlng.lat;
+        const clickLng = e.latlng.lng;
+        
+        // Find nearest node from existing walkways
+        let nearestNode: [number, number] | null = null;
+        let minDistance = Infinity;
+        const SNAP_THRESHOLD_METERS = 5.0; // Snaps if within 5 meters
+        
+        existingWalkways.forEach(w => {
+          w.coordinates.forEach(coord => {
+            const dist = calculateDistanceInMeters(clickLat, clickLng, coord[0], coord[1]);
+            if (dist < minDistance) {
+              minDistance = dist;
+              nearestNode = coord;
+            }
+          });
+        });
+        
+        if (nearestNode && minDistance <= SNAP_THRESHOLD_METERS) {
+          onChange([...points, nearestNode]);
+          toast.success(`Disnap ke titik terdekat (${minDistance.toFixed(1)}m)`);
+        } else {
+          onChange([...points, [clickLat, clickLng]]);
+        }
       },
     });
     return null;
@@ -118,30 +157,48 @@ function WalkwayDrawingMap({
           </CircleMarker>
         ))}
 
-        {/* Render existing walkways as light-grey lines */}
-        {existingWalkways.map((w, idx) => (
-          <React.Fragment key={idx}>
-            <Polyline 
-              positions={w.coordinates} 
-              pathOptions={{ color: '#64748b', weight: 3, dashArray: '5, 5' }} 
-            />
-            {/* Draw markers at endpoints for reference */}
-            {w.coordinates.length > 0 && (
-              <CircleMarker 
-                center={w.coordinates[0]} 
-                radius={3.5} 
-                pathOptions={{ color: '#475569', fillColor: '#94a3b8', fillOpacity: 1, weight: 1 }} 
+        {/* Render existing walkways as light-grey lines and show all intermediate nodes */}
+        {existingWalkways.map((w, idx) => {
+          let color = '#64748b'; // standard grey
+          let weight = 3;
+          let dashArray = '5, 5';
+          if (w.is_blocked) {
+            color = '#ef4444'; // red
+            weight = 4;
+            dashArray = '3, 6';
+          } else if (w.is_covered) {
+            color = '#10b981'; // emerald green
+            weight = 3.5;
+            dashArray = undefined; // solid line for covered path
+          }
+          return (
+            <React.Fragment key={idx}>
+              <Polyline 
+                positions={w.coordinates} 
+                pathOptions={{ color, weight, dashArray }} 
               />
-            )}
-            {w.coordinates.length > 1 && (
-              <CircleMarker 
-                center={w.coordinates[w.coordinates.length - 1]} 
-                radius={3.5} 
-                pathOptions={{ color: '#475569', fillColor: '#94a3b8', fillOpacity: 1, weight: 1 }} 
-              />
-            )}
-          </React.Fragment>
-        ))}
+              {w.coordinates.map((coord, cIdx) => (
+                <CircleMarker 
+                  key={cIdx}
+                  center={coord} 
+                  radius={w.is_blocked ? 4 : 3.5} 
+                  pathOptions={{ 
+                    color: w.is_blocked ? '#ef4444' : (w.is_covered ? '#10b981' : '#475569'), 
+                    fillColor: w.is_blocked ? '#fee2e2' : (w.is_covered ? '#a7f3d0' : '#94a3b8'), 
+                    fillOpacity: 1, 
+                    weight: 1 
+                  }} 
+                >
+                  <Tooltip direction="top" offset={[0, -5]} opacity={0.7}>
+                    <span className="text-[8px]">
+                      Titik #{cIdx + 1} ({w.name}){w.is_blocked ? ' [SEKAT]' : (w.is_covered ? ' [BERBUMBUNG]' : '')}
+                    </span>
+                  </Tooltip>
+                </CircleMarker>
+              ))}
+            </React.Fragment>
+          );
+        })}
 
         {/* Render active drawn polyline as amber line */}
         {points.length > 0 && (
@@ -171,6 +228,7 @@ function WalkwayDrawingMap({
     </div>
   );
 }
+
 
 interface Building {
   id: string;
@@ -223,10 +281,11 @@ export function JppPolyMapsAdmin() {
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [reports, setReports] = useState<MissingReport[]>([]);
-  const [walkways, setWalkways] = useState<{ id: string; name: string; coordinates: [number, number][] }[]>([]);
+  const [walkways, setWalkways] = useState<{ id: string; name: string; coordinates: [number, number][]; is_covered?: boolean; is_blocked?: boolean }[]>([]);
   const [drawingPoints, setDrawingPoints] = useState<[number, number][]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [walkwayName, setWalkwayName] = useState('');
+  const [isWalkwayCovered, setIsWalkwayCovered] = useState(false);
   const [loading, setLoading] = useState(true);
   
   const [showBuildingModal, setShowBuildingModal] = useState(false);
@@ -392,7 +451,9 @@ export function JppPolyMapsAdmin() {
       const parsedWalkways = (walkwaysRes.data || []).map((w: any) => ({
         id: w.id,
         name: w.name,
-        coordinates: Array.isArray(w.coordinates) ? w.coordinates : JSON.parse(w.coordinates)
+        coordinates: Array.isArray(w.coordinates) ? w.coordinates : JSON.parse(w.coordinates),
+        is_covered: w.is_covered || false,
+        is_blocked: w.is_blocked || false
       }));
       setWalkways(parsedWalkways);
     } catch (error: any) {
@@ -418,7 +479,8 @@ export function JppPolyMapsAdmin() {
     try {
       const { error } = await supabase.from('imaps_walkways').insert({
         name: walkwayName,
-        coordinates: drawingPoints
+        coordinates: drawingPoints,
+        is_covered: isWalkwayCovered
       });
 
       if (error) throw error;
@@ -426,6 +488,7 @@ export function JppPolyMapsAdmin() {
       toast.success('Laluan berjaya disimpan!', { id: toastId });
       setWalkwayName('');
       setDrawingPoints([]);
+      setIsWalkwayCovered(false);
       setIsDrawing(false);
       
       const userId = (await supabase.auth.getUser()).data.user?.id;
@@ -468,6 +531,60 @@ export function JppPolyMapsAdmin() {
       fetchData();
     } catch (err: any) {
       toast.error('Gagal memadam laluan');
+    }
+  };
+
+  const toggleBlockWalkway = async (id: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('imaps_walkways')
+        .update({ is_blocked: !currentStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+      toast.success(!currentStatus ? 'Laluan disekat (dihalang).' : 'Sekatan laluan dibuka.');
+      
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (userId) {
+        logAuditAction({
+          actionType: 'WALKWAY_UPDATED',
+          module: 'PolyMaps',
+          entityId: id,
+          description: `Status sekat laluan diubah ke ${!currentStatus}`,
+          actorId: userId
+        });
+      }
+
+      fetchData();
+    } catch (err: any) {
+      toast.error('Gagal menukar status sekatan laluan');
+    }
+  };
+
+  const toggleCoverWalkway = async (id: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('imaps_walkways')
+        .update({ is_covered: !currentStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+      toast.success(!currentStatus ? 'Laluan diubah ke Berbumbung.' : 'Laluan diubah ke Tanpa Bumbung.');
+
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (userId) {
+        logAuditAction({
+          actionType: 'WALKWAY_UPDATED',
+          module: 'PolyMaps',
+          entityId: id,
+          description: `Status bumbung laluan diubah ke ${!currentStatus}`,
+          actorId: userId
+        });
+      }
+
+      fetchData();
+    } catch (err: any) {
+      toast.error('Gagal menukar status bumbung laluan');
     }
   };
 
@@ -1082,26 +1199,40 @@ export function JppPolyMapsAdmin() {
 
               {/* Save Form */}
               {drawingPoints.length > 0 && (
-                <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                  <input
-                    type="text"
-                    placeholder="Nama Laluan (Cth: Blok A ke Perpustakaan)..."
-                    value={walkwayName}
-                    onChange={e => setWalkwayName(e.target.value)}
-                    className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50"
-                  />
-                  <button
-                    onClick={saveWalkway}
-                    disabled={isSaving || drawingPoints.length < 2 || !walkwayName.trim()}
-                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2 shrink-0"
-                  >
-                    {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Simpan Laluan
-                  </button>
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center gap-2 bg-black/10 border border-white/5 p-2 rounded-xl">
+                    <input
+                      type="checkbox"
+                      id="isWalkwayCoveredCheckbox"
+                      checked={isWalkwayCovered}
+                      onChange={e => setIsWalkwayCovered(e.target.checked)}
+                      className="w-4 h-4 rounded border-white/10 bg-black/20 text-sky-600 focus:ring-sky-500/50"
+                    />
+                    <label htmlFor="isWalkwayCoveredCheckbox" className="text-xs font-bold text-white/70 cursor-pointer select-none">
+                      Laluan Berbumbung? (Melindungi daripada hujan/panas)
+                    </label>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <input
+                      type="text"
+                      placeholder="Nama Laluan (Cth: Blok A ke Perpustakaan)..."
+                      value={walkwayName}
+                      onChange={e => setWalkwayName(e.target.value)}
+                      className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50"
+                    />
+                    <button
+                      onClick={saveWalkway}
+                      disabled={isSaving || drawingPoints.length < 2 || !walkwayName.trim()}
+                      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2 shrink-0"
+                    >
+                      {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Simpan Laluan
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
           </div>
-
+ 
           {/* List of Saved Walkways */}
           <div className="space-y-4">
             <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
@@ -1113,17 +1244,53 @@ export function JppPolyMapsAdmin() {
                   </div>
                 ) : (
                   walkways.map(w => (
-                    <div key={w.id} className="bg-black/20 border border-white/5 rounded-xl p-3 flex justify-between items-center group">
-                      <div className="min-w-0 pr-2">
-                        <p className="font-bold text-sm text-white truncate">{w.name}</p>
+                    <div key={w.id} className="bg-black/20 border border-white/5 rounded-xl p-3 flex justify-between items-center group gap-2">
+                      <div className="min-w-0 flex-1 pr-2">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <p className="font-bold text-sm text-white truncate">{w.name}</p>
+                          {w.is_covered && (
+                            <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold text-[9px] uppercase tracking-wider">Berbumbung</span>
+                          )}
+                          {w.is_blocked && (
+                            <span className="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold text-[9px] uppercase tracking-wider">Sekat</span>
+                          )}
+                        </div>
                         <p className="text-[10px] font-medium text-white/40 mt-0.5">{w.coordinates.length} titik koordinat</p>
                       </div>
-                      <button
-                        onClick={() => deleteWalkway(w.id)}
-                        className="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/30 text-rose-400 opacity-80 group-hover:opacity-100 transition-all shrink-0"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {/* Toggle block status */}
+                        <button
+                          onClick={() => toggleBlockWalkway(w.id, w.is_blocked || false)}
+                          className={cn(
+                            "px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border",
+                            w.is_blocked
+                              ? "bg-rose-500/20 border-rose-500/30 text-rose-400 hover:bg-rose-500/30"
+                              : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"
+                          )}
+                          title={w.is_blocked ? "Buka sekatan" : "Sekat laluan"}
+                        >
+                          {w.is_blocked ? "Buka" : "Sekat"}
+                        </button>
+                        {/* Toggle covered status */}
+                        <button
+                          onClick={() => toggleCoverWalkway(w.id, w.is_covered || false)}
+                          className={cn(
+                            "px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border",
+                            w.is_covered
+                              ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30"
+                              : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"
+                          )}
+                          title={w.is_covered ? "Tukar ke Tanpa Bumbung" : "Tukar ke Berbumbung"}
+                        >
+                          Bumbung
+                        </button>
+                        <button
+                          onClick={() => deleteWalkway(w.id)}
+                          className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/30 text-rose-400 transition-all"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   ))
                 )}

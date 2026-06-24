@@ -2099,9 +2099,12 @@ Bagi memastikan kelancaran logik pengelompokan (grouping) dan klasifikasi fasili
 
 
 ### 18.4 Rangkaian Laluan Pejalan Kaki Pintar (Walkway Network & Dijkstra)
-- **Skema Jadual (`imaps_walkways`):** Menyimpan koordinat segmen laluan pejalan kaki (arrays of `[lat, lng]` sebagai JSONB). RLS diaktifkan (pembacaan awam anonym, penulisan terhad kepada pentadbir/JPP).
+- **Skema Jadual (`imaps_walkways`):** Menyimpan koordinat segmen laluan pejalan kaki (arrays of `[lat, lng]` sebagai JSONB). Dipertingkatkan dengan atribut `is_covered` (laluan berbumbung) dan `is_blocked` (jalan ditutup/halangan). RLS diaktifkan (pembacaan awam anonym, penulisan terhad kepada pentadbir/JPP).
 - **Junction Bridge (Penyambungan Automatik):** Titik dari segmen laluan berasingan yang berada dalam lingkungan 8 meter secara automatik dihubungkan sebagai simpang persilangan semasa graf dibina pada peranti pengguna, mengelakkan keperluan menyambung titik secara manual semasa melukis.
-- **Algoritma Dijkstra:** Menghubungkan titik GPS pengguna dan destinasi bangunan ke rangkaian jalan terdekat, kemudian mencari laluan pejalan kaki terpendek secara dinamik. Pengguna dipaparkan jarak laluan sebenar dan anggaran masa berjalan (ETA) yang realistik berbanding jarak garis lurus.
+- **Algoritma Dijkstra & Laluan Berbumbung:** Menghubungkan titik GPS pengguna dan destinasi bangunan ke rangkaian jalan terdekat, kemudian mencari laluan pejalan kaki terpendek secara dinamik.
+  - **Laluan Berbumbung (Covered Walkways):** Apabila mod "Utamakan Laluan Berbumbung" aktif (boleh ditoggel secara manual atau diaktifkan automatik sekiranya status cuaca adalah hujan), algoritma Dijkstra meletakkan gandaan pemberat denda sebanyak 8x ke atas segmen laluan yang tidak berbumbung. Ini membolehkan sistem mengutamakan laluan berbumbung bagi keselesaan pelajar ketika cuaca buruk.
+  - **Jalan Ditutup / Laporan Halangan:** Mana-mana segmen laluan yang ditoggel sebagai `is_blocked` oleh pentadbir JPP akan disaring keluar semasa pembinaan graf Dijkstra, memastikan jalan terhalang tidak terpilih untuk navigasi pejalan kaki.
+- **Arahan Langkah-demi-Langkah (Turn-by-Turn Directions):** Dinilai secara automatik menerusi perbezaan sudut bearing ($\Delta\theta > 25^\circ$ ditafsirkan sebagai belokan kiri/kanan). Setiap langkah perjalanan dikira mengikut nama laluan kampus, dipaparkan dengan jarak dalam meter, dan dilengkapi penanda status berbumbung/tidak berbumbung menggunakan ikon visual yang premium.
 
 ### 18.5 Penunjuk Arah Kompas (Device Orientation Heading Cone)
 - **Penunjuk Cahaya Biru (Flashlight Cone):** Penanda GPS pelajar memaparkan pancaran cahaya biru yang berputar dinamik mengikut orientasi fizikal telefon pintar (compass heading).
