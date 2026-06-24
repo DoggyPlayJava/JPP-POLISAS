@@ -226,6 +226,121 @@ function VendorOrderCard({
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [showCancelRequestModal, setShowCancelRequestModal] = useState(false);
 
+  const handleVerifyPayment = async () => {
+    setLoading(true);
+    try {
+      const now = new Date().toISOString();
+      const orderIds = order.items.map(i => i.order_id);
+
+      if (localStorage.getItem('use_mock_auth') === 'true') {
+        const storedOrders = localStorage.getItem('mock_vendor_orders');
+        if (storedOrders) {
+          const parsed = JSON.parse(storedOrders);
+          const updated = parsed.map((o: any) => {
+            if (orderIds.includes(o.id)) {
+              return {
+                ...o,
+                payment_verified_at: now,
+                payment_verified_by: profile?.id,
+                status: 'CONFIRMED',
+                confirmed_at: now,
+                updated_at: now,
+              };
+            }
+            return o;
+          });
+          localStorage.setItem('mock_vendor_orders', JSON.stringify(updated));
+        }
+        toast.success('Bayaran disahkan!');
+        setShowReceiptModal(false);
+        onUpdate();
+        return;
+      }
+
+      const { error } = await supabase.from('polymart_orders').update({
+        payment_verified_at: now,
+        payment_verified_by: profile?.id,
+        status: 'CONFIRMED',
+        confirmed_at: now,
+        updated_at: now,
+      }).in('id', orderIds);
+      
+      if (error) throw error;
+
+      if (order.buyer?.id) {
+        await sendNotificationToUser(order.buyer.id, {
+          title: '✅ Bayaran Disahkan!',
+          message: `Bayaran untuk tempahan anda telah disahkan. Pesanan sedang diproses!`,
+          type: 'polymart_payment_verified',
+          module: 'POLYMART',
+          link: '/polymart/pesanan-saya',
+          reference_id: order.id,
+        });
+      }
+      toast.success('Bayaran disahkan!');
+      setShowReceiptModal(false);
+      onUpdate();
+    } catch (err: any) {
+      toast.error('Gagal mengesahkan: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRejectPayment = async () => {
+    setLoading(true);
+    try {
+      const orderIds = order.items.map(i => i.order_id);
+
+      if (localStorage.getItem('use_mock_auth') === 'true') {
+        const storedOrders = localStorage.getItem('mock_vendor_orders');
+        if (storedOrders) {
+          const parsed = JSON.parse(storedOrders);
+          const updated = parsed.map((o: any) => {
+            if (orderIds.includes(o.id)) {
+              return {
+                ...o,
+                payment_receipt_rejected: true,
+                updated_at: new Date().toISOString(),
+              };
+            }
+            return o;
+          });
+          localStorage.setItem('mock_vendor_orders', JSON.stringify(updated));
+        }
+        toast.error('Resit ditolak');
+        setShowReceiptModal(false);
+        onUpdate();
+        return;
+      }
+
+      const { error } = await supabase.from('polymart_orders').update({
+        payment_receipt_rejected: true,
+        updated_at: new Date().toISOString(),
+      }).in('id', orderIds);
+
+      if (error) throw error;
+
+      if (order.buyer?.id) {
+        await sendNotificationToUser(order.buyer.id, {
+          title: '⚠ Resit Ditolak',
+          message: `Resit pembayaran anda telah ditolak. Sila muat naik resit yang betul.`,
+          type: 'polymart_receipt_rejected',
+          module: 'POLYMART',
+          link: '/polymart/pesanan-saya',
+          reference_id: order.id,
+        });
+      }
+      toast.error('Resit ditolak');
+      setShowReceiptModal(false);
+      onUpdate();
+    } catch (err: any) {
+      toast.error('Gagal menolak: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const cfg = STATUS_CONFIG[order.status];
 
   const updateStatus = async (newStatus: OrderStatus, extra: Record<string, any> = {}) => {
@@ -600,7 +715,7 @@ function VendorOrderCard({
                     className="px-2.5 py-1 rounded-full bg-blue-500 text-white text-[9px] font-black hover:bg-blue-600 transition-colors flex items-center gap-1 shadow-sm active:scale-95"
                   >
                     <Eye className="w-3 h-3" />
-                    <span>Sahkan Bayaran</span>
+                    <span>Periksa</span>
                   </button>
                 )}
 
@@ -621,6 +736,46 @@ function VendorOrderCard({
                 <span className="text-[13px] font-mono font-black text-amber-500">RM {totalAmount.toFixed(2)}</span>
               </div>
             </div>
+
+            {/* Inline Receipt Preview Panel */}
+            {order.payment_method === 'QR_ONLINE' && order.payment_receipt_url && !order.payment_verified_at && !order.payment_receipt_rejected && order.status !== 'CANCELLED' && (
+              <div className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950/30 border border-zinc-200 dark:border-zinc-800/10 flex gap-3 items-center shadow-inner animate-in fade-in zoom-in duration-300">
+                {/* Small Thumbnail Clickable to Zoom */}
+                <button
+                  onClick={() => setShowReceiptModal(true)}
+                  className="w-14 h-14 rounded-xl overflow-hidden bg-white border border-zinc-200 dark:border-zinc-800 shrink-0 relative group shadow-sm active:scale-95 transition-all"
+                  title="Klik untuk besarkan resit"
+                >
+                  <img src={order.payment_receipt_url} alt="Resit" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <Eye className="w-3.5 h-3.5 text-white" />
+                  </div>
+                </button>
+
+                {/* Inline Quick Action Buttons */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/60 leading-none mb-2">Semak Resit Pembayaran</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleVerifyPayment}
+                      disabled={loading}
+                      className="flex-1 h-9 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black transition-all flex items-center justify-center gap-1 shadow-sm active:scale-95 disabled:opacity-50"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Sahkan</span>
+                    </button>
+                    <button
+                      onClick={handleRejectPayment}
+                      disabled={loading}
+                      className="flex-1 h-9 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 text-[10px] font-black border border-rose-500/15 transition-all flex items-center justify-center gap-1 active:scale-95 disabled:opacity-50"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>Tolak</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Alert banners placed neatly */}
             {order.cancellation_requested_at && order.status !== 'CANCELLED' && (
@@ -830,121 +985,12 @@ function VendorOrderCard({
                 {/* Verification Actions */}
                 {!order.payment_verified_at && !order.payment_receipt_rejected && order.status !== 'CANCELLED' && (
                   <div className="flex gap-2">
-                    <button onClick={async () => {
-                        setLoading(true);
-                        const now = new Date().toISOString();
-                        
-                        if (localStorage.getItem('use_mock_auth') === 'true') {
-                          const storedOrders = localStorage.getItem('mock_vendor_orders');
-                          if (storedOrders) {
-                            const parsed = JSON.parse(storedOrders);
-                            const updated = parsed.map((o: any) => {
-                              if (order.items.map(i => i.order_id).includes(o.id)) {
-                                return {
-                                  ...o,
-                                  payment_verified_at: now,
-                                  payment_verified_by: profile?.id,
-                                  status: 'CONFIRMED',
-                                  confirmed_at: now,
-                                  updated_at: now,
-                                };
-                              }
-                              return o;
-                            });
-                            localStorage.setItem('mock_vendor_orders', JSON.stringify(updated));
-                          }
-                          toast.success('Bayaran disahkan!');
-                          setShowReceiptModal(false);
-                          onUpdate();
-                          setLoading(false);
-                          return;
-                        }
-                        
-                        const { error } = await supabase.from('polymart_orders').update({
-                          payment_verified_at: now,
-                          payment_verified_by: profile?.id,
-                          status: 'CONFIRMED',
-                          confirmed_at: now,
-                          updated_at: now,
-                        }).in('id', order.items.map(i => i.order_id));
-                        
-                        if (error) {
-                          toast.error('Gagal mengesahkan: ' + error.message);
-                          setLoading(false);
-                          return;
-                        }
-
-                        if (order.buyer?.id) {
-                          await sendNotificationToUser(order.buyer.id, {
-                            title: '✅ Bayaran Disahkan!',
-                            message: `Bayaran untuk tempahan anda telah disahkan. Pesanan sedang diproses!`,
-                            type: 'polymart_payment_verified',
-                            module: 'POLYMART',
-                            link: '/polymart/pesanan-saya',
-                            reference_id: order.id,
-                          });
-                        }
-                        toast.success('Bayaran disahkan!');
-                        setShowReceiptModal(false);
-                        onUpdate();
-                        setLoading(false);
-                      }} disabled={loading}
+                    <button onClick={handleVerifyPayment} disabled={loading}
                       className="flex-1 h-9 rounded-xl text-[11px] font-black text-white bg-emerald-500 hover:bg-emerald-600 transition-colors disabled:opacity-50"
                     >
                       Sah Bayaran
                     </button>
-                    <button onClick={async () => {
-                        setLoading(true);
-                        
-                        if (localStorage.getItem('use_mock_auth') === 'true') {
-                          const storedOrders = localStorage.getItem('mock_vendor_orders');
-                          if (storedOrders) {
-                            const parsed = JSON.parse(storedOrders);
-                            const updated = parsed.map((o: any) => {
-                              if (order.items.map(i => i.order_id).includes(o.id)) {
-                                return {
-                                  ...o,
-                                  payment_receipt_rejected: true,
-                                  updated_at: new Date().toISOString(),
-                                };
-                              }
-                              return o;
-                            });
-                            localStorage.setItem('mock_vendor_orders', JSON.stringify(updated));
-                          }
-                          toast.error('Resit ditolak');
-                          setShowReceiptModal(false);
-                          onUpdate();
-                          setLoading(false);
-                          return;
-                        }
-                        
-                        const { error } = await supabase.from('polymart_orders').update({
-                          payment_receipt_rejected: true,
-                          updated_at: new Date().toISOString(),
-                        }).in('id', order.items.map(i => i.order_id));
-
-                        if (error) {
-                          toast.error('Gagal menolak: ' + error.message);
-                          setLoading(false);
-                          return;
-                        }
-
-                        if (order.buyer?.id) {
-                          await sendNotificationToUser(order.buyer.id, {
-                            title: '⚠ Resit Ditolak',
-                            message: `Resit pembayaran anda telah ditolak. Sila muat naik resit yang betul.`,
-                            type: 'polymart_receipt_rejected',
-                            module: 'POLYMART',
-                            link: '/polymart/pesanan-saya',
-                            reference_id: order.id,
-                          });
-                        }
-                        toast.error('Resit ditolak');
-                        setShowReceiptModal(false);
-                        onUpdate();
-                        setLoading(false);
-                      }} disabled={loading}
+                    <button onClick={handleRejectPayment} disabled={loading}
                       className="flex-1 h-9 rounded-xl text-[11px] font-black text-rose-500 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-colors disabled:opacity-50"
                     >
                       Tolak Resit

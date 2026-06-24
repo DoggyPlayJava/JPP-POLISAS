@@ -168,7 +168,6 @@ interface Building {
   center_lat: number;
   center_lng: number;
   zone_name?: string | null;
-  drone_image_url: string;
   is_facility?: boolean;
   facility_type?: string;
   op_start?: string;
@@ -176,6 +175,171 @@ interface Building {
   floorplan_image_url?: string;
   entrance_image_url?: string;
 }
+
+interface GraphNode {
+  lat: number;
+  lng: number;
+  key: string;
+  neighbors: Map<string, number>;
+}
+
+function findShortestPath(
+  nodesMap: Map<string, GraphNode>,
+  startLat: number,
+  startLng: number,
+  endLat: number,
+  endLng: number
+): [number, number][] | null {
+  if (nodesMap.size === 0) return null;
+
+  let startKey: string | null = null;
+  let minDistStart = Infinity;
+  let endKey: string | null = null;
+  let minDistEnd = Infinity;
+
+  for (const node of nodesMap.values()) {
+    const dStart = calculateDistanceInMeters(startLat, startLng, node.lat, node.lng);
+    if (dStart < minDistStart) {
+      minDistStart = dStart;
+      startKey = node.key;
+    }
+    const dEnd = calculateDistanceInMeters(endLat, endLng, node.lat, node.lng);
+    if (dEnd < minDistEnd) {
+      minDistEnd = dEnd;
+      endKey = node.key;
+    }
+  }
+
+  if (!startKey || !endKey) return null;
+
+  const tempStartKey = "temp_start";
+  const tempEndKey = "temp_end";
+
+  const neighborsCopy = new Map<string, Map<string, number>>();
+  for (const [key, node] of nodesMap.entries()) {
+    neighborsCopy.set(key, new Map(node.neighbors));
+  }
+
+  neighborsCopy.set(tempStartKey, new Map([[startKey, minDistStart]]));
+  if (neighborsCopy.has(startKey)) {
+    neighborsCopy.get(startKey)!.set(tempStartKey, minDistStart);
+  }
+
+  neighborsCopy.set(tempEndKey, new Map([[endKey, minDistEnd]]));
+  if (neighborsCopy.has(endKey)) {
+    neighborsCopy.get(endKey)!.set(tempEndKey, minDistEnd);
+  }
+
+  const distances = new Map<string, number>();
+  const previous = new Map<string, string | null>();
+  const visited = new Set<string>();
+
+  for (const key of neighborsCopy.keys()) {
+    distances.set(key, Infinity);
+    previous.set(key, null);
+  }
+  distances.set(tempStartKey, 0);
+
+  const unvisitedKeys = new Set<string>(neighborsCopy.keys());
+
+  while (unvisitedKeys.size > 0) {
+    let currentKey: string | null = null;
+    let minD = Infinity;
+    for (const key of unvisitedKeys) {
+      const d = distances.get(key) ?? Infinity;
+      if (d < minD) {
+        minD = d;
+        currentKey = key;
+      }
+    }
+
+    if (currentKey === null || minD === Infinity) break;
+    if (currentKey === tempEndKey) break;
+
+    unvisitedKeys.delete(currentKey);
+    visited.add(currentKey);
+
+    const neighbors = neighborsCopy.get(currentKey);
+    if (neighbors) {
+      for (const [neighborKey, weight] of neighbors.entries()) {
+        if (visited.has(neighborKey)) continue;
+        const alt = minD + weight;
+        if (alt < (distances.get(neighborKey) ?? Infinity)) {
+          distances.set(neighborKey, alt);
+          previous.set(neighborKey, currentKey);
+        }
+      }
+    }
+  }
+
+  if (distances.get(tempEndKey) === Infinity) return null;
+
+  const pathKeys: string[] = [];
+  let curr: string | null = tempEndKey;
+  while (curr !== null) {
+    pathKeys.push(curr);
+    curr = previous.get(curr) ?? null;
+  }
+  pathKeys.reverse();
+
+  const pathCoordinates: [number, number][] = [];
+  for (const key of pathKeys) {
+    if (key === tempStartKey) {
+      pathCoordinates.push([startLat, startLng]);
+    } else if (key === tempEndKey) {
+      pathCoordinates.push([endLat, endLng]);
+    } else {
+      const node = nodesMap.get(key);
+      if (node) {
+        pathCoordinates.push([node.lat, node.lng]);
+      }
+    }
+  }
+
+  return pathCoordinates;
+}
+
+const getUserIcon = (heading: number | null) => {
+  const rotation = heading !== null ? heading : 0;
+  const html = `
+    <div style="position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100px; height: 100px;">
+      ${heading !== null ? `
+        <div style="
+          position: absolute; 
+          width: 0; 
+          height: 0; 
+          border-left: 20px solid transparent; 
+          border-right: 20px solid transparent; 
+          border-top: 55px solid rgba(14, 165, 233, 0.4); 
+          filter: drop-shadow(0 0 6px rgba(14, 165, 233, 0.6));
+          top: -10px; 
+          transform-origin: 50% 100%;
+          transform: rotate(${rotation}deg);
+          pointer-events: none;
+          z-index: 100;
+        "></div>
+      ` : ''}
+      <div style="
+        width: 18px; 
+        height: 18px; 
+        border-radius: 50%; 
+        background-color: #0ea5e9; 
+        border: 3px solid white; 
+        box-shadow: 0 0 10px rgba(14, 165, 233, 0.8), 0 3px 6px rgba(0,0,0,0.4); 
+        z-index: 200; 
+        position: relative;
+      ">
+        <div class="animate-pulse" style="position: absolute; top: -3px; left: -3px; width: 18px; height: 18px; border-radius: 50%; background-color: rgba(14, 165, 233, 0.4);"></div>
+      </div>
+    </div>
+  `;
+  return L.divIcon({
+    className: '',
+    html,
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
+  });
+};
 
 interface Location {
   id: string;
@@ -206,6 +370,132 @@ export function PolyMapsPage() {
   
   const [allBuildings, setAllBuildings] = useState<Building[]>([]);
   const [allLocations, setAllLocations] = useState<Location[]>([]);
+  const [walkways, setWalkways] = useState<{ id: string; name: string; coordinates: [number, number][] }[]>([]);
+  const [heading, setHeading] = useState<number | null>(null);
+
+  const graph = useMemo(() => {
+    const nodesMap = new Map<string, GraphNode>();
+    
+    walkways.forEach(w => {
+      w.coordinates.forEach((coord, i) => {
+        const lat = coord[0];
+        const lng = coord[1];
+        const key = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+        
+        if (!nodesMap.has(key)) {
+          nodesMap.set(key, {
+            lat,
+            lng,
+            key,
+            neighbors: new Map<string, number>()
+          });
+        }
+        
+        if (i > 0) {
+          const prevCoord = w.coordinates[i-1];
+          const prevLat = prevCoord[0];
+          const prevLng = prevCoord[1];
+          const prevKey = `${prevLat.toFixed(6)},${prevLng.toFixed(6)}`;
+          
+          const d = calculateDistanceInMeters(prevLat, prevLng, lat, lng);
+          
+          nodesMap.get(prevKey)?.neighbors.set(key, d);
+          nodesMap.get(key)?.neighbors.set(prevKey, d);
+        }
+      });
+    });
+    
+    const nodeList = Array.from(nodesMap.values());
+    for (let i = 0; i < nodeList.length; i++) {
+      for (let j = i + 1; j < nodeList.length; j++) {
+        const nodeA = nodeList[i];
+        const nodeB = nodeList[j];
+        
+        const d = calculateDistanceInMeters(nodeA.lat, nodeA.lng, nodeB.lat, nodeB.lng);
+        if (d <= 8.0) {
+          nodeA.neighbors.set(nodeB.key, d);
+          nodeB.neighbors.set(nodeA.key, d);
+        }
+      }
+    }
+    
+    return nodesMap;
+  }, [walkways]);
+
+  const shortestPath = useMemo(() => {
+    if (isNavigating && userLocation && activeBuilding?.center_lat) {
+      return findShortestPath(
+        graph,
+        userLocation[0],
+        userLocation[1],
+        activeBuilding.center_lat,
+        activeBuilding.center_lng
+      );
+    }
+    return null;
+  }, [isNavigating, userLocation, activeBuilding, graph]);
+
+  const navigationStats = useMemo(() => {
+    if (!userLocation || !activeBuilding?.center_lat) {
+      return { distance: null, eta: null };
+    }
+    
+    if (shortestPath && shortestPath.length > 0) {
+      let totalDistance = 0;
+      for (let i = 1; i < shortestPath.length; i++) {
+        totalDistance += calculateDistanceInMeters(
+          shortestPath[i-1][0], shortestPath[i-1][1],
+          shortestPath[i][0], shortestPath[i][1]
+        );
+      }
+      const eta = Math.ceil(totalDistance / 75);
+      return { distance: totalDistance, eta: eta || 1 };
+    } else {
+      const directDist = calculateDistanceInMeters(
+        userLocation[0], userLocation[1],
+        activeBuilding.center_lat, activeBuilding.center_lng
+      );
+      const eta = Math.ceil((directDist / 4.5e3) * 60) + 1;
+      return { distance: directDist, eta };
+    }
+  }, [userLocation, activeBuilding, shortestPath]);
+
+  const getPathDistanceAndETA = (startLat: number, startLng: number, endLat: number, endLng: number) => {
+    const path = findShortestPath(graph, startLat, startLng, endLat, endLng);
+    if (path && path.length > 0) {
+      let totalDistance = 0;
+      for (let i = 1; i < path.length; i++) {
+        totalDistance += calculateDistanceInMeters(
+          path[i-1][0], path[i-1][1],
+          path[i][0], path[i][1]
+        );
+      }
+      const eta = Math.ceil(totalDistance / 75);
+      return { distance: totalDistance, eta: eta || 1 };
+    } else {
+      const directDist = calculateDistanceInMeters(startLat, startLng, endLat, endLng);
+      const eta = Math.ceil((directDist / 4.5e3) * 60) + 1;
+      return { distance: directDist, eta };
+    }
+  };
+
+  const requestCompassPermission = async () => {
+    if (
+      typeof window !== 'undefined' &&
+      typeof (DeviceOrientationEvent as any).requestPermission === 'function'
+    ) {
+      try {
+        const permissionState = await (DeviceOrientationEvent as any).requestPermission();
+        if (permissionState === 'granted') {
+          console.log('Compass permission granted');
+        } else {
+          toast.error('Kebenaran kompas ditolak. Navigasi tetap berfungsi tanpa penunjuk arah.');
+        }
+      } catch (error) {
+        console.error('Error requesting compass permission:', error);
+      }
+    }
+  };
   
   const [activeBuilding, setActiveBuilding] = useState<Building | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
@@ -295,7 +585,7 @@ export function PolyMapsPage() {
   const [mapZoom, setMapZoom] = useState(16);
   const [zones, setZones] = useState<ZoneMarkerInfo[]>([]);
 
-  const [activeImageTab, setActiveImageTab] = useState<'drone' | 'entrance' | 'floorplan' | 'room'>('drone');
+  const [activeImageTab, setActiveImageTab] = useState<'entrance' | 'floorplan' | 'room'>('entrance');
   const [showFullscreenImage, setShowFullscreenImage] = useState<string | null>(null);
   
   const [currentStep, setCurrentStep] = useState(0);
@@ -409,30 +699,41 @@ export function PolyMapsPage() {
       // Ignore auth errors — page is public, auth is optional
     }
 
-    // Fetch buildings — public RLS policy allows anon access
-    const { data: bData, error: bError } = await supabase
-      .from('imaps_buildings')
-      .select('*')
-      .order('name');
-    if (bError) {
-      console.error('PolyMaps: Failed to load buildings:', bError.message);
+    // Fetch buildings, locations, and walkways in parallel
+    const [bRes, lRes, wRes] = await Promise.all([
+      supabase.from('imaps_buildings').select('*').order('name'),
+      supabase.from('imaps_locations').select('*, building:building_id(*)').order('floor_level'),
+      supabase.from('imaps_walkways').select('*').order('created_at', { ascending: false })
+    ]);
+
+    if (bRes.error) {
+      console.error('PolyMaps: Failed to load buildings:', bRes.error.message);
     }
+    const bData = bRes.data;
     if (bData) setAllBuildings(bData);
     
-    // Fetch all locations — public RLS policy allows anon access
-    const { data: lData, error: lError } = await supabase
-      .from('imaps_locations')
-      .select('*, building:building_id(*)')
-      .order('floor_level');
-    if (lError) {
-      console.error('PolyMaps: Failed to load locations:', lError.message);
+    if (lRes.error) {
+      console.error('PolyMaps: Failed to load locations:', lRes.error.message);
     }
+    const lData = lRes.data;
     const formatted = (lData || []).map((item: any) => ({
       ...item,
       building: Array.isArray(item.building) ? item.building[0] : item.building
     }));
     if (formatted.length > 0) {
       setAllLocations(formatted);
+    }
+
+    if (wRes.error) {
+      console.error('PolyMaps: Failed to load walkways:', wRes.error.message);
+    }
+    if (wRes.data) {
+      const parsedWalkways = wRes.data.map((w: any) => ({
+        id: w.id,
+        name: w.name,
+        coordinates: Array.isArray(w.coordinates) ? w.coordinates : JSON.parse(w.coordinates)
+      }));
+      setWalkways(parsedWalkways);
     }
     
     // Handle Deep Link (?b=building_id or ?room=room_id)
@@ -447,7 +748,7 @@ export function PolyMapsPage() {
         setTimeout(() => {
           setSelectedLocation(targetRoom);
           setActiveBuilding(targetRoom.building);
-          setActiveImageTab(targetRoom.image_url ? 'room' : 'drone');
+          setActiveImageTab(targetRoom.image_url ? 'room' : (targetRoom.building?.entrance_image_url ? 'entrance' : 'floorplan'));
         }, 300);
       }
     } else if (bId && bData) {
@@ -455,7 +756,7 @@ export function PolyMapsPage() {
       if (targetBuilding) {
         setTimeout(() => {
           setActiveBuilding(targetBuilding);
-          setActiveImageTab('drone');
+          setActiveImageTab(targetBuilding.entrance_image_url ? 'entrance' : 'floorplan');
         }, 300);
       }
     }
@@ -487,7 +788,7 @@ export function PolyMapsPage() {
         .select(`
           id, room_code, floor_level, direction_text, search_tags, image_url,
           building:building_id (
-            id, name, code, center_lat, center_lng, drone_image_url, zone_name
+            id, name, code, center_lat, center_lng, entrance_image_url, floorplan_image_url, zone_name
           )
         `)
         .or(`room_code.ilike.%${query}%,search_tags.ilike.%${query}%`)
@@ -533,7 +834,7 @@ export function PolyMapsPage() {
       const mappedBuildings = filtered.map(b => {
         let eta = null;
         if (userLocation && b.center_lat) {
-          eta = calculateWalkingETA(userLocation[0], userLocation[1], b.center_lat, b.center_lng);
+          eta = getPathDistanceAndETA(userLocation[0], userLocation[1], b.center_lat, b.center_lng).eta;
         }
         return {
           id: `b-${b.id}`,
@@ -561,7 +862,7 @@ export function PolyMapsPage() {
       const mappedLocations = matchedLocations.map(loc => {
         let eta = null;
         if (userLocation && loc.building?.center_lat) {
-          eta = calculateWalkingETA(userLocation[0], userLocation[1], loc.building.center_lat, loc.building.center_lng);
+          eta = getPathDistanceAndETA(userLocation[0], userLocation[1], loc.building.center_lat, loc.building.center_lng).eta;
         }
         return {
           ...loc,
@@ -585,7 +886,7 @@ export function PolyMapsPage() {
   const handleSelectLocation = (loc: Location) => {
     setSelectedLocation(loc);
     setActiveBuilding(loc.building);
-    setActiveImageTab(loc.image_url ? 'room' : 'drone');
+    setActiveImageTab(loc.image_url ? 'room' : (loc.building?.entrance_image_url ? 'entrance' : 'floorplan'));
     setCurrentStep(0);
     setSearchQuery('');
     setSearchResults([]);
@@ -596,6 +897,7 @@ export function PolyMapsPage() {
   const handleSelectBuildingMapMarker = (b: Building) => {
     setSelectedLocation(null);
     setActiveBuilding(b);
+    setActiveImageTab(b.entrance_image_url ? 'entrance' : 'floorplan');
   };
 
   const dismissCard = () => {
@@ -609,6 +911,7 @@ export function PolyMapsPage() {
   };
 
   const startNavigation = () => {
+    requestCompassPermission();
     setIsNavigating(true);
     setHasArrivedManual(false);
     setHasZoomedToNavigation(false);
@@ -672,15 +975,31 @@ export function PolyMapsPage() {
     };
   }, [isNavigating, isLowEnd]);
 
-  const etaMinutes = useMemo(() => {
-    if (userLocation && activeBuilding?.center_lat) {
-      return calculateWalkingETA(
-        userLocation[0], userLocation[1], 
-        activeBuilding.center_lat, activeBuilding.center_lng
-      );
+  useEffect(() => {
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      if ((e as any).webkitCompassHeading !== undefined) {
+        setHeading((e as any).webkitCompassHeading);
+      } else if (e.alpha !== null) {
+        setHeading(360 - e.alpha);
+      }
+    };
+
+    if (isNavigating) {
+      window.addEventListener('deviceorientation', handleOrientation);
+      window.addEventListener('deviceorientationabsolute', handleOrientation);
+    } else {
+      setHeading(null);
     }
-    return null;
-  }, [userLocation, activeBuilding]);
+
+    return () => {
+      window.removeEventListener('deviceorientation', handleOrientation);
+      window.removeEventListener('deviceorientationabsolute', handleOrientation);
+    };
+  }, [isNavigating]);
+
+  const etaMinutes = useMemo(() => {
+    return navigationStats.eta;
+  }, [navigationStats.eta]);
 
   // Sidebar Grouping Logic
   const getLocationsForBuilding = (bId: string) => allLocations.filter(l => l.building_id === bId);
@@ -902,8 +1221,17 @@ export function PolyMapsPage() {
             <MapFollower lat={userLocation[0]} lng={userLocation[1]} isLowEnd={isLowEnd} />
           )}
 
+          {/* Render walkways as light-grey dashed trails */}
+          {walkways.map((w, idx) => (
+            <Polyline
+              key={`walkway-${w.id || idx}`}
+              positions={w.coordinates}
+              pathOptions={{ color: '#64748b', weight: 2.5, dashArray: '5, 8', opacity: 0.5 }}
+            />
+          ))}
+
           {userLocation && (
-            <Marker position={userLocation} icon={userIcon}>
+            <Marker position={userLocation} icon={getUserIcon(heading)}>
               <Popup>Lokasi Anda</Popup>
             </Marker>
           )}
@@ -969,14 +1297,17 @@ export function PolyMapsPage() {
 
           {isNavigating && userLocation && activeBuilding && activeBuilding.center_lat && (
             <Polyline 
-              positions={[
+              positions={shortestPath && shortestPath.length > 0 ? shortestPath : [
                 userLocation,
                 [activeBuilding.center_lat, activeBuilding.center_lng]
               ]}
-              color="#3b82f6"
-              weight={4}
-              dashArray="10, 10"
-              className="animate-pulse"
+              pathOptions={{
+                color: '#0ea5e9',
+                weight: 5,
+                opacity: 0.9,
+                lineCap: 'round',
+                lineJoin: 'round'
+              }}
             />
           )}
         </MapContainer>
@@ -1171,8 +1502,11 @@ export function PolyMapsPage() {
                     <p className="text-blue-100 text-xs font-bold uppercase tracking-widest">Memandu Arah Ke</p>
                     <p className="text-white font-black text-lg">{selectedLocation ? selectedLocation.room_code : activeBuilding.code}</p>
                     {etaMinutes && (
-                      <p className="text-blue-200 text-xs font-bold mt-1 flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> Anggaran: {etaMinutes} minit
+                      <p className="text-blue-200 text-xs font-bold mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Anggaran: {etaMinutes} minit</span>
+                        {navigationStats.distance !== null && (
+                          <span className="text-blue-300 font-medium">({navigationStats.distance < 1000 ? `${Math.round(navigationStats.distance)}m` : `${(navigationStats.distance / 1000).toFixed(1)}km`})</span>
+                        )}
                       </p>
                     )}
                   </div>
@@ -1345,9 +1679,6 @@ export function PolyMapsPage() {
                 {/* Media Area */}
                 <div className="w-full h-32 sm:h-48 bg-slate-100 dark:bg-slate-800 relative">
                   {/* Media Content */}
-                  {activeImageTab === 'drone' && activeBuilding.drone_image_url && (
-                    <img src={activeBuilding.drone_image_url} alt="Drone View" loading="lazy" decoding="async" className="w-full h-full object-cover" />
-                  )}
                   {activeImageTab === 'entrance' && activeBuilding.entrance_image_url && (
                     <img src={activeBuilding.entrance_image_url} alt="Entrance View" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                   )}
@@ -1369,13 +1700,12 @@ export function PolyMapsPage() {
                   )}
 
                   {/* Empty state fallback */}
-                  {((activeImageTab === 'drone' && !activeBuilding.drone_image_url) || 
-                    (activeImageTab === 'entrance' && !activeBuilding.entrance_image_url) || 
+                  {((activeImageTab === 'entrance' && !activeBuilding.entrance_image_url) || 
                     (activeImageTab === 'floorplan' && !activeBuilding.floorplan_image_url) ||
                     (activeImageTab === 'room' && !selectedLocation?.image_url)) && (
                     <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
                       {activeImageTab === 'floorplan' ? <MapIcon className="w-10 h-10 mb-2 opacity-50" /> : <ImageIcon className="w-10 h-10 mb-2 opacity-50" />}
-                      <span className="text-[10px] font-black uppercase tracking-widest">Tiada Imej {activeImageTab === 'entrance' ? 'Pintu Masuk' : activeImageTab === 'floorplan' ? 'Pelan Lantai' : activeImageTab === 'room' ? 'Bilik' : 'Dron'}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest">Tiada Imej {activeImageTab === 'entrance' ? 'Pintu Masuk' : activeImageTab === 'floorplan' ? 'Pelan Lantai' : 'Bilik'}</span>
                     </div>
                   )}
                   
@@ -1386,18 +1716,19 @@ export function PolyMapsPage() {
                   )}
 
                   {/* Media Tabs */}
-                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 bg-black/40 backdrop-blur-md p-1 rounded-full border border-white/10">
-                    <button onClick={() => setActiveImageTab('drone')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'drone' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Dron</button>
-                    {activeBuilding.entrance_image_url && (
-                      <button onClick={() => setActiveImageTab('entrance')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'entrance' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Depan</button>
-                    )}
-                    {activeBuilding.floorplan_image_url && (
-                      <button onClick={() => setActiveImageTab('floorplan')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'floorplan' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Lantai</button>
-                    )}
-                    {selectedLocation && selectedLocation.image_url && (
-                      <button onClick={() => setActiveImageTab('room')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'room' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Bilik</button>
-                    )}
-                  </div>
+                  {((activeBuilding.entrance_image_url ? 1 : 0) + (activeBuilding.floorplan_image_url ? 1 : 0) + ((selectedLocation && selectedLocation.image_url) ? 1 : 0)) > 1 && (
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 bg-black/40 backdrop-blur-md p-1 rounded-full border border-white/10">
+                      {activeBuilding.entrance_image_url && (
+                        <button onClick={() => setActiveImageTab('entrance')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'entrance' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Depan</button>
+                      )}
+                      {activeBuilding.floorplan_image_url && (
+                        <button onClick={() => setActiveImageTab('floorplan')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'floorplan' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Lantai</button>
+                      )}
+                      {selectedLocation && selectedLocation.image_url && (
+                        <button onClick={() => setActiveImageTab('room')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'room' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Bilik</button>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Details Area */}

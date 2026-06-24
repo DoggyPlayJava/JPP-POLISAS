@@ -2098,6 +2098,15 @@ Bagi memastikan kelancaran logik pengelompokan (grouping) dan klasifikasi fasili
 - **Naik Taraf (Datalist):** Ditukar menggunakan <input> bersama <datalist>. Pentadbir kini boleh *type-to-search* nama bangunan atau kod bangunan. Sistem akan secara proaktif menterjemahkan teks yang dipadankan kepada uilding_id di sebalik tabir.
 
 
+### 18.4 Rangkaian Laluan Pejalan Kaki Pintar (Walkway Network & Dijkstra)
+- **Skema Jadual (`imaps_walkways`):** Menyimpan koordinat segmen laluan pejalan kaki (arrays of `[lat, lng]` sebagai JSONB). RLS diaktifkan (pembacaan awam anonym, penulisan terhad kepada pentadbir/JPP).
+- **Junction Bridge (Penyambungan Automatik):** Titik dari segmen laluan berasingan yang berada dalam lingkungan 8 meter secara automatik dihubungkan sebagai simpang persilangan semasa graf dibina pada peranti pengguna, mengelakkan keperluan menyambung titik secara manual semasa melukis.
+- **Algoritma Dijkstra:** Menghubungkan titik GPS pengguna dan destinasi bangunan ke rangkaian jalan terdekat, kemudian mencari laluan pejalan kaki terpendek secara dinamik. Pengguna dipaparkan jarak laluan sebenar dan anggaran masa berjalan (ETA) yang realistik berbanding jarak garis lurus.
+
+### 18.5 Penunjuk Arah Kompas (Device Orientation Heading Cone)
+- **Penunjuk Cahaya Biru (Flashlight Cone):** Penanda GPS pelajar memaparkan pancaran cahaya biru yang berputar dinamik mengikut orientasi fizikal telefon pintar (compass heading).
+- **Kebenaran iOS Safari:** Menguruskan protokol `DeviceOrientationEvent.requestPermission()` secara lancar di mana permintaan dialog kebenaran kompas iOS dipicu oleh tindakan interaksi pengguna semasa butang "Mula Pandu Arah" ditekan.
+
 ---
 
 ## 19. Senibina Modul PolySuara Social Commenting Platform (e-Kebajikan) 💬

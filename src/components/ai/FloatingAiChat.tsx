@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, X, Send, ShieldAlert, Trash2, Copy, Check, ExternalLink,
-  MessageSquare, Store, Home, Shield, QrCode, Phone, ArrowLeft, Megaphone, Loader2
+  MessageSquare, Store, Home, Shield, QrCode, Phone, ArrowLeft, Megaphone, Loader2,
+  Search, Pin, Archive, ArrowDown
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAiAssistant, ChatMessage, ChatContext } from '@/hooks/useAiAssistant';
@@ -98,6 +99,88 @@ function parseTicketCard(content: string) {
   }
 }
 
+// ── Format Date Header (Group messages by day) ──
+const formatMessageDateHeader = (isoString: string) => {
+  try {
+    const d = new Date(isoString);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    
+    if (d.toDateString() === today.toDateString()) {
+      return "Hari Ini";
+    } else if (d.toDateString() === yesterday.toDateString()) {
+      return "Semalam";
+    } else {
+      return d.toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+  } catch {
+    return "";
+  }
+};
+
+// ── Trigger Web Haptic Feedback ──
+function triggerHaptic(pattern: number | number[]) {
+  if ('vibrate' in navigator && typeof navigator.vibrate === 'function') {
+    try {
+      navigator.vibrate(pattern);
+    } catch (e) {
+      // Ignored
+    }
+  }
+}
+
+// ── Play dual-tone chime sound ──
+function playNotificationChime() {
+  try {
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    // Resume context if suspended (common browser security check)
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    
+    const osc1 = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    // First note: D5 (587.33Hz) for 0.1s, then A5 (880Hz) for 0.25s
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+    osc1.connect(gainNode);
+    
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.08);
+    osc2.connect(gainNode);
+
+    gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+    
+    gainNode.connect(audioCtx.destination);
+
+    osc1.start();
+    osc1.stop(audioCtx.currentTime + 0.08);
+    
+    osc2.start(audioCtx.currentTime + 0.08);
+    osc2.stop(audioCtx.currentTime + 0.35);
+  } catch (e) {
+    console.warn('Web Audio API notification sound blocked or unsupported:', e);
+  }
+}
+
+function getQuickReplies(type: string): string[] {
+  if (type === 'polymart') {
+    return ["Masih ada stok?", "Boleh kurang harga?", "Bila boleh COD?", "Boleh pos ke hostel?", "Terima kasih!"];
+  }
+  if (type === 'polyrent') {
+    return ["Kemasukan bila ya?", "Rumah masih kosong?", "Bilik single ke sharing?", "Ada deposit?", "Terima kasih!"];
+  }
+  if (type === 'kebajikan') {
+    return ["Terima kasih, Exco.", "Bagaimana status terkini?", "Saya dah hantar borang.", "Boleh saya tahu syaratnya?", "Terima kasih!"];
+  }
+  return ["Hai!", "Terima kasih"];
+}
+
 export function FloatingAiChat() {
   const { profile, user } = useAuth();
   const { allowAiChat } = useAiSettings();
@@ -126,12 +209,57 @@ export function FloatingAiChat() {
   const [isInboxLoading, setIsInboxLoading] = useState(false);
   const [inboxFilter, setInboxFilter] = useState<'all' | 'polymart' | 'polyrent' | 'kebajikan'>('all');
 
+  // Search & Filtering State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showOnlyUnread, setShowOnlyUnread] = useState(false);
+
+  // Popout Preview State
+  const [showPopout, setShowPopout] = useState(false);
+  const [popoutMessage, setPopoutMessage] = useState<{ title: string; content: string; chat: any } | null>(null);
+  const prevUnreadTotalRef = useRef<number>(-1);
+  const popoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Advanced Sembang Features State
+  const [pinnedChatIds, setPinnedChatIds] = useState<string[]>([]);
+  const [archivedChatIds, setArchivedChatIds] = useState<string[]>([]);
+  const [showArchivedSection, setShowArchivedSection] = useState(false);
+  
+  // In-Chat Search State
+  const [showInChatSearch, setShowInChatSearch] = useState(false);
+  const [inChatSearchQuery, setInChatSearchQuery] = useState('');
+
+  // Scroll to Bottom State
+  const [showScrollDownBtn, setShowScrollDownBtn] = useState(false);
+  const [unreadMessagesInFeed, setUnreadMessagesInFeed] = useState(0);
+
+  // Realtime Typing Indicator State
+  const [isPartnerTyping, setIsPartnerTyping] = useState(false);
+  const activeChannelRef = useRef<any>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Offline detection state
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
   // Detailed Inline Chat State
   const [selectedChat, setSelectedChat] = useState<any | null>(null);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [activeProduct, setActiveProduct] = useState<any | null>(null);
+  const [messageLimit, setMessageLimit] = useState(30);
+
+  // Reset room-specific states when chat selection changes
+  useEffect(() => {
+    if (selectedChat) {
+      setMessageLimit(30);
+      setInChatSearchQuery('');
+      setShowInChatSearch(false);
+      setUnreadMessagesInFeed(0);
+      triggerHaptic(15);
+    } else {
+      setIsPartnerTyping(false);
+    }
+  }, [selectedChat?.id, selectedChat?.type]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inboxMessagesEndRef = useRef<HTMLDivElement>(null);
@@ -145,6 +273,198 @@ export function FloatingAiChat() {
   }, [messages]);
 
   const lastUserIdRef = useRef<string | null>(null);
+
+  // Offline Listener
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Load Pin/Archive state from localStorage on mount/profile load
+  useEffect(() => {
+    if (profile?.id) {
+      try {
+        const pinned = localStorage.getItem(`nexus_pinned_${profile.id}`);
+        const archived = localStorage.getItem(`nexus_archived_${profile.id}`);
+        setPinnedChatIds(pinned ? JSON.parse(pinned) : []);
+        setArchivedChatIds(archived ? JSON.parse(archived) : []);
+      } catch (e) {
+        console.warn('Failed to load pin/archive state:', e);
+      }
+    } else {
+      setPinnedChatIds([]);
+      setArchivedChatIds([]);
+    }
+  }, [profile?.id]);
+
+  const handleTogglePin = (chatKey: string) => {
+    if (!profile?.id) return;
+    triggerHaptic(15);
+    const newPinned = pinnedChatIds.includes(chatKey)
+      ? pinnedChatIds.filter(id => id !== chatKey)
+      : [...pinnedChatIds, chatKey];
+    setPinnedChatIds(newPinned);
+    localStorage.setItem(`nexus_pinned_${profile.id}`, JSON.stringify(newPinned));
+    toast.success(pinnedChatIds.includes(chatKey) ? 'Sembang dinyahsemat' : 'Sembang disemat ke atas');
+  };
+
+  const handleToggleArchive = (chatKey: string) => {
+    if (!profile?.id) return;
+    triggerHaptic(15);
+    const newArchived = archivedChatIds.includes(chatKey)
+      ? archivedChatIds.filter(id => id !== chatKey)
+      : [...archivedChatIds, chatKey];
+    setArchivedChatIds(newArchived);
+    localStorage.setItem(`nexus_archived_${profile.id}`, JSON.stringify(newArchived));
+    toast.success(archivedChatIds.includes(chatKey) ? 'Sembang dipindahkan ke inbox utama' : 'Sembang diarkibkan');
+  };
+
+  const handleChatInputChange = (val: string) => {
+    setChatInput(val);
+    
+    if (!activeChannelRef.current || !profile?.id) return;
+    
+    if (val.trim().length > 0) {
+      activeChannelRef.current.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: { senderId: profile.id, isTyping: true }
+      });
+      
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        if (activeChannelRef.current) {
+          activeChannelRef.current.send({
+            type: 'broadcast',
+            event: 'typing',
+            payload: { senderId: profile.id, isTyping: false }
+          });
+        }
+      }, 2000);
+    } else {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      activeChannelRef.current.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: { senderId: profile.id, isTyping: false }
+      });
+    }
+  };
+
+  const handleFeedScroll = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    
+    const isScrolledUp = el.scrollHeight - el.scrollTop - el.clientHeight > 150;
+    setShowScrollDownBtn(isScrolledUp);
+    
+    if (!isScrolledUp) {
+      setUnreadMessagesInFeed(0);
+    }
+  };
+
+  const renderChatCard = (chat: any) => {
+    const chatKey = `${chat.type}-${chat.id}`;
+    const isPinned = pinnedChatIds.includes(chatKey);
+    const isArchived = archivedChatIds.includes(chatKey);
+    const isUnread = chat.unreadCount > 0;
+    
+    let bgBorderClass = "bg-card border-border/30 hover:bg-muted/40";
+    
+    if (isUnread) {
+      if (chat.type === 'polymart') {
+        bgBorderClass = "bg-amber-500/10 border-amber-500/40 hover:bg-amber-500/15 shadow-sm shadow-amber-500/5";
+      } else if (chat.type === 'polyrent') {
+        bgBorderClass = "bg-sky-500/10 border-sky-500/40 hover:bg-sky-500/15 shadow-sm shadow-sky-500/5";
+      } else if (chat.type === 'kebajikan') {
+        bgBorderClass = "bg-[#0d7377]/10 border-[#0d7377]/40 hover:bg-[#0d7377]/15 shadow-sm shadow-[#0d7377]/5";
+      } else {
+        bgBorderClass = "bg-indigo-500/10 border-indigo-500/40 hover:bg-indigo-500/15 shadow-sm shadow-indigo-500/5";
+      }
+    }
+
+    return (
+      <div key={`${chat.type}-${chat.id}`} className="group relative w-full">
+        <button
+          onClick={() => { 
+            triggerHaptic(15);
+            setSelectedChat(chat); 
+            fetchChatMessages(chat);
+            // Optimistic read update
+            setInboxList(prev => prev.map(item => 
+              (item.type === chat.type && item.id === chat.id) ? { ...item, unreadCount: 0 } : item
+            ));
+            setUnreadTotal(prev => Math.max(0, prev - (chat.unreadCount || 0)));
+          }}
+          className={`w-full flex items-center gap-3 p-3 pr-20 rounded-2xl border text-left transition-all ${bgBorderClass}`}
+        >
+          {/* Module Indicator Icon */}
+          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-muted/40 border border-border/40`}>
+            {getModuleIcon(chat.type)}
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 min-w-0">
+                {isPinned && <Pin size={10} className="text-indigo-400 rotate-45 shrink-0" />}
+                <span className={`text-[11px] font-black truncate max-w-[140px] ${isUnread ? 'text-foreground' : 'text-foreground/90'}`}>
+                  {chat.title}
+                </span>
+                {isUnread && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
+                )}
+              </div>
+              <span className={`text-[8px] shrink-0 ${isUnread ? 'text-rose-500 dark:text-rose-400 font-bold' : 'text-muted-foreground/40'}`}>
+                {new Date(chat.updatedAt).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short' })}
+              </span>
+            </div>
+            <p className={`text-[10px] truncate mt-0.5 ${isUnread ? 'text-foreground font-black' : 'text-muted-foreground/60'}`}>
+              {chat.lastMessage || 'Tiada mesej.'}
+            </p>
+          </div>
+
+          {/* Unread Indicator Badge */}
+          {isUnread && (
+            <span className="w-4 h-4 rounded-full bg-rose-600 text-white text-[8px] font-black flex items-center justify-center shrink-0 absolute right-3 bottom-3 shadow-md shadow-rose-600/20 animate-bounce">
+              {chat.unreadCount}
+            </span>
+          )}
+        </button>
+
+        {/* Action overlay buttons (Pin & Archive) - positioned floating absolute on right */}
+        <div className="absolute right-3.5 top-[50%] -translate-y-[50%] flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+          <button
+            onClick={(e) => { e.stopPropagation(); handleTogglePin(chatKey); }}
+            className={`w-7 h-7 rounded-xl flex items-center justify-center border transition-all ${
+              isPinned 
+                ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20' 
+                : 'bg-card border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/40'
+            }`}
+            title={isPinned ? "Nyahsemat sembang" : "Semat sembang"}
+          >
+            <Pin size={11} className={isPinned ? 'rotate-45' : ''} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); handleToggleArchive(chatKey); }}
+            className={`w-7 h-7 rounded-xl flex items-center justify-center border transition-all ${
+              isArchived 
+                ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20' 
+                : 'bg-card border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/40'
+            }`}
+            title={isArchived ? "Keluarkan dari arkib" : "Arkib sembang"}
+          >
+            <Archive size={11} />
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   // ── Dynamic Theme Selector based on path ──
   const getThemeColors = useCallback(() => {
@@ -411,6 +731,7 @@ export function FloatingAiChat() {
             .select('conversation_id, sender_id, content, is_read, created_at')
             .in('conversation_id', polymartConvs.map(c => c.id))
             .order('created_at', { ascending: false })
+            .limit(polymartConvs.length * 3)
         ]);
 
         const bizMap = new Map((bizRes.data ?? []).map(b => [b.id, b]));
@@ -454,7 +775,8 @@ export function FloatingAiChat() {
         .from('polyrent_messages')
         .select('id, sender_id, receiver_id, content, is_read, created_at')
         .or(`sender_id.eq.${profile.id},receiver_id.eq.${profile.id}`)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       let enrichedPolyrent: any[] = [];
       if (rentMsgs && rentMsgs.length > 0) {
@@ -545,6 +867,7 @@ export function FloatingAiChat() {
       // Compute total unread
       const totalUnread = combined.reduce((acc, curr) => acc + (curr.unreadCount || 0), 0);
       setUnreadTotal(totalUnread);
+      prevUnreadTotalRef.current = totalUnread;
 
     } catch (e) {
       console.error('Error fetching inbox data:', e);
@@ -553,19 +876,195 @@ export function FloatingAiChat() {
     }
   }, [profile]);
 
-  // ── Fetch unread counts via lightweight REST polling ──
-  const fetchUnreadCounts = useCallback(async () => {
+  // Popout auto-dismiss timer
+  useEffect(() => {
+    if (showPopout) {
+      if (popoutTimerRef.current) clearTimeout(popoutTimerRef.current);
+      popoutTimerRef.current = setTimeout(() => {
+        setShowPopout(false);
+      }, 7000);
+    }
+    return () => {
+      if (popoutTimerRef.current) clearTimeout(popoutTimerRef.current);
+    };
+  }, [showPopout]);
+
+  // ── Check unread counts and new messages to trigger popout/chime ──
+  const checkNewMessages = useCallback(async () => {
     if (!profile?.id) return;
     try {
+      // 1. Fetch unread counts from polymart and polyrent
       const [martRes, rentRes] = await Promise.all([
         supabase.from('polymart_messages').select('id', { count: 'exact', head: true }).neq('sender_id', profile.id).eq('is_read', false),
         supabase.from('polyrent_messages').select('id', { count: 'exact', head: true }).eq('receiver_id', profile.id).eq('is_read', false)
       ]);
-      setUnreadTotal((martRes.count || 0) + (rentRes.count || 0));
+      
+      // 2. Fetch unread counts from kebajikan tickets
+      const isExco = profile.role === 'SUPER_ADMIN_JPP' || (profile.role === 'JPP' && profile.jpp_unit === 'KEBAJIKAN');
+      let ticketsQuery = supabase.from('kebajikan_tickets').select('id, ticket_no, title');
+      if (isExco) {
+        ticketsQuery = ticketsQuery.or(`submitter_id.eq.${profile.id},assigned_to.eq.${profile.id},delegated_to.eq.${profile.id}`);
+      } else {
+        ticketsQuery = ticketsQuery.eq('submitter_id', profile.id);
+      }
+      const { data: userTickets } = await ticketsQuery;
+      
+      let unreadKebajikanCount = 0;
+      let latestComment: any = null;
+      if (userTickets && userTickets.length > 0) {
+        const ticketIds = userTickets.map(t => t.id);
+        const { data: comments } = await supabase
+          .from('kebajikan_ticket_comments')
+          .select('id, ticket_id, author_id, author_name, content, created_at')
+          .in('ticket_id', ticketIds)
+          .order('created_at', { ascending: false });
+          
+        // Group by ticket to find the last comment on each ticket
+        const latestCommentPerTicket = new Map<string, any>();
+        (comments || []).forEach(c => {
+          if (!latestCommentPerTicket.has(c.ticket_id)) {
+            latestCommentPerTicket.set(c.ticket_id, c);
+          }
+        });
+        
+        latestCommentPerTicket.forEach(c => {
+          if (c.author_id !== profile.id) {
+            unreadKebajikanCount++;
+            if (!latestComment || new Date(c.created_at).getTime() > new Date(latestComment.created_at).getTime()) {
+              latestComment = c;
+            }
+          }
+        });
+      }
+
+      const totalUnread = (martRes.count || 0) + (rentRes.count || 0) + unreadKebajikanCount;
+      setUnreadTotal(totalUnread);
+
+      // Check if unread count increased to trigger chime & popout
+      if (prevUnreadTotalRef.current !== -1 && totalUnread > prevUnreadTotalRef.current) {
+        // Play chime sound
+        playNotificationChime();
+
+        // Query the latest unread message content across all channels
+        let newestTime = 0;
+        let latestMsgObj: { title: string; content: string; chat: any } | null = null;
+
+        // Check PolyMart
+        const { data: latestMart } = await supabase
+          .from('polymart_messages')
+          .select('content, sender_id, created_at, conversation_id')
+          .neq('sender_id', profile.id)
+          .eq('is_read', false)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (latestMart?.[0]) {
+          const martTime = new Date(latestMart[0].created_at).getTime();
+          if (martTime > newestTime) {
+            newestTime = martTime;
+            // Fetch conversation and business details
+            const { data: conv } = await supabase
+              .from('polymart_conversations')
+              .select('buyer_id, vendor_business_id, last_message_at, created_at')
+              .eq('id', latestMart[0].conversation_id)
+              .single();
+              
+            let senderName = 'Peniaga';
+            let logoUrl = null;
+            if (conv) {
+              const isUserBuyer = conv.buyer_id === profile.id;
+              if (isUserBuyer) {
+                const { data: biz } = await supabase.from('keusahawanan_businesses').select('name, logo_url').eq('id', conv.vendor_business_id).maybeSingle();
+                senderName = biz?.name || 'Kedai PolyMart';
+                logoUrl = biz?.logo_url;
+              } else {
+                const { data: buyer } = await supabase.from('profiles').select('full_name').eq('id', conv.buyer_id).maybeSingle();
+                senderName = buyer?.full_name || 'Pembeli';
+              }
+              latestMsgObj = {
+                title: senderName,
+                content: latestMart[0].content,
+                chat: {
+                  id: latestMart[0].conversation_id,
+                  type: 'polymart',
+                  title: senderName,
+                  logoUrl,
+                  lastMessage: latestMart[0].content,
+                  updatedAt: latestMart[0].created_at,
+                  unreadCount: 1,
+                  originalData: conv
+                }
+              };
+            }
+          }
+        }
+
+        // Check PolyRent
+        const { data: latestRent } = await supabase
+          .from('polyrent_messages')
+          .select('content, sender_id, created_at')
+          .eq('receiver_id', profile.id)
+          .eq('is_read', false)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (latestRent?.[0]) {
+          const rentTime = new Date(latestRent[0].created_at).getTime();
+          if (rentTime > newestTime) {
+            newestTime = rentTime;
+            const { data: partner } = await supabase.from('profiles').select('full_name').eq('id', latestRent[0].sender_id).maybeSingle();
+            const senderName = partner?.full_name || 'Pengguna PolyRent';
+            latestMsgObj = {
+              title: senderName,
+              content: latestRent[0].content,
+              chat: {
+                id: latestRent[0].sender_id,
+                type: 'polyrent',
+                title: senderName,
+                lastMessage: latestRent[0].content,
+                updatedAt: latestRent[0].created_at,
+                unreadCount: 1,
+                originalData: { partnerId: latestRent[0].sender_id }
+              }
+            };
+          }
+        }
+
+        // Check Kebajikan Ticket
+        if (latestComment) {
+          const commentTime = new Date(latestComment.created_at).getTime();
+          if (commentTime > newestTime) {
+            const ticketObj = userTickets?.find(t => t.id === latestComment.ticket_id);
+            const senderName = latestComment.author_name || 'Urusetia Kebajikan';
+            latestMsgObj = {
+              title: senderName,
+              content: latestComment.content,
+              chat: {
+                id: latestComment.ticket_id,
+                type: 'kebajikan',
+                title: `[${ticketObj?.ticket_no || 'Aduan'}] ${ticketObj?.title || 'Sembang'}`,
+                lastMessage: latestComment.content,
+                updatedAt: latestComment.created_at,
+                unreadCount: 1,
+                originalData: { id: latestComment.ticket_id, ticket_no: ticketObj?.ticket_no, title: ticketObj?.title, status: 'OPEN', submitter_id: latestComment.author_id }
+              }
+            };
+          }
+        }
+
+        // Set popout message and show it (only if widget is not open)
+        if (latestMsgObj && !isOpen) {
+          setPopoutMessage(latestMsgObj);
+          setShowPopout(true);
+        }
+      }
+
+      // Update ref
+      prevUnreadTotalRef.current = totalUnread;
     } catch (e) {
-      console.warn('Failed to fetch unread counts:', e);
+      console.warn('Failed checking new messages:', e);
     }
-  }, [profile?.id]);
+  }, [profile, isOpen]);
 
   const handleMarkAllAsRead = async () => {
     if (!profile?.id) return;
@@ -610,13 +1109,13 @@ export function FloatingAiChat() {
     }
   };
 
-  // Poll unread counts every 60s when widget is closed
+  // Poll unread counts & check new messages every 60s when widget is closed
   useEffect(() => {
     if (!profile?.id) return;
-    fetchUnreadCounts();
-    const interval = setInterval(fetchUnreadCounts, 60000);
+    checkNewMessages();
+    const interval = setInterval(checkNewMessages, 60000);
     return () => clearInterval(interval);
-  }, [profile?.id, fetchUnreadCounts]);
+  }, [profile?.id, checkNewMessages]);
 
   // Fetch complete inbox whenever user switches to messages tab
   useEffect(() => {
@@ -824,16 +1323,18 @@ export function FloatingAiChat() {
   }, []);
 
   // ── Fetch Detailed Chat Messages ──
-  const fetchChatMessages = async (chat: any) => {
+  const fetchChatMessages = async (chat: any, limitVal?: number) => {
     if (!profile?.id) return;
+    const currentLimit = limitVal || messageLimit;
     try {
       if (chat.type === 'polymart') {
         const { data } = await supabase
           .from('polymart_messages')
           .select('id, conversation_id, sender_id, content, is_read, created_at')
           .eq('conversation_id', chat.id)
-          .order('created_at', { ascending: true });
-        setChatMessages(data || []);
+          .order('created_at', { ascending: false })
+          .limit(currentLimit);
+        setChatMessages((data || []).reverse());
 
         await supabase
           .from('polymart_messages')
@@ -847,8 +1348,9 @@ export function FloatingAiChat() {
           .from('polyrent_messages')
           .select('id, sender_id, receiver_id, content, is_read, created_at')
           .or(`and(sender_id.eq.${profile.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${profile.id})`)
-          .order('created_at', { ascending: true });
-        setChatMessages(data || []);
+          .order('created_at', { ascending: false })
+          .limit(currentLimit);
+        setChatMessages((data || []).reverse());
 
         await supabase
           .from('polyrent_messages')
@@ -862,8 +1364,9 @@ export function FloatingAiChat() {
           .select('id, ticket_id, author_id, author_name, author_role, content, created_at')
           .eq('ticket_id', chat.id)
           .eq('is_internal', false)
-          .order('created_at', { ascending: true });
-        setChatMessages(data || []);
+          .order('created_at', { ascending: false })
+          .limit(currentLimit);
+        setChatMessages((data || []).reverse());
       }
     } catch (e) {
       console.error('Failed to fetch chat details:', e);
@@ -888,6 +1391,14 @@ export function FloatingAiChat() {
             const newMsg = payload.new;
             setChatMessages(prev => {
               if (prev.some(m => m.id === newMsg.id)) return prev;
+              
+              const el = messagesContainerRef.current;
+              if (el) {
+                const isScrolledUp = el.scrollHeight - el.scrollTop - el.clientHeight > 150;
+                if (isScrolledUp && newMsg.sender_id !== profile.id) {
+                  setUnreadMessagesInFeed(c => c + 1);
+                }
+              }
               return [...prev, newMsg];
             });
             if (newMsg.sender_id !== profile.id) {
@@ -898,7 +1409,13 @@ export function FloatingAiChat() {
             setChatMessages(prev => prev.map(m => m.id === updatedMsg.id ? updatedMsg : m));
           }
         })
+        .on('broadcast', { event: 'typing' }, (payload: any) => {
+          if (payload.payload && payload.payload.senderId !== profile.id) {
+            setIsPartnerTyping(payload.payload.isTyping);
+          }
+        })
         .subscribe();
+      activeChannelRef.current = channel;
     } else if (selectedChat.type === 'polyrent') {
       const partnerId = selectedChat.originalData.partnerId;
       channel = supabase.channel(`inbox_chat_polyrent_${partnerId}`)
@@ -915,6 +1432,14 @@ export function FloatingAiChat() {
             ) {
               setChatMessages(prev => {
                 if (prev.some(m => m.id === newMsg.id)) return prev;
+
+                const el = messagesContainerRef.current;
+                if (el) {
+                  const isScrolledUp = el.scrollHeight - el.scrollTop - el.clientHeight > 150;
+                  if (isScrolledUp && newMsg.sender_id !== profile.id) {
+                    setUnreadMessagesInFeed(c => c + 1);
+                  }
+                }
                 return [...prev, newMsg];
               });
               if (newMsg.sender_id !== profile.id) {
@@ -931,7 +1456,13 @@ export function FloatingAiChat() {
             }
           }
         })
+        .on('broadcast', { event: 'typing' }, (payload: any) => {
+          if (payload.payload && payload.payload.senderId !== profile.id) {
+            setIsPartnerTyping(payload.payload.isTyping);
+          }
+        })
         .subscribe();
+      activeChannelRef.current = channel;
     } else if (selectedChat.type === 'kebajikan') {
       channel = supabase.channel(`inbox_chat_kebajikan_${selectedChat.id}`)
         .on('postgres_changes', {
@@ -944,15 +1475,31 @@ export function FloatingAiChat() {
           if (!incoming.is_internal) {
             setChatMessages(prev => {
               if (prev.some(m => m.id === incoming.id)) return prev;
+
+              const el = messagesContainerRef.current;
+              if (el) {
+                const isScrolledUp = el.scrollHeight - el.scrollTop - el.clientHeight > 150;
+                if (isScrolledUp && incoming.author_id !== profile.id) {
+                  setUnreadMessagesInFeed(c => c + 1);
+                }
+              }
               return [...prev, incoming];
             });
           }
         })
+        .on('broadcast', { event: 'typing' }, (payload: any) => {
+          if (payload.payload && payload.payload.senderId !== profile.id) {
+            setIsPartnerTyping(payload.payload.isTyping);
+          }
+        })
         .subscribe();
+      activeChannelRef.current = channel;
     }
 
     return () => {
       if (channel) supabase.removeChannel(channel);
+      activeChannelRef.current = null;
+      setIsPartnerTyping(false);
     };
   }, [selectedChat, profile]);
 
@@ -1245,6 +1792,53 @@ export function FloatingAiChat() {
   const content = (
     <div id="nexus-chat-container" className={`fixed bottom-6 max-md:bottom-[calc(76px+env(safe-area-inset-bottom,0px))] right-4 md:right-6 z-[120] transition-all duration-300 ease-in-out ${bottomMarginClass}`}>
       
+      {/* ── Floating Notification Popout (New Message Alert) ── */}
+      <AnimatePresence>
+        {showPopout && popoutMessage && !isOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            onClick={() => {
+              setIsOpen(true);
+              setActiveTab('messages');
+              setSelectedChat(popoutMessage.chat);
+              fetchChatMessages(popoutMessage.chat);
+              setShowPopout(false);
+            }}
+            className="absolute bottom-16 md:bottom-20 right-0 w-64 md:w-72 bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md border border-rose-500/40 rounded-2xl p-3 shadow-xl cursor-pointer hover:border-rose-500 transition-colors z-[130] flex gap-2.5 items-start select-none"
+          >
+            {/* Notification Pulsing Red Dot */}
+            <span className="absolute top-3.5 left-3.5 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
+            
+            <div className="flex-1 pl-3 min-w-0">
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[8px] font-black text-rose-400 uppercase tracking-widest leading-none">
+                  Mesej Baru
+                </span>
+              </div>
+              <p className="text-[10px] font-black text-white mt-1 leading-snug truncate">
+                {popoutMessage.title}
+              </p>
+              <p className="text-[9px] text-slate-300 mt-0.5 leading-relaxed line-clamp-2">
+                {popoutMessage.content}
+              </p>
+            </div>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowPopout(false);
+              }}
+              className="p-1.5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors shrink-0"
+              aria-label="Tutup"
+            >
+              <X size={11} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── FAB Trigger ── */}
       <motion.button
         id="nexus-chat-fab"
@@ -1364,15 +1958,43 @@ export function FloatingAiChat() {
             {/* Chat Content Body */}
             {selectedChat ? (
               // ── Detailed Inline Chat Screen ──
-              <div className="flex-1 flex flex-col overflow-hidden bg-background">
+              <div className="flex-1 flex flex-col overflow-hidden bg-background relative animate-in fade-in duration-200">
                 {/* Inline Header Back button bar */}
-                <div className="px-4 py-2 bg-muted/20 border-b border-border/30 flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => { setSelectedChat(null); setChatMessages([]); fetchInboxData(); }}
-                    className="flex items-center gap-1 text-[10px] font-black text-muted-foreground hover:text-foreground uppercase tracking-widest transition-colors py-1 px-2.5 bg-muted/40 hover:bg-muted/70 rounded-xl"
-                  >
-                    <ArrowLeft size={12} /> Kembali
-                  </button>
+                <div className="px-4 py-2 bg-muted/20 border-b border-border/30 flex items-center justify-between gap-2 shrink-0">
+                  {showInChatSearch ? (
+                    <div className="flex items-center gap-1.5 w-full relative animate-in slide-in-from-right duration-200">
+                      <input
+                        value={inChatSearchQuery}
+                        onChange={(e) => setInChatSearchQuery(e.target.value)}
+                        placeholder="Cari dalam sembang..."
+                        className="w-full text-[10px] pl-7 pr-7 py-1 bg-muted/40 border border-border/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 text-foreground placeholder:text-muted-foreground/45"
+                        autoFocus
+                      />
+                      <Search size={10} className="absolute left-2.5 text-muted-foreground/50" />
+                      <button
+                        onClick={() => { setInChatSearchQuery(''); setShowInChatSearch(false); }}
+                        className="absolute right-2 text-muted-foreground hover:text-foreground p-0.5"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => { setSelectedChat(null); setChatMessages([]); fetchInboxData(); }}
+                        className="flex items-center gap-1 text-[10px] font-black text-muted-foreground hover:text-foreground uppercase tracking-widest transition-colors py-1 px-2.5 bg-muted/40 hover:bg-muted/70 rounded-xl"
+                      >
+                        <ArrowLeft size={12} /> Kembali
+                      </button>
+                      <button
+                        onClick={() => setShowInChatSearch(true)}
+                        className="p-1.5 text-muted-foreground hover:text-foreground bg-muted/40 hover:bg-muted/70 rounded-lg transition-all"
+                        title="Cari mesej"
+                      >
+                        <Search size={12} />
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 {/* Pinned Shopee-style Product Banner */}
@@ -1433,16 +2055,36 @@ export function FloatingAiChat() {
                 )}
 
                 {/* Messages feed */}
-                <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-950/20">
+                <div 
+                  ref={messagesContainerRef} 
+                  onScroll={handleFeedScroll}
+                  className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-950/20 relative"
+                >
+                  {chatMessages.length >= messageLimit && (
+                    <div className="flex justify-center py-2 shrink-0">
+                      <button
+                        onClick={() => {
+                          const newLimit = messageLimit + 30;
+                          setMessageLimit(newLimit);
+                          fetchChatMessages(selectedChat, newLimit);
+                        }}
+                        type="button"
+                        className="px-3 py-1 rounded-xl bg-muted/20 border border-border/40 hover:bg-muted/40 text-[9px] font-black uppercase text-muted-foreground transition-all active:scale-95"
+                      >
+                        Muat Mesej Terdahulu
+                      </button>
+                    </div>
+                  )}
+
                   {chatMessages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full gap-2 text-slate-500 text-center py-10">
                       <MessageSquare size={20} className="opacity-20 animate-pulse" />
                       <p className="text-[11px] font-bold text-muted-foreground">Mula perbualan</p>
                       <p className="text-[10px] text-muted-foreground/50">Hantar mesej pertama di bawah.</p>
                     </div>
-                  ) : (
-                    chatMessages.map((msg, i) => {
-                      // e-kebajikan author roles, polymart/polyrent uses IDs
+                  ) : (() => {
+                    let lastDateStr = '';
+                    return chatMessages.map((msg, i) => {
                       const isMe = selectedChat.type === 'kebajikan'
                         ? msg.author_id === profile?.id
                         : msg.sender_id === profile?.id;
@@ -1455,121 +2097,208 @@ export function FloatingAiChat() {
                       const prListing = parseRentCard(msgText);
                       const kbTicket = parseTicketCard(msgText);
 
+                      // Date Header
+                      const msgDateStr = formatMessageDateHeader(msg.created_at || new Date().toISOString());
+                      const showDateHeader = msgDateStr !== lastDateStr;
+                      if (showDateHeader) {
+                        lastDateStr = msgDateStr;
+                      }
+
+                      // Check if message matches the search query
+                      const matchesSearch = inChatSearchQuery.trim().length > 0 && msgText.toLowerCase().includes(inChatSearchQuery.toLowerCase());
+
                       return (
-                        <div key={msg.id || i} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                          {senderName && !isMe && (
-                            <span className="text-[9px] font-black text-muted-foreground mb-1 px-1">{senderName}</span>
-                          )}
-                          
-                          {pmProduct ? (
-                            /* Visual PolyMart Product Card */
-                            <div
-                              onClick={() => {
-                                setIsOpen(false);
-                                navigate(`/polymart/produk/${pmProduct.id}`);
-                              }}
-                              className="p-2.5 rounded-2xl bg-card border border-border/50 hover:border-amber-500/50 cursor-pointer transition-all flex gap-3 text-foreground w-64 shadow-md active:scale-95 duration-200"
-                            >
-                              <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-muted border border-border/20 flex items-center justify-center text-lg">
-                                {pmProduct.imageUrl ? (
-                                  <img src={pmProduct.imageUrl} alt={pmProduct.name} className="w-full h-full object-cover" />
-                                ) : (
-                                  '📦'
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0 flex flex-col justify-between">
-                                <p className="text-[11px] font-black leading-tight truncate text-foreground">{pmProduct.name}</p>
-                                <p className="text-xs font-black text-amber-500 mt-1">RM {pmProduct.price.toFixed(2)}</p>
-                                <span className="text-[9px] text-muted-foreground/60 flex items-center gap-1 mt-0.5 font-bold">
-                                  Lihat Produk <ExternalLink size={8} />
-                                </span>
-                              </div>
-                            </div>
-                          ) : prListing ? (
-                            /* Visual PolyRent Listing Card */
-                            <div
-                              onClick={() => {
-                                setIsOpen(false);
-                                navigate(`/polyrent?listingId=${prListing.id}`);
-                              }}
-                              className="p-2.5 rounded-2xl bg-card border border-border/50 hover:border-sky-500/50 cursor-pointer transition-all flex gap-3 text-foreground w-64 shadow-md active:scale-95 duration-200"
-                            >
-                              <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-muted border border-border/20 flex items-center justify-center text-lg">
-                                {prListing.imageUrl ? (
-                                  <img src={prListing.imageUrl} alt={prListing.title} className="w-full h-full object-cover" />
-                                ) : (
-                                  '🏠'
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0 flex flex-col justify-between">
-                                <p className="text-[11px] font-black leading-tight truncate text-foreground">{prListing.title}</p>
-                                <p className="text-xs font-black text-sky-500 mt-1">RM {prListing.price.toFixed(2)}/bulan</p>
-                                <span className="text-[9px] text-muted-foreground/60 flex items-center gap-1 mt-0.5 font-bold">
-                                  Lihat Kediaman <ExternalLink size={8} />
-                                </span>
-                              </div>
-                            </div>
-                          ) : kbTicket ? (
-                            /* Visual Kebajikan Ticket Card */
-                            <div
-                              onClick={() => {
-                                setIsOpen(false);
-                                navigate(`/kebajikan/buat-aduan`);
-                              }}
-                              className="p-2.5 rounded-2xl bg-card border border-border/50 hover:border-teal-500/50 cursor-pointer transition-all flex gap-3 text-foreground w-64 shadow-md active:scale-95 duration-200"
-                            >
-                              <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0 text-sm font-black">
-                                🛡️
-                              </div>
-                              <div className="flex-1 min-w-0 flex flex-col justify-between">
-                                <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest leading-none">Aduan [{kbTicket.ticketNo}]</p>
-                                <p className="text-[11px] font-black leading-tight truncate text-foreground mt-1.5">{kbTicket.title}</p>
-                                <span className={`text-[8px] font-black uppercase px-2.5 py-0.5 rounded-full border self-start mt-1.5 ${
-                                  kbTicket.status === 'RESOLVED' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                                }`}>
-                                  {kbTicket.status}
-                                </span>
-                              </div>
-                            </div>
-                          ) : (
-                            /* Standard Text Message bubble */
-                            <div className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed shadow-sm ${
-                              isMe 
-                                ? `text-white rounded-br-sm` 
-                                : `bg-card border border-border/50 text-foreground rounded-bl-sm`
-                            }`}
-                            style={isMe ? { backgroundColor: themeColors.accent } : {}}
-                            >
-                              <p className="whitespace-pre-wrap break-words">{msgText}</p>
+                        <React.Fragment key={msg.id || i}>
+                          {showDateHeader && (
+                            <div className="sticky top-2 z-10 flex justify-center my-3 animate-in fade-in duration-200">
+                              <span className="px-3 py-1 rounded-full bg-slate-900/80 backdrop-blur-md border border-white/[0.04] text-[8px] font-black uppercase text-slate-400 tracking-wider shadow-sm">
+                                {msgDateStr}
+                              </span>
                             </div>
                           )}
 
-                          <div className="flex items-center gap-1 mt-1 px-1 text-muted-foreground/40 font-medium">
-                            <span className="text-[8px]">
-                              {msg.created_at ? fmt(msg.created_at) : 'Kini'}
-                            </span>
-                            {isMe && selectedChat.type !== 'kebajikan' && (
-                              <span className="text-[9px] font-black leading-none select-none ml-0.5">
-                                {msg.is_read ? (
-                                  <span className="text-sky-500 dark:text-sky-400">✓✓</span>
-                                ) : (
-                                  <span className="text-muted-foreground/30">✓</span>
+                          <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                            {senderName && !isMe && (
+                              <span className="text-[9px] font-black text-muted-foreground mb-1 px-1">{senderName}</span>
+                            )}
+                            
+                            {pmProduct ? (
+                              /* Visual PolyMart Product Card */
+                              <div
+                                onClick={() => {
+                                  setIsOpen(false);
+                                  navigate(`/polymart/produk/${pmProduct.id}`);
+                                }}
+                                className="p-2.5 rounded-2xl bg-card border border-border/50 hover:border-amber-500/50 cursor-pointer transition-all flex gap-3 text-foreground w-64 shadow-md active:scale-95 duration-200 animate-in fade-in"
+                              >
+                                <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-muted border border-border/20 flex items-center justify-center text-lg">
+                                  {pmProduct.imageUrl ? (
+                                    <img src={pmProduct.imageUrl} alt={pmProduct.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    '📦'
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0 flex flex-col justify-between">
+                                  <p className="text-[11px] font-black leading-tight truncate text-foreground">{pmProduct.name}</p>
+                                  <p className="text-xs font-black text-amber-500 mt-1">RM {pmProduct.price.toFixed(2)}</p>
+                                  <span className="text-[9px] text-muted-foreground/60 flex items-center gap-1 mt-0.5 font-bold">
+                                    Lihat Produk <ExternalLink size={8} />
+                                  </span>
+                                </div>
+                              </div>
+                            ) : prListing ? (
+                              /* Visual PolyRent Listing Card */
+                              <div
+                                onClick={() => {
+                                  setIsOpen(false);
+                                  navigate(`/polyrent?listingId=${prListing.id}`);
+                                }}
+                                className="p-2.5 rounded-2xl bg-card border border-border/50 hover:border-sky-500/50 cursor-pointer transition-all flex gap-3 text-foreground w-64 shadow-md active:scale-95 duration-200 animate-in fade-in"
+                              >
+                                <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-muted border border-border/20 flex items-center justify-center text-lg">
+                                  {prListing.imageUrl ? (
+                                    <img src={prListing.imageUrl} alt={prListing.title} className="w-full h-full object-cover" />
+                                  ) : (
+                                    '🏠'
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0 flex flex-col justify-between">
+                                  <p className="text-[11px] font-black leading-tight truncate text-foreground">{prListing.title}</p>
+                                  <p className="text-xs font-black text-sky-500 mt-1">RM {prListing.price.toFixed(2)}/bulan</p>
+                                  <span className="text-[9px] text-muted-foreground/60 flex items-center gap-1 mt-0.5 font-bold">
+                                    Lihat Kediaman <ExternalLink size={8} />
+                                  </span>
+                                </div>
+                              </div>
+                            ) : kbTicket ? (
+                              /* Visual Kebajikan Ticket Card */
+                              <div
+                                onClick={() => {
+                                  setIsOpen(false);
+                                  navigate(`/kebajikan/buat-aduan`);
+                                }}
+                                className="p-2.5 rounded-2xl bg-card border border-border/50 hover:border-teal-500/50 cursor-pointer transition-all flex gap-3 text-foreground w-64 shadow-md active:scale-95 duration-200 animate-in fade-in"
+                              >
+                                <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0 text-sm font-black">
+                                  🛡️
+                                </div>
+                                <div className="flex-1 min-w-0 flex flex-col justify-between">
+                                  <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest leading-none">Aduan [{kbTicket.ticketNo}]</p>
+                                  <p className="text-[11px] font-black leading-tight truncate text-foreground mt-1.5">{kbTicket.title}</p>
+                                  <span className={`text-[8px] font-black uppercase px-2.5 py-0.5 rounded-full border self-start mt-1.5 ${
+                                    kbTicket.status === 'RESOLVED' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                  }`}>
+                                    {kbTicket.status}
+                                  </span>
+                                </div>
+                              </div>
+                            ) : (
+                              /* Standard Text Message bubble */
+                              <div 
+                                className={`relative max-w-[85%] pl-3.5 pr-12 pt-2.5 pb-3.5 rounded-2xl text-xs leading-relaxed shadow-sm cursor-pointer select-all transition-all duration-200 ${
+                                  isMe 
+                                    ? `text-white rounded-br-sm` 
+                                    : `bg-card border border-border/50 text-foreground rounded-bl-sm`
+                                } ${matchesSearch ? (isMe ? 'ring-2 ring-yellow-400 border-yellow-400' : 'bg-yellow-500/25 border-yellow-500/50 shadow-sm shadow-yellow-500/10') : ''}`}
+                                style={isMe ? { backgroundColor: themeColors.accent } : {}}
+                                onDoubleClick={() => {
+                                  triggerHaptic([15, 10]);
+                                  navigator.clipboard.writeText(msgText);
+                                  toast.success('Mesej disalin!');
+                                }}
+                                title="Dwi-ketik untuk menyalin"
+                              >
+                                <p className="whitespace-pre-wrap break-words">{msgText}</p>
+                                <div className="absolute bottom-1 right-2.5 flex items-center gap-0.5 text-[8px] opacity-60 pointer-events-none select-none">
+                                  <span>{msg.created_at ? fmt(msg.created_at) : 'Kini'}</span>
+                                  {isMe && selectedChat.type !== 'kebajikan' && (
+                                    <span className="text-[9px] font-black leading-none ml-0.5">
+                                      {msg.is_read ? (
+                                        <span className="text-sky-400">✓✓</span>
+                                      ) : (
+                                        <span className="text-white/40">✓</span>
+                                      )}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Render timestamp below only if it's a card message */}
+                            {(pmProduct || prListing || kbTicket) && (
+                              <div className="flex items-center gap-1 mt-1 px-1 text-muted-foreground/40 font-medium">
+                                <span className="text-[8px]">
+                                  {msg.created_at ? fmt(msg.created_at) : 'Kini'}
+                                </span>
+                                {isMe && selectedChat.type !== 'kebajikan' && (
+                                  <span className="text-[9px] font-black leading-none select-none ml-0.5">
+                                    {msg.is_read ? (
+                                      <span className="text-sky-500 dark:text-sky-400">✓✓</span>
+                                    ) : (
+                                      <span className="text-muted-foreground/30">✓</span>
+                                    )}
+                                  </span>
                                 )}
-                              </span>
+                              </div>
                             )}
                           </div>
-                        </div>
+                        </React.Fragment>
                       );
-                    })
+                    });
+                  })()}
+
+                  {/* Partner Typing Indicator Bouncing Bubble */}
+                  {isPartnerTyping && (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-card/45 border border-border/40 rounded-2xl rounded-bl-sm self-start text-[9px] text-muted-foreground animate-pulse w-fit">
+                      <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <span className="ml-1 font-bold">sedang menaip...</span>
+                    </div>
                   )}
+
                   <div ref={inboxMessagesEndRef} />
+                </div>
+
+                {/* Floating Scroll-to-Bottom FAB */}
+                {showScrollDownBtn && (
+                  <button
+                    onClick={() => {
+                      inboxMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+                      setShowScrollDownBtn(false);
+                      setUnreadMessagesInFeed(0);
+                    }}
+                    type="button"
+                    className="absolute bottom-20 right-4 w-7 h-7 rounded-full bg-card/90 backdrop-blur-sm border border-border/50 shadow-lg flex items-center justify-center hover:bg-muted/80 text-foreground z-20 transition-all active:scale-95 duration-100 animate-bounce"
+                  >
+                    <ArrowDown size={12} />
+                    {unreadMessagesInFeed > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white text-[8px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border border-card shadow-sm animate-pulse">
+                        {unreadMessagesInFeed}
+                      </span>
+                    )}
+                  </button>
+                )}
+
+                {/* Quick Reply Slidable Chips */}
+                <div className="flex gap-1.5 overflow-x-auto px-3 py-1.5 bg-background shrink-0 border-t border-border/30 scrollbar-none select-none">
+                  {getQuickReplies(selectedChat.type).map((reply, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleSendInboxMessage(undefined, reply)}
+                      type="button"
+                      className="px-2.5 py-1 rounded-full bg-muted/40 hover:bg-muted/70 border border-border/50 text-[10px] text-muted-foreground hover:text-foreground font-black whitespace-nowrap transition-all active:scale-95 shrink-0"
+                    >
+                      {reply}
+                    </button>
+                  ))}
                 </div>
 
                 {/* Inline Message Input */}
                 <form onSubmit={handleSendInboxMessage} className="p-3 bg-background border-t border-border/50 flex gap-2 items-end shrink-0">
                   <textarea
                     value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
+                    onChange={(e) => handleChatInputChange(e.target.value)}
                     placeholder="Taip mesej..."
                     rows={1}
                     disabled={isSendingMessage}
@@ -1822,6 +2551,46 @@ export function FloatingAiChat() {
                   </button>
                 </div>
 
+                {/* Search Bar & Unread Filter */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="relative flex-1">
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground/70 bg-transparent">
+                      <Search size={13} />
+                    </span>
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Cari perbualan..."
+                      className="w-full text-[10px] md:text-[11px] pl-8 pr-7 py-2 bg-muted/40 border border-border/50 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-foreground placeholder:text-muted-foreground/45"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        type="button"
+                        className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-muted-foreground hover:text-foreground"
+                      >
+                        <X size={12} />
+                      </button>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => setShowOnlyUnread(prev => !prev)}
+                    type="button"
+                    className={`px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border flex items-center gap-1.5 shrink-0 ${
+                      showOnlyUnread
+                        ? 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-600/25'
+                        : 'bg-muted/30 hover:bg-muted/50 border-border/50 text-muted-foreground'
+                    }`}
+                  >
+                    Unread
+                    {unreadTotal > 0 && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                    )}
+                  </button>
+                </div>
+
                 {/* Divider */}
                 <div className="h-px bg-border/40 shrink-0" />
 
@@ -1846,8 +2615,39 @@ export function FloatingAiChat() {
                       <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Memuatkan Inbox...</p>
                     </div>
                   ) : (() => {
-                    const filteredList = inboxList.filter(chat => inboxFilter === 'all' || chat.type === inboxFilter);
-                    if (filteredList.length === 0) {
+                    const activeChats = inboxList.filter(chat => {
+                      const chatKey = `${chat.type}-${chat.id}`;
+                      const isArchived = archivedChatIds.includes(chatKey);
+                      
+                      const matchesType = inboxFilter === 'all' || chat.type === inboxFilter;
+                      const matchesSearch = chat.title.toLowerCase().includes(searchQuery.toLowerCase());
+                      const matchesUnread = !showOnlyUnread || chat.unreadCount > 0;
+                      
+                      return matchesType && matchesSearch && matchesUnread && !isArchived;
+                    });
+
+                    const archivedChats = inboxList.filter(chat => {
+                      const chatKey = `${chat.type}-${chat.id}`;
+                      const isArchived = archivedChatIds.includes(chatKey);
+                      
+                      const matchesType = inboxFilter === 'all' || chat.type === inboxFilter;
+                      const matchesSearch = chat.title.toLowerCase().includes(searchQuery.toLowerCase());
+                      const matchesUnread = !showOnlyUnread || chat.unreadCount > 0;
+                      
+                      return matchesType && matchesSearch && matchesUnread && isArchived;
+                    });
+
+                    // Sort activeChats so that pinned chats are at the absolute top
+                    const sortedActiveChats = [...activeChats].sort((a, b) => {
+                      const aKey = `${a.type}-${a.id}`;
+                      const bKey = `${b.type}-${b.id}`;
+                      const aPinned = pinnedChatIds.includes(aKey) ? 1 : 0;
+                      const bPinned = pinnedChatIds.includes(bKey) ? 1 : 0;
+                      if (aPinned !== bPinned) return bPinned - aPinned; // pinned first
+                      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(); // then latest updated
+                    });
+
+                    if (sortedActiveChats.length === 0 && archivedChats.length === 0) {
                       if (inboxFilter === 'polymart') {
                         return (
                           <div className="flex flex-col items-center justify-center min-h-[220px] gap-3 text-amber-500 text-center px-6 py-4 animate-in fade-in duration-200">
@@ -1907,33 +2707,33 @@ export function FloatingAiChat() {
                         </div>
                       );
                     }
-                    return filteredList.map((chat) => (
-                      <button
-                        key={`${chat.type}-${chat.id}`}
-                        onClick={() => { setSelectedChat(chat); fetchChatMessages(chat); }}
-                        className="w-full flex items-center gap-3 p-3 rounded-2xl border border-border/30 bg-card hover:bg-muted/40 text-left transition-all relative"
-                      >
-                        {/* Module Indicator Icon */}
-                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-muted/40 border border-border/40`}>
-                          {getModuleIcon(chat.type)}
-                        </div>
 
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-black text-foreground truncate max-w-[140px]">{chat.title}</span>
-                            <span className="text-[8px] text-muted-foreground/40 shrink-0">{new Date(chat.updatedAt).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short' })}</span>
+                    return (
+                      <div className="space-y-2">
+                        {sortedActiveChats.map((chat) => renderChatCard(chat))}
+
+                        {archivedChats.length > 0 && (
+                          <div className="mt-4 pt-2 border-t border-border/30">
+                            <button
+                              onClick={() => setShowArchivedSection(prev => !prev)}
+                              type="button"
+                              className="w-full flex items-center justify-between p-2 rounded-xl bg-muted/20 hover:bg-muted/40 transition-all text-left text-[10px] font-black uppercase tracking-wider text-slate-400"
+                            >
+                              <div className="flex items-center gap-1.5">
+                                <Archive size={12} />
+                                <span>Arsip Sembang ({archivedChats.length})</span>
+                              </div>
+                              <span className="text-[8px]">{showArchivedSection ? '▼' : '▶'}</span>
+                            </button>
+                            {showArchivedSection && (
+                              <div className="mt-2 space-y-2 pl-1 animate-in fade-in duration-200">
+                                {archivedChats.map((chat) => renderChatCard(chat))}
+                              </div>
+                            )}
                           </div>
-                          <p className="text-[10px] text-muted-foreground/60 truncate mt-0.5">{chat.lastMessage || 'Tiada mesej.'}</p>
-                        </div>
-
-                        {/* Unread Indicator Badge */}
-                        {chat.unreadCount > 0 && (
-                          <span className="w-4 h-4 rounded-full bg-rose-600 text-white text-[8px] font-black flex items-center justify-center shrink-0 absolute right-2.5 bottom-2.5">
-                            {chat.unreadCount}
-                          </span>
                         )}
-                      </button>
-                    ));
+                      </div>
+                    );
                   })()}
                 </div>
               </div>

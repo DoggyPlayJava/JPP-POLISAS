@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapContainer, TileLayer, Marker, useMapEvents, CircleMarker, Tooltip } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, CircleMarker, Tooltip, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { 
@@ -67,6 +67,111 @@ function LocationPickerMap({ lat, lng, onChange, existingBuildings }: { lat: num
   );
 }
 
+function WalkwayDrawingMap({
+  points,
+  onChange,
+  isDrawing,
+  existingWalkways,
+  existingBuildings
+}: {
+  points: [number, number][],
+  onChange: (points: [number, number][]) => void,
+  isDrawing: boolean,
+  existingWalkways: { name: string; coordinates: [number, number][] }[],
+  existingBuildings: Building[]
+}) {
+  const MapEvents = () => {
+    useMapEvents({
+      click(e) {
+        if (!isDrawing) return;
+        onChange([...points, [e.latlng.lat, e.latlng.lng]]);
+      },
+    });
+    return null;
+  };
+
+  const defaultLat = 3.8625;
+  const defaultLng = 103.3153;
+  const mapCenter: [number, number] = [defaultLat, defaultLng];
+
+  return (
+    <div className="w-full h-[400px] rounded-2xl overflow-hidden border border-white/10 relative z-0">
+      <MapContainer center={mapCenter} zoom={17} className="w-full h-full" zoomControl={true}>
+        <TileLayer
+          attribution='&copy; Google'
+          url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+          maxZoom={20}
+        />
+        <MapEvents />
+        
+        {/* Render existing buildings as red circles */}
+        {existingBuildings.map(b => b.center_lat && b.center_lng && (
+          <CircleMarker 
+            key={b.id} 
+            center={[b.center_lat, b.center_lng]} 
+            radius={6} 
+            pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.6, weight: 1.5 }}
+          >
+            <Tooltip direction="top" offset={[0, -10]} opacity={0.8}>
+              <span className="font-bold text-[9px] uppercase tracking-wider">{b.code || b.name}</span>
+            </Tooltip>
+          </CircleMarker>
+        ))}
+
+        {/* Render existing walkways as light-grey lines */}
+        {existingWalkways.map((w, idx) => (
+          <React.Fragment key={idx}>
+            <Polyline 
+              positions={w.coordinates} 
+              pathOptions={{ color: '#64748b', weight: 3, dashArray: '5, 5' }} 
+            />
+            {/* Draw markers at endpoints for reference */}
+            {w.coordinates.length > 0 && (
+              <CircleMarker 
+                center={w.coordinates[0]} 
+                radius={3.5} 
+                pathOptions={{ color: '#475569', fillColor: '#94a3b8', fillOpacity: 1, weight: 1 }} 
+              />
+            )}
+            {w.coordinates.length > 1 && (
+              <CircleMarker 
+                center={w.coordinates[w.coordinates.length - 1]} 
+                radius={3.5} 
+                pathOptions={{ color: '#475569', fillColor: '#94a3b8', fillOpacity: 1, weight: 1 }} 
+              />
+            )}
+          </React.Fragment>
+        ))}
+
+        {/* Render active drawn polyline as amber line */}
+        {points.length > 0 && (
+          <>
+            <Polyline 
+              positions={points} 
+              pathOptions={{ color: '#f59e0b', weight: 4 }} 
+            />
+            {/* Draw active points as circles */}
+            {points.map((pt, idx) => (
+              <CircleMarker 
+                key={idx} 
+                center={pt} 
+                radius={5} 
+                pathOptions={{ color: '#f59e0b', fillColor: '#ffffff', fillOpacity: 1, weight: 2 }} 
+              />
+            ))}
+          </>
+        )}
+      </MapContainer>
+      
+      {isDrawing && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000] bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/10 pointer-events-none shadow-lg whitespace-nowrap">
+          {points.length === 0 ? 'Sentuh peta untuk mula melukis jalan' : `Titik dilukis: ${points.length} (Sentuh peta untuk tambah)`}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface Building {
   id: string;
   name: string;
@@ -75,7 +180,7 @@ interface Building {
   center_lat: number;
   center_lng: number;
   zone_name?: string | null;
-  drone_image_url: string;
+  drone_image_url?: string;
   is_facility?: boolean;
   facility_type?: string;
   op_start?: string;
@@ -114,10 +219,14 @@ interface MissingReport {
 }
 
 export function JppPolyMapsAdmin() {
-  const [activeTab, setActiveTab] = useState<'buildings' | 'locations' | 'reports'>('buildings');
+  const [activeTab, setActiveTab] = useState<'buildings' | 'locations' | 'reports' | 'walkways'>('buildings');
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [reports, setReports] = useState<MissingReport[]>([]);
+  const [walkways, setWalkways] = useState<{ id: string; name: string; coordinates: [number, number][] }[]>([]);
+  const [drawingPoints, setDrawingPoints] = useState<[number, number][]>([]);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [walkwayName, setWalkwayName] = useState('');
   const [loading, setLoading] = useState(true);
   
   const [showBuildingModal, setShowBuildingModal] = useState(false);
@@ -175,7 +284,7 @@ export function JppPolyMapsAdmin() {
     setShowLocationModal(true);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: 'drone_image_url' | 'entrance_image_url' | 'floorplan_image_url' | 'image_url', isLocation = false) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: 'entrance_image_url' | 'floorplan_image_url' | 'image_url', isLocation = false) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -257,7 +366,7 @@ export function JppPolyMapsAdmin() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [buildingsRes, locationsRes, reportsRes] = await Promise.all([
+      const [buildingsRes, locationsRes, reportsRes, walkwaysRes] = await Promise.all([
         supabase.from('imaps_buildings').select('*').order('name'),
         supabase.from('imaps_locations').select('*').order('room_code'),
         supabase.from('imaps_missing_reports').select(`
@@ -267,21 +376,98 @@ export function JppPolyMapsAdmin() {
             full_name,
             matric_no
           )
-        `).order('created_at', { ascending: false })
+        `).order('created_at', { ascending: false }),
+        supabase.from('imaps_walkways').select('*').order('created_at', { ascending: false })
       ]);
 
       if (buildingsRes.error) throw buildingsRes.error;
       if (locationsRes.error) throw locationsRes.error;
       if (reportsRes.error) throw reportsRes.error;
+      if (walkwaysRes.error) throw walkwaysRes.error;
 
       setBuildings(buildingsRes.data || []);
       setLocations(locationsRes.data || []);
       setReports(reportsRes.data || []);
+      
+      const parsedWalkways = (walkwaysRes.data || []).map((w: any) => ({
+        id: w.id,
+        name: w.name,
+        coordinates: Array.isArray(w.coordinates) ? w.coordinates : JSON.parse(w.coordinates)
+      }));
+      setWalkways(parsedWalkways);
     } catch (error: any) {
       console.error('Error fetching PolyMaps data:', error);
       toast.error('Gagal memuat turun data PolyMaps');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const saveWalkway = async () => {
+    if (!walkwayName.trim()) {
+      toast.error('Sila isi nama laluan');
+      return;
+    }
+    if (drawingPoints.length < 2) {
+      toast.error('Sila lukis sekurang-kurangnya 2 titik pada peta');
+      return;
+    }
+
+    setIsSaving(true);
+    const toastId = toast.loading('Menyimpan laluan...');
+    try {
+      const { error } = await supabase.from('imaps_walkways').insert({
+        name: walkwayName,
+        coordinates: drawingPoints
+      });
+
+      if (error) throw error;
+
+      toast.success('Laluan berjaya disimpan!', { id: toastId });
+      setWalkwayName('');
+      setDrawingPoints([]);
+      setIsDrawing(false);
+      
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (userId) {
+        logAuditAction({
+          actionType: 'WALKWAY_ADDED',
+          module: 'PolyMaps',
+          entityId: walkwayName,
+          description: `Laluan ditambah: ${walkwayName}`,
+          actorId: userId
+        });
+      }
+
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal menyimpan laluan', { id: toastId });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const deleteWalkway = async (id: string) => {
+    if (!window.confirm('Adakah anda pasti mahu memadam laluan ini?')) return;
+    try {
+      const { error } = await supabase.from('imaps_walkways').delete().eq('id', id);
+      if (error) throw error;
+      toast.success('Laluan berjaya dipadam.');
+      
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (userId) {
+        logAuditAction({
+          actionType: 'WALKWAY_DELETED',
+          module: 'PolyMaps',
+          entityId: id,
+          description: `Laluan dipadam`,
+          actorId: userId
+        });
+      }
+
+      fetchData();
+    } catch (err: any) {
+      toast.error('Gagal memadam laluan');
     }
   };
 
@@ -529,6 +715,15 @@ export function JppPolyMapsAdmin() {
               </span>
             )}
           </button>
+          <button
+            onClick={() => setActiveTab('walkways')}
+            className={cn(
+              "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg font-bold text-sm transition-all relative",
+              activeTab === 'walkways' ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/70"
+            )}
+          >
+            <Map className="w-4 h-4" /> Urus Laluan
+          </button>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
           {activeTab === 'buildings' ? (
@@ -750,7 +945,7 @@ export function JppPolyMapsAdmin() {
             </table>
           </div>
         </div>
-      ) : (
+      ) : activeTab === 'reports' ? (
         <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -828,6 +1023,112 @@ export function JppPolyMapsAdmin() {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Editor Controls & Map */}
+          <div className="lg:col-span-2 space-y-4">
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-bold text-white text-lg">Melukis Laluan Pejalan Kaki</h3>
+                  <p className="text-xs text-white/50">Sentuh peta untuk membina rangkaian jalan pintas & laluan berteduh kampus</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setIsDrawing(!isDrawing);
+                      if (!isDrawing) {
+                        toast.success('Mod melukis diaktifkan. Klik pada peta untuk mula.');
+                      }
+                    }}
+                    className={cn(
+                      "px-4 py-2 rounded-xl font-bold text-sm transition-colors flex items-center gap-2",
+                      isDrawing ? "bg-amber-600 hover:bg-amber-500 text-white" : "bg-sky-600 hover:bg-sky-500 text-white"
+                    )}
+                  >
+                    {isDrawing ? 'Selesai Melukis' : 'Mula Melukis'}
+                  </button>
+                  <button
+                    onClick={() => setDrawingPoints(prev => prev.slice(0, -1))}
+                    disabled={drawingPoints.length === 0}
+                    className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white/70 rounded-xl font-bold text-sm disabled:opacity-30 transition-colors"
+                  >
+                    Undo
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDrawingPoints([]);
+                      setWalkwayName('');
+                      setIsDrawing(false);
+                    }}
+                    disabled={drawingPoints.length === 0 && !walkwayName}
+                    className="px-4 py-2 bg-rose-500/20 hover:bg-rose-500/40 text-rose-400 rounded-xl font-bold text-sm disabled:opacity-30 transition-colors"
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+
+              {/* Walkway Map */}
+              <WalkwayDrawingMap
+                points={drawingPoints}
+                onChange={setDrawingPoints}
+                isDrawing={isDrawing}
+                existingWalkways={walkways}
+                existingBuildings={buildings}
+              />
+
+              {/* Save Form */}
+              {drawingPoints.length > 0 && (
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                  <input
+                    type="text"
+                    placeholder="Nama Laluan (Cth: Blok A ke Perpustakaan)..."
+                    value={walkwayName}
+                    onChange={e => setWalkwayName(e.target.value)}
+                    className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50"
+                  />
+                  <button
+                    onClick={saveWalkway}
+                    disabled={isSaving || drawingPoints.length < 2 || !walkwayName.trim()}
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2 shrink-0"
+                  >
+                    {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Simpan Laluan
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* List of Saved Walkways */}
+          <div className="space-y-4">
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
+              <h3 className="font-bold text-white text-lg mb-4">Senarai Laluan ({walkways.length})</h3>
+              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                {walkways.length === 0 ? (
+                  <div className="text-center py-8 text-white/40 text-sm border border-dashed border-white/10 rounded-xl">
+                    Tiada laluan disimpan.
+                  </div>
+                ) : (
+                  walkways.map(w => (
+                    <div key={w.id} className="bg-black/20 border border-white/5 rounded-xl p-3 flex justify-between items-center group">
+                      <div className="min-w-0 pr-2">
+                        <p className="font-bold text-sm text-white truncate">{w.name}</p>
+                        <p className="text-[10px] font-medium text-white/40 mt-0.5">{w.coordinates.length} titik koordinat</p>
+                      </div>
+                      <button
+                        onClick={() => deleteWalkway(w.id)}
+                        className="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/30 text-rose-400 opacity-80 group-hover:opacity-100 transition-all shrink-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -917,9 +1218,9 @@ export function JppPolyMapsAdmin() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {(['drone_image_url', 'floorplan_image_url', 'entrance_image_url'] as const).map(field => {
-                    const label = field === 'drone_image_url' ? 'Imej Dron' : field === 'floorplan_image_url' ? 'Pelan Lantai' : 'Pintu Masuk';
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {(['floorplan_image_url', 'entrance_image_url'] as const).map(field => {
+                    const label = field === 'floorplan_image_url' ? 'Pelan Lantai' : 'Pintu Masuk';
                     const value = currentBuilding[field];
                     return (
                       <div key={field} className="bg-black/20 border border-white/10 rounded-xl p-3">
