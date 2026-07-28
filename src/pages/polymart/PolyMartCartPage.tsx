@@ -62,7 +62,7 @@ export function PolyMartCartPage() {
         id, quantity, selected_variation,
         product:business_products (
           id, name, price, image_url, category, stock_quantity, reserved_stock, business_id, online_payment_enabled, variations,
-          keusahawanan_businesses (id, name, logo_url, online_payment_enabled, cod_enabled, payment_deadline_value, payment_deadline_unit)
+          keusahawanan_businesses (id, name, logo_url, online_payment_enabled, cod_enabled, payment_deadline_value, payment_deadline_unit, is_active)
         )
       `)
       .eq('buyer_id', user!.id)
@@ -104,6 +104,12 @@ export function PolyMartCartPage() {
 
     setCheckingOut(businessId);
     try {
+
+      // 0. Semak kedai masih buka
+      if (business && !business.is_active) {
+        throw new Error('Kedai ini telah ditutup. Tidak boleh membuat tempahan buat masa ini.');
+      }
+      
       // 1. Tempah stok dahulu untuk setiap barang dengan parameter variasi terpilih
       for (const item of businessItems) {
         const { error: reserveError } = await supabase.rpc('reserve_polymart_stock', {

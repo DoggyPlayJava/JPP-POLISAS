@@ -184,6 +184,12 @@ function OrderModal({
         return;
       }
 
+
+      // 0. Semak kedai masih buka
+      if (biz && !biz.is_active) {
+        throw new Error('Kedai ini telah ditutup. Tidak boleh membuat tempahan buat masa ini.');
+      }
+      
       // 1. Tempah stok dahulu
       const { error: reserveError } = await supabase.rpc('reserve_polymart_stock', {
         p_product_id: product.id,
@@ -614,7 +620,7 @@ export function PolyMartProductDetail() {
         .from('business_products')
         .select(`
           *,
-          keusahawanan_businesses!business_id(id, name, logo_url, description, polymart_contact_method, status, online_payment_enabled, cod_enabled, payment_qr_url, payment_instructions, business_phone, payment_deadline_value, payment_deadline_unit)
+          keusahawanan_businesses!business_id(id, name, logo_url, description, polymart_contact_method, status, online_payment_enabled, cod_enabled, payment_qr_url, payment_instructions, business_phone, payment_deadline_value, payment_deadline_unit, is_active)
         `)
         .eq('id', id).single();
       setProduct(data as Product);

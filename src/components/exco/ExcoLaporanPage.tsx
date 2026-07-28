@@ -50,6 +50,8 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
   // ── State ─────────────────────────────────────────────────────────────────
   const [allowAutoPdf, setAllowAutoPdf]     = useState(true);
   const [targetMonth, setTargetMonth]       = useState(format(new Date(), 'yyyy-MM'));
+  const [endMonth, setEndMonth]             = useState(format(new Date(), 'yyyy-MM'));
+  const [gabungMode, setGabungMode]         = useState(false);
   const [submitting, setSubmitting]         = useState(false);
   const [progress, setProgress]             = useState(0);
   const [reports, setReports]               = useState<any[]>([]);
@@ -61,7 +63,15 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
   const [mtReviewer, setMtReviewer]         = useState<{ name: string; role: string } | null>(null);
 
   // ── Derived values ─────────────────────────────────────────────────────────
-  const monthLabel = format(parseISO(`${targetMonth}-01`), 'MMMM yyyy', { locale: ms }).toUpperCase();
+  const formatMonth = (m: string) => format(parseISO(`${m}-01`), 'MMMM yyyy', { locale: ms }).toUpperCase();
+  const monthLabel = formatMonth(targetMonth);
+  const dateRangeLabel = gabungMode && targetMonth !== endMonth
+    ? (() => {
+        const sm = format(parseISO(`${targetMonth}-01`), 'MMMM', { locale: ms }).toUpperCase();
+        const em = formatMonth(endMonth);
+        return `${sm} - ${em}`;
+      })()
+    : undefined;
 
   // Jawatan penuh: "KETUA EXCO" atau "EXCO" (buang prefix "AHLI" jika ada)
   const positionLabel = jppPos
@@ -170,8 +180,10 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
 
   // ── Fetch preview data ────────────────────────────────────────────────────
   const fetchReportData = async (): Promise<any[]> => {
-    const start = startOfMonth(parseISO(`${targetMonth}-01`)).toISOString();
-    const end   = endOfMonth(parseISO(`${targetMonth}-01`)).toISOString();
+    const rangeStart = gabungMode ? targetMonth : targetMonth;
+    const rangeEnd   = gabungMode ? endMonth : targetMonth;
+    const start = startOfMonth(parseISO(`${rangeStart}-01`)).toISOString();
+    const end   = endOfMonth(parseISO(`${rangeEnd}-01`)).toISOString();
 
     const { data: acts } = await supabase
       .from('club_activities')
@@ -199,7 +211,7 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
     try {
       const data = await fetchReportData();
       if (data.length === 0) {
-        toast.error('Tiada aktiviti selesai pada bulan ini.');
+        toast.error(gabungMode ? 'Tiada aktiviti selesai dalam tempoh ini.' : 'Tiada aktiviti selesai pada bulan ini.');
         return;
       }
       setPreviewData(data);
@@ -224,7 +236,8 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
       const doc = (
         <LaporanPDFTemplate
           clubName={excoLabel}
-          monthYear={monthLabel}
+          monthYear={dateRangeLabel || monthLabel}
+          dateRange={dateRangeLabel}
           activities={previewData}
           submitterName={profile?.full_name || undefined}
           submitterRole={submitterRoleLabel}
@@ -251,7 +264,7 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
         submitted_by: user.id,
         report_type:  'Laporan Aktiviti',
         file_url:     url,
-        file_name:    `Laporan Bulanan ${excoLabel} - ${monthLabel}.pdf`,
+        file_name:    `Laporan Bulanan ${excoLabel} - ${dateRangeLabel || monthLabel}.pdf`,
         status:       'Menunggu',
         is_archived:  false,
       });
@@ -374,12 +387,29 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
                         <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.05] text-[11px] text-white/30 font-medium">
                           Sistem akan menarik aktiviti 'Selesai' untuk bulan dipilih dan menjana PDF secara automatik.
                         </div>
-                        <Input
-                          type="month"
-                          value={targetMonth}
-                          onChange={e => setTargetMonth(e.target.value)}
-                          className="h-12 rounded-2xl bg-white/[0.05] border-white/[0.07] text-white font-bold"
-                        />
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <label className="flex items-center gap-1.5 text-[10px] text-white/30 font-medium cursor-pointer select-none">
+                            <input type="checkbox" checked={gabungMode} onChange={e => setGabungMode(e.target.checked)}
+                              className="accent-violet-500 w-3.5 h-3.5" />
+                            Gabung bulan
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="month"
+                            value={targetMonth}
+                            onChange={e => setTargetMonth(e.target.value)}
+                            className="h-12 rounded-2xl bg-white/[0.05] border-white/[0.07] text-white font-bold flex-1"
+                          />
+                          {gabungMode && (
+                            <Input
+                              type="month"
+                              value={endMonth}
+                              onChange={e => setEndMonth(e.target.value)}
+                              className="h-12 rounded-2xl bg-white/[0.05] border-white/[0.07] text-white font-bold flex-1"
+                            />
+                          )}
+                        </div>
                         <Button
                           type="submit"
                           disabled={submitting}

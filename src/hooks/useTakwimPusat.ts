@@ -68,7 +68,7 @@ export function useTakwimPusat(options: UseTakwimPusatOptions = {}): UseTakwimPu
         .from('programs')
         .select('*')
         .not('status', 'eq', 'DRAFT')
-        .eq('is_archived', false)
+        .or('is_archived.is.null,is_archived.eq.false')
         .order('tarikh_mula', { ascending: true });
 
       // For "Kelab Saya" filter — multi-club support

@@ -23,7 +23,9 @@ function MeritConfigPanel() {
   const [config, setConfig] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
-  const { isSuperAdmin } = useAuth();
+  const { profile, isSuperAdmin } = useAuth();
+  const isExcoAkademik = (profile?.role === 'JPP' && profile?.jpp_unit === 'AKADEMIK');
+  const canEditConfig = isSuperAdmin || isExcoAkademik;
 
   const JENIS    = ['ANUGERAH', 'SIJIL', 'PERTANDINGAN'];
   const PERINGKAT = ['ANTARABANGSA', 'KEBANGSAAN', 'NEGERI', 'DAERAH'];
@@ -53,14 +55,14 @@ function MeritConfigPanel() {
     setSaving(null);
   };
 
-  if (!isSuperAdmin) {
+  if (!canEditConfig) {
     return (
       <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 text-center space-y-3">
         <Shield className="w-8 h-8 mx-auto text-white/15" />
         <p className="text-xs font-black uppercase tracking-widest text-white/20">
-          Akses Terhad — SUPER_ADMIN_JPP sahaja
+          Akses Terhad — SUPER_ADMIN_JPP / Exco Akademik sahaja
         </p>
-        <p className="text-[10px] text-white/15">Hanya SUPER_ADMIN_JPP boleh mengubah nilai merit. Anda boleh melihat tetapi tidak boleh mengubah nilai ini.</p>
+        <p className="text-[10px] text-white/15">Hanya SUPER_ADMIN_JPP dan Exco Akademik boleh mengubah nilai merit.</p>
         {/* Read-only table */}
         <div className="overflow-x-auto mt-4">
           <table className="w-full text-[10px]">

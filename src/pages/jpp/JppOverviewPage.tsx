@@ -83,12 +83,10 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
 
     if (!rawSubs?.length) { setSubs([]); setLoading(false); return; }
 
-    // Step 2: Fetch profiles for all unique user_ids (FK points to auth.users, not profiles, so join won't work)
+    // Step 2: Fetch profiles for all unique user_ids via RPC (avoid URL-bloat from 200+ UUIDs)
     const uniqueUserIds = [...new Set(rawSubs.map(s => s.user_id))];
     const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, full_name, matric_no, role')
-      .in('id', uniqueUserIds);
+      .rpc('get_profiles_by_ids', { p_ids: uniqueUserIds });
 
     const profileMap = new Map((profiles || []).map(p => [p.id, p]));
 

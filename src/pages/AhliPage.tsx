@@ -200,7 +200,9 @@ export function AhliPage() {
         if (updErr) throw updErr;
           
         // Buka pintu untuk pengguna ini memandangkan mereka dah diluluskan
-        await supabase.from('profiles').update({ account_status: 'APPROVED' }).eq('id', userId);
+        // With error check
+        const { error: profErr } = await supabase.from('profiles').update({ account_status: 'APPROVED' }).eq('id', userId);
+        if (profErr) throw profErr;
 
         // ✅ FIX: Sync profiles.role jika kelab ini adalah primary club user
         // Semak dulu sama ada ini primary club & apa role yang dimohon
@@ -238,13 +240,38 @@ export function AhliPage() {
       } catch {}
 
       toast.success(status === 'APPROVED' ? 'Tindakan berjaya!' : 'Ahli/Permohonan telah disingkirkan.');
-      setKickingMember(null);
-      setKickReason('');
-      load();
-    } catch {
-      toast.error('Operasi gagal.');
+    } catch (e: any) {
+      toast.error('Ralat: ' + e.message);
     }
   };
+
+  // ✅ LULUSKAN PERMOHONAN BERHENTI — terus padam, x perlu alasan
+  const handleApproveResign = async (userId: string, clubId: string) => {
+    try {
+      const { error } = await supabase.from('student_club_memberships')
+        .delete()
+        .eq('user_id', userId)
+        .eq('club_id', clubId);
+      if (error) throw error;
+
+      const { error: profErr2 } = await supabase.from('profiles').update({ account_status: 'APPROVED' }).eq('id', userId);
+      if (profErr2) throw profErr2;
+
+      const clubName = ALL_CLUBS.find(c => c.id === clubId)?.name || 'Kelab';
+      await sendNotificationToUser(userId, {
+        title: 'Permohonan Berhenti Diluluskan',
+        message: `Permohonan anda untuk keluar dari ${clubName} telah diluluskan.`,
+        type: 'SYSTEM', module: 'EKPP', link: '/kelab',
+      }).catch(() => {});
+
+      toast.success('Berhenti diluluskan.');
+      load();
+    } catch (e: any) {
+      toast.error('Ralat: ' + e.message);
+    }
+  };
+
+  // ✏️ BUKA MODAL KEMASKINI PRESIDEN/MT
 
   // ✅ FUNGSI TUKAR PERANAN — guna RPC untuk server-side role guard (CRIT-1 fix)
   const handleRoleChange = async (userId: string, clubId: string, newRole: string) => {
@@ -421,7 +448,7 @@ export function AhliPage() {
                         {m.account_status === 'RESIGN_PENDING' ? (
                           <>
                             {/* m.id = profiles.id = user_id yang betul untuk handleStatusAction */}
-                            <Button onClick={() => handleStatusAction(m.id, m.club_id, 'KICKED')} className="flex-1 bg-amber-500 hover:bg-amber-500/90 text-white rounded-xl font-black text-[10px] uppercase tracking-widest h-10">
+                            <Button onClick={() => handleApproveResign(m.id, m.club_id)} className="flex-1 bg-amber-500 hover:bg-amber-500/90 text-white rounded-xl font-black text-[10px] uppercase tracking-widest h-10">
                               Luluskan Berhenti
                             </Button>
                             <Button onClick={() => handleStatusAction(m.id, m.club_id, 'APPROVED')} variant="ghost" className="bg-slate-100/50 hover:bg-slate-200 rounded-xl font-black text-[10px] uppercase tracking-widest h-10">

@@ -139,7 +139,7 @@ function AktivitiPopout({ open, onClose }: { open: boolean; onClose: () => void 
     try {
       let q = supabase.from('club_activities')
         .select('*, club_id')
-        .eq('is_archived', false)
+        .or('is_archived.is.null,is_archived.eq.false')
         .order('start_date', { ascending: false })
         .limit(60);
       if (filter !== 'ALL') q = q.eq('club_id', filter);
@@ -269,14 +269,14 @@ export function KppUnitDashboard() {
 
       const [activeClubsRes, monthActRes, memsRes, repsCountRes, recentActsRes] = await Promise.all([
         supabase.from('clubs').select('id', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('club_activities').select('id', { count: 'exact', head: true }).gte('created_at', monthStart).eq('is_archived', false),
+        supabase.from('club_activities').select('id', { count: 'exact', head: true }).gte('created_at', monthStart).or('is_archived.is.null,is_archived.eq.false'),
         supabase.from('student_club_memberships')
           .select('id, user_id, club_id, role, account_status, created_at, profiles(full_name, email, matric_no)')
           .eq('account_status', 'PENDING')
           .order('created_at', { ascending: false })
           .limit(100),
-        supabase.from('club_reports').select('id', { count: 'exact', head: true }).eq('is_archived', false).eq('status', 'Menunggu'),
-        supabase.from('club_activities').select('club_id').gte('start_date', threshold30d).eq('is_archived', false)
+        supabase.from('club_reports').select('id', { count: 'exact', head: true }).or('is_archived.is.null,is_archived.eq.false').eq('status', 'Menunggu'),
+        supabase.from('club_activities').select('club_id').gte('start_date', threshold30d).or('is_archived.is.null,is_archived.eq.false')
       ]);
 
       setTotalActiveClubs(activeClubsRes.count ?? 0);
@@ -305,7 +305,7 @@ export function KppUnitDashboard() {
       if (rekodView === 'aktiviti') {
         let q = supabase.from('club_activities')
             .select('id, title, status, start_date, end_date, club_id, created_at')
-            .eq('is_archived', false)
+            .or('is_archived.is.null,is_archived.eq.false')
             .order('start_date', { ascending: false })
             .limit(100);
         if (clubEq) q = q.eq('club_id', clubEq);
@@ -314,7 +314,7 @@ export function KppUnitDashboard() {
       } else {
         let q = supabase.from('club_reports')
             .select('id, title, type, status, club_id, created_at, file_name')
-            .eq('is_archived', false)
+            .or('is_archived.is.null,is_archived.eq.false')
             .order('created_at', { ascending: false })
             .limit(100);
         if (clubEq) q = q.eq('club_id', clubEq);
@@ -336,7 +336,7 @@ export function KppUnitDashboard() {
     const { data: recentActs } = await supabase.from('club_activities')
         .select('club_id')
         .gte('start_date', threshold30d)
-        .eq('is_archived', false);
+        .or('is_archived.is.null,is_archived.eq.false');
     const activeClubIds = new Set((recentActs || []).map((a: any) => a.club_id));
     const inactive: InactiveClub[] = ALL_CLUBS
       .filter(c => !activeClubIds.has(c.id))

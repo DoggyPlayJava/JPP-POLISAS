@@ -110,8 +110,8 @@ export function ProtectedRoute() {
   useEffect(() => {
     if (isLoading) {
       hardTimeoutRef.current = setTimeout(() => {
-        console.warn('[ProtectedRoute] Hard timeout — loading stuck, redirecting to /login');
-        navigate('/login', { replace: true });
+        console.warn('[ProtectedRoute] Hard timeout — loading stuck, forcing hard redirect to /login');
+        window.location.replace('/login');
       }, 8000);
     } else {
       if (hardTimeoutRef.current) {

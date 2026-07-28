@@ -4,21 +4,41 @@ console.log('Buffer polyfilled');
 
 // Mencegah aplikasi menjadi "blank white screen" jika pengguna klik pada menu
 // yang mengandungi kod "chunk" JS lama yang telah dipadam dari Coolify server selepas kemas kini.
-// GUARD: Hadkan maksimum 2 kali reload sahaja untuk elak infinite loop.
-// Senario loop: SW serve index.html lama → chunk 404 → reload → SW serve lama lagi → loop.
+// GUARD: Hadkan maksimum 2 kali reload sahaja + min delay 4s antara reload.
+// Delay + cooldown utk break infinite loop bila SW serve lama / CF tunnel issue.
 window.addEventListener('vite:preloadError', () => {
   const key = 'vite_preload_retries';
+  const cooldownKey = 'vite_preload_cooldown';
+  const now = Date.now();
+  const lastReload = parseInt(sessionStorage.getItem(cooldownKey) || '0', 10);
+
+  // Cooldown — jangan reload dalam 4s lepas reload terakhir (break loop laju)
+  if (now - lastReload < 4000) {
+    console.warn('[vite:preloadError] Cooldown aktif — skip reload');
+    return;
+  }
+  sessionStorage.setItem(cooldownKey, String(now));
+
   const retries = parseInt(sessionStorage.getItem(key) || '0', 10);
   if (retries < 2) {
     sessionStorage.setItem(key, String(retries + 1));
-    window.location.reload();
+    // Delay 1.5s — bagi SW chance update / CF tunnel chance recover
+    setTimeout(() => window.location.reload(), 1500);
   } else {
-    // Max retries reached — clear SW cache dan hard redirect sebagai usaha terakhir
+    // Max retries — clear SW cache + force skip waiting + redirect
     sessionStorage.removeItem(key);
+    sessionStorage.removeItem(cooldownKey);
     if ('caches' in window) {
-      caches.keys().then(names => names.forEach(n => caches.delete(n)));
+      caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
     }
-    window.location.replace('/?t=' + Date.now());
+    // Force new SW to activate
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then(reg => {
+        if (reg?.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      });
+    }
+    // Bypass CF cache dengan random param
+    window.location.replace('/?t=' + now + '&r=' + Math.random().toString(36).slice(2));
   }
 });
 

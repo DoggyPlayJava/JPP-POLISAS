@@ -2114,6 +2114,7 @@ export function PolyMartVendorDashboard() {
         { header: 'Nama Pembeli', key: 'buyer_name', width: 22 },
         { header: 'No Matrik', key: 'matric_no', width: 14 },
         { header: 'No Telefon', key: 'phone', width: 16 },
+        { header: 'Nota Pembeli', key: 'buyer_note', width: 30 },
         { header: 'Nama Produk', key: 'product_name', width: 25 },
         { header: 'Variasi', key: 'variation', width: 15 },
         { header: 'Kuantiti', key: 'qty', width: 10 },
@@ -2122,7 +2123,6 @@ export function PolyMartVendorDashboard() {
         { header: 'Kaedah Bayaran', key: 'payment_method', width: 18 },
         { header: 'Status Bayaran', key: 'payment_status', width: 20 },
         { header: 'Status Pesanan', key: 'order_status', width: 16 },
-        { header: 'Nota Pembeli', key: 'buyer_note', width: 30 },
         { header: 'Waktu Pickup', key: 'pickup_time', width: 20 }
       ];
       

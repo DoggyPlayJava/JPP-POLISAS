@@ -522,20 +522,45 @@ app.post('/api/kebajikan-new-ticket-notify', requireWebhookSecret, async (req, r
                 .eq("role", "JPP")
                 .eq("jpp_unit", "KEBAJIKAN");
         
-            for (const exco of excoUsers ?? []) {
-                fetch("https://api.resend.com/emails", {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${RESEND_API_KEY}`,
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        from: "E-Kebajikan <kebajikan@polisas.edu.my>",
-                        to: exco.email,
-                        subject: `[E-Kebajikan] Aduan Baru: ${ticket_no}`,
-                        html: `<p>Salam, ${exco.full_name}.<br/>Aduan baru <strong>${ticket_no}</strong> telah diterima.<br/><strong>${title}</strong><br/>Sila log masuk ke sistem untuk mengambil tindakan.</p>`,
-                    }),
-                });
+            const excoEmails = (excoUsers ?? []).map(u => u.email).filter(Boolean);
+            if (excoEmails.length > 0) {
+                const emailHtml = `<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Aduan Baru | E-Kebajikan</title></head>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background-color:#f4f4f5;">
+<div style="background-color:#f4f4f5;padding:40px 20px;text-align:center;">
+<table align="center" style="max-width:550px;margin:0 auto;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 25px -5px rgba(0,0,0,0.05);width:100%;border-collapse:collapse;" cellpadding="0" cellspacing="0">
+<tr><td style="padding:40px 30px;text-align:center;border-bottom:1px solid #f1f5f9;background-color:#ffffff;">
+<h1 style="color:#881B1B;font-size:26px;font-weight:900;margin:0;letter-spacing:-0.5px;">E-KEBAJIKAN</h1>
+<p style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:3px;margin-top:6px;font-weight:800;margin-bottom:0;">JPP POLISAS</p>
+</td></tr>
+<tr><td style="padding:40px 30px;text-align:center;background-color:#ffffff;">
+<div style="width:64px;height:64px;background-color:#fef2f2;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:24px;">
+<span style="font-size:32px;">📣</span></div>
+<h2 style="color:#0f172a;font-size:22px;font-weight:800;margin:0 0 16px 0;">Aduan Baru Diterima</h2>
+<table style="width:100%;border-collapse:collapse;margin:20px 0;">
+<tr><td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:13px;width:100px;">No. Tiket</td>
+<td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;font-weight:700;font-size:14px;color:#0f172a;">${ticket_no}</td></tr>
+<tr><td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:13px;">Tajuk</td>
+<td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;font-weight:600;font-size:14px;color:#0f172a;">${title}</td></tr>
+<tr><td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:13px;">Kategori</td>
+<td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;font-size:14px;color:#0f172a;">${category}</td></tr>
+<tr><td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:13px;">Dari</td>
+<td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;font-weight:600;font-size:14px;color:#0f172a;">${full_name}</td></tr>
+</table>
+<div style="margin:24px 0;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;">
+<p style="margin:0;color:#881B1B;font-size:14px;font-weight:600;">⚠️ Tindakan diperlukan</p>
+<p style="margin:8px 0 0 0;color:#dc2626;font-size:13px;">Sila log masuk ke portal E-Kebajikan untuk mengambil tindakan.</p></div>
+</td></tr>
+<tr><td style="padding:24px 30px;background-color:#f8fafc;text-align:center;border-top:1px solid #f1f5f9;">
+<p style="color:#94a3b8;font-size:12px;margin:0;font-weight:500;">&copy; ${new Date().getFullYear()} Jawatankuasa Perwakilan Pelajar POLISAS.<br/>Hak cipta terpelihara.</p>
+</td></tr></table></div></body></html>`;
+                sendEmailInternal(
+                    excoEmails,
+                    `[E-Kebajikan] Aduan Baru: ${ticket_no}`,
+                    emailHtml
+                ).then(r => console.log("[kebajikan-new-ticket-notify] Email sent to", excoEmails.length, "exco members:", excoEmails.join(",")))
+                .catch(err => console.error("[kebajikan-new-ticket-notify] Email error:", err.message));
             }
         }
 
@@ -1406,7 +1431,7 @@ app.post('/api/notify-anomaly', requireAuth, anomalyNotifyLimiter, async (req, r
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                from: 'Audit JPP-POLISAS <noreply@jpp-polisas.com>',
+                from: 'JPP Polisas <jpp@cipher-node.org>',
                 to: ADMIN_EMAIL,
                 subject: `🚨 [AMARAN] ${alerts.length} Anomali Sistem Dikesan`,
                 html: html
@@ -2826,6 +2851,23 @@ try {
     console.log('[STARTUP] ✅ index.html cached in memory (' + Buffer.byteLength(cachedIndexHtml) + ' bytes)');
 } catch (err) {
     console.warn('[STARTUP] ⚠️ index.html not found in dist/ — SPA fallback will use sendFile (slower)');
+}
+
+// Auto-refresh cache bila rebuild — tak perlu PM2 restart lepas npm run build
+try {
+    fs.watchFile(INDEX_HTML_PATH, { interval: 1000 }, () => {
+        try {
+            const fresh = fs.readFileSync(INDEX_HTML_PATH, 'utf8');
+            if (fresh !== cachedIndexHtml) {
+                cachedIndexHtml = fresh;
+                console.log('[WATCH] ✅ index.html cache auto-refreshed (' + Buffer.byteLength(cachedIndexHtml) + ' bytes)');
+            }
+        } catch (err) {
+            console.warn('[WATCH] ⚠️ Failed to refresh index.html:', err.message);
+        }
+    });
+} catch (err) {
+    console.warn('[WATCH] ⚠️ Cannot watch index.html — auto-refresh disabled');
 }
 
 // SPA Fallback: Any route not matched by API or static files will return index.html

@@ -37,6 +37,8 @@ export function JppUsersPage() {
     const [filterLevel, setFilterLevel] = useState<string>('all');  // all | Junior | Senior | Asasi
     const [filterProg, setFilterProg]   = useState<string>('all');  // all | programme code
     const [loading, setLoading] = useState(true);
+    const [userCount, setUserCount] = useState(0);
+    const [allProgs, setAllProgs] = useState<string[]>([]);
     const [sm1, setSm1] = useState(7);
     const [sm2, setSm2] = useState(1);
     
@@ -52,11 +54,38 @@ export function JppUsersPage() {
             .then(({ data }) => { if (data?.color) setThemeColor(data.color); });
     }, []);
 
+    const fetchUsers = async (search: string, prog: string) => {
+        setLoading(true);
+        let query = supabase
+            .from('profiles')
+            .select('id, full_name, email, role, matric_no, programme_code, intake_year, intake_period, semester_override, subscription_tier, ai_token_balance, ai_tier_expiration, jpp_position, club_id');
+
+        if (search) {
+            // Server-side ilike search — no limit issue
+            const s = search.replace(/%/g, '\\%').replace(/_/g, '\\_'); // escape LIKE wildcards
+            query = query.or(`full_name.ilike.%${s}%,email.ilike.%${s}%,matric_no.ilike.%${s}%`);
+        }
+        if (prog !== 'all') {
+            query = query.eq('programme_code', prog);
+        }
+
+        const { data: usersData } = await query.order('full_name', { ascending: true }).limit(200);
+        setAllUsers(usersData || []);
+        setLoading(false);
+    };
+
     const fetchAdminData = async () => {
         setLoading(true);
-        const { data: usersData } = await supabase.from('profiles').select('id, full_name, email, role, matric_no, programme_code, intake_year, intake_period, semester_override, subscription_tier, ai_token_balance, ai_tier_expiration, jpp_position, club_id').order('full_name', { ascending: true });
-        setAllUsers(usersData || []);
-        
+
+        // Total user count — no limit issue
+        const { count } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
+        setUserCount(count || 0);
+
+        // Distinct programmes for filter dropdown — no limit issue
+        const { data: progData } = await supabase.from('profiles').select('programme_code').not('programme_code', 'is', null).order('programme_code').limit(5000);
+        setAllProgs([...new Set((progData || []).map(p => p.programme_code as string))].sort());
+
+        // AI tier requests
         const { data: requestsData } = await supabase.from('ai_tier_requests').select('*, profiles(full_name)').order('created_at', { ascending: false });
         setTierRequests(requestsData || []);
 
@@ -66,8 +95,9 @@ export function JppUsersPage() {
             if (r.key === 'intake_1_month') setSm1(Number(r.value) || 7);
             if (r.key === 'intake_2_month') setSm2(Number(r.value) || 1);
         });
-        
-        setLoading(false);
+
+        // Initial user fetch
+        await fetchUsers('', 'all');
     };
 
     const fetchDuplicates = async () => {
@@ -120,6 +150,7 @@ export function JppUsersPage() {
             });
             // Refresh data
             fetchDuplicates();
+            fetchUsers(userSearch, filterProg);
             fetchAdminData();
         } catch (err: any) {
             toast.error(err.message || 'Ralat tidak dijangka.');
@@ -129,6 +160,13 @@ export function JppUsersPage() {
     useEffect(() => {
         fetchAdminData();
     }, []);
+
+    // Re-fetch users when search or programme filter changes (server-side)
+    useEffect(() => {
+        if (userSearch !== undefined) {
+            fetchUsers(userSearch, filterProg);
+        }
+    }, [userSearch, filterProg]);
 
     const handleTierApprove = async (requestId: string, userId: string, newTier: string, receipt_url: string | null) => {
         if (!confirm('Adakah anda pasti untuk menaik taraf pengguna ini?')) return;
@@ -147,6 +185,7 @@ export function JppUsersPage() {
                 details: `Approved tier '${newTier}' for user ${userId}. Receipt: ${receipt_url}`
             }]);
         }
+        fetchUsers(userSearch, filterProg);
         fetchAdminData();
     };
 
@@ -162,6 +201,7 @@ export function JppUsersPage() {
                 details: `Rejected tier request for user ${userId}. Receipt: ${receipt_url}`
             }]);
         }
+        fetchUsers(userSearch, filterProg);
         fetchAdminData();
     };
 
@@ -170,7 +210,7 @@ export function JppUsersPage() {
         window.open(url, '_blank');
     };
 
-    const uniqueProgs = [...new Set(allUsers.map(u => u.programme_code).filter(Boolean))].sort();
+    const uniqueProgs = allProgs;
 
     const getUserCohort = (u: any) => {
         const isStaff = ['STAFF', 'SUPER_ADMIN_JPP', 'ADMIN'].includes(u.role);
@@ -183,13 +223,6 @@ export function JppUsersPage() {
     };
 
     const filteredUsers = allUsers.filter(u => {
-        const matchSearch = (u.full_name?.toLowerCase() || '').includes(userSearch.toLowerCase()) || 
-            (u.email?.toLowerCase() || '').includes(userSearch.toLowerCase()) ||
-            (u.matric_no?.toLowerCase() || '').includes(userSearch.toLowerCase());
-        if (!matchSearch) return false;
-
-        if (filterProg !== 'all' && u.programme_code !== filterProg) return false;
-
         if (filterLevel !== 'all') {
             const cohort = getUserCohort(u);
             if (!cohort || cohort.level !== filterLevel) return false;
@@ -486,7 +519,7 @@ export function JppUsersPage() {
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
                             <div>
                                 <h3 className="font-bold text-lg text-white">Direktori Pengguna</h3>
-                                <p className="text-[11px] text-white/40 uppercase tracking-widest mt-1">Sistem berdaftar keseluruhan — {filteredUsers.length} rekod</p>
+                                <p className="text-[11px] text-white/40 uppercase tracking-widest mt-1">Sistem berdaftar keseluruhan — {userCount.toLocaleString()} rekod</p>
                             </div>
                             <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
                                 {/* Search */}
@@ -654,7 +687,7 @@ export function JppUsersPage() {
                             </table>
                         </div>
                         {filteredUsers.length > 100 && userSearch === '' && (
-                            <p className="text-center text-[10px] uppercase tracking-widest text-white/30 mt-4">Memaparkan 100 rekod teratas</p>
+                            <p className="text-center text-[10px] uppercase tracking-widest text-white/30 mt-4">Gunakan carian untuk mencari pelajar tertentu</p>
                         )}
                     </div>
                 </motion.div>

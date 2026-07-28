@@ -66,7 +66,10 @@ export function useDashboardData() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchData = useCallback(async (forceRefresh = false) => {
-    if (!clubId || !user) return;
+    if (!clubId || !user) {
+      setIsLoading(false);
+      return;
+    }
 
     const cacheKey = `dashboard_${clubId}_${user.id}`;
 
@@ -123,7 +126,7 @@ export function useDashboardData() {
           .from('programs')
           .select('*')
           .eq('club_id', clubId)
-          .eq('is_archived', false)
+          .or('is_archived.is.null,is_archived.eq.false')
           .order('created_at', { ascending: false }),
           
         // 4. Tasks (Tugasan)
@@ -142,7 +145,7 @@ export function useDashboardData() {
           .from('club_activities')
           .select('*')
           .eq('club_id', clubId)
-          .eq('is_archived', false)
+          .or('is_archived.is.null,is_archived.eq.false')
           .order('created_at', { ascending: false })
       ]);
 

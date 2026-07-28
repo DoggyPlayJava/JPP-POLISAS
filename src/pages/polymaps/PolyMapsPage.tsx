@@ -6,7 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { 
   Search, Navigation, MapPin, Building2, Layers, Clock, X, Menu, 
-  ChevronDown, ChevronRight, Share2, Coffee, Moon, Droplets, 
+  ChevronDown, ChevronRight, ChevronUp, Share2, Coffee, Moon, Droplets, 
   CreditCard, BookOpen, ImageIcon, Map as MapIcon, DoorOpen,
   CloudRain, Sun, HelpCircle, Loader2, Umbrella, CornerUpLeft, 
   CornerUpRight, Compass
@@ -723,6 +723,7 @@ export function PolyMapsPage() {
 
   const [activeImageTab, setActiveImageTab] = useState<'entrance' | 'floorplan' | 'room'>('entrance');
   const [showFullscreenImage, setShowFullscreenImage] = useState<string | null>(null);
+  const [cardExpanded, setCardExpanded] = useState(false);
   
   const [currentStep, setCurrentStep] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -1051,6 +1052,7 @@ export function PolyMapsPage() {
     setHasArrivedManual(false);
     setHasZoomedToNavigation(false);
     setIsFollowingUser(false);
+    setCardExpanded(false);
   };
 
   const startNavigation = () => {
@@ -1143,6 +1145,21 @@ export function PolyMapsPage() {
   const etaMinutes = useMemo(() => {
     return navigationStats.eta;
   }, [navigationStats.eta]);
+
+  // Auto-expand nav card when user arrives within 30m + has indoor directions
+  useEffect(() => {
+    if (!isNavigating || !activeBuilding || !userLocation) return;
+    const dist = calculateDistanceInMeters(
+      userLocation[0], userLocation[1],
+      activeBuilding.center_lat, activeBuilding.center_lng
+    );
+    const arrived = hasArrivedManual || dist <= 30;
+    const hasIndoor = selectedLocation && selectedLocation.direction_text;
+    if (arrived && hasIndoor && !cardExpanded) {
+      setCardExpanded(true);
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+    }
+  }, [isNavigating, activeBuilding, userLocation, hasArrivedManual, selectedLocation, cardExpanded]);
 
   // Sidebar Grouping Logic
   const getLocationsForBuilding = (bId: string) => allLocations.filter(l => l.building_id === bId);
@@ -1650,247 +1667,343 @@ export function PolyMapsPage() {
       <div className="absolute bottom-[70px] sm:bottom-[90px] left-0 right-0 z-[1000] p-3 sm:p-4 pointer-events-none pb-safe">
         <div className="max-w-md mx-auto pointer-events-auto flex flex-col gap-4">
           
-          {/* Navigation Active Banner */}
+          {/* Navigation — Collapsible Mini Bar + Expand */}
           <AnimatePresence>
             {isNavigating && activeBuilding && (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-                className="bg-blue-600 rounded-3xl shadow-2xl p-4 flex flex-col gap-3"
+              <motion.div
+                layout
+                initial={{ opacity: 0, y: 20 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ layout: { duration: 0.3, ease: [0.16, 1, 0.3, 1] } }}
+                className="bg-blue-600/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 overflow-hidden relative"
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-blue-100 text-xs font-bold uppercase tracking-widest">Memandu Arah Ke</p>
-                    <p className="text-white font-black text-lg">{selectedLocation ? selectedLocation.room_code : activeBuilding.code}</p>
-                    {etaMinutes && (
-                      <p className="text-blue-200 text-xs font-bold mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Anggaran: {etaMinutes} minit</span>
-                        {navigationStats.distance !== null && (
-                          <span className="text-blue-300 font-medium">({navigationStats.distance < 1000 ? `${Math.round(navigationStats.distance)}m` : `${(navigationStats.distance / 1000).toFixed(1)}km`})</span>
-                        )}
-                      </p>
-                    )}
-                  </div>
-                  <button 
-                    onClick={() => { setIsNavigating(false); setHasArrivedManual(false); }}
-                    className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl font-bold text-sm transition-colors"
+                {/* ── COLLAPSED: Mini Nav Bar ── */}
+                {!cardExpanded && (
+                  <div 
+                    onClick={() => setCardExpanded(true)}
+                    className="flex items-center justify-between px-5 py-3 cursor-pointer active:scale-[0.99] transition-transform"
                   >
-                    Tamat
-                  </button>
-                </div>                {/* Weather alert warning / covered suggestion */}
-                {weather?.isRaining && (
-                  <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-2xl p-2.5 flex items-center gap-2 text-emerald-100 text-xs mt-1">
-                    <CloudRain className="w-4 h-4 shrink-0 text-emerald-300 animate-bounce" />
-                    <span>Hujan dikesan! Laluan berbumbung diutamakan secara automatik.</span>
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                        <Navigation className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-black text-white/80 uppercase tracking-widest">Memandu Arah Ke</p>
+                        <p className="text-base font-black text-white truncate leading-tight">
+                          {selectedLocation ? selectedLocation.room_code : activeBuilding.code}
+                        </p>
+                        {etaMinutes && (
+                          <p className="text-[10px] font-bold text-blue-200 mt-0.5">
+                            <Clock className="w-3 h-3 inline mr-0.5" />{etaMinutes} minit
+                            {navigationStats.distance !== null && (
+                              <span className="text-blue-300 ml-1">
+                                ({navigationStats.distance < 1000 ? `${Math.round(navigationStats.distance)}m` : `${(navigationStats.distance / 1000).toFixed(1)}km`})
+                              </span>
+                            )}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 ml-3">
+                      <div className="text-[10px] font-bold text-emerald-300 flex items-center gap-1 bg-white/10 px-2.5 py-1 rounded-lg">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Active</span>
+                      </div>
+                      <button
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          setIsNavigating(false); 
+                          setHasArrivedManual(false); 
+                          setCardExpanded(false);
+                        }}
+                        className="bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-xl font-bold text-xs transition-colors active:scale-95"
+                      >
+                        Tamat
+                      </button>
+                    </div>
+                    
+                    {/* Arrival detector — shown in collapsed bar when user arrives */}
+                    {(() => {
+                      const dist = userLocation && activeBuilding?.center_lat
+                        ? calculateDistanceInMeters(userLocation[0], userLocation[1], activeBuilding.center_lat, activeBuilding.center_lng)
+                        : null;
+                      const arrived = hasArrivedManual || (dist !== null && dist <= 30);
+                      const hasIndoor = selectedLocation && selectedLocation.direction_text;
+                      if (!arrived || !hasIndoor) return null;
+                      return (
+                        <div className="mt-2 pt-2 border-t border-white/20">
+                          <div 
+                            onClick={(e) => { e.stopPropagation(); setCardExpanded(true); }}
+                            className="flex items-center gap-2.5 bg-emerald-500/20 rounded-xl px-3 py-2.5 cursor-pointer active:scale-[0.98] transition-transform group"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-emerald-500/30 flex items-center justify-center shrink-0 animate-bounce">
+                              <DoorOpen className="w-4 h-4 text-emerald-300" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-black text-emerald-300">📍 Anda Telah Sampai!</p>
+                              <p className="text-[11px] font-bold text-emerald-200/80">Buka Panduan Dalaman →</p>
+                            </div>
+                            <div className="w-6 h-6 rounded-full bg-emerald-500/30 flex items-center justify-center group-hover:bg-emerald-500/50 transition-colors">
+                              <ChevronUp className="w-3.5 h-3.5 text-emerald-300" />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
 
-                {/* Prefer Covered Walkway Toggle */}
-                <div className="flex items-center justify-between bg-white/10 rounded-2xl p-3 border border-white/10 mt-1">
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-1.5 bg-white/10 rounded-lg text-white">
-                      <Umbrella className="w-4 h-4 text-emerald-300" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-white">Utamakan Laluan Berbumbung</p>
-                      <p className="text-[10px] text-blue-200">Elakkan hujan & panas di kampus</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      if (navigator.vibrate) navigator.vibrate(20);
-                      setPreferCovered(!preferCovered);
-                    }}
-                    className={cn(
-                      "w-10 h-6 rounded-full p-1 transition-colors duration-200 focus:outline-none flex items-center",
-                      preferCovered ? "bg-emerald-400" : "bg-white/25"
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        "w-4 h-4 rounded-full bg-white transition-transform duration-200 shadow-sm",
-                        preferCovered ? "translate-x-4" : "translate-x-0"
-                      )}
-                    />
-                  </button>
-                </div>
-
-                {/* Directions Section */}
-                {(() => {
-                  const distanceMeters = userLocation && activeBuilding?.center_lat
-                    ? calculateDistanceInMeters(userLocation[0], userLocation[1], activeBuilding.center_lat, activeBuilding.center_lng)
-                    : null;
-                  
-                  const hasArrived = hasArrivedManual || (distanceMeters !== null && distanceMeters <= 30);
-                  const hasIndoorDirections = selectedLocation && selectedLocation.direction_text;
-
-                  // If they have arrived AND we have indoor directions, show the Indoor (Langkah Dalaman) card
-                  if (hasIndoorDirections && hasArrived) {
-                    const steps = selectedLocation.direction_text.split(/\r?\n/).filter(s => s.trim().length > 0);
-                    const isMultiStep = steps.length > 1;
-
-                    return (
-                      <div className="bg-white/10 rounded-2xl p-3 border border-white/10 mt-1">
-                        <div className="flex gap-3">
-                          <DoorOpen className="w-4 h-4 text-emerald-300 shrink-0 mt-0.5" />
-                          <div className="flex-1">
-                            {isMultiStep ? (
-                              <div className="flex flex-col">
-                                {/* Segmented Progress Bar */}
-                                <div className="flex gap-1.5 mb-3 w-full">
-                                  {steps.map((_, idx) => (
-                                    <div key={idx} className="h-1 rounded-full flex-1 bg-white/20 overflow-hidden">
-                                      <motion.div 
-                                        className="h-full bg-white"
-                                        initial={false}
-                                        animate={{ 
-                                          width: idx <= currentStep ? '100%' : '0%' 
-                                        }}
-                                        transition={{ duration: 0.3 }}
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
-
-                                <motion.div key={currentStep} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
-                                  <span className="text-[9px] font-black uppercase tracking-widest text-emerald-300 mb-1 block">
-                                    Langkah Dalaman ({currentStep + 1} / {steps.length})
-                                  </span>
-                                  <p className="text-sm font-bold text-white leading-relaxed min-h-[40px]">
-                                    {steps[currentStep]}
-                                  </p>
-                                  <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/10">
-                                    <button 
-                                      disabled={currentStep === 0} 
-                                      onClick={() => {
-                                        if (navigator.vibrate) navigator.vibrate(30);
-                                        setCurrentStep(prev => prev - 1);
-                                      }}
-                                      className="text-xs font-bold text-white/70 disabled:opacity-30 transition-opacity px-3 py-1.5 -ml-3"
-                                    >
-                                      Kembali
-                                    </button>
-                                    <button 
-                                      disabled={currentStep === steps.length - 1} 
-                                      onClick={() => {
-                                        if (navigator.vibrate) navigator.vibrate(50);
-                                        setCurrentStep(prev => prev + 1);
-                                      }}
-                                      className="text-xs font-bold text-white bg-white/10 hover:bg-white/20 rounded-lg disabled:opacity-30 disabled:bg-transparent transition-colors px-4 py-1.5"
-                                    >
-                                      Seterusnya
-                                    </button>
-                                  </div>
-                                </motion.div>
-                              </div>
-                            ) : (
-                              <div>
-                                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-300 mb-1 block">
-                                  Panduan Dalaman
-                                </span>
-                                <p className="text-sm font-bold text-white leading-relaxed">
-                                  {selectedLocation.direction_text}
-                                </p>
-                              </div>
-                            )}
-                          </div>
+                {/* ── EXPANDED: Full Nav Details ── */}
+                {cardExpanded && (
+                  <div className="p-4 flex flex-col gap-3">
+                    {/* Header with collapse */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setCardExpanded(false)}
+                          className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors active:scale-90"
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                        </button>
+                        <div>
+                          <p className="text-blue-100 text-xs font-bold uppercase tracking-widest">Memandu Arah Ke</p>
+                          <p className="text-white font-black text-lg">{selectedLocation ? selectedLocation.room_code : activeBuilding.code}</p>
+                          {etaMinutes && (
+                            <p className="text-blue-200 text-xs font-bold mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                              <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Anggaran: {etaMinutes} minit</span>
+                              {navigationStats.distance !== null && (
+                                <span className="text-blue-300 font-medium">({navigationStats.distance < 1000 ? `${Math.round(navigationStats.distance)}m` : `${(navigationStats.distance / 1000).toFixed(1)}km`})</span>
+                              )}
+                            </p>
+                          )}
                         </div>
                       </div>
-                    );
-                  }
-
-                  // Otherwise, show external walkways navigation (Dijkstra Turn-by-Turn list) and hasArrived toggle if needed
-                  return (
-                    <div className="flex flex-col gap-2 mt-1">
-                      {/* External Walkways Turn-by-Turn Card */}
-                      {navigationSteps.length > 0 && (
-                        <div className="bg-white/10 rounded-2xl border border-white/10 overflow-hidden">
-                          <button
-                            onClick={() => {
-                              if (navigator.vibrate) navigator.vibrate(25);
-                              setShowTbtSteps(!showTbtSteps);
-                            }}
-                            className="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors text-left focus:outline-none"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Compass className="w-4 h-4 text-blue-200 shrink-0" />
-                              <span className="text-xs font-bold text-white">Langkah Perjalanan ({navigationSteps.length - 1} langkah)</span>
-                            </div>
-                            {showTbtSteps ? (
-                              <ChevronDown className="w-4 h-4 text-white/70" />
-                            ) : (
-                              <ChevronRight className="w-4 h-4 text-white/70" />
-                            )}
-                          </button>
-                          
-                          <AnimatePresence>
-                            {showTbtSteps && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                className="border-t border-white/10 max-h-48 overflow-y-auto px-3 py-2 space-y-2.5 bg-black/15 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
-                              >
-                                {navigationSteps.map((step, idx) => {
-                                  // Determine step icon
-                                  let stepIcon = <Navigation className="w-3.5 h-3.5 text-blue-300 rotate-90" />;
-                                  if (step.instruction.toLowerCase().includes('kanan')) {
-                                    stepIcon = <CornerUpRight className="w-3.5 h-3.5 text-emerald-400" />;
-                                  } else if (step.instruction.toLowerCase().includes('kiri')) {
-                                    stepIcon = <CornerUpLeft className="w-3.5 h-3.5 text-rose-400" />;
-                                  } else if (step.instruction.toLowerCase().includes('sampai') || step.instruction.toLowerCase().includes('destinasi')) {
-                                    stepIcon = <MapPin className="w-3.5 h-3.5 text-blue-400" />;
-                                  }
-
-                                  return (
-                                    <div key={idx} className="flex gap-2.5 items-start text-xs">
-                                      <div className="p-1 bg-white/10 rounded-md shrink-0 mt-0.5">
-                                        {stepIcon}
-                                      </div>
-                                      <div className="flex-1">
-                                        <p className="font-semibold text-white leading-tight">{step.instruction}</p>
-                                        {step.distance > 0 && (
-                                          <p className="text-[10px] text-blue-200 mt-0.5 flex items-center gap-1.5">
-                                            <span>Jalan terus {step.distance}m</span>
-                                            {step.isCovered && (
-                                              <span className="inline-flex items-center gap-0.5 px-1 py-0.2 bg-emerald-500/20 text-emerald-300 rounded text-[8px] font-black uppercase">
-                                                <Umbrella className="w-2.5 h-2.5" /> Berbumbung
-                                              </span>
-                                            )}
-                                          </p>
-                                        )}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      )}
-
-                      {/* Manual "Seterusnya" for indoor entrance */}
-                      {hasIndoorDirections && !hasArrived && (
-                        <div className="bg-white/10 rounded-2xl p-3 border border-white/10 flex flex-col gap-2">
-                          <p className="text-xs text-white leading-relaxed">
-                            Panduan dalaman bilik akan dibuka secara automatik apabila anda berada &lt; 30m dari bangunan.
-                          </p>
-                          <div className="flex justify-between items-center pt-2 border-t border-white/10">
-                            <span className="text-[10px] font-bold text-white/60">Jarak ke bangunan: {distanceMeters !== null ? `${Math.round(distanceMeters)}m` : 'mengira...'}</span>
-                            <button 
-                              onClick={() => {
-                                if (navigator.vibrate) navigator.vibrate(40);
-                                setHasArrivedManual(true);
-                              }}
-                              className="text-xs font-bold text-white bg-white/20 hover:bg-white/30 px-3.5 py-1.5 rounded-xl transition-colors flex items-center gap-1"
-                            >
-                              Seterusnya <ChevronRight className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      )}
+                      <button 
+                        onClick={() => { setIsNavigating(false); setHasArrivedManual(false); setCardExpanded(false); }}
+                        className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl font-bold text-sm transition-colors shrink-0 ml-3"
+                      >
+                        Tamat
+                      </button>
                     </div>
-                  );
-                })()}
+
+                    {/* Weather alert warning / covered suggestion */}
+                    {weather?.isRaining && (
+                      <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-2xl p-2.5 flex items-center gap-2 text-emerald-100 text-xs mt-1">
+                        <CloudRain className="w-4 h-4 shrink-0 text-emerald-300 animate-bounce" />
+                        <span>Hujan dikesan! Laluan berbumbung diutamakan secara automatik.</span>
+                      </div>
+                    )}
+
+                    {/* Prefer Covered Walkway Toggle */}
+                    <div className="flex items-center justify-between bg-white/10 rounded-2xl p-3 border border-white/10 mt-1">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-1.5 bg-white/10 rounded-lg text-white">
+                          <Umbrella className="w-4 h-4 text-emerald-300" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-white">Utamakan Laluan Berbumbung</p>
+                          <p className="text-[10px] text-blue-200">Elakkan hujan & panas di kampus</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (navigator.vibrate) navigator.vibrate(20);
+                          setPreferCovered(!preferCovered);
+                        }}
+                        className={cn(
+                          "w-10 h-6 rounded-full p-1 transition-colors duration-200 focus:outline-none flex items-center",
+                          preferCovered ? "bg-emerald-400" : "bg-white/25"
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "w-4 h-4 rounded-full bg-white transition-transform duration-200 shadow-sm",
+                            preferCovered ? "translate-x-4" : "translate-x-0"
+                          )}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Directions Section */}
+                    {(() => {
+                      const distanceMeters = userLocation && activeBuilding?.center_lat
+                        ? calculateDistanceInMeters(userLocation[0], userLocation[1], activeBuilding.center_lat, activeBuilding.center_lng)
+                        : null;
+                      
+                      const hasArrived = hasArrivedManual || (distanceMeters !== null && distanceMeters <= 30);
+                      const hasIndoorDirections = selectedLocation && selectedLocation.direction_text;
+
+                      // If they have arrived AND we have indoor directions, show the Indoor (Langkah Dalaman) card
+                      if (hasIndoorDirections && hasArrived) {
+                        const steps = selectedLocation.direction_text.split(/\r?\n/).filter(s => s.trim().length > 0);
+                        const isMultiStep = steps.length > 1;
+
+                        return (
+                          <div className="bg-white/10 rounded-2xl p-3 border border-white/10 mt-1">
+                            <div className="flex gap-3">
+                              <DoorOpen className="w-4 h-4 text-emerald-300 shrink-0 mt-0.5" />
+                              <div className="flex-1">
+                                {isMultiStep ? (
+                                  <div className="flex flex-col">
+                                    {/* Segmented Progress Bar */}
+                                    <div className="flex gap-1.5 mb-3 w-full">
+                                      {steps.map((_, idx) => (
+                                        <div key={idx} className="h-1 rounded-full flex-1 bg-white/20 overflow-hidden">
+                                          <motion.div 
+                                            className="h-full bg-white"
+                                            initial={false}
+                                            animate={{ 
+                                              width: idx <= currentStep ? '100%' : '0%' 
+                                            }}
+                                            transition={{ duration: 0.3 }}
+                                          />
+                                        </div>
+                                      ))}
+                                    </div>
+
+                                    <motion.div key={currentStep} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
+                                      <span className="text-[9px] font-black uppercase tracking-widest text-emerald-300 mb-1 block">
+                                        Langkah Dalaman ({currentStep + 1} / {steps.length})
+                                      </span>
+                                      <p className="text-sm font-bold text-white leading-relaxed min-h-[40px]">
+                                        {steps[currentStep]}
+                                      </p>
+                                      <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/10">
+                                        <button 
+                                          disabled={currentStep === 0} 
+                                          onClick={() => {
+                                            if (navigator.vibrate) navigator.vibrate(30);
+                                            setCurrentStep(prev => prev - 1);
+                                          }}
+                                          className="text-xs font-bold text-white/70 disabled:opacity-30 transition-opacity px-3 py-1.5 -ml-3"
+                                        >
+                                          Kembali
+                                        </button>
+                                        <button 
+                                          disabled={currentStep === steps.length - 1} 
+                                          onClick={() => {
+                                            if (navigator.vibrate) navigator.vibrate(50);
+                                            setCurrentStep(prev => prev + 1);
+                                          }}
+                                          className="text-xs font-bold text-white bg-white/10 hover:bg-white/20 rounded-lg disabled:opacity-30 disabled:bg-transparent transition-colors px-4 py-1.5"
+                                        >
+                                          Seterusnya
+                                        </button>
+                                      </div>
+                                    </motion.div>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-emerald-300 mb-1 block">
+                                      Panduan Dalaman
+                                    </span>
+                                    <p className="text-sm font-bold text-white leading-relaxed">
+                                      {selectedLocation.direction_text}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // Otherwise, show external walkways navigation (Dijkstra Turn-by-Turn list) and hasArrived toggle if needed
+                      return (
+                        <div className="flex flex-col gap-2 mt-1">
+                          {/* External Walkways Turn-by-Turn Card */}
+                          {navigationSteps.length > 0 && (
+                            <div className="bg-white/10 rounded-2xl border border-white/10 overflow-hidden">
+                              <button
+                                onClick={() => {
+                                  if (navigator.vibrate) navigator.vibrate(25);
+                                  setShowTbtSteps(!showTbtSteps);
+                                }}
+                                className="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors text-left focus:outline-none"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Compass className="w-4 h-4 text-blue-200 shrink-0" />
+                                  <span className="text-xs font-bold text-white">Langkah Perjalanan ({navigationSteps.length - 1} langkah)</span>
+                                </div>
+                                {showTbtSteps ? (
+                                  <ChevronDown className="w-4 h-4 text-white/70" />
+                                ) : (
+                                  <ChevronRight className="w-4 h-4 text-white/70" />
+                                )}
+                              </button>
+                              
+                              <AnimatePresence>
+                                {showTbtSteps && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="border-t border-white/10 max-h-48 overflow-y-auto px-3 py-2 space-y-2.5 bg-black/15 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
+                                  >
+                                    {navigationSteps.map((step, idx) => {
+                                      // Determine step icon
+                                      let stepIcon = <Navigation className="w-3.5 h-3.5 text-blue-300 rotate-90" />;
+                                      if (step.instruction.toLowerCase().includes('kanan')) {
+                                        stepIcon = <CornerUpRight className="w-3.5 h-3.5 text-emerald-400" />;
+                                      } else if (step.instruction.toLowerCase().includes('kiri')) {
+                                        stepIcon = <CornerUpLeft className="w-3.5 h-3.5 text-rose-400" />;
+                                      } else if (step.instruction.toLowerCase().includes('sampai') || step.instruction.toLowerCase().includes('destinasi')) {
+                                        stepIcon = <MapPin className="w-3.5 h-3.5 text-blue-400" />;
+                                      }
+
+                                      return (
+                                        <div key={idx} className="flex gap-2.5 items-start text-xs">
+                                          <div className="p-1 bg-white/10 rounded-md shrink-0 mt-0.5">
+                                            {stepIcon}
+                                          </div>
+                                          <div className="flex-1">
+                                            <p className="font-semibold text-white leading-tight">{step.instruction}</p>
+                                            {step.distance > 0 && (
+                                              <p className="text-[10px] text-blue-200 mt-0.5 flex items-center gap-1.5">
+                                                <span>Jalan terus {step.distance}m</span>
+                                                {step.isCovered && (
+                                                  <span className="inline-flex items-center gap-0.5 px-1 py-0.2 bg-emerald-500/20 text-emerald-300 rounded text-[8px] font-black uppercase">
+                                                    <Umbrella className="w-2.5 h-2.5" /> Berbumbung
+                                                  </span>
+                                                )}
+                                              </p>
+                                            )}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          )}
+
+                          {/* Manual "Seterusnya" for indoor entrance */}
+                          {hasIndoorDirections && !hasArrived && (
+                            <div className="bg-white/10 rounded-2xl p-3 border border-white/10 flex flex-col gap-2">
+                              <p className="text-xs text-white leading-relaxed">
+                                Panduan dalaman bilik akan dibuka secara automatik apabila anda berada &lt; 30m dari bangunan.
+                              </p>
+                              <div className="flex justify-between items-center pt-2 border-t border-white/10">
+                                <span className="text-[10px] font-bold text-white/60">Jarak ke bangunan: {distanceMeters !== null ? `${Math.round(distanceMeters)}m` : 'mengira...'}</span>
+                                <button 
+                                  onClick={() => {
+                                    if (navigator.vibrate) navigator.vibrate(40);
+                                    setHasArrivedManual(true);
+                                  }}
+                                  className="text-xs font-bold text-white bg-white/20 hover:bg-white/30 px-3.5 py-1.5 rounded-xl transition-colors flex items-center gap-1"
+                                >
+                                  Seterusnya <ChevronRight className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -1915,150 +2028,218 @@ export function PolyMapsPage() {
             </div>
           )}
 
-          {/* Info Card / Drone View */}
+          {/* Info Card / Drone View — Collapsible Mini Bar + Expand */}
           <AnimatePresence>
             {activeBuilding && !isNavigating && (
               <motion.div
+                layout
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 50 }}
-                className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden relative"
+                transition={{ layout: { duration: 0.3, ease: [0.16, 1, 0.3, 1] } }}
+                className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/60 dark:border-slate-800/60 overflow-hidden relative"
               >
-                {/* Close Button */}
-                <button 
-                  onClick={dismissCard}
-                  className="absolute top-3 right-3 z-10 w-8 h-8 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-
-                {/* Media Area */}
-                <div className="w-full h-32 sm:h-48 bg-slate-100 dark:bg-slate-800 relative">
-                  {/* Media Content */}
-                  {activeImageTab === 'entrance' && activeBuilding.entrance_image_url && (
-                    <img src={activeBuilding.entrance_image_url} alt="Entrance View" loading="lazy" decoding="async" className="w-full h-full object-cover" />
-                  )}
-                  {activeImageTab === 'floorplan' && activeBuilding.floorplan_image_url && (
-                    <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowFullscreenImage(activeBuilding.floorplan_image_url!)}>
-                      <img src={activeBuilding.floorplan_image_url} alt="Floorplan View" loading="lazy" decoding="async" className="w-full h-full object-contain bg-white dark:bg-slate-900 p-2" />
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                        <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">Tekan untuk Zoom</span>
+                {/* ── COLLAPSED: Mini Bar ── */}
+                {!cardExpanded && (
+                  <div 
+                    onClick={() => setCardExpanded(true)}
+                    className="flex items-center justify-between px-5 py-3 cursor-pointer active:scale-[0.99] transition-transform"
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      {/* Mini building icon */}
+                      <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                        <MapPin className="w-4 h-4" />
                       </div>
-                    </div>
-                  )}
-                  {activeImageTab === 'room' && selectedLocation?.image_url && (
-                    <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowFullscreenImage(selectedLocation.image_url!)}>
-                      <img src={selectedLocation.image_url} alt="Room View" loading="lazy" decoding="async" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                        <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">Tekan untuk Zoom</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Empty state fallback */}
-                  {((activeImageTab === 'entrance' && !activeBuilding.entrance_image_url) || 
-                    (activeImageTab === 'floorplan' && !activeBuilding.floorplan_image_url) ||
-                    (activeImageTab === 'room' && !selectedLocation?.image_url)) && (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
-                      {activeImageTab === 'floorplan' ? <MapIcon className="w-10 h-10 mb-2 opacity-50" /> : <ImageIcon className="w-10 h-10 mb-2 opacity-50" />}
-                      <span className="text-[10px] font-black uppercase tracking-widest">Tiada Imej {activeImageTab === 'entrance' ? 'Pintu Masuk' : activeImageTab === 'floorplan' ? 'Pelan Lantai' : 'Bilik'}</span>
-                    </div>
-                  )}
-                  
-                  {selectedLocation && (
-                    <div className="absolute top-3 left-3 bg-emerald-500/90 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase">
-                      LOKASI JUMPA
-                    </div>
-                  )}
-
-                  {/* Media Tabs */}
-                  {((activeBuilding.entrance_image_url ? 1 : 0) + (activeBuilding.floorplan_image_url ? 1 : 0) + ((selectedLocation && selectedLocation.image_url) ? 1 : 0)) > 1 && (
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 bg-black/40 backdrop-blur-md p-1 rounded-full border border-white/10">
-                      {activeBuilding.entrance_image_url && (
-                        <button onClick={() => setActiveImageTab('entrance')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'entrance' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Depan</button>
-                      )}
-                      {activeBuilding.floorplan_image_url && (
-                        <button onClick={() => setActiveImageTab('floorplan')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'floorplan' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Lantai</button>
-                      )}
-                      {selectedLocation && selectedLocation.image_url && (
-                        <button onClick={() => setActiveImageTab('room')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'room' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Bilik</button>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Details Area */}
-                <div className="p-5">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
+                      <div className="min-w-0">
+                        <p className="text-sm font-black text-slate-900 dark:text-white truncate leading-tight">
                           {selectedLocation ? selectedLocation.room_code : activeBuilding.name}
-                        </h2>
+                        </p>
+                        {selectedLocation && (
+                          <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate flex items-center gap-1">
+                            <Building2 className="w-3 h-3 shrink-0" />
+                            <span className="truncate">{activeBuilding.name} · T{selectedLocation.floor_level}</span>
+                          </p>
+                        )}
+                        {!selectedLocation && (
+                          <p className="text-[10px] font-bold text-sky-500 dark:text-sky-400 truncate">
+                            Kod: {activeBuilding.code}
+                          </p>
+                        )}
                       </div>
-                      
-                      {/* Facility Live Status */}
-                      {activeBuilding.is_facility && activeBuilding.op_start && activeBuilding.op_end && !selectedLocation && (
-                        <div className="mt-1 mb-2 flex items-center gap-1.5">
-                          {checkIsOpen(activeBuilding.op_start, activeBuilding.op_end) ? (
-                            <span className="inline-flex items-center gap-1 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> BUKA ({activeBuilding.op_start.slice(0,5)} - {activeBuilding.op_end.slice(0,5)})
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
-                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> TUTUP
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {selectedLocation && (
-                        <p className="text-sm font-bold text-slate-500 flex items-center gap-1.5 mt-1">
-                          <Building2 className="w-4 h-4" /> {activeBuilding.name}
-                        </p>
-                      )}
-                      {!selectedLocation && (
-                        <p className="text-sm font-bold text-sky-500 flex items-center gap-1.5 mt-1">
-                          Kod: {activeBuilding.code}
-                        </p>
-                      )}
                     </div>
-                    <div className="flex flex-col gap-2 items-end">
-                      {selectedLocation && (
-                        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex flex-col items-center justify-center shrink-0 ml-3">
-                          <Layers className="w-4 h-4" />
-                          <span className="text-[10px] font-black">T{selectedLocation.floor_level}</span>
-                        </div>
-                      )}
-                      <button 
-                        onClick={handleShare}
-                        className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                        title="Kongsi Lokasi"
+                    <div className="flex items-center gap-2 shrink-0 ml-3">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); startNavigation(); }}
+                        className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-black text-xs transition-colors shadow-lg shadow-blue-500/30 active:scale-95"
                       >
-                        <Share2 className="w-4 h-4" />
+                        <Navigation className="w-3.5 h-3.5" />
+                        <span>Pandu</span>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); dismissCard(); }}
+                        className="w-7 h-7 rounded-full bg-slate-200/70 dark:bg-slate-700/70 hover:bg-slate-300/70 dark:hover:bg-slate-600/70 flex items-center justify-center text-slate-500 dark:text-slate-300 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
+                )}
 
+                {/* ── EXPANDED: Full Card ── */}
+                {cardExpanded && (
+                  <>
+                    {/* Close Button */}
+                    <button 
+                      onClick={() => setCardExpanded(false)}
+                      className="absolute top-3 right-3 z-10 w-8 h-8 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors"
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
 
-                  
-                  {/* Action Buttons */}
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={startNavigation}
-                      className="tour-polymaps-navigate w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-2xl font-black text-sm transition-colors shadow-lg shadow-blue-500/30"
-                    >
-                      <Navigation className="w-4 h-4" /> Mula Pandu Arah
-                    </button>
-                    
-                    <button
-                      onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${activeBuilding.center_lat},${activeBuilding.center_lng}`, '_blank')}
-                      className="w-full text-center text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 text-xs font-bold transition-colors mt-1 underline underline-offset-2"
-                    >
-                      Memandu dari luar kampus? Buka Google Maps
-                    </button>
-                  </div>
-                </div>
+                    {/* Media Area */}
+                    <div className="w-full h-32 sm:h-48 bg-slate-100 dark:bg-slate-800 relative">
+                      {/* Media Content */}
+                      {activeImageTab === 'entrance' && activeBuilding.entrance_image_url && (
+                        <img src={activeBuilding.entrance_image_url} alt="Entrance View" loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                      )}
+                      {activeImageTab === 'floorplan' && activeBuilding.floorplan_image_url && (
+                        <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowFullscreenImage(activeBuilding.floorplan_image_url!)}>
+                          <img src={activeBuilding.floorplan_image_url} alt="Floorplan View" loading="lazy" decoding="async" className="w-full h-full object-contain bg-white dark:bg-slate-900 p-2" />
+                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">Tekan untuk Zoom</span>
+                          </div>
+                        </div>
+                      )}
+                      {activeImageTab === 'room' && selectedLocation?.image_url && (
+                        <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowFullscreenImage(selectedLocation.image_url!)}>
+                          <img src={selectedLocation.image_url} alt="Room View" loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">Tekan untuk Zoom</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Empty state fallback */}
+                      {((activeImageTab === 'entrance' && !activeBuilding.entrance_image_url) || 
+                        (activeImageTab === 'floorplan' && !activeBuilding.floorplan_image_url) ||
+                        (activeImageTab === 'room' && !selectedLocation?.image_url)) && (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                          {activeImageTab === 'floorplan' ? <MapIcon className="w-10 h-10 mb-2 opacity-50" /> : <ImageIcon className="w-10 h-10 mb-2 opacity-50" />}
+                          <span className="text-[10px] font-black uppercase tracking-widest">Tiada Imej {activeImageTab === 'entrance' ? 'Pintu Masuk' : activeImageTab === 'floorplan' ? 'Pelan Lantai' : 'Bilik'}</span>
+                        </div>
+                      )}
+                      
+                      {selectedLocation && (
+                        <div className="absolute top-3 left-3 bg-emerald-500/90 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase">
+                          LOKASI JUMPA
+                        </div>
+                      )}
+
+                      {/* Media Tabs */}
+                      {((activeBuilding.entrance_image_url ? 1 : 0) + (activeBuilding.floorplan_image_url ? 1 : 0) + ((selectedLocation && selectedLocation.image_url) ? 1 : 0)) > 1 && (
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 bg-black/40 backdrop-blur-md p-1 rounded-full border border-white/10">
+                          {activeBuilding.entrance_image_url && (
+                            <button onClick={() => setActiveImageTab('entrance')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'entrance' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Depan</button>
+                          )}
+                          {activeBuilding.floorplan_image_url && (
+                            <button onClick={() => setActiveImageTab('floorplan')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'floorplan' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Lantai</button>
+                          )}
+                          {selectedLocation && selectedLocation.image_url && (
+                            <button onClick={() => setActiveImageTab('room')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'room' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Bilik</button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Details Area */}
+                    <div className="p-5">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
+                              {selectedLocation ? selectedLocation.room_code : activeBuilding.name}
+                            </h2>
+                          </div>
+                          
+                          {/* Facility Live Status */}
+                          {activeBuilding.is_facility && activeBuilding.op_start && activeBuilding.op_end && !selectedLocation && (
+                            <div className="mt-1 mb-2 flex items-center gap-1.5">
+                              {checkIsOpen(activeBuilding.op_start, activeBuilding.op_end) ? (
+                                <span className="inline-flex items-center gap-1 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> BUKA ({activeBuilding.op_start.slice(0,5)} - {activeBuilding.op_end.slice(0,5)})
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> TUTUP
+                                </span>
+                              )}
+                            </div>
+                          )}
+
+                          {selectedLocation && (
+                            <p className="text-sm font-bold text-slate-500 flex items-center gap-1.5 mt-1">
+                              <Building2 className="w-4 h-4" /> {activeBuilding.name}
+                            </p>
+                          )}
+                          {!selectedLocation && (
+                            <p className="text-sm font-bold text-sky-500 flex items-center gap-1.5 mt-1">
+                              Kod: {activeBuilding.code}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-2 items-end">
+                          {selectedLocation && (
+                            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex flex-col items-center justify-center shrink-0 ml-3">
+                              <Layers className="w-4 h-4" />
+                              <span className="text-[10px] font-black">T{selectedLocation.floor_level}</span>
+                            </div>
+                          )}
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleShare(); }}
+                            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                            title="Kongsi Lokasi"
+                          >
+                            <Share2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Collapse hint */}
+                      <button
+                        onClick={() => setCardExpanded(false)}
+                        className="w-full mb-3 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors active:scale-95"
+                      >
+                        <ChevronDown className="w-3.5 h-3.5" />
+                        <span>Lipat Kad</span>
+                      </button>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-col gap-2">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); startNavigation(); }}
+                          className="tour-polymaps-navigate w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-2xl font-black text-sm transition-colors shadow-lg shadow-blue-500/30 active:scale-[0.98]"
+                        >
+                          <Navigation className="w-4 h-4" /> Mula Pandu Arah
+                        </button>
+                        
+                        <button
+                          onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${activeBuilding.center_lat},${activeBuilding.center_lng}`, '_blank')}
+                          className="w-full text-center text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 text-xs font-bold transition-colors mt-1 underline underline-offset-2"
+                        >
+                          Memandu dari luar kampus? Buka Google Maps
+                        </button>
+
+                        {/* Dismiss card */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); dismissCard(); }}
+                          className="w-full text-center text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 text-[10px] font-bold transition-colors mt-1"
+                        >
+                          Tutup
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </motion.div>
             )}
           </AnimatePresence>

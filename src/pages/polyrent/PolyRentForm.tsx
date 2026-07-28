@@ -105,7 +105,8 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
           const parsed = JSON.parse(savedDraft);
           // Only use draft if it has actual changes to avoid overriding contact info default incorrectly
           if (parsed.title || parsed.lokasi) {
-            setFormData(prev => ({ ...prev, ...parsed }));
+            const { image_files: _, ...cleanData } = parsed;
+            setFormData(prev => ({ ...prev, ...cleanData, image_files: [] }));
             toast.success('Draf disimpan sebelum ini dipulihkan.', { icon: '📝' });
           }
         } catch (e) {
@@ -121,7 +122,8 @@ export function PolyRentForm({ onClose, onSuccess }: PolyRentFormProps) {
       const draftKey = `polyrent_draft_${profile.id}`;
       // Avoid saving completely empty form as draft immediately
       if (formData.title || formData.lokasi || formData.sewa_bulanan) {
-        localStorage.setItem(draftKey, JSON.stringify(formData));
+        const { image_files, ...draftData } = formData;
+        localStorage.setItem(draftKey, JSON.stringify(draftData));
       }
     }
   }, [formData, profile]);

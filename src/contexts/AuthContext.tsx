@@ -308,7 +308,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn('[AuthContext] Safety timeout triggered — forcing isLoading=false');
         setIsLoading(false);
       }
-    }, 4000);
+    }, 2500);
 
     const initialize = async () => {
       try {

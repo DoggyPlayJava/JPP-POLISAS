@@ -168,7 +168,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
     try {
       if (activeTab === 'POLYSUARA' || activeTab === 'ANALITIK') {
         const [suaraRes, reportsRes, reportedCommentsRes, commentReportsRes, activeCommentsRes] = await Promise.all([
-          supabase.from('polysuara_confessions').select('id, content, category, upvotes, downvotes, created_at, official_reply, official_reply_at, status, codename, hashtags, author_reply, author_reply_at, image_url, is_pinned, is_approved, is_hidden_by_community, author_id, profiles:author_id(full_name, matric_no)').eq('is_archived', false).order('is_pinned', { ascending: false }).order('created_at', { ascending: false }).limit(500),
+          supabase.from('polysuara_confessions').select('id, content, category, upvotes, downvotes, created_at, official_reply, official_reply_at, status, codename, hashtags, author_reply, author_reply_at, image_url, is_pinned, is_approved, is_hidden_by_community, author_id, profiles:author_id(full_name, matric_no)').or('is_archived.is.null,is_archived.eq.false').order('is_pinned', { ascending: false }).order('created_at', { ascending: false }).limit(500),
           supabase.from('polyservices_reports').select('target_id, reason, created_at, profiles:reporter_id(matric_no)').eq('target_type', 'SUARA'),
           supabase.from('polysuara_comments').select('id, confession_id, content, codename, is_hidden_by_community, upvotes, downvotes, reports_count, created_at, profiles:user_id(matric_no)').or('reports_count.gt.0,is_hidden_by_community.eq.true').order('created_at', { ascending: false }),
           supabase.from('polysuara_comment_reports').select('comment_id, reason, profiles:reporter_id(matric_no)'),

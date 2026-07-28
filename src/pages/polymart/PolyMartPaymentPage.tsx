@@ -306,7 +306,17 @@ export function PolyMartPaymentPage() {
             {/* Top Gateway Summary */}
             <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-card p-5 shadow-xl space-y-4">
               {/* Receipt Uploaded Status vs Countdown Timer */}
-              {order.payment_receipt_url ? (
+              {order.payment_receipt_rejected ? (
+                <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20">
+                  <AlertCircle className="w-5 h-5 text-rose-500 shrink-0" />
+                  <div>
+                    <h4 className="text-xs font-black text-rose-600">⚠ Resit Ditolak</h4>
+                    <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                      Resit sebelum ini tidak sah. Sila muat naik resit baharu di bawah. Tempoh pembayaran diteruskan semula.
+                    </p>
+                  </div>
+                </div>
+              ) : order.payment_receipt_url ? (
                 <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
                   <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
                     <Check className="w-4 h-4 text-emerald-500 animate-pulse" />

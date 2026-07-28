@@ -161,7 +161,7 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
       .from('club_activities')
       .select('*, creator:profiles!user_id(full_name)')
       .eq('club_id', selectedClubId)
-      .eq('is_archived', false)
+      .or('is_archived.is.null,is_archived.eq.false')
       .order('start_date', { ascending: false })
       .limit(100);
     if (!error) setActivities(data || []);
@@ -888,23 +888,14 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
       .from('programs')
       .select('*')
       .eq('club_id', selectedClubId)
-      .eq('is_archived', false)
+      .or('is_archived.is.null,is_archived.eq.false')
       .order('tarikh_mula', { ascending: true });
 
     if (progByClub && progByClub.length > 0) {
       setActivities(progByClub);
     } else {
-      // Fallback: guna user_id lookup (untuk data yang dicipta sebelum migration)
-      const { data: members } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('club_id', selectedClubId);
-      const memberIds = members?.length ? members.map((m: any) => m.id) : [user?.id];
-      const { data } = await supabase
-        .from('programs')
-        .select('*')
-        .in('user_id', memberIds)
-        .order('tarikh_mula', { ascending: true });
+      // Fallback: guna RPC function (elak URL lampau panjang)
+      const { data } = await supabase.rpc('get_club_programs', { p_club_id: selectedClubId });
       if (data) setActivities(data);
     }
 
@@ -1064,18 +1055,18 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
   };
 
   const handleDeleteProgram = async (actId: string) => {
-    if (!window.confirm('Arkib draf program ini? Data tidak akan dipadam secara kekal.')) return;
+    if (!window.confirm('Padam draf program ini secara kekal? Tindakan ini tidak boleh dibuat semula.')) return;
     try {
       setSaving(true);
       const { error } = await supabase
         .from('programs')
-        .update({ is_archived: true })
+        .delete()
         .eq('id', actId);
       if (error) throw error;
-      toast.success('Draf berjaya diarkibkan.');
+      toast.success('Draf berjaya dipadam.');
       load();
     } catch (e: any) {
-      toast.error('Gagal mengarkibkan draf: ' + e.message);
+      toast.error('Gagal memadam draf: ' + e.message);
     } finally {
       setSaving(false);
     }
@@ -1085,9 +1076,9 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
     (a.status === 'DRAFT' && differenceInDays(parseISO(a.tarikh_mula), new Date()) <= 14) ||
     ((a.status === 'DRAFT' || a.status === 'PENDING_POSTMORTEM') && !!a.jpp_remarks)
   );
-  const activeZone = activities.filter(a => ['CONFIRMED', 'PENDING_APPROVAL', 'REQUEST_UNLOCK'].includes(a.status) && !urgentItems.includes(a));
-  const draftingZone = activities.filter(a => a.status === 'DRAFT' && !urgentItems.includes(a));
-  const archiveZone = activities.filter(a => a.status === 'COMPLETED');
+  const activeZone = activities.filter(a => ['CONFIRMED', 'PENDING_APPROVAL', 'REQUEST_UNLOCK'].includes(a.status) && !urgentItems.includes(a) && !a.is_archived);
+  const draftingZone = activities.filter(a => a.status === 'DRAFT' && !urgentItems.includes(a) && !a.is_archived);
+  const archiveZone = activities.filter(a => a.status === 'COMPLETED' && !a.is_archived);
 
   const openCreate = () => {
     setEditTarget(null);

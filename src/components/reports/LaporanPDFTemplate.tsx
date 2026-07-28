@@ -177,6 +177,8 @@ interface LaporanPDFProps {
   jppOrgName?: string;
   /** Nama politeknik (default: POLITEKNIK SULTAN HAJI AHMAD SHAH) */
   polytechnicName?: string;
+  /** Label julat bulan untuk laporan gabungan (contoh: "MEI - JUN 2026") — gantikan monthYear cover */
+  dateRange?: string;
 }
 
 // ─── Exact Helvetica-Bold glyph widths (units per 1000em) ─────────────────────
@@ -244,6 +246,7 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
   submitterName,
   submitterRole,
   submitterUnit,
+  dateRange,
   presidenName = "NAMA PRESIDEN KELAB",
   reviewerRole = "PRESIDEN",
   reviewerUnit,
@@ -294,10 +297,19 @@ export const LaporanPDFTemplate: React.FC<LaporanPDFProps> = ({
         </View>
 
         <View style={styles.coverCenter}>
-          {/* 3 baris berasingan, semua saiz sama (40pt bold) */}
-          <Text style={styles.coverTitleLine}>LAPORAN BULAN</Text>
-          <Text style={styles.coverTitleLine}>{coverMonth}</Text>
-          <Text style={styles.coverTitleLine}>{coverYear}</Text>
+          {dateRange ? (
+            <>
+              <Text style={styles.coverTitleLine}>LAPORAN BULAN</Text>
+              <Text style={[styles.coverTitleLine, { fontSize: 28 }]}>{dateRange}</Text>
+              <Text style={[styles.coverTitleLine, { fontSize: 16, marginTop: 8, fontWeight: 'normal' }]}>(GABUNGAN)</Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.coverTitleLine}>LAPORAN BULAN</Text>
+              <Text style={styles.coverTitleLine}>{coverMonth}</Text>
+              <Text style={styles.coverTitleLine}>{coverYear}</Text>
+            </>
+          )}
         </View>
 
         <View style={[

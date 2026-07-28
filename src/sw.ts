@@ -22,9 +22,10 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// ── Precache offline fallback FIRST (install event) ──────────────────────────
-// Ini memastikan offline.html sentiasa tersedia walaupun server/tunnel mati sepenuhnya
+// ── Install event: precache offline.html + skip waiting ────────────────────
 self.addEventListener('install', (event) => {
+  // Skip waiting — new SW activates immediately after install
+  self.skipWaiting();
   event.waitUntil(
     caches.open(OFFLINE_CACHE).then((cache) => cache.add(OFFLINE_URL))
   );
@@ -36,22 +37,25 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 // ── Cache strategies ──────────────────────────────────────────────────────────
 
-// HTML pages — Robust SPA Navigation Handler with Offline Fallback
-// Strategi: Precache → Network → offline.html
+// HTML pages — Network First with Offline Fallback
+// Strategi: Network → Precache → offline.html
+// Network-first ensures fresh JS chunks after deploy (no stale shell problem)
 registerRoute(
   ({ request, url }) => request.mode === 'navigate' && !url.pathname.startsWith('/api/'),
   async ({ request }) => {
-    // Cuba 1: Hidangkan index.html dari precache (paling cepat)
+    // Cuba 1: Fetch dari network (fresh index.html dengan JS hash terkini)
+    try {
+      const networkResponse = await fetch(request);
+      if (networkResponse.ok && networkResponse.status < 400) {
+        return networkResponse;
+      }
+    } catch (_e) { /* Network gagal — fallback ke cache */ }
+
+    // Cuba 2: Hidangkan index.html dari precache (stale tapi lebih baik dari offline)
     try {
       const precachedResponse = await matchPrecache('index.html');
       if (precachedResponse) return precachedResponse;
     } catch (_e) { /* Precache miss — teruskan */ }
-
-    // Cuba 2: Fetch dari network
-    try {
-      const networkResponse = await fetch(request);
-      if (networkResponse.ok) return networkResponse;
-    } catch (_e) { /* Network gagal — teruskan */ }
 
     // Cuba 3: Hidangkan halaman offline.html yang berjenama
     try {

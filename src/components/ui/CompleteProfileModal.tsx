@@ -132,10 +132,14 @@ export function CompleteProfileModal() {
   if (isProfileComplete) return null;
 
   // ── Scenario flags ───────────────────────────────────────────────────────
-  const isOnlyMissingPhone    = hasMatric && hasDept && hasPhone && !hasCohort === false &&
-                                hasMatric && hasDept && !hasPhone && hasCohort;
+  // Note: hasDept=true implies department is set, hasCohort=true implies
+  // programme_code + intake_year + intake_period are all set.
+  // Any user who has matric_no but no department/cohort falls through to
+  // isMissingCoreFields so they never see an empty form.
+  const isOnlyMissingPhone    = hasMatric && hasDept && !hasPhone && hasCohort;
   const isOnlyMissingCohort   = hasMatric && hasDept && hasPhone && !hasCohort;
   const isMissingPhoneAndCohort = hasMatric && hasDept && !hasPhone && !hasCohort;
+  const isMissingCoreFields   = hasMatric && !hasDept;  // need dept + phone + everything
   const isFullRegistration    = !hasMatric;
 
   // Derived UI helpers
@@ -150,6 +154,8 @@ export function CompleteProfileModal() {
     ? 'Kemaskini No. Telefon'
     : isOnlyMissingCohort || isMissingPhoneAndCohort
     ? 'Kemaskini Maklumat Pengajian'
+    : isMissingCoreFields
+    ? 'Lengkapkan Profil'
     : 'Lengkapkan Profil';
 
   const subheading = isOnlyMissingPhone
@@ -158,6 +164,8 @@ export function CompleteProfileModal() {
     ? 'Sistem kohort baharu memerlukan maklumat program pengajian anda. Sila lengkapkan.'
     : isMissingPhoneAndCohort
     ? 'Sila lengkapkan nombor telefon dan maklumat program pengajian anda.'
+    : isMissingCoreFields
+    ? 'Sila lengkapkan maklumat asas untuk pendaftaran anda.'
     : 'Akaun anda telah disambungkan. Sila lengkapkan semua maklumat di bawah.';
 
   // ── Submit handler ───────────────────────────────────────────────────────
@@ -221,6 +229,31 @@ export function CompleteProfileModal() {
         if (error) throw error;
         await refetchProfile();
         toast.success('Profil berjaya dikemaskini!');
+      } catch (err: any) {
+        toast.error(err.message || 'Ralat menyimpan profil.');
+      } finally { setLoading(false); }
+      return;
+    }
+
+    // ── C2: Missing core fields (matric exists but no dept/phone/cohort) ──
+    if (isMissingCoreFields) {
+      if (!phone.trim()) { toast.error('Sila masukkan nombor telefon.'); return; }
+      if (!jabatan) { toast.error('Sila pilih jabatan.'); return; }
+      if (!isFtv && !programmeCode) { toast.error('Sila pilih program pengajian.'); return; }
+      if (!intakeYear || !intakePeriod) { toast.error('Sila pilih tahun dan sesi pengambilan.'); return; }
+      setLoading(true);
+      try {
+        const { error } = await supabase.from('profiles').update({
+          phone:            phone.trim(),
+          department:       jabatan,
+          programme_code:   isFtv ? 'FTV' : programmeCode,
+          intake_year:      intakeYear,
+          intake_period:    intakePeriod,
+          semester_override: showSemOverride && semOverride ? Number(semOverride) : null,
+        }).eq('id', user?.id);
+        if (error) throw error;
+        await refetchProfile();
+        toast.success('Profil berjaya disimpan!');
       } catch (err: any) {
         toast.error(err.message || 'Ralat menyimpan profil.');
       } finally { setLoading(false); }
@@ -575,6 +608,26 @@ export function CompleteProfileModal() {
 
               {/* ── SCENARIO: Missing phone + cohort ───────────────────────── */}
               {isMissingPhoneAndCohort && (
+                <>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                      No Telefon Bimbit
+                    </Label>
+                    <div className="relative group">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                      <Input
+                        type="tel" placeholder="0123456789" required
+                        value={phone} onChange={e => setPhone(e.target.value)}
+                        className="h-12 pl-11 rounded-xl bg-slate-100 dark:bg-slate-800/50 font-bold tracking-wide border-slate-200 dark:border-white/10"
+                      />
+                    </div>
+                  </div>
+                  <CohortFields />
+                </>
+              )}
+
+              {/* ── SCENARIO: Missing core fields ──────────────────────────── */}
+              {isMissingCoreFields && (
                 <>
                   <div className="space-y-1.5">
                     <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">

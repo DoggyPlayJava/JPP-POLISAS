@@ -58,6 +58,8 @@ export function LaporanPage() {
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [targetMonth, setTargetMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [endMonth, setEndMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [gabungMode, setGabungMode] = useState(false);
   const [progress, setProgress] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const effectiveClubId = selectedClubId ?? profile?.club_id;
@@ -72,7 +74,15 @@ export function LaporanPage() {
   const { runTour, startTour, closeTour } = useTour('EKPP_LAPORAN', !!profile);
 
   // ── Derived values ────────────────────────────────────────────────
-  const monthLabel = format(parseISO(`${targetMonth}-01`), 'MMMM yyyy', { locale: ms }).toUpperCase();
+  const formatMonth = (m: string) => format(parseISO(`${m}-01`), 'MMMM yyyy', { locale: ms }).toUpperCase();
+  const monthLabel = formatMonth(targetMonth);
+  const dateRangeLabel = gabungMode && targetMonth !== endMonth
+    ? (() => {
+        const sm = format(parseISO(`${targetMonth}-01`), 'MMMM', { locale: ms }).toUpperCase();
+        const em = formatMonth(endMonth);
+        return `${sm} - ${em}`;
+      })()
+    : undefined;
   const submitterRole = isPresident ? 'PRESIDEN' : isMT ? 'MAJLIS TERTINGGI JPP' : ((profile as any)?.club_role || 'SETIAUSAHA');
 
   const clubName = effectiveClubId
@@ -171,14 +181,16 @@ export function LaporanPage() {
         setLogoData(b64);
       }
 
-      const start = startOfMonth(parseISO(`${targetMonth}-01`)).toISOString();
-      const end = endOfMonth(parseISO(`${targetMonth}-01`)).toISOString();
+      const rangeStart = gabungMode ? targetMonth : targetMonth;
+      const rangeEnd   = gabungMode ? endMonth : targetMonth;
+      const start = startOfMonth(parseISO(`${rangeStart}-01`)).toISOString();
+      const end   = endOfMonth(parseISO(`${rangeEnd}-01`)).toISOString();
 
       const { data: acts } = await supabase
         .from('club_activities')
         .select('id, title, description, status, start_date, end_date, location, budget, tindakan, image_urls')
         .eq('club_id', effectiveClubId).eq('status', 'selesai')
-        .eq('is_archived', false)
+        .or('is_archived.is.null,is_archived.eq.false')
         .gte('start_date', start).lte('start_date', end)
         .order('start_date', { ascending: true });
 
@@ -189,9 +201,10 @@ export function LaporanPage() {
         .select('id, nama_program, deskripsi, tarikh_mula, tarikh_tamat, location, budget, tindakan, image_urls')
         .eq('club_id', effectiveClubId)
         .eq('status', 'COMPLETED')
-        .eq('is_archived', false)
+        .or('is_archived.is.null,is_archived.eq.false')
         .gte('tarikh_tamat', start)
         .lte('tarikh_tamat', end)
+        .limit(500)
         .order('tarikh_mula', { ascending: true });
 
       if (progByClub && progByClub.length > 0) {
@@ -206,9 +219,10 @@ export function LaporanPage() {
             .select('id, nama_program, deskripsi, tarikh_mula, tarikh_tamat, location, budget, tindakan, image_urls')
             .in('user_id', memberIds)
             .eq('status', 'COMPLETED')
-            .eq('is_archived', false)
+            .or('is_archived.is.null,is_archived.eq.false')
             .gte('tarikh_tamat', start)
             .lte('tarikh_tamat', end)
+            .limit(500)
             .order('tarikh_mula', { ascending: true });
           rawPrograms = progData || [];
         }
@@ -238,7 +252,7 @@ export function LaporanPage() {
     try {
       const data = await fetchReportData();
       if (data.length === 0) {
-        toast.error("Tiada aktiviti atau program selesai pada bulan ini.");
+        toast.error(gabungMode ? "Tiada aktiviti atau program selesai dalam tempoh ini." : "Tiada aktiviti atau program selesai pada bulan ini.");
         setSubmitting(false);
         return;
       }
@@ -263,7 +277,8 @@ export function LaporanPage() {
       const doc = (
         <LaporanPDFTemplate
           clubName={clubName}
-          monthYear={monthLabel}
+          monthYear={dateRangeLabel || monthLabel}
+          dateRange={dateRangeLabel}
           activities={previewData}
           submitterName={profile?.full_name || undefined}
           submitterRole={submitterRole}
@@ -291,7 +306,7 @@ export function LaporanPage() {
         submitted_by: user.id,
         report_type: 'Laporan Aktiviti',
         file_url: url,
-        file_name: `Laporan Bulanan - ${monthLabel}.pdf`,
+        file_name: `Laporan Bulanan - ${dateRangeLabel || monthLabel}.pdf`,
         status: 'Menunggu',
         is_archived: false
       });
@@ -303,7 +318,7 @@ export function LaporanPage() {
         const { sendNotificationToKppExco } = await import('@/lib/notifications');
         await sendNotificationToKppExco({
           title: 'Laporan Auto-Jana Baharu',
-          message: `${clubName} telah menjana laporan bulan ${monthLabel}. Sila semak di Semakan Laporan.`,
+          message: `${clubName} telah menjana laporan ${dateRangeLabel ? 'gabungan ' + dateRangeLabel : 'bulan ' + monthLabel}. Sila semak di Semakan Laporan.`,
           type: 'INFO',
           module: 'KPP',
           link: '/semakan-laporan'
@@ -364,7 +379,19 @@ export function LaporanPage() {
               ) : (
                 <form onSubmit={handleAutoGenerateTransition} className="space-y-4">
                   <div className="bg-emerald-500/10 p-4 rounded-xl text-xs text-emerald-600 font-medium">Sistem akan menarik data aktiviti 'Selesai' dan menjana PDF secara automatik.</div>
-                  <Input type="month" value={targetMonth} onChange={e => setTargetMonth(e.target.value)} className="h-12 rounded-xl" />
+                  <div className="flex items-center gap-1.5">
+                    <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground cursor-pointer select-none">
+                      <input type="checkbox" checked={gabungMode} onChange={e => setGabungMode(e.target.checked)}
+                        className="accent-violet-500 w-3.5 h-3.5" />
+                      Gabung bulan
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input type="month" value={targetMonth} onChange={e => setTargetMonth(e.target.value)} className="h-12 rounded-xl flex-1" />
+                    {gabungMode && (
+                      <Input type="month" value={endMonth} onChange={e => setEndMonth(e.target.value)} className="h-12 rounded-xl flex-1" />
+                    )}
+                  </div>
                   <Button type="submit" disabled={submitting} className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl">{submitting ? 'Memuatkan...' : 'Pratonton & Jana'}</Button>
                 </form>
               )
