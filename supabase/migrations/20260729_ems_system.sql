@@ -241,3 +241,6 @@ CREATE POLICY "Authenticated users can update certificates"
 CREATE POLICY "Authenticated users can delete certificates"
   ON public.ems_certificates FOR DELETE
   USING ((SELECT auth.uid()) IS NOT NULL);
+-- GRANT table-level permissions (anon for public registration)
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
