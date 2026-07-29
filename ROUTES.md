@@ -78,16 +78,19 @@ Semua laluan bagi modul Event Management System (EMS) menggunakan prefix `/ems/*
 
 | Route | Deskripsi | Jenis Akses |
 |---|---|---|
-| `/ems/dashboard` | EMS Main Management Hub — Papan pemuka utama penganjur acara untuk senarai acara, jana kod juri, jana pautan QR pendaftaran, tie-breaker & e-sijil | Protected (AppLayout) |
-| `/ems/event/new` | Event Form & Rubric Builder — Pembina borang pendaftaran dinamik & pembina rubrik pemarkahan kriteria juri | Protected (AppLayout) |
-| `/ems/event/:id/edit` | Event Form & Rubric Builder Edit — Kemaskini borang dinamik & rubrik pemarkahan acara sedia ada | Protected (AppLayout) |
-| `/ems/approvals` | Super Admin Approval Page — Semakan & kelulusan penganjuran acara oleh Pentadbir Mutlak (`SUPER_ADMIN_JPP`) | Protected (SUPER_ADMIN_JPP) |
-| `/ems/e/:eventId/register` | Public Participant Registration Wizard — Wisard pendaftaran peserta awam/pelajar multi-langkah & muat naik media | Public Standalone |
-| `/ems/checkin/:eventId` | Crew Attendance QR Check-In Scanner — Portal pengimbas QR kehadiran peserta oleh krew/urus setia hari kejadian | Protected (AppLayout) |
-| `/ems/juri` | External Jury Access Portal — Portal penilaian juri luar/dalaman dengan pengesahan kod passcode juri | Public Standalone |
-| `/ems/leaderboard/:eventId` | Live Realtime Leaderboard Dashboard — Papan pendahulu live penganjur & penonton berserta kawalan tie-breaker | Protected / Public |
-| `/ems/stage/:eventId` | Stage Display Mode — Mod paparan pentas skrin penuh bertema gelap/vibrant, animasi podium Top 3 & confetti | Public Standalone |
-| `/ems/cert/:certId` | Digital E-Certificate PDF & Verification Portal — Muat turun PDF sijil digital & verifikasi ketulenan menerusi QR | Public Standalone |
+| `/ems/dashboard` | Hub Acara EMS & Eksplorasi — Papan pemuka utama penganjur acara untuk senarai acara, status kelulusan, jana kod juri, pautan QR pendaftaran, tie-breaker & e-sijil | Protected (AppLayout) |
+| `/ems/event/new` | Borang & Builder Acara — Pembina borang pendaftaran dinamik & pembina rubrik pemarkahan kriteria juri | Protected (AppLayout) |
+| `/ems/event/:id/edit` | Borang & Builder Acara Edit — Kemaskini borang dinamik & rubrik pemarkahan acara sedia ada | Protected (AppLayout) |
+| `/ems/approvals` | Semakan HQ Super Admin — Semakan & kelulusan penganjuran acara oleh Pentadbir Mutlak (`SUPER_ADMIN_JPP`) | Protected (SUPER_ADMIN_JPP) |
+| `/ems/e/:eventId/register` | Wizard Pendaftaran Peserta & Pas QR — Wisard pendaftaran peserta awam/pelajar multi-langkah, borang dinamik, media & pas digital QR | Public Standalone |
+| `/ems/checkin` | Pemilih Acara Crew Check-In — Pemilih acara aktif untuk urus setia & crew melakukan check-in peserta | Protected (AppLayout) |
+| `/ems/checkin/:eventId` | Scanner Kehadiran Crew — Portal pengimbas QR kehadiran peserta/krew hari kejadian menggunakan kamera real-time | Protected (AppLayout) |
+| `/ems/juri` | Portal Akses Juri Luar — Portal penilaian juri luar/dalaman dengan pengesahan kod passcode juri & hantaran skor real-time | Public Standalone |
+| `/ems/leaderboard/:eventId` | Live Leaderboard & Markah — Papan pendahulu live penganjur & penonton berserta Roda Cabutan Bertuah & tie-breaker | Protected / Public |
+| `/ems/stage/:eventId` | Mod Pentas Presentasi — Mod paparan pentas skrin penuh bertema gelap/vibrant, animasi podium Top 3 & confetti | Public Standalone |
+| `/ems/v/:eventId/scan` | Portal Imbas Kehadiran Pengunjung & Milestone — Portal imbasan QR pendaftaran kehadiran pengunjung awam & milestone winner | Public Standalone |
+| `/ems/cert/verify` | Semakan Carian E-Sijil — Halaman carian nombor siri E-Sijil rasmi (cth: `CERT-EMS-2026-XXXXX`) dan pengesahan | Public Standalone |
+| `/ems/cert/:certId` | Portal Sijil PDF & Verifikasi Ber-QR — Muat turun PDF sijil digital & verifikasi ketulenan menerusi QR | Public Standalone |
 
 ---
 
