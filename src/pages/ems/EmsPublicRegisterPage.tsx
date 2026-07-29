@@ -27,10 +27,10 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { fetchEmsEventById, registerEmsParticipant } from '@/lib/ems';
+import { fetchEmsEventById, registerEmsParticipant, type EmsEventDetail } from '@/lib/ems';
 import { uploadFileToDrive, uploadPdfToDrive } from '@/lib/driveUpload';
 import { supabase } from '@/lib/supabase';
-import type { EmsEventDetail, EmsParticipant, EmsFormField } from '@/types';
+import type { EmsParticipant, EmsFormField } from '@/types';
 
 interface TeamMember {
   name: string;

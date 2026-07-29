@@ -69,39 +69,27 @@ export const EmsCertificatePage: React.FC = () => {
       }
 
       // 2. Concurrently fetch event, participant, and jury details (following DEV_GUIDELINE rules)
-      const promises: Promise<any>[] = [
+      const [eventRes, participantRes, juryRes] = await Promise.all([
         supabase
           .from('ems_events')
           .select('id, title, event_date, category, location, status')
           .eq('id', cert.event_id)
           .maybeSingle(),
-      ];
-
-      if (cert.participant_id) {
-        promises.push(
-          supabase
-            .from('ems_participants')
-            .select('id, leader_name, team_name, matrix_no, category_name, participant_type')
-            .eq('id', cert.participant_id)
-            .maybeSingle()
-        );
-      } else {
-        promises.push(Promise.resolve({ data: null, error: null }));
-      }
-
-      if (cert.jury_code_id) {
-        promises.push(
-          supabase
-            .from('ems_jury_codes')
-            .select('id, jury_name, organization, code')
-            .eq('id', cert.jury_code_id)
-            .maybeSingle()
-        );
-      } else {
-        promises.push(Promise.resolve({ data: null, error: null }));
-      }
-
-      const [eventRes, participantRes, juryRes] = await Promise.all(promises);
+        cert.participant_id
+          ? supabase
+              .from('ems_participants')
+              .select('id, leader_name, team_name, matrix_no, category_name, participant_type')
+              .eq('id', cert.participant_id)
+              .maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+        cert.jury_code_id
+          ? supabase
+              .from('ems_jury_codes')
+              .select('id, jury_name, organization, code')
+              .eq('id', cert.jury_code_id)
+              .maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+      ]);
 
       const event = eventRes.data;
       const participant = participantRes.data;

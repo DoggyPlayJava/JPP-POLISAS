@@ -178,11 +178,11 @@ export async function createEmsEvent(
   const promises: Promise<any>[] = [];
 
   if (fieldInserts.length > 0) {
-    promises.push(supabase.from('ems_form_fields').insert(fieldInserts));
+    promises.push(Promise.resolve(supabase.from('ems_form_fields').insert(fieldInserts)));
   }
 
   if (rubricInserts.length > 0) {
-    promises.push(supabase.from('ems_rubrics').insert(rubricInserts));
+    promises.push(Promise.resolve(supabase.from('ems_rubrics').insert(rubricInserts)));
   }
 
   if (promises.length > 0) {
