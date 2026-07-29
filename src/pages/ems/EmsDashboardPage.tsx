@@ -413,7 +413,7 @@ export function EmsDashboardPage() {
           {events
             .filter((e) => {
               if (canCreateEvent) return true;
-              const isOwner = user?.id && e.created_by === user.id;
+              const isOwner = profile?.id && e.created_by === profile.id;
               if (isOwner) return true;
               return e.status === 'APPROVED' || e.status === 'ACTIVE' || e.status === 'COMPLETED';
             })
