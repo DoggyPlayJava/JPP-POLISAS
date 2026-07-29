@@ -2190,5 +2190,29 @@ Bagi tujuan keselamatan dan pemantauan salah guna kuasa pentadbir/exco JPP, sist
 - **RLS**: strictly disekat untuk carian awam. Hanya pengguna bertaraf `JPP` atau `SUPER_ADMIN_JPP` sahaja dibenarkan membaca rekod log (`Allow select admin_audit_logs for admins`).
 - **Pandangan `system_logs` (View)**: VIEW ini menggabungkan audit log dari `admin_audit_logs` dan `club_logs` menggunakan `UNION ALL`. Ia menapis paparan menggunakan klausa `WHERE EXISTS` agar hanya boleh diakses oleh exco bertaraf JPP/SUPER_ADMIN_JPP.
 
+---
+
+## 22. Senibina Modul Event Management System (EMS) 🎯
+
+> Ditambah: Julai 2026
+
+Modul EMS membolehkan pengurusan acara politeknik merangkumi pendaftaran QR, penilaian juri luar (menerusi kod juri), papan pemuka live leaderboard, dan penjanaan sijil digital.
+
+### 22.1 Skema Pangkalan Data & Indeks FK
+Modul EMS menggunakan 7 jadual teras di dalam skema `public` dengan indeks pada semua kolum Foreign Key:
+- **`ems_events`**: Menyimpan rekod acara (`id`, `title`, `description`, `category`, `event_mode`, `event_date`, `location`, `status`, `is_leaderboard_public`, `created_by`, `created_at`). Indeks: `idx_ems_events_created_by`.
+- **`ems_form_fields`**: Menyimpan medan borang pendaftaran dinamik (`id`, `event_id`, `field_label`, `field_type`, `is_required`, `options`, `sort_order`). Indeks: `idx_ems_form_fields_event_id`.
+- **`ems_participants`**: Menyimpan maklumat peserta/kumpulan terdaftar (`id`, `event_id`, `participant_type`, `entity_mode`, `team_name`, `booth_no`, `category_name`, `leader_name`, `matrix_no`, `email`, `phone`, `members_list`, `custom_responses`, `media_urls`, `is_checked_in`, `checked_in_at`, `created_at`). Indeks: `idx_ems_participants_event_id`.
+- **`ems_jury_codes`**: Menyimpan kod laluan juri luar/dalaman (`id`, `event_id`, `code`, `jury_name`, `organization`, `assigned_categories`, `assigned_booths`, `created_at`). Indeks: `idx_ems_jury_codes_event_id`.
+- **`ems_rubrics`**: Menyimpan kriteria rubrik penilaian (`id`, `event_id`, `criteria_name`, `max_score`, `weight`, `sort_order`). Indeks: `idx_ems_rubrics_event_id`.
+- **`ems_scores`**: Menyimpan markah penilaian yang diberikan oleh juri (`id`, `event_id`, `participant_id`, `jury_code_id`, `rubric_id`, `score`, `comments`, `created_at`). Indeks: `idx_ems_scores_event_id`, `idx_ems_scores_participant_id`, `idx_ems_scores_jury_code_id`, `idx_ems_scores_rubric_id`.
+- **`ems_certificates`**: Menyimpan rekod dan nombor siri sijil digital (`id`, `event_id`, `participant_id`, `jury_code_id`, `cert_type`, `cert_serial`, `qr_code_url`, `created_at`). Indeks: `idx_ems_certificates_event_id`, `idx_ems_certificates_participant_id`, `idx_ems_certificates_jury_code_id`.
+
+### 22.2 Polisi Row-Level Security (RLS)
+Setiap jadual EMS diaktifkan RLS dengan polisi tunggal bagi setiap operasi (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) menggunakan `(SELECT auth.uid())`:
+- **Kebangkitan Awam/Peserta/Juri**: Kebenaran `SELECT` dibolehkan awam bagi permohonan pendaftaran, verifikasi kod juri, live leaderboard, dan pengesahan sijil QR.
+- **Pendaftaran & Penilaian Awam**: Pendaftaran peserta (`ems_participants`) dan masukan markah (`ems_scores`) membenarkan `INSERT`/`UPDATE` untuk fleksibiliti borang awam & juri luar berautentikasi kod.
+
+
 
 

@@ -983,4 +983,97 @@ export const KEBAJIKAN_PRIORITY_COLORS: Record<KebajikanTicketPriority, string> 
 };
 
 // Warna tema E-Kebajikan (teal)
-export const KEBAJIKAN_THEME_COLOR = '#2DD4BF';
+export const KEBAJIKAN_THEME_COLOR = '#2DD4BF';
+
+// ─── Event Management System (EMS) Types ─────────────────────────────────────
+
+export type EmsEventMode = 'INDIVIDUAL' | 'TEAM' | string;
+export type EmsEventStatus = 'PENDING_APPROVAL' | 'APPROVED' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED' | string;
+export type EmsParticipantType = 'STUDENT' | 'STAFF' | 'PUBLIC' | string;
+
+export interface EmsEvent {
+  id: string;
+  title: string;
+  description?: string | null;
+  category?: string | null;
+  event_mode: EmsEventMode;
+  event_date?: string | null;
+  location?: string | null;
+  status: EmsEventStatus;
+  is_leaderboard_public: boolean;
+  created_by?: string | null;
+  created_at: string;
+}
+
+export interface EmsFormField {
+  id: string;
+  event_id: string;
+  field_label: string;
+  field_type: string;
+  is_required: boolean;
+  options?: any | null;
+  sort_order: number;
+}
+
+export interface EmsParticipant {
+  id: string;
+  event_id: string;
+  participant_type: EmsParticipantType;
+  entity_mode: EmsEventMode;
+  team_name?: string | null;
+  booth_no?: string | null;
+  category_name?: string | null;
+  leader_name: string;
+  matrix_no?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  members_list?: any | null;
+  custom_responses?: Record<string, any> | null;
+  media_urls?: string[] | null;
+  is_checked_in: boolean;
+  checked_in_at?: string | null;
+  created_at: string;
+}
+
+export interface EmsJuryCode {
+  id: string;
+  event_id: string;
+  code: string;
+  jury_name?: string | null;
+  organization?: string | null;
+  assigned_categories?: string[] | null;
+  assigned_booths?: string[] | null;
+  created_at: string;
+}
+
+export interface EmsRubricCriteria {
+  id: string;
+  event_id: string;
+  criteria_name: string;
+  max_score: number;
+  weight: number;
+  sort_order: number;
+}
+
+export interface EmsScore {
+  id: string;
+  event_id: string;
+  participant_id: string;
+  jury_code_id: string;
+  rubric_id: string;
+  score: number;
+  comments?: string | null;
+  created_at: string;
+}
+
+export interface EmsCertificate {
+  id: string;
+  event_id: string;
+  participant_id: string;
+  jury_code_id?: string | null;
+  cert_type: string;
+  cert_serial: string;
+  qr_code_url?: string | null;
+  created_at: string;
+}
+

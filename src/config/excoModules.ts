@@ -67,6 +67,17 @@ export const EXCO_MODULES: ExcoModule[] = [
     basePath: '/akademik',
     isActive: true,
   },
+  {
+    id: 'ems',
+    name: 'EMS',
+    fullName: 'Event Management System',
+    tagline: 'Acara · Penjurian · Sijil',
+    description: 'Pengurusan acara politeknik, pendaftaran QR, juri luar & live leaderboard.',
+    defaultColor: '#EC4899',
+    icon: 'CalendarDays',
+    basePath: '/ems/dashboard',
+    isActive: true,
+  },
   // NOTA: SUPSAS dan PolyRider tidak dimasukkan dalam senarai ini — ia dikawal
   // secara berasingan melalui komponen tersendiri (BottomNav atau event banner).
 ];
