@@ -28,6 +28,9 @@ const EKPP_ROUTES = [
   '/leaderboard', '/logs', '/karnival', '/nexus',
 ];
 function detectExcoFromPath(pathname: string) {
+  if (pathname.startsWith('/ems')) {
+    return EXCO_MODULES.find(m => m.id === 'ems')!;
+  }
   if (EKPP_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) {
     return EXCO_MODULES.find(m => m.id === 'ekpp')!;
   }

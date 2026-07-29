@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, HelpCircle, MessageSquare, Send, ChevronRight } from 'lucide-react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { Search, HelpCircle, MessageSquare, Send, ChevronRight, CalendarDays } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,8 @@ import toast from 'react-hot-toast';
 
 export function Header({ onOpenSearch }: { onOpenSearch?: () => void }) {
   const { profile, selectedClubId, isSuperAdmin, isPresident, effectiveRole, refetchProfile } = useAuth();
+  const location = useLocation();
+  const isEmsRoute = location.pathname.startsWith('/ems');
   
   const activeClubId = selectedClubId ?? profile?.club_id;
   const clubName = activeClubId
@@ -69,6 +71,17 @@ export function Header({ onOpenSearch }: { onOpenSearch?: () => void }) {
   return (
     <header className="h-16 flex items-center justify-between px-6 lg:px-8 relative z-40 bg-background/70 backdrop-blur-xl border-b border-border/40">
       <div className="flex items-center gap-3">
+        {isEmsRoute && (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-500 shadow-sm">
+            <CalendarDays className="w-4 h-4 text-pink-500 shrink-0" />
+            <span className="text-xs font-black tracking-tight text-foreground hidden sm:inline">
+              Event Management System (EMS)
+            </span>
+            <Badge className="bg-pink-500 text-white text-[9px] font-black px-1.5 py-0 border-none">
+              EMS
+            </Badge>
+          </div>
+        )}
         {profile && (
           <Popover>
             <PopoverTrigger asChild>

@@ -23,6 +23,10 @@ import {
   Lightbulb,
   HeartHandshake,
   HelpCircle,
+  PlusCircle,
+  QrCode,
+  Gavel,
+  FileCheck,
 } from 'lucide-react';
 import { ExcoIcon } from '@/components/ui/ExcoIcon';
 import { useAuth } from '@/contexts/AuthContext';
@@ -59,6 +63,9 @@ const EKPP_ROUTES = [
 ];
 
 function detectActiveExco(pathname: string): string | null {
+  if (pathname.startsWith('/ems')) {
+    return 'ems';
+  }
   // Semak e-KPP (route tanpa prefix — konvensyen sedia ada)
   if (EKPP_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) {
     return 'ekpp';
@@ -94,31 +101,57 @@ const EKPP_ADMIN_NAV: NavItem[] = [
   // /jpp-admin has been removed — accessible via JPP HQ Portal sidebar only
 ];
 
+// EMS Navigation items
+const EMS_NAV: NavItem[] = [
+  { icon: LayoutDashboard, label: 'Hub Acara EMS', href: '/ems/dashboard' },
+  { icon: PlusCircle,      label: 'Cipta Acara Baharu', href: '/ems/event/new' },
+  { icon: QrCode,          label: 'Crew Check-In Scanner', href: '/ems/checkin' },
+  { icon: Gavel,           label: 'Portal Juri Luar', href: '/ems/juri' },
+  { icon: Trophy,          label: 'Live Leaderboard', href: '/ems/leaderboard' },
+  { icon: FileCheck,       label: 'Semakan E-Sijil', href: '/ems/cert/verify' },
+  { icon: ShieldCheck,     label: 'Semakan HQ', href: '/ems/approvals' },
+];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SubKomponen: NavItem generik
 // ─────────────────────────────────────────────────────────────────────────────
 function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accentColor?: string }) {
-  const colorMap: Record<string, { active: string; dot: string; iconBg: string }> = {
+  const colorMap: Record<string, { active: string; dot: string; iconBg: string; iconText?: string }> = {
     amber: {
       active: 'bg-white/12 text-white shadow-inner',
       dot: 'bg-amber-400 shadow-[0_0_6px_2px_rgba(212,160,23,0.4)]',
       iconBg: 'bg-amber-500/25 shadow-lg',
+      iconText: 'text-amber-400',
     },
     rose: {
       active: 'bg-rose-500/20 text-rose-300 shadow-inner',
       dot: 'bg-rose-400 shadow-[0_0_6px_2px_rgba(244,63,94,0.4)]',
       iconBg: 'bg-rose-500/30 shadow-lg',
+      iconText: 'text-rose-400',
     },
     emerald: {
       active: 'bg-emerald-500/20 text-emerald-300 shadow-inner',
       dot: 'bg-emerald-400 shadow-[0_0_6px_2px_rgba(52,211,153,0.4)]',
       iconBg: 'bg-emerald-500/30 shadow-lg',
+      iconText: 'text-emerald-400',
     },
     indigo: {
       active: 'bg-indigo-500/20 text-indigo-300 shadow-inner',
       dot: 'bg-indigo-400',
       iconBg: 'bg-indigo-500/30 shadow-lg',
+      iconText: 'text-indigo-400',
+    },
+    pink: {
+      active: 'bg-pink-500/20 text-pink-300 shadow-inner',
+      dot: 'bg-pink-400 shadow-[0_0_6px_2px_rgba(236,72,153,0.4)]',
+      iconBg: 'bg-pink-500/30 shadow-lg',
+      iconText: 'text-pink-400',
+    },
+    fuchsia: {
+      active: 'bg-fuchsia-500/20 text-fuchsia-300 shadow-inner',
+      dot: 'bg-fuchsia-400 shadow-[0_0_6px_2px_rgba(217,70,239,0.4)]',
+      iconBg: 'bg-fuchsia-500/30 shadow-lg',
+      iconText: 'text-fuchsia-400',
     },
   };
   const c = colorMap[accentColor] ?? colorMap.amber;
@@ -137,7 +170,7 @@ function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accent
             'w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200',
             isActive ? c.iconBg : 'group-hover:bg-white/8'
           )}>
-            <item.icon className={cn('w-3.5 h-3.5', isActive ? `text-${accentColor}-400` : '')} />
+            <item.icon className={cn('w-3.5 h-3.5', isActive ? (c.iconText ?? `text-${accentColor}-400`) : '')} />
           </div>
           <span className="text-xs font-bold tracking-tight">{item.label}</span>
           {isActive && <div className={cn('ml-auto w-1 h-4 rounded-full', c.dot)} />}
@@ -296,6 +329,58 @@ function EkppSidebarContent() {
           </NavLink>
         </>
       )}
+    </nav>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SubKomponen: EMS (Event Management System) Sidebar Content
+// ─────────────────────────────────────────────────────────────────────────────
+function EmsSidebarContent() {
+  const { profile, effectiveRole, isSuperAdmin, isJppMember, isPresident, isMT, isAdvisor } = useAuth();
+
+  const isClubMt = isMT || effectiveRole === 'CLUB_MT';
+  const isClubAdvisor = isAdvisor || effectiveRole === 'CLUB_ADVISOR';
+  const isStaff = profile?.role === 'STAFF' || effectiveRole === 'STAFF';
+
+  const canManageEvents = isSuperAdmin || isJppMember || isPresident || isClubMt || isClubAdvisor || isStaff;
+
+  const mainItem = EMS_NAV.find(i => i.href === '/ems/dashboard')!;
+  const createItem = EMS_NAV.find(i => i.href === '/ems/event/new')!;
+  const opsItems = EMS_NAV.filter(i => ['/ems/checkin', '/ems/juri', '/ems/leaderboard'].includes(i.href));
+  const certVerifyItem = EMS_NAV.find(i => i.href === '/ems/cert/verify')!;
+  const approvalsItem = EMS_NAV.find(i => i.href === '/ems/approvals')!;
+
+  return (
+    <nav className="flex-1 py-6 px-3 space-y-0.5 overflow-y-auto scrollbar-hide">
+      {/* Menu Utama */}
+      <p className="px-3 mb-3 text-[10px] font-black uppercase tracking-[0.25em] text-white/25">Menu Utama</p>
+      {mainItem && <SidebarNavItem item={mainItem} accentColor="pink" />}
+
+      {/* Pengurusan Acara (Only for authorized roles) */}
+      {canManageEvents && createItem && (
+        <>
+          <div className="pt-4 pb-2">
+            <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-pink-400/60">Pengurusan Acara</p>
+          </div>
+          <SidebarNavItem item={createItem} accentColor="pink" />
+        </>
+      )}
+
+      {/* Operasi & Penjurian */}
+      <div className="pt-4 pb-2">
+        <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-pink-400/60">Operasi & Penjurian</p>
+      </div>
+      {opsItems.map(item => (
+        <SidebarNavItem key={item.href} item={item} accentColor="pink" />
+      ))}
+
+      {/* Pentadbiran */}
+      <div className="pt-4 pb-2">
+        <p className="px-3 text-[10px] font-black uppercase tracking-[0.25em] text-pink-400/60">Pentadbiran</p>
+      </div>
+      {certVerifyItem && <SidebarNavItem item={certVerifyItem} accentColor="pink" />}
+      {isSuperAdmin && approvalsItem && <SidebarNavItem item={approvalsItem} accentColor="pink" />}
     </nav>
   );
 }
@@ -517,6 +602,7 @@ export function Sidebar() {
 
       {/* ── Nav Content — bertukar mengikut exco aktif ── */}
       {activeExco === 'ekpp' && <EkppSidebarContent />}
+      {activeExco === 'ems' && <EmsSidebarContent />}
       {activeExco === 'kebajikan' && <PlaceholderSidebarContent excoId="kebajikan" />}
       {activeExco === 'keusahawanan' && <PlaceholderSidebarContent excoId="keusahawanan" />}
       {activeExco === 'sukan' && <PlaceholderSidebarContent excoId="sukan" />}
