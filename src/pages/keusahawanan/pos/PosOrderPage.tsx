@@ -381,7 +381,7 @@ export function PosOrderPage() {
     if (!scannedOrder) return;
     setProcessing(true);
     try {
-      const pm = scannedOrder.payment_method || 'CASH';
+      const pm = scannedOrder.payment_method === 'QR_ONLINE' ? 'QR' : 'CASH';
       const { error } = await supabase.rpc('complete_polymart_order', {
         p_order_id: scannedOrder.id,
         p_business_id: scannedOrder.business_id,

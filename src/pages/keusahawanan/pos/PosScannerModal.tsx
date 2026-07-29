@@ -118,7 +118,7 @@ export function PosScannerModal({ onScan, onClose, businessId, servedBy }: PosSc
       }
 
       // 2. Selesaikan order melalui RPC
-      const pm = order.payment_method || 'CASH';
+      const pm = order.payment_method === 'QR_ONLINE' ? 'QR' : 'CASH';
       const { error: rpcError } = await supabase.rpc('complete_polymart_order', {
         p_order_id: order.id,
         p_business_id: order.business_id,
