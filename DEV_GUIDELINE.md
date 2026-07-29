@@ -2219,6 +2219,7 @@ Setiap jadual EMS diaktifkan RLS dengan polisi tunggal bagi setiap operasi (`SEL
 - **`/ems/event/:id/edit`**: `<EmsEventFormPage />` (`src/pages/ems/EmsEventFormPage.tsx`) — Suntingan acara sedia ada.
 - **`/ems/approvals`**: `<EmsApprovalPage />` (`src/pages/ems/EmsApprovalPage.tsx`) — Halaman pengesahan kelulusan khas Pentadbir Mutlak (SUPER_ADMIN_JPP).
 - **`/ems/e/:eventId/register`**: `<EmsPublicRegisterPage />` (`src/pages/ems/EmsPublicRegisterPage.tsx`) — Wisard pendaftaran peserta awam/pelajar multi-langkah dengan pendaftaran individu/pasukan, borang dinamik, muat naik media, dan jana pass digital berserta QR.
+- **`/ems/checkin/:eventId`**: `<EmsCheckinPage />` (`src/pages/ems/EmsCheckinPage.tsx`) — Portal pengesahan kehadiran urus setia / AJK hari kejadian menggunakan pengimbas QR kamera real-time (html5-qrcode), carian manual, audio chime, dan papan pemuka peratusan kehadiran live.
 
 
 
