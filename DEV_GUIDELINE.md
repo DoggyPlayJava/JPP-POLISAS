@@ -2220,6 +2220,8 @@ Setiap jadual EMS diaktifkan RLS dengan polisi tunggal bagi setiap operasi (`SEL
 - **`/ems/approvals`**: `<EmsApprovalPage />` (`src/pages/ems/EmsApprovalPage.tsx`) — Halaman pengesahan kelulusan khas Pentadbir Mutlak (SUPER_ADMIN_JPP).
 - **`/ems/e/:eventId/register`**: `<EmsPublicRegisterPage />` (`src/pages/ems/EmsPublicRegisterPage.tsx`) — Wisard pendaftaran peserta awam/pelajar multi-langkah dengan pendaftaran individu/pasukan, borang dinamik, muat naik media, dan jana pass digital berserta QR.
 - **`/ems/checkin/:eventId`**: `<EmsCheckinPage />` (`src/pages/ems/EmsCheckinPage.tsx`) — Portal pengesahan kehadiran urus setia / AJK hari kejadian menggunakan pengimbas QR kamera real-time (html5-qrcode), carian manual, audio chime, dan papan pemuka peratusan kehadiran live.
+- **`/ems/leaderboard/:eventId`**: `<EmsLeaderboardPage />` (`src/pages/ems/EmsLeaderboardPage.tsx`) — Papan pendahulu pentadbir & pengarah program EMS berserta kawalan visibiliti, penentuan seret (tie-breaker), penapis kategori, dan perincian komen/skor juri.
+- **`/ems/stage/:eventId`**: `<EmsLeaderboardPage isStageMode={true} />` (`src/pages/ems/EmsLeaderboardPage.tsx`) — Mod persembahan pentas (Stage Display Mode) skrin penuh bertema gelap/vibrant, animasi podium Top 3, lencana 🥇/🥈/🥉, pelancaran bunga api (canvas-confetti), dan skrin tirai kunci status visibiliti rasmi.
 
 
 
