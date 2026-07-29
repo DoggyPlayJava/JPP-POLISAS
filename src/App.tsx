@@ -185,6 +185,7 @@ const EmsCheckinPage   = lazy(() => import('./pages/ems/EmsCheckinPage').then(m 
 const EmsJuryPortalPage = lazy(() => import('./pages/ems/EmsJuryPortalPage').then(m => ({ default: m.EmsJuryPortalPage })));
 const EmsLeaderboardPage = lazy(() => import('./pages/ems/EmsLeaderboardPage').then(m => ({ default: m.EmsLeaderboardPage })));
 const EmsCertificatePage = lazy(() => import('./pages/ems/EmsCertificatePage').then(m => ({ default: m.EmsCertificatePage })));
+const EmsAudienceScanPage = lazy(() => import('./pages/ems/EmsAudienceScanPage').then(m => ({ default: m.EmsAudienceScanPage })));
 
 
 // ── Global Modals (lazy-loaded, deferred after paint) ──
@@ -281,6 +282,7 @@ function AppRoutes() {
       <Route path="/program/attend/:token" element={<ProgramAttendPage />} />
       {/* 🎪 EMS Public Participant Registration Wizard, Jury Portal & Stage Display */}
       <Route path="/ems/e/:eventId/register" element={<EmsPublicRegisterPage />} />
+      <Route path="/ems/v/:eventId/scan" element={<EmsAudienceScanPage />} />
       <Route path="/ems/juri" element={<EmsJuryPortalPage />} />
       <Route path="/ems/stage/:eventId" element={<EmsLeaderboardPage isStageMode={true} />} />
       <Route path="/ems/cert/:certId" element={<EmsCertificatePage />} />

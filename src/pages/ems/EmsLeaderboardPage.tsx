@@ -26,8 +26,10 @@ import {
   Shield,
   Layers,
   Search,
+  Gift,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { EmsLuckyDrawModal } from '@/components/ems/EmsLuckyDrawModal';
 import {
   fetchEmsLeaderboard,
   resolveTieWinner,
@@ -73,6 +75,9 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   // Stage Display State
   const [isRevealed, setIsRevealed] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Lucky Draw Modal State
+  const [showLuckyDrawModal, setShowLuckyDrawModal] = useState(false);
 
   // Fetch Event Details & Leaderboard
   const loadData = useCallback(async (showToast = false) => {
@@ -475,6 +480,15 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               </div>
             )}
 
+            {/* Lucky Draw Wheel Button */}
+            <button
+              onClick={() => setShowLuckyDrawModal(true)}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(139,92,246,0.4)] transition flex items-center gap-2"
+            >
+              <Gift className="w-4 h-4 text-amber-300" />
+              Cabutan Bertuah 🎰
+            </button>
+
             {/* Fireworks / Confetti Button */}
             <button
               onClick={triggerConfetti}
@@ -726,6 +740,15 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Lucky Draw Button */}
+          <button
+            onClick={() => setShowLuckyDrawModal(true)}
+            className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider shadow-md transition flex items-center gap-2"
+          >
+            <Gift className="w-4 h-4 text-amber-300" />
+            Cabutan Bertuah 🎰
+          </button>
+
           {/* Refresh Button */}
           <button
             onClick={() => loadData(true)}
@@ -1175,6 +1198,14 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
           </div>
         </div>
       )}
+
+      {/* Interactive Lucky Draw Modal */}
+      <EmsLuckyDrawModal
+        isOpen={showLuckyDrawModal}
+        onClose={() => setShowLuckyDrawModal(false)}
+        eventId={eventId}
+        eventTitle={event?.title}
+      />
     </div>
   );
 }

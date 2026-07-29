@@ -22,8 +22,10 @@ import {
   AlertCircle,
   HelpCircle,
   CheckCircle2,
+  Gift,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { EmsLuckyDrawModal } from '@/components/ems/EmsLuckyDrawModal';
 import {
   fetchEmsEvents,
   createJuryCode,
@@ -70,6 +72,10 @@ export function EmsDashboardPage() {
 
   // Cert generation loading state per event
   const [generatingCertId, setGeneratingCertId] = useState<string | null>(null);
+
+  // Lucky Draw Modal State
+  const [luckyDrawModalOpen, setLuckyDrawModalOpen] = useState(false);
+  const [selectedLuckyDrawEvent, setSelectedLuckyDrawEvent] = useState<EmsEvent | null>(null);
 
   const loadEvents = async () => {
     try {
@@ -249,13 +255,25 @@ export function EmsDashboardPage() {
           </div>
         </div>
 
-        <button
-          onClick={() => navigate('/ems/event/new')}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Cipta Acara Baharu</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              setSelectedLuckyDrawEvent(null);
+              setLuckyDrawModalOpen(true);
+            }}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black transition-all shadow-lg shadow-amber-500/20 active:scale-95 text-xs uppercase tracking-wider"
+          >
+            <Gift className="w-4 h-4 text-slate-950" />
+            <span>Cabutan Bertuah 🎰</span>
+          </button>
+          <button
+            onClick={() => navigate('/ems/event/new')}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Cipta Acara Baharu</span>
+          </button>
+        </div>
       </div>
 
       {/* Super Admin Approval Access Banner */}
@@ -433,6 +451,17 @@ export function EmsDashboardPage() {
                     <span>Tie-Breaker</span>
                   </button>
                 </div>
+
+                <button
+                  onClick={() => {
+                    setSelectedLuckyDrawEvent(event);
+                    setLuckyDrawModalOpen(true);
+                  }}
+                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-amber-600/10 hover:from-amber-500/30 hover:to-amber-600/20 text-amber-300 border border-amber-500/30 font-semibold text-xs transition-all"
+                >
+                  <Gift className="w-4 h-4 text-amber-400" />
+                  <span>Roda Cabutan Bertuah</span>
+                </button>
 
                 {event.status === 'COMPLETED' && (
                   <button
@@ -766,6 +795,14 @@ export function EmsDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Lucky Draw Wheel Modal */}
+      <EmsLuckyDrawModal
+        isOpen={luckyDrawModalOpen}
+        onClose={() => setLuckyDrawModalOpen(false)}
+        eventId={selectedLuckyDrawEvent?.id}
+        eventTitle={selectedLuckyDrawEvent?.title}
+      />
     </div>
   );
 }
