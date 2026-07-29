@@ -567,37 +567,38 @@ export function Sidebar() {
 
 
 
-      {/* ── Club / Role Badge ── */}
-      <div className="mx-4 mt-2">
-        <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/6 border border-white/10">
-          <div className={cn('w-2 h-2 rounded-full flex-shrink-0', clubColorClass)} />
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Status</p>
-            <p className="text-xs font-black text-white truncate">{clubName}</p>
+      {/* ── Club / Role Badge (Hanya untuk modul e-KPP / Kelab) ── */}
+      {(activeExco === 'ekpp' || activeExco === null) && (
+        <div className="mx-4 mt-2">
+          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/6 border border-white/10">
+            <div className={cn('w-2 h-2 rounded-full flex-shrink-0', clubColorClass)} />
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Status</p>
+              <p className="text-xs font-black text-white truncate">{clubName}</p>
+            </div>
+            {(isSuperAdmin || isPresident) && effectiveRole !== 'CLUB_MEMBER' && effectiveRole !== 'AHLI' && (
+              <Badge className="text-[10px] px-1.5 py-0 bg-amber-500/20 text-amber-400 border-none font-black">
+                ADMIN
+              </Badge>
+            )}
+            {profile?.jpp_unit === 'KPP' && !isSuperAdmin && (
+              <Badge className="text-[10px] px-1.5 py-0 bg-indigo-500/20 text-indigo-300 border-none font-black">
+                KPP
+              </Badge>
+            )}
           </div>
-          {(isSuperAdmin || isPresident) && effectiveRole !== 'CLUB_MEMBER' && effectiveRole !== 'AHLI' && (
-            <Badge className="text-[10px] px-1.5 py-0 bg-amber-500/20 text-amber-400 border-none font-black">
-              ADMIN
-            </Badge>
-          )}
-          {profile?.jpp_unit === 'KPP' && !isSuperAdmin && (
-            <Badge className="text-[10px] px-1.5 py-0 bg-indigo-500/20 text-indigo-300 border-none font-black">
-              KPP
-            </Badge>
+
+          {/* KPP Club Switcher — tukar kelab untuk pemantauan */}
+          {(profile?.jpp_unit === 'KPP' || isSuperAdmin) && ALL_CLUBS.length > 0 && (
+            <CustomClubSelect 
+              value={selectedClubId} 
+              onChange={setSelectedClubId} 
+              clubs={ALL_CLUBS} 
+            />
           )}
         </div>
+      )}
 
-        {/* KPP Club Switcher — tukar kelab untuk pemantauan */}
-        {(profile?.jpp_unit === 'KPP' || isSuperAdmin) && ALL_CLUBS.length > 0 && (
-          <CustomClubSelect 
-            value={selectedClubId} 
-            onChange={setSelectedClubId} 
-            clubs={ALL_CLUBS} 
-          />
-        )}
-
-
-      </div>
 
 
       {/* ── Nav Content — bertukar mengikut exco aktif ── */}

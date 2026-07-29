@@ -71,17 +71,7 @@ export function Header({ onOpenSearch }: { onOpenSearch?: () => void }) {
   return (
     <header className="h-16 flex items-center justify-between px-6 lg:px-8 relative z-40 bg-background/70 backdrop-blur-xl border-b border-border/40">
       <div className="flex items-center gap-3">
-        {isEmsRoute && (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-500 shadow-sm">
-            <CalendarDays className="w-4 h-4 text-pink-500 shrink-0" />
-            <span className="text-xs font-black tracking-tight text-foreground hidden sm:inline">
-              Event Management System (EMS)
-            </span>
-            <Badge className="bg-pink-500 text-white text-[9px] font-black px-1.5 py-0 border-none">
-              EMS
-            </Badge>
-          </div>
-        )}
+
         {profile && (
           <Popover>
             <PopoverTrigger asChild>
