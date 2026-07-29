@@ -25,6 +25,7 @@ import {
   Gift,
   Trash2,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { EmsLuckyDrawModal } from '@/components/ems/EmsLuckyDrawModal';
 import {
