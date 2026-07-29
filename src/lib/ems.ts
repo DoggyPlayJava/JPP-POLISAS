@@ -1,0 +1,666 @@
+// ============================================================
+// JPP POLISAS — EMS (Event Management System) Supabase Helpers
+// ============================================================
+
+import { supabase } from '@/lib/supabase';
+import type {
+  EmsEvent,
+  EmsFormField,
+  EmsParticipant,
+  EmsJuryCode,
+  EmsRubricCriteria,
+  EmsScore,
+  EmsCertificate,
+} from '@/types';
+
+export interface EmsLeaderboardItem {
+  participant: EmsParticipant;
+  total_score: number;
+  average_score: number;
+  jury_count: number;
+  rank: number;
+  is_tied?: boolean;
+  is_tie_winner?: boolean;
+  scores_breakdown?: Record<string, number>;
+}
+
+export interface EmsEventDetail extends EmsEvent {
+  form_fields: EmsFormField[];
+  rubrics: EmsRubricCriteria[];
+  participants: EmsParticipant[];
+  jury_codes: EmsJuryCode[];
+  leaderboard: EmsLeaderboardItem[];
+  creator?: {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+  } | null;
+}
+
+/**
+ * Fetches list of EMS events with optional status filter, including form_fields, rubrics, and creator details.
+ */
+export async function fetchEmsEvents(
+  statusFilter?: string
+): Promise<(EmsEvent & { form_fields?: EmsFormField[]; rubrics?: EmsRubricCriteria[]; creator?: any })[]> {
+  let query = supabase
+    .from('ems_events')
+    .select(`
+      *,
+      form_fields:ems_form_fields(*),
+      rubrics:ems_rubrics(*),
+      creator:profiles!created_by(id, full_name, email)
+    `)
+    .order('created_at', { ascending: false });
+
+  if (statusFilter && statusFilter !== 'ALL') {
+    query = query.eq('status', statusFilter);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    console.warn('[EMS] Error fetching events with creator relation, using fallback:', error.message);
+    let fallbackQuery = supabase
+      .from('ems_events')
+      .select(`
+        *,
+        form_fields:ems_form_fields(*),
+        rubrics:ems_rubrics(*)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (statusFilter && statusFilter !== 'ALL') {
+      fallbackQuery = fallbackQuery.eq('status', statusFilter);
+    }
+
+    const { data: fallbackData, error: fallbackError } = await fallbackQuery;
+    if (fallbackError) throw fallbackError;
+    return fallbackData || [];
+  }
+
+  return data || [];
+}
+
+/**
+ * Fetches a single event with form fields, rubrics, participants, jury codes, and calculated leaderboard.
+ * Uses Promise.all for parallel fetching.
+ */
+export async function fetchEmsEventById(eventId: string): Promise<EmsEventDetail | null> {
+  const [eventRes, participantsRes, juryCodesRes, leaderboard] = await Promise.all([
+    supabase
+      .from('ems_events')
+      .select(`
+        *,
+        form_fields:ems_form_fields(*),
+        rubrics:ems_rubrics(*),
+        creator:profiles!created_by(id, full_name, email)
+      `)
+      .eq('id', eventId)
+      .maybeSingle(),
+    supabase
+      .from('ems_participants')
+      .select('*')
+      .eq('event_id', eventId)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('ems_jury_codes')
+      .select('*')
+      .eq('event_id', eventId)
+      .order('created_at', { ascending: true }),
+    fetchEmsLeaderboard(eventId),
+  ]);
+
+  if (eventRes.error || !eventRes.data) {
+    // Fallback if creator relation hint fails
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from('ems_events')
+      .select(`
+        *,
+        form_fields:ems_form_fields(*),
+        rubrics:ems_rubrics(*)
+      `)
+      .eq('id', eventId)
+      .maybeSingle();
+
+    if (fallbackError || !fallbackData) return null;
+
+    return {
+      ...fallbackData,
+      form_fields: fallbackData.form_fields || [],
+      rubrics: fallbackData.rubrics || [],
+      participants: participantsRes.data || [],
+      jury_codes: juryCodesRes.data || [],
+      leaderboard: leaderboard || [],
+    };
+  }
+
+  const eventData = eventRes.data;
+  return {
+    ...eventData,
+    form_fields: eventData.form_fields || [],
+    rubrics: eventData.rubrics || [],
+    participants: participantsRes.data || [],
+    jury_codes: juryCodesRes.data || [],
+    leaderboard: leaderboard || [],
+  };
+}
+
+/**
+ * Inserts event into ems_events, and uses Promise.all to batch insert form fields and rubrics.
+ */
+export async function createEmsEvent(
+  eventData: Partial<EmsEvent>,
+  formFields: Partial<EmsFormField>[] = [],
+  rubrics: Partial<EmsRubricCriteria>[] = []
+): Promise<EmsEvent> {
+  const { data: event, error: eventError } = await supabase
+    .from('ems_events')
+    .insert([eventData])
+    .select()
+    .single();
+
+  if (eventError || !event) {
+    throw new Error(`Gagal mencipta acara: ${eventError?.message || 'Tiada data'}`);
+  }
+
+  const fieldInserts = formFields.map((field, idx) => ({
+    ...field,
+    event_id: event.id,
+    sort_order: field.sort_order ?? idx + 1,
+  }));
+
+  const rubricInserts = rubrics.map((rubric, idx) => ({
+    ...rubric,
+    event_id: event.id,
+    sort_order: rubric.sort_order ?? idx + 1,
+  }));
+
+  const promises: Promise<any>[] = [];
+
+  if (fieldInserts.length > 0) {
+    promises.push(supabase.from('ems_form_fields').insert(fieldInserts));
+  }
+
+  if (rubricInserts.length > 0) {
+    promises.push(supabase.from('ems_rubrics').insert(rubricInserts));
+  }
+
+  if (promises.length > 0) {
+    const results = await Promise.all(promises);
+    for (const res of results) {
+      if (res.error) {
+        console.error('[EMS] Error batch inserting form_fields or rubrics:', res.error);
+      }
+    }
+  }
+
+  return event;
+}
+
+/**
+ * Updates event details, form fields, and rubrics.
+ */
+export async function updateEmsEvent(
+  eventId: string,
+  eventData: Partial<EmsEvent>,
+  formFields?: Partial<EmsFormField>[],
+  rubrics?: Partial<EmsRubricCriteria>[]
+): Promise<EmsEvent> {
+  const { data: event, error: eventError } = await supabase
+    .from('ems_events')
+    .update(eventData)
+    .eq('id', eventId)
+    .select()
+    .single();
+
+  if (eventError || !event) {
+    throw new Error(`Gagal mengemaskini acara: ${eventError?.message || 'Tiada data'}`);
+  }
+
+  const updateTasks: Promise<any>[] = [];
+
+  if (formFields !== undefined) {
+    updateTasks.push(
+      (async () => {
+        await supabase.from('ems_form_fields').delete().eq('event_id', eventId);
+        if (formFields.length > 0) {
+          const fieldInserts = formFields.map((field, idx) => ({
+            ...field,
+            event_id: eventId,
+            sort_order: field.sort_order ?? idx + 1,
+          }));
+          return supabase.from('ems_form_fields').insert(fieldInserts);
+        }
+      })()
+    );
+  }
+
+  if (rubrics !== undefined) {
+    updateTasks.push(
+      (async () => {
+        await supabase.from('ems_rubrics').delete().eq('event_id', eventId);
+        if (rubrics.length > 0) {
+          const rubricInserts = rubrics.map((rubric, idx) => ({
+            ...rubric,
+            event_id: eventId,
+            sort_order: rubric.sort_order ?? idx + 1,
+          }));
+          return supabase.from('ems_rubrics').insert(rubricInserts);
+        }
+      })()
+    );
+  }
+
+  if (updateTasks.length > 0) {
+    await Promise.all(updateTasks);
+  }
+
+  return event;
+}
+
+/**
+ * Updates event status by Super Admin ('APPROVED' | 'REJECTED').
+ */
+export async function approveEmsEvent(
+  eventId: string,
+  status: 'APPROVED' | 'REJECTED',
+  note?: string
+): Promise<EmsEvent> {
+  const updatePayload: Record<string, any> = { status };
+  if (note) {
+    updatePayload.description = note;
+  }
+
+  const { data, error } = await supabase
+    .from('ems_events')
+    .update(updatePayload)
+    .eq('id', eventId)
+    .select()
+    .single();
+
+  if (error || !data) {
+    throw new Error(`Gagal mengubah status acara: ${error?.message || 'Tiada data'}`);
+  }
+
+  return data;
+}
+
+/**
+ * Inserts participant into ems_participants.
+ */
+export async function registerEmsParticipant(
+  participantData: Partial<EmsParticipant>
+): Promise<EmsParticipant> {
+  const { data, error } = await supabase
+    .from('ems_participants')
+    .insert([participantData])
+    .select()
+    .single();
+
+  if (error || !data) {
+    throw new Error(`Gagal mendaftar peserta: ${error?.message || 'Sila cuba lagi'}`);
+  }
+
+  return data;
+}
+
+/**
+ * Finds participant by matrix_no, id, or email, sets is_checked_in: true, checked_in_at: now().
+ */
+export async function checkinEmsParticipant(
+  eventId: string,
+  searchInput: string
+): Promise<EmsParticipant> {
+  const cleanInput = searchInput.trim();
+  if (!cleanInput) {
+    throw new Error('Sila masukkan No. Matrik, ID, atau Emel peserta.');
+  }
+
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanInput);
+
+  let query = supabase
+    .from('ems_participants')
+    .select('*')
+    .eq('event_id', eventId);
+
+  if (isUuid) {
+    query = query.or(`id.eq.${cleanInput},matrix_no.ilike.${cleanInput},email.ilike.${cleanInput}`);
+  } else {
+    query = query.or(`matrix_no.ilike.${cleanInput},email.ilike.${cleanInput}`);
+  }
+
+  const { data: participants, error: findError } = await query;
+
+  if (findError || !participants || participants.length === 0) {
+    throw new Error(`Peserta dengan carian "${cleanInput}" tidak dijumpai.`);
+  }
+
+  const participant = participants[0];
+
+  const { data: updated, error: updateError } = await supabase
+    .from('ems_participants')
+    .update({
+      is_checked_in: true,
+      checked_in_at: new Date().toISOString(),
+    })
+    .eq('id', participant.id)
+    .select()
+    .single();
+
+  if (updateError || !updated) {
+    throw new Error(`Gagal daftar masuk peserta: ${updateError?.message || 'Ralat sistem'}`);
+  }
+
+  return updated;
+}
+
+/**
+ * Inserts jury code into ems_jury_codes.
+ */
+export async function createJuryCode(
+  eventId: string,
+  codeData: {
+    code: string;
+    jury_name?: string;
+    organization?: string;
+    assigned_categories?: string[];
+    assigned_booths?: string[];
+  }
+): Promise<EmsJuryCode> {
+  const { data, error } = await supabase
+    .from('ems_jury_codes')
+    .insert([
+      {
+        event_id: eventId,
+        code: codeData.code.trim().toUpperCase(),
+        jury_name: codeData.jury_name || null,
+        organization: codeData.organization || null,
+        assigned_categories: codeData.assigned_categories || null,
+        assigned_booths: codeData.assigned_booths || null,
+      },
+    ])
+    .select()
+    .single();
+
+  if (error || !data) {
+    throw new Error(`Gagal mencipta kod juri: ${error?.message || 'Ralat sistem'}`);
+  }
+
+  return data;
+}
+
+/**
+ * Queries ems_jury_codes by code, returns jury code record along with associated event and rubrics.
+ * Uses Promise.all for parallel fetches.
+ */
+export async function verifyJuryCode(
+  code: string
+): Promise<{ juryCode: EmsJuryCode; event: EmsEvent; rubrics: EmsRubricCriteria[] } | null> {
+  const cleanCode = code.trim().toUpperCase();
+
+  const { data: juryCode, error: juryError } = await supabase
+    .from('ems_jury_codes')
+    .select('*')
+    .eq('code', cleanCode)
+    .maybeSingle();
+
+  if (juryError || !juryCode) {
+    return null;
+  }
+
+  const [eventRes, rubricsRes] = await Promise.all([
+    supabase.from('ems_events').select('*').eq('id', juryCode.event_id).maybeSingle(),
+    supabase
+      .from('ems_rubrics')
+      .select('*')
+      .eq('event_id', juryCode.event_id)
+      .order('sort_order', { ascending: true }),
+  ]);
+
+  if (eventRes.error || !eventRes.data) {
+    return null;
+  }
+
+  return {
+    juryCode,
+    event: eventRes.data,
+    rubrics: rubricsRes.data || [],
+  };
+}
+
+/**
+ * Upserts scores in ems_scores for a jury submission.
+ */
+export async function submitJuryScore(
+  scores: Array<{
+    event_id: string;
+    participant_id: string;
+    jury_code_id: string;
+    rubric_id: string;
+    score: number;
+    comments?: string;
+  }>
+): Promise<boolean> {
+  if (!scores || scores.length === 0) return true;
+
+  const participantIds = Array.from(new Set(scores.map((s) => s.participant_id)));
+  const juryCodeIds = Array.from(new Set(scores.map((s) => s.jury_code_id)));
+
+  // Batch delete previous scores for these participant & jury combinations
+  await supabase
+    .from('ems_scores')
+    .delete()
+    .in('participant_id', participantIds)
+    .in('jury_code_id', juryCodeIds);
+
+  const { error } = await supabase.from('ems_scores').insert(
+    scores.map((s) => ({
+      event_id: s.event_id,
+      participant_id: s.participant_id,
+      jury_code_id: s.jury_code_id,
+      rubric_id: s.rubric_id,
+      score: s.score,
+      comments: s.comments || null,
+    }))
+  );
+
+  if (error) {
+    throw new Error(`Gagal menyimpan markah juri: ${error.message}`);
+  }
+
+  return true;
+}
+
+/**
+ * Fetches participants and scores, calculates average jury score for each participant/team, orders descending by score.
+ * Uses Promise.all for parallel fetches.
+ */
+export async function fetchEmsLeaderboard(eventId: string): Promise<EmsLeaderboardItem[]> {
+  const [participantsRes, rubricsRes, scoresRes] = await Promise.all([
+    supabase.from('ems_participants').select('*').eq('event_id', eventId),
+    supabase.from('ems_rubrics').select('*').eq('event_id', eventId),
+    supabase.from('ems_scores').select('*').eq('event_id', eventId),
+  ]);
+
+  if (participantsRes.error) throw participantsRes.error;
+
+  const participants: EmsParticipant[] = participantsRes.data || [];
+  const rubrics: EmsRubricCriteria[] = rubricsRes.data || [];
+  const scores: EmsScore[] = scoresRes.data || [];
+
+  const leaderboard: EmsLeaderboardItem[] = participants.map((participant) => {
+    const pScores = scores.filter((s) => s.participant_id === participant.id);
+
+    const juryMap: Record<string, EmsScore[]> = {};
+    pScores.forEach((s) => {
+      if (!juryMap[s.jury_code_id]) juryMap[s.jury_code_id] = [];
+      juryMap[s.jury_code_id].push(s);
+    });
+
+    const juryIds = Object.keys(juryMap);
+    const juryCount = juryIds.length;
+
+    let totalJurySum = 0;
+    const scoresBreakdown: Record<string, number> = {};
+
+    if (juryCount > 0) {
+      juryIds.forEach((jId) => {
+        const jScores = juryMap[jId];
+        let juryTotal = 0;
+        jScores.forEach((scoreObj) => {
+          const rubric = rubrics.find((r) => r.id === scoreObj.rubric_id);
+          const weight = rubric ? Number(rubric.weight) || 1.0 : 1.0;
+          juryTotal += Number(scoreObj.score) * weight;
+        });
+        totalJurySum += juryTotal;
+      });
+
+      rubrics.forEach((r) => {
+        const rScores = pScores.filter((s) => s.rubric_id === r.id);
+        if (rScores.length > 0) {
+          const avgR = rScores.reduce((acc, curr) => acc + Number(curr.score), 0) / rScores.length;
+          scoresBreakdown[r.id] = Number(avgR.toFixed(2));
+        } else {
+          scoresBreakdown[r.id] = 0;
+        }
+      });
+    }
+
+    const averageScore = juryCount > 0 ? Number((totalJurySum / juryCount).toFixed(2)) : 0;
+    const isTieWinner = Boolean(participant.custom_responses?.is_tie_winner);
+
+    return {
+      participant,
+      total_score: averageScore,
+      average_score: averageScore,
+      jury_count: juryCount,
+      rank: 0,
+      is_tied: false,
+      is_tie_winner: isTieWinner,
+      scores_breakdown: scoresBreakdown,
+    };
+  });
+
+  leaderboard.sort((a, b) => {
+    if (b.total_score !== a.total_score) {
+      return b.total_score - a.total_score;
+    }
+    if (a.is_tie_winner && !b.is_tie_winner) return -1;
+    if (!a.is_tie_winner && b.is_tie_winner) return 1;
+    return a.participant.leader_name.localeCompare(b.participant.leader_name);
+  });
+
+  leaderboard.forEach((item, index) => {
+    item.rank = index + 1;
+    if (index > 0 && leaderboard[index - 1].total_score === item.total_score && item.total_score > 0) {
+      item.is_tied = true;
+      leaderboard[index - 1].is_tied = true;
+    }
+  });
+
+  return leaderboard;
+}
+
+/**
+ * Helper to record/mark tied winner selection by Program Director.
+ */
+export async function resolveTieWinner(
+  eventId: string,
+  winnerParticipantId: string
+): Promise<boolean> {
+  const { data: participants, error: fetchErr } = await supabase
+    .from('ems_participants')
+    .select('id, custom_responses')
+    .eq('event_id', eventId);
+
+  if (fetchErr || !participants) {
+    throw new Error(`Gagal memproses penentuan pemenang seret: ${fetchErr?.message}`);
+  }
+
+  const updateTasks = participants.map((p) => {
+    const existing = (p.custom_responses as Record<string, any>) || {};
+    const isWinner = p.id === winnerParticipantId;
+    const updatedResponses = {
+      ...existing,
+      is_tie_winner: isWinner,
+      tie_resolved_at: isWinner ? new Date().toISOString() : null,
+    };
+    return supabase
+      .from('ems_participants')
+      .update({ custom_responses: updatedResponses })
+      .eq('id', p.id);
+  });
+
+  await Promise.all(updateTasks);
+  return true;
+}
+
+/**
+ * Generates certificate records in ems_certificates for all participants and juries with unique serial numbers.
+ * Uses Promise.all for parallel fetches.
+ */
+export async function generateEmsCertificates(eventId: string): Promise<EmsCertificate[]> {
+  const [participantsRes, juriesRes, existingCertsRes] = await Promise.all([
+    supabase.from('ems_participants').select('*').eq('event_id', eventId),
+    supabase.from('ems_jury_codes').select('*').eq('event_id', eventId),
+    supabase.from('ems_certificates').select('*').eq('event_id', eventId),
+  ]);
+
+  if (participantsRes.error) throw participantsRes.error;
+  if (juriesRes.error) throw juriesRes.error;
+
+  const participants: EmsParticipant[] = participantsRes.data || [];
+  const juries: EmsJuryCode[] = juriesRes.data || [];
+  const existingCerts: EmsCertificate[] = existingCertsRes.data || [];
+
+  const existingParticipantIds = new Set(
+    existingCerts.filter((c) => c.participant_id).map((c) => c.participant_id)
+  );
+  const existingJuryIds = new Set(
+    existingCerts.filter((c) => c.jury_code_id).map((c) => c.jury_code_id)
+  );
+
+  const year = new Date().getFullYear();
+  const certInserts: Partial<EmsCertificate>[] = [];
+
+  participants.forEach((p, idx) => {
+    if (!existingParticipantIds.has(p.id)) {
+      const randomSuffix = Math.floor(10000 + Math.random() * 90000);
+      const certSerial = `CERT-EMS-${year}-P${idx + 1}-${randomSuffix}`;
+      certInserts.push({
+        event_id: eventId,
+        participant_id: p.id,
+        cert_type: 'PARTICIPANT',
+        cert_serial: certSerial,
+      });
+    }
+  });
+
+  juries.forEach((j, idx) => {
+    if (!existingJuryIds.has(j.id)) {
+      const randomSuffix = Math.floor(10000 + Math.random() * 90000);
+      const certSerial = `CERT-EMS-${year}-J${idx + 1}-${randomSuffix}`;
+      certInserts.push({
+        event_id: eventId,
+        jury_code_id: j.id,
+        cert_type: 'JURY',
+        cert_serial: certSerial,
+      });
+    }
+  });
+
+  if (certInserts.length > 0) {
+    const { error } = await supabase.from('ems_certificates').insert(certInserts);
+    if (error) {
+      throw new Error(`Gagal menjana sijil: ${error.message}`);
+    }
+  }
+
+  const { data: updatedCerts, error: fetchErr } = await supabase
+    .from('ems_certificates')
+    .select('*')
+    .eq('event_id', eventId);
+
+  if (fetchErr) throw fetchErr;
+  return updatedCerts || [];
+}
