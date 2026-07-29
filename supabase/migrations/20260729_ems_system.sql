@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS public.ems_events (
   max_participants INT DEFAULT NULL,
   milestone_config JSONB DEFAULT NULL,
   is_leaderboard_public BOOLEAN DEFAULT true,
-  created_by UUID REFERENCES auth.users(id),
+  created_by UUID REFERENCES profiles(id),
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS public.ems_certificates (
 CREATE TABLE IF NOT EXISTS public.ems_visitors (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   event_id UUID REFERENCES public.ems_events(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES auth.users(id),
+  user_id UUID REFERENCES profiles(id),
   name TEXT NOT NULL,
   matrix_no TEXT,
   email TEXT,
