@@ -100,11 +100,13 @@ src/
 │   ├── akademik/              ← Modul e-Akademik (CGPA, merit, folder, QR)
 │   ├── polymart/              ← Modul PolyMart (marketplace pelajar)
 │   ├── supsas/                ← Modul SUPSAS (sukan & pertandingan)
+│   ├── ems/                   ← Modul EMS (Event Management System)
 │   └── karnival/              ← Modul Karnival (sistem undian & booth)
 │
 ├── components/
 │   ├── RouteGuards.tsx        ← ProtectedRoute, PublicRoute
 │   ├── ai/                   ← FloatingAiChat, komponen AI
+│   ├── ems/                  ← Templat E-Sijil & komponen EMS
 │   ├── layout/               ← AppLayout, Sidebar, BottomNav
 │   ├── reports/              ← Penjana PDF/DOCX laporan
 │   ├── takwim/               ← Komponen takwim/kalendar
@@ -2194,35 +2196,88 @@ Bagi tujuan keselamatan dan pemantauan salah guna kuasa pentadbir/exco JPP, sist
 
 ## 22. Senibina Modul Event Management System (EMS) 🎯
 
-> Ditambah: Julai 2026
+> Dikemas kini: Julai 2026
 
-Modul EMS membolehkan pengurusan acara politeknik merangkumi pendaftaran QR, penilaian juri luar (menerusi kod juri), papan pemuka live leaderboard, dan penjanaan sijil digital.
+Modul Event Management System (EMS) ialah platform pengurusan acara komprehensif politeknik yang merangkumi pembinaan borang & rubrik dinamik, wisard pendaftaran peserta awam/pelajar dengan muat naik media, pengimbas kehadiran QR krew real-time, portal penilaian juri luar/dalaman berautentikasi kod laluan, papan pendahulu (live leaderboard) berserta mod pentas (Stage Mode) animasi podium, dan penjanaan serta pengesahan sijil digital PDF berserta QR.
 
 ### 22.1 Skema Pangkalan Data & Indeks FK
-Modul EMS menggunakan 7 jadual teras di dalam skema `public` dengan indeks pada semua kolum Foreign Key:
-- **`ems_events`**: Menyimpan rekod acara (`id`, `title`, `description`, `category`, `event_mode`, `event_date`, `location`, `status`, `is_leaderboard_public`, `created_by`, `created_at`). Indeks: `idx_ems_events_created_by`.
-- **`ems_form_fields`**: Menyimpan medan borang pendaftaran dinamik (`id`, `event_id`, `field_label`, `field_type`, `is_required`, `options`, `sort_order`). Indeks: `idx_ems_form_fields_event_id`.
-- **`ems_participants`**: Menyimpan maklumat peserta/kumpulan terdaftar (`id`, `event_id`, `participant_type`, `entity_mode`, `team_name`, `booth_no`, `category_name`, `leader_name`, `matrix_no`, `email`, `phone`, `members_list`, `custom_responses`, `media_urls`, `is_checked_in`, `checked_in_at`, `created_at`). Indeks: `idx_ems_participants_event_id`.
-- **`ems_jury_codes`**: Menyimpan kod laluan juri luar/dalaman (`id`, `event_id`, `code`, `jury_name`, `organization`, `assigned_categories`, `assigned_booths`, `created_at`). Indeks: `idx_ems_jury_codes_event_id`.
-- **`ems_rubrics`**: Menyimpan kriteria rubrik penilaian (`id`, `event_id`, `criteria_name`, `max_score`, `weight`, `sort_order`). Indeks: `idx_ems_rubrics_event_id`.
-- **`ems_scores`**: Menyimpan markah penilaian yang diberikan oleh juri (`id`, `event_id`, `participant_id`, `jury_code_id`, `rubric_id`, `score`, `comments`, `created_at`). Indeks: `idx_ems_scores_event_id`, `idx_ems_scores_participant_id`, `idx_ems_scores_jury_code_id`, `idx_ems_scores_rubric_id`.
-- **`ems_certificates`**: Menyimpan rekod dan nombor siri sijil digital (`id`, `event_id`, `participant_id`, `jury_code_id`, `cert_type`, `cert_serial`, `qr_code_url`, `created_at`). Indeks: `idx_ems_certificates_event_id`, `idx_ems_certificates_participant_id`, `idx_ems_certificates_jury_code_id`.
 
-### 22.2 Polisi Row-Level Security (RLS)
-Setiap jadual EMS diaktifkan RLS dengan polisi tunggal bagi setiap operasi (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) menggunakan `(SELECT auth.uid())`:
-- **Kebangkitan Awam/Peserta/Juri**: Kebenaran `SELECT` dibolehkan awam bagi permohonan pendaftaran, verifikasi kod juri, live leaderboard, dan pengesahan sijil QR.
-- **Pendaftaran & Penilaian Awam**: Pendaftaran peserta (`ems_participants`) dan masukan markah (`ems_scores`) membenarkan `INSERT`/`UPDATE` untuk fleksibiliti borang awam & juri luar berautentikasi kod.
+Modul EMS menggunakan 7 jadual teras di dalam skema `public` dengan penguatkuasaan RLS serta indeks pada semua kolum Foreign Key (FK):
 
-### 22.3 Laluan (Routes) & Fail Halaman EMS
-- **`/ems/dashboard`**: `<EmsDashboardPage />` (`src/pages/ems/EmsDashboardPage.tsx`) — Papan pemuka utama EMS, senarai acara, jana kod juri, pautan QR pendaftaran, tie-breaker & e-sijil.
-- **`/ems/event/new`**: `<EmsEventFormPage />` (`src/pages/ems/EmsEventFormPage.tsx`) — Borang pendaftaran acara baharu dengan pembina borang & rubrik pemarkahan.
-- **`/ems/event/:id/edit`**: `<EmsEventFormPage />` (`src/pages/ems/EmsEventFormPage.tsx`) — Suntingan acara sedia ada.
-- **`/ems/approvals`**: `<EmsApprovalPage />` (`src/pages/ems/EmsApprovalPage.tsx`) — Halaman pengesahan kelulusan khas Pentadbir Mutlak (SUPER_ADMIN_JPP).
-- **`/ems/e/:eventId/register`**: `<EmsPublicRegisterPage />` (`src/pages/ems/EmsPublicRegisterPage.tsx`) — Wisard pendaftaran peserta awam/pelajar multi-langkah dengan pendaftaran individu/pasukan, borang dinamik, muat naik media, dan jana pass digital berserta QR.
-- **`/ems/checkin/:eventId`**: `<EmsCheckinPage />` (`src/pages/ems/EmsCheckinPage.tsx`) — Portal pengesahan kehadiran urus setia / AJK hari kejadian menggunakan pengimbas QR kamera real-time (html5-qrcode), carian manual, audio chime, dan papan pemuka peratusan kehadiran live.
-- **`/ems/leaderboard/:eventId`**: `<EmsLeaderboardPage />` (`src/pages/ems/EmsLeaderboardPage.tsx`) — Papan pendahulu pentadbir & pengarah program EMS berserta kawalan visibiliti, penentuan seret (tie-breaker), penapis kategori, dan perincian komen/skor juri.
-- **`/ems/stage/:eventId`**: `<EmsLeaderboardPage isStageMode={true} />` (`src/pages/ems/EmsLeaderboardPage.tsx`) — Mod persembahan pentas (Stage Display Mode) skrin penuh bertema gelap/vibrant, animasi podium Top 3, lencana 🥇/🥈/🥉, pelancaran bunga api (canvas-confetti), dan skrin tirai kunci status visibiliti rasmi.
-- **`/ems/cert/:certId`**: `<EmsCertificatePage />` (`src/pages/ems/EmsCertificatePage.tsx`) — Portal awam muat turun & pengesahan e-sijil digital dengan carian carian Supabase ID/serial, kad status sah dengan lencana hijau, pratinjau PDF terbina (`@react-pdf/renderer`), dan pautan QR pengesahan. Templat dokumen disedia di `src/components/ems/EmsCertificateTemplate.tsx` menyokong jenis `PARTICIPANT`, `WINNER`, dan `JURY`.
+1. **`ems_events`**: Menyimpan rekod induk acara/pertandingan.
+   - **Kolum**: `id` (UUID, PK), `title` (TEXT), `description` (TEXT), `category` (TEXT), `event_mode` (TEXT: 'INDIVIDUAL' | 'TEAM'), `event_date` (TIMESTAMPTZ), `location` (TEXT), `status` (TEXT: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'LIVE' | 'COMPLETED'), `is_leaderboard_public` (BOOLEAN), `created_by` (UUID, FK -> `profiles.id`), `created_at` (TIMESTAMPTZ).
+   - **Indeks FK**: `idx_ems_events_created_by`.
+
+2. **`ems_form_fields`**: Menyimpan medan borang pendaftaran dinamik per acara.
+   - **Kolum**: `id` (UUID, PK), `event_id` (UUID, FK -> `ems_events.id` ON DELETE CASCADE), `field_label` (TEXT), `field_type` (TEXT: 'TEXT' | 'NUMBER' | 'SELECT' | 'FILE' | 'CHECKBOX'), `is_required` (BOOLEAN), `options` (JSONB), `sort_order` (INT).
+   - **Indeks FK**: `idx_ems_form_fields_event_id`.
+
+3. **`ems_participants`**: Menyimpan maklumat pendaftaran peserta atau kumpulan terdaftar.
+   - **Kolum**: `id` (UUID, PK), `event_id` (UUID, FK -> `ems_events.id` ON DELETE CASCADE), `participant_type` (TEXT: 'STUDENT' | 'PUBLIC'), `entity_mode` (TEXT: 'INDIVIDUAL' | 'TEAM'), `team_name` (TEXT), `booth_no` (TEXT), `category_name` (TEXT), `leader_name` (TEXT), `matrix_no` (TEXT), `email` (TEXT), `phone` (TEXT), `members_list` (JSONB), `custom_responses` (JSONB), `media_urls` (JSONB), `is_checked_in` (BOOLEAN), `checked_in_at` (TIMESTAMPTZ), `created_at` (TIMESTAMPTZ).
+   - **Indeks FK**: `idx_ems_participants_event_id`.
+
+4. **`ems_jury_codes`**: Menyimpan kod laluan (passcode) akses juri luar/dalaman.
+   - **Kolum**: `id` (UUID, PK), `event_id` (UUID, FK -> `ems_events.id` ON DELETE CASCADE), `code` (TEXT, UNIQUE per event), `jury_name` (TEXT), `organization` (TEXT), `assigned_categories` (JSONB / TEXT[]), `assigned_booths` (JSONB / TEXT[]), `created_at` (TIMESTAMPTZ).
+   - **Indeks FK**: `idx_ems_jury_codes_event_id`.
+
+5. **`ems_rubrics`**: Menyimpan kriteria rubrik pemarkahan untuk sesuatu acara.
+   - **Kolum**: `id` (UUID, PK), `event_id` (UUID, FK -> `ems_events.id` ON DELETE CASCADE), `criteria_name` (TEXT), `max_score` (NUMERIC), `weight` (NUMERIC), `sort_order` (INT).
+   - **Indeks FK**: `idx_ems_rubrics_event_id`.
+
+6. **`ems_scores`**: Menyimpan markah penilaian yang diberikan oleh juri.
+   - **Kolum**: `id` (UUID, PK), `event_id` (UUID, FK -> `ems_events.id` ON DELETE CASCADE), `participant_id` (UUID, FK -> `ems_participants.id` ON DELETE CASCADE), `jury_code_id` (UUID, FK -> `ems_jury_codes.id` ON DELETE CASCADE), `rubric_id` (UUID, FK -> `ems_rubrics.id` ON DELETE CASCADE), `score` (NUMERIC), `comments` (TEXT), `created_at` (TIMESTAMPTZ).
+   - **Indeks FK**: `idx_ems_scores_event_id`, `idx_ems_scores_participant_id`, `idx_ems_scores_jury_code_id`, `idx_ems_scores_rubric_id`.
+
+7. **`ems_certificates`**: Menyimpan rekod sijil digital dan nombor siri rasmi.
+   - **Kolum**: `id` (UUID, PK), `event_id` (UUID, FK -> `ems_events.id` ON DELETE CASCADE), `participant_id` (UUID, FK -> `ems_participants.id` ON DELETE CASCADE, NULLABLE), `jury_code_id` (UUID, FK -> `ems_jury_codes.id` ON DELETE CASCADE, NULLABLE), `cert_type` (TEXT: 'PARTICIPANT' | 'WINNER' | 'JURY'), `cert_serial` (TEXT, UNIQUE), `qr_code_url` (TEXT), `created_at` (TIMESTAMPTZ).
+   - **Indeks FK**: `idx_ems_certificates_event_id`, `idx_ems_certificates_participant_id`, `idx_ems_certificates_jury_code_id`.
+
+### 22.2 Polisi Row-Level Security (RLS) & Keselamatan
+
+Setiap jadual EMS mematuhi piawaian RLS ketat projek:
+- **Penggunaan `(SELECT auth.uid())`**: Semua klausa subquery RLS menggunakan `(SELECT auth.uid())` dan bukannya bare `auth.uid()` bagi mengelakkan masalah prestasi Supavisor connection pooler.
+- **Satu Polisi Per Operasi**: Menghindari polisi duplikasi/bertindih pada jadual yang sama.
+
+**Peraturan Akses mengikut Entiti**:
+1. **Pengurusan Admin & Penganjur (`ems_events`, `ems_form_fields`, `ems_rubrics`, `ems_jury_codes`)**:
+   - `SELECT`, `INSERT`, `UPDATE`, `DELETE` dibolehkan untuk pencipta acara (`created_by = (SELECT auth.uid())`) atau pengguna bertaraf `JPP` / `SUPER_ADMIN_JPP`.
+   - `SELECT` dibolehkan untuk awam/peserta pada `ems_events` (apabila diluluskan/LIVE) dan `ems_form_fields` untuk tujuan paparan borang pendaftaran.
+2. **Portal Pendaftaran Peserta (`ems_participants`)**:
+   - `INSERT` dibolehkan untuk sesi awam/pelajar (anonymous/authenticated) untuk mendaftar acara.
+   - `SELECT` dibolehkan untuk penganjur acara, krew imbasan QR, dan awam (untuk tujuan papan pendahulu & verifikasi pass).
+   - `UPDATE` dibolehkan untuk krew/penganjur mengemaskini status kehadiran (`is_checked_in`, `checked_in_at`).
+3. **Portal Penilaian Juri (`ems_jury_codes`, `ems_scores`)**:
+   - `SELECT` pada `ems_jury_codes` dibolehkan secara awam untuk proses pengesahan kod passcode juri (`code = ...`).
+   - `INSERT` & `UPDATE` pada `ems_scores` dibolehkan untuk penyerahan markah juri berautentikasi kod juri sah.
+   - `SELECT` pada `ems_scores` dibolehkan untuk penganjur/admin dan pengiraan aggregat leaderboard.
+4. **Portal E-Sijil (`ems_certificates`)**:
+   - `SELECT` dibolehkan untuk carian awam melalui `id` atau `cert_serial` untuk pengesahan ketulenan sijil digital & paparan QR.
+   - `INSERT` dibolehkan untuk penganjur acara/admin bagi pembentukan sijil secara pukal.
+
+### 22.3 Konvensyen Storan (Storage & Media EMS)
+
+Sistem EMS memanfaatkan baldi (bucket) storan Supabase `ems-media` yang dikonfigurasi dengan capaian awam (Public Access):
+- **Bahan Muat Naik Peserta**: Fail seperti poster persembahan, slaid pembentangan, dan dokumen sokongan peserta disimpan di folder `ems-media/participants/:eventId/`.
+- **Grafik Acara**: Banner dan poster hebahan acara disimpan di folder `ems-media/events/:eventId/`.
+- **Aset E-Sijil & QR**: Gambar Kod QR pengesahan sijil disimpan di `ems-media/certificates/:certId.png`.
+- **Standard Hibrid**: Mengikut konvensyen Section 3 (`src/lib/driveUpload.ts`), imej dan aset visual disimpan dalam Supabase Storage, manakala dokumen PDF atau fail saiz besar disokong secara integrasi Google Drive jika diperlukan.
+
+### 22.4 Laluan (Routes) & Fail Halaman EMS
+
+Semua 9 laluan EMS menggunakan prefix `/ems/*` dan dipeta kepada komponen halaman dedicated dalam `src/pages/ems/`:
+
+| Route | Fail Komponen | Mod Akses | Deskripsi |
+|---|---|---|---|
+| `/ems/dashboard` | `src/pages/ems/EmsDashboardPage.tsx` | Protected (AppLayout) | **EMS Main Management Hub** — Hub pengurusan utama penganjur acara: urus senarai acara, status kelulusan, jana kod juri, jana pautan QR pendaftaran, tie-breaker & pengurusan e-sijil. |
+| `/ems/event/new` | `src/pages/ems/EmsEventFormPage.tsx` | Protected (AppLayout) | **Event Form & Rubric Builder** — Pembina borang pendaftaran dinamik (custom fields) & pembina rubrik pemarkahan kriteria juri untuk acara baharu. |
+| `/ems/event/:id/edit` | `src/pages/ems/EmsEventFormPage.tsx` | Protected (AppLayout) | **Event Form & Rubric Builder Edit** — Kemaskini maklumat acara sedia ada, susunan borang dinamik, dan kriteria rubrik. |
+| `/ems/approvals` | `src/pages/ems/EmsApprovalPage.tsx` | Protected (SUPER_ADMIN_JPP) | **Super Admin Approval Page** — Halaman pengesahan kelulusan khas Pentadbir Mutlak (`SUPER_ADMIN_JPP`) untuk meluluskan/menolak permohonan penganjuran acara EMS. |
+| `/ems/e/:eventId/register` | `src/pages/ems/EmsPublicRegisterPage.tsx` | Public Standalone | **Public Participant Registration Wizard** — Wisard pendaftaran peserta awam/pelajar multi-langkah (individu/pasukan), borang soalan dinamik, muat naik media, dan penjanaan pas digital QR. |
+| `/ems/checkin/:eventId` | `src/pages/ems/EmsCheckinPage.tsx` | Protected (AppLayout) | **Crew Attendance QR Check-In Scanner** — Portal pengimbas QR kehadiran krew / AJK hari kejadian menggunakan kamera real-time (`html5-qrcode`), carian manual, audio chime, dan statistik kehadiran live. |
+| `/ems/juri` | `src/pages/ems/EmsJuryPortalPage.tsx` | Public Standalone | **External Jury Access Portal** — Portal penilaian juri luar/dalaman dengan masukkan passcode kod juri, penilaian berasaskan rubrik, tapisan kategori/booth, dan hantaran skor real-time. |
+| `/ems/leaderboard/:eventId` | `src/pages/ems/EmsLeaderboardPage.tsx` | Protected / Public (jika `is_leaderboard_public`) | **Live Realtime Leaderboard Dashboard** — Papan pendahulu live penganjur & penonton dengan kawalan visibiliti, penetapan tie-breaker manual/automatik, filter kategori, dan pecahan komen/skor juri. |
+| `/ems/stage/:eventId` | `src/pages/ems/EmsLeaderboardPage.tsx` | Public Standalone (`isStageMode={true}`) | **Stage Display Mode** — Mod persembahan pentas skrin penuh bertema gelap/vibrant, animasi podium Top 3, lencana 🥇/🥈/🥉, pelancaran bunga api (`canvas-confetti`), dan tirai kunci visibiliti. |
+| `/ems/cert/:certId` | `src/pages/ems/EmsCertificatePage.tsx` | Public Standalone | **Digital E-Certificate PDF & Verification Portal** — Portal awam muat turun PDF & pengesahan e-sijil digital dengan carian Supabase ID/serial, kad status sah lencana hijau, pratinjau PDF terbina (`@react-pdf/renderer`), dan pautan QR (`src/components/ems/EmsCertificateTemplate.tsx`). |
 
 
 

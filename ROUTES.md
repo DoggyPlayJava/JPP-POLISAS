@@ -52,6 +52,7 @@ Setiap exco baharu yang ditambah **MESTI** menggunakan prefix dengan ID exco mer
 | `/polyrider/*` | PolyRider | ✅ Aktif |
 | `/polytask/*` | PolyTask | ✅ Aktif |
 | `/karnival/*` | Sistem Karnival JPP | ✅ Aktif |
+| `/ems/*` | EMS (Event Management System) | ✅ Aktif |
 | `/sukan/*` | e-Sukan | 🔜 Akan Datang |
 
 **Contoh route exco / modul tambahan:**
@@ -65,7 +66,28 @@ Setiap exco baharu yang ditambah **MESTI** menggunakan prefix dengan ID exco mer
 /keusahawanan/poster    (Poster Digital Keusahawanan & PolyMart)
 /polyrider              (Laman Utama PolyRider)
 /polyrider-admin        (Pusat Kawalan PolyRider)
+/ems/dashboard          (Papan Pemuka Utama EMS)
+/ems/juri               (Portal Penilaian Juri EMS)
 ```
+
+---
+
+## Modul EMS (Event Management System)
+
+Semua laluan bagi modul Event Management System (EMS) menggunakan prefix `/ems/*`:
+
+| Route | Deskripsi | Jenis Akses |
+|---|---|---|
+| `/ems/dashboard` | EMS Main Management Hub — Papan pemuka utama penganjur acara untuk senarai acara, jana kod juri, jana pautan QR pendaftaran, tie-breaker & e-sijil | Protected (AppLayout) |
+| `/ems/event/new` | Event Form & Rubric Builder — Pembina borang pendaftaran dinamik & pembina rubrik pemarkahan kriteria juri | Protected (AppLayout) |
+| `/ems/event/:id/edit` | Event Form & Rubric Builder Edit — Kemaskini borang dinamik & rubrik pemarkahan acara sedia ada | Protected (AppLayout) |
+| `/ems/approvals` | Super Admin Approval Page — Semakan & kelulusan penganjuran acara oleh Pentadbir Mutlak (`SUPER_ADMIN_JPP`) | Protected (SUPER_ADMIN_JPP) |
+| `/ems/e/:eventId/register` | Public Participant Registration Wizard — Wisard pendaftaran peserta awam/pelajar multi-langkah & muat naik media | Public Standalone |
+| `/ems/checkin/:eventId` | Crew Attendance QR Check-In Scanner — Portal pengimbas QR kehadiran peserta oleh krew/urus setia hari kejadian | Protected (AppLayout) |
+| `/ems/juri` | External Jury Access Portal — Portal penilaian juri luar/dalaman dengan pengesahan kod passcode juri | Public Standalone |
+| `/ems/leaderboard/:eventId` | Live Realtime Leaderboard Dashboard — Papan pendahulu live penganjur & penonton berserta kawalan tie-breaker | Protected / Public |
+| `/ems/stage/:eventId` | Stage Display Mode — Mod paparan pentas skrin penuh bertema gelap/vibrant, animasi podium Top 3 & confetti | Public Standalone |
+| `/ems/cert/:certId` | Digital E-Certificate PDF & Verification Portal — Muat turun PDF sijil digital & verifikasi ketulenan menerusi QR | Public Standalone |
 
 ---
 
@@ -106,4 +128,4 @@ Setiap exco baharu yang ditambah **MESTI** menggunakan prefix dengan ID exco mer
 ---
 
 *Dikemaskini oleh: Pembangun JPP Digital Portal*
-*Tarikh: April 2026*
+*Tarikh: Julai 2026*
