@@ -358,13 +358,19 @@ export function EmsDashboardPage() {
 
       {/* Filter Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-800">
-        {[
-          { key: 'ALL', label: 'Semua Acara' },
-          { key: 'PENDING_APPROVAL', label: 'Pending Kelulusan' },
-          { key: 'APPROVED', label: 'Diluluskan' },
-          { key: 'DRAFT', label: 'Draf' },
-          { key: 'COMPLETED', label: 'Selesai' },
-        ].map((tab) => (
+        {(canCreateEvent
+          ? [
+              { key: 'ALL', label: 'Semua Acara' },
+              { key: 'APPROVED', label: 'Diluluskan / Aktif' },
+              { key: 'PENDING_APPROVAL', label: 'Pending Kelulusan' },
+              { key: 'DRAFT', label: 'Draf' },
+              { key: 'COMPLETED', label: 'Selesai' },
+            ]
+          : [
+              { key: 'ALL', label: '🔥 Acara Berlangsung & Akan Datang' },
+              { key: 'COMPLETED', label: '🏆 Acara Selesai & Keputusan' },
+            ]
+        ).map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
@@ -378,6 +384,7 @@ export function EmsDashboardPage() {
           </button>
         ))}
       </div>
+
 
       {/* Event Cards Grid */}
       {loading ? (
@@ -403,7 +410,15 @@ export function EmsDashboardPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((event) => (
+          {events
+            .filter((e) => {
+              if (canCreateEvent) return true;
+              const isOwner = user?.id && e.created_by === user.id;
+              if (isOwner) return true;
+              return e.status === 'APPROVED' || e.status === 'ACTIVE' || e.status === 'COMPLETED';
+            })
+            .map((event) => (
+
             <div
               key={event.id}
               className="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-2xl p-5 flex flex-col justify-between transition-all hover:shadow-xl hover:shadow-indigo-500/5 space-y-4"
