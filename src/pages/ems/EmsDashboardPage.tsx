@@ -24,7 +24,11 @@ import {
   CheckCircle2,
   Gift,
   Trash2,
+  Share2,
+  Send,
+  MessageSquare,
 } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { EmsLuckyDrawModal } from '@/components/ems/EmsLuckyDrawModal';
@@ -876,20 +880,46 @@ export function EmsDashboardPage() {
                         <button
                           type="button"
                           onClick={() => {
-                            navigator.clipboard.writeText(j.code);
+                            const portalUrl = `${window.location.origin}/ems/juri?code=${encodeURIComponent(j.code)}`;
+                            const juryName = j.jury_name || 'Dato\'/Dr./Tuan/Puan';
+                            const org = j.organization ? ` (${j.organization})` : '';
+
+                            const waMsg = `🏛️ *JEMPUTAN PENJURIAN EMS POLISAS*\n\nSalam Sejahtera *${juryName}*${org},\n\nAnda dijemput sebagai *Juri Penilai Rasmi* bagi acara:\n📌 *${juryModalEvent.title}*\n\nMaklumat Akses Penjurian Anda:\n👤 *Nama Juri:* ${j.jury_name || '-'}\n🏢 *Organisasi:* ${j.organization || '-'}\n🔑 *Kod Jemputan Juri:* \`${j.code}\` \n\nSila layari Portal Juri Penilai melalui pautan rasmi di bawah untuk memulakan pemarkahan:\n🔗 ${portalUrl}\n\nTerima kasih atas sumbangan & sokongan anda!\n— *Jawatankuasa Perwakilan Pelajar (JPP) POLISAS*`;
+
+                            navigator.clipboard.writeText(waMsg);
                             setCopiedCodeId(j.id);
-                            toast.success(`Kod ${j.code} disalin!`);
+                            toast.success(`Mesej Jemputan WhatsApp Kod ${j.code} disalin!`);
                             setTimeout(() => setCopiedCodeId(null), 2000);
                           }}
-                          className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-[11px] flex items-center gap-1 transition-all"
+                          className="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-semibold text-[11px] flex items-center gap-1 border border-emerald-500/30 transition-all"
+                          title="Salin Teks Mesej WhatsApp Rasmi"
                         >
                           {copiedCodeId === j.id ? (
                             <Check className="w-3.5 h-3.5 text-emerald-400" />
                           ) : (
                             <Copy className="w-3.5 h-3.5" />
                           )}
-                          <span>{copiedCodeId === j.id ? 'Disalin' : 'Salin'}</span>
+                          <span>{copiedCodeId === j.id ? 'Disalin!' : 'Salin WhatsApp'}</span>
                         </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const portalUrl = `${window.location.origin}/ems/juri?code=${encodeURIComponent(j.code)}`;
+                            const juryName = j.jury_name || 'Dato\'/Dr./Tuan/Puan';
+                            const org = j.organization ? ` (${j.organization})` : '';
+
+                            const waMsg = `🏛️ *JEMPUTAN PENJURIAN EMS POLISAS*\n\nSalam Sejahtera *${juryName}*${org},\n\nAnda dijemput sebagai *Juri Penilai Rasmi* bagi acara:\n📌 *${juryModalEvent.title}*\n\nMaklumat Akses Penjurian Anda:\n👤 *Nama Juri:* ${j.jury_name || '-'}\n🏢 *Organisasi:* ${j.organization || '-'}\n🔑 *Kod Jemputan Juri:* \`${j.code}\` \n\nSila layari Portal Juri Penilai melalui pautan rasmi di bawah untuk memulakan pemarkahan:\n🔗 ${portalUrl}\n\nTerima kasih atas sumbangan & sokongan anda!\n— *Jawatankuasa Perwakilan Pelajar (JPP) POLISAS*`;
+
+                            window.open(`https://wa.me/?text=${encodeURIComponent(waMsg)}`, '_blank');
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold text-[11px] flex items-center gap-1 transition-all shadow-sm"
+                          title="Buka terus di WhatsApp"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          <span>WhatsApp</span>
+                        </button>
+
 
                         <button
                           type="button"

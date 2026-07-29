@@ -78,6 +78,12 @@ export function EmsJuryPortalPage() {
   useEffect(() => {
     async function loadSavedSession() {
       try {
+        const searchParams = new URLSearchParams(window.location.search);
+        const urlCode = searchParams.get('code');
+        if (urlCode) {
+          setInputCode(urlCode.toUpperCase());
+        }
+
         const savedRaw = localStorage.getItem('ems_jury_session');
         if (savedRaw) {
           const parsedSession: JurySession = JSON.parse(savedRaw);
