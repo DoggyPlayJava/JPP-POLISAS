@@ -209,9 +209,94 @@ export function AkademikQrPage() {
 
   const handleQrDetected = (url: string) => {
     setShowCamera(false);
-    // Extract token from URL pattern: /akademik/qr/:token
+    const raw = url.trim();
+    const lower = raw.toLowerCase();
+
+    // 1. EMS Registration: /ems/e/ or register
+    if (lower.includes('/ems/e/') || (lower.includes('register') && lower.includes('/ems/'))) {
+      const match = raw.match(/\/ems\/e\/([^\/\s\?]+)/i);
+      if (match && match[1]) {
+        navigate(`/ems/e/${match[1]}/register`);
+        return;
+      }
+      const uuidMatch = raw.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+      if (uuidMatch) {
+        navigate(`/ems/e/${uuidMatch[0]}/register`);
+        return;
+      }
+    }
+
+    // 2. EMS Checkin / Pass: /ems/checkin or pass
+    if (lower.includes('/ems/checkin') || (lower.includes('pass') && lower.includes('/ems/'))) {
+      const match = raw.match(/\/ems\/checkin\/([^\/\s\?]+)/i);
+      if (match && match[1]) {
+        navigate(`/ems/checkin/${match[1]}`);
+        return;
+      }
+      const uuidMatch = raw.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+      if (uuidMatch) {
+        navigate(`/ems/checkin/${uuidMatch[0]}`);
+        return;
+      }
+      navigate('/ems/checkin');
+      return;
+    }
+
+    // 3. EMS Juri Code: /ems/juri or starts with JURI-
+    if (lower.includes('/ems/juri') || lower.startsWith('juri-') || raw.toUpperCase().startsWith('JURI-')) {
+      if (raw.toUpperCase().startsWith('JURI-')) {
+        navigate(`/ems/juri?code=${encodeURIComponent(raw.toUpperCase())}`);
+        return;
+      }
+      try {
+        const urlObj = new URL(raw.startsWith('http') ? raw : `https://dummy.com${raw.startsWith('/') ? '' : '/'}${raw}`);
+        const codeParam = urlObj.searchParams.get('code');
+        if (codeParam) {
+          navigate(`/ems/juri?code=${encodeURIComponent(codeParam)}`);
+          return;
+        }
+      } catch {}
+      const codeMatch = raw.match(/code=([^&]+)/i) || raw.match(/JURI-[A-Za-z0-9]+/i);
+      if (codeMatch) {
+        const codeVal = codeMatch[1] || codeMatch[0];
+        navigate(`/ems/juri?code=${encodeURIComponent(codeVal.toUpperCase())}`);
+        return;
+      }
+      navigate('/ems/juri');
+      return;
+    }
+
+    // 4. EMS Visitor Scan: /ems/v/ or scan
+    if (lower.includes('/ems/v/') || (lower.includes('scan') && lower.includes('/ems/'))) {
+      const match = raw.match(/\/ems\/v\/([^\/\s\?]+)/i);
+      if (match && match[1]) {
+        navigate(`/ems/v/${match[1]}/scan`);
+        return;
+      }
+      const uuidMatch = raw.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+      if (uuidMatch) {
+        navigate(`/ems/v/${uuidMatch[0]}/scan`);
+        return;
+      }
+    }
+
+    // 5. EMS Certificate: /ems/cert/ or starts with CERT-EMS-
+    if (lower.includes('/ems/cert/') || lower.includes('cert-ems-') || raw.toUpperCase().startsWith('CERT-EMS-')) {
+      const certMatch = raw.match(/CERT-EMS-[A-Za-z0-9-]+/i);
+      if (certMatch) {
+        navigate(`/ems/cert/${certMatch[0]}`);
+        return;
+      }
+      const match = raw.match(/\/ems\/cert\/([^\/\s\?]+)/i);
+      if (match && match[1]) {
+        navigate(`/ems/cert/${match[1]}`);
+        return;
+      }
+    }
+
+    // 6. Fallback: Process as e-Akademik Merit QR Code
     try {
-      const parsed  = new URL(url);
+      const parsed  = new URL(raw.startsWith('http') ? raw : `https://dummy.com${raw.startsWith('/') ? '' : '/'}${raw}`);
       const parts   = parsed.pathname.split('/');
       const tokenIdx = parts.indexOf('qr');
       if (tokenIdx !== -1 && parts[tokenIdx + 1]) {
@@ -220,13 +305,13 @@ export function AkademikQrPage() {
         return;
       }
     } catch {}
-    // Jika bukan URL sistam kita tapi ada uuid pattern
-    const uuidMatch = url.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+
+    const uuidMatch = raw.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
     if (uuidMatch) {
       navigate(`/akademik/qr/${uuidMatch[0]}`);
       return;
     }
-    toast.error('QR ini bukan QR Merit JPP yang sah.');
+    toast.error('QR ini bukan QR Merit JPP atau EMS yang sah.');
   };
 
   return (

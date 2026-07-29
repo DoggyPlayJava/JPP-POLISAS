@@ -23,6 +23,7 @@ import {
   HelpCircle,
   CheckCircle2,
   Gift,
+  Trash2,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { EmsLuckyDrawModal } from '@/components/ems/EmsLuckyDrawModal';
@@ -32,6 +33,9 @@ import {
   resolveTieWinner,
   generateEmsCertificates,
   fetchEmsLeaderboard,
+  toggleJuryCodeActive,
+  deleteJuryCode,
+  completeEmsEvent,
   EmsLeaderboardItem,
 } from '@/lib/ems';
 import { supabase } from '@/lib/supabase';
@@ -39,7 +43,17 @@ import type { EmsEvent, EmsJuryCode } from '@/types';
 
 export function EmsDashboardPage() {
   const navigate = useNavigate();
-  const { isSuperAdmin } = useAuth();
+  const {
+    isSuperAdmin,
+    isJppMember,
+    isPresident,
+    isMT: isClubMt,
+    isAdvisor: isClubAdvisor,
+    profile,
+  } = useAuth();
+
+  const isStaff = profile?.role === 'STAFF' || profile?.role === 'PENSYARAH';
+  const canCreateEvent = isSuperAdmin || isJppMember || isPresident || isClubMt || isClubAdvisor || isStaff;
 
   const [events, setEvents] = useState<(EmsEvent & { creator?: any })[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,8 +84,34 @@ export function EmsDashboardPage() {
   const [selectedWinnerId, setSelectedWinnerId] = useState<string>('');
   const [isResolvingTie, setIsResolvingTie] = useState(false);
 
-  // Cert generation loading state per event
+  // Cert generation & Completion loading state per event
   const [generatingCertId, setGeneratingCertId] = useState<string | null>(null);
+  const [completingCertId, setCompletingCertId] = useState<string | null>(null);
+
+  const handleGenerateCertificates = async (eventId: string) => {
+    try {
+      setGeneratingCertId(eventId);
+      const certs = await generateEmsCertificates(eventId);
+      toast.success(`Berjaya menjana ${certs.length} e-sijil secara automatik!`);
+    } catch (err: any) {
+      toast.error(err?.message || 'Gagal menjana e-sijil.');
+    } finally {
+      setGeneratingCertId(null);
+    }
+  };
+
+  const handleCompleteEvent = async (eventId: string) => {
+    try {
+      setCompletingCertId(eventId);
+      await completeEmsEvent(eventId);
+      toast.success('Acara ditanda SELESAI & e-sijil berjaya dijana!');
+      loadEvents();
+    } catch (err: any) {
+      toast.error(err?.message || 'Gagal menandakan acara selesai.');
+    } finally {
+      setCompletingCertId(null);
+    }
+  };
 
   // Lucky Draw Modal State
   const [luckyDrawModalOpen, setLuckyDrawModalOpen] = useState(false);
@@ -202,18 +242,6 @@ export function EmsDashboardPage() {
     }
   };
 
-  const handleGenerateCertificates = async (eventId: string) => {
-    try {
-      setGeneratingCertId(eventId);
-      const certs = await generateEmsCertificates(eventId);
-      toast.success(`Berjaya menjana ${certs.length} e-sijil secara automatik!`);
-    } catch (err: any) {
-      toast.error(err?.message || 'Gagal menjana e-sijil.');
-    } finally {
-      setGeneratingCertId(null);
-    }
-  };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'DRAFT':
@@ -266,13 +294,15 @@ export function EmsDashboardPage() {
             <Gift className="w-4 h-4 text-slate-950" />
             <span>Cabutan Bertuah 🎰</span>
           </button>
-          <button
-            onClick={() => navigate('/ems/event/new')}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Cipta Acara Baharu</span>
-          </button>
+          {canCreateEvent && (
+            <button
+              onClick={() => navigate('/ems/event/new')}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
+            >
+              <Plus className="w-5 h-5" />
+              <span>Cipta Acara Baharu</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -335,12 +365,14 @@ export function EmsDashboardPage() {
           <p className="text-xs text-slate-400 max-w-md mb-6">
             Belum ada acara yang didaftarkan untuk status ini. Sila cipta acara baharu untuk memulakan pengurusan pertandingan.
           </p>
-          <button
-            onClick={() => navigate('/ems/event/new')}
-            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all"
-          >
-            + Cipta Acara Baharu
-          </button>
+          {canCreateEvent && (
+            <button
+              onClick={() => navigate('/ems/event/new')}
+              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all"
+            >
+              + Cipta Acara Baharu
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -398,82 +430,130 @@ export function EmsDashboardPage() {
 
               {/* Action Buttons */}
               <div className="border-t border-slate-800 pt-4 space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => navigate(`/ems/event/${event.id}/edit`)}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs transition-all"
-                  >
-                    <Edit3 className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Sunting</span>
-                  </button>
+                {canCreateEvent ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => navigate(`/ems/event/${event.id}/edit`)}
+                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs transition-all"
+                      >
+                        <Edit3 className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Sunting</span>
+                      </button>
 
-                  <button
-                    onClick={() => setQrModalEvent(event)}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 font-semibold text-xs transition-all"
-                  >
-                    <QrCode className="w-3.5 h-3.5" />
-                    <span>Pautan QR</span>
-                  </button>
-                </div>
+                      <button
+                        onClick={() => setQrModalEvent(event)}
+                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 font-semibold text-xs transition-all"
+                      >
+                        <QrCode className="w-3.5 h-3.5" />
+                        <span>Pautan QR</span>
+                      </button>
+                    </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => openJuryModal(event)}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 font-semibold text-xs transition-all"
-                  >
-                    <Key className="w-3.5 h-3.5" />
-                    <span>Jana Kod Juri</span>
-                  </button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => openJuryModal(event)}
+                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 font-semibold text-xs transition-all"
+                      >
+                        <Key className="w-3.5 h-3.5" />
+                        <span>Jana Kod Juri</span>
+                      </button>
 
-                  <button
-                    onClick={() => navigate(`/ems/leaderboard/${event.id}`)}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-950 hover:bg-indigo-900 text-indigo-300 font-semibold text-xs border border-indigo-800/50 transition-all"
-                  >
-                    <Trophy className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Leaderboard</span>
-                  </button>
-                </div>
+                      <button
+                        onClick={() => navigate(`/ems/leaderboard/${event.id}`)}
+                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-950 hover:bg-indigo-900 text-indigo-300 font-semibold text-xs border border-indigo-800/50 transition-all"
+                      >
+                        <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Leaderboard</span>
+                      </button>
+                    </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => navigate(`/ems/checkin/${event.id}`)}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 font-semibold text-xs transition-all"
-                  >
-                    <Scan className="w-3.5 h-3.5" />
-                    <span>Check-In</span>
-                  </button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => navigate(`/ems/checkin/${event.id}`)}
+                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 font-semibold text-xs transition-all"
+                      >
+                        <Scan className="w-3.5 h-3.5" />
+                        <span>Check-In</span>
+                      </button>
 
-                  <button
-                    onClick={() => openTieModal(event)}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-300 font-semibold text-xs transition-all"
-                  >
-                    <HelpCircle className="w-3.5 h-3.5" />
-                    <span>Tie-Breaker</span>
-                  </button>
-                </div>
+                      <button
+                        onClick={() => openTieModal(event)}
+                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-300 font-semibold text-xs transition-all"
+                      >
+                        <HelpCircle className="w-3.5 h-3.5" />
+                        <span>Tie-Breaker</span>
+                      </button>
+                    </div>
 
-                <button
-                  onClick={() => {
-                    setSelectedLuckyDrawEvent(event);
-                    setLuckyDrawModalOpen(true);
-                  }}
-                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-amber-600/10 hover:from-amber-500/30 hover:to-amber-600/20 text-amber-300 border border-amber-500/30 font-semibold text-xs transition-all"
-                >
-                  <Gift className="w-4 h-4 text-amber-400" />
-                  <span>Roda Cabutan Bertuah</span>
-                </button>
+                    <button
+                      onClick={() => {
+                        setSelectedLuckyDrawEvent(event);
+                        setLuckyDrawModalOpen(true);
+                      }}
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-amber-600/10 hover:from-amber-500/30 hover:to-amber-600/20 text-amber-300 border border-amber-500/30 font-semibold text-xs transition-all"
+                    >
+                      <Gift className="w-4 h-4 text-amber-400" />
+                      <span>Roda Cabutan Bertuah</span>
+                    </button>
 
-                {event.status === 'COMPLETED' && (
-                  <button
-                    onClick={() => handleGenerateCertificates(event.id)}
-                    disabled={generatingCertId === event.id}
-                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs transition-all shadow-md shadow-teal-600/20 disabled:opacity-50"
-                  >
-                    <Award className="w-4 h-4" />
-                    <span>
-                      {generatingCertId === event.id ? 'Menjana E-Sijil...' : 'Jana E-Sijil'}
-                    </span>
-                  </button>
+                    {event.status === 'APPROVED' && (
+                      <button
+                        onClick={() => handleCompleteEvent(event.id)}
+                        disabled={completingCertId === event.id}
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-md shadow-emerald-600/20 disabled:opacity-50"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>
+                          {completingCertId === event.id ? 'Menanda Selesai...' : 'Tanda Acara Selesai (COMPLETED)'}
+                        </span>
+                      </button>
+                    )}
+
+                    {event.status === 'COMPLETED' && (
+                      <button
+                        onClick={() => handleGenerateCertificates(event.id)}
+                        disabled={generatingCertId === event.id}
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs transition-all shadow-md shadow-teal-600/20 disabled:opacity-50"
+                      >
+                        <Award className="w-4 h-4" />
+                        <span>
+                          {generatingCertId === event.id ? 'Menjana E-Sijil...' : 'Jana E-Sijil'}
+                        </span>
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => navigate(`/ems/e/${event.id}/register`)}
+                        className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all shadow-md shadow-indigo-600/20"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Daftar Peserta</span>
+                      </button>
+
+                      <button
+                        onClick={() => navigate(`/ems/leaderboard/${event.id}`)}
+                        className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 font-semibold text-xs border border-slate-700 transition-all"
+                      >
+                        <Trophy className="w-4 h-4 text-amber-400" />
+                        <span>Lihat Keputusan</span>
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setSelectedLuckyDrawEvent(event);
+                        setLuckyDrawModalOpen(true);
+                      }}
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-amber-600/10 hover:from-amber-500/30 hover:to-amber-600/20 text-amber-300 border border-amber-500/30 font-semibold text-xs transition-all"
+                    >
+                      <Gift className="w-4 h-4 text-amber-400" />
+                      <span>Roda Cabutan Bertuah</span>
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -655,36 +735,96 @@ export function EmsDashboardPage() {
                   {juryCodes.map((j) => (
                     <div
                       key={j.id}
-                      className="flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs gap-2"
                     >
                       <div>
-                        <span className="font-mono font-bold text-amber-400 text-sm block">
-                          {j.code}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-amber-400 text-sm">
+                            {j.code}
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${
+                              (j.is_active ?? true)
+                                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                            }`}
+                          >
+                            {(j.is_active ?? true) ? 'Aktif' : 'Nyahaktif'}
+                          </span>
+                        </div>
                         {j.jury_name && (
-                          <span className="text-slate-300 block">{j.jury_name}</span>
+                          <span className="text-slate-300 block mt-0.5">{j.jury_name}</span>
                         )}
                         {j.organization && (
                           <span className="text-[10px] text-slate-500 block">{j.organization}</span>
                         )}
                       </div>
 
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(j.code);
-                          setCopiedCodeId(j.id);
-                          toast.success(`Kod ${j.code} disalin!`);
-                          setTimeout(() => setCopiedCodeId(null), 2000);
-                        }}
-                        className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-[11px] flex items-center gap-1 transition-all"
-                      >
-                        {copiedCodeId === j.id ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-400" />
-                        ) : (
-                          <Copy className="w-3.5 h-3.5" />
-                        )}
-                        <span>{copiedCodeId === j.id ? 'Disalin' : 'Salin'}</span>
-                      </button>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              const newActive = !(j.is_active ?? true);
+                              await toggleJuryCodeActive(j.id, newActive);
+                              setJuryCodes((prev) =>
+                                prev.map((item) =>
+                                  item.id === j.id ? { ...item, is_active: newActive } : item
+                                )
+                              );
+                              toast.success(
+                                `Kod Juri ${j.code} kini ${newActive ? 'Aktif' : 'Nyahaktif'}`
+                              );
+                            } catch (err: any) {
+                              toast.error(err.message || 'Gagal mengubah status kod juri');
+                            }
+                          }}
+                          className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${
+                            (j.is_active ?? true)
+                              ? 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border-amber-500/30'
+                              : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/30'
+                          }`}
+                        >
+                          {(j.is_active ?? true) ? 'Nyahaktif' : 'Aktifkan'}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(j.code);
+                            setCopiedCodeId(j.id);
+                            toast.success(`Kod ${j.code} disalin!`);
+                            setTimeout(() => setCopiedCodeId(null), 2000);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-[11px] flex items-center gap-1 transition-all"
+                        >
+                          {copiedCodeId === j.id ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                          <span>{copiedCodeId === j.id ? 'Disalin' : 'Salin'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!window.confirm(`Adakah anda pasti untuk memadam kod juri ${j.code}?`))
+                              return;
+                            try {
+                              await deleteJuryCode(j.id);
+                              setJuryCodes((prev) => prev.filter((item) => item.id !== j.id));
+                              toast.success(`Kod Juri ${j.code} berjaya dipadam!`);
+                            } catch (err: any) {
+                              toast.error(err.message || 'Gagal memadam kod juri');
+                            }
+                          }}
+                          className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-all"
+                          title="Padam Kod Juri"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

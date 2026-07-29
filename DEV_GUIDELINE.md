@@ -2219,7 +2219,7 @@ Modul EMS menggunakan 7 jadual teras di dalam skema `public` dengan penguatkuasa
    - **Indeks FK**: `idx_ems_participants_event_id`.
 
 4. **`ems_jury_codes`**: Menyimpan kod laluan (passcode) akses juri luar/dalaman.
-   - **Kolum**: `id` (UUID, PK), `event_id` (UUID, FK -> `ems_events.id` ON DELETE CASCADE), `code` (TEXT, UNIQUE per event), `jury_name` (TEXT), `organization` (TEXT), `assigned_categories` (JSONB / TEXT[]), `assigned_booths` (JSONB / TEXT[]), `created_at` (TIMESTAMPTZ).
+   - **Kolum**: `id` (UUID, PK), `event_id` (UUID, FK -> `ems_events.id` ON DELETE CASCADE), `code` (TEXT, UNIQUE per event), `jury_name` (TEXT), `organization` (TEXT), `assigned_categories` (JSONB / TEXT[]), `assigned_booths` (JSONB / TEXT[]), `is_active` (BOOLEAN, DEFAULT true), `created_at` (TIMESTAMPTZ).
    - **Indeks FK**: `idx_ems_jury_codes_event_id`.
 
 5. **`ems_rubrics`**: Menyimpan kriteria rubrik pemarkahan untuk sesuatu acara.

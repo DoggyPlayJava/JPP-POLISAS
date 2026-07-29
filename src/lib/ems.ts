@@ -3,6 +3,7 @@
 // ============================================================
 
 import { supabase } from './supabase';
+import { sendNotificationToUser } from './notifications';
 import type {
   EmsEvent,
   EmsFormField,
@@ -260,6 +261,7 @@ export async function updateEmsEvent(
 
 /**
  * Updates event status by Super Admin ('APPROVED' | 'REJECTED').
+ * Sends automated notification to the event creator.
  */
 export async function approveEmsEvent(
   eventId: string,
@@ -282,11 +284,27 @@ export async function approveEmsEvent(
     throw new Error(`Gagal mengubah status acara: ${error?.message || 'Tiada data'}`);
   }
 
+  // Send automated notification to event creator
+  if (data.created_by) {
+    const isApproved = status === 'APPROVED';
+    sendNotificationToUser(data.created_by, {
+      title: isApproved ? 'Acara Diluluskan 🎉' : 'Acara Ditolak ⚠️',
+      message: isApproved
+        ? `Acara "${data.title}" telah diluluskan oleh JPP HQ.`
+        : `Acara "${data.title}" telah ditolak.${note ? ' Sebab: ' + note : ''}`,
+      type: isApproved ? 'EMS_EVENT_APPROVED' : 'EMS_EVENT_REJECTED',
+      module: 'JPP',
+      link: '/ems/dashboard',
+      reference_id: data.id,
+    }).catch((err) => console.error('[EMS] Error sending creator notification:', err));
+  }
+
   return data;
 }
 
 /**
  * Inserts participant into ems_participants.
+ * Sends automated notification to the registrant with link to their Pass QR code.
  */
 export async function registerEmsParticipant(
   participantData: Partial<EmsParticipant>
@@ -300,6 +318,106 @@ export async function registerEmsParticipant(
   if (error || !data) {
     throw new Error(`Gagal mendaftar peserta: ${error?.message || 'Sila cuba lagi'}`);
   }
+
+  // Send automated notification to registrant with link to Pass QR code
+  (async () => {
+    try {
+      let targetUserId = (data.custom_responses as Record<string, any>)?.user_id;
+
+      if (!targetUserId && (data.matrix_no || data.email)) {
+        let query = supabase.from('profiles').select('id');
+        if (data.matrix_no && data.email) {
+          query = query.or(`matrix_no.eq.${data.matrix_no},email.eq.${data.email}`);
+        } else if (data.matrix_no) {
+          query = query.eq('matrix_no', data.matrix_no);
+        } else if (data.email) {
+          query = query.eq('email', data.email);
+        }
+        const { data: prof } = await query.maybeSingle();
+        if (prof?.id) {
+          targetUserId = prof.id;
+        }
+      }
+
+      if (!targetUserId) {
+        const { data: authData } = await supabase.auth.getUser();
+        if (authData?.user?.id) {
+          targetUserId = authData.user.id;
+        }
+      }
+
+      if (targetUserId) {
+        await sendNotificationToUser(targetUserId, {
+          title: 'Pendaftaran Acara Berjaya 🎟️',
+          message: `Pendaftaran anda untuk acara telah berjaya. Pas QR anda sedia untuk digunakan.`,
+          type: 'EMS_REGISTRATION_SUCCESS',
+          module: 'JPP',
+          link: `/ems/checkin/${data.event_id}`,
+          reference_id: data.id,
+        });
+      }
+    } catch (notifErr) {
+      console.error('[EMS] Error sending participant registration notification:', notifErr);
+    }
+  })();
+
+  return data;
+}
+
+/**
+ * Toggles active state of a jury code.
+ */
+export async function toggleJuryCodeActive(
+  codeId: string,
+  isActive: boolean
+): Promise<EmsJuryCode> {
+  const { data, error } = await supabase
+    .from('ems_jury_codes')
+    .update({ is_active: isActive })
+    .eq('id', codeId)
+    .select()
+    .single();
+
+  if (error || !data) {
+    throw new Error(`Gagal mengemaskini status kod juri: ${error?.message || 'Ralat sistem'}`);
+  }
+
+  return data;
+}
+
+/**
+ * Deletes a jury code.
+ */
+export async function deleteJuryCode(codeId: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('ems_jury_codes')
+    .delete()
+    .eq('id', codeId);
+
+  if (error) {
+    throw new Error(`Gagal memadam kod juri: ${error.message}`);
+  }
+
+  return true;
+}
+
+/**
+ * Sets event status to COMPLETED, locking jury grading, and generates certificates.
+ */
+export async function completeEmsEvent(eventId: string): Promise<EmsEvent> {
+  const { data, error } = await supabase
+    .from('ems_events')
+    .update({ status: 'COMPLETED' })
+    .eq('id', eventId)
+    .select()
+    .single();
+
+  if (error || !data) {
+    throw new Error(`Gagal menandakan acara selesai: ${error?.message || 'Ralat sistem'}`);
+  }
+
+  // Automatically trigger certificate generation
+  await generateEmsCertificates(eventId);
 
   return data;
 }

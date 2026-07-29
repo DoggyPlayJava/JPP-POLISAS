@@ -40,12 +40,32 @@ interface LocalRubricCriteria {
 export function EmsEventFormPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
-  const { user } = useAuth();
+  const {
+    user,
+    isSuperAdmin,
+    isJppMember,
+    isPresident,
+    isMT: isClubMt,
+    isAdvisor: isClubAdvisor,
+    profile,
+    isLoading: authLoading,
+  } = useAuth();
+
+  const isStaff = profile?.role === 'STAFF' || profile?.role === 'PENSYARAH';
+  const canCreateEvent = isSuperAdmin || isJppMember || isPresident || isClubMt || isClubAdvisor || isStaff;
 
   const isEditMode = Boolean(id);
 
   const [loading, setLoading] = useState(isEditMode);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!canCreateEvent) {
+      toast.error('Akses Terhad: Hanya Pengarah Program, AJK, atau Pensyarah dibenarkan mencipta acara.');
+      navigate('/ems/dashboard');
+    }
+  }, [authLoading, canCreateEvent, navigate]);
 
   // Section 1: Basic Info
   const [title, setTitle] = useState('');

@@ -1060,6 +1060,7 @@ export interface EmsJuryCode {
   organization?: string | null;
   assigned_categories?: string[] | null;
   assigned_booths?: string[] | null;
+  is_active?: boolean;
   created_at: string;
 }
 
