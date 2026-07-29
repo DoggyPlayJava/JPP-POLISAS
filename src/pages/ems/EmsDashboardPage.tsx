@@ -64,6 +64,7 @@ export function EmsDashboardPage() {
 
   // Modals state
   const [qrModalEvent, setQrModalEvent] = useState<EmsEvent | null>(null);
+  const [qrModalTab, setQrModalTab] = useState<'PARTICIPANT' | 'AUDIENCE'>('PARTICIPANT');
   const [copiedLink, setCopiedLink] = useState(false);
 
   // Jury Code Modal State
@@ -598,11 +599,11 @@ export function EmsDashboardPage() {
       )}
 
       {/* ============================================================ */}
-      {/* 1. Modal QR Code Pendaftaran */}
+      {/* 1. Modal QR Code Pendaftaran & Kehadiran Pengunjung */}
       {/* ============================================================ */}
       {qrModalEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-6 shadow-2xl relative">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-5 shadow-2xl relative">
             <button
               onClick={() => {
                 setQrModalEvent(null);
@@ -614,36 +615,84 @@ export function EmsDashboardPage() {
             </button>
 
             <div className="text-center space-y-1">
-              <h3 className="text-xl font-bold text-white">QR Code Pendaftaran</h3>
+              <h3 className="text-xl font-bold text-white">Kod QR Acara</h3>
               <p className="text-xs text-slate-400">{qrModalEvent.title}</p>
+            </div>
+
+            {/* Tab Selector */}
+            <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-950 border border-slate-800">
+              <button
+                onClick={() => setQrModalTab('PARTICIPANT')}
+                className={`py-2 px-3 rounded-lg text-xs font-bold transition ${
+                  qrModalTab === 'PARTICIPANT'
+                    ? 'bg-indigo-600 text-white shadow'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                QR Peserta Pertandingan
+              </button>
+              <button
+                onClick={() => setQrModalTab('AUDIENCE')}
+                className={`py-2 px-3 rounded-lg text-xs font-bold transition ${
+                  qrModalTab === 'AUDIENCE'
+                    ? 'bg-pink-600 text-white shadow'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                QR Pengunjung / Penonton
+              </button>
             </div>
 
             {/* QR Code Render */}
             <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl shadow-inner">
               <QRCodeSVG
-                value={registrationUrl(qrModalEvent.id)}
+                value={
+                  qrModalTab === 'AUDIENCE'
+                    ? `${window.location.origin}/ems/v/${qrModalEvent.id}/scan`
+                    : registrationUrl(qrModalEvent.id)
+                }
                 size={200}
                 bgColor="#FFFFFF"
                 fgColor="#0F172A"
                 level="H"
               />
               <p className="text-[10px] text-slate-500 font-mono mt-3 text-center break-all">
-                {registrationUrl(qrModalEvent.id)}
+                {qrModalTab === 'AUDIENCE'
+                  ? `${window.location.origin}/ems/v/${qrModalEvent.id}/scan`
+                  : registrationUrl(qrModalEvent.id)}
               </p>
             </div>
 
             {/* Copy Link Button */}
             <button
               onClick={() => {
-                navigator.clipboard.writeText(registrationUrl(qrModalEvent.id));
+                const targetUrl =
+                  qrModalTab === 'AUDIENCE'
+                    ? `${window.location.origin}/ems/v/${qrModalEvent.id}/scan`
+                    : registrationUrl(qrModalEvent.id);
+                navigator.clipboard.writeText(targetUrl);
                 setCopiedLink(true);
-                toast.success('Pautan pendaftaran disalin!');
+                toast.success(
+                  qrModalTab === 'AUDIENCE'
+                    ? 'Pautan QR Pengunjung disalin!'
+                    : 'Pautan QR Peserta disalin!'
+                );
                 setTimeout(() => setCopiedLink(false), 2000);
               }}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition-all shadow-lg shadow-indigo-600/20"
+              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all shadow-lg ${
+                qrModalTab === 'AUDIENCE'
+                  ? 'bg-pink-600 hover:bg-pink-500 text-white shadow-pink-600/20'
+                  : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20'
+              }`}
             >
               {copiedLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              <span>{copiedLink ? 'Berjaya Disalin!' : 'Salin Pautan Pendaftaran'}</span>
+              <span>
+                {copiedLink
+                  ? 'Berjaya Disalin!'
+                  : qrModalTab === 'AUDIENCE'
+                  ? 'Salin Pautan QR Pengunjung'
+                  : 'Salin Pautan QR Peserta'}
+              </span>
             </button>
           </div>
         </div>

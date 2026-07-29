@@ -53,13 +53,22 @@ export const EmsCertificatePage: React.FC = () => {
     setErrorMsg(null);
     try {
       // 1. Fetch certificate record by ID or serial number
-      const { data: cert, error: certErr } = await supabase
+      const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(idOrSerial);
+
+      let query = supabase
         .from('ems_certificates')
-        .select('id, event_id, participant_id, jury_code_id, cert_type, cert_serial, qr_code_url, created_at')
-        .or(`id.eq.${idOrSerial},cert_serial.eq.${idOrSerial}`)
-        .maybeSingle();
+        .select('id, event_id, participant_id, jury_code_id, cert_type, cert_serial, qr_code_url, created_at');
+
+      if (isUuid) {
+        query = query.or(`id.eq.${idOrSerial},cert_serial.eq.${idOrSerial}`);
+      } else {
+        query = query.eq('cert_serial', idOrSerial);
+      }
+
+      const { data: cert, error: certErr } = await query.maybeSingle();
 
       if (certErr) throw certErr;
+
 
       if (!cert) {
         setErrorMsg('Sijil tidak dijumpai dalam rekod rasmi JPP-POLISAS.');
