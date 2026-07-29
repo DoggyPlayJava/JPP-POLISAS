@@ -324,9 +324,9 @@ export async function checkinEmsParticipant(
     .eq('event_id', eventId);
 
   if (isUuid) {
-    query = query.or(`id.eq.${cleanInput},matrix_no.ilike.${cleanInput},email.ilike.${cleanInput}`);
+    query = query.or(`id.eq.${cleanInput},matrix_no.ilike.${cleanInput},email.ilike.${cleanInput},booth_no.ilike.${cleanInput}`);
   } else {
-    query = query.or(`matrix_no.ilike.${cleanInput},email.ilike.${cleanInput}`);
+    query = query.or(`matrix_no.ilike.${cleanInput},email.ilike.${cleanInput},booth_no.ilike.${cleanInput},leader_name.ilike.%${cleanInput}%`);
   }
 
   const { data: participants, error: findError } = await query;

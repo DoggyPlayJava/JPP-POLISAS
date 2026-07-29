@@ -181,6 +181,7 @@ const EmsDashboardPage = lazy(() => import('./pages/ems/EmsDashboardPage').then(
 const EmsEventFormPage = lazy(() => import('./pages/ems/EmsEventFormPage').then(m => ({ default: m.EmsEventFormPage })));
 const EmsApprovalPage  = lazy(() => import('./pages/ems/EmsApprovalPage').then(m => ({ default: m.EmsApprovalPage })));
 const EmsPublicRegisterPage = lazy(() => import('./pages/ems/EmsPublicRegisterPage').then(m => ({ default: m.EmsPublicRegisterPage })));
+const EmsCheckinPage   = lazy(() => import('./pages/ems/EmsCheckinPage').then(m => ({ default: m.EmsCheckinPage })));
 
 
 // ── Global Modals (lazy-loaded, deferred after paint) ──
@@ -358,10 +359,11 @@ function AppRoutes() {
 
         {/* ── Event Management System (EMS) ── */}
         <Route element={<RequireApproval><AppLayout /></RequireApproval>}>
-          <Route path="/ems/dashboard"      element={<EmsDashboardPage />} />
-          <Route path="/ems/event/new"      element={<EmsEventFormPage />} />
-          <Route path="/ems/event/:id/edit" element={<EmsEventFormPage />} />
-          <Route path="/ems/approvals"      element={<EmsApprovalPage />} />
+          <Route path="/ems/dashboard"        element={<EmsDashboardPage />} />
+          <Route path="/ems/event/new"        element={<EmsEventFormPage />} />
+          <Route path="/ems/event/:id/edit"   element={<EmsEventFormPage />} />
+          <Route path="/ems/approvals"        element={<EmsApprovalPage />} />
+          <Route path="/ems/checkin/:eventId" element={<EmsCheckinPage />} />
         </Route>
 
 
