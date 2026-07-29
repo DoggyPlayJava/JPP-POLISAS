@@ -2213,6 +2213,13 @@ Setiap jadual EMS diaktifkan RLS dengan polisi tunggal bagi setiap operasi (`SEL
 - **Kebangkitan Awam/Peserta/Juri**: Kebenaran `SELECT` dibolehkan awam bagi permohonan pendaftaran, verifikasi kod juri, live leaderboard, dan pengesahan sijil QR.
 - **Pendaftaran & Penilaian Awam**: Pendaftaran peserta (`ems_participants`) dan masukan markah (`ems_scores`) membenarkan `INSERT`/`UPDATE` untuk fleksibiliti borang awam & juri luar berautentikasi kod.
 
+### 22.3 Laluan (Routes) & Fail Halaman EMS
+- **`/ems/dashboard`**: `<EmsDashboardPage />` (`src/pages/ems/EmsDashboardPage.tsx`) — Papan pemuka utama EMS, senarai acara, jana kod juri, pautan QR pendaftaran, tie-breaker & e-sijil.
+- **`/ems/event/new`**: `<EmsEventFormPage />` (`src/pages/ems/EmsEventFormPage.tsx`) — Borang pendaftaran acara baharu dengan pembina borang & rubrik pemarkahan.
+- **`/ems/event/:id/edit`**: `<EmsEventFormPage />` (`src/pages/ems/EmsEventFormPage.tsx`) — Suntingan acara sedia ada.
+- **`/ems/approvals`**: `<EmsApprovalPage />` (`src/pages/ems/EmsApprovalPage.tsx`) — Halaman pengesahan kelulusan khas Pentadbir Mutlak (SUPER_ADMIN_JPP).
+
+
 
 
 

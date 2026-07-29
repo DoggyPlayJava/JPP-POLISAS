@@ -176,6 +176,12 @@ const PolySuaraPage = lazy(() => import('./pages/polyservices/PolySuaraPage').th
 const PolyRentPage = lazy(() => import('./pages/polyrent/PolyRentPage').then(m => ({ default: m.PolyRentPage })));
 const PolyServicesAdmin = lazy(() => import('./pages/jpp/PolyServicesAdmin').then(m => ({ default: m.PolyServicesAdmin })));
 
+// ── Event Management System (EMS) ──
+const EmsDashboardPage = lazy(() => import('./pages/ems/EmsDashboardPage').then(m => ({ default: m.EmsDashboardPage })));
+const EmsEventFormPage = lazy(() => import('./pages/ems/EmsEventFormPage').then(m => ({ default: m.EmsEventFormPage })));
+const EmsApprovalPage  = lazy(() => import('./pages/ems/EmsApprovalPage').then(m => ({ default: m.EmsApprovalPage })));
+
+
 // ── Global Modals (lazy-loaded, deferred after paint) ──
 const CompleteProfileModal = lazy(() => import('@/components/ui/CompleteProfileModal').then(m => ({ default: m.CompleteProfileModal })));
 const GlobalAnnouncementModal = lazy(() => import('@/components/GlobalAnnouncementModal').then(m => ({ default: m.GlobalAnnouncementModal })));
@@ -346,6 +352,15 @@ function AppRoutes() {
           <Route path="/keusahawanan/pos/stats"     element={<PosStatsPage />} />
           <Route path="/keusahawanan/pos/history"   element={<PosHistoryPage />} />
         </Route>
+
+        {/* ── Event Management System (EMS) ── */}
+        <Route element={<RequireApproval><AppLayout /></RequireApproval>}>
+          <Route path="/ems/dashboard"      element={<EmsDashboardPage />} />
+          <Route path="/ems/event/new"      element={<EmsEventFormPage />} />
+          <Route path="/ems/event/:id/edit" element={<EmsEventFormPage />} />
+          <Route path="/ems/approvals"      element={<EmsApprovalPage />} />
+        </Route>
+
 
       </Route>
 
