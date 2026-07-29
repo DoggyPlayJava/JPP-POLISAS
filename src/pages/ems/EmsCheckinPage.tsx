@@ -92,7 +92,9 @@ export function EmsCheckinPage() {
   // Data states
   const [eventDetail, setEventDetail] = useState<EmsEventDetail | null>(null);
   const [participants, setParticipants] = useState<EmsParticipant[]>([]);
+  const [visitors, setVisitors] = useState<EmsVisitor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeCheckinTab, setActiveCheckinTab] = useState<'PARTICIPANTS' | 'VISITORS'>('PARTICIPANTS');
 
   // Scanner & Mode states
   const [mode, setMode] = useState<'SCANNER' | 'MANUAL'>('SCANNER');
@@ -118,7 +120,7 @@ export function EmsCheckinPage() {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const isProcessingRef = useRef(false);
 
-  // Load Event & Participants Data
+  // Load Event, Participants & Visitors Data
   const loadEventData = useCallback(async () => {
     if (!eventId) return;
     setLoading(true);
@@ -131,6 +133,14 @@ export function EmsCheckinPage() {
       }
       setEventDetail(detail);
       setParticipants(detail.participants || []);
+
+      // Fetch Visitors
+      const { data: vData } = await supabase
+        .from('ems_visitors')
+        .select('*')
+        .eq('event_id', eventId)
+        .order('scanned_at', { ascending: false });
+      setVisitors(vData || []);
     } catch (err: any) {
       toast.error(`Gagal memuatkan acara: ${err?.message || 'Ralat'}`);
     } finally {
@@ -142,11 +152,11 @@ export function EmsCheckinPage() {
     loadEventData();
   }, [loadEventData]);
 
-  // Supabase Realtime Subscription for Live Updates
+  // Supabase Realtime Subscription for Live Updates (Participants & Visitors)
   useEffect(() => {
     if (!eventId) return;
 
-    const channel = supabase
+    const pChannel = supabase
       .channel(`ems-checkin-${eventId}`)
       .on(
         'postgres_changes',
@@ -168,10 +178,28 @@ export function EmsCheckinPage() {
           }
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'ems_visitors',
+          filter: `event_id=eq.${eventId}`,
+        },
+        (payload) => {
+          const newVisitor = payload.new as EmsVisitor;
+          setVisitors((prev) => [newVisitor, ...prev]);
+          if (newVisitor.is_milestone_winner) {
+            toast.success(`🎉 Pengunjung Pemenang Milestone Ke-${newVisitor.milestone_number}: ${newVisitor.name}!`, {
+              duration: 6000,
+            });
+          }
+        }
+      )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(pChannel);
     };
   }, [eventId]);
 
@@ -464,6 +492,103 @@ export function EmsCheckinPage() {
           </button>
         </div>
       </div>
+
+      {/* ── Tab Switcher: Peserta Pertandingan vs Kehadiran Pengunjung ── */}
+      <div className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-slate-900 border border-slate-800">
+        <button
+          onClick={() => setActiveCheckinTab('PARTICIPANTS')}
+          className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm transition ${
+            activeCheckinTab === 'PARTICIPANTS'
+              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+              : 'text-slate-400 hover:text-white hover:bg-slate-800'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          <span>Peserta Pertandingan ({participants.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveCheckinTab('VISITORS')}
+          className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm transition ${
+            activeCheckinTab === 'VISITORS'
+              ? 'bg-pink-600 text-white shadow-lg shadow-pink-600/20'
+              : 'text-slate-400 hover:text-white hover:bg-slate-800'
+          }`}
+        >
+          <Sparkles className="w-4 h-4 text-amber-400" />
+          <span>Kehadiran Pengunjung ({visitors.length})</span>
+        </button>
+      </div>
+
+      {activeCheckinTab === 'VISITORS' ? (
+        <div className="space-y-6 animate-fadeIn">
+          {/* Visitor Stats Header */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Jumlah Pengunjung Free-Flow</span>
+              <p className="text-3xl font-black text-white">{visitors.length}</p>
+            </div>
+            <div className="p-5 rounded-2xl bg-slate-900 border border-amber-500/30 space-y-1">
+              <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                <Sparkles className="w-4 h-4" /> Pemenang Milestone
+              </span>
+              <p className="text-3xl font-black text-amber-300">
+                {visitors.filter((v) => v.is_milestone_winner).length}
+              </p>
+            </div>
+            <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Imbasan Terakhir</span>
+              <p className="text-sm font-bold text-slate-200">
+                {visitors[0] ? new Date(visitors[0].scanned_at).toLocaleTimeString('ms-MY') : '-'}
+              </p>
+            </div>
+          </div>
+
+          {/* Visitor Stream Table */}
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Users className="w-5 h-5 text-pink-400" /> Senarai Kehadiran Pengunjung Awam
+              </h3>
+              <span className="text-xs text-slate-400">Kemaskini Masa Nyata (Realtime)</span>
+            </div>
+
+            {visitors.length === 0 ? (
+              <div className="p-8 text-center bg-slate-950 border border-slate-800 rounded-2xl text-slate-400 text-xs">
+                Belum ada pengunjung imbas QR Kehadiran. Minta pengunjung mengimbas QR Pengunjung di pintu masuk!
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-800">
+                {visitors.map((v, i) => (
+                  <div key={v.id || i} className="py-3 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${v.is_milestone_winner ? 'bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/20' : 'bg-slate-800 text-slate-300'}`}>
+                        {v.is_milestone_winner ? '🏆' : i + 1}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-white flex items-center gap-2">
+                          {v.name}
+                          {v.is_milestone_winner && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                              Pemenang Ke-{v.milestone_number}
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-xs text-slate-400">{v.matrix_no || v.email || v.phone || 'Pengunjung Awam'}</p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-mono text-slate-400">
+                      {new Date(v.scanned_at).toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <>
+
 
       {/* ── Real-Time Header Stats Grid ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
@@ -979,6 +1104,9 @@ export function EmsCheckinPage() {
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }
+
