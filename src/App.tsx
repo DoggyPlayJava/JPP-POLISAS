@@ -183,6 +183,7 @@ const EmsApprovalPage  = lazy(() => import('./pages/ems/EmsApprovalPage').then(m
 const EmsPublicRegisterPage = lazy(() => import('./pages/ems/EmsPublicRegisterPage').then(m => ({ default: m.EmsPublicRegisterPage })));
 const EmsCheckinPage   = lazy(() => import('./pages/ems/EmsCheckinPage').then(m => ({ default: m.EmsCheckinPage })));
 const EmsJuryPortalPage = lazy(() => import('./pages/ems/EmsJuryPortalPage').then(m => ({ default: m.EmsJuryPortalPage })));
+const EmsLeaderboardPage = lazy(() => import('./pages/ems/EmsLeaderboardPage').then(m => ({ default: m.EmsLeaderboardPage })));
 
 
 // ── Global Modals (lazy-loaded, deferred after paint) ──
@@ -277,9 +278,10 @@ function AppRoutes() {
       <Route path="/polymaps" element={<PolyMapsPage />} />
       {/* QR Program Attendance — standalone, redirect ke login diuruskan dalam page itu sendiri */}
       <Route path="/program/attend/:token" element={<ProgramAttendPage />} />
-      {/* 🎪 EMS Public Participant Registration Wizard & Jury Portal */}
+      {/* 🎪 EMS Public Participant Registration Wizard, Jury Portal & Stage Display */}
       <Route path="/ems/e/:eventId/register" element={<EmsPublicRegisterPage />} />
       <Route path="/ems/juri" element={<EmsJuryPortalPage />} />
+      <Route path="/ems/stage/:eventId" element={<EmsLeaderboardPage isStageMode={true} />} />
 
       {/* 🔐 PROTECTED ROUTES */}
       <Route element={<ProtectedRoute />}>
@@ -361,11 +363,12 @@ function AppRoutes() {
 
         {/* ── Event Management System (EMS) ── */}
         <Route element={<RequireApproval><AppLayout /></RequireApproval>}>
-          <Route path="/ems/dashboard"        element={<EmsDashboardPage />} />
-          <Route path="/ems/event/new"        element={<EmsEventFormPage />} />
-          <Route path="/ems/event/:id/edit"   element={<EmsEventFormPage />} />
-          <Route path="/ems/approvals"        element={<EmsApprovalPage />} />
-          <Route path="/ems/checkin/:eventId" element={<EmsCheckinPage />} />
+          <Route path="/ems/dashboard"            element={<EmsDashboardPage />} />
+          <Route path="/ems/event/new"            element={<EmsEventFormPage />} />
+          <Route path="/ems/event/:id/edit"       element={<EmsEventFormPage />} />
+          <Route path="/ems/approvals"            element={<EmsApprovalPage />} />
+          <Route path="/ems/checkin/:eventId"     element={<EmsCheckinPage />} />
+          <Route path="/ems/leaderboard/:eventId" element={<EmsLeaderboardPage />} />
         </Route>
 
 
