@@ -9,10 +9,13 @@ CREATE TABLE IF NOT EXISTS public.ems_events (
   title TEXT NOT NULL,
   description TEXT,
   category TEXT,
+  event_type TEXT DEFAULT 'COMPETITION',
   event_mode TEXT DEFAULT 'INDIVIDUAL',
   event_date TIMESTAMPTZ,
   location TEXT,
   status TEXT DEFAULT 'PENDING_APPROVAL',
+  max_participants INT DEFAULT NULL,
+  milestone_config JSONB DEFAULT NULL,
   is_leaderboard_public BOOLEAN DEFAULT true,
   created_by UUID REFERENCES auth.users(id),
   created_at TIMESTAMPTZ DEFAULT now()
@@ -90,6 +93,19 @@ CREATE TABLE IF NOT EXISTS public.ems_certificates (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS public.ems_visitors (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id UUID REFERENCES public.ems_events(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id),
+  name TEXT NOT NULL,
+  matrix_no TEXT,
+  email TEXT,
+  phone TEXT,
+  is_milestone_winner BOOLEAN DEFAULT false,
+  milestone_number INT,
+  scanned_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- 2. Foreign Key Indexes
 
 CREATE INDEX IF NOT EXISTS idx_ems_events_created_by ON public.ems_events(created_by);
@@ -111,6 +127,9 @@ CREATE INDEX IF NOT EXISTS idx_ems_certificates_event_id ON public.ems_certifica
 CREATE INDEX IF NOT EXISTS idx_ems_certificates_participant_id ON public.ems_certificates(participant_id);
 CREATE INDEX IF NOT EXISTS idx_ems_certificates_jury_code_id ON public.ems_certificates(jury_code_id);
 
+CREATE INDEX IF NOT EXISTS idx_ems_visitors_event_id ON public.ems_visitors(event_id);
+CREATE INDEX IF NOT EXISTS idx_ems_visitors_user_id ON public.ems_visitors(user_id);
+
 -- 3. Enable Row Level Security (RLS)
 
 ALTER TABLE public.ems_events ENABLE ROW LEVEL SECURITY;
@@ -120,6 +139,7 @@ ALTER TABLE public.ems_jury_codes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ems_rubrics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ems_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ems_certificates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ems_visitors ENABLE ROW LEVEL SECURITY;
 
 -- 4. RLS Policies
 
@@ -241,6 +261,24 @@ CREATE POLICY "Authenticated users can update certificates"
 CREATE POLICY "Authenticated users can delete certificates"
   ON public.ems_certificates FOR DELETE
   USING ((SELECT auth.uid()) IS NOT NULL);
+-- ems_visitors policies
+CREATE POLICY "Public and users can view visitors"
+  ON public.ems_visitors FOR SELECT
+  USING (true);
+
+CREATE POLICY "Public and users can insert visitors"
+  ON public.ems_visitors FOR INSERT
+  WITH CHECK (true);
+
+CREATE POLICY "Authenticated users can update visitors"
+  ON public.ems_visitors FOR UPDATE
+  USING ((SELECT auth.uid()) IS NOT NULL);
+
+CREATE POLICY "Authenticated users can delete visitors"
+  ON public.ems_visitors FOR DELETE
+  USING ((SELECT auth.uid()) IS NOT NULL);
+
 -- GRANT table-level permissions (anon for public registration)
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
+

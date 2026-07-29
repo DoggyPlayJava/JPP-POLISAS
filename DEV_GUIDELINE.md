@@ -289,6 +289,8 @@ import { supabase } from '@/lib/supabase';
 | `polysuara_comment_votes` | Log undian upvote/downvote ulasan PolySuara |
 | `polysuara_comment_reports` | Laporan penyalahgunaan ulasan PolySuara oleh pelajar |
 | `polysuara_notif_optout` | Rekod pilihan keluar (opt-out) notifikasi PolySuara |
+| `ems_events` | Modul EMS — Maklumat acara (COMPETITION, OPEN_AUDIENCE, HYBRID) |
+| `ems_visitors` | Modul EMS — Kehadiran pengunjung audience & pemenang cabutan bertuah |
 
 ### Logging:
 ```typescript

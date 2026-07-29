@@ -987,6 +987,7 @@ export const KEBAJIKAN_THEME_COLOR = '#2DD4BF';
 
 // ─── Event Management System (EMS) Types ─────────────────────────────────────
 
+export type EmsEventType = 'COMPETITION' | 'OPEN_AUDIENCE' | 'HYBRID';
 export type EmsEventMode = 'INDIVIDUAL' | 'TEAM' | string;
 export type EmsEventStatus = 'PENDING_APPROVAL' | 'APPROVED' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED' | string;
 export type EmsParticipantType = 'STUDENT' | 'STAFF' | 'PUBLIC' | string;
@@ -996,13 +997,29 @@ export interface EmsEvent {
   title: string;
   description?: string | null;
   category?: string | null;
+  event_type: EmsEventType;
   event_mode: EmsEventMode;
   event_date?: string | null;
   location?: string | null;
   status: EmsEventStatus;
+  max_participants?: number | null;
+  milestone_config?: number[] | null;
   is_leaderboard_public: boolean;
   created_by?: string | null;
   created_at: string;
+}
+
+export interface EmsVisitor {
+  id: string;
+  event_id: string;
+  user_id?: string | null;
+  name: string;
+  matrix_no?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  is_milestone_winner: boolean;
+  milestone_number?: number | null;
+  scanned_at: string;
 }
 
 export interface EmsFormField {
