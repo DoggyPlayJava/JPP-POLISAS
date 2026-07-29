@@ -18,12 +18,12 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchEmsEventById, createEmsEvent, updateEmsEvent } from '@/lib/ems';
-import type { EmsEventMode, EmsFormField, EmsRubricCriteria } from '@/types';
+import type { EmsEventMode, EmsEventType, EmsFormField, EmsRubricCriteria } from '@/types';
 
 interface LocalFormField {
   id?: string;
   field_label: string;
-  field_type: 'text' | 'select' | 'checkbox' | 'image_upload' | 'document_upload' | string;
+  field_type: 'text' | 'textarea' | 'select' | 'checkbox' | 'image_upload' | 'document_upload' | string;
   is_required: boolean;
   options: string; // Comma separated for select options input UI
   sort_order: number;
@@ -51,9 +51,11 @@ export function EmsEventFormPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Keusahawanan');
+  const [eventType, setEventType] = useState<EmsEventType>('COMPETITION');
   const [eventMode, setEventMode] = useState<EmsEventMode>('INDIVIDUAL');
   const [eventDate, setEventDate] = useState('');
   const [location, setLocation] = useState('');
+  const [milestoneConfig, setMilestoneConfig] = useState('');
   const [isLeaderboardPublic, setIsLeaderboardPublic] = useState(true);
 
   // Section 2: Form Builder Fields
@@ -105,6 +107,7 @@ export function EmsEventFormPage() {
         setTitle(data.title || '');
         setDescription(data.description || '');
         setCategory(data.category || 'Keusahawanan');
+        setEventType((data.event_type as EmsEventType) || 'COMPETITION');
         setEventMode((data.event_mode as EmsEventMode) || 'INDIVIDUAL');
         if (data.event_date) {
           // Format ISO string to datetime-local format YYYY-MM-THH:mm
@@ -115,6 +118,11 @@ export function EmsEventFormPage() {
           setEventDate(formatted);
         }
         setLocation(data.location || '');
+        if (data.milestone_config && Array.isArray(data.milestone_config)) {
+          setMilestoneConfig(data.milestone_config.join(', '));
+        } else {
+          setMilestoneConfig('');
+        }
         setIsLeaderboardPublic(data.is_leaderboard_public ?? true);
 
         // Load fields
@@ -224,14 +232,23 @@ export function EmsEventFormPage() {
     try {
       setSubmitting(true);
 
+      const parsedMilestones = milestoneConfig
+        ? milestoneConfig
+            .split(',')
+            .map((s) => parseInt(s.trim(), 10))
+            .filter((n) => !isNaN(n))
+        : null;
+
       const eventPayload = {
         title: title.trim(),
         description: description.trim() || null,
         category: category.trim() || 'Keusahawanan',
+        event_type: eventType,
         event_mode: eventMode,
         event_date: eventDate ? new Date(eventDate).toISOString() : null,
         location: location.trim() || null,
         status: targetStatus,
+        milestone_config: parsedMilestones,
         is_leaderboard_public: isLeaderboardPublic,
         created_by: user?.id || null,
       };
@@ -349,6 +366,58 @@ export function EmsEventFormPage() {
               />
             </div>
 
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold text-slate-300 mb-2">
+                Jenis Acara <span className="text-rose-500">*</span>
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEventType('COMPETITION')}
+                  className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+                    eventType === 'COMPETITION'
+                      ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-lg shadow-indigo-600/10'
+                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <div>
+                    <div className="font-bold text-sm text-white mb-1">Pertandingan / Pameran</div>
+                    <div className="text-xs text-slate-400">Juri & Leaderboard pemarkahan</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setEventType('OPEN_AUDIENCE')}
+                  className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+                    eventType === 'OPEN_AUDIENCE'
+                      ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-lg shadow-indigo-600/10'
+                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <div>
+                    <div className="font-bold text-sm text-white mb-1">Program Terbuka / Ceramah</div>
+                    <div className="text-xs text-slate-400">Kehadiran & Cabutan Bertuah</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setEventType('HYBRID')}
+                  className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+                    eventType === 'HYBRID'
+                      ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-lg shadow-indigo-600/10'
+                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <div>
+                    <div className="font-bold text-sm text-white mb-1">Kombinasi (Hybrid)</div>
+                    <div className="text-xs text-slate-400">Pertandingan & Kehadiran Awam</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
             <div>
               <label className="block text-xs font-bold text-slate-300 mb-2">Kategori Acara</label>
               <select
@@ -411,6 +480,22 @@ export function EmsEventFormPage() {
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="e.g. Dewan Gemilang POLISAS / Booth Lobi Utama"
                 className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-white text-sm focus:outline-none focus:border-indigo-500"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold text-slate-300 mb-1">
+                Tetapan Pemenang Milestone (Milestone Winner Config)
+              </label>
+              <p className="text-[11px] text-slate-400 mb-2">
+                Masukkan nombor kedatangan pengunjung bertuah yang akan memenangi hadiah cabutan (dipisahkan dengan koma).
+              </p>
+              <input
+                type="text"
+                value={milestoneConfig}
+                onChange={(e) => setMilestoneConfig(e.target.value)}
+                placeholder="e.g. 50, 100, 250, 500"
+                className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-white font-mono text-sm focus:outline-none focus:border-indigo-500"
               />
             </div>
 
@@ -529,10 +614,11 @@ export function EmsEventFormPage() {
                       className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs"
                     >
                       <option value="text">Teks Ringkas (Text)</option>
-                      <option value="select">Pilihan Droplist (Select)</option>
-                      <option value="checkbox">Kotak Semakan (Checkbox)</option>
-                      <option value="image_upload">Muat Naik Gambar</option>
-                      <option value="document_upload">Muat Naik Dokumen PDF</option>
+                      <option value="textarea">Teks Panjang (Textarea)</option>
+                      <option value="select">Pilihan Dropdown (Select)</option>
+                      <option value="checkbox">Pengesahan Checkbox</option>
+                      <option value="image_upload">Muat Naik Gambar / Foto</option>
+                      <option value="document_upload">Muat Naik Dokumen / PDF</option>
                     </select>
                   </div>
 

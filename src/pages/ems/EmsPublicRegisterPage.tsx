@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchEmsEventById, registerEmsParticipant } from '@/lib/ems';
-import { uploadFileToDrive } from '@/lib/driveUpload';
+import { uploadFileToDrive, uploadPdfToDrive } from '@/lib/driveUpload';
 import { supabase } from '@/lib/supabase';
 import type { EmsEventDetail, EmsParticipant, EmsFormField } from '@/types';
 
@@ -71,6 +71,7 @@ export function EmsPublicRegisterPage() {
 
   // Form Step 2: Custom Responses
   const [customResponses, setCustomResponses] = useState<Record<string, any>>({});
+  const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({});
 
   // Form Step 3: Media Uploads
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
@@ -78,6 +79,43 @@ export function EmsPublicRegisterPage() {
 
   // Step 4: Registered Participant Result
   const [registeredParticipant, setRegisteredParticipant] = useState<EmsParticipant | null>(null);
+
+  // Helper for dynamic file field uploads in Step 2
+  const handleDynamicFileUpload = async (
+    fieldId: string,
+    fieldKey: string,
+    fieldType: 'image_upload' | 'document_upload',
+    file: File
+  ) => {
+    setUploadingFields((prev) => ({ ...prev, [fieldId]: true }));
+    const toastId = toast.loading('Memuat naik fail...');
+
+    try {
+      let url = '';
+      if (fieldType === 'document_upload' && file.type === 'application/pdf') {
+        try {
+          url = await uploadPdfToDrive(file, `ems/documents_${eventId}`);
+        } catch (pdfErr) {
+          console.warn('[upload] Fallback to Supabase Storage for PDF:', pdfErr);
+          url = await uploadFileToDrive(file, `ems/documents_${eventId}`);
+        }
+      } else {
+        url = await uploadFileToDrive(
+          file,
+          fieldType === 'image_upload' ? `ems/images_${eventId}` : `ems/documents_${eventId}`
+        );
+      }
+
+      if (url) {
+        setCustomResponses((prev) => ({ ...prev, [fieldKey]: url }));
+        toast.success('Fail berjaya dimuat naik!', { id: toastId });
+      }
+    } catch (err: any) {
+      toast.error(`Gagal memuat naik fail: ${err.message || 'Ralat pelayan'}`, { id: toastId });
+    } finally {
+      setUploadingFields((prev) => ({ ...prev, [fieldId]: false }));
+    }
+  };
 
   // Load Event Details
   useEffect(() => {
@@ -782,6 +820,135 @@ export function EmsPublicRegisterPage() {
                             <label htmlFor={`check_${field.id}`} className="text-xs text-slate-300 font-medium">
                               Ya, saya bersetuju / mengesahkan
                             </label>
+                          </div>
+                        ) : field.field_type === 'image_upload' ? (
+                          <div className="space-y-3 pt-1">
+                            {customResponses[fieldKey] ? (
+                              <div className="relative group rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 max-w-sm aspect-video flex items-center justify-center">
+                                <img
+                                  src={customResponses[fieldKey]}
+                                  alt={field.field_label}
+                                  className="w-full h-full object-cover"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = { ...customResponses };
+                                    delete updated[fieldKey];
+                                    setCustomResponses(updated);
+                                  }}
+                                  className="absolute top-2 right-2 bg-rose-600/90 text-white p-2 rounded-xl hover:bg-rose-500 transition shadow"
+                                  title="Padam Gambar"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 text-center transition bg-slate-900/40">
+                                <input
+                                  type="file"
+                                  id={`file_input_${field.id}`}
+                                  accept="image/*"
+                                  disabled={uploadingFields[field.id]}
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      handleDynamicFileUpload(field.id, fieldKey, 'image_upload', file);
+                                    }
+                                  }}
+                                  className="hidden"
+                                />
+                                <label
+                                  htmlFor={`file_input_${field.id}`}
+                                  className="cursor-pointer flex flex-col items-center justify-center space-y-2"
+                                >
+                                  <div className="w-10 h-10 rounded-full bg-indigo-600/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                                    {uploadingFields[field.id] ? (
+                                      <RefreshCw className="w-5 h-5 animate-spin text-indigo-400" />
+                                    ) : (
+                                      <ImageIcon className="w-5 h-5" />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <p className="text-xs font-bold text-white">
+                                      {uploadingFields[field.id] ? 'Memuat naik gambar...' : 'Pilih / Muat Naik Gambar'}
+                                    </p>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Format disokong: JPG, PNG, WEBP</p>
+                                  </div>
+                                </label>
+                              </div>
+                            )}
+                          </div>
+                        ) : field.field_type === 'document_upload' ? (
+                          <div className="space-y-3 pt-1">
+                            {customResponses[fieldKey] ? (
+                              <div className="flex items-center justify-between p-4 bg-slate-900 border border-slate-800 rounded-2xl">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 shrink-0">
+                                    <FileText className="w-5 h-5" />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-bold text-white truncate max-w-xs sm:max-w-md">
+                                      {customResponses[fieldKey].split('/').pop() || 'Dokumen'}
+                                    </p>
+                                    <a
+                                      href={customResponses[fieldKey]}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[11px] text-indigo-400 hover:text-indigo-300 underline font-medium"
+                                    >
+                                      Lihat Dokumen
+                                    </a>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = { ...customResponses };
+                                    delete updated[fieldKey];
+                                    setCustomResponses(updated);
+                                  }}
+                                  className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition"
+                                  title="Padam Dokumen"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 text-center transition bg-slate-900/40">
+                                <input
+                                  type="file"
+                                  id={`file_input_${field.id}`}
+                                  accept=".pdf,.doc,.docx"
+                                  disabled={uploadingFields[field.id]}
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      handleDynamicFileUpload(field.id, fieldKey, 'document_upload', file);
+                                    }
+                                  }}
+                                  className="hidden"
+                                />
+                                <label
+                                  htmlFor={`file_input_${field.id}`}
+                                  className="cursor-pointer flex flex-col items-center justify-center space-y-2"
+                                >
+                                  <div className="w-10 h-10 rounded-full bg-purple-600/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                                    {uploadingFields[field.id] ? (
+                                      <RefreshCw className="w-5 h-5 animate-spin text-purple-400" />
+                                    ) : (
+                                      <Upload className="w-5 h-5" />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <p className="text-xs font-bold text-white">
+                                      {uploadingFields[field.id] ? 'Memuat naik dokumen...' : 'Pilih / Muat Naik Dokumen'}
+                                    </p>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Format disokong: PDF, DOC, DOCX</p>
+                                  </div>
+                                </label>
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <input
