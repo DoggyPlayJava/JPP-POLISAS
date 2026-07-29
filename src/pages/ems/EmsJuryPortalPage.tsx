@@ -427,7 +427,7 @@ export function EmsJuryPortalPage() {
   // ---------------------------------------------------------------------------
   if (!session || !eventData || !juryCodeData) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center p-4 sm:p-6 relative overflow-hidden">
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center p-4 sm:p-6 pb-28 md:pb-8 relative overflow-hidden">
         {/* Background glow graphics */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-10 right-10 w-80 h-80 bg-violet-600/15 rounded-full blur-3xl pointer-events-none" />
@@ -575,7 +575,7 @@ export function EmsJuryPortalPage() {
   // SCREEN 2: JURY EVALUATION DASHBOARD
   // ---------------------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col pb-28 md:pb-8">
       {/* Event Header Banner */}
       <header className="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-30 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">

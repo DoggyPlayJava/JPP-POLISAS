@@ -242,6 +242,10 @@ export function EmsPublicRegisterPage() {
 
   // Step Navigations & Validation
   const validateStep1 = (): boolean => {
+    if (isQuotaFull) {
+      toast.error('Pendaftaran bagi acara ini telah penuh.');
+      return false;
+    }
     if (!leaderName.trim()) {
       toast.error('Sila masukkan Nama Ketua / Peserta.');
       return false;
@@ -302,6 +306,10 @@ export function EmsPublicRegisterPage() {
   // Final Registration Submission
   const handleSubmitRegistration = async () => {
     if (!eventId || !eventDetail) return;
+    if (isQuotaFull) {
+      toast.error('Pendaftaran bagi acara ini telah penuh.');
+      return;
+    }
     setSubmitting(true);
     const toastId = toast.loading('Mendaftar pendaftaran anda...');
 
@@ -368,8 +376,12 @@ export function EmsPublicRegisterPage() {
     );
   }
 
+  const totalParticipants = eventDetail?.participants?.length || 0;
+  const maxParticipants = eventDetail?.max_participants || 0;
+  const isQuotaFull = maxParticipants > 0 && totalParticipants >= maxParticipants;
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white pb-16">
+    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white pb-28 md:pb-8">
       {/* Print Specific CSS */}
       <style>{`
         @media print {
@@ -432,6 +444,25 @@ export function EmsPublicRegisterPage() {
                 <span>{eventDetail.category}</span>
               </div>
             )}
+            {maxParticipants > 0 && (
+              <div
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border ${
+                  isQuotaFull
+                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 font-bold'
+                    : 'bg-slate-800/80 text-slate-300 border-slate-700/50'
+                }`}
+              >
+                <Users className="w-3.5 h-3.5 text-indigo-400" />
+                <span>
+                  Peserta: {totalParticipants} / {maxParticipants}
+                </span>
+                {isQuotaFull && (
+                  <span className="ml-1.5 px-2 py-0.5 rounded-full bg-rose-600 text-white font-extrabold text-[10px] uppercase tracking-wide shadow-sm">
+                    Pendaftaran Penuh
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -487,6 +518,24 @@ export function EmsPublicRegisterPage() {
 
         {/* Wizard Form Card */}
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+          {/* Quota Full Alert Banner */}
+          {isQuotaFull && (
+            <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-start gap-3 text-xs">
+              <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-extrabold text-rose-200 text-sm">Pendaftaran Penuh</span>
+                  <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold">
+                    {totalParticipants} / {maxParticipants} Peserta
+                  </span>
+                </div>
+                <p className="text-slate-300">
+                  Maaf, kuota maksimum peserta bagi acara ini telah dipenuhi. Pendaftaran baharu dikunci.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* STEP 1: CATEGORY SELECTION & BASIC INFO */}
           {currentStep === 1 && (
             <div className="space-y-6 animate-fadeIn">
@@ -751,9 +800,22 @@ export function EmsPublicRegisterPage() {
                 <button
                   type="button"
                   onClick={handleNextStep}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition shadow-lg shadow-indigo-600/20"
+                  disabled={isQuotaFull}
+                  className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition shadow-lg ${
+                    isQuotaFull
+                      ? 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed shadow-none'
+                      : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20'
+                  }`}
                 >
-                  Seterusnya <ArrowRight className="w-4 h-4" />
+                  {isQuotaFull ? (
+                    <>
+                      <AlertCircle className="w-4 h-4 text-rose-400" /> Pendaftaran Penuh
+                    </>
+                  ) : (
+                    <>
+                      Seterusnya <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -1061,12 +1123,20 @@ export function EmsPublicRegisterPage() {
                 <button
                   type="button"
                   onClick={handleSubmitRegistration}
-                  disabled={submitting || uploadingMedia}
-                  className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-extrabold text-sm transition shadow-lg shadow-emerald-500/20"
+                  disabled={submitting || uploadingMedia || isQuotaFull}
+                  className={`inline-flex items-center gap-2 px-8 py-3 rounded-xl font-extrabold text-sm transition shadow-lg ${
+                    isQuotaFull
+                      ? 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed shadow-none'
+                      : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 shadow-emerald-500/20'
+                  }`}
                 >
                   {submitting ? (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin" /> Memproses...
+                    </>
+                  ) : isQuotaFull ? (
+                    <>
+                      <AlertCircle className="w-4 h-4 text-rose-400" /> Pendaftaran Penuh
                     </>
                   ) : (
                     <>

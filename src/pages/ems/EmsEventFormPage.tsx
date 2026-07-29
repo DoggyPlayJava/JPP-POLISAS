@@ -326,7 +326,7 @@ export function EmsEventFormPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 max-w-5xl mx-auto space-y-8">
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 pb-28 md:pb-8 max-w-5xl mx-auto space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-6">
         <div className="flex items-center gap-3">

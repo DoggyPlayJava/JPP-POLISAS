@@ -409,7 +409,7 @@ export function EmsCheckinPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 space-y-6 max-w-7xl mx-auto font-sans">
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 pb-28 md:pb-8 space-y-6 max-w-7xl mx-auto font-sans">
       {/* ── Top Header Navigation & Title ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/80 border border-slate-800/80 backdrop-blur-xl p-5 rounded-2xl shadow-xl">
         <div className="flex items-center gap-3">

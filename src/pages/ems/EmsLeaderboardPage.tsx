@@ -420,7 +420,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
     const restItems = filteredLeaderboard.slice(3);
 
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between p-4 md:p-8 relative overflow-hidden select-none font-sans">
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between p-4 md:p-8 pb-28 md:pb-8 relative overflow-hidden select-none font-sans">
         {/* Background glow effects */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-amber-500/15 via-purple-500/10 to-transparent blur-[140px] pointer-events-none" />
 
@@ -712,7 +712,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   // MODE 1: DASHBOARD LEADERBOARD VIEW (/ems/leaderboard/:eventId)
   // =========================================================================
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white p-4 sm:p-6 lg:p-8 space-y-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white p-4 sm:p-6 lg:p-8 pb-28 md:pb-8 space-y-6">
       {/* Top Header & Breadcrumbs */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
         <div className="space-y-1">
