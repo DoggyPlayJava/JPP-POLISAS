@@ -108,6 +108,11 @@ CREATE TABLE IF NOT EXISTS public.ems_visitors (
 
 -- 2. Foreign Key Indexes
 
+-- Ensure new columns exist on existing ems_events table (safe re-run)
+ALTER TABLE public.ems_events ADD COLUMN IF NOT EXISTS event_type TEXT DEFAULT 'COMPETITION';
+ALTER TABLE public.ems_events ADD COLUMN IF NOT EXISTS max_participants INT DEFAULT NULL;
+ALTER TABLE public.ems_events ADD COLUMN IF NOT EXISTS milestone_config JSONB DEFAULT NULL;
+
 CREATE INDEX IF NOT EXISTS idx_ems_events_created_by ON public.ems_events(created_by);
 
 CREATE INDEX IF NOT EXISTS idx_ems_form_fields_event_id ON public.ems_form_fields(event_id);
