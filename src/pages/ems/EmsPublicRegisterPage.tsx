@@ -1248,6 +1248,13 @@ export function EmsPublicRegisterPage() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => navigate('/ems/cert/verify')}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm transition shadow-lg shadow-teal-600/20"
+                >
+                  <Award className="w-4 h-4" /> Semak / Muat Turun E-Sijil
+                </button>
+                <button
+                  type="button"
                   onClick={() => {
                     navigator.clipboard.writeText(registeredParticipant.id);
                     toast.success('ID Pendaftaran disalin!');
@@ -1267,6 +1274,7 @@ export function EmsPublicRegisterPage() {
                   Daftar Peserta Lain
                 </button>
               </div>
+
             </div>
           )}
         </div>

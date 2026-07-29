@@ -36,10 +36,12 @@ import {
   toggleJuryCodeActive,
   deleteJuryCode,
   completeEmsEvent,
+  fetchEventCertificates,
   EmsLeaderboardItem,
 } from '@/lib/ems';
 import { supabase } from '@/lib/supabase';
-import type { EmsEvent, EmsJuryCode } from '@/types';
+import type { EmsEvent, EmsJuryCode, EmsCertificate } from '@/types';
+
 
 export function EmsDashboardPage() {
   const navigate = useNavigate();
@@ -116,6 +118,25 @@ export function EmsDashboardPage() {
   // Lucky Draw Modal State
   const [luckyDrawModalOpen, setLuckyDrawModalOpen] = useState(false);
   const [selectedLuckyDrawEvent, setSelectedLuckyDrawEvent] = useState<EmsEvent | null>(null);
+
+  // Event Certificates List Modal State
+  const [certModalEvent, setCertModalEvent] = useState<EmsEvent | null>(null);
+  const [eventCertList, setEventCertList] = useState<Array<EmsCertificate & { participant?: any; jury?: any; event_title?: string }>>([]);
+  const [loadingEventCerts, setLoadingEventCerts] = useState(false);
+
+  const openCertModal = async (event: EmsEvent) => {
+    setCertModalEvent(event);
+    try {
+      setLoadingEventCerts(true);
+      const certs = await fetchEventCertificates(event.id);
+      setEventCertList(certs);
+    } catch (err) {
+      toast.error('Gagal memuatkan senarai sijil acara.');
+    } finally {
+      setLoadingEventCerts(false);
+    }
+  };
+
 
   const loadEvents = async () => {
     try {
@@ -517,17 +538,25 @@ export function EmsDashboardPage() {
                     )}
 
                     {event.status === 'COMPLETED' && (
-                      <button
-                        onClick={() => handleGenerateCertificates(event.id)}
-                        disabled={generatingCertId === event.id}
-                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs transition-all shadow-md shadow-teal-600/20 disabled:opacity-50"
-                      >
-                        <Award className="w-4 h-4" />
-                        <span>
-                          {generatingCertId === event.id ? 'Menjana E-Sijil...' : 'Jana E-Sijil'}
-                        </span>
-                      </button>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => openCertModal(event)}
+                          className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs transition-all shadow-md shadow-teal-600/20"
+                        >
+                          <Award className="w-4 h-4" />
+                          <span>Senarai E-Sijil</span>
+                        </button>
+                        <button
+                          onClick={() => handleGenerateCertificates(event.id)}
+                          disabled={generatingCertId === event.id}
+                          className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-300 font-semibold text-xs border border-teal-500/30 transition-all disabled:opacity-50"
+                        >
+                          <RefreshCw className={cn("w-3.5 h-3.5", generatingCertId === event.id && "animate-spin")} />
+                          <span>Jana Semula</span>
+                        </button>
+                      </div>
                     )}
+
                   </>
                 ) : (
                   <>
@@ -945,10 +974,77 @@ export function EmsDashboardPage() {
       {/* Lucky Draw Wheel Modal */}
       <EmsLuckyDrawModal
         isOpen={luckyDrawModalOpen}
-        onClose={() => setLuckyDrawModalOpen(false)}
+        onClose={() => {
+          setLuckyDrawModalOpen(false);
+          setSelectedLuckyDrawEvent(null);
+        }}
         eventId={selectedLuckyDrawEvent?.id}
         eventTitle={selectedLuckyDrawEvent?.title}
       />
+
+      {/* Modal Senarai E-Sijil Acara */}
+      {certModalEvent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-2xl w-full space-y-6 shadow-2xl relative max-h-[85vh] overflow-y-auto">
+            <button
+              onClick={() => setCertModalEvent(null)}
+              className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Award className="w-5 h-5 text-teal-400" />
+                <h3 className="text-xl font-bold text-white">Senarai E-Sijil Acara</h3>
+              </div>
+              <p className="text-xs text-slate-400">{certModalEvent.title} ({eventCertList.length} Sijil Dijana)</p>
+            </div>
+
+            {loadingEventCerts ? (
+              <div className="py-12 flex flex-col items-center justify-center space-y-2">
+                <RefreshCw className="w-8 h-8 text-teal-400 animate-spin" />
+                <p className="text-xs text-slate-400 font-medium">Memuatkan senarai sijil...</p>
+              </div>
+            ) : eventCertList.length === 0 ? (
+              <div className="p-8 text-center bg-slate-950 border border-slate-800 rounded-2xl space-y-2">
+                <AlertCircle className="w-8 h-8 text-amber-400 mx-auto" />
+                <p className="text-sm font-semibold text-white">Belum Ada E-Sijil Dijana</p>
+                <p className="text-xs text-slate-400">Tekan butang "Jana Semula" untuk menjana e-sijil peserta dan juri acara ini.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {eventCertList.map((cert) => {
+                  const recipientName = cert.participant?.team_name || cert.participant?.leader_name || cert.jury?.jury_name || 'Penerima Sijil';
+                  const subtext = cert.participant?.matrix_no || cert.jury?.organization || cert.cert_type;
+
+                  return (
+                    <div key={cert.id} className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-4">
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300">
+                            {cert.cert_type}
+                          </span>
+                          <span className="text-xs font-mono text-slate-400 truncate">{cert.cert_serial}</span>
+                        </div>
+                        <p className="text-sm font-bold text-white truncate">{recipientName}</p>
+                        {subtext && <p className="text-xs text-slate-400">{subtext}</p>}
+                      </div>
+
+                      <button
+                        onClick={() => navigate(`/ems/cert/${cert.cert_serial}`)}
+                        className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-300 font-semibold text-xs transition border border-slate-700 shrink-0"
+                      >
+                        Lihat Sijil
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

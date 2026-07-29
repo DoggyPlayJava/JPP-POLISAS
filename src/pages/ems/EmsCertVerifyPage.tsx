@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   ShieldCheck,
@@ -10,12 +10,36 @@ import {
   Sparkles,
   ArrowLeft,
   Lock,
+  ExternalLink,
+  Loader2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { fetchUserCertificates } from '@/lib/ems';
+import type { EmsCertificate } from '@/types';
 
 export const EmsCertVerifyPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
   const [serialNumber, setSerialNumber] = useState('');
+  const [userCerts, setUserCerts] = useState<Array<EmsCertificate & { event_title?: string; recipient_name?: string }>>([]);
+  const [loadingCerts, setLoadingCerts] = useState(false);
+
+  useEffect(() => {
+    async function loadCerts() {
+      if (!user?.email && !profile?.matrix_no) return;
+      try {
+        setLoadingCerts(true);
+        const certs = await fetchUserCertificates(user?.email || undefined, profile?.matrix_no || undefined);
+        setUserCerts(certs);
+      } catch (err) {
+        console.error('Error fetching user certificates:', err);
+      } finally {
+        setLoadingCerts(false);
+      }
+    }
+    loadCerts();
+  }, [user, profile]);
 
   const handleVerify = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +67,6 @@ export const EmsCertVerifyPage: React.FC = () => {
           <ArrowLeft className="w-4 h-4" /> Kembali
         </button>
 
-
         <div className="flex items-center gap-2">
           <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5" /> Portal Rasmi POLISAS
@@ -52,7 +75,7 @@ export const EmsCertVerifyPage: React.FC = () => {
       </div>
 
       {/* Hero Content Box */}
-      <div className="relative z-10 my-auto py-12 flex flex-col items-center text-center max-w-2xl mx-auto space-y-8">
+      <div className="relative z-10 my-auto py-8 flex flex-col items-center text-center max-w-2xl mx-auto space-y-6">
         <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-2xl shadow-emerald-500/20">
           <Award className="w-10 h-10" />
         </div>
@@ -65,7 +88,7 @@ export const EmsCertVerifyPage: React.FC = () => {
             Sahkan Sijil Digital Anda
           </h1>
           <p className="text-slate-400 text-sm sm:text-base leading-relaxed max-w-lg mx-auto">
-            Masukkan nombor siri sijil rasmi yang tertera pada dokumen E-Sijil JPP-POLISAS anda untuk mengesahkan ketulenan rekod digital.
+            Masukkan nombor siri sijil rasmi tertera pada dokumen E-Sijil JPP-POLISAS anda untuk mengesahkan ketulenan rekod.
           </p>
         </div>
 
@@ -94,8 +117,47 @@ export const EmsCertVerifyPage: React.FC = () => {
           </button>
         </form>
 
+        {/* Logged in User Certificates List */}
+        {(user || profile) && (
+          <div className="w-full pt-8 text-left space-y-4 border-t border-slate-800/80">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <Award className="w-5 h-5 text-emerald-400" /> Senarai E-Sijil Berdaftar Anda
+              </h2>
+              {loadingCerts && <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />}
+            </div>
+
+            {userCerts.length === 0 && !loadingCerts ? (
+              <div className="p-5 rounded-2xl bg-slate-900/40 border border-slate-800/60 text-center text-xs text-slate-400">
+                Tiada E-Sijil dijumpai untuk e-mel / no. matrik akaun anda setakat ini.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {userCerts.map((cert) => (
+                  <div key={cert.id} className="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-emerald-500/40 transition-all space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
+                        {cert.cert_type}
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-400">{cert.cert_serial}</span>
+                    </div>
+                    <p className="text-sm font-bold text-white truncate">{cert.event_title}</p>
+                    <p className="text-xs text-slate-400">{cert.recipient_name}</p>
+                    <button
+                      onClick={() => navigate(`/ems/cert/${cert.cert_serial}`)}
+                      className="w-full mt-2 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 font-semibold text-xs transition"
+                    >
+                      <span>Lihat / Muat Turun Sijil</span> <ExternalLink className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Features / Notice */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 text-left w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 text-left w-full">
           <div className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800/80 space-y-1.5">
             <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
               <CheckCircle2 className="w-4 h-4" /> Pengesahan QR
@@ -130,3 +192,4 @@ export const EmsCertVerifyPage: React.FC = () => {
     </div>
   );
 };
+

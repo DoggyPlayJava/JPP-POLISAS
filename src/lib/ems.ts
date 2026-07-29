@@ -782,3 +782,72 @@ export async function generateEmsCertificates(eventId: string): Promise<EmsCerti
   if (fetchErr) throw fetchErr;
   return updatedCerts || [];
 }
+
+/**
+ * Fetches all certificates for a specific event with associated participant and event details.
+ */
+export async function fetchEventCertificates(eventId: string): Promise<Array<EmsCertificate & { participant?: EmsParticipant | null; jury?: EmsJuryCode | null; event_title?: string }>> {
+  const [certsRes, eventRes, participantsRes, juriesRes] = await Promise.all([
+    supabase.from('ems_certificates').select('*').eq('event_id', eventId).order('created_at', { ascending: false }),
+    supabase.from('ems_events').select('title').eq('id', eventId).maybeSingle(),
+    supabase.from('ems_participants').select('*').eq('event_id', eventId),
+    supabase.from('ems_jury_codes').select('*').eq('event_id', eventId),
+  ]);
+
+  if (certsRes.error) throw certsRes.error;
+  const certs = certsRes.data || [];
+  const eventTitle = eventRes.data?.title || 'Acara EMS';
+  const participantsMap = new Map((participantsRes.data || []).map((p) => [p.id, p]));
+  const juriesMap = new Map((juriesRes.data || []).map((j) => [j.id, j]));
+
+  return certs.map((c) => ({
+    ...c,
+    event_title: eventTitle,
+    participant: c.participant_id ? participantsMap.get(c.participant_id) || null : null,
+    jury: c.jury_code_id ? juriesMap.get(c.jury_code_id) || null : null,
+  }));
+}
+
+/**
+ * Fetches all certificates for a user matching email or matrix_no.
+ */
+export async function fetchUserCertificates(email?: string, matrixNo?: string): Promise<Array<EmsCertificate & { event_title?: string; recipient_name?: string }>> {
+  if (!email && !matrixNo) return [];
+
+  // 1. Find participant records matching email or matrix_no
+  let query = supabase.from('ems_participants').select('id, event_id, leader_name, team_name, email, matrix_no');
+  if (email && matrixNo) {
+    query = query.or(`email.ilike.${email},matrix_no.ilike.${matrixNo}`);
+  } else if (email) {
+    query = query.ilike('email', email);
+  } else if (matrixNo) {
+    query = query.ilike('matrix_no', matrixNo);
+  }
+
+  const { data: participants, error: pErr } = await query;
+  if (pErr || !participants || participants.length === 0) return [];
+
+  const participantIds = participants.map((p) => p.id);
+
+  // 2. Fetch certificates matching participant_ids
+  const { data: certs, error: cErr } = await supabase
+    .from('ems_certificates')
+    .select('*')
+    .in('participant_id', participantIds)
+    .order('created_at', { ascending: false });
+
+  if (cErr || !certs || certs.length === 0) return [];
+
+  // 3. Fetch event titles
+  const eventIds = Array.from(new Set(certs.map((c) => c.event_id)));
+  const { data: events } = await supabase.from('ems_events').select('id, title').in('id', eventIds);
+  const eventsMap = new Map((events || []).map((e) => [e.id, e.title]));
+  const participantsMap = new Map(participants.map((p) => [p.id, p.team_name || p.leader_name]));
+
+  return certs.map((c) => ({
+    ...c,
+    event_title: eventsMap.get(c.event_id) || 'Acara EMS',
+    recipient_name: c.participant_id ? participantsMap.get(c.participant_id) : 'Peserta',
+  }));
+}
+
