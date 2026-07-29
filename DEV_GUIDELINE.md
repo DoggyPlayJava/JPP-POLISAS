@@ -2222,6 +2222,8 @@ Setiap jadual EMS diaktifkan RLS dengan polisi tunggal bagi setiap operasi (`SEL
 - **`/ems/checkin/:eventId`**: `<EmsCheckinPage />` (`src/pages/ems/EmsCheckinPage.tsx`) — Portal pengesahan kehadiran urus setia / AJK hari kejadian menggunakan pengimbas QR kamera real-time (html5-qrcode), carian manual, audio chime, dan papan pemuka peratusan kehadiran live.
 - **`/ems/leaderboard/:eventId`**: `<EmsLeaderboardPage />` (`src/pages/ems/EmsLeaderboardPage.tsx`) — Papan pendahulu pentadbir & pengarah program EMS berserta kawalan visibiliti, penentuan seret (tie-breaker), penapis kategori, dan perincian komen/skor juri.
 - **`/ems/stage/:eventId`**: `<EmsLeaderboardPage isStageMode={true} />` (`src/pages/ems/EmsLeaderboardPage.tsx`) — Mod persembahan pentas (Stage Display Mode) skrin penuh bertema gelap/vibrant, animasi podium Top 3, lencana 🥇/🥈/🥉, pelancaran bunga api (canvas-confetti), dan skrin tirai kunci status visibiliti rasmi.
+- **`/ems/cert/:certId`**: `<EmsCertificatePage />` (`src/pages/ems/EmsCertificatePage.tsx`) — Portal awam muat turun & pengesahan e-sijil digital dengan carian carian Supabase ID/serial, kad status sah dengan lencana hijau, pratinjau PDF terbina (`@react-pdf/renderer`), dan pautan QR pengesahan. Templat dokumen disedia di `src/components/ems/EmsCertificateTemplate.tsx` menyokong jenis `PARTICIPANT`, `WINNER`, dan `JURY`.
+
 
 
 
