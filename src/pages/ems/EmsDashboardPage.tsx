@@ -433,18 +433,24 @@ export function EmsDashboardPage() {
                 {canCreateEvent ? (
                   <>
                     <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => navigate(`/ems/event/${event.id}/edit`)}
-                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs transition-all"
-                      >
-                        <Edit3 className="w-3.5 h-3.5 text-slate-400" />
-                        <span>Sunting</span>
-                      </button>
+                      {(isSuperAdmin || isJppMember || (user?.id && event.created_by === user.id)) && (
+                        <button
+                          onClick={() => navigate(`/ems/event/${event.id}/edit`)}
+                          className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs transition-all"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Sunting</span>
+                        </button>
+                      )}
 
                       <button
                         onClick={() => setQrModalEvent(event)}
-                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 font-semibold text-xs transition-all"
+                        className={cn(
+                          "flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 font-semibold text-xs transition-all",
+                          !(isSuperAdmin || isJppMember || (user?.id && event.created_by === user.id)) && "col-span-2"
+                        )}
                       >
+
                         <QrCode className="w-3.5 h-3.5" />
                         <span>Pautan QR</span>
                       </button>

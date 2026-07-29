@@ -6,7 +6,20 @@ import {
   Trophy,
   GraduationCap,
   LayoutDashboard,
-  LucideIcon
+  CalendarDays,
+  Calendar,
+  Sparkles,
+  ShieldCheck,
+  PlusCircle,
+  QrCode,
+  Gavel,
+  FileCheck,
+  Users,
+  FileText,
+  Settings,
+  Settings2,
+  ClipboardCheck,
+  LucideIcon,
 } from 'lucide-react';
 
 const ICONS: Record<string, LucideIcon> = {
@@ -16,9 +29,23 @@ const ICONS: Record<string, LucideIcon> = {
   Trophy,
   GraduationCap,
   LayoutDashboard,
+  CalendarDays,
+  Calendar,
+  Sparkles,
+  ShieldCheck,
+  PlusCircle,
+  QrCode,
+  Gavel,
+  FileCheck,
+  Users,
+  FileText,
+  Settings,
+  Settings2,
+  ClipboardCheck,
 };
 
 interface ExcoIconProps {
+
   iconName: string;
   className?: string;
   fallback?: LucideIcon;

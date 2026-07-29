@@ -209,8 +209,15 @@ export const EmsCertificatePage: React.FC = () => {
       {/* ── Navbar Public Branding ── */}
       <header className="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-black text-slate-950 shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" /> Kembali
+            </button>
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-black text-slate-950 shadow-lg shadow-emerald-500/20">
               <ShieldCheck className="w-5 h-5 text-slate-950" />
             </div>
             <div>
@@ -219,7 +226,8 @@ export const EmsCertificatePage: React.FC = () => {
               </div>
               <p className="text-[10px] text-slate-400 font-medium">Portal Pengesahan Digital JPP POLISAS</p>
             </div>
-          </Link>
+          </div>
+
 
           <div className="flex items-center gap-2">
             <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center gap-2">

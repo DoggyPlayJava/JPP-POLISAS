@@ -35,12 +35,14 @@ export const EmsCertVerifyPage: React.FC = () => {
 
       {/* Top Header Nav */}
       <div className="relative z-10 flex items-center justify-between gap-4">
-        <Link
-          to="/"
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
           className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900/80 border border-slate-800 text-slate-400 hover:text-white text-xs font-semibold transition-all hover:bg-slate-800"
         >
-          <ArrowLeft className="w-4 h-4" /> Utama
-        </Link>
+          <ArrowLeft className="w-4 h-4" /> Kembali
+        </button>
+
 
         <div className="flex items-center gap-2">
           <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">

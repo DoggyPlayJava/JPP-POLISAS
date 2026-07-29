@@ -124,7 +124,17 @@ export function EmsEventFormPage() {
           return;
         }
 
+        // RBAC Security Check: Only Event Creator, Super Admin, or JPP Admin can edit this event
+        const isOwner = Boolean(user?.id && data.created_by === user.id);
+        const canEditThisEvent = isSuperAdmin || isJppMember || isOwner;
+        if (!canEditThisEvent) {
+          toast.error('Akses Terhad: Anda tidak mempunyai kebenaran untuk menyunting acara ini.');
+          navigate('/ems/dashboard');
+          return;
+        }
+
         setTitle(data.title || '');
+
         setDescription(data.description || '');
         setCategory(data.category || 'Keusahawanan');
         setEventType((data.event_type as EmsEventType) || 'COMPETITION');
