@@ -2,7 +2,7 @@
 // JPP POLISAS — EMS (Event Management System) Supabase Helpers
 // ============================================================
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from './supabase';
 import type {
   EmsEvent,
   EmsFormField,
@@ -11,7 +11,7 @@ import type {
   EmsRubricCriteria,
   EmsScore,
   EmsCertificate,
-} from '@/types';
+} from '../types';
 
 export interface EmsLeaderboardItem {
   participant: EmsParticipant;

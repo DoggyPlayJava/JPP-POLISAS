@@ -2218,6 +2218,7 @@ Setiap jadual EMS diaktifkan RLS dengan polisi tunggal bagi setiap operasi (`SEL
 - **`/ems/event/new`**: `<EmsEventFormPage />` (`src/pages/ems/EmsEventFormPage.tsx`) — Borang pendaftaran acara baharu dengan pembina borang & rubrik pemarkahan.
 - **`/ems/event/:id/edit`**: `<EmsEventFormPage />` (`src/pages/ems/EmsEventFormPage.tsx`) — Suntingan acara sedia ada.
 - **`/ems/approvals`**: `<EmsApprovalPage />` (`src/pages/ems/EmsApprovalPage.tsx`) — Halaman pengesahan kelulusan khas Pentadbir Mutlak (SUPER_ADMIN_JPP).
+- **`/ems/e/:eventId/register`**: `<EmsPublicRegisterPage />` (`src/pages/ems/EmsPublicRegisterPage.tsx`) — Wisard pendaftaran peserta awam/pelajar multi-langkah dengan pendaftaran individu/pasukan, borang dinamik, muat naik media, dan jana pass digital berserta QR.
 
 
 

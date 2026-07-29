@@ -180,6 +180,7 @@ const PolyServicesAdmin = lazy(() => import('./pages/jpp/PolyServicesAdmin').the
 const EmsDashboardPage = lazy(() => import('./pages/ems/EmsDashboardPage').then(m => ({ default: m.EmsDashboardPage })));
 const EmsEventFormPage = lazy(() => import('./pages/ems/EmsEventFormPage').then(m => ({ default: m.EmsEventFormPage })));
 const EmsApprovalPage  = lazy(() => import('./pages/ems/EmsApprovalPage').then(m => ({ default: m.EmsApprovalPage })));
+const EmsPublicRegisterPage = lazy(() => import('./pages/ems/EmsPublicRegisterPage').then(m => ({ default: m.EmsPublicRegisterPage })));
 
 
 // ── Global Modals (lazy-loaded, deferred after paint) ──
@@ -274,6 +275,8 @@ function AppRoutes() {
       <Route path="/polymaps" element={<PolyMapsPage />} />
       {/* QR Program Attendance — standalone, redirect ke login diuruskan dalam page itu sendiri */}
       <Route path="/program/attend/:token" element={<ProgramAttendPage />} />
+      {/* 🎪 EMS Public Participant Registration Wizard */}
+      <Route path="/ems/e/:eventId/register" element={<EmsPublicRegisterPage />} />
 
       {/* 🔐 PROTECTED ROUTES */}
       <Route element={<ProtectedRoute />}>
