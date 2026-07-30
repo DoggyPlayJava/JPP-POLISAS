@@ -332,16 +332,18 @@ export function EmsDashboardPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              setSelectedLuckyDrawEvent(null);
-              setLuckyDrawModalOpen(true);
-            }}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black transition-all shadow-lg shadow-amber-500/20 active:scale-95 text-xs uppercase tracking-wider"
-          >
-            <Gift className="w-4 h-4 text-slate-950" />
-            <span>Cabutan Bertuah 🎰</span>
-          </button>
+          {canCreateEvent && (
+            <button
+              onClick={() => {
+                setSelectedLuckyDrawEvent(null);
+                setLuckyDrawModalOpen(true);
+              }}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black transition-all shadow-lg shadow-amber-500/20 active:scale-95 text-xs uppercase tracking-wider"
+            >
+              <Gift className="w-4 h-4 text-slate-950" />
+              <span>Cabutan Bertuah 🎰</span>
+            </button>
+          )}
           {canCreateEvent && (
             <button
               onClick={() => navigate('/ems/event/new')}
@@ -613,16 +615,18 @@ export function EmsDashboardPage() {
                       </button>
                     </div>
 
-                    <button
-                      onClick={() => {
-                        setSelectedLuckyDrawEvent(event);
-                        setLuckyDrawModalOpen(true);
-                      }}
-                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-amber-600/10 hover:from-amber-500/30 hover:to-amber-600/20 text-amber-300 border border-amber-500/30 font-semibold text-xs transition-all"
-                    >
-                      <Gift className="w-4 h-4 text-amber-400" />
-                      <span>Roda Cabutan Bertuah</span>
-                    </button>
+                    {(canCreateEvent || (!!user?.id && event.created_by === user.id)) && (
+                      <button
+                        onClick={() => {
+                          setSelectedLuckyDrawEvent(event);
+                          setLuckyDrawModalOpen(true);
+                        }}
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-amber-600/10 hover:from-amber-500/30 hover:to-amber-600/20 text-amber-300 border border-amber-500/30 font-semibold text-xs transition-all"
+                      >
+                        <Gift className="w-4 h-4 text-amber-400" />
+                        <span>Roda Cabutan Bertuah</span>
+                      </button>
+                    )}
                   </>
                 )}
               </div>

@@ -14,7 +14,9 @@ import {
   Gift,
   CheckCircle2,
   Filter,
+  Lock,
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import type { EmsVisitor, EmsParticipant } from '@/types';
 
@@ -41,6 +43,31 @@ export function EmsLuckyDrawModal({
   eventId,
   eventTitle,
 }: EmsLuckyDrawModalProps) {
+  const { user, isSuperAdmin, isJppMember, isPresident, isMT: isClubMt, isAdvisor: isClubAdvisor, profile } = useAuth();
+  const isStaff = profile?.role === 'STAFF' || profile?.role === 'PENSYARAH';
+  const [eventCreatorId, setEventCreatorId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen && eventId) {
+      supabase
+        .from('ems_events')
+        .select('created_by')
+        .eq('id', eventId)
+        .single()
+        .then(({ data }) => {
+          if (data?.created_by) {
+            setEventCreatorId(data.created_by);
+          } else {
+            setEventCreatorId(null);
+          }
+        });
+    } else {
+      setEventCreatorId(null);
+    }
+  }, [isOpen, eventId]);
+
+  const canManage = isSuperAdmin || isJppMember || isPresident || isClubMt || isClubAdvisor || isStaff || (!!user?.id && !!eventCreatorId && eventCreatorId === user.id);
+
   const [sourceFilter, setSourceFilter] = useState<'ALL' | 'VISITORS' | 'PARTICIPANTS'>('ALL');
   const [candidates, setCandidates] = useState<LuckyDrawCandidate[]>([]);
   const [loadingCandidates, setLoadingCandidates] = useState(false);
@@ -165,6 +192,11 @@ export function EmsLuckyDrawModal({
   };
 
   const handleStartSpin = () => {
+    if (!canManage) {
+      toast.error('Akses Terhad: Hanya Pengarah Program atau Admin JPP dibenarkan memutar Roda Cabutan Bertuah.');
+      return;
+    }
+
     // Filter out already drawn winners
     const historyIds = new Set(winnerHistory.map((w) => w.id));
     const eligible = candidates.filter((c) => !historyIds.has(c.id));
@@ -294,7 +326,18 @@ export function EmsLuckyDrawModal({
           {/* Animated Glow Backlight */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          {currentWinner ? (
+          {!canManage ? (
+            /* Access Denied Card */
+            <div className="relative z-10 space-y-3 p-4 text-center">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 mx-auto">
+                <Lock className="w-7 h-7" />
+              </div>
+              <h3 className="text-lg font-bold text-rose-400">Akses Terhad</h3>
+              <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
+                Akses Terhad: Hanya Pengarah Program atau Admin JPP dibenarkan memutar Roda Cabutan Bertuah.
+              </p>
+            </div>
+          ) : currentWinner ? (
             /* Winner Reveal Celebration Card */
             <div className="relative z-10 space-y-4 animate-scaleUp">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-b from-amber-400/30 to-amber-500/10 border-2 border-amber-400 text-amber-400 shadow-[0_0_40px_rgba(245,158,11,0.4)] animate-bounce">
@@ -340,8 +383,8 @@ export function EmsLuckyDrawModal({
         {/* Action Button: Putar Roda Cabutan */}
         <button
           onClick={handleStartSpin}
-          disabled={isSpinning || candidates.length === 0}
-          className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-sm uppercase tracking-wider transition-all shadow-[0_0_30px_rgba(245,158,11,0.3)] flex items-center justify-center gap-3 disabled:opacity-50 active:scale-95"
+          disabled={!canManage || isSpinning || candidates.length === 0}
+          className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-sm uppercase tracking-wider transition-all shadow-[0_0_30px_rgba(245,158,11,0.3)] flex items-center justify-center gap-3 disabled:opacity-50 active:scale-95 cursor-pointer disabled:cursor-not-allowed"
         >
           <RotateCw className={`w-5 h-5 ${isSpinning ? 'animate-spin' : ''}`} />
           <span>{isSpinning ? 'Memutar Roda Cabutan...' : 'Putar Roda Cabutan Bertuah 🎰'}</span>

@@ -47,7 +47,8 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isSuperAdmin, isJppMember, isPresident, isClubMt, isClubAdvisor, isStaff } = useAuth();
+  const { user, isSuperAdmin, isJppMember, isPresident, isMT: isClubMt, isAdvisor: isClubAdvisor, profile } = useAuth();
+  const isStaff = profile?.role === 'STAFF' || profile?.role === 'PENSYARAH';
 
   // Detect Stage Mode from prop or path
   const isStageMode = Boolean(isStageProp || location.pathname.startsWith('/ems/stage/'));
