@@ -196,7 +196,7 @@ export const EmsCheckinSelectorPage: React.FC = () => {
                   className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/20 transition-all group-hover:scale-[1.02]"
                 >
                   <UserCheck className="w-4 h-4" />
-                  Muka Check-In
+                  Mula Check-In
                 </Link>
               </div>
             </div>
