@@ -108,6 +108,7 @@ src/
 │   ├── ai/                   ← FloatingAiChat, komponen AI
 │   ├── ems/                  ← Templat E-Sijil & komponen EMS
 │   ├── layout/               ← AppLayout, Sidebar, BottomNav
+│   ├── portal/               ← Komponen Portal & Celebration MegaBanners (FiraMegaBanner, FiraEffects, Karnival, Supsas)
 │   ├── reports/              ← Penjana PDF/DOCX laporan
 │   ├── takwim/               ← Komponen takwim/kalendar
 │   ├── tasks/                ← Komponen pengurusan tugasan

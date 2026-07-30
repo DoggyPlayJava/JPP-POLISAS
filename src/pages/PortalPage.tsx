@@ -20,6 +20,8 @@ import { CurtainReveal } from '@/components/portal/CurtainReveal';
 import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import { KarnivalMegaBanner } from '@/components/portal/KarnivalMegaBanner';
 import { SupsasMegaBanner } from '@/components/portal/SupsasMegaBanner';
+import { FiraMegaBanner } from '@/components/portal/FiraMegaBanner';
+import { FiraEffects } from '@/components/portal/FiraEffects';
 import { QuickActions } from '@/components/portal/QuickActions';
 import { PortalNavbar } from '@/components/portal/PortalNavbar';
 import { PortalFooter } from '@/components/portal/PortalFooter';
@@ -261,6 +263,7 @@ export function PortalPage() {
 
   const displayName = useMemo(() => getMalaysianNickname(profile?.full_name) || 'Student', [profile]);
   const supsasActive = isModuleEnabled('supsas');
+  const firaActive = settings.find(s => s.exco_module === 'fira') ? isModuleEnabled('fira') : true;
 
   return (
     <div className={cn(
@@ -269,7 +272,9 @@ export function PortalPage() {
         ? 'bg-[#060010] text-white selection:bg-violet-500/20'
         : supsasActive
           ? 'bg-[#030d1a] text-white selection:bg-amber-500/20'
-          : 'bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-white selection:bg-emerald-500/20'
+          : firaActive
+            ? 'bg-[#070500] text-white selection:bg-amber-500/30'
+            : 'bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-white selection:bg-emerald-500/20'
     )}>
 
       <SystemTour 
@@ -363,6 +368,7 @@ export function PortalPage() {
       <CurtainReveal karnivalActive={karnivalActive} supsasActive={supsasActive} />
       {karnivalActive && <KarnivalEffects />}
       {supsasActive && !karnivalActive && <SupsasEffects />}
+      {firaActive && !karnivalActive && !supsasActive && <FiraEffects />}
 
       {/* Navigation */}
       <PortalNavbar
@@ -418,6 +424,12 @@ export function PortalPage() {
               </p>
 
               {/* ── Event Banners ── */}
+              <AnimatePresence>
+                {firaActive && (
+                  <FiraMegaBanner />
+                )}
+              </AnimatePresence>
+
               <AnimatePresence>
                 {supsasActive && !karnivalActive && (
                   <SupsasMegaBanner supsasEdition={supsasEdition} />
