@@ -263,7 +263,8 @@ export function PortalPage() {
 
   const displayName = useMemo(() => getMalaysianNickname(profile?.full_name) || 'Student', [profile]);
   const supsasActive = isModuleEnabled('supsas');
-  const firaActive = settings.find(s => s.exco_module === 'fira') ? isModuleEnabled('fira') : true;
+  const [isFiraDismissed, setIsFiraDismissed] = useState(() => typeof window !== 'undefined' && sessionStorage.getItem('jpp_fira_banner_dismissed') === 'true');
+  const firaActive = (settings.find(s => s.exco_module === 'fira') ? isModuleEnabled('fira') : true) && !isFiraDismissed;
 
   return (
     <div className={cn(
@@ -426,7 +427,7 @@ export function PortalPage() {
               {/* ── Event Banners ── */}
               <AnimatePresence>
                 {firaActive && (
-                  <FiraMegaBanner />
+                  <FiraMegaBanner onClose={() => setIsFiraDismissed(true)} />
                 )}
               </AnimatePresence>
 

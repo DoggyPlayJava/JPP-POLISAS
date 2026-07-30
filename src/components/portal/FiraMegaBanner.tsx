@@ -1,13 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, animate } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Trophy, Globe, Sparkles, Car, Star, Flag } from 'lucide-react';
+import { Trophy, Globe, Sparkles, Car, Star, Flag, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { triggerHaptic } from '@/lib/utils';
 
-export function FiraMegaBanner() {
+export interface FiraMegaBannerProps {
+  onClose?: () => void;
+}
+
+export function FiraMegaBanner({ onClose }: FiraMegaBannerProps) {
   const [clickCount, setClickCount] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(() => {
+    return sessionStorage.getItem('jpp_fira_banner_dismissed') === 'true';
+  });
+
+  const handleDismiss = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    triggerHaptic('light');
+    sessionStorage.setItem('jpp_fira_banner_dismissed', 'true');
+    setIsDismissed(true);
+    if (onClose) onClose();
+  };
+
+  if (isDismissed) return null;
 
   // 3D Parallax Setup
   const x = useMotionValue(0);
@@ -98,13 +115,22 @@ export function FiraMegaBanner() {
             </Badge>
           </div>
 
-          <button
-            onClick={fireConfetti}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all cursor-pointer z-20"
-          >
-            <Sparkles className="w-4 h-4 fill-slate-950" />
-            Sambut Lagi! 🎉
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={fireConfetti}
+              className="inline-flex items-center gap-2 px-4 py-2 md:px-5 md:py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all cursor-pointer z-20"
+            >
+              <Sparkles className="w-4 h-4 fill-slate-950" />
+              Sambut Lagi! 🎉
+            </button>
+            <button
+              onClick={handleDismiss}
+              className="w-9 h-9 rounded-full bg-slate-900/80 hover:bg-red-500/20 border border-slate-700/80 hover:border-red-500/40 text-slate-400 hover:text-red-400 flex items-center justify-center transition-all cursor-pointer z-20"
+              title="Tutup Banner Perayaan"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Main Banner Title & Hero Rank */}
