@@ -57,6 +57,7 @@ export function EmsDashboardPage() {
     isMT: isClubMt,
     isAdvisor: isClubAdvisor,
     profile,
+    user,
   } = useAuth();
 
   const isStaff = profile?.role === 'STAFF' || profile?.role === 'PENSYARAH';
@@ -147,7 +148,7 @@ export function EmsDashboardPage() {
   const loadEvents = async () => {
     try {
       setLoading(true);
-      const data = await fetchEmsEvents(activeTab);
+      const data = await fetchEmsEvents();
       setEvents(data);
     } catch (err: any) {
       console.error('[EMS] Error loading events:', err);
@@ -159,7 +160,27 @@ export function EmsDashboardPage() {
 
   useEffect(() => {
     loadEvents();
-  }, [activeTab]);
+  }, []);
+
+  const displayedEvents = events.filter((e) => {
+    const isOwner = user?.id && e.created_by === user.id;
+    const isManagerOrCreator = canCreateEvent || isOwner;
+
+    if (isManagerOrCreator) {
+      if (activeTab === 'ALL') return true;
+      if (activeTab === 'APPROVED') return e.status === 'APPROVED' || e.status === 'ACTIVE';
+      return e.status === activeTab;
+    }
+
+    // For Regular Students (!canCreateEvent and not creator):
+    if (activeTab === 'COMPLETED') {
+      return e.status === 'COMPLETED';
+    }
+
+    // 'ALL' tab ("🔥 Acara Berlangsung & Akan Datang"):
+    // returns events where status === 'APPROVED' || status === 'ACTIVE', explicitly excluding COMPLETED
+    return e.status === 'APPROVED' || e.status === 'ACTIVE';
+  });
 
   // Load Jury Codes when modal opens
   const openJuryModal = async (event: EmsEvent) => {
@@ -392,7 +413,7 @@ export function EmsDashboardPage() {
           <RefreshCw className="w-8 h-8 animate-spin mb-3 text-indigo-400" />
           <p className="text-sm font-semibold">Memuatkan senarai acara...</p>
         </div>
-      ) : events.length === 0 ? (
+      ) : displayedEvents.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 px-4 bg-slate-900/50 border border-slate-800 rounded-3xl text-center">
           <AlertCircle className="w-12 h-12 text-slate-600 mb-3" />
           <h3 className="text-lg font-bold text-white mb-1">Tiada Acara Dijumpai</h3>
@@ -410,14 +431,7 @@ export function EmsDashboardPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events
-            .filter((e) => {
-              if (canCreateEvent) return true;
-              const isOwner = user?.id && e.created_by === user.id;
-              if (isOwner) return true;
-              return e.status === 'APPROVED' || e.status === 'ACTIVE' || e.status === 'COMPLETED';
-            })
-            .map((event) => (
+          {displayedEvents.map((event) => (
 
             <div
               key={event.id}
