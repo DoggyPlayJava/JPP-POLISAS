@@ -156,15 +156,19 @@ export function EmsPublicRegisterPage() {
     };
   }, [eventId]);
 
-  // Auto-fill logged in user info if student category is selected
+  // Auto-fill logged in user info & matrix number during registration
   useEffect(() => {
-    if (isAuthenticated && profile && participantCategory === 'STUDENT') {
-      setLeaderName(profile.full_name || '');
-      setMatrixNo(profile.matrix_no || '');
+    if (user || profile) {
+      const studentMatrix = profile?.matrix_no || profile?.matric_no || '';
+      if (studentMatrix) {
+        setParticipantCategory('STUDENT');
+      }
+      setLeaderName(profile?.full_name || user?.user_metadata?.full_name || '');
+      setMatrixNo(studentMatrix);
       setEmail(user?.email || '');
-      setPhone(profile.phone_number || profile.phone || '');
+      setPhone(profile?.phone || '');
     }
-  }, [isAuthenticated, profile, user, participantCategory]);
+  }, [user, profile]);
 
   // Handle Google Login helper
   const handleGoogleLogin = async () => {
@@ -587,8 +591,8 @@ export function EmsPublicRegisterPage() {
                         <div>
                           <p className="text-xs text-indigo-300 font-semibold">Log Masuk Sebagai:</p>
                           <p className="text-sm font-bold text-white">{profile?.full_name || user?.email}</p>
-                          {profile?.matrix_no && (
-                            <p className="text-xs text-slate-400">No. Matrik: <span className="font-mono text-indigo-300">{profile.matrix_no}</span></p>
+                          {(profile?.matrix_no || profile?.matric_no) && (
+                            <p className="text-xs text-slate-400">No. Matrik: <span className="font-mono text-indigo-300">{profile.matrix_no || profile.matric_no}</span></p>
                           )}
                         </div>
                       </div>

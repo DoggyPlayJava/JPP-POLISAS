@@ -53,6 +53,7 @@ export interface Profile {
   department?: string | null;
   avatar_url?: string | null;
   matric_no?: string | null;
+  matrix_no?: string | null;
   jpp_position?: string | null;
   jpp_unit?: string | null;
   created_at?: string;
