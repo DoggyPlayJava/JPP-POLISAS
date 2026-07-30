@@ -365,6 +365,48 @@ export async function registerEmsParticipant(
 }
 
 /**
+ * Manually creates a participant record by Program Director / Admin.
+ */
+export async function createEmsParticipantManual(participantData: {
+  event_id: string;
+  participant_type?: string;
+  entity_mode?: string;
+  team_name?: string;
+  booth_no?: string;
+  category_name?: string;
+  leader_name: string;
+  matrix_no?: string;
+  email?: string;
+  phone?: string;
+}): Promise<EmsParticipant> {
+  const { data, error } = await supabase
+    .from('ems_participants')
+    .insert([
+      {
+        event_id: participantData.event_id,
+        participant_type: participantData.participant_type || 'STUDENT',
+        entity_mode: participantData.entity_mode || 'INDIVIDUAL',
+        team_name: participantData.team_name || null,
+        booth_no: participantData.booth_no || null,
+        category_name: participantData.category_name || null,
+        leader_name: participantData.leader_name.trim(),
+        matrix_no: participantData.matrix_no || null,
+        email: participantData.email || null,
+        phone: participantData.phone || null,
+      },
+    ])
+    .select()
+    .single();
+
+  if (error || !data) {
+    throw new Error(`Gagal mendaftar peserta secara manual: ${error?.message || 'Ralat tidak diketahui'}`);
+  }
+
+  return data;
+}
+
+
+/**
  * Toggles active state of a jury code.
  */
 export async function toggleJuryCodeActive(

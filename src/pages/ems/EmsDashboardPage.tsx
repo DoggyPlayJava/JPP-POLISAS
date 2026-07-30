@@ -27,6 +27,7 @@ import {
   Share2,
   Send,
   MessageSquare,
+  UserPlus,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -42,6 +43,7 @@ import {
   deleteJuryCode,
   completeEmsEvent,
   fetchEventCertificates,
+  createEmsParticipantManual,
   EmsLeaderboardItem,
 } from '@/lib/ems';
 import { supabase } from '@/lib/supabase';
@@ -91,7 +93,66 @@ export function EmsDashboardPage() {
   const [leaderboard, setLeaderboard] = useState<EmsLeaderboardItem[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
   const [selectedWinnerId, setSelectedWinnerId] = useState<string>('');
-  const [isResolvingTie, setIsResolvingTie] = useState(false);
+  // Manual Registration Modal State
+  const [manualRegModalEvent, setManualRegModalEvent] = useState<EmsEvent | null>(null);
+  const [manualRegForm, setManualRegForm] = useState({
+    leader_name: '',
+    matrix_no: '',
+    email: '',
+    phone: '',
+    team_name: '',
+    booth_no: '',
+    category_name: '',
+    participant_type: 'STUDENT',
+  });
+  const [isSubmittingManualReg, setIsSubmittingManualReg] = useState(false);
+
+  const openManualRegModal = (event: EmsEvent) => {
+    setManualRegModalEvent(event);
+    setManualRegForm({
+      leader_name: '',
+      matrix_no: '',
+      email: '',
+      phone: '',
+      team_name: '',
+      booth_no: '',
+      category_name: event.category || '',
+      participant_type: 'STUDENT',
+    });
+  };
+
+  const handleManualRegistration = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualRegModalEvent) return;
+    if (!manualRegForm.leader_name.trim()) {
+      toast.error('Sila masukkan Nama Ketua / Peserta.');
+      return;
+    }
+
+    try {
+      setIsSubmittingManualReg(true);
+      await createEmsParticipantManual({
+        event_id: manualRegModalEvent.id,
+        participant_type: manualRegForm.participant_type || 'STUDENT',
+        entity_mode: manualRegModalEvent.event_mode || 'INDIVIDUAL',
+        leader_name: manualRegForm.leader_name.trim(),
+        matrix_no: manualRegForm.matrix_no.trim() || undefined,
+        email: manualRegForm.email.trim() || undefined,
+        phone: manualRegForm.phone.trim() || undefined,
+        team_name: manualRegForm.team_name.trim() || undefined,
+        booth_no: manualRegForm.booth_no.trim() || undefined,
+        category_name: manualRegForm.category_name.trim() || undefined,
+      });
+
+      toast.success('Peserta berjaya didaftarkan secara manual!');
+      setManualRegModalEvent(null);
+      loadEvents();
+    } catch (err: any) {
+      toast.error(err?.message || 'Gagal mendaftar peserta');
+    } finally {
+      setIsSubmittingManualReg(false);
+    }
+  };
 
   // Cert generation & Completion loading state per event
   const [generatingCertId, setGeneratingCertId] = useState<string | null>(null);
@@ -488,7 +549,7 @@ export function EmsDashboardPage() {
 
               {/* Action Buttons */}
               <div className="border-t border-slate-800 pt-4 space-y-2">
-                {canCreateEvent ? (
+                {(canCreateEvent || (!!user?.id && event.created_by === user.id)) ? (
                   <>
                     <div className="grid grid-cols-2 gap-2">
                       {(isSuperAdmin || isJppMember || (user?.id && event.created_by === user.id)) && (
@@ -549,6 +610,14 @@ export function EmsDashboardPage() {
                         <span>Tie-Breaker</span>
                       </button>
                     </div>
+
+                    <button
+                      onClick={() => openManualRegModal(event)}
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 font-semibold text-xs transition-all"
+                    >
+                      <UserPlus className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>+ Pendaftaran Manual</span>
+                    </button>
 
                     <button
                       onClick={() => {
@@ -1155,6 +1224,135 @@ export function EmsDashboardPage() {
                 })}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* 4. Modal Pendaftaran Manual Peserta */}
+      {/* ============================================================ */}
+      {manualRegModalEvent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full space-y-6 shadow-2xl my-8 relative">
+            <button
+              onClick={() => setManualRegModalEvent(null)}
+              className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div>
+              <div className="flex items-center gap-2 text-indigo-400 mb-1">
+                <UserPlus className="w-5 h-5" />
+                <h3 className="text-xl font-bold text-white">Pendaftaran Manual Peserta</h3>
+              </div>
+              <p className="text-xs text-slate-400">Acara: {manualRegModalEvent.title}</p>
+            </div>
+
+            <form onSubmit={handleManualRegistration} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1">
+                  Nama Ketua / Peserta <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={manualRegForm.leader_name}
+                  onChange={(e) => setManualRegForm({ ...manualRegForm, leader_name: e.target.value })}
+                  placeholder="Contoh: Muhammad Ali bin Ahmad"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">No. Matrik (Pilihan)</label>
+                  <input
+                    type="text"
+                    value={manualRegForm.matrix_no}
+                    onChange={(e) => setManualRegForm({ ...manualRegForm, matrix_no: e.target.value })}
+                    placeholder="Contoh: 15DKA21F1001"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">E-Mel (Pilihan)</label>
+                  <input
+                    type="email"
+                    value={manualRegForm.email}
+                    onChange={(e) => setManualRegForm({ ...manualRegForm, email: e.target.value })}
+                    placeholder="Contoh: peserta@polisas.edu.my"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">No. Telefon (Pilihan)</label>
+                  <input
+                    type="tel"
+                    value={manualRegForm.phone}
+                    onChange={(e) => setManualRegForm({ ...manualRegForm, phone: e.target.value })}
+                    placeholder="Contoh: 0123456789"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Kategori (Pilihan)</label>
+                  <input
+                    type="text"
+                    value={manualRegForm.category_name}
+                    onChange={(e) => setManualRegForm({ ...manualRegForm, category_name: e.target.value })}
+                    placeholder="Contoh: Inovasi / Sukan"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Nama Pasukan (Pilihan)</label>
+                  <input
+                    type="text"
+                    value={manualRegForm.team_name}
+                    onChange={(e) => setManualRegForm({ ...manualRegForm, team_name: e.target.value })}
+                    placeholder="Contoh: Team TechSquad"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">No. Booth (Pilihan)</label>
+                  <input
+                    type="text"
+                    value={manualRegForm.booth_no}
+                    onChange={(e) => setManualRegForm({ ...manualRegForm, booth_no: e.target.value })}
+                    placeholder="Contoh: Booth 12"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setManualRegModalEvent(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingManualReg}
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all shadow-md shadow-indigo-600/20 disabled:opacity-50"
+                >
+                  {isSubmittingManualReg ? 'Mendaftarkan...' : 'Daftar Peserta'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
