@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { motion, useMotionValue, useSpring, useTransform, animate } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, animate } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Trophy, Globe, Sparkles, Car, Star, Flag, X } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Trophy, Globe, Sparkles, ChevronDown, ChevronUp, Flag, X, Award, Star } from 'lucide-react';
 import { triggerHaptic } from '@/lib/utils';
 
 export interface FiraMegaBannerProps {
@@ -12,32 +11,23 @@ export interface FiraMegaBannerProps {
 export function FiraMegaBanner({ onClose }: FiraMegaBannerProps) {
   const [clickCount, setClickCount] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [isDismissed, setIsDismissed] = useState(() => {
-    return sessionStorage.getItem('jpp_fira_banner_dismissed') === 'true';
+    return typeof window !== 'undefined' && sessionStorage.getItem('jpp_fira_banner_dismissed') === 'true';
   });
 
-  const handleDismiss = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    triggerHaptic('light');
-    sessionStorage.setItem('jpp_fira_banner_dismissed', 'true');
-    setIsDismissed(true);
-    if (onClose) onClose();
-  };
-
-  if (isDismissed) return null;
-
-  // 3D Parallax Setup
+  // Parallax Setup
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const mouseXSpring = useSpring(x, { stiffness: 150, damping: 20 });
   const mouseYSpring = useSpring(y, { stiffness: 150, damping: 20 });
-  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["8deg", "-8deg"]);
-  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-8deg", "8deg"]);
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["6deg", "-6deg"]);
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-6deg", "6deg"]);
 
   useEffect(() => {
     if (!isHovered) {
-      const cx = animate(x, [-0.1, 0.1, -0.1], { duration: 7, ease: "easeInOut", repeat: Infinity });
-      const cy = animate(y, [-0.08, 0.08, -0.08], { duration: 9, ease: "easeInOut", repeat: Infinity });
+      const cx = animate(x, [-0.1, 0.1, -0.1], { duration: 8, ease: "easeInOut", repeat: Infinity });
+      const cy = animate(y, [-0.08, 0.08, -0.08], { duration: 10, ease: "easeInOut", repeat: Infinity });
       return () => { cx.stop(); cy.stop(); };
     }
   }, [isHovered, x, y]);
@@ -53,160 +43,227 @@ export function FiraMegaBanner({ onClose }: FiraMegaBannerProps) {
     setIsHovered(false);
   };
 
+  const handleDismiss = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    triggerHaptic('light');
+    sessionStorage.setItem('jpp_fira_banner_dismissed', 'true');
+    setIsDismissed(true);
+    if (onClose) onClose();
+  };
+
   const fireConfetti = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     triggerHaptic('medium');
     confetti({
       particleCount: 100,
-      spread: 80,
+      spread: 90,
       origin: { y: 0.6 },
-      colors: ['#ffd700', '#f59e0b', '#c0c0c0', '#ffffff', '#e2e8f0']
+      colors: ['#ffd700', '#f59e0b', '#c0c0c0', '#ffffff']
     });
   };
 
-  const handleEasterEgg = (e: React.MouseEvent) => {
+  const handleSecretClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     triggerHaptic('light');
-    const nextCount = clickCount + 1;
-    setClickCount(nextCount);
+    const next = clickCount + 1;
+    setClickCount(next);
 
-    if (nextCount >= 5) {
+    if (next >= 5) {
       triggerHaptic('heavy');
       confetti({
         particleCount: 250,
         spread: 140,
         origin: { y: 0.5 },
-        colors: ['#ffd700', '#fbbf24', '#f59e0b', '#ffffff', '#94a3b8'],
+        colors: ['#ffd700', '#fbbf24', '#f59e0b', '#ffffff', '#e2e8f0'],
         zIndex: 2000
       });
       setClickCount(0);
     }
   };
 
+  if (isDismissed) return null;
+
   const achievements = [
-    { title: 'Autonomous Car Challenge (Race)', medal: '🥈 Perak', desc: 'Perlumbaan Kepantasan Otonomi', border: 'border-slate-400/30 bg-slate-900/60' },
-    { title: 'Autonomous Car Challenge (Urban)', medal: '🥈 Perak', desc: 'Pemanduan Bandar Berhalangan', border: 'border-slate-400/30 bg-slate-900/60' },
-    { title: 'Autonomous Car Challenge (Advanced Urban)', medal: '🥈 Perak', desc: 'Navigasi Kompleks Bandaraya', border: 'border-slate-400/30 bg-slate-900/60' },
-    { title: 'Autonomous Car Challenge (Best United Technical)', medal: '🥇 Emas', desc: 'Cabaran Teknikal Terbaik Dunia', border: 'border-amber-400/60 bg-gradient-to-br from-amber-500/20 to-yellow-950/40 text-amber-300' },
+    { title: 'Autonomous Car Challenge (Race)', medal: '🥈 Perak', cat: 'Race' },
+    { title: 'Autonomous Car Challenge (Urban)', medal: '🥈 Perak', cat: 'Urban' },
+    { title: 'Autonomous Car Challenge (Advanced Urban)', medal: '🥈 Perak', cat: 'Advanced Urban' },
+    { title: 'Autonomous Car Challenge (Best United Technical)', medal: '🥇 Emas', cat: 'Best Technical' },
   ];
 
   return (
-    <div className="w-full max-w-5xl mx-auto perspective-[1000px] my-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ type: 'spring', stiffness: 180, damping: 22 }}
+      className="w-full max-w-4xl perspective-[1000px] my-6 mx-auto"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
       <motion.div
-        style={{ rotateX, rotateY }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        className="relative rounded-[2.5rem] p-6 md:p-8 overflow-hidden border border-amber-500/40 shadow-[0_20px_60px_rgba(245,158,11,0.25)] text-left group transition-all duration-500"
+        style={{
+          rotateX,
+          rotateY,
+          transformStyle: "preserve-3d",
+          background: 'linear-gradient(135deg, #090600 0%, #1a1200 45%, #050300 100%)',
+          minHeight: 280
+        }}
+        className="relative rounded-[2.5rem] overflow-hidden border border-amber-500/30 shadow-[0_25px_60px_rgba(245,158,11,0.22)] text-left group transition-all duration-500"
       >
-        {/* Background Gradient & Animated Sheen */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-950/70 via-[#070500] to-slate-950 pointer-events-none" />
-        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(245,158,11,0.15),transparent_60%)] pointer-events-none" />
+        <style>{`
+          @keyframes fira-shimmer-sweep {
+            0% { transform: translateX(-150%) skewX(-20deg); }
+            15%, 100% { transform: translateX(250%) skewX(-20deg); }
+          }
+          @keyframes fira-marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+        `}</style>
 
-        {/* Top Badges & Action */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-6 relative z-10">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge className="bg-amber-500/20 text-amber-300 border border-amber-400/40 px-3.5 py-1.5 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md backdrop-blur-md">
-              <Globe className="w-4 h-4 text-amber-400 animate-spin-slow" />
-              Pencapaian Antarabangsa 2026
-            </Badge>
-            <Badge className="bg-slate-900/80 text-slate-200 border border-slate-700/80 px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 backdrop-blur-md">
-              <Flag className="w-3.5 h-3.5 text-red-500" />
-              Ontario, Canada 🇨🇦🇲🇾
-            </Badge>
+        {/* Shimmer Sweep Effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/10 to-transparent opacity-60 pointer-events-none z-0" style={{ animation: 'fira-shimmer-sweep 7s infinite ease-in-out', animationDelay: '1s' }} />
+
+        {/* Dot Matrix Texture & Glows */}
+        <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% -10%, rgba(245,158,11,0.25) 0%, transparent 65%)' }} />
+
+        {/* Top Marquee Ticker */}
+        <div className="absolute top-0 left-0 right-0 h-8 bg-amber-950/60 border-b border-amber-500/20 overflow-hidden z-20 flex items-center backdrop-blur-md">
+          <div className="whitespace-nowrap flex items-center gap-12 text-[10px] font-black uppercase tracking-[0.25em] text-amber-200" style={{ animation: 'fira-marquee 22s linear infinite', width: '200%' }}>
+            <span>🏆 31ST FIRA ROBOWORLD CUP & SUMMIT 2026 • ONTARIO, CANADA 🇨🇦🇲🇾</span>
+            <span>🥈 KEDUA DUNIA (SILVER RANK #2) — MALAYSIA POLYCC (POLISAS)</span>
+            <span>🥇 1 EMAS 🥈 4 PERAK • AUTONOMOUS CAR CHALLENGE (PRO)</span>
+            <span>🏆 31ST FIRA ROBOWORLD CUP & SUMMIT 2026 • ONTARIO, CANADA 🇨🇦🇲🇾</span>
+            <span>🥈 KEDUA DUNIA (SILVER RANK #2) — MALAYSIA POLYCC (POLISAS)</span>
+            <span>🥇 1 EMAS 🥈 4 PERAK • AUTONOMOUS CAR CHALLENGE (PRO)</span>
+          </div>
+        </div>
+
+        {/* Top Status Bar & Actions */}
+        <div className="flex items-center justify-between px-6 md:px-8 pt-12 pb-2 relative z-30">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500" />
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-300">Pencapaian Antarabangsa</span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={fireConfetti}
-              className="inline-flex items-center gap-2 px-4 py-2 md:px-5 md:py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all cursor-pointer z-20"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[10px] font-black uppercase tracking-wider hover:bg-amber-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
-              <Sparkles className="w-4 h-4 fill-slate-950" />
-              Sambut Lagi! 🎉
+              <Sparkles className="w-3 h-3 text-amber-400" />
+              Sambut! 🎉
             </button>
             <button
               onClick={handleDismiss}
-              className="w-9 h-9 rounded-full bg-slate-900/80 hover:bg-red-500/20 border border-slate-700/80 hover:border-red-500/40 text-slate-400 hover:text-red-400 flex items-center justify-center transition-all cursor-pointer z-20"
-              title="Tutup Banner Perayaan"
+              className="w-7 h-7 rounded-full bg-slate-900/80 hover:bg-red-500/20 border border-slate-700/80 text-slate-400 hover:text-red-400 flex items-center justify-center transition-all cursor-pointer"
+              title="Tutup Banner"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        {/* Main Banner Title & Hero Rank */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center mb-8 relative z-10">
-          <div className="lg:col-span-8 space-y-3">
-            <div className="inline-flex items-center gap-2 text-amber-400 font-extrabold text-sm tracking-wide">
-              <Trophy className="w-5 h-5 text-yellow-400 animate-bounce" />
-              31st FIRA Roboworld Cup & Summit 2026
+        {/* Centerpiece Hero Section */}
+        <div className="px-6 md:px-8 pt-2 pb-6 text-center space-y-4 relative z-30">
+          <div
+            onClick={handleSecretClick}
+            className="text-5xl sm:text-6xl cursor-pointer hover:scale-110 active:scale-95 transition-transform inline-block"
+            style={{ filter: 'drop-shadow(0 0 25px rgba(245,158,11,0.6))' }}
+            title={clickCount > 0 ? `${5 - clickCount}x lagi!` : 'Tekan 5x untuk Kejutan!'}
+          >
+            🏆
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-xs font-bold text-amber-400 uppercase tracking-widest flex items-center justify-center gap-2">
+              <span>31st FIRA Roboworld Cup & Summit 2026</span>
+              <span className="text-slate-500">•</span>
+              <span className="text-slate-300">Ontario, Canada 🇨🇦🇲🇾</span>
             </div>
-            <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight">
-              Kontijen <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400">Malaysia Polycc (POLISAS)</span> Naib Juara Dunia! 🥈
+            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight max-w-3xl mx-auto">
+              Kontijen <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400">Malaysia Polycc (POLISAS)</span>
             </h2>
-            <p className="text-slate-300 text-sm md:text-base leading-relaxed">
-              Mewakili Negara Malaysia di pentas dunia Ontario, Canada dan bertanding menentang 6 pasukan robotik terbaik dunia dalam kategori <span className="font-bold text-amber-300">Autonomous Car Challenge (Pro)</span>.
+            <p className="text-slate-300 text-xs sm:text-sm max-w-xl mx-auto font-medium">
+              Naib Juara Dunia bagi Kategori <span className="text-amber-300 font-bold">Autonomous Car Challenge (Pro)</span> bertanding menentang 6 pasukan robotik terbaik dunia.
             </p>
           </div>
 
-          {/* Hero World Rank Card with Easter Egg */}
-          <motion.div
-            onClick={handleEasterEgg}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className="lg:col-span-4 p-6 rounded-3xl bg-gradient-to-b from-amber-500/25 via-amber-950/40 to-black border-2 border-amber-400/50 text-center space-y-3 relative overflow-hidden shadow-2xl cursor-pointer group/egg"
-          >
-            <div className="absolute top-2 right-2 text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30">
-              {clickCount > 0 ? `${5 - clickCount}x klik lagi! 🚀` : 'Tekan Untuk Combo! 🔥'}
+          {/* Sleek Medal Stats Bar */}
+          <div className="inline-flex items-center gap-4 px-6 py-2.5 rounded-full bg-black/60 border border-amber-500/30 backdrop-blur-md shadow-lg">
+            <div className="flex items-center gap-1.5 text-xs font-black text-amber-300">
+              <Award className="w-4 h-4 text-amber-400" />
+              <span>Kedua Dunia (Silver) 🥈</span>
             </div>
-            <div className="text-xs font-black uppercase tracking-widest text-amber-300/90 flex items-center justify-center gap-1.5 pt-2">
-              <Star className="w-4 h-4 text-amber-400 fill-amber-400 animate-pulse" />
-              Overall Rank in the World
-              <Star className="w-4 h-4 text-amber-400 fill-amber-400 animate-pulse" />
+            <div className="w-[1px] h-4 bg-amber-500/30" />
+            <div className="flex items-center gap-3 text-xs font-bold text-slate-200">
+              <span className="text-amber-400 font-black">🥇 1 Emas</span>
+              <span className="text-slate-300 font-black">🥈 4 Perak</span>
             </div>
-            <div className="text-3xl md:text-4xl font-black text-white flex items-center justify-center gap-2 drop-shadow-[0_4px_12px_rgba(245,158,11,0.5)]">
-              <span>Kedua Dunia</span>
-              <span className="text-3xl">🥈</span>
-            </div>
-            <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-slate-950/80 border border-amber-500/40 text-xs font-bold text-slate-100 shadow-inner">
-              <span className="text-amber-400 font-extrabold">🥇 1 Emas</span>
-              <span className="text-slate-500">|</span>
-              <span className="text-slate-200 font-extrabold">🥈 4 Perak</span>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* 4 Category Breakdown Cards */}
-        <div className="space-y-3 relative z-10">
-          <div className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
-            <Car className="w-4 h-4 text-amber-400" />
-            Keputusan Rasmi Autonomous Car Challenge (Pro) — Total 4 Acara
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {achievements.map((item, idx) => (
+
+          {/* Minimalist Sub-event Tag Bar & Expand Button */}
+          <div className="pt-2 flex flex-col items-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {achievements.map((a, i) => (
+                <span key={i} className="px-3 py-1 rounded-lg bg-amber-950/40 border border-amber-500/20 text-[11px] font-semibold text-slate-300 backdrop-blur-sm">
+                  {a.cat}: <strong className="text-amber-300">{a.medal}</strong>
+                </span>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowDetails(!showDetails)}
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-400/80 hover:text-amber-300 transition-colors pt-1 cursor-pointer"
+            >
+              <span>{showDetails ? 'Sembunyi Perincian' : 'Lihat Perincian Keputusan Rasmi'}</span>
+              {showDetails ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+
+          {/* Expandable Details Drawer */}
+          <AnimatePresence>
+            {showDetails && (
               <motion.div
-                key={idx}
-                whileHover={{ y: -4, scale: 1.02 }}
-                className={`p-4 rounded-2xl border ${item.border} backdrop-blur-xl flex flex-col justify-between space-y-3 shadow-lg transition-all`}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden pt-4 text-left"
               >
-                <div className="space-y-1">
-                  <div className="text-xs font-bold text-slate-100 leading-snug">
-                    {item.title}
+                <div className="p-4 rounded-2xl bg-black/70 border border-amber-500/20 space-y-2 text-xs text-slate-300">
+                  <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                    <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                    Keputusan Rasmi Autonomous Car Challenge (Pro):
                   </div>
-                  <div className="text-[11px] font-medium text-slate-400">
-                    {item.desc}
-                  </div>
-                </div>
-                <div className="flex items-center justify-between pt-2 border-t border-white/10">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Keputusan</span>
-                  <span className="text-xs font-extrabold px-3 py-1 rounded-lg bg-black/60 border border-white/15 shadow-sm">
-                    {item.medal}
-                  </span>
+                  <ul className="space-y-1.5 pl-2">
+                    <li className="flex items-center justify-between border-b border-white/5 pb-1">
+                      <span>🥈 1) Autonomous Car Challenge (Race)</span>
+                      <span className="font-bold text-slate-200">Pingat Perak</span>
+                    </li>
+                    <li className="flex items-center justify-between border-b border-white/5 pb-1">
+                      <span>🥈 2) Autonomous Car Challenge (Urban)</span>
+                      <span className="font-bold text-slate-200">Pingat Perak</span>
+                    </li>
+                    <li className="flex items-center justify-between border-b border-white/5 pb-1">
+                      <span>🥈 3) Autonomous Car Challenge (Advanced Urban)</span>
+                      <span className="font-bold text-slate-200">Pingat Perak</span>
+                    </li>
+                    <li className="flex items-center justify-between">
+                      <span>🥇 4) Autonomous Car Challenge (Best United Technical Challenge)</span>
+                      <span className="font-bold text-amber-300">Pingat Emas</span>
+                    </li>
+                  </ul>
                 </div>
               </motion.div>
-            ))}
-          </div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }
