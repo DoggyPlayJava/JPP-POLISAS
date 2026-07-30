@@ -47,12 +47,16 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isSuperAdmin } = useAuth();
+  const { user, isSuperAdmin, isJppMember, isPresident, isClubMt, isClubAdvisor, isStaff } = useAuth();
 
   // Detect Stage Mode from prop or path
   const isStageMode = Boolean(isStageProp || location.pathname.startsWith('/ems/stage/'));
 
   const [event, setEvent] = useState<EmsEvent | null>(null);
+
+  const canManageLeaderboard = Boolean(
+    isSuperAdmin || isJppMember || isPresident || isClubMt || isClubAdvisor || isStaff || (!!user?.id && event?.created_by === user.id)
+  );
   const [leaderboard, setLeaderboard] = useState<EmsLeaderboardItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -354,6 +358,45 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
     );
   }
 
+  // Guard private leaderboard from unauthorized students
+  if (!canManageLeaderboard && !event.is_leaderboard_public) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 relative overflow-hidden select-none">
+        {/* Ambient Background Lights */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute bottom-10 left-10 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px] pointer-events-none" />
+
+        <div className="relative z-10 max-w-2xl text-center space-y-8 p-8 md:p-12 rounded-3xl bg-slate-900/60 backdrop-blur-2xl border border-white/10 shadow-[0_32px_64px_rgba(0,0,0,0.8)]">
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-b from-amber-500/20 to-amber-500/5 border border-amber-500/30 shadow-[0_0_40px_rgba(245,158,11,0.2)] animate-pulse">
+            <Lock className="w-12 h-12 text-amber-400" />
+          </div>
+
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black uppercase tracking-widest">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+              Keputusan Sedang Diproses
+            </div>
+            <h1 className="text-3xl md:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-amber-200">
+              Keputusan Belum Didedahkan Oleh Penganjur
+            </h1>
+            <p className="text-base md:text-lg text-slate-400 leading-relaxed font-medium">
+              Kedudukan dan markah peserta sedang disemak dan belum didedahkan kepada awam.
+            </p>
+          </div>
+
+          <div className="pt-4 flex flex-col items-center gap-3">
+            <button
+              onClick={() => navigate('/ems/dashboard')}
+              className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-lg"
+            >
+              Kembali ke Papan Pemuka EMS
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // =========================================================================
   // MODE 2: STAGE PRESENTATION DISPLAY MODE (/ems/stage/:eventId)
   // =========================================================================
@@ -395,8 +438,8 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               </span>
             </div>
 
-            {/* Admin quick toggle button if user is admin */}
-            {isSuperAdmin && (
+            {/* Admin quick toggle button if user can manage leaderboard */}
+            {canManageLeaderboard && (
               <div className="pt-6 border-t border-white/5">
                 <button
                   onClick={handleToggleVisibility}
@@ -404,7 +447,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                   className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider transition shadow-lg flex items-center gap-2 mx-auto"
                 >
                   <Eye className="w-4 h-4" />
-                  Buka Keputusan Pentas Sekarang (Admin)
+                  Buka Keputusan Pentas Sekarang
                 </button>
               </div>
             )}
@@ -481,13 +524,15 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
             )}
 
             {/* Lucky Draw Wheel Button */}
-            <button
-              onClick={() => setShowLuckyDrawModal(true)}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(139,92,246,0.4)] transition flex items-center gap-2"
-            >
-              <Gift className="w-4 h-4 text-amber-300" />
-              Cabutan Bertuah 🎰
-            </button>
+            {canManageLeaderboard && (
+              <button
+                onClick={() => setShowLuckyDrawModal(true)}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(139,92,246,0.4)] transition flex items-center gap-2"
+              >
+                <Gift className="w-4 h-4 text-amber-300" />
+                Cabutan Bertuah 🎰
+              </button>
+            )}
 
             {/* Fireworks / Confetti Button */}
             <button
@@ -741,13 +786,15 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
         <div className="flex items-center gap-2">
           {/* Lucky Draw Button */}
-          <button
-            onClick={() => setShowLuckyDrawModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider shadow-md transition flex items-center gap-2"
-          >
-            <Gift className="w-4 h-4 text-amber-300" />
-            Cabutan Bertuah 🎰
-          </button>
+          {canManageLeaderboard && (
+            <button
+              onClick={() => setShowLuckyDrawModal(true)}
+              className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider shadow-md transition flex items-center gap-2"
+            >
+              <Gift className="w-4 h-4 text-amber-300" />
+              Cabutan Bertuah 🎰
+            </button>
+          )}
 
           {/* Refresh Button */}
           <button
@@ -760,101 +807,105 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
           </button>
 
           {/* Open Stage View Button */}
-          <button
-            onClick={() => window.open(`/ems/stage/${eventId}`, '_blank')}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-md transition flex items-center gap-2"
-          >
-            <ExternalLink className="w-4 h-4" />
-            Buka Mod Skrin Pentas (Stage View)
-          </button>
+          {canManageLeaderboard && (
+            <button
+              onClick={() => window.open(`/ems/stage/${eventId}`, '_blank')}
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-md transition flex items-center gap-2"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Buka Mod Skrin Pentas (Stage View)
+            </button>
+          )}
         </div>
       </div>
 
       {/* Director Controls Toolbar */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Toggle Public Leaderboard Visibility */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Visibiliti Skrin Pentas
-            </span>
-            <div className="flex items-center gap-2">
-              <span className={`w-2.5 h-2.5 rounded-full ${event.is_leaderboard_public ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-              <h4 className="text-sm font-black">
-                {event.is_leaderboard_public ? 'Status Awam: Didedahkan 👁️' : 'Status Awam: Disembunyikan 🔒'}
-              </h4>
+      {canManageLeaderboard && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Toggle Public Leaderboard Visibility */}
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+            <div className="space-y-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Visibiliti Skrin Pentas
+              </span>
+              <div className="flex items-center gap-2">
+                <span className={`w-2.5 h-2.5 rounded-full ${event.is_leaderboard_public ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                <h4 className="text-sm font-black">
+                  {event.is_leaderboard_public ? 'Status Awam: Didedahkan 👁️' : 'Status Awam: Disembunyikan 🔒'}
+                </h4>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                {event.is_leaderboard_public
+                  ? 'Skrin pentas memaparkan kedudukan & kedudukan terkini peserta.'
+                  : 'Skrin pentas memaparkan skrin kunci "Keputusan Sedang Diproses".'}
+              </p>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              {event.is_leaderboard_public
-                ? 'Skrin pentas memaparkan kedudukan & kedudukan terkini peserta.'
-                : 'Skrin pentas memaparkan skrin kunci "Keputusan Sedang Diproses".'}
-            </p>
+
+            <button
+              onClick={handleToggleVisibility}
+              disabled={togglingVisibility}
+              className={`px-4 py-2 rounded-xl font-black text-xs uppercase tracking-wider transition shadow-sm shrink-0 flex items-center gap-2 ${
+                event.is_leaderboard_public
+                  ? 'bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 border border-rose-500/20'
+                  : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-emerald-500/20'
+              }`}
+            >
+              {event.is_leaderboard_public ? (
+                <>
+                  <EyeOff className="w-4 h-4" /> Sembunyi
+                </>
+              ) : (
+                <>
+                  <Eye className="w-4 h-4" /> Buka Awam
+                </>
+              )}
+            </button>
           </div>
 
-          <button
-            onClick={handleToggleVisibility}
-            disabled={togglingVisibility}
-            className={`px-4 py-2 rounded-xl font-black text-xs uppercase tracking-wider transition shadow-sm shrink-0 flex items-center gap-2 ${
-              event.is_leaderboard_public
-                ? 'bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 border border-rose-500/20'
-                : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-emerald-500/20'
-            }`}
-          >
-            {event.is_leaderboard_public ? (
-              <>
-                <EyeOff className="w-4 h-4" /> Sembunyi
-              </>
-            ) : (
-              <>
-                <Eye className="w-4 h-4" /> Buka Awam
-              </>
-            )}
-          </button>
-        </div>
+          {/* Tie-Breaker Resolution Control */}
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+            <div className="space-y-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Penentuan Seret (Tie-Breaker)
+              </span>
+              <h4 className="text-sm font-black flex items-center gap-1.5">
+                <Scale className="w-4 h-4 text-amber-500" />
+                {hasTiedParticipants ? 'Terdapat Peserta Seret! ⚠️' : 'Tiada Keputusan Seret'}
+              </h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                {hasTiedParticipants
+                  ? 'Pengarah Program perlu menetapkan pemenang muktamad.'
+                  : 'Kedudukan dikira berdasarkan purata skor juri.'}
+              </p>
+            </div>
 
-        {/* Tie-Breaker Resolution Control */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Penentuan Seret (Tie-Breaker)
-            </span>
-            <h4 className="text-sm font-black flex items-center gap-1.5">
-              <Scale className="w-4 h-4 text-amber-500" />
-              {hasTiedParticipants ? 'Terdapat Peserta Seret! ⚠️' : 'Tiada Keputusan Seret'}
-            </h4>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              {hasTiedParticipants
-                ? 'Pengarah Program perlu menetapkan pemenang muktamad.'
-                : 'Kedudukan dikira berdasarkan purata skor juri.'}
-            </p>
+            <button
+              onClick={() => setShowTieBreakerModal(true)}
+              className="px-4 py-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition font-black text-xs uppercase tracking-wider shrink-0 flex items-center gap-1.5"
+            >
+              <Scale className="w-4 h-4" /> Urus Seret
+            </button>
           </div>
 
-          <button
-            onClick={() => setShowTieBreakerModal(true)}
-            className="px-4 py-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition font-black text-xs uppercase tracking-wider shrink-0 flex items-center gap-1.5"
-          >
-            <Scale className="w-4 h-4" /> Urus Seret
-          </button>
-        </div>
-
-        {/* Stats Summary Card */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Jumlah Peserta & Juri
-            </span>
-            <h4 className="text-sm font-black text-indigo-600 dark:text-indigo-400">
-              {leaderboard.length} Peserta Berdaftar
-            </h4>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Dineka untuk {categories.length || 1} kategori penilaian.
-            </p>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-black text-lg">
-            {leaderboard.length}
+          {/* Stats Summary Card */}
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+            <div className="space-y-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Jumlah Peserta & Juri
+              </span>
+              <h4 className="text-sm font-black text-indigo-600 dark:text-indigo-400">
+                {leaderboard.length} Peserta Berdaftar
+              </h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Dineka untuk {categories.length || 1} kategori penilaian.
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-black text-lg">
+              {leaderboard.length}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
