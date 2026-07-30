@@ -496,6 +496,7 @@ export function EmsDashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayedEvents.map((event) => (
 
+
             <div
               key={event.id}
               className="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-2xl p-5 flex flex-col justify-between transition-all hover:shadow-xl hover:shadow-indigo-500/5 space-y-4"
