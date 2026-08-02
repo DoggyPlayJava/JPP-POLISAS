@@ -148,11 +148,30 @@ export function EmsJuryPortalPage() {
   // Lightbox State
   const [lightboxImage, setLightboxImage] = useState<{ url: string; title: string } | null>(null);
 
+  // Compute active participant category for evaluation wizard
+  const activeParticipantCategory = evalParticipant
+    ? getParticipantCategory(evalParticipant) || selectedCategory || ''
+    : selectedCategory || '';
+
+  // Filter rubrics strictly for the active participant category or general rubrics ('Umum' or empty category_name)
+  const participantRubrics = useMemo(() => {
+    if (!rubrics || rubrics.length === 0) return [];
+    if (!activeParticipantCategory) return rubrics;
+
+    const catClean = activeParticipantCategory.trim().toLowerCase();
+    const filtered = rubrics.filter((r) => {
+      const rCat = r.category_name?.trim().toLowerCase();
+      return !rCat || rCat === 'umum' || rCat === catClean;
+    });
+
+    return filtered.length > 0 ? filtered : rubrics;
+  }, [rubrics, activeParticipantCategory]);
+
   // Group active rubrics by section_name (fallback to 'Penilaian Utama')
   const sections = useMemo<RubricSection[]>(() => {
-    if (!rubrics || rubrics.length === 0) return [];
+    if (!participantRubrics || participantRubrics.length === 0) return [];
     const map = new Map<string, EmsRubricCriteria[]>();
-    rubrics.forEach((r) => {
+    participantRubrics.forEach((r) => {
       const secName = r.section_name?.trim() || 'Penilaian Utama';
       if (!map.has(secName)) {
         map.set(secName, []);
@@ -169,13 +188,13 @@ export function EmsJuryPortalPage() {
         rubrics: items,
       };
     });
-  }, [rubrics]);
+  }, [participantRubrics]);
 
   // Compute live total weighted score (0 to 100%)
   const liveTotalWeightedScore = useMemo(() => {
-    if (!rubrics || rubrics.length === 0) return 0;
-    const totalWeightSum = rubrics.reduce((acc, r) => acc + (Number(r.weight) || 0), 0);
-    const rawWeighted = rubrics.reduce((acc, r) => {
+    if (!participantRubrics || participantRubrics.length === 0) return 0;
+    const totalWeightSum = participantRubrics.reduce((acc, r) => acc + (Number(r.weight) || 0), 0);
+    const rawWeighted = participantRubrics.reduce((acc, r) => {
       const scoreVal = criterionScores[r.id] ?? 0;
       const maxVal = Number(r.max_score) || 5;
       const weightVal = Number(r.weight) || 0;
@@ -186,7 +205,7 @@ export function EmsJuryPortalPage() {
       return (rawWeighted / totalWeightSum) * 100;
     }
     return rawWeighted;
-  }, [rubrics, criterionScores]);
+  }, [participantRubrics, criterionScores]);
 
   // Initial session check on mount
   useEffect(() => {
@@ -530,7 +549,7 @@ export function EmsJuryPortalPage() {
 
     setIsSubmittingScores(true);
     try {
-      const scoresPayload = rubrics.map((r) => ({
+      const scoresPayload = participantRubrics.map((r) => ({
         event_id: eventData.id,
         participant_id: evalParticipant.id,
         jury_code_id: juryCodeData.id,
@@ -1377,7 +1396,7 @@ export function EmsJuryPortalPage() {
 
             {/* Modal Form Content */}
             <form onSubmit={handleRubricSubmit} className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
-              {rubrics.length === 0 ? (
+              {participantRubrics.length === 0 ? (
                 <div className="p-8 bg-slate-950/60 rounded-2xl border border-slate-800 text-center text-slate-400 text-sm space-y-2">
                   <AlertCircle className="w-8 h-8 text-amber-400 mx-auto" />
                   <p>Tiada kriteria penilaian rubrik ditetap oleh Pengarah Program untuk acara ini.</p>
