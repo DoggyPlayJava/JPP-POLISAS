@@ -125,6 +125,7 @@ export function EmsJuryPortalPage() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'UNSCORED' | 'SCORED'>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Modal / Evaluation Wizard State
   const [evalParticipant, setEvalParticipant] = useState<EmsParticipant | null>(null);
@@ -353,6 +354,7 @@ export function EmsJuryPortalPage() {
     setScores([]);
     setInputCode('');
     setPendingJuryCode(null);
+    setSelectedCategory(null);
     toast.success('Anda telah log keluar daripada sesi juri.');
   };
 
@@ -386,23 +388,57 @@ export function EmsJuryPortalPage() {
     });
   }, [participants, juryCodeData]);
 
-  // Categories list for category tab filter
+  // Extract unique available categories from event's rubrics (r.category_name) and participants (p.category_name)
   const availableCategories = useMemo(() => {
     const cats = new Set<string>();
-    assignedParticipants.forEach((p) => {
-      const cat = p.category_name || p.custom_responses?.category;
-      if (cat) cats.add(cat);
-    });
+    if (rubrics) {
+      rubrics.forEach((r) => {
+        if (r.category_name && r.category_name.trim()) {
+          cats.add(r.category_name.trim());
+        }
+      });
+    }
+    if (assignedParticipants) {
+      assignedParticipants.forEach((p) => {
+        const cat = p.category_name?.trim() || (p.custom_responses?.category as string)?.trim();
+        if (cat) cats.add(cat);
+      });
+    }
     return Array.from(cats);
-  }, [assignedParticipants]);
+  }, [rubrics, assignedParticipants]);
 
-  // Further filter participants based on search query, status filter, and category tab
+  // Next Category switcher logic for 1-click category switching
+  const nextCategory = useMemo(() => {
+    if (!selectedCategory || availableCategories.length <= 1) return null;
+    const currIdx = availableCategories.findIndex(
+      (c) => c.toLowerCase() === selectedCategory.toLowerCase()
+    );
+    if (currIdx === -1) return availableCategories[0];
+    const nextIdx = (currIdx + 1) % availableCategories.length;
+    return availableCategories[nextIdx];
+  }, [selectedCategory, availableCategories]);
+
+  // Icon selector for category card titles
+  const getCategoryIcon = (categoryName: string) => {
+    const name = categoryName.toLowerCase();
+    if (name.includes('pitch') || name.includes('persembahan') || name.includes('pembentangan')) return '🎤';
+    if (name.includes('showcase') || name.includes('pameran') || name.includes('booth')) return '📦';
+    if (name.includes('poster') || name.includes('grafik')) return '🖼️';
+    if (name.includes('video') || name.includes('media')) return '🎬';
+    if (name.includes('inovasi') || name.includes('produk') || name.includes('projek')) return '🚀';
+    return '🏆';
+  };
+
+  // Further filter participants based on selectedCategory, search query, status filter, and category tab
   const filteredParticipants = useMemo(() => {
     return assignedParticipants.filter((p) => {
-      // Category tab
-      if (categoryFilter !== 'ALL') {
+      // Selected Category Gateway Filter
+      if (selectedCategory !== null) {
         const cat = p.category_name || p.custom_responses?.category || '';
-        if (cat.toLowerCase() !== categoryFilter.toLowerCase()) return false;
+        if (cat.trim().toLowerCase() !== selectedCategory.trim().toLowerCase()) return false;
+      } else if (categoryFilter !== 'ALL') {
+        const cat = p.category_name || p.custom_responses?.category || '';
+        if (cat.trim().toLowerCase() !== categoryFilter.trim().toLowerCase()) return false;
       }
 
       // Search query
@@ -431,7 +467,7 @@ export function EmsJuryPortalPage() {
 
       return true;
     });
-  }, [assignedParticipants, categoryFilter, searchQuery, statusFilter, scores]);
+  }, [assignedParticipants, selectedCategory, categoryFilter, searchQuery, statusFilter, scores]);
 
   // Calculate overall maximum possible rubric score sum
   const maxPossibleTotal = useMemo(() => {
@@ -747,260 +783,446 @@ export function EmsJuryPortalPage() {
         </div>
       </header>
 
-      {/* Main Dashboard Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
-        {/* Filters & Search Controls */}
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            {/* Search Input */}
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari booth #, pasukan, ketua atau tajuk inovasi..."
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-600"
-              />
-              {searchQuery && (
+      {/* Main Dashboard / Gateway Content */}
+      {availableCategories.length > 1 && selectedCategory === null ? (
+        /* HUB PEMILIHAN KATEGORI PENILAIAN JURI (Category Selection Gateway) */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8">
+          <div className="bg-gradient-to-r from-indigo-950/80 via-slate-900 to-purple-950/80 border border-indigo-500/30 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-2xl">
+            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10 space-y-3 max-w-3xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-full text-xs font-semibold uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Hub Pemilihan Kategori Penilaian Juri</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                Pilih Kategori Penilaian Juri
+              </h2>
+              <p className="text-sm text-slate-300 leading-relaxed">
+                Sesi juri anda mempunyai {availableCategories.length} kategori penilaian. Sila pilih kategori di bawah untuk mula membuat penilaian peserta dan booth.
+              </p>
+              <div className="flex flex-wrap items-center gap-4 pt-2 text-xs text-slate-400">
+                <span className="flex items-center gap-1.5 bg-slate-950/60 px-3 py-1.5 rounded-xl border border-slate-800">
+                  <UserCheck className="w-4 h-4 text-indigo-400" />
+                  <span>Jumlah Peserta: <strong className="text-white">{assignedParticipants.length}</strong></span>
+                </span>
+                <span className="flex items-center gap-1.5 bg-slate-950/60 px-3 py-1.5 rounded-xl border border-slate-800">
+                  <Award className="w-4 h-4 text-purple-400" />
+                  <span>Jumlah Kategori: <strong className="text-white">{availableCategories.length}</strong></span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+              <Filter className="w-4 h-4 text-indigo-400" />
+              <span>Kategori Penilaian Tersedia ({availableCategories.length})</span>
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {availableCategories.map((cat) => {
+                const catIcon = getCategoryIcon(cat);
+                const catParticipants = assignedParticipants.filter(
+                  (p) =>
+                    (p.category_name || p.custom_responses?.category || '')
+                      .trim()
+                      .toLowerCase() === cat.trim().toLowerCase()
+                );
+                const catParticipantsCount = catParticipants.length;
+                const catScoredCount = catParticipants.filter((p) =>
+                  scores.some((s) => s.participant_id === p.id)
+                ).length;
+
+                const catRubrics = rubrics.filter(
+                  (r) =>
+                    !r.category_name ||
+                    r.category_name.trim().toLowerCase() === cat.trim().toLowerCase()
+                );
+                const catRubricsCount = catRubrics.length;
+                const catSectionsCount = new Set(
+                  catRubrics.map((r) => r.section_name?.trim() || 'Penilaian Utama')
+                ).size;
+
+                const progressPct =
+                  catParticipantsCount > 0
+                    ? Math.round((catScoredCount / catParticipantsCount) * 100)
+                    : 0;
+
+                return (
+                  <div
+                    key={cat}
+                    className="bg-slate-900/90 border border-slate-800 hover:border-indigo-500/50 rounded-3xl p-6 flex flex-col justify-between transition-all duration-200 hover:shadow-xl hover:shadow-indigo-500/10 group"
+                  >
+                    <div className="space-y-5">
+                      {/* Category Header */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600/30 to-violet-600/30 border border-indigo-500/30 flex items-center justify-center text-2xl shrink-0 group-hover:scale-110 transition-transform">
+                            {catIcon}
+                          </div>
+                          <div>
+                            <span className="text-[11px] font-semibold text-indigo-400 uppercase tracking-wider block">
+                              Kategori Penilaian
+                            </span>
+                            <h4 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors">
+                              {cat}
+                            </h4>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Number of Participants & Rubriks/Seksyen */}
+                      <div className="grid grid-cols-2 gap-3 bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/80 text-xs">
+                        <div>
+                          <span className="text-slate-400 block text-[11px]">Bil. Peserta / Booth</span>
+                          <span className="font-bold text-white text-sm font-mono">
+                            {catParticipantsCount} Peserta
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block text-[11px]">Rubrik & Seksyen</span>
+                          <span className="font-bold text-indigo-300 text-sm font-mono">
+                            {catRubricsCount} Rubrik ({catSectionsCount} Seksyen)
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-slate-400">Kemajuan Penilaian:</span>
+                          <span className="font-bold font-mono text-emerald-400">
+                            {catScoredCount}/{catParticipantsCount} ({progressPct}%)
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                          <div
+                            className="bg-gradient-to-r from-indigo-500 to-emerald-400 h-full transition-all duration-300"
+                            style={{ width: `${progressPct}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Masuk Penilaian ➔ Button */}
+                    <div className="mt-6 pt-4 border-t border-slate-800/80">
+                      <button
+                        onClick={() => setSelectedCategory(cat)}
+                        className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 transition-all group-hover:gap-3"
+                      >
+                        <span>Masuk Penilaian ➔</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </main>
+      ) : (
+        /* PARTICIPANT LIST & EVALUATION DASHBOARD */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+          {/* Category Header Bar & Next Category Switcher */}
+          {selectedCategory !== null && (
+            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-lg">
+              <div className="flex flex-wrap items-center gap-3">
+                {availableCategories.length > 1 && (
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 transition-all shrink-0 shadow-sm"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>← Tukar Kategori</span>
+                  </button>
+                )}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400 font-medium">Kategori Penilaian Semasa:</span>
+                  <span className="px-3 py-1 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold rounded-xl flex items-center gap-1.5">
+                    <span>{getCategoryIcon(selectedCategory)}</span>
+                    <span>{selectedCategory}</span>
+                  </span>
+                </div>
+              </div>
+
+              {nextCategory && (
                 <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                  onClick={() => setSelectedCategory(nextCategory)}
+                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-md shadow-purple-600/20 flex items-center gap-2 transition-all shrink-0 self-start md:self-auto hover:scale-105"
                 >
-                  <X className="w-4 h-4" />
+                  <span>⏩ Penilaian Kategori Seterusnya: {nextCategory} ➔</span>
                 </button>
               )}
             </div>
+          )}
 
-            {/* Status Filter Buttons */}
-            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 self-start sm:self-auto shrink-0">
+          {/* Prominent Action Button (Top) */}
+          {nextCategory && selectedCategory !== null && (
+            <div className="flex justify-end">
               <button
-                onClick={() => setStatusFilter('ALL')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-                  statusFilter === 'ALL'
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
+                onClick={() => setSelectedCategory(nextCategory)}
+                className="w-full sm:w-auto py-2.5 px-5 bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-purple-600/20 flex items-center justify-center gap-2 transition-all hover:scale-105"
               >
-                Semua ({assignedParticipants.length})
+                <span>⏩ Penilaian Kategori Seterusnya: {nextCategory} ➔</span>
               </button>
-              <button
-                onClick={() => setStatusFilter('UNSCORED')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-                  statusFilter === 'UNSCORED'
-                    ? 'bg-amber-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Belum Dinilai ({assignedParticipants.filter((p) => !scores.some((s) => s.participant_id === p.id)).length})
-              </button>
-              <button
-                onClick={() => setStatusFilter('SCORED')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-                  statusFilter === 'SCORED'
-                    ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Telah Dinilai ({assignedParticipants.filter((p) => scores.some((s) => s.participant_id === p.id)).length})
-              </button>
-            </div>
-          </div>
-
-          {/* Category Tabs (if multiple categories present) */}
-          {availableCategories.length > 1 && (
-            <div className="flex items-center gap-2 overflow-x-auto pt-2 border-t border-slate-800/80 no-scrollbar">
-              <span className="text-xs text-slate-500 font-medium shrink-0 flex items-center gap-1">
-                <Filter className="w-3.5 h-3.5" /> Kategori:
-              </span>
-              <button
-                onClick={() => setCategoryFilter('ALL')}
-                className={`px-3 py-1 text-xs rounded-full font-medium transition-all shrink-0 ${
-                  categoryFilter === 'ALL'
-                    ? 'bg-slate-700 text-white border border-slate-600'
-                    : 'bg-slate-950 text-slate-400 hover:bg-slate-800 border border-slate-800'
-                }`}
-              >
-                Semua Kategori
-              </button>
-              {availableCategories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setCategoryFilter(cat)}
-                  className={`px-3 py-1 text-xs rounded-full font-medium transition-all shrink-0 ${
-                    categoryFilter === cat
-                      ? 'bg-slate-700 text-white border border-slate-600'
-                      : 'bg-slate-950 text-slate-400 hover:bg-slate-800 border border-slate-800'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
             </div>
           )}
-        </div>
 
-        {/* Participant Cards Grid */}
-        {isLoadingDashboard ? (
-          <div className="py-16 text-center text-slate-400 space-y-3">
-            <RefreshCw className="w-8 h-8 animate-spin mx-auto text-indigo-400" />
-            <p>Memuatkan senarai peserta & pemarkahan...</p>
-          </div>
-        ) : filteredParticipants.length === 0 ? (
-          <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-12 text-center space-y-3">
-            <UserCheck className="w-12 h-12 text-slate-600 mx-auto" />
-            <h3 className="text-lg font-semibold text-slate-300">Tiada Peserta Ditemui</h3>
-            <p className="text-xs text-slate-500 max-w-md mx-auto">
-              {searchQuery || statusFilter !== 'ALL' || categoryFilter !== 'ALL'
-                ? 'Tiada peserta yang sepadan dengan tapisan atau kata kunci carian anda.'
-                : 'Tiada peserta yang diagihkan di bawah kategori / booth kod juri anda.'}
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredParticipants.map((participant) => {
-              const pScores = scores.filter((s) => s.participant_id === participant.id);
-              const isScored = pScores.length > 0;
+          {/* Filters & Search Controls */}
+          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              {/* Search Input */}
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Cari booth #, pasukan, ketua atau tajuk inovasi..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-600"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
 
-              // Calculate total raw awarded score & weighted score %
-              const awardedScore = rubrics.reduce((acc, r) => {
-                const s = pScores.find((sc) => sc.rubric_id === r.id);
-                return acc + (s ? Number(s.score || 0) : 0);
-              }, 0);
-
-              const totalWeightSum = rubrics.reduce((acc, r) => acc + (Number(r.weight) || 0), 0);
-              const rawWeighted = rubrics.reduce((acc, r) => {
-                const s = pScores.find((sc) => sc.rubric_id === r.id);
-                const scoreVal = s ? Number(s.score || 0) : 0;
-                const max = Number(r.max_score || 5);
-                const weight = Number(r.weight || 0);
-                return acc + (scoreVal / max) * weight;
-              }, 0);
-
-              const weightedPercentage = totalWeightSum > 0 && Math.abs(totalWeightSum - 100) > 0.01
-                ? (rawWeighted / totalWeightSum) * 100
-                : rawWeighted;
-
-              const mediaImages = getParticipantImages(participant);
-              const productTitle =
-                participant.custom_responses?.product_title ||
-                participant.custom_responses?.title ||
-                participant.custom_responses?.nama_produk ||
-                participant.team_name ||
-                'Inovasi Peserta';
-
-              return (
-                <div
-                  key={participant.id}
-                  className={`bg-slate-900/90 border rounded-2xl p-5 flex flex-col justify-between transition-all hover:border-slate-700 shadow-lg ${
-                    isScored ? 'border-emerald-500/30' : 'border-slate-800'
+              {/* Status Filter Buttons */}
+              <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 self-start sm:self-auto shrink-0">
+                <button
+                  onClick={() => setStatusFilter('ALL')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                    statusFilter === 'ALL'
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  <div className="space-y-4">
-                    {/* Top Row: Booth Badge & Category & Status */}
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        {participant.booth_no ? (
-                          <span className="px-3 py-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-mono text-xs font-bold rounded-lg shadow-sm">
-                            BOOTH #{participant.booth_no}
+                  Semua ({assignedParticipants.length})
+                </button>
+                <button
+                  onClick={() => setStatusFilter('UNSCORED')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                    statusFilter === 'UNSCORED'
+                      ? 'bg-amber-600 text-white shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Belum Dinilai ({assignedParticipants.filter((p) => !scores.some((s) => s.participant_id === p.id)).length})
+                </button>
+                <button
+                  onClick={() => setStatusFilter('SCORED')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                    statusFilter === 'SCORED'
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Telah Dinilai ({assignedParticipants.filter((p) => scores.some((s) => s.participant_id === p.id)).length})
+                </button>
+              </div>
+            </div>
+
+            {/* Category Tabs (if multiple categories present and Gateway not active) */}
+            {availableCategories.length > 1 && selectedCategory !== null && (
+              <div className="flex items-center gap-2 overflow-x-auto pt-2 border-t border-slate-800/80 no-scrollbar">
+                <span className="text-xs text-slate-500 font-medium shrink-0 flex items-center gap-1">
+                  <Filter className="w-3.5 h-3.5" /> Tukar Kategori Cepat:
+                </span>
+                {availableCategories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-3 py-1 text-xs rounded-full font-medium transition-all shrink-0 flex items-center gap-1 ${
+                      selectedCategory === cat
+                        ? 'bg-indigo-600 text-white border border-indigo-500 shadow-sm'
+                        : 'bg-slate-950 text-slate-400 hover:bg-slate-800 border border-slate-800'
+                    }`}
+                  >
+                    <span>{getCategoryIcon(cat)}</span>
+                    <span>{cat}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Participant Cards Grid */}
+          {isLoadingDashboard ? (
+            <div className="py-16 text-center text-slate-400 space-y-3">
+              <RefreshCw className="w-8 h-8 animate-spin mx-auto text-indigo-400" />
+              <p>Memuatkan senarai peserta & pemarkahan...</p>
+            </div>
+          ) : filteredParticipants.length === 0 ? (
+            <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-12 text-center space-y-3">
+              <UserCheck className="w-12 h-12 text-slate-600 mx-auto" />
+              <h3 className="text-lg font-semibold text-slate-300">Tiada Peserta Ditemui</h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                {searchQuery || statusFilter !== 'ALL' || selectedCategory !== null
+                  ? 'Tiada peserta yang sepadan dengan tapisan atau kata kunci carian anda.'
+                  : 'Tiada peserta yang diagihkan di bawah kategori / booth kod juri anda.'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredParticipants.map((participant) => {
+                const pScores = scores.filter((s) => s.participant_id === participant.id);
+                const isScored = pScores.length > 0;
+
+                // Calculate total raw awarded score & weighted score %
+                const awardedScore = rubrics.reduce((acc, r) => {
+                  const s = pScores.find((sc) => sc.rubric_id === r.id);
+                  return acc + (s ? Number(s.score || 0) : 0);
+                }, 0);
+
+                const totalWeightSum = rubrics.reduce((acc, r) => acc + (Number(r.weight) || 0), 0);
+                const rawWeighted = rubrics.reduce((acc, r) => {
+                  const s = pScores.find((sc) => sc.rubric_id === r.id);
+                  const scoreVal = s ? Number(s.score || 0) : 0;
+                  const max = Number(r.max_score || 5);
+                  const weight = Number(r.weight || 0);
+                  return acc + (scoreVal / max) * weight;
+                }, 0);
+
+                const weightedPercentage = totalWeightSum > 0 && Math.abs(totalWeightSum - 100) > 0.01
+                  ? (rawWeighted / totalWeightSum) * 100
+                  : rawWeighted;
+
+                const mediaImages = getParticipantImages(participant);
+                const productTitle =
+                  participant.custom_responses?.product_title ||
+                  participant.custom_responses?.title ||
+                  participant.custom_responses?.nama_produk ||
+                  participant.team_name ||
+                  'Inovasi Peserta';
+
+                return (
+                  <div
+                    key={participant.id}
+                    className={`bg-slate-900/90 border rounded-2xl p-5 flex flex-col justify-between transition-all hover:border-slate-700 shadow-lg ${
+                      isScored ? 'border-emerald-500/30' : 'border-slate-800'
+                    }`}
+                  >
+                    <div className="space-y-4">
+                      {/* Top Row: Booth Badge & Category & Status */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          {participant.booth_no ? (
+                            <span className="px-3 py-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-mono text-xs font-bold rounded-lg shadow-sm">
+                              BOOTH #{participant.booth_no}
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-1 bg-slate-800 text-slate-400 text-xs font-medium rounded-lg">
+                              TIADA BOOTH
+                            </span>
+                          )}
+                          {(participant.category_name || participant.custom_responses?.category) && (
+                            <span className="px-2 py-0.5 bg-slate-800 text-slate-300 text-[11px] font-medium rounded-md truncate max-w-[120px]">
+                              {participant.category_name || participant.custom_responses?.category}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Status Badge */}
+                        {isScored ? (
+                          <span className="px-2.5 py-1 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[11px] font-semibold rounded-full flex items-center gap-1 shrink-0 font-mono">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>{weightedPercentage.toFixed(1)}% ({awardedScore}/{maxPossibleTotal})</span>
                           </span>
                         ) : (
-                          <span className="px-2.5 py-1 bg-slate-800 text-slate-400 text-xs font-medium rounded-lg">
-                            TIADA BOOTH
-                          </span>
-                        )}
-                        {(participant.category_name || participant.custom_responses?.category) && (
-                          <span className="px-2 py-0.5 bg-slate-800 text-slate-300 text-[11px] font-medium rounded-md truncate max-w-[120px]">
-                            {participant.category_name || participant.custom_responses?.category}
+                          <span className="px-2.5 py-1 bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[11px] font-semibold rounded-full flex items-center gap-1 shrink-0">
+                            <Clock className="w-3.5 h-3.5" />
+                            <span>Belum Dinilai</span>
                           </span>
                         )}
                       </div>
 
-                      {/* Status Badge */}
-                      {isScored ? (
-                        <span className="px-2.5 py-1 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[11px] font-semibold rounded-full flex items-center gap-1 shrink-0 font-mono">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>{weightedPercentage.toFixed(1)}% ({awardedScore}/{maxPossibleTotal})</span>
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-1 bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[11px] font-semibold rounded-full flex items-center gap-1 shrink-0">
-                          <Clock className="w-3.5 h-3.5" />
-                          <span>Belum Dinilai</span>
-                        </span>
+                      {/* Team & Product Title */}
+                      <div>
+                        <h3 className="text-base font-bold text-white group-hover:text-indigo-400 transition-colors line-clamp-2">
+                          {productTitle}
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-1 font-medium flex items-center gap-1.5">
+                          <User className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                          <span>
+                            {participant.team_name ? (
+                              <>
+                                <strong className="text-slate-200">{participant.team_name}</strong> ({participant.leader_name})
+                              </>
+                            ) : (
+                              participant.leader_name
+                            )}
+                          </span>
+                        </p>
+                      </div>
+
+                      {/* Media Gallery Preview Thumbnails */}
+                      {mediaImages.length > 0 && (
+                        <div className="pt-2 border-t border-slate-800/80">
+                          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                            Pratonton Galeri Media
+                          </span>
+                          <div className="flex items-center gap-2 overflow-x-auto">
+                            {mediaImages.map((img, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => setLightboxImage({ url: img.url, title: `${productTitle} - ${img.label}` })}
+                                className="relative group w-16 h-16 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 shrink-0 hover:border-indigo-500 transition-all"
+                              >
+                                <img
+                                  src={img.url}
+                                  alt={img.label}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                />
+                                <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                  <Eye className="w-4 h-4 text-white" />
+                                </div>
+                                <span className="absolute bottom-0 inset-x-0 bg-slate-950/80 text-[9px] text-slate-300 text-center py-0.5 truncate px-0.5">
+                                  {img.label}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       )}
                     </div>
 
-                    {/* Team & Product Title */}
-                    <div>
-                      <h3 className="text-base font-bold text-white group-hover:text-indigo-400 transition-colors line-clamp-2">
-                        {productTitle}
-                      </h3>
-                      <p className="text-xs text-slate-400 mt-1 font-medium flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                        <span>
-                          {participant.team_name ? (
-                            <>
-                              <strong className="text-slate-200">{participant.team_name}</strong> ({participant.leader_name})
-                            </>
-                          ) : (
-                            participant.leader_name
-                          )}
-                        </span>
-                      </p>
+                    {/* Action Button */}
+                    <div className="mt-6 pt-4 border-t border-slate-800/80">
+                      <button
+                        onClick={() => openEvaluationModal(participant)}
+                        className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-md ${
+                          isScored
+                            ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
+                            : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-indigo-600/20'
+                        }`}
+                      >
+                        <Sliders className="w-4 h-4" />
+                        <span>{isScored ? 'Kemaskini Pemarkahan Wizard' : 'Buka Wizard Penilaian Juri'}</span>
+                      </button>
                     </div>
-
-                    {/* Media Gallery Preview Thumbnails */}
-                    {mediaImages.length > 0 && (
-                      <div className="pt-2 border-t border-slate-800/80">
-                        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-2">
-                          Pratonton Galeri Media
-                        </span>
-                        <div className="flex items-center gap-2 overflow-x-auto">
-                          {mediaImages.map((img, idx) => (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() => setLightboxImage({ url: img.url, title: `${productTitle} - ${img.label}` })}
-                              className="relative group w-16 h-16 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 shrink-0 hover:border-indigo-500 transition-all"
-                            >
-                              <img
-                                src={img.url}
-                                alt={img.label}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                              />
-                              <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                <Eye className="w-4 h-4 text-white" />
-                              </div>
-                              <span className="absolute bottom-0 inset-x-0 bg-slate-950/80 text-[9px] text-slate-300 text-center py-0.5 truncate px-0.5">
-                                {img.label}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
+                );
+              })}
+            </div>
+          )}
 
-                  {/* Action Button */}
-                  <div className="mt-6 pt-4 border-t border-slate-800/80">
-                    <button
-                      onClick={() => openEvaluationModal(participant)}
-                      className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-md ${
-                        isScored
-                          ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
-                          : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-indigo-600/20'
-                      }`}
-                    >
-                      <Sliders className="w-4 h-4" />
-                      <span>{isScored ? 'Kemaskini Pemarkahan Wizard' : 'Buka Wizard Penilaian Juri'}</span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </main>
+          {/* Prominent Action Button (Bottom) */}
+          {nextCategory && filteredParticipants.length > 0 && (
+            <div className="pt-6 border-t border-slate-800/80 flex justify-center">
+              <button
+                onClick={() => setSelectedCategory(nextCategory)}
+                className="py-3.5 px-7 bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white text-xs font-bold rounded-2xl shadow-xl shadow-purple-600/25 flex items-center gap-2.5 transition-all hover:scale-105"
+              >
+                <span>⏩ Penilaian Kategori Seterusnya: {nextCategory} ➔</span>
+              </button>
+            </div>
+          )}
+        </main>
+      )}
 
       {/* ----------------------------------------------------------------------- */}
       {/* SCREEN 3: STEP-BY-STEP JURY EVALUATION WIZARD MODAL */}
