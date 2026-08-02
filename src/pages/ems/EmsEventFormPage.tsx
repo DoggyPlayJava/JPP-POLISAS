@@ -913,35 +913,81 @@ export function EmsEventFormPage() {
 
           {/* Live Total Weight Summary & Warning */}
           {(() => {
-            const totalWeight = rubrics.reduce((sum, r) => sum + (Number(r.weight) || 0), 0);
-            const isWeightBalanced = Math.abs(totalWeight - 100) < 0.01;
+            const categorySummaryMap: Record<string, number> = {};
+            rubrics.forEach((r) => {
+              const catName = r.category_name?.trim() || 'Tanpa Kategori';
+              categorySummaryMap[catName] = (categorySummaryMap[catName] || 0) + (Number(r.weight) || 0);
+            });
+
+            const categoriesSummary = Object.entries(categorySummaryMap).map(([categoryName, catTotalWeight]) => {
+              const isCatBalanced = Math.abs(catTotalWeight - 100) < 0.01;
+              return { categoryName, catTotalWeight, isCatBalanced };
+            });
+
+            const allCategoriesBalanced =
+              categoriesSummary.length > 0 && categoriesSummary.every((c) => c.isCatBalanced);
+            const unbalancedCategories = categoriesSummary.filter((c) => !c.isCatBalanced);
 
             return (
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-slate-950/90 border border-slate-800 p-4 rounded-2xl gap-3">
-                <div>
-                  <span className="text-xs font-semibold text-slate-400">Ringkasan Pemberat Kriteria:</span>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="text-base font-bold text-white">
-                      Jumlah Pemberat (Weight):{' '}
-                      <span className={isWeightBalanced ? 'text-emerald-400 font-black' : 'text-amber-400 font-black'}>
-                        {totalWeight}%
-                      </span>
-                    </span>
-                    {isWeightBalanced ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> 100% Seimbang
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                        <AlertCircle className="w-3.5 h-3.5" /> Tidak Seimbang
-                      </span>
-                    )}
+              <div className="bg-slate-950/90 border border-slate-800 p-5 rounded-2xl space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+                  <div>
+                    <span className="text-xs font-semibold text-slate-400">Ringkasan Pemberat Kriteria:</span>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-base font-bold text-white">Status Nisbah Kategori:</span>
+                      {allCategoriesBalanced ? (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Semua Kategori 100% Seimbang ✅
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                          <AlertCircle className="w-4 h-4 text-amber-400" /> Kategori Tidak Seimbang ⚠️
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-                {!isWeightBalanced && (
-                  <div className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-xl flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
-                    <span>Amaran: Jumlah pemberat semasa ialah {totalWeight}%. Jumlah pemberat yang disyorkan ialah 100%.</span>
+
+                {/* Per-Category Badges */}
+                <div className="flex flex-wrap items-center gap-3">
+                  {categoriesSummary.map((cat) => (
+                    <div
+                      key={cat.categoryName}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold ${
+                        cat.isCatBalanced
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                          : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                      }`}
+                    >
+                      <span className="text-slate-200">{cat.categoryName}:</span>
+                      <span className="font-mono font-black">{cat.catTotalWeight}%</span>
+                      {cat.isCatBalanced ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 bg-emerald-500/20 px-1.5 py-0.5 rounded-md">
+                          <CheckCircle2 className="w-3 h-3" /> 100% Seimbang
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-amber-400 bg-amber-500/20 px-1.5 py-0.5 rounded-md">
+                          <AlertCircle className="w-3 h-3" /> Tidak Seimbang
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Warnings for unbalanced categories */}
+                {unbalancedCategories.length > 0 && (
+                  <div className="space-y-2 pt-1">
+                    {unbalancedCategories.map((cat) => (
+                      <div
+                        key={cat.categoryName}
+                        className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-xl flex items-center gap-2"
+                      >
+                        <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
+                        <span>
+                          Amaran: Pemberat Kategori &quot;{cat.categoryName}&quot; ialah {cat.catTotalWeight}%. Disyorkan 100%.
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
