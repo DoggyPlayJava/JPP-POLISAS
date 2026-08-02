@@ -15,10 +15,16 @@ import {
   CheckCircle2,
   RefreshCw,
   AlertCircle,
+  Package,
+  Mic,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchEmsEventById, createEmsEvent, updateEmsEvent } from '@/lib/ems';
 import type { EmsEventMode, EmsEventType, EmsFormField, EmsRubricCriteria } from '@/types';
+import { IFAMB_SHOWCASE_PRESET, IFAMB_PITCHING_PRESET } from '@/config/emsRubricTemplates';
 
 interface LocalFormField {
   id?: string;
@@ -31,10 +37,13 @@ interface LocalFormField {
 
 interface LocalRubricCriteria {
   id?: string;
+  category_name?: string;
+  section_name?: string;
   criteria_name: string;
   max_score: number;
   weight: number;
   sort_order: number;
+  descriptors?: Record<string, string>;
 }
 
 export function EmsEventFormPage() {
@@ -93,23 +102,32 @@ export function EmsEventFormPage() {
   const [rubrics, setRubrics] = useState<LocalRubricCriteria[]>([
     {
       criteria_name: 'Kreativiti & Inovasi',
-      max_score: 30,
-      weight: 1.0,
+      max_score: 5,
+      weight: 30,
       sort_order: 1,
     },
     {
       criteria_name: 'Persembahan & Pitching',
-      max_score: 30,
-      weight: 1.0,
+      max_score: 5,
+      weight: 30,
       sort_order: 2,
     },
     {
       criteria_name: 'Impak & Kebolehlaksanaan',
-      max_score: 40,
-      weight: 1.0,
+      max_score: 5,
+      weight: 40,
       sort_order: 3,
     },
   ]);
+
+  const [openDescriptors, setOpenDescriptors] = useState<Record<number, boolean>>({});
+
+  const toggleDescriptor = (index: number) => {
+    setOpenDescriptors((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
 
   // Load existing event data if editing
   useEffect(() => {
@@ -178,10 +196,19 @@ export function EmsEventFormPage() {
           setRubrics(
             data.rubrics.map((r, idx) => ({
               id: r.id,
+              category_name: r.category_name || '',
+              section_name: r.section_name || '',
               criteria_name: r.criteria_name,
               max_score: r.max_score,
               weight: r.weight,
               sort_order: r.sort_order || idx + 1,
+              descriptors: r.descriptors || {
+                '5': '',
+                '4': '',
+                '3': '',
+                '2': '',
+                '1': '',
+              },
             }))
           );
         }
@@ -229,10 +256,20 @@ export function EmsEventFormPage() {
     setRubrics((prev) => [
       ...prev,
       {
+        id: `rubric-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        category_name: '',
+        section_name: '',
         criteria_name: '',
-        max_score: 10,
-        weight: 1.0,
+        max_score: 5,
+        weight: 10,
         sort_order: prev.length + 1,
+        descriptors: {
+          '5': '',
+          '4': '',
+          '3': '',
+          '2': '',
+          '1': '',
+        },
       },
     ]);
   };
@@ -250,6 +287,75 @@ export function EmsEventFormPage() {
     newRubrics[index] = newRubrics[targetIdx];
     newRubrics[targetIdx] = temp;
     setRubrics(newRubrics);
+  };
+
+  const handleLoadShowcasePreset = () => {
+    if (rubrics.length > 0 && rubrics.some((r) => r.criteria_name.trim())) {
+      if (
+        !window.confirm(
+          'Adakah anda pasti mahu menggantikan kriteria pemarkahan sedia ada dengan Templat iFAMB Best Showcase (16 Rubrik)?'
+        )
+      ) {
+        return;
+      }
+    }
+    const items: LocalRubricCriteria[] = IFAMB_SHOWCASE_PRESET.map((preset, idx) => ({
+      id: `showcase-${idx + 1}-${Date.now()}`,
+      category_name: preset.category_name || '',
+      section_name: preset.section_name || '',
+      criteria_name: preset.criteria_name,
+      max_score: preset.max_score,
+      weight: preset.weight,
+      sort_order: preset.sort_order || idx + 1,
+      descriptors: preset.descriptors ? { ...preset.descriptors } : { '5': '', '4': '', '3': '', '2': '', '1': '' },
+    }));
+    setRubrics(items);
+    toast.success('Templat iFAMB Best Showcase berjaya dimuatkan! (16 Rubrik / 4 Seksyen)');
+  };
+
+  const handleLoadPitchingPreset = () => {
+    if (rubrics.length > 0 && rubrics.some((r) => r.criteria_name.trim())) {
+      if (
+        !window.confirm(
+          'Adakah anda pasti mahu menggantikan kriteria pemarkahan sedia ada dengan Templat iFAMB Best Pitching (10 Rubrik)?'
+        )
+      ) {
+        return;
+      }
+    }
+    const items: LocalRubricCriteria[] = IFAMB_PITCHING_PRESET.map((preset, idx) => ({
+      id: `pitching-${idx + 1}-${Date.now()}`,
+      category_name: preset.category_name || '',
+      section_name: preset.section_name || '',
+      criteria_name: preset.criteria_name,
+      max_score: preset.max_score,
+      weight: preset.weight,
+      sort_order: preset.sort_order || idx + 1,
+      descriptors: preset.descriptors ? { ...preset.descriptors } : { '5': '', '4': '', '3': '', '2': '', '1': '' },
+    }));
+    setRubrics(items);
+    toast.success('Templat iFAMB Best Pitching berjaya dimuatkan! (10 Rubrik)');
+  };
+
+  const updateDescriptor = (index: number, scoreKey: string, val: string) => {
+    setRubrics((prev) => {
+      const updated = [...prev];
+      const currentDescriptors = updated[index].descriptors || {
+        '5': '',
+        '4': '',
+        '3': '',
+        '2': '',
+        '1': '',
+      };
+      updated[index] = {
+        ...updated[index],
+        descriptors: {
+          ...currentDescriptors,
+          [scoreKey]: val,
+        },
+      };
+      return updated;
+    });
   };
 
   // Save / Submit Handler
@@ -295,9 +401,12 @@ export function EmsEventFormPage() {
       }));
 
       const preparedRubrics = rubrics.map((r, idx) => ({
+        category_name: r.category_name ? r.category_name.trim() : null,
+        section_name: r.section_name ? r.section_name.trim() : null,
         criteria_name: r.criteria_name.trim(),
-        max_score: Number(r.max_score) || 10,
-        weight: Number(r.weight) || 1.0,
+        max_score: Number(r.max_score) || 5,
+        weight: Number(r.weight) || 0,
+        descriptors: r.descriptors || null,
         sort_order: idx + 1,
       }));
 
@@ -696,14 +805,14 @@ export function EmsEventFormPage() {
         {/* Section 3: Rubrik Pemarkahan Juri (Scoring Rubric Builder) */}
         {/* ============================================================ */}
         <section className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-xl">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-4 gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
                 <Award className="w-5 h-5" />
               </div>
               <div>
                 <h2 className="text-lg font-bold text-white">
-                  Seksyen 3: Rubrik Pemarkahan Juri
+                  Seksyen 3: Rubrik Pemarkahan Juri & Hierarki
                 </h2>
                 <p className="text-xs text-slate-400">
                   Tetapkan kriteria pemarkahan, markah maksimum & pemberat (weightage) untuk juri.
@@ -714,106 +823,275 @@ export function EmsEventFormPage() {
             <button
               type="button"
               onClick={addRubric}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-all shadow-md"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-all shadow-md"
             >
               <Plus className="w-4 h-4" />
               <span>Tambah Kriteria</span>
             </button>
           </div>
 
-          <div className="space-y-4">
-            {rubrics.map((rubric, index) => (
-              <div
-                key={index}
-                className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3 relative group"
+          {/* 1-Click Preset Loaders */}
+          <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-indigo-300 uppercase tracking-wider">
+              <Sparkles className="w-4 h-4 text-indigo-400" />
+              <span>Templat Rubrik Pantas (1-Click Preset Loader)</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={handleLoadShowcasePreset}
+                className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl bg-gradient-to-r from-indigo-950/70 to-slate-900 border border-indigo-500/30 hover:border-indigo-400 text-white font-bold text-xs transition-all shadow-md group active:scale-[0.98]"
               >
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <span className="w-6 h-6 rounded-full bg-slate-800 text-amber-400 font-mono font-bold text-xs flex items-center justify-center shrink-0">
-                      {index + 1}
+                <div className="flex items-center gap-2.5 text-left">
+                  <Package className="w-5 h-5 text-indigo-400 group-hover:scale-110 transition-transform shrink-0" />
+                  <div>
+                    <div className="text-white font-extrabold">📦 Muat Templat iFAMB Best Showcase</div>
+                    <div className="text-[11px] font-normal text-slate-400">(4 Seksyen / 16 Rubrik)</div>
+                  </div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleLoadPitchingPreset}
+                className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl bg-gradient-to-r from-emerald-950/70 to-slate-900 border border-emerald-500/30 hover:border-emerald-400 text-white font-bold text-xs transition-all shadow-md group active:scale-[0.98]"
+              >
+                <div className="flex items-center gap-2.5 text-left">
+                  <Mic className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform shrink-0" />
+                  <div>
+                    <div className="text-white font-extrabold">🎤 Muat Templat iFAMB Best Pitching</div>
+                    <div className="text-[11px] font-normal text-slate-400">(10 Rubrik)</div>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Live Total Weight Summary & Warning */}
+          {(() => {
+            const totalWeight = rubrics.reduce((sum, r) => sum + (Number(r.weight) || 0), 0);
+            const isWeightBalanced = Math.abs(totalWeight - 100) < 0.01;
+
+            return (
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-slate-950/90 border border-slate-800 p-4 rounded-2xl gap-3">
+                <div>
+                  <span className="text-xs font-semibold text-slate-400">Ringkasan Pemberat Kriteria:</span>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="text-base font-bold text-white">
+                      Jumlah Pemberat (Weight):{' '}
+                      <span className={isWeightBalanced ? 'text-emerald-400 font-black' : 'text-amber-400 font-black'}>
+                        {totalWeight}%
+                      </span>
                     </span>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Nama Kriteria (e.g. Kreativiti / Impak)"
-                      value={rubric.criteria_name}
-                      onChange={(e) => {
-                        const updated = [...rubrics];
-                        updated[index].criteria_name = e.target.value;
-                        setRubrics(updated);
-                      }}
-                      className="w-full sm:w-72 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-semibold focus:outline-none focus:border-amber-500"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                    <button
-                      type="button"
-                      disabled={index === 0}
-                      onClick={() => moveRubric(index, 'UP')}
-                      className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 disabled:opacity-30"
-                    >
-                      <MoveUp className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      disabled={index === rubrics.length - 1}
-                      onClick={() => moveRubric(index, 'DOWN')}
-                      className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 disabled:opacity-30"
-                    >
-                      <MoveDown className="w-3.5 h-3.5" />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => removeRubric(index)}
-                      className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition-all"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {isWeightBalanced ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> 100% Seimbang
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        <AlertCircle className="w-3.5 h-3.5" /> Tidak Seimbang
+                      </span>
+                    )}
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
-                      Markah Maksimum (Max Score)
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={100}
-                      value={rubric.max_score}
-                      onChange={(e) => {
-                        const updated = [...rubrics];
-                        updated[index].max_score = Number(e.target.value);
-                        setRubrics(updated);
-                      }}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-mono font-bold"
-                    />
+                {!isWeightBalanced && (
+                  <div className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-xl flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
+                    <span>Amaran: Jumlah pemberat semasa ialah {totalWeight}%. Jumlah pemberat yang disyorkan ialah 100%.</span>
                   </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
-                      Pemberat (Weightage Multiplier)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      min="0.1"
-                      max="10"
-                      value={rubric.weight}
-                      onChange={(e) => {
-                        const updated = [...rubrics];
-                        updated[index].weight = Number(e.target.value);
-                        setRubrics(updated);
-                      }}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-mono font-bold"
-                    />
-                  </div>
-                </div>
+                )}
               </div>
-            ))}
+            );
+          })()}
+
+          {/* Rubrics Editor List */}
+          <div className="space-y-4">
+            {rubrics.map((rubric, index) => {
+              const isExpanded = Boolean(openDescriptors[index]);
+              const descriptors = rubric.descriptors || { '5': '', '4': '', '3': '', '2': '', '1': '' };
+
+              return (
+                <div
+                  key={rubric.id || index}
+                  className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-4 relative group"
+                >
+                  {/* Card Header & Main Fields */}
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+                    <div className="flex items-center gap-2 w-full md:w-auto">
+                      <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                        {index + 1}
+                      </span>
+                      <div className="flex-1 md:w-80">
+                        <input
+                          type="text"
+                          required
+                          placeholder="Nama Kriteria (e.g. Creativity & Originality)"
+                          value={rubric.criteria_name}
+                          onChange={(e) => {
+                            const updated = [...rubrics];
+                            updated[index].criteria_name = e.target.value;
+                            setRubrics(updated);
+                          }}
+                          className="w-full px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-semibold focus:outline-none focus:border-amber-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+                      <button
+                        type="button"
+                        disabled={index === 0}
+                        onClick={() => moveRubric(index, 'UP')}
+                        className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 disabled:opacity-30 transition-colors"
+                        title="Alih ke atas"
+                      >
+                        <MoveUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={index === rubrics.length - 1}
+                        onClick={() => moveRubric(index, 'DOWN')}
+                        className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 disabled:opacity-30 transition-colors"
+                        title="Alih ke bawah"
+                      >
+                        <MoveDown className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeRubric(index)}
+                        className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition-all"
+                        title="Padam Kriteria"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Hierarchical Fields & Numeric Inputs */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                        Kategori (Category)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Best Showcase / Best Pitching"
+                        value={rubric.category_name || ''}
+                        onChange={(e) => {
+                          const updated = [...rubrics];
+                          updated[index].category_name = e.target.value;
+                          setRubrics(updated);
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                        Seksyen / Sub-kategori (Section)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. TIKTOK PROMOTION (25%)"
+                        value={rubric.section_name || ''}
+                        onChange={(e) => {
+                          const updated = [...rubrics];
+                          updated[index].section_name = e.target.value;
+                          setRubrics(updated);
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                        Pemberat % (Weight)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.5"
+                        min="0"
+                        max="100"
+                        value={rubric.weight}
+                        onChange={(e) => {
+                          const updated = [...rubrics];
+                          updated[index].weight = Number(e.target.value);
+                          setRubrics(updated);
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-mono font-bold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                        Markah Maksimum (Max Score)
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={rubric.max_score}
+                        onChange={(e) => {
+                          const updated = [...rubrics];
+                          updated[index].max_score = Number(e.target.value);
+                          setRubrics(updated);
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-mono font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Collapsible 5-Point Descriptors */}
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => toggleDescriptor(index)}
+                      className="flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-amber-400 transition-colors bg-slate-900/60 hover:bg-slate-900 px-3 py-2 rounded-xl border border-slate-800 w-full"
+                    >
+                      {isExpanded ? (
+                        <ChevronUp className="w-4 h-4 text-amber-400 shrink-0" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
+                      )}
+                      <span>Deskriptor Pemarkahan 5-Skala (Skor 1 - 5)</span>
+                      <span className="ml-auto text-[10px] text-slate-400">
+                        {isExpanded ? 'Tutup' : 'Buka & Sunting'}
+                      </span>
+                    </button>
+
+                    {isExpanded && (
+                      <div className="mt-3 p-4 bg-slate-900/80 border border-slate-800 rounded-xl space-y-3">
+                        <div className="text-[11px] font-bold text-slate-400 mb-2 uppercase tracking-wide">
+                          Deskriptor Pemarkahan (5-Point Descriptors):
+                        </div>
+                        <div className="grid grid-cols-1 gap-2.5">
+                          {[
+                            { key: '5', label: '5 - Cemerlang (Excellent)', badgeColor: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' },
+                            { key: '4', label: '4 - Baik (Good)', badgeColor: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
+                            { key: '3', label: '3 - Memuaskan (Satisfactory)', badgeColor: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
+                            { key: '2', label: '2 - Sederhana (Fair)', badgeColor: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
+                            { key: '1', label: '1 - Lemah (Poor)', badgeColor: 'bg-rose-500/20 text-rose-400 border-rose-500/30' },
+                          ].map((level) => (
+                            <div key={level.key} className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border shrink-0 sm:w-44 ${level.badgeColor}`}>
+                                {level.label}
+                              </span>
+                              <input
+                                type="text"
+                                placeholder={`Keterangan untuk skor ${level.key}...`}
+                                value={descriptors[level.key] || ''}
+                                onChange={(e) => updateDescriptor(index, level.key, e.target.value)}
+                                className="w-full px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-amber-500"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
 
