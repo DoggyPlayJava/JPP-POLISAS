@@ -61,7 +61,8 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   const [leaderboard, setLeaderboard] = useState<EmsLeaderboardItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+  const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
+  const [hasSetDefaultCategory, setHasSetDefaultCategory] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Public Visibility Toggle Loading
@@ -186,26 +187,44 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   const categories = useMemo(() => {
     const set = new Set<string>();
     leaderboard.forEach((item) => {
-      const cat = item.participant.category_name || item.participant.custom_responses?.category || item.participant.custom_responses?.category_name;
+      const cat =
+        item.category_name ||
+        item.participant.category_name ||
+        item.participant.custom_responses?.category ||
+        item.participant.custom_responses?.category_name;
       if (cat) set.add(String(cat).trim());
     });
     return Array.from(set).sort();
   }, [leaderboard]);
 
-  // Filtered Leaderboard
+  // Set default category filter when categories load
+  useEffect(() => {
+    if (!hasSetDefaultCategory && categories.length > 0) {
+      setCategoryFilter(categories[0]);
+      setHasSetDefaultCategory(true);
+    }
+  }, [categories, hasSetDefaultCategory]);
+
+  // Filtered Leaderboard with recalculated category ranks
   const filteredLeaderboard = useMemo(() => {
-    return leaderboard.filter((item) => {
+    const filtered = leaderboard.filter((item) => {
       const p = item.participant;
-      const cat = p.category_name || p.custom_responses?.category || p.custom_responses?.category_name || '';
-      
-      const matchesCat = selectedCategory === 'ALL' || cat === selectedCategory;
+      const cat =
+        item.category_name ||
+        p.category_name ||
+        p.custom_responses?.category ||
+        p.custom_responses?.category_name ||
+        '';
+
+      const matchesCat = categoryFilter === 'ALL' || cat === categoryFilter;
 
       const booth = p.booth_no || p.custom_responses?.booth_no || p.custom_responses?.booth_number || '';
       const team = p.team_name || '';
       const leader = p.leader_name || '';
 
       const query = searchQuery.toLowerCase().trim();
-      const matchesSearch = !query ||
+      const matchesSearch =
+        !query ||
         team.toLowerCase().includes(query) ||
         leader.toLowerCase().includes(query) ||
         booth.toLowerCase().includes(query) ||
@@ -213,7 +232,12 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
       return matchesCat && matchesSearch;
     });
-  }, [leaderboard, selectedCategory, searchQuery]);
+
+    return filtered.map((item, index) => ({
+      ...item,
+      category_rank: index + 1,
+    }));
+  }, [leaderboard, categoryFilter, searchQuery]);
 
   // Check if any participants are tied
   const hasTiedParticipants = useMemo(() => {
@@ -499,28 +523,40 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
             {categories.length > 0 && (
               <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10 overflow-x-auto max-w-md">
                 <button
-                  onClick={() => setSelectedCategory('ALL')}
+                  onClick={() => setCategoryFilter('ALL')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
-                    selectedCategory === 'ALL'
+                    categoryFilter === 'ALL'
                       ? 'bg-amber-500 text-slate-950 shadow-md'
                       : 'text-white/70 hover:text-white hover:bg-white/5'
                   }`}
                 >
-                  Semua Kategori
+                  Semua Kategori ({leaderboard.length})
                 </button>
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
-                      selectedCategory === cat
-                        ? 'bg-amber-500 text-slate-950 shadow-md'
-                        : 'text-white/70 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
+                {categories.map((cat) => {
+                  const count = leaderboard.filter((item) => {
+                    const p = item.participant;
+                    const c =
+                      item.category_name ||
+                      p.category_name ||
+                      p.custom_responses?.category ||
+                      p.custom_responses?.category_name;
+                    return c === cat;
+                  }).length;
+
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => setCategoryFilter(cat)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
+                        categoryFilter === cat
+                          ? 'bg-amber-500 text-slate-950 shadow-md'
+                          : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      {cat} ({count})
+                    </button>
+                  );
+                })}
               </div>
             )}
 
@@ -710,7 +746,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                         >
                           <div className="flex items-center gap-3 min-w-0">
                             <span className="w-9 h-9 rounded-xl bg-slate-800 text-white font-black text-sm flex items-center justify-center border border-white/10 shrink-0">
-                              #{item.rank}
+                              #{item.category_rank || item.rank}
                             </span>
                             <div className="min-w-0">
                               <p className="text-xs font-black text-amber-400 uppercase tracking-wider">
@@ -910,9 +946,9 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
         {/* Category Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
           <button
-            onClick={() => setSelectedCategory('ALL')}
+            onClick={() => setCategoryFilter('ALL')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
-              selectedCategory === 'ALL'
+              categoryFilter === 'ALL'
                 ? 'bg-indigo-600 text-white shadow-md'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
             }`}
@@ -922,16 +958,20 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
           {categories.map((cat) => {
             const count = leaderboard.filter((item) => {
               const p = item.participant;
-              const c = p.category_name || p.custom_responses?.category || p.custom_responses?.category_name;
+              const c =
+                item.category_name ||
+                p.category_name ||
+                p.custom_responses?.category ||
+                p.custom_responses?.category_name;
               return c === cat;
             }).length;
 
             return (
               <button
                 key={cat}
-                onClick={() => setSelectedCategory(cat)}
+                onClick={() => setCategoryFilter(cat)}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
-                  selectedCategory === cat
+                  categoryFilter === cat
                     ? 'bg-indigo-600 text-white shadow-md'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
@@ -983,7 +1023,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                   const p = item.participant;
                   const booth = p.booth_no || p.custom_responses?.booth_no || p.custom_responses?.booth_number || '-';
                   const cat = item.category_name || p.category_name || p.custom_responses?.category || p.custom_responses?.category_name || '-';
-                  const rank = index + 1;
+                  const rank = item.category_rank || index + 1;
 
                   // Rank Badge styles
                   let rankBadge = (
