@@ -252,13 +252,13 @@ export function EmsEventFormPage() {
   };
 
   // Rubrics Helpers
-  const addRubric = (defaultCategory = '') => {
+  const addRubric = (defaultCategory = '', defaultSection = '') => {
     setRubrics((prev) => [
       ...prev,
       {
         id: `rubric-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
         category_name: defaultCategory,
-        section_name: '',
+        section_name: defaultSection,
         criteria_name: '',
         max_score: 5,
         weight: 10,
@@ -272,6 +272,59 @@ export function EmsEventFormPage() {
         },
       },
     ]);
+  };
+
+  const handleAddCategory = () => {
+    const catName = window.prompt('Masukkan nama Kategori Rubrik baharu (cth: Anugerah Khas / Best Innovation):');
+    if (!catName || !catName.trim()) return;
+    const name = catName.trim();
+    setRubrics((prev) => [
+      ...prev,
+      {
+        id: `rubric-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        category_name: name,
+        section_name: 'Seksyen 1',
+        criteria_name: '',
+        max_score: 5,
+        weight: 10,
+        sort_order: prev.length + 1,
+        descriptors: {
+          '5': '',
+          '4': '',
+          '3': '',
+          '2': '',
+          '1': '',
+        },
+      },
+    ]);
+    toast.success(`Kategori "${name}" berjaya ditambah!`);
+  };
+
+  const handleAddSection = (categoryName: string) => {
+    const secInput = window.prompt(`Masukkan nama Seksyen baharu untuk Kategori "${categoryName}" (cth: PITCHING PRESENTATION [30%]):`);
+    if (!secInput || !secInput.trim()) return;
+    const secName = secInput.trim();
+    const actualCategory = categoryName === 'Tanpa Kategori' ? '' : categoryName;
+    setRubrics((prev) => [
+      ...prev,
+      {
+        id: `rubric-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        category_name: actualCategory,
+        section_name: secName,
+        criteria_name: '',
+        max_score: 5,
+        weight: 10,
+        sort_order: prev.length + 1,
+        descriptors: {
+          '5': '',
+          '4': '',
+          '3': '',
+          '2': '',
+          '1': '',
+        },
+      },
+    ]);
+    toast.success(`Seksyen "${secName}" berjaya ditambah!`);
   };
 
   const removeRubric = (index: number) => {
@@ -864,14 +917,24 @@ export function EmsEventFormPage() {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={addRubric}
-              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-all shadow-md"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Tambah Kriteria</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleAddCategory}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all shadow-md active:scale-95"
+              >
+                <Plus className="w-4 h-4" />
+                <span>📂 + Tambah Kategori Baharu</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => addRubric()}
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-all shadow-md active:scale-95"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Tambah Kriteria</span>
+              </button>
+            </div>
           </div>
 
           {/* 1-Click Preset Loaders */}
@@ -1033,21 +1096,30 @@ export function EmsEventFormPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs font-semibold text-slate-400">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-semibold text-slate-400 mr-1">
                           {group.items.length} Kriteria
                         </span>
-                        <div className="px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold font-mono">
+                        <div className="px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold font-mono mr-1">
                           Jumlah Pemberat: <span className="text-white font-black">{group.totalWeight}%</span>
                         </div>
                         <button
                           type="button"
+                          onClick={() => handleAddSection(group.categoryName)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 text-xs font-bold transition-all border border-teal-500/30 active:scale-95"
+                          title={`Tambah Seksyen ke ${group.categoryName}`}
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>📑 + Tambah Seksyen</span>
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => addRubric(group.categoryName === 'Tanpa Kategori' ? '' : group.categoryName)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold transition-all border border-amber-500/30"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold transition-all border border-amber-500/30 active:scale-95"
                           title={`Tambah Kriteria ke ${group.categoryName}`}
                         >
                           <Plus className="w-3.5 h-3.5" />
-                          <span>Tambah</span>
+                          <span>📝 + Tambah Kriteria</span>
                         </button>
                       </div>
                     </div>
