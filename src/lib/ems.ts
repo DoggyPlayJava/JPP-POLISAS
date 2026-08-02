@@ -23,6 +23,7 @@ export interface EmsLeaderboardItem {
   is_tied?: boolean;
   is_tie_winner?: boolean;
   scores_breakdown?: Record<string, number>;
+  category_name?: string | null;
 }
 
 export interface EmsEventDetail extends EmsEvent {
@@ -649,6 +650,12 @@ export async function fetchEmsLeaderboard(eventId: string): Promise<EmsLeaderboa
   const scores: EmsScore[] = scoresRes.data || [];
 
   const leaderboard: EmsLeaderboardItem[] = participants.map((participant) => {
+    const categoryName =
+      participant.category_name ||
+      (participant.custom_responses as Record<string, any>)?.category ||
+      (participant.custom_responses as Record<string, any>)?.category_name ||
+      null;
+
     const pScores = scores.filter((s) => s.participant_id === participant.id);
 
     const juryMap: Record<string, EmsScore[]> = {};
@@ -666,13 +673,19 @@ export async function fetchEmsLeaderboard(eventId: string): Promise<EmsLeaderboa
     if (juryCount > 0) {
       juryIds.forEach((jId) => {
         const jScores = juryMap[jId];
-        let juryTotal = 0;
+        let juryWeightedTotal = 0;
         jScores.forEach((scoreObj) => {
           const rubric = rubrics.find((r) => r.id === scoreObj.rubric_id);
-          const weight = rubric ? Number(rubric.weight) || 1.0 : 1.0;
-          juryTotal += Number(scoreObj.score) * weight;
+          if (rubric) {
+            const maxScore = Number(rubric.max_score) > 0 ? Number(rubric.max_score) : 10;
+            const weight = rubric.weight !== undefined && rubric.weight !== null ? Number(rubric.weight) : 1;
+            const weightedScore = (Number(scoreObj.score) / maxScore) * weight;
+            juryWeightedTotal += weightedScore;
+          } else {
+            juryWeightedTotal += Number(scoreObj.score);
+          }
         });
-        totalJurySum += juryTotal;
+        totalJurySum += juryWeightedTotal;
       });
 
       rubrics.forEach((r) => {
@@ -689,8 +702,13 @@ export async function fetchEmsLeaderboard(eventId: string): Promise<EmsLeaderboa
     const averageScore = juryCount > 0 ? Number((totalJurySum / juryCount).toFixed(2)) : 0;
     const isTieWinner = Boolean(participant.custom_responses?.is_tie_winner);
 
+    const updatedParticipant: EmsParticipant = {
+      ...participant,
+      category_name: categoryName || participant.category_name,
+    };
+
     return {
-      participant,
+      participant: updatedParticipant,
       total_score: averageScore,
       average_score: averageScore,
       jury_count: juryCount,
@@ -698,6 +716,7 @@ export async function fetchEmsLeaderboard(eventId: string): Promise<EmsLeaderboa
       is_tied: false,
       is_tie_winner: isTieWinner,
       scores_breakdown: scoresBreakdown,
+      category_name: categoryName,
     };
   });
 

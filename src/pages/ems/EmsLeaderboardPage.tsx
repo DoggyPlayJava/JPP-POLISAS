@@ -589,9 +589,8 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
                       {/* Score display */}
                       <div className="pt-3 border-t border-white/10 flex items-center justify-center gap-2">
-                        <span className="text-xs font-bold text-slate-400 uppercase">Skor Purata:</span>
-                        <span className="text-2xl font-black text-slate-200">{top2.average_score.toFixed(2)}</span>
-                        <span className="text-xs text-slate-500">/ 100</span>
+                        <span className="text-xs font-bold text-slate-400 uppercase">Markah Terwajar:</span>
+                        <span className="text-2xl font-black text-slate-200">{top2.average_score.toFixed(1)} / 100%</span>
                       </div>
 
                       {top2.is_tie_winner && (
@@ -635,11 +634,10 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
                       {/* Score display */}
                       <div className="pt-4 border-t border-amber-500/20 flex items-center justify-center gap-2">
-                        <span className="text-xs font-bold text-amber-300/70 uppercase">Purata Markah:</span>
+                        <span className="text-xs font-bold text-amber-300/70 uppercase">Markah Terwajar:</span>
                         <span className="text-3xl md:text-4xl font-black text-amber-300 drop-shadow-md">
-                          {top1.average_score.toFixed(2)}
+                          {top1.average_score.toFixed(1)} / 100%
                         </span>
-                        <span className="text-xs text-amber-400/50">/ 100</span>
                       </div>
 
                       {top1.is_tie_winner && (
@@ -677,9 +675,8 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
                       {/* Score display */}
                       <div className="pt-3 border-t border-white/10 flex items-center justify-center gap-2">
-                        <span className="text-xs font-bold text-slate-400 uppercase">Skor Purata:</span>
-                        <span className="text-2xl font-black text-amber-200">{top3.average_score.toFixed(2)}</span>
-                        <span className="text-xs text-slate-500">/ 100</span>
+                        <span className="text-xs font-bold text-slate-400 uppercase">Markah Terwajar:</span>
+                        <span className="text-2xl font-black text-amber-200">{top3.average_score.toFixed(1)} / 100%</span>
                       </div>
 
                       {top3.is_tie_winner && (
@@ -728,8 +725,8 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                             </div>
                           </div>
                           <div className="text-right shrink-0">
-                            <div className="text-lg font-black text-white">
-                              {item.average_score.toFixed(2)}
+                            <div className="text-base font-black text-amber-400">
+                              {item.average_score.toFixed(1)} / 100%
                             </div>
                             <span className="text-[10px] text-white/40 uppercase font-bold">
                               {item.jury_count} Juri
@@ -968,7 +965,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 <th className="px-4 py-3.5">Stan #</th>
                 <th className="px-4 py-3.5">Pasukan / Ketua</th>
                 <th className="px-4 py-3.5">Kategori</th>
-                <th className="px-4 py-3.5 text-center">Purata Markah</th>
+                <th className="px-4 py-3.5 text-center">Markah Terwajar (%)</th>
                 <th className="px-4 py-3.5 text-center">Bil. Juri</th>
                 <th className="px-4 py-3.5 text-center">Status / Lencana</th>
                 <th className="px-4 py-3.5 text-right">Tindakan</th>
@@ -982,32 +979,33 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                   </td>
                 </tr>
               ) : (
-                filteredLeaderboard.map((item) => {
+                filteredLeaderboard.map((item, index) => {
                   const p = item.participant;
                   const booth = p.booth_no || p.custom_responses?.booth_no || p.custom_responses?.booth_number || '-';
-                  const cat = p.category_name || p.custom_responses?.category || p.custom_responses?.category_name || '-';
+                  const cat = item.category_name || p.category_name || p.custom_responses?.category || p.custom_responses?.category_name || '-';
+                  const rank = index + 1;
 
                   // Rank Badge styles
                   let rankBadge = (
-                    <span className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-black flex items-center justify-center mx-auto">
-                      #{item.rank}
+                    <span className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-black flex items-center justify-center mx-auto text-xs">
+                      #{rank}
                     </span>
                   );
-                  if (item.rank === 1) {
+                  if (rank === 1) {
                     rankBadge = (
-                      <span className="w-8 h-8 rounded-full bg-amber-500 text-slate-950 font-black flex items-center justify-center mx-auto shadow-md shadow-amber-500/30">
+                      <span className="px-2.5 py-1 rounded-full bg-amber-500 text-slate-950 font-black flex items-center justify-center gap-1 mx-auto text-xs shadow-md shadow-amber-500/30">
                         🥇 1
                       </span>
                     );
-                  } else if (item.rank === 2) {
+                  } else if (rank === 2) {
                     rankBadge = (
-                      <span className="w-8 h-8 rounded-full bg-slate-300 text-slate-900 font-black flex items-center justify-center mx-auto shadow-md">
+                      <span className="px-2.5 py-1 rounded-full bg-slate-300 text-slate-950 font-black flex items-center justify-center gap-1 mx-auto text-xs shadow-md">
                         🥈 2
                       </span>
                     );
-                  } else if (item.rank === 3) {
+                  } else if (rank === 3) {
                     rankBadge = (
-                      <span className="w-8 h-8 rounded-full bg-amber-700 text-white font-black flex items-center justify-center mx-auto shadow-md">
+                      <span className="px-2.5 py-1 rounded-full bg-amber-700 text-white font-black flex items-center justify-center gap-1 mx-auto text-xs shadow-md">
                         🥉 3
                       </span>
                     );
@@ -1031,13 +1029,16 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                         </div>
                       </td>
                       <td className="px-4 py-3.5 text-slate-600 dark:text-slate-400">
-                        {cat}
+                        <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[11px]">
+                          {cat}
+                        </span>
                       </td>
                       <td className="px-4 py-3.5 text-center">
-                        <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">
-                          {item.average_score.toFixed(2)}
-                        </span>
-                        <span className="text-[10px] text-slate-400 block">/ 100</span>
+                        <div className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60">
+                          <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">
+                            {item.average_score.toFixed(1)} / 100%
+                          </span>
+                        </div>
                       </td>
                       <td className="px-4 py-3.5 text-center">
                         <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold">
