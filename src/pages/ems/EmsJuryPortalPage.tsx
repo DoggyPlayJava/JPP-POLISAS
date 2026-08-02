@@ -24,6 +24,12 @@ import {
   Eye,
   ChevronRight,
   Send,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  AlertCircle,
+  Trophy,
+  HelpCircle,
 } from 'lucide-react';
 import { verifyJuryCode, submitJuryScore } from '@/lib/ems';
 import { supabase } from '@/lib/supabase';
@@ -35,6 +41,61 @@ interface JurySession {
   organization: string;
   event_id: string;
 }
+
+interface RubricSection {
+  id: string;
+  name: string;
+  weight: number;
+  rubrics: EmsRubricCriteria[];
+}
+
+const LIKERT_OPTIONS = [
+  {
+    value: 5,
+    label: '5 - Excellent',
+    icon: '🌟',
+    shortText: 'Excellent (5/5)',
+    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30',
+    activeBg: 'bg-emerald-600 text-white border-emerald-400 ring-2 ring-emerald-500/50 shadow-lg shadow-emerald-600/30',
+    defaultDescriptor: 'Cemerlang 🌟 - Prestasi luar biasa, sangat kreatif, inovatif dan memenuhi semua kriteria kualiti tertinggi.',
+  },
+  {
+    value: 4,
+    label: '4 - Good',
+    icon: '👍',
+    shortText: 'Good (4/5)',
+    badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40 hover:bg-blue-500/30',
+    activeBg: 'bg-blue-600 text-white border-blue-400 ring-2 ring-blue-500/50 shadow-lg shadow-blue-600/30',
+    defaultDescriptor: 'Baik 👍 - Memenuhi kriteria dengan kualiti tinggi, kemas dan penyampaian yang meyakinkan.',
+  },
+  {
+    value: 3,
+    label: '3 - Satisfactory',
+    icon: '👌',
+    shortText: 'Satisfactory (3/5)',
+    badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30',
+    activeBg: 'bg-amber-600 text-white border-amber-400 ring-2 ring-amber-500/50 shadow-lg shadow-amber-600/30',
+    defaultDescriptor: 'Memuaskan 👌 - Memenuhi kriteria asas pada tahap yang memuaskan dan wajar diterima.',
+  },
+  {
+    value: 2,
+    label: '2 - Fair',
+    icon: '⚠️',
+    shortText: 'Fair (2/5)',
+    badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40 hover:bg-orange-500/30',
+    activeBg: 'bg-orange-600 text-white border-orange-400 ring-2 ring-orange-500/50 shadow-lg shadow-orange-600/30',
+    defaultDescriptor: 'Sederhana ⚠️ - Memerlukan penambahbaikan pada beberapa aspek penting.',
+  },
+  {
+    value: 1,
+    label: '1 - Poor',
+    icon: '❌',
+    shortText: 'Poor (1/5)',
+    badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40 hover:bg-rose-500/30',
+    activeBg: 'bg-rose-600 text-white border-rose-400 ring-2 ring-rose-500/50 shadow-lg shadow-rose-600/30',
+    defaultDescriptor: 'Lemah ❌ - Tidak memenuhi kriteria asas atau terdapat kelemahan ketara.',
+  },
+];
 
 export function EmsJuryPortalPage() {
   // Session & Auth State
@@ -65,14 +126,56 @@ export function EmsJuryPortalPage() {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'UNSCORED' | 'SCORED'>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
 
-  // Modal / Evaluation Drawer State
+  // Modal / Evaluation Wizard State
   const [evalParticipant, setEvalParticipant] = useState<EmsParticipant | null>(null);
+  const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [criterionScores, setCriterionScores] = useState<Record<string, number>>({});
+  const [hoveredScores, setHoveredScores] = useState<Record<string, number | null>>({});
   const [generalComments, setGeneralComments] = useState<string>('');
   const [isSubmittingScores, setIsSubmittingScores] = useState<boolean>(false);
 
   // Lightbox State
   const [lightboxImage, setLightboxImage] = useState<{ url: string; title: string } | null>(null);
+
+  // Group active rubrics by section_name (fallback to 'Penilaian Utama')
+  const sections = useMemo<RubricSection[]>(() => {
+    if (!rubrics || rubrics.length === 0) return [];
+    const map = new Map<string, EmsRubricCriteria[]>();
+    rubrics.forEach((r) => {
+      const secName = r.section_name?.trim() || 'Penilaian Utama';
+      if (!map.has(secName)) {
+        map.set(secName, []);
+      }
+      map.get(secName)!.push(r);
+    });
+
+    return Array.from(map.entries()).map(([name, items], idx) => {
+      const weight = items.reduce((acc, r) => acc + Number(r.weight || 0), 0);
+      return {
+        id: `sec-${idx}`,
+        name,
+        weight,
+        rubrics: items,
+      };
+    });
+  }, [rubrics]);
+
+  // Compute live total weighted score (0 to 100%)
+  const liveTotalWeightedScore = useMemo(() => {
+    if (!rubrics || rubrics.length === 0) return 0;
+    const totalWeightSum = rubrics.reduce((acc, r) => acc + (Number(r.weight) || 0), 0);
+    const rawWeighted = rubrics.reduce((acc, r) => {
+      const scoreVal = criterionScores[r.id] ?? 0;
+      const maxVal = Number(r.max_score) || 5;
+      const weightVal = Number(r.weight) || 0;
+      return acc + (scoreVal / maxVal) * weightVal;
+    }, 0);
+
+    if (totalWeightSum > 0 && Math.abs(totalWeightSum - 100) > 0.01) {
+      return (rawWeighted / totalWeightSum) * 100;
+    }
+    return rawWeighted;
+  }, [rubrics, criterionScores]);
 
   // Initial session check on mount
   useEffect(() => {
@@ -330,7 +433,7 @@ export function EmsJuryPortalPage() {
     });
   }, [assignedParticipants, categoryFilter, searchQuery, statusFilter, scores]);
 
-  // Calculate overall maximum possible rubric score
+  // Calculate overall maximum possible rubric score sum
   const maxPossibleTotal = useMemo(() => {
     return rubrics.reduce((acc, r) => acc + Number(r.max_score || 0), 0);
   }, [rubrics]);
@@ -338,6 +441,8 @@ export function EmsJuryPortalPage() {
   // Open Evaluation Modal for a Participant
   const openEvaluationModal = (participant: EmsParticipant) => {
     setEvalParticipant(participant);
+    setCurrentStepIndex(0);
+    setHoveredScores({});
 
     // Populate existing scores if present
     const existingScores = scores.filter((s) => s.participant_id === participant.id);
@@ -377,7 +482,7 @@ export function EmsJuryPortalPage() {
       }));
 
       await submitJuryScore(scoresPayload);
-      toast.success(`Pemarkahan untuk ${evalParticipant.team_name || evalParticipant.leader_name} berjaya disimpan!`);
+      toast.success(`Pemarkahan juri untuk ${evalParticipant.team_name || evalParticipant.leader_name} berjaya disimpan!`);
 
       // Refresh scores from DB
       await fetchDashboardData(eventData.id, juryCodeData.id);
@@ -412,11 +517,6 @@ export function EmsJuryPortalPage() {
 
     return images;
   };
-
-  // Calculation helper for current live total score in evaluation modal
-  const liveModalTotalScore = useMemo(() => {
-    return rubrics.reduce((acc, r) => acc + (criterionScores[r.id] || 0), 0);
-  }, [rubrics, criterionScores]);
 
   // Loading indicator for initial load
   if (isInitializing) {
@@ -762,11 +862,24 @@ export function EmsJuryPortalPage() {
               const pScores = scores.filter((s) => s.participant_id === participant.id);
               const isScored = pScores.length > 0;
 
-              // Calculate total score given by jury
+              // Calculate total raw awarded score & weighted score %
               const awardedScore = rubrics.reduce((acc, r) => {
                 const s = pScores.find((sc) => sc.rubric_id === r.id);
                 return acc + (s ? Number(s.score || 0) : 0);
               }, 0);
+
+              const totalWeightSum = rubrics.reduce((acc, r) => acc + (Number(r.weight) || 0), 0);
+              const rawWeighted = rubrics.reduce((acc, r) => {
+                const s = pScores.find((sc) => sc.rubric_id === r.id);
+                const scoreVal = s ? Number(s.score || 0) : 0;
+                const max = Number(r.max_score || 5);
+                const weight = Number(r.weight || 0);
+                return acc + (scoreVal / max) * weight;
+              }, 0);
+
+              const weightedPercentage = totalWeightSum > 0 && Math.abs(totalWeightSum - 100) > 0.01
+                ? (rawWeighted / totalWeightSum) * 100
+                : rawWeighted;
 
               const mediaImages = getParticipantImages(participant);
               const productTitle =
@@ -805,11 +918,9 @@ export function EmsJuryPortalPage() {
 
                       {/* Status Badge */}
                       {isScored ? (
-                        <span className="px-2.5 py-1 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[11px] font-semibold rounded-full flex items-center gap-1 shrink-0">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>
-                            Telah Dinilai ({awardedScore}/{maxPossibleTotal})
-                          </span>
+                        <span className="px-2.5 py-1 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[11px] font-semibold rounded-full flex items-center gap-1 shrink-0 font-mono">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>{weightedPercentage.toFixed(1)}% ({awardedScore}/{maxPossibleTotal})</span>
                         </span>
                       ) : (
                         <span className="px-2.5 py-1 bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[11px] font-semibold rounded-full flex items-center gap-1 shrink-0">
@@ -881,7 +992,7 @@ export function EmsJuryPortalPage() {
                       }`}
                     >
                       <Sliders className="w-4 h-4" />
-                      <span>{isScored ? 'Kemaskini Markah Rubrik' : 'Penilaian Rubrik'}</span>
+                      <span>{isScored ? 'Kemaskini Pemarkahan Wizard' : 'Buka Wizard Penilaian Juri'}</span>
                     </button>
                   </div>
                 </div>
@@ -892,13 +1003,13 @@ export function EmsJuryPortalPage() {
       </main>
 
       {/* ----------------------------------------------------------------------- */}
-      {/* SCREEN 3: RUBRIC EVALUATION MODAL / DRAWER */}
+      {/* SCREEN 3: STEP-BY-STEP JURY EVALUATION WIZARD MODAL */}
       {/* ----------------------------------------------------------------------- */}
       {evalParticipant && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex justify-center items-end sm:items-center p-0 sm:p-4 overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-3xl rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
-            {/* Modal Header */}
-            <div className="p-5 sm:p-6 bg-slate-900 border-b border-slate-800 flex items-start justify-between gap-4 sticky top-0 z-10">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex justify-center items-end sm:items-center p-0 sm:p-4 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-4xl rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
+            {/* Modal Top Header: Participant Summary */}
+            <div className="p-4 sm:p-5 bg-slate-950/90 border-b border-slate-800 flex items-start justify-between gap-4 sticky top-0 z-20">
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   {evalParticipant.booth_no && (
@@ -912,7 +1023,7 @@ export function EmsJuryPortalPage() {
                     </span>
                   )}
                 </div>
-                <h2 className="text-lg sm:text-xl font-bold text-white leading-snug">
+                <h2 className="text-base sm:text-lg font-bold text-white leading-snug">
                   {evalParticipant.custom_responses?.product_title ||
                     evalParticipant.custom_responses?.title ||
                     evalParticipant.custom_responses?.nama_produk ||
@@ -928,178 +1039,416 @@ export function EmsJuryPortalPage() {
               <button
                 onClick={() => setEvalParticipant(null)}
                 className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all"
+                title="Tutup Wizard"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Modal Form Content */}
-            <form onSubmit={handleRubricSubmit} className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
-              {/* Rubric Criteria List */}
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                    <Sliders className="w-4 h-4 text-indigo-400" />
-                    <span>Kriteria Penilaian ({rubrics.length})</span>
-                  </h3>
-                  <span className="text-xs font-mono font-semibold text-indigo-300 bg-indigo-950/80 px-2.5 py-1 rounded-lg border border-indigo-800/50">
-                    Jumlah Semasa: {liveModalTotalScore} / {maxPossibleTotal}
-                  </span>
-                </div>
-
-                {rubrics.length === 0 ? (
-                  <div className="p-6 bg-slate-950/60 rounded-2xl border border-slate-800 text-center text-slate-400 text-xs">
-                    Tiada kriteria penilaian rubrik ditetap oleh Pengarah Program untuk acara ini.
+            {/* Stepper Progress Bar & Active Section Sub-Header */}
+            {sections.length > 0 && (
+              <div className="bg-slate-900 border-b border-slate-800 p-4 sm:px-6 space-y-3 shrink-0">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-7 h-7 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-xs font-mono font-bold flex items-center justify-center">
+                      {currentStepIndex + 1}
+                    </span>
+                    <h3 className="text-xs sm:text-sm font-bold text-white tracking-wide uppercase">
+                      {currentStepIndex < sections.length ? (
+                        <>
+                          Langkah {currentStepIndex + 1} daripada {sections.length + 1}:{' '}
+                          <span className="text-indigo-400">{sections[currentStepIndex].name}</span>{' '}
+                          <span className="text-slate-400 font-normal">({sections[currentStepIndex].weight}%)</span>
+                        </>
+                      ) : (
+                        <>
+                          Langkah {sections.length + 1} daripada {sections.length + 1}:{' '}
+                          <span className="text-emerald-400">Ringkasan & Pengesahan</span>
+                        </>
+                      )}
+                    </h3>
                   </div>
-                ) : (
-                  rubrics.map((r, index) => {
-                    const currentScore = criterionScores[r.id] ?? 0;
-                    const maxScore = Number(r.max_score || 10);
-                    const weight = Number(r.weight || 1);
 
-                    // Preset rating options
-                    const presets = [
-                      { label: '0%', val: 0 },
-                      { label: '25%', val: Math.round(maxScore * 0.25) },
-                      { label: '50%', val: Math.round(maxScore * 0.5) },
-                      { label: '75%', val: Math.round(maxScore * 0.75) },
-                      { label: '100%', val: maxScore },
-                    ];
-
-                    return (
-                      <div
-                        key={r.id}
-                        className="bg-slate-950/80 border border-slate-800/90 rounded-2xl p-4 sm:p-5 space-y-4 hover:border-slate-700 transition-all"
-                      >
-                        {/* Criterion Header */}
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 text-xs font-bold flex items-center justify-center">
-                                {index + 1}
-                              </span>
-                              <h4 className="text-sm font-semibold text-white">
-                                {r.criteria_name}
-                              </h4>
-                            </div>
-                            <p className="text-[11px] text-slate-400 mt-1 pl-8">
-                              Markah Maksimum: <strong className="text-slate-200">{maxScore}</strong> | Pemberat: <strong className="text-slate-200">x{weight}</strong>
-                            </p>
-                          </div>
-
-                          <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-xl">
-                            <span className="text-xs text-slate-400">Markah:</span>
-                            <input
-                              type="number"
-                              min={0}
-                              max={maxScore}
-                              step={1}
-                              value={currentScore}
-                              onChange={(e) => {
-                                const val = Math.min(maxScore, Math.max(0, Number(e.target.value) || 0));
-                                setCriterionScores((prev) => ({ ...prev, [r.id]: val }));
-                              }}
-                              className="w-14 bg-transparent text-right font-mono font-bold text-indigo-400 focus:outline-none text-sm"
-                            />
-                            <span className="text-xs text-slate-500">/ {maxScore}</span>
-                          </div>
-                        </div>
-
-                        {/* Interactive Controls: Range Slider */}
-                        <div className="space-y-2">
-                          <input
-                            type="range"
-                            min={0}
-                            max={maxScore}
-                            step={1}
-                            value={currentScore}
-                            onChange={(e) => {
-                              const val = Number(e.target.value);
-                              setCriterionScores((prev) => ({ ...prev, [r.id]: val }));
-                            }}
-                            className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                          />
-
-                          {/* Quick Rating Preset Buttons */}
-                          <div className="flex items-center justify-between gap-1 pt-1">
-                            {presets.map((p) => {
-                              const isActive = currentScore === p.val;
-                              return (
-                                <button
-                                  key={p.label}
-                                  type="button"
-                                  onClick={() =>
-                                    setCriterionScores((prev) => ({ ...prev, [r.id]: p.val }))
-                                  }
-                                  className={`flex-1 py-1 text-[11px] font-medium rounded-lg border transition-all ${
-                                    isActive
-                                      ? 'bg-indigo-600 text-white border-indigo-500 font-bold'
-                                      : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-slate-200'
-                                  }`}
-                                >
-                                  {p.label} ({p.val})
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-
-              {/* General Comments */}
-              <div className="space-y-2 pt-2 border-t border-slate-800">
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-indigo-400" />
-                  <span>Ulasan & Cadangan Penambahbaikan (Pilihan)</span>
-                </label>
-                <textarea
-                  rows={3}
-                  value={generalComments}
-                  onChange={(e) => setGeneralComments(e.target.value)}
-                  placeholder="Berikan maklum balas atau ulasan ringkas mengenai inovasi/projek ini..."
-                  className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-600"
-                />
-              </div>
-
-              {/* Modal Footer Actions */}
-              <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-4 sticky bottom-0 bg-slate-900 py-3 z-10">
-                <button
-                  type="button"
-                  onClick={() => setEvalParticipant(null)}
-                  className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition-all"
-                >
-                  Batal
-                </button>
-
-                <div className="flex items-center gap-3">
-                  <div className="text-right hidden sm:block">
-                    <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Jumlah Markah</span>
-                    <span className="text-sm font-bold text-white font-mono">
-                      {liveModalTotalScore} / {maxPossibleTotal}
+                  {/* Live Total Weighted Score Badge */}
+                  <div className="flex items-center gap-2 bg-gradient-to-r from-indigo-950 to-violet-950 border border-indigo-500/30 px-3.5 py-1.5 rounded-xl shadow-inner">
+                    <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+                    <span className="text-xs text-slate-300">Jumlah Markah Terkumpul:</span>
+                    <span className="text-sm font-black font-mono text-emerald-400">
+                      {liveTotalWeightedScore.toFixed(1)} / 100%
                     </span>
                   </div>
+                </div>
+
+                {/* Progress Bar Track */}
+                <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800/80">
+                  <div
+                    className="bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 h-full transition-all duration-300"
+                    style={{
+                      width: `${Math.round(((currentStepIndex + 1) / (sections.length + 1)) * 100)}%`,
+                    }}
+                  />
+                </div>
+
+                {/* Step Tabs Indicator */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pt-1 no-scrollbar">
+                  {sections.map((sec, idx) => {
+                    const isCurrent = currentStepIndex === idx;
+                    const isSecComplete = sec.rubrics.every((r) => (criterionScores[r.id] || 0) > 0);
+                    return (
+                      <button
+                        key={sec.id}
+                        type="button"
+                        onClick={() => setCurrentStepIndex(idx)}
+                        className={`px-3 py-1 rounded-lg text-[11px] font-semibold transition-all shrink-0 flex items-center gap-1.5 border ${
+                          isCurrent
+                            ? 'bg-indigo-600 text-white border-indigo-500 shadow-md'
+                            : isSecComplete
+                            ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/50 hover:bg-emerald-900/40'
+                            : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200'
+                        }`}
+                      >
+                        {isSecComplete ? (
+                          <Check className="w-3 h-3 text-emerald-400" />
+                        ) : (
+                          <span className="font-mono text-[10px] text-slate-500">#{idx + 1}</span>
+                        )}
+                        <span className="truncate max-w-[120px]">{sec.name}</span>
+                      </button>
+                    );
+                  })}
+                  {/* Summary Step Tab */}
                   <button
-                    type="submit"
-                    disabled={isSubmittingScores}
-                    className="py-2.5 px-5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all disabled:opacity-50"
+                    type="button"
+                    onClick={() => setCurrentStepIndex(sections.length)}
+                    className={`px-3 py-1 rounded-lg text-[11px] font-semibold transition-all shrink-0 flex items-center gap-1.5 border ${
+                      currentStepIndex === sections.length
+                        ? 'bg-emerald-600 text-white border-emerald-500 shadow-md'
+                        : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200'
+                    }`}
                   >
-                    {isSubmittingScores ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                        <span>Menyimpan...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4" />
-                        <span>Hantar Pemarkahan Juri</span>
-                      </>
-                    )}
+                    <Trophy className="w-3 h-3 text-amber-400" />
+                    <span>Ringkasan</span>
                   </button>
                 </div>
               </div>
+            )}
+
+            {/* Modal Form Content */}
+            <form onSubmit={handleRubricSubmit} className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+              {rubrics.length === 0 ? (
+                <div className="p-8 bg-slate-950/60 rounded-2xl border border-slate-800 text-center text-slate-400 text-sm space-y-2">
+                  <AlertCircle className="w-8 h-8 text-amber-400 mx-auto" />
+                  <p>Tiada kriteria penilaian rubrik ditetap oleh Pengarah Program untuk acara ini.</p>
+                </div>
+              ) : currentStepIndex < sections.length ? (
+                /* SECTION STEP CONTENT */
+                <div className="space-y-6">
+                  {/* Section Title & Description Banner */}
+                  <div className="bg-indigo-950/30 border border-indigo-500/20 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div>
+                      <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                        <Sliders className="w-4 h-4 text-indigo-400" />
+                        <span>{sections[currentStepIndex].name}</span>
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Mengandungi {sections[currentStepIndex].rubrics.length} kriteria penilaian dalam seksyen ini.
+                      </p>
+                    </div>
+                    <span className="px-3 py-1 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold font-mono">
+                      Pemberat Seksyen: {sections[currentStepIndex].weight}%
+                    </span>
+                  </div>
+
+                  {/* Rubric Criteria Items in Active Section */}
+                  <div className="space-y-6">
+                    {sections[currentStepIndex].rubrics.map((r, rIndex) => {
+                      const selectedVal = criterionScores[r.id] || 0;
+                      const hoveredVal = hoveredScores[r.id];
+                      const activeDisplayVal = hoveredVal || selectedVal;
+                      const maxScore = Number(r.max_score || 5);
+                      const weight = Number(r.weight || 0);
+
+                      // Determine active descriptor text
+                      const activeOption = LIKERT_OPTIONS.find((opt) => opt.value === activeDisplayVal);
+                      const activeDescriptorText =
+                        (activeDisplayVal > 0 && r.descriptors?.[String(activeDisplayVal)]) ||
+                        activeOption?.defaultDescriptor ||
+                        'Sila pilih satu skor di atas.';
+
+                      return (
+                        <div
+                          key={r.id}
+                          className="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 space-y-4 hover:border-slate-700 transition-all shadow-md"
+                        >
+                          {/* Criterion Header & Weight Badge */}
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+                            <div className="flex items-start gap-2.5">
+                              <span className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                                {rIndex + 1}
+                              </span>
+                              <div>
+                                <h4 className="text-sm sm:text-base font-bold text-white">
+                                  {r.criteria_name}
+                                </h4>
+                                {r.category_name && (
+                                  <span className="text-[11px] text-indigo-300 font-medium block">
+                                    Sub-Kategori: {r.category_name}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 self-start sm:self-auto">
+                              <span className="px-2.5 py-1 bg-slate-900 text-indigo-300 border border-slate-800 text-xs font-semibold rounded-lg font-mono">
+                                Pemberat: {weight}%
+                              </span>
+                              {selectedVal > 0 && (
+                                <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold rounded-lg font-mono flex items-center gap-1">
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span>
+                                    {selectedVal}/{maxScore} ({((selectedVal / maxScore) * weight).toFixed(1)}%)
+                                  </span>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* 5-Point Likert Rating Buttons */}
+                          <div className="space-y-3">
+                            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                              Pilih Skor Likert (1 - 5):
+                            </label>
+                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                              {LIKERT_OPTIONS.map((option) => {
+                                const isSelected = selectedVal === option.value;
+                                return (
+                                  <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={() =>
+                                      setCriterionScores((prev) => ({ ...prev, [r.id]: option.value }))
+                                    }
+                                    onMouseEnter={() =>
+                                      setHoveredScores((prev) => ({ ...prev, [r.id]: option.value }))
+                                    }
+                                    onMouseLeave={() =>
+                                      setHoveredScores((prev) => ({ ...prev, [r.id]: null }))
+                                    }
+                                    className={`py-3 px-2 rounded-xl text-xs font-bold border transition-all flex flex-col items-center justify-center gap-1.5 text-center ${
+                                      isSelected
+                                        ? option.activeBg
+                                        : `${option.badgeColor} hover:scale-[1.02]`
+                                    }`}
+                                  >
+                                    <span className="text-lg">{option.icon}</span>
+                                    <span className="leading-tight">{option.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+
+                            {/* Live Descriptor Box */}
+                            {activeDisplayVal > 0 ? (
+                              <div className="mt-3 p-3.5 bg-slate-900/90 border border-slate-800 rounded-xl space-y-1 animate-in fade-in duration-150">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[11px] font-bold text-indigo-400 uppercase tracking-wide flex items-center gap-1.5">
+                                    <HelpCircle className="w-3.5 h-3.5" />
+                                    <span>Deskriptor Skor {activeDisplayVal}: {activeOption?.shortText}</span>
+                                  </span>
+                                  {hoveredVal && hoveredVal !== selectedVal && (
+                                    <span className="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                                      Pratonton (Hover)
+                                    </span>
+                                  )}
+                                  {selectedVal === activeDisplayVal && !hoveredVal && (
+                                    <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                                      Pilihan Semasa
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-slate-200 leading-relaxed pl-5 italic">
+                                  "{activeDescriptorText}"
+                                </p>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-slate-500 italic pt-1">
+                                * Sila klik salah satu butang di atas untuk memberikan pemarkahan.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Section Step Navigation Footer */}
+                  <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-4">
+                    <button
+                      type="button"
+                      disabled={currentStepIndex === 0}
+                      onClick={() => setCurrentStepIndex((prev) => Math.max(0, prev - 1))}
+                      className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-slate-300 text-xs font-semibold rounded-xl transition-all flex items-center gap-2"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      <span>Kembali</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStepIndex((prev) => Math.min(sections.length, prev + 1))}
+                      className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all"
+                    >
+                      <span>Seterusnya</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* FINAL SUMMARY STEP CONTENT */
+                <div className="space-y-6">
+                  {/* Hero Score Badge Card */}
+                  <div className="bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 border border-indigo-500/30 rounded-3xl p-6 text-center space-y-3 relative overflow-hidden shadow-xl">
+                    <div className="w-16 h-16 rounded-2xl bg-indigo-600/30 border border-indigo-500/50 flex items-center justify-center mx-auto text-amber-400 mb-2">
+                      <Trophy className="w-8 h-8" />
+                    </div>
+                    <span className="text-xs font-bold uppercase text-slate-400 tracking-wider block">
+                      Jumlah Markah Terkumpul Keseluruhan
+                    </span>
+                    <div className="text-4xl sm:text-5xl font-black font-mono text-emerald-400 tracking-tight">
+                      {liveTotalWeightedScore.toFixed(1)} <span className="text-2xl text-slate-400 font-normal">/ 100%</span>
+                    </div>
+
+                    {/* Status Pill */}
+                    <div className="pt-1">
+                      {liveTotalWeightedScore >= 80 ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          <CheckCircle2 className="w-4 h-4" /> Pemarkahan Cemerlang 🎉
+                        </span>
+                      ) : liveTotalWeightedScore >= 60 ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                          <CheckCircle2 className="w-4 h-4" /> Pemarkahan Baik 👍
+                        </span>
+                      ) : liveTotalWeightedScore >= 40 ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          <AlertCircle className="w-4 h-4" /> Pemarkahan Sederhana ⚠️
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                          <AlertCircle className="w-4 h-4" /> Memerlukan Penambahbaikan ❌
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Section Breakdown Table */}
+                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
+                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                      <Sliders className="w-4 h-4 text-indigo-400" />
+                      <span>Ringkasan Pecahan Pemarkahan Mengikut Seksyen</span>
+                    </h4>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs text-slate-300 border-collapse">
+                        <thead>
+                          <tr className="bg-slate-900 text-slate-400 border-b border-slate-800">
+                            <th className="p-3 rounded-l-xl">Nama Seksyen</th>
+                            <th className="p-3 text-center">Bil. Kriteria</th>
+                            <th className="p-3 text-center">Pemberat Seksyen</th>
+                            <th className="p-3 text-right">Sumbangan Markah</th>
+                            <th className="p-3 text-center rounded-r-xl">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/80">
+                          {sections.map((sec, idx) => {
+                            const secWeightedScore = sec.rubrics.reduce((acc, r) => {
+                              const scoreVal = criterionScores[r.id] || 0;
+                              const maxVal = Number(r.max_score) || 5;
+                              const weightVal = Number(r.weight) || 0;
+                              return acc + (scoreVal / maxVal) * weightVal;
+                            }, 0);
+
+                            const ratedCount = sec.rubrics.filter((r) => (criterionScores[r.id] || 0) > 0).length;
+                            const isComplete = ratedCount === sec.rubrics.length;
+
+                            return (
+                              <tr key={sec.id} className="hover:bg-slate-900/50 transition-colors">
+                                <td className="p-3 font-semibold text-white">
+                                  #{idx + 1}. {sec.name}
+                                </td>
+                                <td className="p-3 text-center font-mono text-slate-400">
+                                  {sec.rubrics.length}
+                                </td>
+                                <td className="p-3 text-center font-mono font-semibold text-indigo-300">
+                                  {sec.weight}%
+                                </td>
+                                <td className="p-3 text-right font-mono font-bold text-emerald-400">
+                                  {secWeightedScore.toFixed(1)}%
+                                </td>
+                                <td className="p-3 text-center">
+                                  {isComplete ? (
+                                    <span className="px-2 py-0.5 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold rounded-full inline-flex items-center gap-1">
+                                      <Check className="w-3 h-3" /> Lengkap
+                                    </span>
+                                  ) : (
+                                    <span className="px-2 py-0.5 bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[10px] font-bold rounded-full">
+                                      {ratedCount}/{sec.rubrics.length} Dinilai
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* General Comments Textarea */}
+                  <div className="space-y-2 pt-2">
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 text-indigo-400" />
+                      <span>Ulasan & Cadangan Penambahbaikan (Pilihan Juri)</span>
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={generalComments}
+                      onChange={(e) => setGeneralComments(e.target.value)}
+                      placeholder="Masukkan ulasan keseluruhan, pujian, atau cadangan penambahbaikan untuk peserta ini..."
+                      className="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-600"
+                    />
+                  </div>
+
+                  {/* Summary Step Navigation & Final Submission Footer */}
+                  <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-4 sticky bottom-0 bg-slate-900 py-3 z-10">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStepIndex(sections.length - 1)}
+                      className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition-all flex items-center gap-2"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      <span>Kembali ke Seksyen Terakhir</span>
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={isSubmittingScores}
+                      className="py-3 px-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/30 flex items-center gap-2 transition-all disabled:opacity-50"
+                    >
+                      {isSubmittingScores ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Menyimpan Pemarkahan...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" />
+                          <span>Hantar Pemarkahan Juri</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
             </form>
           </div>
         </div>
@@ -1139,3 +1488,4 @@ export function EmsJuryPortalPage() {
     </div>
   );
 }
+
