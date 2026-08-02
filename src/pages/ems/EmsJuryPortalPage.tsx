@@ -97,6 +97,16 @@ const LIKERT_OPTIONS = [
   },
 ];
 
+export const getParticipantCategory = (p: EmsParticipant): string => {
+  return (
+    p.category_name?.trim() ||
+    (p.custom_responses?.category as string)?.trim() ||
+    (p.custom_responses?.category_name as string)?.trim() ||
+    (p.custom_responses?.kategori as string)?.trim() ||
+    ''
+  );
+};
+
 export function EmsJuryPortalPage() {
   // Session & Auth State
   const [session, setSession] = useState<JurySession | null>(null);
@@ -369,10 +379,12 @@ export function EmsJuryPortalPage() {
       // Category filter match
       let matchCat = true;
       if (assignedCats && assignedCats.length > 0 && !assignedCats.includes('ALL')) {
-        const pCategory = p.category_name || p.custom_responses?.category || '';
-        matchCat = assignedCats.some(
-          (c) => c.toLowerCase() === pCategory.toLowerCase()
-        );
+        const pCategory = getParticipantCategory(p);
+        if (pCategory !== '') {
+          matchCat = assignedCats.some(
+            (c) => c.toLowerCase() === pCategory.toLowerCase()
+          );
+        }
       }
 
       // Booth filter match
@@ -388,7 +400,7 @@ export function EmsJuryPortalPage() {
     });
   }, [participants, juryCodeData]);
 
-  // Extract unique available categories from event's rubrics (r.category_name) and participants (p.category_name)
+  // Extract unique available categories from event's rubrics (r.category_name) and participants (via getParticipantCategory)
   const availableCategories = useMemo(() => {
     const cats = new Set<string>();
     if (rubrics) {
@@ -400,12 +412,22 @@ export function EmsJuryPortalPage() {
     }
     if (assignedParticipants) {
       assignedParticipants.forEach((p) => {
-        const cat = p.category_name?.trim() || (p.custom_responses?.category as string)?.trim();
+        const cat = getParticipantCategory(p);
         if (cat) cats.add(cat);
       });
     }
-    return Array.from(cats);
-  }, [rubrics, assignedParticipants]);
+
+    let result = Array.from(cats);
+
+    const assignedCats = juryCodeData?.assigned_categories;
+    if (assignedCats && assignedCats.length > 0 && !assignedCats.includes('ALL')) {
+      result = result.filter((catName) =>
+        assignedCats.some((ac) => ac.trim().toLowerCase() === catName.trim().toLowerCase())
+      );
+    }
+
+    return result;
+  }, [rubrics, assignedParticipants, juryCodeData]);
 
   // Next Category switcher logic for 1-click category switching
   const nextCategory = useMemo(() => {
@@ -432,13 +454,13 @@ export function EmsJuryPortalPage() {
   // Further filter participants based on selectedCategory, search query, status filter, and category tab
   const filteredParticipants = useMemo(() => {
     return assignedParticipants.filter((p) => {
+      const pCat = getParticipantCategory(p);
+
       // Selected Category Gateway Filter
       if (selectedCategory !== null) {
-        const cat = p.category_name || p.custom_responses?.category || '';
-        if (cat.trim().toLowerCase() !== selectedCategory.trim().toLowerCase()) return false;
+        if (pCat !== '' && pCat.toLowerCase() !== selectedCategory.trim().toLowerCase()) return false;
       } else if (categoryFilter !== 'ALL') {
-        const cat = p.category_name || p.custom_responses?.category || '';
-        if (cat.trim().toLowerCase() !== categoryFilter.trim().toLowerCase()) return false;
+        if (pCat !== '' && pCat.toLowerCase() !== categoryFilter.trim().toLowerCase()) return false;
       }
 
       // Search query
@@ -822,12 +844,10 @@ export function EmsJuryPortalPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {availableCategories.map((cat) => {
                 const catIcon = getCategoryIcon(cat);
-                const catParticipants = assignedParticipants.filter(
-                  (p) =>
-                    (p.category_name || p.custom_responses?.category || '')
-                      .trim()
-                      .toLowerCase() === cat.trim().toLowerCase()
-                );
+                const catParticipants = assignedParticipants.filter((p) => {
+                  const pCat = getParticipantCategory(p);
+                  return pCat === '' || pCat.toLowerCase() === cat.trim().toLowerCase();
+                });
                 const catParticipantsCount = catParticipants.length;
                 const catScoredCount = catParticipants.filter((p) =>
                   scores.some((s) => s.participant_id === p.id)
@@ -1118,9 +1138,9 @@ export function EmsJuryPortalPage() {
                               TIADA BOOTH
                             </span>
                           )}
-                          {(participant.category_name || participant.custom_responses?.category) && (
+                          {getParticipantCategory(participant) && (
                             <span className="px-2 py-0.5 bg-slate-800 text-slate-300 text-[11px] font-medium rounded-md truncate max-w-[120px]">
-                              {participant.category_name || participant.custom_responses?.category}
+                              {getParticipantCategory(participant)}
                             </span>
                           )}
                         </div>
@@ -1239,9 +1259,9 @@ export function EmsJuryPortalPage() {
                       BOOTH #{evalParticipant.booth_no}
                     </span>
                   )}
-                  {(evalParticipant.category_name || evalParticipant.custom_responses?.category) && (
+                  {getParticipantCategory(evalParticipant) && (
                     <span className="px-2 py-0.5 bg-slate-800 text-slate-300 text-xs font-medium rounded-md">
-                      {evalParticipant.category_name || evalParticipant.custom_responses?.category}
+                      {getParticipantCategory(evalParticipant)}
                     </span>
                   )}
                 </div>
