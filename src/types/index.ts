@@ -1067,9 +1067,12 @@ export interface EmsJuryCode {
 export interface EmsRubricCriteria {
   id: string;
   event_id: string;
+  category_name?: string | null;
+  section_name?: string | null;
   criteria_name: string;
   max_score: number;
   weight: number;
+  descriptors?: Record<string, string> | null;
   sort_order: number;
 }
 
