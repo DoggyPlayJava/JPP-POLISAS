@@ -150,10 +150,40 @@ export function EmsJuryAuditMatrix({
   const [auditComment, setAuditComment] = useState<string>('');
   const [isSubmittingOverride, setIsSubmittingOverride] = useState(false);
 
+  // State for ignored imbalance warnings
+  const [ignoredFlags, setIgnoredFlags] = useState<Record<string, boolean>>({});
+
+  // Toggle ignore flag for jury imbalance anomaly
+  const toggleIgnoreFlag = (participantId: string) => {
+    setIgnoredFlags((prev) => {
+      const isCurrentlyIgnored = !!prev[participantId];
+      const nextState = { ...prev, [participantId]: !isCurrentlyIgnored };
+      if (!isCurrentlyIgnored) {
+        toast.success('Amaran ketidakseimbangan juri diabaikan.');
+      } else {
+        toast.success('Amaran ketidakseimbangan juri dinyahabaikan.');
+      }
+      return nextState;
+    });
+  };
+
   // Filter active jury codes
   const activeJuries = useMemo(() => {
     return juryCodes.filter((j) => j.is_active !== false);
   }, [juryCodes]);
+
+  // Compute average juries count across all active participants
+  const avgJuriesCount = useMemo(() => {
+    if (participants.length === 0) return 0;
+    const totalScored = participants.reduce((sum, p) => {
+      const count = activeJuries.filter((j) => {
+        const info = getJuryParticipantScoreInfo(p, j, rubrics, scores);
+        return info.status === 'COMPLETED';
+      }).length;
+      return sum + count;
+    }, 0);
+    return Math.round(totalScored / participants.length);
+  }, [participants, activeJuries, rubrics, scores]);
 
   // Extract unique categories for filtering
   const availableCategories = useMemo(() => {
@@ -431,6 +461,11 @@ export function EmsJuryAuditMatrix({
 
           {/* Controls & Filters */}
           <div className="flex flex-wrap items-center gap-2">
+            <span className="px-3 py-1.5 bg-purple-500/10 text-purple-300 border border-purple-500/20 text-xs font-semibold rounded-xl flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-purple-400" />
+              Purata Juri Se-Booth: {avgJuriesCount} Juri
+            </span>
+
             <div className="relative">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -504,19 +539,14 @@ export function EmsJuryAuditMatrix({
                   </tr>
                 ) : (
                   filteredParticipants.map((p) => {
-                    // Compute summary of juries assigned vs completed for this participant
-                    const assignedJuries = activeJuries.filter((j) =>
-                      isParticipantAssignedToJury(p, j)
-                    );
-                    const targetJuriesCount = assignedJuries.length;
-
-                    const completedJuriesCount = assignedJuries.filter((j) => {
+                    // Count scored juries count for the booth
+                    const scoredJuriesCount = activeJuries.filter((j) => {
                       const info = getJuryParticipantScoreInfo(p, j, rubrics, scores);
                       return info.status === 'COMPLETED';
                     }).length;
 
-                    const isUnderJuried =
-                      targetJuriesCount > 0 && completedJuriesCount < targetJuriesCount;
+                    const isIgnored = !!ignoredFlags[p.id];
+                    const isFlagged = scoredJuriesCount !== avgJuriesCount;
 
                     return (
                       <tr
@@ -601,12 +631,43 @@ export function EmsJuryAuditMatrix({
                         <td className="p-3.5 text-center align-middle">
                           <div className="flex flex-col items-center justify-center gap-1">
                             <span className="font-bold text-slate-100">
-                              {completedJuriesCount}/{targetJuriesCount} Juri
+                              {scoredJuriesCount} Juri Menilai
                             </span>
-                            {isUnderJuried && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">
-                                🚨 Terkurang Juri
+                            {isIgnored ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-800 text-slate-400 border border-slate-700">
+                                [Amaran Diabaikan 👁️]
                               </span>
+                            ) : scoredJuriesCount < avgJuriesCount ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                                🚨 Terkurang Juri ({scoredJuriesCount} vs Purata {avgJuriesCount})
+                              </span>
+                            ) : scoredJuriesCount > avgJuriesCount ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                                ⚠️ Terlebih Juri ({scoredJuriesCount} vs Purata {avgJuriesCount})
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                                🟢 Seimbang ({scoredJuriesCount} Juri)
+                              </span>
+                            )}
+
+                            {isFlagged && !isIgnored && (
+                              <button
+                                type="button"
+                                onClick={() => toggleIgnoreFlag(p.id)}
+                                className="mt-1 text-[10px] font-semibold px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 transition-colors cursor-pointer"
+                              >
+                                👁️ Abaikan Amaran
+                              </button>
+                            )}
+                            {isIgnored && (
+                              <button
+                                type="button"
+                                onClick={() => toggleIgnoreFlag(p.id)}
+                                className="mt-1 text-[10px] font-semibold px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 transition-colors cursor-pointer"
+                              >
+                                🔔 Nyahabaikan
+                              </button>
                             )}
                           </div>
                         </td>
