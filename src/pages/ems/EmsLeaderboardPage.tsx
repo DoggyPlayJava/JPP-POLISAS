@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import confetti from 'canvas-confetti';
 import {
@@ -30,13 +30,14 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { EmsLuckyDrawModal } from '@/components/ems/EmsLuckyDrawModal';
+import { EmsJuryAuditMatrix } from '@/components/ems/EmsJuryAuditMatrix';
 import {
   fetchEmsLeaderboard,
   resolveTieWinner,
   EmsLeaderboardItem,
 } from '@/lib/ems';
 import { supabase } from '@/lib/supabase';
-import type { EmsEvent, EmsScore, EmsJuryCode, EmsRubricCriteria } from '@/types';
+import type { EmsEvent, EmsScore, EmsJuryCode, EmsRubricCriteria, EmsParticipant } from '@/types';
 
 interface DetailedScore extends EmsScore {
   jury?: EmsJuryCode | null;
@@ -47,6 +48,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, isSuperAdmin, isJppMember, isPresident, isMT: isClubMt, isAdvisor: isClubAdvisor, profile } = useAuth();
   const isStaff = profile?.role === 'STAFF' || profile?.role === 'PENSYARAH';
 
@@ -58,7 +60,18 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   const canManageLeaderboard = Boolean(
     isSuperAdmin || isJppMember || isPresident || isClubMt || isClubAdvisor || isStaff || (!!user?.id && event?.created_by === user.id)
   );
+
+  const tabParam = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState<'LEADERBOARD' | 'STAGE' | 'AUDIT'>(
+    tabParam === 'audit' ? 'AUDIT' : isStageMode ? 'STAGE' : 'LEADERBOARD'
+  );
+
   const [leaderboard, setLeaderboard] = useState<EmsLeaderboardItem[]>([]);
+  const [participants, setParticipants] = useState<EmsParticipant[]>([]);
+  const [juryCodes, setJuryCodes] = useState<EmsJuryCode[]>([]);
+  const [rubrics, setRubrics] = useState<EmsRubricCriteria[]>([]);
+  const [scores, setScores] = useState<EmsScore[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
@@ -85,16 +98,27 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   // Lucky Draw Modal State
   const [showLuckyDrawModal, setShowLuckyDrawModal] = useState(false);
 
-  // Fetch Event Details & Leaderboard
+  // Fetch Event Details & Leaderboard & Audit Matrix data
   const loadData = useCallback(async (showToast = false) => {
     if (!eventId) return;
 
     try {
       if (showToast) setRefreshing(true);
 
-      const [eventRes, leaderboardData] = await Promise.all([
+      const [
+        eventRes,
+        leaderboardData,
+        participantsRes,
+        juryCodesRes,
+        rubricsRes,
+        scoresRes,
+      ] = await Promise.all([
         supabase.from('ems_events').select('*').eq('id', eventId).single(),
         fetchEmsLeaderboard(eventId),
+        supabase.from('ems_participants').select('*').eq('event_id', eventId),
+        supabase.from('ems_jury_codes').select('*').eq('event_id', eventId),
+        supabase.from('ems_rubrics').select('*').eq('event_id', eventId).order('sort_order', { ascending: true }),
+        supabase.from('ems_scores').select('*').eq('event_id', eventId),
       ]);
 
       if (eventRes.error) {
@@ -103,6 +127,10 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
       setEvent(eventRes.data as EmsEvent);
       setLeaderboard(leaderboardData);
+      setParticipants((participantsRes.data || []) as EmsParticipant[]);
+      setJuryCodes((juryCodesRes.data || []) as EmsJuryCode[]);
+      setRubrics((rubricsRes.data || []) as EmsRubricCriteria[]);
+      setScores((scoresRes.data || []) as EmsScore[]);
 
       if (showToast) {
         toast.success('Papan pendahulu dikemas kini!');
@@ -115,6 +143,19 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
       setRefreshing(false);
     }
   }, [eventId]);
+
+  const loadLeaderboard = loadData;
+
+  // RBAC Guard: Prevent unauthorized student access to audit tab
+  useEffect(() => {
+    if (!loading && (activeTab === 'AUDIT' || searchParams.get('tab') === 'audit')) {
+      if (!canManageLeaderboard) {
+        toast.error('Akses Ditolak: Anda tidak mempunyai kebenaran untuk melihat audit juri.');
+        setActiveTab('LEADERBOARD');
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [loading, canManageLeaderboard, activeTab, searchParams, setSearchParams]);
 
   // Realtime Supabase Subscription
   useEffect(() => {
@@ -853,268 +894,330 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
         </div>
       </div>
 
-      {/* Director Controls Toolbar */}
-      {canManageLeaderboard && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Toggle Public Leaderboard Visibility */}
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
-            <div className="space-y-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Visibiliti Skrin Pentas
-              </span>
-              <div className="flex items-center gap-2">
-                <span className={`w-2.5 h-2.5 rounded-full ${event.is_leaderboard_public ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                <h4 className="text-sm font-black">
-                  {event.is_leaderboard_public ? 'Status Awam: Didedahkan 👁️' : 'Status Awam: Disembunyikan 🔒'}
-                </h4>
-              </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                {event.is_leaderboard_public
-                  ? 'Skrin pentas memaparkan kedudukan & kedudukan terkini peserta.'
-                  : 'Skrin pentas memaparkan skrin kunci "Keputusan Sedang Diproses".'}
-              </p>
-            </div>
+      {/* Main View Mode Navigation Tabs */}
+      <div className="flex items-center gap-2 p-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-x-auto">
+        <button
+          onClick={() => {
+            setActiveTab('LEADERBOARD');
+            setSearchParams({});
+          }}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition ${
+            activeTab === 'LEADERBOARD'
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Trophy className="w-4 h-4 text-amber-400" />
+          Papan Kedudukan
+        </button>
 
-            <button
-              onClick={handleToggleVisibility}
-              disabled={togglingVisibility}
-              className={`px-4 py-2 rounded-xl font-black text-xs uppercase tracking-wider transition shadow-sm shrink-0 flex items-center gap-2 ${
-                event.is_leaderboard_public
-                  ? 'bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 border border-rose-500/20'
-                  : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-emerald-500/20'
-              }`}
-            >
-              {event.is_leaderboard_public ? (
-                <>
-                  <EyeOff className="w-4 h-4" /> Sembunyi
-                </>
-              ) : (
-                <>
-                  <Eye className="w-4 h-4" /> Buka Awam
-                </>
-              )}
-            </button>
-          </div>
+        <button
+          onClick={() => {
+            window.open(`/ems/stage/${eventId}`, '_blank');
+          }}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition ${
+            activeTab === 'STAGE'
+              ? 'bg-amber-500 text-slate-950 shadow-md'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <ExternalLink className="w-4 h-4 text-amber-500" />
+          Mod Pentas
+        </button>
 
-          {/* Tie-Breaker Resolution Control */}
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
-            <div className="space-y-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Penentuan Seret (Tie-Breaker)
-              </span>
-              <h4 className="text-sm font-black flex items-center gap-1.5">
-                <Scale className="w-4 h-4 text-amber-500" />
-                {hasTiedParticipants ? 'Terdapat Peserta Seret! ⚠️' : 'Tiada Keputusan Seret'}
-              </h4>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                {hasTiedParticipants
-                  ? 'Pengarah Program perlu menetapkan pemenang muktamad.'
-                  : 'Kedudukan dikira berdasarkan purata skor juri.'}
-              </p>
-            </div>
-
-            <button
-              onClick={() => setShowTieBreakerModal(true)}
-              className="px-4 py-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition font-black text-xs uppercase tracking-wider shrink-0 flex items-center gap-1.5"
-            >
-              <Scale className="w-4 h-4" /> Urus Seret
-            </button>
-          </div>
-
-          {/* Stats Summary Card */}
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
-            <div className="space-y-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Jumlah Peserta & Juri
-              </span>
-              <h4 className="text-sm font-black text-indigo-600 dark:text-indigo-400">
-                {leaderboard.length} Peserta Berdaftar
-              </h4>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Dineka untuk {categories.length || 1} kategori penilaian.
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-black text-lg">
-              {leaderboard.length}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        {/* Category Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+        {canManageLeaderboard && (
           <button
-            onClick={() => setCategoryFilter('ALL')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
-              categoryFilter === 'ALL'
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+            onClick={() => {
+              setActiveTab('AUDIT');
+              setSearchParams({ tab: 'audit' });
+            }}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition ${
+              activeTab === 'AUDIT'
+                ? 'bg-purple-600 text-white shadow-md'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
-            Semua Kategori ({leaderboard.length})
+            <Shield className="w-4 h-4 text-purple-300" />
+            🕵️ Audit & Pemantauan Juri
           </button>
-          {categories.map((cat) => {
-            const count = leaderboard.filter((item) => {
-              const p = item.participant;
-              const c =
-                item.category_name ||
-                p.category_name ||
-                p.custom_responses?.category ||
-                p.custom_responses?.category_name;
-              return c === cat;
-            }).length;
+        )}
+      </div>
 
-            return (
+      {activeTab === 'AUDIT' && canManageLeaderboard ? (
+        <EmsJuryAuditMatrix
+          eventId={eventId!}
+          participants={participants}
+          juryCodes={juryCodes}
+          rubrics={rubrics}
+          scores={scores}
+          onRefresh={loadLeaderboard}
+        />
+      ) : (
+        <>
+          {/* Director Controls Toolbar */}
+          {canManageLeaderboard && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Toggle Public Leaderboard Visibility */}
+              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Visibiliti Skrin Pentas
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2.5 h-2.5 rounded-full ${event.is_leaderboard_public ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                    <h4 className="text-sm font-black">
+                      {event.is_leaderboard_public ? 'Status Awam: Didedahkan 👁️' : 'Status Awam: Disembunyikan 🔒'}
+                    </h4>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {event.is_leaderboard_public
+                      ? 'Skrin pentas memaparkan kedudukan & kedudukan terkini peserta.'
+                      : 'Skrin pentas memaparkan skrin kunci "Keputusan Sedang Diproses".'}
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleToggleVisibility}
+                  disabled={togglingVisibility}
+                  className={`px-4 py-2 rounded-xl font-black text-xs uppercase tracking-wider transition shadow-sm shrink-0 flex items-center gap-2 ${
+                    event.is_leaderboard_public
+                      ? 'bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 border border-rose-500/20'
+                      : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-emerald-500/20'
+                  }`}
+                >
+                  {event.is_leaderboard_public ? (
+                    <>
+                      <EyeOff className="w-4 h-4" /> Sembunyi
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-4 h-4" /> Buka Awam
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Tie-Breaker Resolution Control */}
+              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Penentuan Seret (Tie-Breaker)
+                  </span>
+                  <h4 className="text-sm font-black flex items-center gap-1.5">
+                    <Scale className="w-4 h-4 text-amber-500" />
+                    {hasTiedParticipants ? 'Terdapat Peserta Seret! ⚠️' : 'Tiada Keputusan Seret'}
+                  </h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {hasTiedParticipants
+                      ? 'Pengarah Program perlu menetapkan pemenang muktamad.'
+                      : 'Kedudukan dikira berdasarkan purata skor juri.'}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setShowTieBreakerModal(true)}
+                  className="px-4 py-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition font-black text-xs uppercase tracking-wider shrink-0 flex items-center gap-1.5"
+                >
+                  <Scale className="w-4 h-4" /> Urus Seret
+                </button>
+              </div>
+
+              {/* Stats Summary Card */}
+              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                <div className="space-y-1">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Jumlah Peserta & Juri
+                  </span>
+                  <h4 className="text-sm font-black text-indigo-600 dark:text-indigo-400">
+                    {leaderboard.length} Peserta Berdaftar
+                  </h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Dineka untuk {categories.length || 1} kategori penilaian.
+                  </p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-black text-lg">
+                  {leaderboard.length}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Filter and Search Bar */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            {/* Category Tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
               <button
-                key={cat}
-                onClick={() => setCategoryFilter(cat)}
+                onClick={() => setCategoryFilter('ALL')}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
-                  categoryFilter === cat
+                  categoryFilter === 'ALL'
                     ? 'bg-indigo-600 text-white shadow-md'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
-                {cat} ({count})
+                Semua Kategori ({leaderboard.length})
               </button>
-            );
-          })}
-        </div>
-
-        {/* Search input */}
-        <div className="relative w-full md:w-72">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Cari Stan / Peserta..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-indigo-500 focus:outline-none transition"
-          />
-        </div>
-      </div>
-
-      {/* Main Breakdown Table */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-100/80 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
-              <tr>
-                <th className="px-4 py-3.5 text-center w-16">Kedudukan</th>
-                <th className="px-4 py-3.5">Stan #</th>
-                <th className="px-4 py-3.5">Pasukan / Ketua</th>
-                <th className="px-4 py-3.5">Kategori</th>
-                <th className="px-4 py-3.5 text-center">Markah Terwajar (%)</th>
-                <th className="px-4 py-3.5 text-center">Bil. Juri</th>
-                <th className="px-4 py-3.5 text-center">Status / Lencana</th>
-                <th className="px-4 py-3.5 text-right">Tindakan</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
-              {filteredLeaderboard.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-slate-400">
-                    Tiada data peserta ditemui bagi carian/kategori ini.
-                  </td>
-                </tr>
-              ) : (
-                filteredLeaderboard.map((item, index) => {
+              {categories.map((cat) => {
+                const count = leaderboard.filter((item) => {
                   const p = item.participant;
-                  const booth = p.booth_no || p.custom_responses?.booth_no || p.custom_responses?.booth_number || '-';
-                  const cat = item.category_name || p.category_name || p.custom_responses?.category || p.custom_responses?.category_name || '-';
-                  const rank = item.category_rank || index + 1;
+                  const c =
+                    item.category_name ||
+                    p.category_name ||
+                    p.custom_responses?.category ||
+                    p.custom_responses?.category_name;
+                  return c === cat;
+                }).length;
 
-                  // Rank Badge styles
-                  let rankBadge = (
-                    <span className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-black flex items-center justify-center mx-auto text-xs">
-                      #{rank}
-                    </span>
-                  );
-                  if (rank === 1) {
-                    rankBadge = (
-                      <span className="px-2.5 py-1 rounded-full bg-amber-500 text-slate-950 font-black flex items-center justify-center gap-1 mx-auto text-xs shadow-md shadow-amber-500/30">
-                        🥇 1
-                      </span>
-                    );
-                  } else if (rank === 2) {
-                    rankBadge = (
-                      <span className="px-2.5 py-1 rounded-full bg-slate-300 text-slate-950 font-black flex items-center justify-center gap-1 mx-auto text-xs shadow-md">
-                        🥈 2
-                      </span>
-                    );
-                  } else if (rank === 3) {
-                    rankBadge = (
-                      <span className="px-2.5 py-1 rounded-full bg-amber-700 text-white font-black flex items-center justify-center gap-1 mx-auto text-xs shadow-md">
-                        🥉 3
-                      </span>
-                    );
-                  }
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setCategoryFilter(cat)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                      categoryFilter === cat
+                        ? 'bg-indigo-600 text-white shadow-md'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {cat} ({count})
+                  </button>
+                );
+              })}
+            </div>
 
-                  return (
-                    <tr
-                      key={p.id}
-                      className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition"
-                    >
-                      <td className="px-4 py-3.5 text-center">{rankBadge}</td>
-                      <td className="px-4 py-3.5 font-black text-amber-600 dark:text-amber-400">
-                        #{booth}
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <div className="font-bold text-slate-900 dark:text-white">
-                          {p.team_name || p.leader_name}
-                        </div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                          Ketua: {p.leader_name} {p.matrix_no ? `(${p.matrix_no})` : ''}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3.5 text-slate-600 dark:text-slate-400">
-                        <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[11px]">
-                          {cat}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3.5 text-center">
-                        <div className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60">
-                          <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">
-                            {item.average_score.toFixed(1)} / 100%
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3.5 text-center">
-                        <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold">
-                          {item.jury_count} Juri
-                        </span>
-                      </td>
-                      <td className="px-4 py-3.5 text-center">
-                        {item.is_tie_winner ? (
-                          <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1">
-                            <Trophy className="w-3 h-3" /> Pemenang Seret
-                          </span>
-                        ) : item.is_tied ? (
-                          <span className="px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1">
-                            <Scale className="w-3 h-3" /> Markah Seret
-                          </span>
-                        ) : (
-                          <span className="text-[11px] text-slate-400">-</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3.5 text-right">
-                        <button
-                          onClick={() => handleViewComments(item)}
-                          className="px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 font-bold text-xs transition inline-flex items-center gap-1.5 border border-indigo-200 dark:border-indigo-800"
-                        >
-                          <MessageSquare className="w-3.5 h-3.5" />
-                          Lihat Markah & Komen
-                        </button>
+            {/* Search input */}
+            <div className="relative w-full md:w-72">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cari Stan / Peserta..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-indigo-500 focus:outline-none transition"
+              />
+            </div>
+          </div>
+
+          {/* Main Breakdown Table */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-100/80 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
+                  <tr>
+                    <th className="px-4 py-3.5 text-center w-16">Kedudukan</th>
+                    <th className="px-4 py-3.5">Stan #</th>
+                    <th className="px-4 py-3.5">Pasukan / Ketua</th>
+                    <th className="px-4 py-3.5">Kategori</th>
+                    <th className="px-4 py-3.5 text-center">Markah Terwajar (%)</th>
+                    <th className="px-4 py-3.5 text-center">Bil. Juri</th>
+                    <th className="px-4 py-3.5 text-center">Status / Lencana</th>
+                    <th className="px-4 py-3.5 text-right">Tindakan</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
+                  {filteredLeaderboard.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="px-4 py-12 text-center text-slate-400">
+                        Tiada data peserta ditemui bagi carian/kategori ini.
                       </td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                  ) : (
+                    filteredLeaderboard.map((item, index) => {
+                      const p = item.participant;
+                      const booth = p.booth_no || p.custom_responses?.booth_no || p.custom_responses?.booth_number || '-';
+                      const cat = item.category_name || p.category_name || p.custom_responses?.category || p.custom_responses?.category_name || '-';
+                      const rank = item.category_rank || index + 1;
+
+                      // Rank Badge styles
+                      let rankBadge = (
+                        <span className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-black flex items-center justify-center mx-auto text-xs">
+                          #{rank}
+                        </span>
+                      );
+                      if (rank === 1) {
+                        rankBadge = (
+                          <span className="px-2.5 py-1 rounded-full bg-amber-500 text-slate-950 font-black flex items-center justify-center gap-1 mx-auto text-xs shadow-md shadow-amber-500/30">
+                            🥇 1
+                          </span>
+                        );
+                      } else if (rank === 2) {
+                        rankBadge = (
+                          <span className="px-2.5 py-1 rounded-full bg-slate-300 text-slate-950 font-black flex items-center justify-center gap-1 mx-auto text-xs shadow-md">
+                            🥈 2
+                          </span>
+                        );
+                      } else if (rank === 3) {
+                        rankBadge = (
+                          <span className="px-2.5 py-1 rounded-full bg-amber-700 text-white font-black flex items-center justify-center gap-1 mx-auto text-xs shadow-md">
+                            🥉 3
+                          </span>
+                        );
+                      }
+
+                      return (
+                        <tr
+                          key={p.id}
+                          className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition"
+                        >
+                          <td className="px-4 py-3.5 text-center">{rankBadge}</td>
+                          <td className="px-4 py-3.5 font-black text-amber-600 dark:text-amber-400">
+                            #{booth}
+                          </td>
+                          <td className="px-4 py-3.5">
+                            <div className="font-bold text-slate-900 dark:text-white">
+                              {p.team_name || p.leader_name}
+                            </div>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                              Ketua: {p.leader_name} {p.matrix_no ? `(${p.matrix_no})` : ''}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3.5 text-slate-600 dark:text-slate-400">
+                            <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[11px]">
+                              {cat}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3.5 text-center">
+                            <div className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60">
+                              <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">
+                                {item.average_score.toFixed(1)} / 100%
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3.5 text-center">
+                            <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold">
+                              {item.jury_count} Juri
+                            </span>
+                          </td>
+                          <td className="px-4 py-3.5 text-center">
+                            {item.is_tie_winner ? (
+                              <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1">
+                                <Trophy className="w-3 h-3" /> Pemenang Seret
+                              </span>
+                            ) : item.is_tied ? (
+                              <span className="px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1">
+                                <Scale className="w-3 h-3" /> Markah Seret
+                              </span>
+                            ) : (
+                              <span className="text-[11px] text-slate-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3.5 text-right">
+                            <button
+                              onClick={() => handleViewComments(item)}
+                              className="px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 font-bold text-xs transition inline-flex items-center gap-1.5 border border-indigo-200 dark:border-indigo-800"
+                            >
+                              <MessageSquare className="w-3.5 h-3.5" />
+                              Lihat Markah & Komen
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ========================================================================= */}
       {/* MODAL 1: JURY COMMENTS & BREAKDOWN MODAL */}

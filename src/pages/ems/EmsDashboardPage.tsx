@@ -613,6 +613,14 @@ export function EmsDashboardPage() {
                     </div>
 
                     <button
+                      onClick={() => navigate(`/ems/leaderboard/${event.id}?tab=audit`)}
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-purple-950/80 hover:bg-purple-900/80 text-purple-300 font-semibold text-xs border border-purple-800/50 transition-all shadow-sm"
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
+                      <span>🕵️ Audit Penjurian</span>
+                    </button>
+
+                    <button
                       onClick={() => openManualRegModal(event)}
                       className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 font-semibold text-xs transition-all"
                     >
