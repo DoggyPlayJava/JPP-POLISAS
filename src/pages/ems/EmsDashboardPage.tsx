@@ -93,6 +93,7 @@ export function EmsDashboardPage() {
   const [leaderboard, setLeaderboard] = useState<EmsLeaderboardItem[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
   const [selectedWinnerId, setSelectedWinnerId] = useState<string>('');
+  const [isResolvingTie, setIsResolvingTie] = useState(false);
   // Manual Registration Modal State
   const [manualRegModalEvent, setManualRegModalEvent] = useState<EmsEvent | null>(null);
   const [manualRegForm, setManualRegForm] = useState({
@@ -612,13 +613,15 @@ export function EmsDashboardPage() {
                       </button>
                     </div>
 
-                    <button
-                      onClick={() => navigate(`/ems/leaderboard/${event.id}?tab=audit`)}
-                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-purple-950/80 hover:bg-purple-900/80 text-purple-300 font-semibold text-xs border border-purple-800/50 transition-all shadow-sm"
-                    >
-                      <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
-                      <span>🕵️ Audit Penjurian</span>
-                    </button>
+                    {(isSuperAdmin || isJppMember || (!!user?.id && event.created_by === user.id)) && (
+                      <button
+                        onClick={() => navigate(`/ems/leaderboard/${event.id}?tab=audit`)}
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-purple-950/80 hover:bg-purple-900/80 text-purple-300 font-semibold text-xs border border-purple-800/50 transition-all shadow-sm"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
+                        <span>🕵️ Audit Penjurian</span>
+                      </button>
+                    )}
 
                     <button
                       onClick={() => openManualRegModal(event)}

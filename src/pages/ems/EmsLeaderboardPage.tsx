@@ -61,6 +61,10 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
     isSuperAdmin || isJppMember || isPresident || isClubMt || isClubAdvisor || isStaff || (!!user?.id && event?.created_by === user.id)
   );
 
+  const canAccessAuditTab = Boolean(
+    isSuperAdmin || isJppMember || (!!user?.id && event?.created_by === user.id)
+  );
+
   const tabParam = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState<'LEADERBOARD' | 'STAGE' | 'AUDIT'>(
     tabParam === 'audit' ? 'AUDIT' : isStageMode ? 'STAGE' : 'LEADERBOARD'
@@ -146,16 +150,16 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
   const loadLeaderboard = loadData;
 
-  // RBAC Guard: Prevent unauthorized student access to audit tab
+  // RBAC Guard: Prevent unauthorized access to audit tab
   useEffect(() => {
     if (!loading && (activeTab === 'AUDIT' || searchParams.get('tab') === 'audit')) {
-      if (!canManageLeaderboard) {
-        toast.error('Akses Ditolak: Anda tidak mempunyai kebenaran untuk melihat audit juri.');
+      if (!canAccessAuditTab) {
+        toast.error('Akses Terhad: Hanya JPP, Super Admin JPP, dan Pencipta Acara dibenarkan mengakses Tab Audit Penjurian.');
         setActiveTab('LEADERBOARD');
         setSearchParams({}, { replace: true });
       }
     }
-  }, [loading, canManageLeaderboard, activeTab, searchParams, setSearchParams]);
+  }, [loading, canAccessAuditTab, activeTab, searchParams, setSearchParams]);
 
   // Realtime Supabase Subscription
   useEffect(() => {
@@ -925,7 +929,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
           Mod Pentas
         </button>
 
-        {canManageLeaderboard && (
+        {canAccessAuditTab && (
           <button
             onClick={() => {
               setActiveTab('AUDIT');
@@ -943,7 +947,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
         )}
       </div>
 
-      {activeTab === 'AUDIT' && canManageLeaderboard ? (
+      {activeTab === 'AUDIT' && canAccessAuditTab ? (
         <EmsJuryAuditMatrix
           eventId={eventId!}
           participants={participants}
