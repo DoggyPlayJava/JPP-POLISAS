@@ -629,6 +629,43 @@ export async function submitJuryScore(
 }
 
 /**
+ * Allows Program Director / Admin to override jury scores.
+ */
+export async function overrideJuryScore(
+  scores: Array<{
+    event_id: string;
+    participant_id: string;
+    jury_code_id: string;
+    rubric_id: string;
+    score: number;
+    comments?: string;
+  }>
+): Promise<boolean> {
+  if (!scores || scores.length === 0) return true;
+
+  const { error } = await supabase
+    .from('ems_scores')
+    .upsert(
+      scores.map((s) => ({
+        event_id: s.event_id,
+        participant_id: s.participant_id,
+        jury_code_id: s.jury_code_id,
+        rubric_id: s.rubric_id,
+        score: s.score,
+        comments: s.comments || null,
+      })),
+      { onConflict: 'participant_id,jury_code_id,rubric_id' }
+    );
+
+  if (error) {
+    throw new Error(`Gagal meminda markah juri: ${error.message}`);
+  }
+
+  return true;
+}
+
+
+/**
  * Fetches participants and scores, calculates average jury score for each participant/team, orders descending by score.
  * Uses Promise.all for parallel fetches.
  */
