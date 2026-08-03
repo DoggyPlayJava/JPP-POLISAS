@@ -604,26 +604,22 @@ export async function submitJuryScore(
 ): Promise<boolean> {
   if (!scores || scores.length === 0) return true;
 
-  const participantIds = Array.from(new Set(scores.map((s) => s.participant_id)));
-  const juryCodeIds = Array.from(new Set(scores.map((s) => s.jury_code_id)));
-
-  // Batch delete previous scores for these participant & jury combinations
-  await supabase
+  // Upsert (insert on conflict update) to allow jury to edit/submit multiple times.
+  // RLS blocks anon-key DELETE (requires auth), so delete+insert fails silently and
+  // scores would duplicate. Upsert avoids the need for DELETE entirely.
+  const { error } = await supabase
     .from('ems_scores')
-    .delete()
-    .in('participant_id', participantIds)
-    .in('jury_code_id', juryCodeIds);
-
-  const { error } = await supabase.from('ems_scores').insert(
-    scores.map((s) => ({
-      event_id: s.event_id,
-      participant_id: s.participant_id,
-      jury_code_id: s.jury_code_id,
-      rubric_id: s.rubric_id,
-      score: s.score,
-      comments: s.comments || null,
-    }))
-  );
+    .upsert(
+      scores.map((s) => ({
+        event_id: s.event_id,
+        participant_id: s.participant_id,
+        jury_code_id: s.jury_code_id,
+        rubric_id: s.rubric_id,
+        score: s.score,
+        comments: s.comments || null,
+      })),
+      { onConflict: 'participant_id,jury_code_id,rubric_id' }
+    );
 
   if (error) {
     throw new Error(`Gagal menyimpan markah juri: ${error.message}`);
