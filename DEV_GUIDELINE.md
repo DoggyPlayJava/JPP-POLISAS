@@ -1230,6 +1230,7 @@ SUPSAS (Sukan Universiti POLISAS) adalah sistem pengurusan pertandingan sukan an
 | `/supsas/sukan` | Senarai sukan — semua |
 | `/supsas/bracket/:sportId` | Bracket sukan — semua |
 | `/supsas/sejarah` | Sejarah edisi lepas — semua |
+| `/supsas/scorekeeper` | Portal Juri/Pengadil Padang — Pengadil berotoriti dengan Kod PIN 4-digit |
 | `/supsas/admin/*` | Panel admin — Exco SRK / Super Admin |
 | `/supsas/ketua` | Dashboard ketua kontingen — ketua kontingen sahaja |
 
