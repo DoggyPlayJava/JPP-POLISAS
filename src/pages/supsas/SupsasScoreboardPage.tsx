@@ -141,10 +141,14 @@ function TallyRow({ entry, rank, isTV }: { entry: SupsasMedalTally; rank: number
         <MedalCell count={entry.bronze} type="bronze" />
       </div>
 
-      {/* Total */}
-      <div className="hidden sm:flex flex-col items-center w-14 flex-shrink-0">
-        <span className={cn('font-black text-white', isTV ? 'text-3xl' : 'text-xl')}>{entry.total_medals}</span>
-        <span className="text-[8px] font-black uppercase tracking-widest text-white/20">Jumlah</span>
+      {/* Total Medals & Points */}
+      <div className="flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex-shrink-0">
+        <span className={cn('font-black text-amber-400 font-mono', isTV ? 'text-2xl' : 'text-base sm:text-lg')}>
+          {entry.total_points ?? (entry.gold * 5 + entry.silver * 3 + entry.bronze * 1)} pts
+        </span>
+        <span className="text-[8px] font-black uppercase tracking-widest text-amber-400/60">
+          {entry.total_medals} Pingat
+        </span>
       </div>
     </motion.div>
   );

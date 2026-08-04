@@ -13,6 +13,9 @@ interface EditionForm {
   start_date: string;
   end_date: string;
   is_active: boolean;
+  gold_points: number;
+  silver_points: number;
+  bronze_points: number;
 }
 
 const DEFAULT_FORM: EditionForm = {
@@ -22,6 +25,9 @@ const DEFAULT_FORM: EditionForm = {
   start_date: '',
   end_date: '',
   is_active: false,
+  gold_points: 5,
+  silver_points: 3,
+  bronze_points: 1,
 };
 
 export function AdminTetapanPage() {
@@ -39,6 +45,9 @@ export function AdminTetapanPage() {
         start_date: edition.start_date ?? '',
         end_date: edition.end_date ?? '',
         is_active: edition.is_active,
+        gold_points: edition.gold_points ?? 5,
+        silver_points: edition.silver_points ?? 3,
+        bronze_points: edition.bronze_points ?? 1,
       });
     }
   }, [edition]);
@@ -48,7 +57,13 @@ export function AdminTetapanPage() {
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error('Sila isi nama edisi'); return; }
     setSaving(true);
-    const payload = { ...form, edition_year: Number(form.edition_year) };
+    const payload = {
+      ...form,
+      edition_year: Number(form.edition_year),
+      gold_points: Number(form.gold_points),
+      silver_points: Number(form.silver_points),
+      bronze_points: Number(form.bronze_points),
+    };
     const { error } = edition
       ? await supabase.from('supsas_editions').update(payload).eq('id', edition.id)
       : await supabase.from('supsas_editions').insert(payload);
@@ -78,7 +93,7 @@ export function AdminTetapanPage() {
     <div className="max-w-3xl mx-auto space-y-8">
       <div>
         <h1 className="text-2xl font-black text-white">Tetapan Edisi</h1>
-        <p className="text-white/30 text-sm mt-1">Urus edisi SUPSAS yang aktif</p>
+        <p className="text-white/30 text-sm mt-1">Urus edisi SUPSAS yang aktif & mata pingat</p>
       </div>
 
       {/* Active status */}
@@ -150,6 +165,29 @@ export function AdminTetapanPage() {
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Tarikh Tamat</label>
             <input type="date" value={form.end_date} onChange={e => setForm(p => ({ ...p, end_date: e.target.value }))} className={inputCls} />
+          </div>
+        </div>
+
+        {/* MEDAL POINTS CONFIGURATION */}
+        <div className="pt-4 border-t border-white/10 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-black uppercase tracking-widest text-amber-400">Pengiraan Mata Johan Keseluruhan</h3>
+            <span className="text-[10px] text-white/40">Tentukan mata per pingat</span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-400">🥇 Mata Emas</label>
+              <input type="number" value={form.gold_points} onChange={e => setForm(p => ({ ...p, gold_points: +e.target.value }))} className={inputCls} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300">🥈 Mata Perak</label>
+              <input type="number" value={form.silver_points} onChange={e => setForm(p => ({ ...p, silver_points: +e.target.value }))} className={inputCls} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400">🥉 Mata Gangsa</label>
+              <input type="number" value={form.bronze_points} onChange={e => setForm(p => ({ ...p, bronze_points: +e.target.value }))} className={inputCls} />
+            </div>
           </div>
         </div>
 
