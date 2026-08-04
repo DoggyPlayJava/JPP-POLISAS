@@ -12,6 +12,9 @@ export interface SupsasEdition {
   is_active: boolean;
   logo_url: string | null;
   banner_url: string | null;
+  gold_points?: number;
+  silver_points?: number;
+  bronze_points?: number;
 }
 
 export interface SupsasKontingen {
@@ -65,6 +68,18 @@ export interface SupsasMedalTally {
   silver: number;
   bronze: number;
   total_medals: number;
+  total_points?: number;
+}
+
+export interface MatchEvent {
+  id: string;
+  minute: number;
+  type: 'goal' | 'yellow_card' | 'red_card' | 'foul' | 'note';
+  team_id: string | null;
+  kontingen_id: string | null;
+  player_name?: string;
+  description: string;
+  created_at: string;
 }
 
 export interface SupsasFixture {
@@ -93,6 +108,11 @@ export interface SupsasFixture {
   team_a_id: string | null;        // NULL untuk sukan single-group (guna kontingen_a_id)
   team_b_id: string | null;
   winner_team_id: string | null;
+  // Referee & Live fields (added in migration 20260804)
+  referee_pin?: string | null;
+  timeline_events?: MatchEvent[] | null;
+  elapsed_seconds?: number | null;
+  timer_status?: 'stopped' | 'running' | 'paused' | null;
 }
 
 // ─── Context Shape ────────────────────────────────────────────
