@@ -80,10 +80,23 @@ function FixtureCard({ fixture, kontingenMap, sportMap }: {
           <div className="flex flex-col items-center gap-1 flex-shrink-0">
             {isCompleted ? (
               <span className="text-white/20 font-black text-lg">—</span>
+            ) : isLive ? (
+              <div className="flex flex-col items-center">
+                <div className="flex items-center gap-2 font-mono font-black text-2xl text-amber-400">
+                  <span>{fixture.score_a ?? '0'}</span>
+                  <span className="text-white/20">-</span>
+                  <span>{fixture.score_b ?? '0'}</span>
+                </div>
+                {fixture.elapsed_seconds !== undefined && (
+                  <span className="text-[10px] font-mono font-black text-red-400 animate-pulse">
+                    {Math.floor((fixture.elapsed_seconds || 0) / 60)}:{(fixture.elapsed_seconds || 0) % 60 < 10 ? '0' : ''}{(fixture.elapsed_seconds || 0) % 60}
+                  </span>
+                )}
+              </div>
             ) : (
               <span className="text-white/40 font-black text-xl">VS</span>
             )}
-            {fixture.match_time && !isCompleted && (
+            {fixture.match_time && !isCompleted && !isLive && (
               <div className="flex items-center gap-1 text-[9px] text-white/20 font-black">
                 <Clock className="w-3 h-3" />
                 {fixture.match_time.slice(0, 5)}

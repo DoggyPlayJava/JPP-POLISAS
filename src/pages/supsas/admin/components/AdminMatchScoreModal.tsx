@@ -108,6 +108,23 @@ export function AdminMatchScoreModal({ fixture, kontingenMap, onClose, onSaved }
                 Kemaskini Skor
               </p>
               <h2 className="text-base font-black text-white">{matchLabel}</h2>
+              {fixture.referee_pin && (
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                    PIN Pengadil: {fixture.referee_pin}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(fixture.referee_pin || '');
+                      toast.success('PIN Pengadil disalin!');
+                    }}
+                    className="text-[9px] font-black text-white/40 hover:text-white underline uppercase"
+                  >
+                    Salin
+                  </button>
+                </div>
+              )}
             </div>
             <button
               onClick={onClose}
