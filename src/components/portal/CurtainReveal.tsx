@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// NOTE: supsas curtain (SUP/SAS doors) removed per request — 2026-08-04.
+// Karnival curtain kept.
 export function CurtainReveal({ karnivalActive, supsasActive }: { karnivalActive: boolean, supsasActive: boolean }) {
   const [show, setShow] = useState(true);
 
@@ -9,7 +11,7 @@ export function CurtainReveal({ karnivalActive, supsasActive }: { karnivalActive
     return () => clearTimeout(t);
   }, []);
 
-  if (!karnivalActive && !supsasActive) return null;
+  if (!karnivalActive) return null;
 
   return (
     <AnimatePresence>
@@ -42,44 +44,6 @@ export function CurtainReveal({ karnivalActive, supsasActive }: { karnivalActive
                 </h1>
               </motion.div>
             </motion.div>
-          )}
-
-          {supsasActive && !karnivalActive && (
-            <>
-              {/* Left Door */}
-              <motion.div
-                initial={{ x: '0%' }}
-                exit={{ x: '-100%' }}
-                transition={{ duration: 1.2, ease: [0.83, 0, 0.17, 1], delay: 0.5 }}
-                className="w-1/2 h-full bg-slate-900 border-r-4 border-yellow-500 shadow-[20px_0_50px_rgba(0,0,0,0.8)] relative z-20 flex items-center justify-end pr-2 overflow-hidden"
-              >
-                <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')]" />
-                <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-600 to-yellow-400 tracking-tighter absolute right-0 translate-x-[50%]">
-                  SUP
-                </h1>
-              </motion.div>
-              
-              {/* Right Door */}
-              <motion.div
-                initial={{ x: '0%' }}
-                exit={{ x: '100%' }}
-                transition={{ duration: 1.2, ease: [0.83, 0, 0.17, 1], delay: 0.5 }}
-                className="w-1/2 h-full bg-slate-900 border-l-4 border-yellow-500 shadow-[-20px_0_50px_rgba(0,0,0,0.8)] relative z-20 flex items-center justify-start pl-2 overflow-hidden"
-              >
-                <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')]" />
-                <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600 tracking-tighter absolute left-0 -translate-x-[50%]">
-                  SAS
-                </h1>
-              </motion.div>
-              
-              {/* Flash / Light burst behind doors */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0 }}
-                exit={{ opacity: 1, scale: 2 }}
-                transition={{ duration: 0.8, delay: 0.8 }}
-                className="absolute inset-0 m-auto w-32 h-32 bg-yellow-400 rounded-full blur-[100px] z-10"
-              />
-            </>
           )}
         </div>
       )}
