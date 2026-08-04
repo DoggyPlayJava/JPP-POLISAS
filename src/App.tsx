@@ -119,6 +119,7 @@ const AdminJadualPage = lazy(() => import('./pages/supsas/admin/AdminJadualPage'
 const KetuaDashboard = lazy(() => import('./pages/supsas/ketua/KetuaDashboard').then(m => ({ default: m.KetuaDashboard })));
 const BracketPage = lazy(() => import('./pages/supsas/BracketPage').then(m => ({ default: m.BracketPage })));
 const SupsasHistoryPage = lazy(() => import('./pages/supsas/SupsasHistoryPage').then(m => ({ default: m.SupsasHistoryPage })));
+const SupsasScorekeeperPage = lazy(() => import('./pages/supsas/SupsasScorekeeperPage').then(m => ({ default: m.SupsasScorekeeperPage })));
 
 // ── Karnival JPP v2 (Layouts — lazy loaded) ──
 import { KarnivalProvider } from './contexts/KarnivalContext';
@@ -480,6 +481,7 @@ function AppRoutes() {
         <Route path="/supsas/sukan"       element={<SupsasSportsPage />} />
         <Route path="/supsas/bracket/:sportId" element={<BracketPage />} />
         <Route path="/supsas/sejarah"     element={<SupsasHistoryPage />} />
+        <Route path="/supsas/scorekeeper" element={<SupsasScorekeeperPage />} />
 
         {/* Admin Panel — role guard inside SupsasAdminLayout */}
         <Route element={<SupsasAdminLayout />}>
