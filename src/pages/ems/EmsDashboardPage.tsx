@@ -67,7 +67,7 @@ export function EmsDashboardPage() {
 
   const [events, setEvents] = useState<(EmsEvent & { creator?: any })[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<string>('ALL');
+  const [activeTab, setActiveTab] = useState<string>('APPROVED');
 
   // Modals state
   const [qrModalEvent, setQrModalEvent] = useState<EmsEvent | null>(null);
@@ -87,6 +87,9 @@ export function EmsDashboardPage() {
   });
   const [isSubmittingJury, setIsSubmittingJury] = useState(false);
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
+  const [juryCategories, setJuryCategories] = useState<string[]>([]);
+  const [juryBooths, setJuryBooths] = useState<string[]>([]);
+  const [loadingJuryOptions, setLoadingJuryOptions] = useState(false);
 
   // Tie Breaker Modal State
   const [tieModalEvent, setTieModalEvent] = useState<EmsEvent | null>(null);
@@ -266,8 +269,34 @@ export function EmsDashboardPage() {
       setJuryCodes(data || []);
     } catch (err: any) {
       toast.error('Gagal memuatkan senarai kod juri');
+    }
+    // Load available categories & booths for this event
+    try {
+      setLoadingJuryOptions(true);
+      const { data: participants } = await supabase
+        .from('ems_participants')
+        .select('category_name, team_name')
+        .eq('event_id', event.id)
+        .not('category_name', 'is', null)
+        .neq('category_name', '')
+        .order('category_name');
+      const cats = Array.from(new Set((participants || []).map((p: any) => p.category_name).filter(Boolean))) as string[];
+      setJuryCategories(cats);
+
+      const { data: boothRows } = await supabase
+        .from('ems_participants')
+        .select('team_name')
+        .eq('event_id', event.id)
+        .not('team_name', 'is', null)
+        .neq('team_name', '')
+        .order('team_name');
+      const booths = Array.from(new Set((boothRows || []).map((p: any) => p.team_name).filter(Boolean))) as string[];
+      setJuryBooths(booths);
+    } catch {
+      setJuryCategories([]);
+      setJuryBooths([]);
     } finally {
-      setLoadingJuryCodes(false);
+      setLoadingJuryOptions(false);
     }
   };
 
@@ -445,7 +474,6 @@ export function EmsDashboardPage() {
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-800">
         {(canCreateEvent
           ? [
-              { key: 'ALL', label: 'Semua Acara' },
               { key: 'APPROVED', label: 'Diluluskan / Aktif' },
               { key: 'PENDING_APPROVAL', label: 'Pending Kelulusan' },
               { key: 'DRAFT', label: 'Draf' },
@@ -891,27 +919,103 @@ export function EmsDashboardPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-300 mb-1">
-                  Kategori Ditugaskan (Asingkan dengan koma)
+                  Kategori Ditugaskan
                 </label>
+                {loadingJuryOptions ? (
+                  <p className="text-xs text-slate-500 animate-pulse">Memuatkan kategori...</p>
+                ) : juryCategories.length === 0 ? (
+                  <p className="text-xs text-slate-500 italic">
+                    Tiada kategori berdaftar dalam acara ini. Anda boleh taip manual di bawah.
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {juryCategories.map((cat) => {
+                      const selected = juryForm.assigned_categories
+                        .split(',')
+                        .map((x) => x.trim())
+                        .filter(Boolean)
+                        .includes(cat);
+                      return (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => {
+                            const current = juryForm.assigned_categories
+                              .split(',')
+                              .map((x) => x.trim())
+                              .filter(Boolean);
+                            const next = selected ? current.filter((x) => x !== cat) : [...current, cat];
+                            setJuryForm({ ...juryForm, assigned_categories: next.join(', ') });
+                          }}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                            selected
+                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+                              : 'bg-slate-950 text-slate-400 border-slate-700 hover:border-slate-500 hover:text-white'
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
                 <input
                   type="text"
                   value={juryForm.assigned_categories}
                   onChange={(e) => setJuryForm({ ...juryForm, assigned_categories: e.target.value })}
                   placeholder="e.g. Inovasi, Keusahawanan"
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500 mt-2"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-300 mb-1">
-                  Booth Ditugaskan (Asingkan dengan koma)
+                  Booth Ditugaskan
                 </label>
+                {loadingJuryOptions ? (
+                  <p className="text-xs text-slate-500 animate-pulse">Memuatkan booth...</p>
+                ) : juryBooths.length === 0 ? (
+                  <p className="text-xs text-slate-500 italic">
+                    Tiada booth berdaftar dalam acara ini. Anda boleh taip manual di bawah.
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">
+                    {juryBooths.map((booth) => {
+                      const selected = juryForm.assigned_booths
+                        .split(',')
+                        .map((x) => x.trim())
+                        .filter(Boolean)
+                        .includes(booth);
+                      return (
+                        <button
+                          key={booth}
+                          type="button"
+                          onClick={() => {
+                            const current = juryForm.assigned_booths
+                              .split(',')
+                              .map((x) => x.trim())
+                              .filter(Boolean);
+                            const next = selected ? current.filter((x) => x !== booth) : [...current, booth];
+                            setJuryForm({ ...juryForm, assigned_booths: next.join(', ') });
+                          }}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                            selected
+                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+                              : 'bg-slate-950 text-slate-400 border-slate-700 hover:border-slate-500 hover:text-white'
+                          }`}
+                        >
+                          {booth}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
                 <input
                   type="text"
                   value={juryForm.assigned_booths}
                   onChange={(e) => setJuryForm({ ...juryForm, assigned_booths: e.target.value })}
                   placeholder="e.g. Booth 1, Booth 2"
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500 mt-2"
                 />
               </div>
 
