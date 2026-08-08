@@ -51,6 +51,7 @@ export function KeusahawananUnitDashboard() {
   const [pendingReports, setPendingReports] = useState(0);
   const [puskepCount, setPuskepCount]       = useState(0);
   const [ssmCount, setSsmCount]             = useState(0);
+  const [emsCount, setEmsCount]             = useState(0);
   const [loadingExtra, setLoadingExtra]     = useState(true);
 
   const fetchExtras = async () => {
@@ -58,7 +59,7 @@ export function KeusahawananUnitDashboard() {
     try {
       const threshold7d = subDays(new Date(), 7).toISOString();
 
-      const [oldPendingRes, logsRes, reportsRes, puskepRes, ssmRes] = await Promise.all([
+      const [oldPendingRes, logsRes, reportsRes, puskepRes, ssmRes, emsRes] = await Promise.all([
         // Pending lama > 7 hari
         supabase.from('keusahawanan_businesses')
           .select(`
@@ -89,7 +90,12 @@ export function KeusahawananUnitDashboard() {
         // Statistik Pendaftaran SSM
         supabase.from('keusahawanan_businesses')
           .select('id', { count: 'exact', head: true })
-          .eq('registration_type', 'SSM')
+          .eq('registration_type', 'SSM'),
+
+        // Statistik Pendaftaran EMS (Sementara)
+        supabase.from('keusahawanan_businesses')
+          .select('id', { count: 'exact', head: true })
+          .eq('registration_type', 'EMS')
       ]);
 
       const now = new Date();
@@ -106,6 +112,7 @@ export function KeusahawananUnitDashboard() {
       setPendingReports(reportsRes.count || 0);
       setPuskepCount(puskepRes?.count || 0);
       setSsmCount(ssmRes?.count || 0);
+      setEmsCount(emsRes?.count || 0);
     } catch (e) {
       console.error('Keusahawanan extras fetch error:', e);
     } finally {
@@ -160,6 +167,15 @@ export function KeusahawananUnitDashboard() {
                   </div>
                   <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
                     <Store className="w-5 h-5 text-blue-400" />
+                  </div>
+                </div>
+                <div className="bg-white/[0.03] border border-white/[0.05] rounded-2xl p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-400">Pendaftaran EMS (Sementara)</p>
+                    <p className="text-3xl font-black text-white mt-1">{emsCount}</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                    <Store className="w-5 h-5 text-amber-400" />
                   </div>
                 </div>
               </div>

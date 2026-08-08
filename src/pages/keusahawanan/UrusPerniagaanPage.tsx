@@ -58,7 +58,7 @@ export function UrusPerniagaanPage() {
 
   const [description, setDescription] = useState('');
   const [useShiftSystem, setUseShiftSystem] = useState(false);
-  const [regType, setRegType] = useState<'SSM' | 'PUSKEP'>('PUSKEP');
+  const [regType, setRegType] = useState<'SSM' | 'PUSKEP' | 'EMS'>('PUSKEP');
   const [ssmRegNumber, setSsmRegNumber] = useState('');
   const [mentors, setMentors] = useState<{name: string, department: string}[]>([]);
 
@@ -108,7 +108,7 @@ export function UrusPerniagaanPage() {
     setPromotionsEnabled(biz?.promotions_enabled ?? false);
     setCashSessionEnabled(biz?.cash_session_enabled ?? false);
     setUseShiftSystem(biz?.is_shift_enabled ?? false);
-    setRegType(biz?.registration_type === 'SSM' ? 'SSM' : 'PUSKEP');
+    setRegType(biz?.registration_type === 'SSM' ? 'SSM' : biz?.registration_type === 'EMS' ? 'EMS' : 'PUSKEP');
     setSsmRegNumber(biz?.ssm_registration_number || '');
     setMentors(biz?.mentors || []);
     // Payment settings
@@ -461,16 +461,17 @@ export function UrusPerniagaanPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Jenis Pendaftaran</p>
-                  <select value={regType} onChange={e => setRegType(e.target.value as 'SSM'|'PUSKEP')}
+                  <select value={regType} onChange={e => setRegType(e.target.value as 'SSM'|'PUSKEP'|'EMS')} disabled={regType === 'EMS'}
                     className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all">
                     <option value="PUSKEP">PUSKEP-POLISAS</option>
                     <option value="SSM">SSM</option>
+                    <option value="EMS">EMS (Sementara)</option>
                   </select>
                 </div>
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">No. Pendaftaran</p>
-                  <input type="text" value={ssmRegNumber} onChange={e => setSsmRegNumber(e.target.value)} disabled={regType === 'PUSKEP'}
-                    placeholder={regType === 'PUSKEP' ? 'Akan Dijana' : 'Contoh: 202101000001'}
+                  <input type="text" value={ssmRegNumber} onChange={e => setSsmRegNumber(e.target.value)} disabled={regType === 'PUSKEP' || regType === 'EMS'}
+                    placeholder={regType === 'PUSKEP' ? 'Akan Dijana' : regType === 'EMS' ? 'No. Siri EMS' : 'Contoh: 202101000001'}
                     className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all disabled:opacity-50" />
                 </div>
               </div>

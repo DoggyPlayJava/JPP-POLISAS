@@ -143,7 +143,7 @@ function BusinessDetailModal({
             <div className="bg-white/[0.03] rounded-2xl p-3 border border-white/[0.04]">
               <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">Pendaftaran</p>
               <p className="text-sm font-black text-white">
-                {business.registration_type === 'SSM' ? 'SSM' : 'PUSKEP'} 
+                {business.registration_type === 'SSM' ? 'SSM' : business.registration_type === 'EMS' ? 'EMS' : 'PUSKEP'} 
                 {business.ssm_registration_number ? ` - ${business.ssm_registration_number}` : ''}
               </p>
               {business.registration_history && business.registration_history.length > 0 && (
