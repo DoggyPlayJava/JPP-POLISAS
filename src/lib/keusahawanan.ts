@@ -203,8 +203,58 @@ export async function provisionEmsSiswapreneurBusiness(
 }
 
 /**
+ * Requests a PUSKEP Upgrade for an EMS Siswapreneur business.
+ * Updates puskep_upgrade_status = 'PENDING' in keusahawanan_businesses
+ * and sends a push notification to Keusahawanan Exco.
+ */
+export async function requestPuskepUpgrade(businessId: string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    const { data: biz, error: fetchErr } = await supabase
+      .from('keusahawanan_businesses')
+      .select('name')
+      .eq('id', businessId)
+      .single();
+
+    if (fetchErr || !biz) {
+      return { success: false, error: fetchErr?.message || 'Perniagaan tidak dijumpai.' };
+    }
+
+    const { error: updateErr } = await supabase
+      .from('keusahawanan_businesses')
+      .update({ puskep_upgrade_status: 'PENDING' })
+      .eq('id', businessId);
+
+    if (updateErr) {
+      return { success: false, error: updateErr.message };
+    }
+
+    try {
+      const { sendNotificationToKeusahawananExco } = await import('@/lib/notifications');
+      await sendNotificationToKeusahawananExco({
+        title: 'Permohonan No. Siri PUSKEP Baru',
+        message: `Perniagaan ${biz.name} (EMS) memohon No. Siri PUSKEP rasmi.`,
+        type: 'PUSKEP_UPGRADE_REQUEST',
+        module: 'KEUSAHAWANAN',
+        link: '/keusahawanan/dashboard',
+      });
+    } catch (notifErr) {
+      console.error('Failed to send notification to Exco:', notifErr);
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('Error requesting PUSKEP upgrade:', err);
+    return { success: false, error: err.message || 'Gagal memohon No. Siri PUSKEP.' };
+  }
+}
+
+/**
  * Checks active EMS Siswapreneur businesses that have exceeded 7 days past event end date
  * and auto-archives them if they have not upgraded to PUSKEP membership.
+ * Protects any business with puskep_upgrade_status === 'APPROVED' or registration_no starting with 'PUSKEP-'.
  */
 export async function autoArchiveExpiredEmsBusinesses(): Promise<{
   success: boolean;
@@ -216,6 +266,7 @@ export async function autoArchiveExpiredEmsBusinesses(): Promise<{
       .from('keusahawanan_businesses')
       .select('id, registration_no, ssm_registration_number, puskep_upgrade_status, ems_event_id, ems_events(event_date, start_date, end_date)')
       .eq('is_ems_siswapreneur', true)
+      .eq('puskep_upgrade_status', 'NONE')
       .eq('is_active', true);
 
     if (fetchErr) throw fetchErr;
@@ -229,7 +280,7 @@ export async function autoArchiveExpiredEmsBusinesses(): Promise<{
 
     for (const biz of businesses) {
       const regNum = biz.registration_no || biz.ssm_registration_number || '';
-      if (biz.puskep_upgrade_status === 'APPROVED' || regNum.startsWith('PUSKEP-')) {
+      if (biz.puskep_upgrade_status === 'APPROVED' || biz.puskep_upgrade_status === 'PENDING' || regNum.startsWith('PUSKEP-')) {
         continue;
       }
 

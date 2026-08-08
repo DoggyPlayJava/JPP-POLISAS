@@ -472,7 +472,11 @@ export interface KeusahawananBusiness {
   is_shift_enabled: boolean;
   created_at: string;
   ssm_registration_number?: string | null;
+  registration_no?: string | null;
   registration_type?: string | null;
+  is_ems_siswapreneur?: boolean;
+  puskep_upgrade_status?: 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED' | string | null;
+  ems_event_id?: string | null;
   registration_history?: any[];
   mentors?: { name: string; department: string }[];
   // Payment settings (migration 52)

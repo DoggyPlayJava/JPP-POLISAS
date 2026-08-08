@@ -8,8 +8,10 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowUpRight, Activity, Star, Eye, ShieldCheck, 
   TrendingUp, TrendingDown, Target, ShoppingBag, DollarSign,
-  PackageSearch, BellRing, Calculator, ExternalLink, CalendarDays, BarChart3, HelpCircle
+  PackageSearch, BellRing, Calculator, ExternalLink, CalendarDays, BarChart3, HelpCircle, Sparkles, Store
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { requestPuskepUpgrade } from '@/lib/keusahawanan';
 import { 
   LineChart, Line, BarChart, Bar, ResponsiveContainer, XAxis, Tooltip as RechartsTooltip, YAxis,
   PieChart, Pie, Cell
@@ -48,11 +50,37 @@ import { SystemTour } from '@/components/ui/SystemTour';
 export function KeusahawananDashboard() {
   const { color } = useExcoTheme();
   const { profile, isSuperAdmin } = useAuth();
-  const { selectedBusiness, isLoading: isSwitcherLoading } = useBusinessSwitcher();
+  const { selectedBusiness, isLoading: isSwitcherLoading, refreshBusinesses } = useBusinessSwitcher();
   const { myMemberships, isLoading: isMembershipsLoading } = useBusinessData();
   const navigate = useNavigate();
   const displayName = getMalaysianNickname(profile?.full_name);
   const { runTour, startTour, closeTour } = useTour('KEUSAHAWANAN_DASHBOARD', !!profile);
+
+  const [isSubmittingPuskep, setIsSubmittingPuskep] = useState(false);
+
+  const regNo = selectedBusiness?.registration_no || selectedBusiness?.ssm_registration_number || '';
+  const isEmsBiz = Boolean(selectedBusiness?.is_ems_siswapreneur || regNo.startsWith('EMS-'));
+  const puskepStatus = selectedBusiness?.puskep_upgrade_status || 'NONE';
+  const isPuskepApproved = puskepStatus === 'APPROVED' || regNo.startsWith('PUSKEP-');
+  const isPuskepPending = puskepStatus === 'PENDING';
+
+  const handleApplyPuskep = async () => {
+    if (!selectedBusiness?.id) return;
+    setIsSubmittingPuskep(true);
+    try {
+      const res = await requestPuskepUpgrade(selectedBusiness.id);
+      if (res.success) {
+        toast.success('Permohonan No. Siri PUSKEP berjaya dihantar!');
+        await refreshBusinesses();
+      } else {
+        toast.error(res.error || 'Gagal memohon No. Siri PUSKEP.');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Ralat berlaku semasa permohonan.');
+    } finally {
+      setIsSubmittingPuskep(false);
+    }
+  };
 
   const [isLoading, setIsLoading] = useState(true);
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>(() => {
@@ -541,6 +569,57 @@ export function KeusahawananDashboard() {
           >
             Sertai Sekarang
           </button>
+        </motion.div>
+      )}
+
+      {/* PUSKEP Upgrade Banner */}
+      {isEmsBiz && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="relative overflow-hidden rounded-[1.5rem] p-5 sm:p-6 bg-gradient-to-r from-emerald-950/90 via-teal-900/90 to-slate-900/95 border border-emerald-500/30 shadow-xl"
+        >
+          <div className="absolute -right-12 -top-12 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-lg shrink-0 mt-0.5">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base sm:text-lg font-black text-white">
+                  🛍️ Perniagaan Siswapreneur EMS
+                </h3>
+                <p className="text-xs sm:text-sm font-medium text-emerald-100/80 max-w-2xl leading-relaxed">
+                  Perniagaan ini didaftarkan secara automatik melalui Acara EMS. Adakah anda berminat mendaftar secara rasmi di bawah PUSKEP bagi mendapatkan No. Siri PUSKEP rasmi & keahlian kekal PUSKEP?
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center shrink-0 self-end md:self-center">
+              {isPuskepApproved ? (
+                <div className="px-4 py-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-black flex items-center gap-2 shadow-sm backdrop-blur-sm">
+                  <span>✅ Ahli PUSKEP Rasmi (Kekal)</span>
+                </div>
+              ) : isPuskepPending ? (
+                <div className="px-4 py-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-black flex items-center gap-2 shadow-sm backdrop-blur-sm">
+                  <span>⏳ Permohonan No. Siri PUSKEP Sedang Diproses</span>
+                </div>
+              ) : (
+                <button
+                  onClick={handleApplyPuskep}
+                  disabled={isSubmittingPuskep}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-900/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isSubmittingPuskep ? (
+                    <span>Memohon...</span>
+                  ) : (
+                    <span>Mohon No. Siri PUSKEP Rasmi</span>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
         </motion.div>
       )}
 
