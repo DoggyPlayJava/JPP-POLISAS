@@ -1250,6 +1250,137 @@ app.post('/api/polysuara-interaction-notify', requireWebhookSecret, async (req, 
 });
 
 // ==========================================
+// 6d. PolyMart Chat Notification
+// Dicetuskan oleh Supabase DB Trigger pada INSERT ke `polymart_messages`.
+// Logik recipient (BUKAN broadcast semua pelajar):
+//   - Customer (buyer) hantar mesej -> staff VENDOR BERKENAAN je dapat
+//     (owner + ahli ACTIVE student_business_memberships)
+//   - Staff vendor hantar -> customer (buyer) dalam conversation tu je dapat
+// ==========================================
+app.post('/api/polymart-chat-notify', requireWebhookSecret, async (req, res) => {
+    try {
+        if (!supabaseAdmin) throw new Error('Supabase Admin Client not initialized.');
+
+        const { record } = req.body || {};
+        if (!record || !record.conversation_id || !record.sender_id) {
+            return res.status(200).json({ success: true, skipped: 'invalid record' });
+        }
+        const { conversation_id, sender_id, content } = record;
+
+        const { data: conv, error: convErr } = await supabaseAdmin
+            .from('polymart_conversations')
+            .select('id, buyer_id, vendor_business_id')
+            .eq('id', conversation_id)
+            .maybeSingle();
+        if (convErr) throw new Error(convErr.message);
+        if (!conv) return res.status(200).json({ success: true, skipped: 'conversation not found' });
+
+        const messagePreview = String(content || '').replace(/\s+/g, ' ').trim().slice(0, 80) || 'Mesej baharu';
+
+        let recipients = [];
+        let title = '';
+        const isCustomerMsg = sender_id === conv.buyer_id;
+
+        if (isCustomerMsg) {
+            // Hantar ke staff vendor berkenaan sahaja
+            const { data: biz, error: bizErr } = await supabaseAdmin
+                .from('keusahawanan_businesses')
+                .select('owner_id, name')
+                .eq('id', conv.vendor_business_id)
+                .maybeSingle();
+            if (bizErr) throw new Error(bizErr.message);
+
+            const { data: members, error: memErr } = await supabaseAdmin
+                .from('student_business_memberships')
+                .select('user_id')
+                .eq('business_id', conv.vendor_business_id)
+                .eq('status', 'ACTIVE');
+            if (memErr) throw new Error(memErr.message);
+
+            recipients = [...new Set([
+                ...(members || []).map(m => m.user_id),
+                ...(biz?.owner_id ? [biz.owner_id] : []),
+            ])];
+            title = `💬 Mesej Baru dari Pelanggan${biz?.name ? ` (${biz.name})` : ''}`;
+        } else {
+            // Staff hantar -> customer itu sahaja
+            recipients = [conv.buyer_id];
+            const { data: biz, error: bizErr } = await supabaseAdmin
+                .from('keusahawanan_businesses')
+                .select('name')
+                .eq('id', conv.vendor_business_id)
+                .maybeSingle();
+            if (bizErr) throw new Error(bizErr.message);
+            title = `💬 Mesej Baru dari ${biz?.name || 'Vendor'}`;
+        }
+
+        if (recipients.length === 0) {
+            return res.status(200).json({ success: true, sent: 0, message: 'Tiada recipient.' });
+        }
+
+        const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:jpp@cipher-node.org';
+        const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
+        const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+        if (!vapidPublicKey || !vapidPrivateKey) {
+            throw new Error('VAPID keys belum dikonfigurasi.');
+        }
+        webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+
+        const { data: subs, error: subsError } = await supabaseAdmin
+            .from('push_subscriptions')
+            .select('id, user_id, endpoint, p256dh, auth')
+            .in('user_id', recipients);
+        if (subsError) throw new Error(subsError.message);
+        if (!subs || subs.length === 0) {
+            return res.status(200).json({ success: true, sent: 0, message: 'Tiada subscription.' });
+        }
+
+        const payload = JSON.stringify({
+            title,
+            body: messagePreview,
+            icon: '/icon-192-maskable.png',
+            badge: '/icon-192-maskable.png',
+            tag: `polymart-chat-${conversation_id}`,
+            renotify: true,
+            requireInteraction: false,
+            data: { url: '/polymart' },
+        });
+
+        let sent = 0;
+        let failed = 0;
+        const staleIds = [];
+        await Promise.allSettled(
+            subs.map(async (sub) => {
+                const subscription = {
+                    endpoint: sub.endpoint,
+                    keys: { p256dh: sub.p256dh, auth: sub.auth },
+                };
+                try {
+                    await webpush.sendNotification(subscription, payload);
+                    sent++;
+                } catch (e) {
+                    failed++;
+                    if (e.statusCode === 410) staleIds.push(sub.id);
+                    console.warn(`[polymart-chat-notify] Sub failed (${e.statusCode}): ${sub.endpoint.slice(-20)}`);
+                }
+            })
+        );
+
+        if (staleIds.length > 0) {
+            await supabaseAdmin.from('push_subscriptions').delete().in('id', staleIds);
+            console.log(`[polymart-chat-notify] Removed ${staleIds.length} stale subscription(s).`);
+        }
+
+        console.log(`[polymart-chat-notify] "${title}" -> Sent: ${sent}/${subs.length}, Failed: ${failed}, Recipients: ${recipients.length}`);
+        return res.status(200).json({ success: true, sent, failed, total: subs.length, recipients: recipients.length });
+
+    } catch (error) {
+        console.error('[polymart-chat-notify] Error:', error.message);
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+// ==========================================
 // 7. PolyRider SOS Alert Endpoint
 // Prioriti KRITIKAL: Dihantar kepada semua KLK & SUPER_ADMIN_JPP
 
