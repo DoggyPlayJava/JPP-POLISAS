@@ -40,6 +40,13 @@ interface TeamMember {
   email?: string;
 }
 
+interface MemberStatus {
+  name: string;
+  matrix_no: string;
+  email?: string;
+  hasAccount: boolean;
+}
+
 export function EmsPublicRegisterPage() {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
@@ -80,8 +87,78 @@ export function EmsPublicRegisterPage() {
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [uploadingMedia, setUploadingMedia] = useState(false);
 
-  // Step 4: Registered Participant Result
+  // Step 4: Registered Participant Result & Team Member Statuses
   const [registeredParticipant, setRegisteredParticipant] = useState<EmsParticipant | null>(null);
+  const [teamMemberStatuses, setTeamMemberStatuses] = useState<MemberStatus[]>([]);
+  const [loadingTeamStatuses, setLoadingTeamStatuses] = useState(false);
+
+  // Check team member profile statuses in Step 4
+  useEffect(() => {
+    if (currentStep !== 4 || !registeredParticipant) return;
+
+    const rawMembers = registeredParticipant.members_list || membersList;
+    if (!Array.isArray(rawMembers)) return;
+
+    const validMembers = rawMembers.filter((m: any) => m && (m.name?.trim() || m.matrix_no_or_ic?.trim()));
+    if (validMembers.length === 0) return;
+
+    let isMounted = true;
+    async function checkStatuses() {
+      setLoadingTeamStatuses(true);
+      try {
+        const results: MemberStatus[] = await Promise.all(
+          validMembers.map(async (m: any) => {
+            const matrix = (m.matrix_no_or_ic || '').trim();
+            const em = (m.email || '').trim().toLowerCase();
+            let hasAccount = false;
+
+            if (matrix) {
+              const { data } = await supabase
+                .from('profiles')
+                .select('id')
+                .or(`matrix_no.eq.${matrix},matric_no.eq.${matrix}`)
+                .limit(1)
+                .maybeSingle();
+              if (data?.id) hasAccount = true;
+            }
+
+            if (!hasAccount && em) {
+              const { data } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('email', em)
+                .limit(1)
+                .maybeSingle();
+              if (data?.id) hasAccount = true;
+            }
+
+            return {
+              name: m.name || 'Ahli Pasukan',
+              matrix_no: m.matrix_no_or_ic || '-',
+              email: m.email,
+              hasAccount,
+            };
+          })
+        );
+
+        if (isMounted) {
+          setTeamMemberStatuses(results);
+        }
+      } catch (err) {
+        console.error('Error checking team member account statuses:', err);
+      } finally {
+        if (isMounted) {
+          setLoadingTeamStatuses(false);
+        }
+      }
+    }
+
+    checkStatuses();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentStep, registeredParticipant, membersList]);
 
   // Helper for dynamic file field uploads in Step 2
   const handleDynamicFileUpload = async (
@@ -1353,6 +1430,86 @@ export function EmsPublicRegisterPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Dedicated Team Account Status & WhatsApp Group Invite Card */}
+              {(entityMode === 'TEAM' ||
+                registeredParticipant.entity_mode === 'TEAM' ||
+                teamMemberStatuses.length > 0 ||
+                (membersList && membersList.some((m) => m.name.trim() !== ''))) && (
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-left shadow-xl space-y-5 my-6 no-print">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                    <div>
+                      <h3 className="text-base font-bold text-white flex items-center gap-2">
+                        <Users className="w-5 h-5 text-indigo-400" />
+                        Status Pendaftaran Akaun Ahli Kumpulan & Akses E-Keusahawanan
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Pengesahan akaun Portal POLISAS bagi ahli pasukan untuk akses penuh Dashboard Perniagaan Siswapreneur & POS Polymart.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const targetTeamName = registeredParticipant?.team_name || teamName || leaderName;
+                        const text = `Salam/Hai ahli pasukan ${targetTeamName}! Sila daftar akaun Portal POLISAS anda melalui pautan ini supaya anda boleh mengakses Dashboard Perniagaan Siswapreneur & POS Polymart kami: https://jpp.polisas.edu.my/register`;
+                        const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+                        window.open(waUrl, '_blank', 'noopener,noreferrer');
+                      }}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-lg shadow-emerald-600/20 shrink-0"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Kongsi Pautan Pendaftaran ke WhatsApp Pasukan
+                    </button>
+                  </div>
+
+                  {loadingTeamStatuses ? (
+                    <div className="flex items-center justify-center py-6 text-xs text-slate-400 gap-2 font-medium">
+                      <RefreshCw className="w-4 h-4 animate-spin text-indigo-400" />
+                      Memeriksa status akaun ahli pasukan...
+                    </div>
+                  ) : teamMemberStatuses.length > 0 ? (
+                    <div className="space-y-3">
+                      {teamMemberStatuses.map((member, idx) => (
+                        <div
+                          key={idx}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-slate-950/80 rounded-2xl border border-slate-800/80 gap-3"
+                        >
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-white">{member.name}</span>
+                            </div>
+                            <span className="text-xs text-slate-400 font-mono block mt-0.5">
+                              No. Matrik / IC: {member.matrix_no}
+                            </span>
+                          </div>
+
+                          <div>
+                            {member.hasAccount ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                <span>🟢</span>
+                                <span>Akaun POLISAS Aktif</span>
+                                <span className="hidden md:inline text-[11px] font-normal text-emerald-300/80">
+                                  (Mempunyai Akses Penuh Dashboard Perniagaan)
+                                </span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                <span>⚠️</span>
+                                <span>Belum Berdaftar di Portal</span>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400 italic">
+                      Sila pastikan semua ahli pasukan mendaftar akaun di Portal POLISAS supaya anda boleh memberikan akses penuh Dashboard Perniagaan.
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Pass Action Buttons */}
               <div className="flex flex-wrap items-center justify-center gap-3 no-print pt-2">
