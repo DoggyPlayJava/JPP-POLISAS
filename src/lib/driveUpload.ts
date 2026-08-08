@@ -80,13 +80,27 @@ export async function uploadFileToDrive(
       : `${subfolder}/${subfolder}_${ts}.${ext}`;
   }
 
-  // Upload ke Supabase Storage
-  const { error: uploadError } = await supabase.storage
-    .from('reports')
-    .upload(fileName, uploadFile, {
-      cacheControl: '3600',
-      upsert: false,
-    });
+  // Upload ke Supabase Storage — dengan retry utk rangkaian flaky (tunnel/QUIC drop)
+  let uploadError: Error | null = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const { error } = await supabase.storage
+      .from('reports')
+      .upload(fileName, uploadFile, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (!error) {
+      uploadError = null;
+      break;
+    }
+    uploadError = error;
+    // Retry hanya utk kegagalan rangkaian; error RLS/400 lain biar terus keluar
+    const isNetworkError = /fetch failed|failed to fetch|abort|timeout|network/i.test(error.message || '');
+    if (!isNetworkError || attempt === 3) break;
+    console.warn(`[upload] Cuba #${attempt} gagal (${error.message}) — retry...`);
+    await new Promise((r) => setTimeout(r, 1000 * attempt));
+  }
 
   if (uploadError) {
     console.error('[upload] Storage error:', uploadError.message);
