@@ -311,6 +311,23 @@ export async function approveEmsEvent(
 export async function registerEmsParticipant(
   participantData: Partial<EmsParticipant>
 ): Promise<EmsParticipant> {
+  // Prevent duplicate registration: same event + same matrix_no/email
+  if (participantData.event_id && (participantData.matrix_no || participantData.email)) {
+    const dupConds: string[] = [];
+    if (participantData.matrix_no) dupConds.push(`matrix_no.eq.${participantData.matrix_no}`);
+    if (participantData.email) dupConds.push(`email.eq.${participantData.email}`);
+    const { data: existing } = await supabase
+      .from('ems_participants')
+      .select('id')
+      .eq('event_id', participantData.event_id)
+      .or(dupConds.join(','))
+      .limit(1)
+      .maybeSingle();
+    if (existing) {
+      throw new Error('Anda telah mendaftar untuk acara ini. Sila gunakan Pass sedia ada.');
+    }
+  }
+
   const { data, error } = await supabase
     .from('ems_participants')
     .insert([participantData])
