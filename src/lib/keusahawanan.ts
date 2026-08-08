@@ -179,10 +179,9 @@ export async function provisionEmsSiswapreneurBusiness(
         .insert(membershipRows);
 
       if (memError) {
+        // RLS kini membenarkan owner/admin insert — fallback ke table lama dihapuskan
+        // kerana keusahawanan_business_members tidak wujud dalam schema.
         console.warn('Notice inserting student_business_memberships:', memError);
-        try {
-          await supabase.from('keusahawanan_business_members').insert(membershipRows);
-        } catch {}
       }
     }
 
