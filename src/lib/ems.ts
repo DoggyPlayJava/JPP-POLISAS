@@ -331,7 +331,7 @@ export async function registerEmsParticipant(
         if (data.matrix_no && data.email) {
           query = query.or(`matric_no.eq.${data.matrix_no},email.eq.${data.email}`);
         } else if (data.matrix_no) {
-          query = query.eq('matrix_no', data.matrix_no);
+          query = query.eq('matric_no', data.matrix_no);
         } else if (data.email) {
           query = query.eq('email', data.email);
         }
