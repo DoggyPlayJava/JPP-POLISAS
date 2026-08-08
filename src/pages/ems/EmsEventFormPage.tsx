@@ -20,6 +20,8 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
+  ShoppingBag,
+  Store,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchEmsEventById, createEmsEvent, updateEmsEvent } from '@/lib/ems';
@@ -86,6 +88,7 @@ export function EmsEventFormPage() {
   const [location, setLocation] = useState('');
   const [milestoneConfig, setMilestoneConfig] = useState('');
   const [isLeaderboardPublic, setIsLeaderboardPublic] = useState(true);
+  const [isSiswapreneur, setIsSiswapreneur] = useState(false);
 
   // Section 2: Form Builder Fields
   const [formFields, setFormFields] = useState<LocalFormField[]>([
@@ -172,6 +175,7 @@ export function EmsEventFormPage() {
           setMilestoneConfig('');
         }
         setIsLeaderboardPublic(data.is_leaderboard_public ?? true);
+        setIsSiswapreneur(data.is_siswapreneur || false);
 
         // Load fields
         if (data.form_fields && data.form_fields.length > 0) {
@@ -483,6 +487,7 @@ export function EmsEventFormPage() {
         status: targetStatus,
         milestone_config: parsedMilestones,
         is_leaderboard_public: isLeaderboardPublic,
+        is_siswapreneur: isSiswapreneur,
         created_by: user?.id || null,
       };
 
@@ -695,6 +700,55 @@ export function EmsEventFormPage() {
                 >
                   Pasukan / Booth
                 </button>
+              </div>
+            </div>
+
+            {/* Siswapreneur Integration Card */}
+            <div className={`md:col-span-2 p-5 rounded-2xl border transition-all duration-300 ${
+              isSiswapreneur
+                ? 'bg-gradient-to-r from-emerald-950/50 via-teal-950/30 to-slate-900 border-emerald-500/50 shadow-lg shadow-emerald-950/20'
+                : 'bg-slate-950/80 border-slate-800 hover:border-slate-700'
+            }`}>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-3.5">
+                  <div className={`p-3 rounded-xl transition-colors ${
+                    isSiswapreneur ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400'
+                  }`}>
+                    <ShoppingBag className="w-6 h-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
+                        <span>🛍️</span> Pautan E-Keusahawanan (Program Siswapreneur)
+                      </h3>
+                      {isSiswapreneur && (
+                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          Aktif
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
+                      Apabila diaktifkan, pendaftaran peserta dalam acara ini akan mendaftarkan profil perniagaan Siswapreneur automatik di bawah e-Keusahawanan (No. Pendaftaran EMS-YYYY-XXXXX, Auto-Lulus tanpa temuduga PUSKEP).
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={isSiswapreneur}
+                    onClick={() => setIsSiswapreneur(!isSiswapreneur)}
+                    className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
+                      isSiswapreneur ? 'bg-emerald-500' : 'bg-slate-800'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                        isSiswapreneur ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
               </div>
             </div>
 

@@ -1005,6 +1005,7 @@ export interface EmsEvent {
   max_participants?: number | null;
   milestone_config?: number[] | null;
   is_leaderboard_public: boolean;
+  is_siswapreneur?: boolean;
   created_by?: string | null;
   created_at: string;
 }

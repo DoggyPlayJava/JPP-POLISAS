@@ -37,6 +37,7 @@ export interface EmsEventDetail extends EmsEvent {
     full_name: string | null;
     email: string | null;
   } | null;
+  is_siswapreneur?: boolean;
 }
 
 /**
