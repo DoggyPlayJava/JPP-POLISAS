@@ -95,7 +95,7 @@ export async function provisionEmsSiswapreneurBusiness(
       registration_no: regNo,
       ssm_registration_number: regNo,
       registration_type: 'EMS',
-      status: 'APPROVED',
+      status: 'ACTIVE',
       is_active: true,
       is_ems_siswapreneur: true,
       ems_event_id: params.eventId,

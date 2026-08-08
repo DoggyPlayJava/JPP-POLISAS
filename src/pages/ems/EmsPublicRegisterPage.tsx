@@ -26,6 +26,7 @@ import {
   RefreshCw,
   Award,
   MessageCircle,
+  Store,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchEmsEventById, registerEmsParticipant, type EmsEventDetail } from '@/lib/ems';
@@ -1453,7 +1454,7 @@ export function EmsPublicRegisterPage() {
                       type="button"
                       onClick={() => {
                         const targetTeamName = registeredParticipant?.team_name || teamName || leaderName;
-                        const text = `Salam/Hai ahli pasukan ${targetTeamName}! Sila daftar akaun Portal POLISAS anda melalui pautan ini supaya anda boleh mengakses Dashboard Perniagaan Siswapreneur & POS Polymart kami: https://jpp.polisas.edu.my/register`;
+                        const text = `Salam/Hai ahli pasukan ${targetTeamName}! Sila daftar akaun Portal POLISAS anda melalui pautan ini supaya anda boleh mengakses Dashboard Perniagaan Siswapreneur & POS Polymart kami: https://jpp.cipher-node.org/register`;
                         const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
                         window.open(waUrl, '_blank', 'noopener,noreferrer');
                       }}
@@ -1538,6 +1539,15 @@ export function EmsPublicRegisterPage() {
                 >
                   Salin ID Pass
                 </button>
+                {eventDetail?.is_siswapreneur && (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/keusahawanan')}
+                    className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition shadow-lg shadow-amber-500/20"
+                  >
+                    <Store className="w-4 h-4" /> Buka e-Keusahawanan
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
