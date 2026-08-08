@@ -116,7 +116,7 @@ export function EmsPublicRegisterPage() {
               const { data } = await supabase
                 .from('profiles')
                 .select('id')
-                .or(`matrix_no.eq.${matrix},matric_no.eq.${matrix}`)
+                .or(`matric_no.eq.${matrix}`)
                 .limit(1)
                 .maybeSingle();
               if (data?.id) hasAccount = true;

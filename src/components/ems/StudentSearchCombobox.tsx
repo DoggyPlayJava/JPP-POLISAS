@@ -69,8 +69,8 @@ export function StudentSearchCombobox({
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, matrix_no, matric_no, email, avatar_url')
-          .or(`full_name.ilike.%${trimmed}%,matrix_no.ilike.%${trimmed}%,matric_no.ilike.%${trimmed}%`)
+          .select('id, full_name, matric_no, email, avatar_url')
+          .or(`full_name.ilike.%${trimmed}%,matric_no.ilike.%${trimmed}%`)
           .limit(8);
 
         if (!error && data) {
