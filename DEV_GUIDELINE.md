@@ -387,6 +387,7 @@ npm run lint:css     # Stylelint sahaja
 | `src/lib/supabase.ts` | Client singleton. Jangan buat instance baru |
 | `src/lib/driveUpload.ts` | Routing storan hibrid. Silap = data tersalah simpan |
 | `src/lib/notifications.ts` | Helper notifikasi. Guna ini — jangan `.insert()` terus tanpa ikut polisi RLS |
+| `src/lib/keusahawanan.ts` | Helper pendaftaran automatik perniagaan Siswapreneur EMS & auto-archive |
 | `src/types/index.ts` | Type contracts. ALL_CLUBS, constants |
 | `src/pages/jpp/jppConfig.ts` | Config semua unit exco JPP. `isActive: false` = unit tersembunyi. `moduleLink` menentukan destinasi klik sidebar |
 | `src/store/useNotificationStore.ts` | Zustand store. Guna atomic selector — jangan destructure keseluruhan store |
