@@ -66,7 +66,7 @@ export async function provisionEmsSiswapreneurBusiness(
         const { data: profile } = await supabase
           .from('profiles')
           .select('id')
-          .or(`matrix_no.eq.${leaderMatrix},matric_no.eq.${leaderMatrix}`)
+          .or(`matric_no.eq.${leaderMatrix}`)
           .limit(1)
           .maybeSingle();
 
@@ -132,7 +132,7 @@ export async function provisionEmsSiswapreneurBusiness(
         const { data: profile } = await supabase
           .from('profiles')
           .select('id')
-          .or(`matrix_no.eq.${matrixNo},matric_no.eq.${matrixNo}`)
+          .or(`matric_no.eq.${matrixNo}`)
           .limit(1)
           .maybeSingle();
 

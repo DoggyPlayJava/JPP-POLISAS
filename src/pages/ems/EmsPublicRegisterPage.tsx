@@ -25,6 +25,7 @@ import {
   LogIn,
   RefreshCw,
   Award,
+  MessageCircle,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchEmsEventById, registerEmsParticipant, type EmsEventDetail } from '@/lib/ems';
