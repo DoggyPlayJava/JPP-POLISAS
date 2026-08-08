@@ -16,7 +16,6 @@ import {
   ArrowRight,
   ArrowLeft,
   AlertCircle,
-  QrCode,
   Check,
   Building2,
   Tag,
@@ -25,16 +24,20 @@ import {
   Image as ImageIcon,
   LogIn,
   RefreshCw,
+  Award,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchEmsEventById, registerEmsParticipant, type EmsEventDetail } from '@/lib/ems';
 import { uploadFileToDrive, uploadPdfToDrive } from '@/lib/driveUpload';
 import { supabase } from '@/lib/supabase';
-import type { EmsParticipant, EmsFormField } from '@/types';
+import type { EmsParticipant } from '@/types';
+import { StudentSearchCombobox } from '@/components/ems/StudentSearchCombobox';
+import { provisionEmsSiswapreneurBusiness } from '@/lib/keusahawanan';
 
 interface TeamMember {
   name: string;
   matrix_no_or_ic: string;
+  email?: string;
 }
 
 export function EmsPublicRegisterPage() {
@@ -54,7 +57,7 @@ export function EmsPublicRegisterPage() {
   // Form Step 1: Category & Basic Info
   const [participantCategory, setParticipantCategory] = useState<'STUDENT' | 'PUBLIC'>('STUDENT');
   const [entityMode, setEntityMode] = useState<'INDIVIDUAL' | 'TEAM'>('INDIVIDUAL');
-  
+
   // Basic info fields
   const [leaderName, setLeaderName] = useState('');
   const [matrixNo, setMatrixNo] = useState('');
@@ -200,6 +203,21 @@ export function EmsPublicRegisterPage() {
     setMembersList(updated);
   };
 
+  const handleSelectStudentForMember = (
+    index: number,
+    student: { full_name: string; matrix_no: string; email?: string }
+  ) => {
+    const updated = [...membersList];
+    updated[index] = {
+      ...updated[index],
+      name: student.full_name,
+      matrix_no_or_ic: student.matrix_no,
+      email: student.email || updated[index].email,
+    };
+    setMembersList(updated);
+    toast.success(`Ahli #${index + 1} diisi automatik: ${student.full_name}`);
+  };
+
   // Helper for options parsing in dynamic fields
   const parseOptions = (options: any): string[] => {
     if (!options) return [];
@@ -279,6 +297,20 @@ export function EmsPublicRegisterPage() {
     if (!eventDetail?.form_fields || eventDetail.form_fields.length === 0) return true;
 
     for (const field of eventDetail.form_fields) {
+      // Filter out duplicate team member fields in Step 2 if entityMode === 'TEAM'
+      if (entityMode === 'TEAM') {
+        const labelLower = (field.field_label || '').toLowerCase();
+        if (
+          labelLower.includes('senarai ahli') ||
+          labelLower.includes('nama ahli') ||
+          labelLower.includes('ahli pasukan') ||
+          labelLower.includes('member name') ||
+          labelLower.includes('team member')
+        ) {
+          continue;
+        }
+      }
+
       if (field.is_required) {
         const val = customResponses[field.field_label || field.id];
         if (val === undefined || val === null || String(val).trim() === '') {
@@ -293,7 +325,6 @@ export function EmsPublicRegisterPage() {
   const handleNextStep = () => {
     if (currentStep === 1) {
       if (!validateStep1()) return;
-      // If event has no form fields, skip step 2 if desired, or proceed
       setCurrentStep(2);
     } else if (currentStep === 2) {
       if (!validateStep2()) return;
@@ -342,6 +373,31 @@ export function EmsPublicRegisterPage() {
 
       const result = await registerEmsParticipant(participantPayload);
       setRegisteredParticipant(result);
+
+      // Auto-provision Siswapreneur Business if this is a Siswapreneur Event
+      if (eventDetail?.is_siswapreneur) {
+        try {
+          const provisionRes = await provisionEmsSiswapreneurBusiness({
+            eventId,
+            teamName: entityMode === 'TEAM' ? teamName.trim() : undefined,
+            leaderName: leaderName.trim(),
+            leaderUserId: user?.id,
+            leaderEmail: email.trim(),
+            leaderMatrixNo: participantCategory === 'STUDENT' ? matrixNo.trim() : undefined,
+            members: cleanMembers,
+          });
+
+          if (provisionRes.success && provisionRes.registrationNo) {
+            toast.success(
+              `Profil Perniagaan Siswapreneur EMS (${provisionRes.registrationNo}) berjaya dicipta secara automatik di e-Keusahawanan!`,
+              { duration: 6000 }
+            );
+          }
+        } catch (provErr) {
+          console.error('Error auto-provisioning Siswapreneur business:', provErr);
+        }
+      }
+
       toast.success('Pendaftaran Berjaya!', { id: toastId });
       setCurrentStep(4);
     } catch (err: any) {
@@ -753,45 +809,77 @@ export function EmsPublicRegisterPage() {
                       />
                     </div>
 
-                    {/* Dynamic Team Members List */}
-                    <div className="space-y-3 pt-2">
+                    {/* Dynamic Team Members List with Student Combobox */}
+                    <div className="space-y-4 pt-2">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-semibold text-slate-300">Senarai Ahli Pasukan</label>
+                        <div>
+                          <label className="text-xs font-semibold text-slate-300">Senarai Ahli Pasukan</label>
+                          <p className="text-[11px] text-slate-400">
+                            Cari pelajar POLISAS untuk mengisi nama & no. matrik secara automatik.
+                          </p>
+                        </div>
                         <button
                           type="button"
                           onClick={handleAddMember}
-                          className="inline-flex items-center gap-1.5 text-xs text-purple-400 hover:text-purple-300 font-semibold"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-xs font-semibold border border-purple-500/30 transition"
                         >
                           <Plus className="w-3.5 h-3.5" /> Tambah Ahli
                         </button>
                       </div>
 
                       {membersList.map((member, idx) => (
-                        <div key={idx} className="flex items-center gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                          <span className="text-xs font-bold text-slate-500 w-5">#{idx + 1}</span>
-                          <input
-                            type="text"
-                            value={member.name}
-                            onChange={(e) => handleMemberChange(idx, 'name', e.target.value)}
-                            placeholder="Nama Ahli"
-                            className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500"
-                          />
-                          <input
-                            type="text"
-                            value={member.matrix_no_or_ic}
-                            onChange={(e) => handleMemberChange(idx, 'matrix_no_or_ic', e.target.value)}
-                            placeholder="No. Matrik / IC"
-                            className="w-36 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500"
-                          />
-                          {membersList.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveMember(idx)}
-                              className="text-slate-500 hover:text-rose-400 p-1"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
+                        <div key={idx} className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/20">
+                              Ahli Pasukan #{idx + 1}
+                            </span>
+                            {membersList.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveMember(idx)}
+                                className="text-slate-500 hover:text-rose-400 p-1 transition"
+                                title="Padam Ahli"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Student Combobox */}
+                          <div>
+                            <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                              Cari & Pilih Pelajar POLISAS:
+                            </label>
+                            <StudentSearchCombobox
+                              onSelectStudent={(student) => handleSelectStudentForMember(idx, student)}
+                              placeholder="Cari mengikut Nama atau No. Matrik POLISAS..."
+                              value={member.name}
+                            />
+                          </div>
+
+                          {/* Manual adjustment fields */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[11px] font-medium text-slate-400 mb-1">Nama Ahli</label>
+                              <input
+                                type="text"
+                                value={member.name}
+                                onChange={(e) => handleMemberChange(idx, 'name', e.target.value)}
+                                placeholder="Nama Penuh Ahli"
+                                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-medium text-slate-400 mb-1">No. Matrik / IC</label>
+                              <input
+                                type="text"
+                                value={member.matrix_no_or_ic}
+                                onChange={(e) => handleMemberChange(idx, 'matrix_no_or_ic', e.target.value)}
+                                placeholder="No. Matrik / IC"
+                                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono uppercase focus:outline-none focus:border-purple-500"
+                              />
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -835,201 +923,226 @@ export function EmsPublicRegisterPage() {
                 <p className="text-slate-400 text-xs mt-1">Sila isi borang soalan khas yang ditetapkan oleh penganjur.</p>
               </div>
 
-              {(!eventDetail.form_fields || eventDetail.form_fields.length === 0) ? (
-                <div className="bg-slate-950 border border-slate-800 rounded-2xl p-8 text-center space-y-2">
-                  <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto opacity-80" />
-                  <p className="text-sm font-semibold text-slate-200">Tiada Borang Tambahan Diperlukan</p>
-                  <p className="text-xs text-slate-400">Penganjur tidak menetapkan sebarang medan dinamik bagi acara ini. Sila terus ke langkah seterusnya.</p>
-                </div>
-              ) : (
-                <div className="space-y-5">
-                  {eventDetail.form_fields.map((field) => {
-                    const fieldKey = field.field_label || field.id;
-                    const options = parseOptions(field.options);
+              {(() => {
+                // Remove duplicate team member input fields from Step 2 if entityMode === 'TEAM'
+                const fieldsToRender = (eventDetail.form_fields || []).filter((field) => {
+                  if (entityMode === 'TEAM') {
+                    const labelLower = (field.field_label || '').toLowerCase();
+                    if (
+                      labelLower.includes('senarai ahli') ||
+                      labelLower.includes('nama ahli') ||
+                      labelLower.includes('ahli pasukan') ||
+                      labelLower.includes('member name') ||
+                      labelLower.includes('team member')
+                    ) {
+                      return false;
+                    }
+                  }
+                  return true;
+                });
 
-                    return (
-                      <div key={field.id} className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 space-y-2">
-                        <label className="block text-xs font-semibold text-slate-200">
-                          {field.field_label} {field.is_required && <span className="text-rose-400">*</span>}
-                        </label>
+                if (fieldsToRender.length === 0) {
+                  return (
+                    <div className="bg-slate-950 border border-slate-800 rounded-2xl p-8 text-center space-y-2">
+                      <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto opacity-80" />
+                      <p className="text-sm font-semibold text-slate-200">Tiada Borang Tambahan Diperlukan</p>
+                      <p className="text-xs text-slate-400">
+                        Penganjur tidak menetapkan sebarang medan dinamik bagi acara ini. Sila terus ke langkah seterusnya.
+                      </p>
+                    </div>
+                  );
+                }
 
-                        {field.field_type === 'textarea' ? (
-                          <textarea
-                            rows={3}
-                            value={customResponses[fieldKey] || ''}
-                            onChange={(e) => setCustomResponses({ ...customResponses, [fieldKey]: e.target.value })}
-                            placeholder="Jawapan anda..."
-                            className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition"
-                          />
-                        ) : field.field_type === 'select' ? (
-                          <select
-                            value={customResponses[fieldKey] || ''}
-                            onChange={(e) => setCustomResponses({ ...customResponses, [fieldKey]: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition"
-                          >
-                            <option value="">-- Pilih Opsi --</option>
-                            {options.map((opt, i) => (
-                              <option key={i} value={opt}>
-                                {opt}
-                              </option>
-                            ))}
-                          </select>
-                        ) : field.field_type === 'checkbox' ? (
-                          <div className="flex items-center gap-3 pt-1">
-                            <input
-                              type="checkbox"
-                              id={`check_${field.id}`}
-                              checked={!!customResponses[fieldKey]}
-                              onChange={(e) => setCustomResponses({ ...customResponses, [fieldKey]: e.target.checked })}
-                              className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-indigo-500"
+                return (
+                  <div className="space-y-5">
+                    {fieldsToRender.map((field) => {
+                      const fieldKey = field.field_label || field.id;
+                      const options = parseOptions(field.options);
+
+                      return (
+                        <div key={field.id} className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 space-y-2">
+                          <label className="block text-xs font-semibold text-slate-200">
+                            {field.field_label} {field.is_required && <span className="text-rose-400">*</span>}
+                          </label>
+
+                          {field.field_type === 'textarea' ? (
+                            <textarea
+                              rows={3}
+                              value={customResponses[fieldKey] || ''}
+                              onChange={(e) => setCustomResponses({ ...customResponses, [fieldKey]: e.target.value })}
+                              placeholder="Jawapan anda..."
+                              className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition"
                             />
-                            <label htmlFor={`check_${field.id}`} className="text-xs text-slate-300 font-medium">
-                              Ya, saya bersetuju / mengesahkan
-                            </label>
-                          </div>
-                        ) : field.field_type === 'image_upload' ? (
-                          <div className="space-y-3 pt-1">
-                            {customResponses[fieldKey] ? (
-                              <div className="relative group rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 max-w-sm aspect-video flex items-center justify-center">
-                                <img
-                                  src={customResponses[fieldKey]}
-                                  alt={field.field_label}
-                                  className="w-full h-full object-cover"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const updated = { ...customResponses };
-                                    delete updated[fieldKey];
-                                    setCustomResponses(updated);
-                                  }}
-                                  className="absolute top-2 right-2 bg-rose-600/90 text-white p-2 rounded-xl hover:bg-rose-500 transition shadow"
-                                  title="Padam Gambar"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 text-center transition bg-slate-900/40">
-                                <input
-                                  type="file"
-                                  id={`file_input_${field.id}`}
-                                  accept="image/*"
-                                  disabled={uploadingFields[field.id]}
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                      handleDynamicFileUpload(field.id, fieldKey, 'image_upload', file);
-                                    }
-                                  }}
-                                  className="hidden"
-                                />
-                                <label
-                                  htmlFor={`file_input_${field.id}`}
-                                  className="cursor-pointer flex flex-col items-center justify-center space-y-2"
-                                >
-                                  <div className="w-10 h-10 rounded-full bg-indigo-600/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-                                    {uploadingFields[field.id] ? (
-                                      <RefreshCw className="w-5 h-5 animate-spin text-indigo-400" />
-                                    ) : (
-                                      <ImageIcon className="w-5 h-5" />
-                                    )}
-                                  </div>
-                                  <div>
-                                    <p className="text-xs font-bold text-white">
-                                      {uploadingFields[field.id] ? 'Memuat naik gambar...' : 'Pilih / Muat Naik Gambar'}
-                                    </p>
-                                    <p className="text-[10px] text-slate-400 mt-0.5">Format disokong: JPG, PNG, WEBP</p>
-                                  </div>
-                                </label>
-                              </div>
-                            )}
-                          </div>
-                        ) : field.field_type === 'document_upload' ? (
-                          <div className="space-y-3 pt-1">
-                            {customResponses[fieldKey] ? (
-                              <div className="flex items-center justify-between p-4 bg-slate-900 border border-slate-800 rounded-2xl">
-                                <div className="flex items-center gap-3 min-w-0">
-                                  <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 shrink-0">
-                                    <FileText className="w-5 h-5" />
-                                  </div>
-                                  <div className="min-w-0">
-                                    <p className="text-xs font-bold text-white truncate max-w-xs sm:max-w-md">
-                                      {customResponses[fieldKey].split('/').pop() || 'Dokumen'}
-                                    </p>
-                                    <a
-                                      href={customResponses[fieldKey]}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-[11px] text-indigo-400 hover:text-indigo-300 underline font-medium"
-                                    >
-                                      Lihat Dokumen
-                                    </a>
-                                  </div>
+                          ) : field.field_type === 'select' ? (
+                            <select
+                              value={customResponses[fieldKey] || ''}
+                              onChange={(e) => setCustomResponses({ ...customResponses, [fieldKey]: e.target.value })}
+                              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition"
+                            >
+                              <option value="">-- Pilih Opsi --</option>
+                              {options.map((opt, i) => (
+                                <option key={i} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </select>
+                          ) : field.field_type === 'checkbox' ? (
+                            <div className="flex items-center gap-3 pt-1">
+                              <input
+                                type="checkbox"
+                                id={`check_${field.id}`}
+                                checked={!!customResponses[fieldKey]}
+                                onChange={(e) => setCustomResponses({ ...customResponses, [fieldKey]: e.target.checked })}
+                                className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-indigo-500"
+                              />
+                              <label htmlFor={`check_${field.id}`} className="text-xs text-slate-300 font-medium">
+                                Ya, saya bersetuju / mengesahkan
+                              </label>
+                            </div>
+                          ) : field.field_type === 'image_upload' ? (
+                            <div className="space-y-3 pt-1">
+                              {customResponses[fieldKey] ? (
+                                <div className="relative group rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 max-w-sm aspect-video flex items-center justify-center">
+                                  <img
+                                    src={customResponses[fieldKey]}
+                                    alt={field.field_label}
+                                    className="w-full h-full object-cover"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = { ...customResponses };
+                                      delete updated[fieldKey];
+                                      setCustomResponses(updated);
+                                    }}
+                                    className="absolute top-2 right-2 bg-rose-600/90 text-white p-2 rounded-xl hover:bg-rose-500 transition shadow"
+                                    title="Padam Gambar"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
                                 </div>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const updated = { ...customResponses };
-                                    delete updated[fieldKey];
-                                    setCustomResponses(updated);
-                                  }}
-                                  className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition"
-                                  title="Padam Dokumen"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 text-center transition bg-slate-900/40">
-                                <input
-                                  type="file"
-                                  id={`file_input_${field.id}`}
-                                  accept=".pdf,.doc,.docx"
-                                  disabled={uploadingFields[field.id]}
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                      handleDynamicFileUpload(field.id, fieldKey, 'document_upload', file);
-                                    }
-                                  }}
-                                  className="hidden"
-                                />
-                                <label
-                                  htmlFor={`file_input_${field.id}`}
-                                  className="cursor-pointer flex flex-col items-center justify-center space-y-2"
-                                >
-                                  <div className="w-10 h-10 rounded-full bg-purple-600/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
-                                    {uploadingFields[field.id] ? (
-                                      <RefreshCw className="w-5 h-5 animate-spin text-purple-400" />
-                                    ) : (
-                                      <Upload className="w-5 h-5" />
-                                    )}
+                              ) : (
+                                <div className="border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 text-center transition bg-slate-900/40">
+                                  <input
+                                    type="file"
+                                    id={`file_input_${field.id}`}
+                                    accept="image/*"
+                                    disabled={uploadingFields[field.id]}
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) {
+                                        handleDynamicFileUpload(field.id, fieldKey, 'image_upload', file);
+                                      }
+                                    }}
+                                    className="hidden"
+                                  />
+                                  <label
+                                    htmlFor={`file_input_${field.id}`}
+                                    className="cursor-pointer flex flex-col items-center justify-center space-y-2"
+                                  >
+                                    <div className="w-10 h-10 rounded-full bg-indigo-600/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                                      {uploadingFields[field.id] ? (
+                                        <RefreshCw className="w-5 h-5 animate-spin text-indigo-400" />
+                                      ) : (
+                                        <ImageIcon className="w-5 h-5" />
+                                      )}
+                                    </div>
+                                    <div>
+                                      <p className="text-xs font-bold text-white">
+                                        {uploadingFields[field.id] ? 'Memuat naik gambar...' : 'Pilih / Muat Naik Gambar'}
+                                      </p>
+                                      <p className="text-[10px] text-slate-400 mt-0.5">Format disokong: JPG, PNG, WEBP</p>
+                                    </div>
+                                  </label>
+                                </div>
+                              )}
+                            </div>
+                          ) : field.field_type === 'document_upload' ? (
+                            <div className="space-y-3 pt-1">
+                              {customResponses[fieldKey] ? (
+                                <div className="flex items-center justify-between p-4 bg-slate-900 border border-slate-800 rounded-2xl">
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 shrink-0">
+                                      <FileText className="w-5 h-5" />
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="text-xs font-bold text-white truncate max-w-xs sm:max-w-md">
+                                        {customResponses[fieldKey].split('/').pop() || 'Dokumen'}
+                                      </p>
+                                      <a
+                                        href={customResponses[fieldKey]}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-[11px] text-indigo-400 hover:text-indigo-300 underline font-medium"
+                                      >
+                                        Lihat Dokumen
+                                      </a>
+                                    </div>
                                   </div>
-                                  <div>
-                                    <p className="text-xs font-bold text-white">
-                                      {uploadingFields[field.id] ? 'Memuat naik dokumen...' : 'Pilih / Muat Naik Dokumen'}
-                                    </p>
-                                    <p className="text-[10px] text-slate-400 mt-0.5">Format disokong: PDF, DOC, DOCX</p>
-                                  </div>
-                                </label>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <input
-                            type="text"
-                            value={customResponses[fieldKey] || ''}
-                            onChange={(e) => setCustomResponses({ ...customResponses, [fieldKey]: e.target.value })}
-                            placeholder="Masukkan jawapan anda"
-                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition"
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = { ...customResponses };
+                                      delete updated[fieldKey];
+                                      setCustomResponses(updated);
+                                    }}
+                                    className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition"
+                                    title="Padam Dokumen"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 text-center transition bg-slate-900/40">
+                                  <input
+                                    type="file"
+                                    id={`file_input_${field.id}`}
+                                    accept=".pdf,.doc,.docx"
+                                    disabled={uploadingFields[field.id]}
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) {
+                                        handleDynamicFileUpload(field.id, fieldKey, 'document_upload', file);
+                                      }
+                                    }}
+                                    className="hidden"
+                                  />
+                                  <label
+                                    htmlFor={`file_input_${field.id}`}
+                                    className="cursor-pointer flex flex-col items-center justify-center space-y-2"
+                                  >
+                                    <div className="w-10 h-10 rounded-full bg-purple-600/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                                      {uploadingFields[field.id] ? (
+                                        <RefreshCw className="w-5 h-5 animate-spin text-purple-400" />
+                                      ) : (
+                                        <Upload className="w-5 h-5" />
+                                      )}
+                                    </div>
+                                    <div>
+                                      <p className="text-xs font-bold text-white">
+                                        {uploadingFields[field.id] ? 'Memuat naik dokumen...' : 'Pilih / Muat Naik Dokumen'}
+                                      </p>
+                                      <p className="text-[10px] text-slate-400 mt-0.5">Format disokong: PDF, DOC, DOCX</p>
+                                    </div>
+                                  </label>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <input
+                              type="text"
+                              value={customResponses[fieldKey] || ''}
+                              onChange={(e) => setCustomResponses({ ...customResponses, [fieldKey]: e.target.value })}
+                              placeholder="Masukkan jawapan anda"
+                              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition"
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
 
               {/* Navigation Buttons */}
               <div className="pt-6 border-t border-slate-800 flex items-center justify-between">
