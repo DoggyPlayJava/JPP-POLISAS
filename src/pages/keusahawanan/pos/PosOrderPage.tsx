@@ -432,7 +432,7 @@ export function PosOrderPage() {
   const lowStockItems = pos.products.filter(p => p.stock_quantity > 0 && p.stock_quantity <= p.stock_alert_threshold);
 
   return (
-    <div className="min-h-full flex flex-col">
+    <div className="min-h-full flex flex-col pb-28 md:pb-8">
       {/* Low stock banner */}
       <AnimatePresence>
         {lowStockItems.length > 0 && (

@@ -808,7 +808,7 @@ export function PosProductPage() {
   };
 
   return (
-    <div className="min-h-full p-4 sm:p-6 space-y-6">
+    <div className="min-h-full p-4 sm:p-6 space-y-6 pb-28 md:pb-8">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

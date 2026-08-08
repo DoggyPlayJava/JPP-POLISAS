@@ -285,7 +285,7 @@ export function KeusahawananProgram() {
 
   // ─── RENDER ───────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-full p-4 sm:p-6 md:p-8 space-y-6">
+    <div className="min-h-full p-4 sm:p-6 md:p-8 space-y-6 pb-28 md:pb-8">
 
       {/* ── Header ── */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}

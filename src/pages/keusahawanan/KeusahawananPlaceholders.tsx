@@ -8,7 +8,7 @@ import { hexToRgba } from '@/lib/utils';
 function ComingSoonPage({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   const { color } = useExcoTheme();
   return (
-    <div className="min-h-full flex items-center justify-center p-8 bg-background">
+    <div className="min-h-full flex items-center justify-center p-8 bg-background pb-28 md:pb-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-sm">
         {/* Icon dalam kotak neutral, border berwarna subtle */}
         <div

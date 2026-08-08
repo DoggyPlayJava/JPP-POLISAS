@@ -481,7 +481,7 @@ export function KeusahawananDashboard() {
   ];
 
   return (
-    <div className="min-h-full p-4 sm:p-6 md:p-8 space-y-6 max-w-[1600px] mx-auto pb-24">
+    <div className="min-h-full p-4 sm:p-6 md:p-8 space-y-6 max-w-[1600px] mx-auto pb-28 md:pb-8">
       
       {/* Admin Banner */}
       {isSuperAdmin && (

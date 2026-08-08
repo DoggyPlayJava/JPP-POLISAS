@@ -69,7 +69,7 @@ export function PosHistoryPage() {
   } : null;
 
   return (
-    <div className="min-h-full p-4 sm:p-6 space-y-6">
+    <div className="min-h-full p-4 sm:p-6 space-y-6 pb-28 md:pb-8">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center gap-2 mb-1">

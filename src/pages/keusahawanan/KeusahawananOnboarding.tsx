@@ -78,7 +78,7 @@ export function KeusahawananOnboarding() {
   const isWaiting = pendingMemberships.length > 0;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 relative overflow-hidden pb-28 md:pb-8">
       {/* Background Enhancements */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full mix-blend-screen filter blur-[120px] opacity-20 bg-emerald-700 animate-slow-spin" />
