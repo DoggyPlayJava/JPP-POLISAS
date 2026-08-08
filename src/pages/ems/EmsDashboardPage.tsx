@@ -47,6 +47,7 @@ import {
   EmsLeaderboardItem,
 } from '@/lib/ems';
 import { supabase } from '@/lib/supabase';
+import { provisionEmsSiswapreneurBusiness } from '@/lib/keusahawanan';
 import type { EmsEvent, EmsJuryCode, EmsCertificate } from '@/types';
 
 
@@ -68,6 +69,7 @@ export function EmsDashboardPage() {
   const [events, setEvents] = useState<(EmsEvent & { creator?: any })[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>('APPROVED');
+  const [syncingBizId, setSyncingBizId] = useState<string | null>(null);
 
   // Modals state
   const [qrModalEvent, setQrModalEvent] = useState<EmsEvent | null>(null);
@@ -155,6 +157,124 @@ export function EmsDashboardPage() {
       toast.error(err?.message || 'Gagal mendaftar peserta');
     } finally {
       setIsSubmittingManualReg(false);
+    }
+  };
+
+  // Resolve user id daripada matric/email (guna session admin — boleh nampak semua profile)
+  const resolveProfileId = async (
+    matrixNo?: string | null,
+    email?: string | null
+  ): Promise<string | null> => {
+    if (matrixNo && matrixNo.trim()) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('matric_no', matrixNo.trim())
+        .maybeSingle();
+      if (data?.id) return data.id;
+    }
+    if (email && email.trim()) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id')
+        .ilike('email', email.trim().toLowerCase())
+        .maybeSingle();
+      if (data?.id) return data.id;
+    }
+    return null;
+  };
+
+  // Sync semua peserta EMS event ke e-Keusahawanan (create business + membership yang hilang)
+  const handleSyncEmsBusiness = async (event: EmsEvent) => {
+    setSyncingBizId(event.id);
+    try {
+      const { data: participants, error: pErr } = await supabase
+        .from('ems_participants')
+        .select('id, event_id, participant_type, team_name, leader_name, matrix_no, email, members_list')
+        .eq('event_id', event.id);
+      if (pErr) throw pErr;
+
+      const { data: businesses, error: bErr } = await supabase
+        .from('keusahawanan_businesses')
+        .select('id, name')
+        .eq('ems_event_id', event.id)
+        .eq('is_ems_siswapreneur', true);
+      if (bErr) throw bErr;
+
+      const byName = new Map<string, { id: string }>();
+      (businesses || []).forEach((b: any) => {
+        const key = (b.name || '').trim().toLowerCase();
+        if (key) byName.set(key, b);
+      });
+
+      let created = 0;
+      let membershipsFixed = 0;
+
+      for (const p of participants || []) {
+        const bizName = (p.team_name || '').trim();
+        const key = bizName.toLowerCase();
+        const existing = key ? byName.get(key) : null;
+
+        if (!existing) {
+          const res = await provisionEmsSiswapreneurBusiness({
+            eventId: event.id,
+            teamName: bizName || undefined,
+            leaderName: p.leader_name || '',
+            // JANGAN hantar leaderUserId — biar provision resolve pemilik sebenar dari matric/email
+            leaderEmail: p.email || undefined,
+            leaderMatrixNo: p.participant_type === 'STUDENT' ? p.matrix_no || undefined : undefined,
+            members: p.members_list || [],
+          });
+          if (res.success && res.businessId) {
+            created++;
+            byName.set(key, { id: res.businessId });
+          }
+          continue;
+        }
+
+        // Business dah wujud — pastikan memberships OWNER cukup
+        const { data: mems } = await supabase
+          .from('student_business_memberships')
+          .select('user_id')
+          .eq('business_id', existing.id);
+        const have = new Set((mems || []).map((m: any) => m.user_id));
+
+        const want = new Set<string>();
+        const leaderId = await resolveProfileId(
+          p.participant_type === 'STUDENT' ? p.matrix_no : null,
+          p.email
+        );
+        if (leaderId) want.add(leaderId);
+        for (const m of p.members_list || []) {
+          const mid = await resolveProfileId(m?.matrix_no_or_ic, m?.email);
+          if (mid) want.add(mid);
+        }
+
+        const toAdd = Array.from(want).filter((uid) => !have.has(uid));
+        if (toAdd.length > 0) {
+          const { error: mErr } = await supabase
+            .from('student_business_memberships')
+            .insert(
+              toAdd.map((uid) => ({
+                business_id: existing.id,
+                user_id: uid,
+                role: 'OWNER' as const,
+                status: 'ACTIVE' as const,
+              }))
+            );
+          if (!mErr) membershipsFixed += toAdd.length;
+        }
+      }
+
+      toast.success(
+        `Sync siap: ${created} perniagaan baharu, ${membershipsFixed} keahlian ditambah.`,
+        { duration: 6000 }
+      );
+    } catch (err: any) {
+      console.error('Sync EMS business error:', err);
+      toast.error(err?.message || 'Gagal sync e-Keusahawanan.');
+    } finally {
+      setSyncingBizId(null);
     }
   };
 
@@ -658,6 +778,17 @@ export function EmsDashboardPage() {
                       <UserPlus className="w-3.5 h-3.5 text-indigo-400" />
                       <span>+ Pendaftaran Manual</span>
                     </button>
+
+                    {event.is_siswapreneur && (
+                      <button
+                        onClick={() => handleSyncEmsBusiness(event)}
+                        disabled={syncingBizId === event.id}
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-teal-600/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/30 font-semibold text-xs transition-all disabled:opacity-50"
+                      >
+                        <RefreshCw className={cn('w-3.5 h-3.5 text-teal-400', syncingBizId === event.id && 'animate-spin')} />
+                        <span>{syncingBizId === event.id ? 'Menyinkronkan...' : 'Sync ke e-Keusahawanan'}</span>
+                      </button>
+                    )}
 
                     <button
                       onClick={() => {
