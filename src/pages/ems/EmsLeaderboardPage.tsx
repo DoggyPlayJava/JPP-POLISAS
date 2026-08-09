@@ -79,6 +79,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
+  const [rubricFilter, setRubricFilter] = useState<string>('ALL');
   const [hasSetDefaultCategory, setHasSetDefaultCategory] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -118,7 +119,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
         scoresRes,
       ] = await Promise.all([
         supabase.from('ems_events').select('*').eq('id', eventId).single(),
-        fetchEmsLeaderboard(eventId),
+        fetchEmsLeaderboard(eventId, rubricFilter === 'ALL' ? undefined : rubricFilter),
         supabase.from('ems_participants').select('*').eq('event_id', eventId),
         supabase.from('ems_jury_codes').select('*').eq('event_id', eventId),
         supabase.from('ems_rubrics').select('*').eq('event_id', eventId).order('sort_order', { ascending: true }),
@@ -146,7 +147,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
       setLoading(false);
       setRefreshing(false);
     }
-  }, [eventId]);
+  }, [eventId, rubricFilter]);
 
   const loadLeaderboard = loadData;
 
@@ -241,6 +242,46 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
     });
     return Array.from(set).sort();
   }, [leaderboard]);
+
+  // Extract Rubric Categories (papan anugerah berasingan: Best Pitching / Best Showcase / dll)
+  const rubricCategories = useMemo(() => {
+    const set = new Set<string>();
+    rubrics.forEach((r) => {
+      const n = r.category_name?.trim();
+      if (n) set.add(n);
+    });
+    return Array.from(set).sort();
+  }, [rubrics]);
+
+  // Rubric award tabs — shared render between Stage Mode & Leaderboard Mode
+  const rubricTabs =
+    rubricCategories.length > 1 ? (
+      <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10 overflow-x-auto max-w-md">
+        <button
+          onClick={() => setRubricFilter('ALL')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
+            rubricFilter === 'ALL'
+              ? 'bg-teal-400 text-slate-950 shadow-md'
+              : 'text-white/70 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          Keseluruhan
+        </button>
+        {rubricCategories.map((rc) => (
+          <button
+            key={rc}
+            onClick={() => setRubricFilter(rc)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
+              rubricFilter === rc
+                ? 'bg-teal-400 text-slate-950 shadow-md'
+                : 'text-white/70 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            {rc}
+          </button>
+        ))}
+      </div>
+    ) : null;
 
   // Set default category filter when categories load
   useEffect(() => {
@@ -564,6 +605,9 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Rubric Award Tabs (papan anugerah berasingan) */}
+            {rubricTabs}
+
             {/* Category Filter Tabs */}
             {categories.length > 0 && (
               <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10 overflow-x-auto max-w-md">
@@ -1048,6 +1092,13 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
           {/* Filter and Search Bar */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            {/* Rubric Award Tabs (papan anugerah berasingan) */}
+            {rubricTabs && (
+              <div className="w-full md:w-auto overflow-x-auto">
+                {rubricTabs}
+              </div>
+            )}
+
             {/* Category Tabs */}
             <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
               <button

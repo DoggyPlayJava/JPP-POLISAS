@@ -687,7 +687,10 @@ export async function overrideJuryScore(
  * Fetches participants and scores, calculates average jury score for each participant/team, orders descending by score.
  * Uses Promise.all for parallel fetches.
  */
-export async function fetchEmsLeaderboard(eventId: string): Promise<EmsLeaderboardItem[]> {
+export async function fetchEmsLeaderboard(
+  eventId: string,
+  rubricCategory?: string
+): Promise<EmsLeaderboardItem[]> {
   const [participantsRes, rubricsRes, scoresRes] = await Promise.all([
     supabase.from('ems_participants').select('*').eq('event_id', eventId),
     supabase.from('ems_rubrics').select('*').eq('event_id', eventId),
@@ -700,6 +703,20 @@ export async function fetchEmsLeaderboard(eventId: string): Promise<EmsLeaderboa
   const rubrics: EmsRubricCriteria[] = rubricsRes.data || [];
   const scores: EmsScore[] = scoresRes.data || [];
 
+  // Rubrik-category scope (cth "Best Pitching") — papan anugerah berasingan.
+  // Kalau tak diberi = papan keseluruhan (semua rubrik).
+  const rubricCategoryClean = rubricCategory?.trim().toLowerCase();
+  const scopedRubricIds = rubricCategoryClean
+    ? new Set(
+        rubrics
+          .filter((r) => (r.category_name?.trim().toLowerCase() || 'umum') === rubricCategoryClean)
+          .map((r) => r.id)
+      )
+    : null;
+  const scopedRubrics = scopedRubricIds
+    ? rubrics.filter((r) => scopedRubricIds.has(r.id))
+    : rubrics;
+
   const leaderboard: EmsLeaderboardItem[] = participants.map((participant) => {
     const categoryName =
       participant.category_name ||
@@ -707,7 +724,10 @@ export async function fetchEmsLeaderboard(eventId: string): Promise<EmsLeaderboa
       (participant.custom_responses as Record<string, any>)?.category_name ||
       null;
 
-    const pScores = scores.filter((s) => s.participant_id === participant.id);
+    const pScoresAll = scores.filter((s) => s.participant_id === participant.id);
+    const pScores = scopedRubricIds
+      ? pScoresAll.filter((s) => scopedRubricIds.has(s.rubric_id))
+      : pScoresAll;
 
     const juryMap: Record<string, EmsScore[]> = {};
     pScores.forEach((s) => {
@@ -726,7 +746,7 @@ export async function fetchEmsLeaderboard(eventId: string): Promise<EmsLeaderboa
         const jScores = juryMap[jId];
         let juryWeightedTotal = 0;
         jScores.forEach((scoreObj) => {
-          const rubric = rubrics.find((r) => r.id === scoreObj.rubric_id);
+          const rubric = scopedRubrics.find((r) => r.id === scoreObj.rubric_id);
           if (rubric) {
             const maxScore = Number(rubric.max_score) > 0 ? Number(rubric.max_score) : 10;
             const weight = rubric.weight !== undefined && rubric.weight !== null ? Number(rubric.weight) : 1;
@@ -739,7 +759,7 @@ export async function fetchEmsLeaderboard(eventId: string): Promise<EmsLeaderboa
         totalJurySum += juryWeightedTotal;
       });
 
-      rubrics.forEach((r) => {
+      scopedRubrics.forEach((r) => {
         const rScores = pScores.filter((s) => s.rubric_id === r.id);
         if (rScores.length > 0) {
           const avgR = rScores.reduce((acc, curr) => acc + Number(curr.score), 0) / rScores.length;
