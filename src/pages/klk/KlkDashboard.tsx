@@ -255,6 +255,7 @@ export function KlkDashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>(MOCK_STATS);
   const [recentSubmissions, setRecentSubmissions] = useState<any[]>([]);
+  const [cadanganAll, setCadanganAll] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dbReady, setDbReady] = useState(false);
   const [searchQ, setSearchQ] = useState('');
@@ -302,7 +303,7 @@ export function KlkDashboard() {
       setDbReady(true);
 
       // Fetch semua data untuk academic year semasa
-      const [residencyRes, kawasanRes, lainRes] = await Promise.all([
+      const [residencyRes, kawasanRes, lainRes, cadanganRes] = await Promise.all([
         supabase
           .from('klk_student_residency')
           .select('id, tinggal_luar, kawasan_kediaman, jabatan, source, created_at, nama_pelajar, no_matrik, no_telefon, kawasan_custom, cadangan')
@@ -314,9 +315,19 @@ export function KlkDashboard() {
           .select('name, latitude, longitude')
           .eq('is_active', true),
         supabase.rpc('get_klk_lain_lain_summary'),
+        // Query penuh untuk tab Cadangan — JANGAN slice 20, supaya cadangan lama tak hilang
+        supabase
+          .from('klk_student_residency')
+          .select('id, nama_pelajar, no_matrik, kawasan_kediaman, kawasan_custom, cadangan, created_at')
+          .eq('academic_year', academicYear)
+          .eq('is_expired', false)
+          .neq('cadangan', '')
+          .not('cadangan', 'is', null)
+          .order('created_at', { ascending: false }),
       ]);
 
       if (lainRes.data) setLainLainCount((lainRes.data as any[]).length);
+      setCadanganAll(cadanganRes.data ?? []);
 
       const allData = residencyRes.data ?? [];
       const kawasanCoords: Record<string, { lat: number; lng: number }> = {};
@@ -366,7 +377,8 @@ export function KlkDashboard() {
         by_jabatan: byJabatan,
       });
 
-      setRecentSubmissions(luarData.slice(0, 20));
+      // Senarai penuh (bukan 20 sahaja) — pelajar lama juga kena nampak
+      setRecentSubmissions(luarData);
     } catch (e) {
       console.error('[KlkDashboard] fetchAll error:', e);
     } finally {
@@ -420,13 +432,24 @@ export function KlkDashboard() {
   const top5Kawasan = stats.by_kawasan.slice(0, 5);
   const maxKawasanCount = top5Kawasan[0]?.count ?? 1;
 
+  // Key kawasan gabungan: LAIN_LAIN guna kawasan_custom, sepadan dengan pilihan filter
+  const kawasanKey = (d: any) =>
+    d.kawasan_kediaman === 'LAIN_LAIN'
+      ? (d.kawasan_custom ?? 'LAIN_LAIN')
+      : (d.kawasan_kediaman ?? 'TIDAK DIISI');
+
   const filteredSubs = recentSubmissions.filter(d => {
     const matchQ = !searchQ || d.nama_pelajar?.toLowerCase().includes(searchQ.toLowerCase()) || d.no_matrik?.toLowerCase().includes(searchQ.toLowerCase());
-    const matchK = !filterKawasan || d.kawasan_kediaman === filterKawasan;
+    const matchK = !filterKawasan || kawasanKey(d) === filterKawasan;
     return matchQ && matchK;
   });
 
-  const cadanganList = filteredSubs.filter(d => d.cadangan && d.cadangan.trim().length > 0);
+  // Tab Cadangan: dari query penuh, bukan dari 20 rekod terbaru — cadangan tak hilang lagi
+  const cadanganList = cadanganAll.filter(d => {
+    const matchQ = !searchQ || d.nama_pelajar?.toLowerCase().includes(searchQ.toLowerCase()) || d.no_matrik?.toLowerCase().includes(searchQ.toLowerCase());
+    const matchK = !filterKawasan || kawasanKey(d) === filterKawasan;
+    return matchQ && matchK;
+  });
 
   if (!hasAccess) return null;
 

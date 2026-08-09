@@ -2945,7 +2945,6 @@ cron.schedule('*/5 * * * *', async () => {
         console.error('[WATCHDOG] Cron error:', err.message);
     }
 });
-
 // ==========================================
 // Serve Static Frontend (Vite Build)
 // ==========================================
