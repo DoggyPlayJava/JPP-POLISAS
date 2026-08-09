@@ -188,6 +188,13 @@ export function PosOrderPage() {
   const [appliedPromo, setAppliedPromo]     = useState<BusinessPromotion | null>(null);
   const [couponError, setCouponError]       = useState('');
 
+  // Ciri 6: Kupon acara (voucher organisasi — MAHRAJAN dll)
+  const eventId = (selectedBusiness as any)?.ems_event_id ?? null;
+  const [eventCoupons, setEventCoupons]         = useState<any[]>([]);
+  const [appliedEventCoupon, setAppliedEventCoupon] = useState<any | null>(null);
+  const [eventCouponError, setEventCouponError]     = useState('');
+  const [eventCouponApplying, setEventCouponApplying] = useState(false);
+
   const searchRef = useRef<HTMLInputElement>(null);
 
   // ── Derived ───────────────────────────────────────────────────────────────
@@ -207,14 +214,14 @@ export function PosOrderPage() {
 
   const subtotal = cart.reduce((s, i) => s + i.total_price, 0);
 
-  // Manual diskaun (hanya aktif jika tiada promo digunakan)
+  // Manual diskaun (hanya aktif jika tiada promo/kupon acara digunakan)
   const discountRM = useMemo(() => {
-    if (appliedPromo) return 0; // mutex: kupon mengatasi manual diskaun
+    if (appliedPromo || appliedEventCoupon) return 0; // mutex
     const v = parseFloat(discountValue) || 0;
     if (!discountEnabled || v <= 0) return 0;
     if (discountType === 'PERCENT') return parseFloat(((v / 100) * subtotal).toFixed(2));
     return Math.min(v, subtotal);
-  }, [appliedPromo, discountEnabled, discountType, discountValue, subtotal]);
+  }, [appliedPromo, appliedEventCoupon, discountEnabled, discountType, discountValue, subtotal]);
 
   // Diskaun dari kupon promosi
   const promoDiscountRM = useMemo(() => {
@@ -224,7 +231,16 @@ export function PosOrderPage() {
     return Math.min(appliedPromo.discount_value, subtotal);
   }, [appliedPromo, subtotal]);
 
-  const effectiveDiscountRM = appliedPromo ? promoDiscountRM : discountRM;
+  // Ciri 6: Diskaun dari kupon acara (voucher organisasi)
+  const eventCouponDiscountRM = useMemo(() => {
+    if (!appliedEventCoupon) return 0;
+    const v = Number(appliedEventCoupon.discount_value) || 0;
+    if (appliedEventCoupon.discount_type === 'PERCENT')
+      return parseFloat(((v / 100) * subtotal).toFixed(2));
+    return Math.min(v, subtotal);
+  }, [appliedEventCoupon, subtotal]);
+
+  const effectiveDiscountRM = appliedPromo ? promoDiscountRM : (appliedEventCoupon ? eventCouponDiscountRM : discountRM);
   const totalAmount  = Math.max(0, subtotal - effectiveDiscountRM);
   const receivedRM   = parseFloat(receivedAmount) || 0;
   const changeAmount = paymentMethod === 'CASH' ? receivedRM - totalAmount : 0;
@@ -280,6 +296,9 @@ export function PosOrderPage() {
     setCouponCode('');
     setAppliedPromo(null);
     setCouponError('');
+    // Reset kupon acara (voucher organisasi)
+    setAppliedEventCoupon(null);
+    setEventCouponError('');
   };
 
   // Ciri 5: Validate & apply promo code
@@ -291,6 +310,8 @@ export function PosOrderPage() {
     setCouponValidating(false);
     if (result.valid && result.promotion) {
       setAppliedPromo(result.promotion);
+      setAppliedEventCoupon(null);   // mutex: kupon acara dikosongkan
+      setEventCouponError('');
       setDiscountEnabled(false); // mutex: clear manual diskaun
       setDiscountValue('');
       setDiscountNote('');
@@ -305,6 +326,56 @@ export function PosOrderPage() {
     setAppliedPromo(null);
     setCouponCode('');
     setCouponError('');
+  };
+
+  // Ciri 6: Fetch kupon acara (voucher organisasi untuk event perniagaan ini)
+  useEffect(() => {
+    let alive = true;
+    if (!eventId) { setEventCoupons([]); return; }
+    (async () => {
+      const { data, error } = await supabase
+        .from('event_coupons')
+        .select('*')
+        .eq('event_id', eventId)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+      if (alive && !error) setEventCoupons(data ?? []);
+    })();
+    return () => { alive = false; };
+  }, [eventId]);
+
+  // Ciri 6: Apply kupon acara (satu klik — e.g. MAHRAJAN)
+  const handleApplyEventCoupon = async (coupon: any) => {
+    setEventCouponApplying(true);
+    setEventCouponError('');
+    try {
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (!coupon.is_active) { setEventCouponError('Kupon ini tidak aktif.'); return; }
+      if (coupon.valid_from && todayStr < coupon.valid_from) { setEventCouponError('Kupon belum bermula.'); return; }
+      if (coupon.valid_until && todayStr > coupon.valid_until) { setEventCouponError('Kupon telah tamat tempoh.'); return; }
+      if (coupon.max_uses != null && (coupon.uses_count ?? 0) >= coupon.max_uses) {
+        setEventCouponError('Had penggunaan kupon telah dicapai.'); return;
+      }
+      if (subtotal < (Number(coupon.min_purchase) || 0)) {
+        setEventCouponError(`Minimum pembelian RM${Number(coupon.min_purchase).toFixed(2)} diperlukan.`); return;
+      }
+      // Mutex: clear kupon lain + diskaun manual
+      setAppliedPromo(null);
+      setCouponCode('');
+      setCouponError('');
+      setDiscountEnabled(false);
+      setDiscountValue('');
+      setDiscountNote('');
+      setAppliedEventCoupon(coupon);
+      toast.success(`Kupon "${coupon.code}" berjaya digunakan!`);
+    } finally {
+      setEventCouponApplying(false);
+    }
+  };
+
+  const handleRemoveEventCoupon = () => {
+    setAppliedEventCoupon(null);
+    setEventCouponError('');
   };
 
   // ── Process Payment ───────────────────────────────────────────────────────
@@ -330,6 +401,10 @@ export function PosOrderPage() {
       customerNote:   customerNote || undefined,
       promotionId:    appliedPromo?.id,
       promotionCode:  appliedPromo?.code,
+      // Ciri 6: kupon acara (voucher organisasi)
+      eventCouponId:    appliedEventCoupon?.id,
+      eventCouponCode:  appliedEventCoupon?.code,
+      eventCouponEventId: eventId ?? undefined,
     });
     setProcessing(false);
 
@@ -621,13 +696,31 @@ export function PosOrderPage() {
                   </div>
                 )}
 
-                {/* Diskaun manual — hanya jika tiada kupon digunakan */}
-                <div className={`rounded-2xl border border-border/50 overflow-hidden ${appliedPromo ? 'opacity-40 pointer-events-none' : ''}`}>
+                {/* Ciri 6: Kupon acara aktif (voucher organisasi — MAHRAJAN) */}
+                                {appliedEventCoupon && (
+                                  <div className="flex items-center justify-between px-4 py-3 rounded-2xl border transition-all"
+                                    style={{ background: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.35)' }}>
+                                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-amber-500">
+                                      <Ticket className="w-3.5 h-3.5" /> Kupon Acara: {appliedEventCoupon.code}
+                                      <span className="text-[9px] text-amber-500/60 normal-case font-black">
+                                        {appliedEventCoupon.name} · -{fmtRM(eventCouponDiscountRM)}
+                                      </span>
+                                    </div>
+                                    <button onClick={handleRemoveEventCoupon}
+                                      className="w-6 h-6 rounded-lg text-rose-500 bg-rose-500/10 hover:bg-rose-500/20 flex items-center justify-center">
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                )}
+
+                                {/* Diskaun manual — hanya aktif jika tiada kupon digunakan */}
+                <div className={`rounded-2xl border border-border/50 overflow-hidden ${(appliedPromo || appliedEventCoupon) ? 'opacity-40 pointer-events-none' : ''}`}>
                   <button onClick={() => setDiscountEnabled(v => !v)}
                     className="w-full flex items-center justify-between px-4 py-3 bg-muted/20 hover:bg-muted/30 transition-colors">
                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                       <Tag className="w-3.5 h-3.5" /> Diskaun Manual
                       {appliedPromo && <span className="text-[8px] text-rose-400 normal-case font-black">(tidak aktif — kupon digunakan)</span>}
+                      {appliedEventCoupon && <span className="text-[8px] text-amber-400 normal-case font-black">(tidak aktif — kupon acara digunakan)</span>}
                     </div>
                     <ChevronDown className={`w-4 h-4 text-muted-foreground/50 transition-transform ${discountEnabled ? 'rotate-180' : ''}`} />
                   </button>
@@ -650,6 +743,25 @@ export function PosOrderPage() {
                                 : { borderColor: 'hsl(var(--border))', color: 'hsl(var(--muted-foreground))' }}>
                               RM Tetap
                             </button>
+                            {/* Ciri 6: Butang kupon acara (MAHRAJAN) di sebelah RM Tetap */}
+                            {eventCoupons.length > 0 && eventCoupons.map((ec: any) => {
+                              const isApplied = appliedEventCoupon?.id === ec.id;
+                              const remaining = ec.max_uses != null ? Math.max(0, (ec.max_uses ?? 0) - (ec.uses_count ?? 0)) : null;
+                              return (
+                                <button key={ec.id} onClick={() => isApplied ? handleRemoveEventCoupon() : handleApplyEventCoupon(ec)}
+                                  disabled={eventCouponApplying}
+                                  className="flex-1 h-8 rounded-lg text-[10px] font-black uppercase border transition-all flex items-center justify-center gap-1 disabled:opacity-50"
+                                  style={isApplied
+                                    ? { background: 'rgba(245,158,11,0.15)', borderColor: 'rgba(245,158,11,0.6)', color: '#f59e0b' }
+                                    : { borderColor: 'rgba(245,158,11,0.4)', color: '#f59e0b' }}>
+                                  <Ticket className="w-3 h-3" />
+                                  {isApplied ? `${ec.code} ✓` : ec.code}
+                                  {remaining != null && remaining < 20 && (
+                                    <span className="text-[8px] opacity-70">({remaining})</span>
+                                  )}
+                                </button>
+                              );
+                            })}
                           </div>
                           <input value={discountValue} onChange={e => setDiscountValue(e.target.value)}
                             placeholder={discountType === 'PERCENT' ? 'Peratus (e.g. 10)' : 'Jumlah RM (e.g. 2.50)'}
@@ -658,6 +770,7 @@ export function PosOrderPage() {
                           <input value={discountNote} onChange={e => setDiscountNote(e.target.value)}
                             placeholder="Nota diskaun (e.g. Diskaun Pelajar)"
                             className="w-full h-9 px-3 rounded-xl text-xs font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40" />
+                          {eventCouponError && <p className="text-[9px] text-rose-500 mt-1 font-black">{eventCouponError}</p>}
                         </div>
                       </motion.div>
                     )}
@@ -674,6 +787,12 @@ export function PosOrderPage() {
                     <div className="flex justify-between text-xs" style={{ color }}>
                       <span className="font-black">🎟️ Kupon: {appliedPromo.code}</span>
                       <span className="font-black">-{fmtRM(promoDiscountRM)}</span>
+                    </div>
+                  )}
+                  {appliedEventCoupon && eventCouponDiscountRM > 0 && (
+                    <div className="flex justify-between text-xs" style={{ color: '#f59e0b' }}>
+                      <span className="font-black">🎟️ Kupon Acara: {appliedEventCoupon.code}</span>
+                      <span className="font-black">-{fmtRM(eventCouponDiscountRM)}</span>
                     </div>
                   )}
                   {!appliedPromo && discountRM > 0 && (

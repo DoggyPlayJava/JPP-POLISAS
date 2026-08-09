@@ -118,6 +118,26 @@ export function EmsAudienceScanPage() {
     try {
       setSubmitting(true);
 
+      // Cegah double-scan: semak rekod sedia ada utk pengunjung sama (matric/email/phone)
+      const dedupeKey = (matrixNo.trim() || email.trim() || phone.trim()).toLowerCase();
+      if (dedupeKey) {
+        const dupQuery = supabase
+          .from('ems_visitors')
+          .select('id, name, scanned_at')
+          .eq('event_id', eventId);
+        if (matrixNo.trim()) dupQuery.eq('matrix_no', matrixNo.trim());
+        else if (email.trim()) dupQuery.eq('email', email.trim());
+        else dupQuery.eq('phone', phone.trim());
+        const { data: dup } = await dupQuery.maybeSingle();
+        if (dup) {
+          setSubmitting(false);
+          const t = new Date(dup.scanned_at).toLocaleTimeString('ms-MY');
+          toast.error(`Kehadiran anda telah direkodkan pada ${t}. Tidak boleh scan berulang!`, { icon: '⚠️' });
+          setSubmittedVisitor(dup as unknown as EmsVisitor);
+          return;
+        }
+      }
+
       // Fetch current count of visitors for this event
       const { count, error: countErr } = await supabase
         .from('ems_visitors')
@@ -155,7 +175,14 @@ export function EmsAudienceScanPage() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Race-condition: unique index (event_id + matric/email/phone) tangkap double-scan
+        if (error.code === '23505') {
+          toast.error('Kehadiran anda telah direkodkan. Tidak boleh scan berulang!', { icon: '⚠️' });
+          return;
+        }
+        throw error;
+      }
 
       const newRecord = data as EmsVisitor;
       setSubmittedVisitor(newRecord);

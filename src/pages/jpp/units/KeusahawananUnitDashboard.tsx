@@ -11,12 +11,13 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
-import { AlertTriangle, Logs, Clock, CheckCircle, XCircle, RefreshCw, ShoppingBag, Store } from 'lucide-react';
+import { AlertTriangle, Logs, Clock, CheckCircle, XCircle, RefreshCw, ShoppingBag, Store, Ticket } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { subDays, formatDistanceToNow } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { KeusahawananAdminPanel } from '@/pages/keusahawanan/KeusahawananAdminPanel';
 import { PolyMartAdminPanel } from '@/pages/polymart/PolyMartAdminPanel';
+import { EventCouponPanel } from './EventCouponPanel';
 import { useExcoTheme } from '@/contexts/ExcoThemeContext';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -44,7 +45,7 @@ const ACTION_META: Record<string, { label: string; color: string; icon: React.El
 // ── Main Component ────────────────────────────────────────────────────────────
 export function KeusahawananUnitDashboard() {
   const { color } = useExcoTheme();
-  const [activeMainTab, setActiveMainTab] = useState<'perniagaan' | 'polymart'>('perniagaan');
+  const [activeMainTab, setActiveMainTab] = useState<'perniagaan' | 'polymart' | 'kupon'>('perniagaan');
   
   const [pendingOld, setPendingOld]       = useState<PendingOldBusiness[]>([]);
   const [auditLogs, setAuditLogs]         = useState<AuditLog[]>([]);
@@ -141,6 +142,11 @@ export function KeusahawananUnitDashboard() {
               {pendingReports}
             </span>
           )}
+        </button>
+        <button onClick={() => setActiveMainTab('kupon')}
+          className="flex-1 min-w-[140px] flex items-center justify-center gap-2 h-11 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all"
+          style={activeMainTab === 'kupon' ? { background: '#f59e0b', color: '#1e293b' } : { color: 'rgba(255,255,255,0.4)' }}>
+          <Ticket className="w-4 h-4" /> Kupon / Voucher
         </button>
       </div>
 
@@ -291,6 +297,14 @@ export function KeusahawananUnitDashboard() {
             
             <div className="bg-white/[0.02] border border-white/[0.05] rounded-[2rem] p-4 sm:p-6 overflow-hidden relative">
               <PolyMartAdminPanel hideHeader />
+            </div>
+          </motion.div>
+        )}
+
+        {activeMainTab === 'kupon' && (
+          <motion.div key="kupon" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+            <div className="bg-white/[0.02] border border-white/[0.05] rounded-[2rem] p-4 sm:p-6 overflow-hidden relative">
+              <EventCouponPanel />
             </div>
           </motion.div>
         )}

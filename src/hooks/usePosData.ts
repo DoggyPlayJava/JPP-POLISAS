@@ -39,6 +39,9 @@ export interface ProcessTransactionPayload {
   customerNote?:   string;
   promotionId?:    string;  // ID promosi yang digunakan (Ciri 5)
   promotionCode?:  string;  // Kod untuk audit trail
+  eventCouponId?:  string;  // ID kupon acara (voucher organisasi, e.g. MAHRAJAN)
+  eventCouponCode?: string; // Kod kupon acara untuk audit
+  eventCouponEventId?: string; // event_id kupon acara
 }
 
 export interface StatsData {
@@ -267,6 +270,7 @@ export function usePosData(businessId?: string, parentLoading = false) {
       discountType, discountAmount = 0, discountNote,
       receivedAmount, customerName, customerNote,
       promotionId, promotionCode,
+      eventCouponId, eventCouponCode, eventCouponEventId,
     } = payload;
 
     const subtotal = items.reduce((s, i) => s + i.total_price, 0);
@@ -304,6 +308,7 @@ export function usePosData(businessId?: string, parentLoading = false) {
         // Ciri 5: rekod kupon jika digunakan
         promotion_id:    promotionId ?? null,
         promotion_code:  promotionCode ?? null,
+        event_coupon_id: eventCouponId ?? null,
       })
       .select()
       .single();
@@ -330,6 +335,24 @@ export function usePosData(businessId?: string, parentLoading = false) {
           });
       }
       await writeLog(bid, 'PROMO_USED', `Kupon ${promotionCode ?? promotionId} digunakan dalam transaksi ${invoiceNumber}.`, { promotion_id: promotionId, invoice_number: invoiceNumber }, txn.id);
+    }
+
+    // Ciri 6: Claim kupon acara (voucher organisasi, contoh MAHRAJAN)
+    if (eventCouponId && eventCouponEventId) {
+      const res = await supabase.rpc('claim_event_coupon', {
+        p_coupon_id:      eventCouponId,
+        p_event_id:       eventCouponEventId,
+        p_business_id:    bid,
+        p_transaction_id: txn.id,
+        p_discount_amount: actualDiscount,
+      });
+      if (res.error) {
+        await writeLog(bid, 'PROMO_USED', `Gagal claim kupon acara ${eventCouponCode ?? eventCouponId}: ${res.error.message}`, { event_coupon_id: eventCouponId }, txn.id);
+      } else if (res.data && !res.data.success) {
+        await writeLog(bid, 'PROMO_USED', `Gagal claim kupon acara ${eventCouponCode ?? eventCouponId}: ${res.data.error}`, { event_coupon_id: eventCouponId }, txn.id);
+      } else {
+        await writeLog(bid, 'PROMO_USED', `Kupon acara ${eventCouponCode ?? eventCouponId} di-claim dalam transaksi ${invoiceNumber}.`, { event_coupon_id: eventCouponId, invoice_number: invoiceNumber }, txn.id);
+      }
     }
 
     // Deduct stock for each item
