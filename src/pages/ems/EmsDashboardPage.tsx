@@ -393,14 +393,32 @@ export function EmsDashboardPage() {
     // Load available categories & booths for this event
     try {
       setLoadingJuryOptions(true);
-      const { data: participants } = await supabase
-        .from('ems_participants')
-        .select('category_name, team_name')
+      // Kategori RUBRIK (penilaian) — bukan kategori makanan booth. Ini membolehkan
+      // juri group A ditugaskan ke rubrik "Best Pitching", group B ke "Best Showcase", dsb.
+      const { data: rubrics } = await supabase
+        .from('ems_rubrics')
+        .select('category_name')
         .eq('event_id', event.id)
         .not('category_name', 'is', null)
-        .neq('category_name', '')
-        .order('category_name');
-      const cats = Array.from(new Set((participants || []).map((p: any) => p.category_name).filter(Boolean))) as string[];
+        .neq('category_name', '');
+      const rubricCats = Array.from(
+        new Set((rubrics || []).map((r: any) => r.category_name).filter(Boolean))
+      ) as string[];
+
+      // Legacy fallback: event tanpa rubrik kategori → guna kategori peserta
+      let cats = rubricCats;
+      if (cats.length === 0) {
+        const { data: participants } = await supabase
+          .from('ems_participants')
+          .select('category_name')
+          .eq('event_id', event.id)
+          .not('category_name', 'is', null)
+          .neq('category_name', '')
+          .order('category_name');
+        cats = Array.from(
+          new Set((participants || []).map((p: any) => p.category_name).filter(Boolean))
+        ) as string[];
+      }
       setJuryCategories(cats);
 
       const { data: boothRows } = await supabase
@@ -1050,13 +1068,13 @@ export function EmsDashboardPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-300 mb-1">
-                  Kategori Ditugaskan
+                  Kategori Rubrik (Penilaian)
                 </label>
                 {loadingJuryOptions ? (
-                  <p className="text-xs text-slate-500 animate-pulse">Memuatkan kategori...</p>
+                  <p className="text-xs text-slate-500 animate-pulse">Memuatkan kategori rubrik...</p>
                 ) : juryCategories.length === 0 ? (
                   <p className="text-xs text-slate-500 italic">
-                    Tiada kategori berdaftar dalam acara ini. Anda boleh taip manual di bawah.
+                    Tiada rubrik berdaftar dalam acara ini. Anda boleh taip manual di bawah.
                   </p>
                 ) : (
                   <div className="flex flex-wrap gap-1.5">
@@ -1094,7 +1112,7 @@ export function EmsDashboardPage() {
                   type="text"
                   value={juryForm.assigned_categories}
                   onChange={(e) => setJuryForm({ ...juryForm, assigned_categories: e.target.value })}
-                  placeholder="e.g. Inovasi, Keusahawanan"
+                  placeholder="e.g. Best Pitching, Best Showcase"
                   className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500 mt-2"
                 />
               </div>

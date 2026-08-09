@@ -153,9 +153,35 @@ export function EmsJuryPortalPage() {
     ? getParticipantCategory(evalParticipant) || selectedCategory || ''
     : selectedCategory || '';
 
+  // Set of rubric category names (category_name dari ems_rubrics) — utk bezakan
+  // assignment "kategori rubrik" (penilaian) vs "kategori peserta" (booth/makanan)
+  const rubricCategoryNames = useMemo(() => {
+    const s = new Set<string>();
+    (rubrics || []).forEach((r) => {
+      const n = r.category_name?.trim().toLowerCase();
+      if (n && n !== 'umum') s.add(n);
+    });
+    return s;
+  }, [rubrics]);
+
   // Filter rubrics strictly for the active participant category or general rubrics ('Umum' or empty category_name)
   const participantRubrics = useMemo(() => {
     if (!rubrics || rubrics.length === 0) return [];
+
+    // Jika kod juri ditugaskan kategori RUBRIK (cth "Best Pitching") → score HANYA rubrik kategori itu
+    const assignedCats = juryCodeData?.assigned_categories;
+    if (assignedCats && assignedCats.length > 0 && !assignedCats.includes('ALL')) {
+      const catSet = assignedCats.map((c) => c.trim().toLowerCase()).filter(Boolean);
+      const hasRubricScope = catSet.some((c) => rubricCategoryNames.has(c));
+      if (hasRubricScope) {
+        const scoped = rubrics.filter((r) => {
+          const rCat = r.category_name?.trim().toLowerCase();
+          return !rCat || rCat === 'umum' || catSet.includes(rCat);
+        });
+        return scoped.length > 0 ? scoped : rubrics;
+      }
+    }
+
     if (!activeParticipantCategory) return rubrics;
 
     const catClean = activeParticipantCategory.trim().toLowerCase();
@@ -165,7 +191,7 @@ export function EmsJuryPortalPage() {
     });
 
     return filtered.length > 0 ? filtered : rubrics;
-  }, [rubrics, activeParticipantCategory]);
+  }, [rubrics, activeParticipantCategory, juryCodeData, rubricCategoryNames]);
 
   // Group active rubrics by section_name (fallback to 'Penilaian Utama')
   const sections = useMemo<RubricSection[]>(() => {
@@ -395,14 +421,21 @@ export function EmsJuryPortalPage() {
     const assignedBooths = juryCodeData.assigned_booths;
 
     return participants.filter((p) => {
-      // Category filter match
+      // Category filter match — HANYA utk kategori peserta (booth/makanan). Kalau
+      // assigned_categories ialah kategori RUBRIK (penilaian), jangan tapis peserta —
+      // juri tu score semua booth utk rubrik yang ditugaskan.
       let matchCat = true;
       if (assignedCats && assignedCats.length > 0 && !assignedCats.includes('ALL')) {
-        const pCategory = getParticipantCategory(p);
-        if (pCategory !== '') {
-          matchCat = assignedCats.some(
-            (c) => c.toLowerCase() === pCategory.toLowerCase()
-          );
+        const isRubricScope = assignedCats.some((c) =>
+          rubricCategoryNames.has(c.trim().toLowerCase())
+        );
+        if (!isRubricScope) {
+          const pCategory = getParticipantCategory(p);
+          if (pCategory !== '') {
+            matchCat = assignedCats.some(
+              (c) => c.toLowerCase() === pCategory.toLowerCase()
+            );
+          }
         }
       }
 
