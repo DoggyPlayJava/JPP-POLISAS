@@ -35,15 +35,37 @@ export interface EmsJuryAuditMatrixProps {
 
 /**
  * Checks whether a participant is assigned to a specific jury code.
+ * Keys: assigned_categories boleh jadi KATEGORI RUBRIK (cth "Best Showcase Award")
+ * atau KATEGORI PESERTA (cth "Makanan"). Kalau kategori rubrik — semua peserta
+ * dinilai oleh juri tu (wizard juri pilih kategori masa menilai).
  */
-function isParticipantAssignedToJury(participant: EmsParticipant, jury: EmsJuryCode): boolean {
+function isParticipantAssignedToJury(participant: EmsParticipant, jury: EmsJuryCode, rubrics: EmsRubricCriteria[]): boolean {
   const assignedCats = jury.assigned_categories;
   const assignedBooths = jury.assigned_booths;
 
+  const rubricCatNames = new Set(
+    rubrics
+      .map((r) => r.category_name?.trim().toLowerCase())
+      .filter(Boolean)
+  );
+
   let matchCat = true;
   if (assignedCats && assignedCats.length > 0 && !assignedCats.includes('ALL')) {
-    const pCat = participant.category_name || '';
-    matchCat = assignedCats.some((c) => c.toLowerCase() === pCat.toLowerCase());
+    const catSet = assignedCats.map((c) => c.trim().toLowerCase()).filter(Boolean);
+    const isRubricScope = catSet.some((c) => rubricCatNames.has(c));
+
+    if (isRubricScope) {
+      // Kategori RUBRIK: kalau peserta sendiri ber-kategori rubrik (cth iFAMB ada
+      // baris berasingan Best Showcase / Best Pitching) — padan ikut makna.
+      // Kalau peserta kategori biasa (food/booth, cth Siswapreneur) — semua assigned.
+      const pCat = (participant.category_name || '').trim().toLowerCase();
+      if (pCat && rubricCatNames.has(pCat)) {
+        matchCat = catSet.includes(pCat);
+      }
+    } else {
+      const pCat = participant.category_name || '';
+      matchCat = catSet.some((c) => c === pCat.toLowerCase());
+    }
   }
 
   let matchBooth = true;
@@ -56,9 +78,30 @@ function isParticipantAssignedToJury(participant: EmsParticipant, jury: EmsJuryC
 }
 
 /**
- * Gets rubrics applicable to a participant based on category.
+ * Gets rubrics applicable to a participant based on the JURY's assigned category.
+ * Kalau juri di-assign kategori RUBRIK → scope ikut rubrik kategori tu (umum/empty included).
+ * Fallback lama: kategori peserta.
  */
-function getApplicableRubrics(participant: EmsParticipant, rubrics: EmsRubricCriteria[]): EmsRubricCriteria[] {
+function getApplicableRubrics(participant: EmsParticipant, jury: EmsJuryCode, rubrics: EmsRubricCriteria[]): EmsRubricCriteria[] {
+  const rubricCatNames = new Set(
+    rubrics
+      .map((r) => r.category_name?.trim().toLowerCase())
+      .filter(Boolean)
+  );
+
+  const assignedCats = jury.assigned_categories;
+  if (assignedCats && assignedCats.length > 0 && !assignedCats.includes('ALL')) {
+    const catSet = assignedCats.map((c) => c.trim().toLowerCase()).filter(Boolean);
+    const rubricScope = catSet.filter((c) => rubricCatNames.has(c));
+    if (rubricScope.length > 0) {
+      const scoped = rubrics.filter((r) => {
+        const rCat = r.category_name?.trim().toLowerCase();
+        return !rCat || rCat === 'umum' || rubricScope.includes(rCat);
+      });
+      return scoped.length > 0 ? scoped : rubrics;
+    }
+  }
+
   const pCat = participant.category_name?.trim().toLowerCase() || '';
   if (!pCat) return rubrics;
 
@@ -79,7 +122,7 @@ function getJuryParticipantScoreInfo(
   rubrics: EmsRubricCriteria[],
   scores: EmsScore[]
 ) {
-  const applicableRubrics = getApplicableRubrics(participant, rubrics);
+  const applicableRubrics = getApplicableRubrics(participant, jury, rubrics);
   const pJuryScores = scores.filter(
     (s) => s.participant_id === participant.id && s.jury_code_id === jury.id
   );
@@ -217,7 +260,7 @@ export function EmsJuryAuditMatrix({
 
   // Handle opening Director Score Override Modal
   const handleOpenOverrideModal = (participant: EmsParticipant, jury: EmsJuryCode) => {
-    const applicable = getApplicableRubrics(participant, rubrics);
+    const applicable = getApplicableRubrics(participant, jury, rubrics);
     const existingScores = scores.filter(
       (s) => s.participant_id === participant.id && s.jury_code_id === jury.id
     );
@@ -244,7 +287,7 @@ export function EmsJuryAuditMatrix({
 
     try {
       setIsSubmittingOverride(true);
-      const applicable = getApplicableRubrics(editingCell.participant, rubrics);
+      const applicable = getApplicableRubrics(editingCell.participant, editingCell.jury, rubrics);
 
       const payload = applicable.map((r) => ({
         event_id: eventId,
@@ -285,7 +328,7 @@ export function EmsJuryAuditMatrix({
   // Calculate live preview total score in modal
   const modalLivePercentage = useMemo(() => {
     if (!editingCell) return 0;
-    const applicable = getApplicableRubrics(editingCell.participant, rubrics);
+    const applicable = getApplicableRubrics(editingCell.participant, editingCell.jury, rubrics);
     if (applicable.length === 0) return 0;
 
     const totalWeightSum = applicable.reduce((acc, r) => acc + (Number(r.weight) || 0), 0);
@@ -331,7 +374,7 @@ export function EmsJuryAuditMatrix({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {activeJuries.map((j) => {
               const assignedForJury = participants.filter((p) =>
-                isParticipantAssignedToJury(p, j)
+                isParticipantAssignedToJury(p, j, rubrics)
               );
               const assignedCount = assignedForJury.length;
 
@@ -579,7 +622,7 @@ export function EmsJuryAuditMatrix({
 
                         {/* Jury Score Columns */}
                         {activeJuries.map((j) => {
-                          const isAssigned = isParticipantAssignedToJury(p, j);
+                          const isAssigned = isParticipantAssignedToJury(p, j, rubrics);
                           const info = getJuryParticipantScoreInfo(p, j, rubrics, scores);
 
                           return (
@@ -734,7 +777,7 @@ export function EmsJuryAuditMatrix({
 
             {/* Rubrics Scoring List */}
             <div className="space-y-4 max-h-[360px] overflow-y-auto pr-1">
-              {getApplicableRubrics(editingCell.participant, rubrics).map((r, index) => {
+              {getApplicableRubrics(editingCell.participant, editingCell.jury, rubrics).map((r, index) => {
                 const maxScore = Number(r.max_score) || 5;
                 const currentVal = modalScores[r.id] ?? 0;
 
