@@ -389,6 +389,9 @@ export function EmsDashboardPage() {
       setJuryCodes(data || []);
     } catch (err: any) {
       toast.error('Gagal memuatkan senarai kod juri');
+    } finally {
+      // Bugfix: tanpa ini, stuck "Memuatkan kod juri..." selama-lamanya
+      setLoadingJuryCodes(false);
     }
     // Load available categories & booths for this event
     try {
