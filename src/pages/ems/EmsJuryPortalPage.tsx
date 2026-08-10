@@ -510,7 +510,9 @@ export function EmsJuryPortalPage() {
 
       // Selected Category Gateway Filter
       if (selectedCategory !== null) {
-        if (pCat !== '' && pCat.toLowerCase() !== selectedCategory.trim().toLowerCase()) return false;
+        // Kategori RUBRIK (penilaian) → jangan tapis peserta ikut kategori makanan
+        const isRubricCat = rubricCategoryNames.has(selectedCategory.trim().toLowerCase());
+        if (!isRubricCat && pCat !== '' && pCat.toLowerCase() !== selectedCategory.trim().toLowerCase()) return false;
       } else if (categoryFilter !== 'ALL') {
         if (pCat !== '' && pCat.toLowerCase() !== categoryFilter.trim().toLowerCase()) return false;
       }
@@ -897,6 +899,9 @@ export function EmsJuryPortalPage() {
               {availableCategories.map((cat) => {
                 const catIcon = getCategoryIcon(cat);
                 const catParticipants = assignedParticipants.filter((p) => {
+                  // Kategori RUBRIK (penilaian) → semua booth dinilai, jangan tapis ikut kategori makanan
+                  const isRubricCat = rubricCategoryNames.has(cat.trim().toLowerCase());
+                  if (isRubricCat) return true;
                   const pCat = getParticipantCategory(p);
                   return pCat === '' || pCat.toLowerCase() === cat.trim().toLowerCase();
                 });
