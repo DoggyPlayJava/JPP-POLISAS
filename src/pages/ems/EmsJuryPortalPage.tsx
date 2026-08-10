@@ -149,9 +149,11 @@ export function EmsJuryPortalPage() {
   const [lightboxImage, setLightboxImage] = useState<{ url: string; title: string } | null>(null);
 
   // Compute active participant category for evaluation wizard
-  const activeParticipantCategory = evalParticipant
-    ? getParticipantCategory(evalParticipant) || selectedCategory || ''
-    : selectedCategory || '';
+  const activeParticipantCategory = selectedCategory
+    ? selectedCategory
+    : evalParticipant
+    ? getParticipantCategory(evalParticipant) || ''
+    : '';
 
   // Set of rubric category names (category_name dari ems_rubrics) — utk bezakan
   // assignment "kategori rubrik" (penilaian) vs "kategori peserta" (booth/makanan)
@@ -167,6 +169,18 @@ export function EmsJuryPortalPage() {
   // Filter rubrics strictly for the active participant category or general rubrics ('Umum' or empty category_name)
   const participantRubrics = useMemo(() => {
     if (!rubrics || rubrics.length === 0) return [];
+
+    // 1. Kategori RUBRIK dipilih (cth "Best Showcase Award") → tunjuk rubrik kategori
+    //    tu SAHAJA. Dulu juri yang di-assign 2 kategori nampak rubrik kedua-duanya
+    //    bercampur + seksyen "Seksyen 1/2/3" bergabung silang kategori.
+    const selCat = activeParticipantCategory?.trim().toLowerCase();
+    if (selCat && rubricCategoryNames.has(selCat)) {
+      const filtered = rubrics.filter((r) => {
+        const rCat = r.category_name?.trim().toLowerCase();
+        return !rCat || rCat === 'umum' || rCat === selCat;
+      });
+      return filtered.length > 0 ? filtered : rubrics;
+    }
 
     // Jika kod juri ditugaskan kategori RUBRIK (cth "Best Pitching") → score HANYA rubrik kategori itu
     const assignedCats = juryCodeData?.assigned_categories;
