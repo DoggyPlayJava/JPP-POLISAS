@@ -229,8 +229,18 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
     };
   }, [eventId, loadData]);
 
-  // Extract Categories
+  // Extract Categories — kalau event guna rubrik, tunjuk KATEGORI RUBRIK je
+  // (cth Best Showcase / Best Digital Promotion / Anugerah Khas Juri), bukan
+  // kategori makanan peserta yang bercelaru (29+ jenis). Legacy event tanpa
+  // rubrik kekal guna kategori peserta.
   const categories = useMemo(() => {
+    const rubricSet = new Set<string>();
+    rubrics.forEach((r) => {
+      const n = r.category_name?.trim();
+      if (n) rubricSet.add(n);
+    });
+    if (rubricSet.size > 0) return Array.from(rubricSet).sort();
+
     const set = new Set<string>();
     leaderboard.forEach((item) => {
       const cat =
@@ -241,7 +251,13 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
       if (cat) set.add(String(cat).trim());
     });
     return Array.from(set).sort();
-  }, [leaderboard]);
+  }, [leaderboard, rubrics]);
+
+  // Event guna rubrik = kategori penilaian (bukan kategori peserta makanan)
+  const isRubricDriven = useMemo(
+    () => rubrics.some((r) => r.category_name?.trim()),
+    [rubrics]
+  );
 
   // Extract Rubric Categories (papan anugerah berasingan: Best Pitching / Best Showcase / dll)
   const rubricCategories = useMemo(() => {
@@ -286,10 +302,11 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   // Set default category filter when categories load
   useEffect(() => {
     if (!hasSetDefaultCategory && categories.length > 0) {
-      setCategoryFilter(categories[0]);
+      // Event rubrik → papar keseluruhan dulu (tab kategori rubrik = papan anugerah)
+      setCategoryFilter(isRubricDriven ? 'ALL' : categories[0]);
       setHasSetDefaultCategory(true);
     }
-  }, [categories, hasSetDefaultCategory]);
+  }, [categories, hasSetDefaultCategory, isRubricDriven]);
 
   // Filtered Leaderboard with recalculated category ranks
   const filteredLeaderboard = useMemo(() => {
@@ -302,7 +319,10 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
         p.custom_responses?.category_name ||
         '';
 
-      const matchesCat = categoryFilter === 'ALL' || cat === categoryFilter;
+      // Event rubrik → kategori dikendalikan oleh tab rubrik (rubricFilter), bukan kategori makanan
+      const matchesCat =
+        categoryFilter === 'ALL' ||
+        (!isRubricDriven && cat === categoryFilter);
 
       const booth = p.booth_no || p.custom_responses?.booth_no || p.custom_responses?.booth_number || '';
       const team = p.team_name || '';
@@ -323,7 +343,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
       ...item,
       category_rank: index + 1,
     }));
-  }, [leaderboard, categoryFilter, searchQuery]);
+  }, [leaderboard, categoryFilter, searchQuery, isRubricDriven]);
 
   // Check if any participants are tied
   const hasTiedParticipants = useMemo(() => {
@@ -608,8 +628,8 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
             {/* Rubric Award Tabs (papan anugerah berasingan) */}
             {rubricTabs}
 
-            {/* Category Filter Tabs */}
-            {categories.length > 0 && (
+            {/* Category Filter Tabs — sembunyi utk event rubrik (tab rubrik dah ada) */}
+            {!isRubricDriven && categories.length > 0 && (
               <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10 overflow-x-auto max-w-md">
                 <button
                   onClick={() => setCategoryFilter('ALL')}
@@ -1099,7 +1119,8 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               </div>
             )}
 
-            {/* Category Tabs */}
+            {/* Category Tabs — sembunyi utk event rubrik (tab rubrik dah ada) */}
+            {!isRubricDriven && (
             <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
               <button
                 onClick={() => setCategoryFilter('ALL')}
@@ -1137,6 +1158,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 );
               })}
             </div>
+            )}
 
             {/* Search input */}
             <div className="relative w-full md:w-72">
