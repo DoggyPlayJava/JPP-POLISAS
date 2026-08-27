@@ -135,13 +135,35 @@ export function AdminJadualPage() {
           <h1 className="text-2xl font-black text-white">Jadual Pertandingan</h1>
           <p className="text-white/30 text-sm mt-1">{fixtures.length} perlawanan dijadualkan</p>
         </div>
-        <button
-          onClick={openNew}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-amber-500/20 border border-amber-500/30 text-amber-400 text-sm font-black uppercase tracking-widest hover:bg-amber-500/30 transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          Tambah Perlawanan
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              if (fixtures.length === 0) {
+                toast.error('Tiada perlawanan untuk disalin');
+                return;
+              }
+              const lines = fixtures.map(f => {
+                const spName = sportMap[f.sport_id] ?? 'Sukan';
+                const kontA = f.kontingen_a_id ? kontingenMap[f.kontingen_a_id]?.short_code : 'TBD';
+                const kontB = f.kontingen_b_id ? kontingenMap[f.kontingen_b_id]?.short_code : 'TBD';
+                return `🏆 *${spName}* (${f.round || 'Perlawanan'} #${f.match_number || '-'}): ${kontA} vs ${kontB}\n🔑 PIN Pengadil: *${f.referee_pin || 'TIADA'}*\n📌 Link: ${window.location.origin}/supsas/scorekeeper\n`;
+              });
+              const text = `📋 *KOD PIN PENGADIL SUPSAS 2.0*\n========================\n\n` + lines.join('\n');
+              navigator.clipboard.writeText(text);
+              toast.success('Senarai PIN Pengadil disalin untuk WhatsApp!');
+            }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white/80 text-sm font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+          >
+            📋 Salin PIN (WhatsApp)
+          </button>
+          <button
+            onClick={openNew}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-amber-500/20 border border-amber-500/30 text-amber-400 text-sm font-black uppercase tracking-widest hover:bg-amber-500/30 transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            Tambah Perlawanan
+          </button>
+        </div>
       </div>
 
       {/* Sport filter */}

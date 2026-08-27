@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 export function SupsasEffects() {
+  const { isLowPerf } = useDevicePerformance();
   const [burstDone, setBurstDone] = useState(false);
   const { scrollY } = useScroll();
 
@@ -13,9 +15,18 @@ export function SupsasEffects() {
   const bgOpacity = useTransform(scrollY, [0, 500], [0, 0.8]);
 
   useEffect(() => {
+    if (isLowPerf) return;
     const t = setTimeout(() => setBurstDone(true), 12000);
     return () => clearTimeout(t);
-  }, []);
+  }, [isLowPerf]);
+
+  if (isLowPerf) {
+    return (
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-b from-amber-950/20 via-transparent to-black/50" />
+      </div>
+    );
+  }
 
   return (
     <>

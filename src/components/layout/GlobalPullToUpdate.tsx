@@ -21,44 +21,17 @@ export function GlobalPullToUpdate() {
 
     let startY = 0;
     let isPulling = false;
-    let scrollContainer: HTMLElement | null = null;
-
-    // Recursive function to find the closest scrolling container
-    const getScrollContainer = (el: HTMLElement | null): HTMLElement | null => {
-      if (!el) return null;
-      if (
-        el.scrollHeight > el.clientHeight && 
-        (window.getComputedStyle(el).overflowY === 'auto' || window.getComputedStyle(el).overflowY === 'scroll')
-      ) {
-        return el;
-      }
-      return getScrollContainer(el.parentElement);
-    };
-
-    const handleTouchStart = (e: TouchEvent) => {
-      if (isRefreshingRef.current) return;
-      
-      const target = e.target as HTMLElement;
-      scrollContainer = getScrollContainer(target) || document.documentElement;
-
-      // Only allow pull-to-refresh if the user is exactly at the top of the container
-      if (scrollContainer && scrollContainer.scrollTop <= 0) {
-        startY = e.touches[0].clientY;
-        isPulling = true;
-      }
-    };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (!isPulling || isRefreshingRef.current) return;
-      
+
       const currentY = e.touches[0].clientY;
       const deltaY = currentY - startY;
 
-      // Only pull down
-      if (deltaY > 0 && scrollContainer && scrollContainer.scrollTop <= 0) {
-        // Prevent default browser pull-to-refresh so we can handle it via SW
+      // Only handle pull down when user is at the very top of the page
+      if (deltaY > 0) {
         if (e.cancelable) e.preventDefault();
-        
+
         // Max pull visual progress is 150px
         const progress = Math.min((deltaY / 150) * 100, 100);
         pullProgressRef.current = progress;
@@ -66,15 +39,22 @@ export function GlobalPullToUpdate() {
       }
     };
 
+    const cleanupActivePull = () => {
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('touchcancel', handleTouchEnd);
+    };
+
     const handleTouchEnd = async () => {
       if (!isPulling || isRefreshingRef.current) return;
       isPulling = false;
+      cleanupActivePull();
 
       // If user pulled down more than 80% of the threshold, trigger the update
       if (pullProgressRef.current > 80) {
         isRefreshingRef.current = true;
         setIsRefreshing(true);
-        
+
         try {
           // 1. Force Service Worker to Update (OTA Update)
           if ('serviceWorker' in navigator) {
@@ -86,32 +66,45 @@ export function GlobalPullToUpdate() {
         } catch (err) {
           console.error("SW Update failed", err);
         }
-        
+
         // 2. Set a flag so useDashboardData knows to force-refresh on next mount
-        // (prevents HMR module-level cache singleton from serving stale data)
         try {
           sessionStorage.setItem('jpp_force_refresh', '1');
         } catch (_) { /* sessionStorage mungkin tidak tersedia */ }
-        
+
         // 3. Hard Reload — clear semua React state + in-memory cache
         setTimeout(() => {
           window.location.reload();
-        }, 1200); // Give enough time for the user to see the spinning animation
+        }, 1200);
       } else {
         pullProgressRef.current = 0;
         setPullProgress(0);
       }
     };
 
+    const handleTouchStart = (e: TouchEvent) => {
+      if (isRefreshingRef.current) return;
+
+      // Check if user is at the top of the viewport (fast 0.01ms check, no getComputedStyle)
+      const isAtTop = window.scrollY <= 0 && (document.documentElement?.scrollTop ?? 0) <= 0;
+
+      if (isAtTop && e.touches.length === 1) {
+        startY = e.touches[0].clientY;
+        isPulling = true;
+        pullProgressRef.current = 0;
+
+        // Dynamically attach touchmove ONLY during potential pull gesture
+        document.addEventListener('touchmove', handleTouchMove, { passive: false });
+        document.addEventListener('touchend', handleTouchEnd, { passive: true });
+        document.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+      }
+    };
+
     document.addEventListener('touchstart', handleTouchStart, { passive: true });
-    // touchmove must not be passive so we can call e.preventDefault()
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
       document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
+      cleanupActivePull();
     };
   }, [isPolyMaps]); // React akan pasang balik listener jika keluar dari kawasan PolyMaps
 

@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { KebajikanReportPDF } from '@/components/pdf/KebajikanReportPDF';
 import { KebajikanPicReportPDF, type PicReportTicket } from '@/components/pdf/KebajikanPicReportPDF';
-import ExcelJS from 'exceljs';
+import type ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
 
@@ -169,6 +169,7 @@ export function KebajikanReportPage() {
   // ── Excel Export: Laporan Bulanan ─────────────────────────────────────────
   const exportMonthlyExcel = async () => {
     if (!data) return;
+    const ExcelJS = (await import('exceljs')).default;
     const wb = new ExcelJS.Workbook();
     wb.creator = generatedByName;
     wb.created = new Date();
@@ -304,6 +305,7 @@ export function KebajikanReportPage() {
 
   // ── Excel Export: Laporan PIC ─────────────────────────────────────────────
   const exportPicExcel = async (tickets: KebajikanTicket[]) => {
+    const ExcelJS = (await import('exceljs')).default;
     const wb = new ExcelJS.Workbook();
     wb.creator = generatedByName;
     wb.created = new Date();

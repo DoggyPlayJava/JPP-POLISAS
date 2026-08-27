@@ -29,7 +29,6 @@ import {
   EmptyDescription,
   EmptyMedia,
 } from '@/components/ui/empty';
-import { pdf } from '@react-pdf/renderer';
 import { LaporanPDFTemplate } from '@/components/reports/LaporanPDFTemplate';
 import { normalizeReportData } from '@/lib/report-utils';
 import { uploadPdfToDrive } from '@/lib/driveUpload';
@@ -290,6 +289,7 @@ export function LaporanPage() {
         />
       );
 
+      const { pdf } = await import('@react-pdf/renderer');
       const asPdf = pdf(doc);
       const blob = await asPdf.toBlob();
       setProgress(70);

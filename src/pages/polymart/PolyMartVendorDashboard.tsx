@@ -8,7 +8,7 @@ import { PM_ACCENT, PM_LIGHT, PM_GRADIENT, usePolymart } from './PolyMartLayout'
 import { sendNotificationToUser } from '@/lib/notifications';
 import toast from 'react-hot-toast';
 import mockData from './mockData.json';
-import ExcelJS from 'exceljs';
+import type ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import {
@@ -2079,6 +2079,7 @@ export function PolyMartVendorDashboard() {
         return;
       }
       
+      const ExcelJS = (await import('exceljs')).default;
       const workbook = new ExcelJS.Workbook();
       const sheet1 = workbook.addWorksheet('Senarai Pesanan');
       const sheet2 = workbook.addWorksheet('Ringkasan Produk');

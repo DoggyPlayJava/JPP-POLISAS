@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion, useMotionValue, useSpring, useMotionTemplate } from 'framer-motion';
+import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 export function KarnivalEffects() {
+  const { isLowPerf } = useDevicePerformance();
   const [confettiDone, setConfettiDone] = useState(false);
   const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
   
@@ -19,6 +21,8 @@ export function KarnivalEffects() {
   const trailY = useSpring(mouseY, { stiffness: 150, damping: 35 });
 
   useEffect(() => {
+    if (isLowPerf) return;
+
     let animationFrameId: number;
     let autoPanTime = 0;
 
@@ -75,7 +79,15 @@ export function KarnivalEffects() {
       cancelAnimationFrame(animationFrameId);
       clearTimeout(t);
     };
-  }, [mouseX, mouseY, spotX, spotY]);
+  }, [isLowPerf, mouseX, mouseY, spotX, spotY]);
+
+  if (isLowPerf) {
+    return (
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-b from-violet-950/20 via-transparent to-black/40" />
+      </div>
+    );
+  }
 
   return (
     <>

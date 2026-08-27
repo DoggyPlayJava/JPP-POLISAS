@@ -20,7 +20,6 @@ import { ms } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription, EmptyMedia } from '@/components/ui/empty';
-import { pdf } from '@react-pdf/renderer';
 import { LaporanPDFTemplate } from '@/components/reports/LaporanPDFTemplate';
 import { uploadPdfToDrive } from '@/lib/driveUpload';
 import { JPP_EXCO_POSITIONS, JPP_MT_POSITIONS } from '@/types';
@@ -250,6 +249,7 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
         />
       );
 
+      const { pdf } = await import('@react-pdf/renderer');
       const blob = await pdf(doc).toBlob();
       setProgress(70);
 

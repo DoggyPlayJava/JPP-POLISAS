@@ -27,8 +27,20 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.ts',
       injectManifest: {
-        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024, // 6MB
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3MB limit
         globPatterns: ['**/*.{js,mjs,css,html,ico,png,svg,webp,woff2}'],
+        globIgnores: [
+          '**/react-pdf*',
+          '**/exceljs*',
+          '**/heic2any*',
+          '**/pdfjs*',
+          '**/html5-qrcode*',
+          '**/docxGenerator*',
+          '**/IGStoryExportCard*',
+          '**/LaunchVideo*',
+          '**/PolyMartVendorDashboard*',
+          '**/JppPolyMapsAdmin*',
+        ],
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'jpp-app-icon.png', 'offline.html'],
       manifest: {
@@ -114,6 +126,7 @@ export default defineConfig({
             '@radix-ui/react-scroll-area',
           ],
           'vendor-recharts': ['recharts'],
+          'vendor-icons': ['lucide-react'],
           'vendor-utils': ['date-fns', 'zod', 'zustand', 'clsx', 'class-variance-authority'],
         },
       },

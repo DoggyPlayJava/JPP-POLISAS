@@ -10,7 +10,6 @@ import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, getDay, 
 import { ms } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 import { logAuditAction } from '@/lib/auditLogger';
-import { PDFDownloadLink } from '@react-pdf/renderer';
 import TakwimPusatPDFTemplate from '@/components/reports/TakwimPusatPDFTemplate';
 import {
   CalendarDays, Plus, Filter, Download, ChevronLeft, ChevronRight,
@@ -84,6 +83,7 @@ export function JppTakwimPage() {
   const [calMonth, setCalMonth] = useState(new Date());
   const [logoPolisas, setLogoPolisas] = useState('');
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   // ── Warna Rasmi (persisted) ──
   const [themeColor, setThemeColor] = useState('#1e3a5f');
@@ -255,17 +255,29 @@ export function JppTakwimPage() {
               </Button>
             )}
             {items.length > 0 && (
-              <PDFDownloadLink
-                document={<TakwimPusatPDFTemplate data={items} themeColor={themeColor} session={sesi} filterLabel={filterLabel} logoPolisas={logoPolisas} />}
-                fileName={`Takwim_POLISAS_${sesi.replace('/', '-')}_${filterLabel}.pdf`}
+              <Button
+                onClick={async () => {
+                  setIsExportingPdf(true);
+                  try {
+                    const { pdf } = await import('@react-pdf/renderer');
+                    const { saveAs } = await import('file-saver');
+                    const doc = <TakwimPusatPDFTemplate data={items} themeColor={themeColor} session={sesi} filterLabel={filterLabel} logoPolisas={logoPolisas} />;
+                    const blob = await pdf(doc).toBlob();
+                    saveAs(blob, `Takwim_POLISAS_${sesi.replace('/', '-')}_${filterLabel}.pdf`);
+                  } catch (err) {
+                    console.error('PDF export error:', err);
+                    toast.error('Gagal menjana PDF takwim.');
+                  } finally {
+                    setIsExportingPdf(false);
+                  }
+                }}
+                disabled={isExportingPdf}
+                variant="outline"
+                className="h-10 rounded-xl border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-[10px] font-black uppercase tracking-widest"
               >
-                {({ loading: pdfLoading }) => (
-                  <Button variant="outline" disabled={pdfLoading} className="h-10 rounded-xl border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-[10px] font-black uppercase tracking-widest">
-                    {pdfLoading ? <Loader2 className="w-3 h-3 animate-spin md:mr-2" /> : <Download className="w-3 h-3 md:mr-2" />}
-                    <span className="hidden md:inline">PDF</span>
-                  </Button>
-                )}
-              </PDFDownloadLink>
+                {isExportingPdf ? <Loader2 className="w-3 h-3 animate-spin md:mr-2" /> : <Download className="w-3 h-3 md:mr-2" />}
+                <span className="hidden md:inline">PDF</span>
+              </Button>
             )}
             {rbac.canAdd && (
               <Button onClick={openCreate} className="h-10 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest">

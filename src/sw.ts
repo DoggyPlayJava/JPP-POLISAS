@@ -81,6 +81,15 @@ registerRoute(
   })
 );
 
+// On-demand runtime caching for lazy JS/CSS chunks
+registerRoute(
+  ({ request, url }) => (request.destination === 'script' || request.destination === 'style') && url.pathname.includes('/assets/'),
+  new StaleWhileRevalidate({
+    cacheName: 'lazy-assets-cache',
+    plugins: [new ExpirationPlugin({ maxEntries: 80, maxAgeSeconds: 14 * 24 * 60 * 60 })],
+  })
+);
+
 // API/Supabase — Hanya cache GET requests untuk Takwim & Announcements
 // POST/PATCH/DELETE TIDAK BOLEH di-cache
 registerRoute(

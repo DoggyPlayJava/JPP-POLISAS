@@ -351,6 +351,7 @@ import { something } from '../lib/supabase';  // ❌ Elakkan relative
 | `ExcoThemeContext` | `useExcoTheme()` | Warna exco aktif untuk theming |
 | `SupsasContext` | `useSupsas()` | Data edisi, kontingen, sukan, fixtures, medal tally SUPSAS |
 | `JppConfigContext` | `useJppConfig()` | Konfigurasi portal JPP (tetapan, feature flags) |
+| `useDevicePerformance` | `useDevicePerformance()` | Pengesanan pasif spesifikasi peranti (`<=4` teras CPU, `<=4GB` RAM) untuk tiering prestasi & CSS `.low-perf-device` |
 
 ---
 
@@ -1036,7 +1037,33 @@ useEffect(() => {
 
 ---
 
-*Dikemas kini: Mei 2026 — Selepas audit prestasi Musim Orientasi + insiden CPU Mei 2026.*
+### 15.8 Pengoptimuman Peranti Rendah (Low-End Devices) & PWA Caching ⭐ WAJIB BACA
+
+Bagi mengelakkan isu kelambatan (frame drops, laggy scroll, memory spikes) pada telefon berspesifikasi rendah (e.g. 2-4GB RAM, 4 CPU cores):
+
+1. **PWA Precache Tuning (`vite.config.ts`):**
+   - Hanya shell teras (~3MB) di-precache dalam SW manifest awal.
+   - Pustaka berat seperti `@react-pdf/renderer`, `exceljs`, `heic2any`, `pdfjs`, `html5-qrcode` mesti diabaikan (`globIgnores`) daripada precache awal dan di-cache atas permintaan (on-demand runtime caching) melalui `lazy-assets-cache` dalam `src/sw.ts`.
+
+2. **Pengesanan Pasif Spesifikasi Peranti (`useDevicePerformance`):**
+   - Hook `useDevicePerformance` mengesan `hardwareConcurrency <= 4` atau `deviceMemory <= 4GB`.
+   - Mengaktifkan kelas `.low-perf-device` pada `<html>` yang secara automatik mematikan offscreen `backdrop-filter: blur(...)` dan `mix-blend-*` render passes.
+
+3. **Scoping Provider Tempatan (Jangan Letak di Root):**
+   - Modul khusus seperti `KarnivalProvider` atau `SupsasProvider` **TIDAK BOLEH** dibungkus pada root `App.tsx`.
+   - Bungkus hanya pada sub-route berkaitan (`/karnival/*` atau `/supsas/*`) untuk mengelakkan 3-6 query automatik berjalan pada setiap muat halaman biasa.
+   - Gunakan hook status ringan (seperti `useKarnivalStatus()`) untuk komponen global seperti `Sidebar`.
+
+4. **Zero-Jank Touch (`GlobalPullToUpdate.tsx`):**
+   - Dilarang membuat traversal rekursif DOM dengan `window.getComputedStyle(el)` pada event `touchstart`.
+   - Hanya pasang listener `touchmove` (`passive: false`) secara dinamik apabila pengguna berada di bahagian atas sekali (`window.scrollY <= 0`).
+
+5. **Dynamic Imports untuk Export Heavy Libraries:**
+   - Semua fungsi jana laporan PDF atau Excel mesti menggunakan dynamic `await import('@react-pdf/renderer')` atau `await import('exceljs')` di dalam event handler, bukan `import` statik di atas fail.
+
+---
+
+*Dikemas kini: Ogos 2026 — Pengoptimuman Prestasi Rendah & PWA Precache.*
 
 ---
 

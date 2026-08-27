@@ -36,7 +36,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { ROLE_LABELS, ALL_CLUBS } from '@/types';
 import { useAiSettings } from '@/contexts/AiSettingsContext';
-import { useKarnival } from '@/contexts/KarnivalContext';
+import { useKarnivalStatus } from '@/contexts/KarnivalContext';
 import { EXCO_MODULES, getExcoModule } from '@/config/excoModules';
 import { ChevronDown } from 'lucide-react';
 
@@ -186,7 +186,8 @@ function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accent
 function EkppSidebarContent() {
   const { isSuperAdmin, isPresident, effectiveRole, isJppMember, hasKppAccess } = useAuth();
   const { allowAiBudget } = useAiSettings();
-  const { showKarnival } = useKarnival();
+  const karnivalStatus = useKarnivalStatus();
+  const showKarnival = !!karnivalStatus?.isActive;
   const isMemberOnly = !isSuperAdmin && !isPresident;
 
   return (

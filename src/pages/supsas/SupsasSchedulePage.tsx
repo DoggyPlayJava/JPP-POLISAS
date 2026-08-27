@@ -87,7 +87,7 @@ function FixtureCard({ fixture, kontingenMap, sportMap }: {
                   <span className="text-white/20">-</span>
                   <span>{fixture.score_b ?? '0'}</span>
                 </div>
-                {fixture.elapsed_seconds !== undefined && (
+                {fixture.elapsed_seconds != null && (
                   <span className="text-[10px] font-mono font-black text-red-400 animate-pulse">
                     {Math.floor((fixture.elapsed_seconds || 0) / 60)}:{(fixture.elapsed_seconds || 0) % 60 < 10 ? '0' : ''}{(fixture.elapsed_seconds || 0) % 60}
                   </span>

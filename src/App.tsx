@@ -500,7 +500,7 @@ function AppRoutes() {
       </Route>
 
       {/* ── Karnival JPP v2 — PUBLIC (scoreboard/landing tanpa login, undi wajib login) ── */}
-      <Route element={<KarnivalLayout />}>
+      <Route element={<KarnivalProvider><KarnivalLayout /></KarnivalProvider>}>
         <Route path="/karnival"            element={<KarnivalLandingPage />} />
         <Route path="/karnival/undi"       element={<KarnivalVotePage />} />
         <Route path="/karnival/scoreboard" element={<KarnivalScoreboard />} />
@@ -523,7 +523,6 @@ function AppRoutes() {
 
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AiSettingsProvider } from '@/contexts/AiSettingsContext';
-import { ImageOptimizationProvider } from '@/contexts/ImageOptimizationContext';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { JppConfigProvider } from './contexts/JppConfigContext';
@@ -531,6 +530,7 @@ import { AcademicSessionProvider } from './contexts/AcademicSessionContext';
 import { PwaUpdater } from '@/components/PwaUpdater';
 import { InstallAppPrompt } from '@/components/pwa/InstallAppPrompt';
 import { GlobalPullToUpdate } from '@/components/layout/GlobalPullToUpdate';
+import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 function GlobalRedirector() {
   const navigate = useNavigate();
@@ -553,6 +553,8 @@ function GlobalRedirector() {
 }
 
 function App() {
+  useDevicePerformance();
+
   return (
     <ErrorBoundary>
       <ThemeProvider>
@@ -563,12 +565,11 @@ function App() {
               <NotificationProvider>
                 <AiSettingsProvider>
                   <JppConfigProvider>
-                    <KarnivalProvider>
-                      <GlobalPullToUpdate />
-                      <AppRoutes />
-                      <PwaUpdater />
-                      <InstallAppPrompt />
-                      <OfflineIndicator />
+                    <GlobalPullToUpdate />
+                    <AppRoutes />
+                    <PwaUpdater />
+                    <InstallAppPrompt />
+                    <OfflineIndicator />
                       <Toaster position="top-center">
                         {(t) => {
                           const isError = t.type === 'error';
@@ -613,7 +614,6 @@ function App() {
                           );
                         }}
                       </Toaster>
-                    </KarnivalProvider>
                   </JppConfigProvider>
                 </AiSettingsProvider>
               </NotificationProvider>
