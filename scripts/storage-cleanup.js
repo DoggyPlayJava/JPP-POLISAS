@@ -13,8 +13,6 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error("[Storage Cleanup] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.");
-  // Don't process.exit here — if imported by server.js, that would crash the whole server.
-  // Instead, export a no-op function.
 }
 
 const supabase = (supabaseUrl && supabaseServiceKey)
@@ -77,47 +75,94 @@ const BUCKETS_TO_CLEAN = [
 ];
 
 /**
- * Check if a given publicUrl is referenced in any DB column (scalar or array).
- * Returns true if at least one reference exists.
+ * Normalize ANY url/path form into the storage-relative path:
+ *   https://api.cipher-node.org/storage/v1/object/public/avatars/u1/a.jpg
+ *   http://localhost:8000/storage/v1/object/public/avatars/u1/a.jpg
+ *   avatars/u1/a.jpg
+ *   u1/a.jpg
+ * all → "u1/a.jpg"  (path WITHIN bucket, leading/trailing slashes stripped)
  */
-async function isFileReferenced(publicUrl, filePath) {
-  // 1. Check scalar (text) columns
+function normalizePath(value) {
+  if (!value) return null;
+  let s = String(value);
+  const q = s.indexOf('?');
+  if (q !== -1) s = s.slice(0, q);
+  const marker = '/object/public/';
+  const i = s.indexOf(marker);
+  if (i !== -1) s = s.slice(i + marker.length);
+  s = s.replace(/^\/+|\/+$/g, '');
+  try { s = decodeURIComponent(s); } catch { /* keep raw */ }
+  return s || null;
+}
+
+/**
+ * BULK-LOAD every referenced path from the DB into a Set.
+ * Domain-agnostic: strips the host so `localhost:8000` vs `api.cipher-node.org`
+ * mismatches can NEVER cause false "orphan" verdicts again (bug fixed 2026-08-12).
+ * Paginated (PGRST_DB_MAX_ROWS=1000 truncates REST silently).
+ */
+async function loadReferencedPaths() {
+  const refs = new Set();
+  const PAGE = 1000;
+
+  // Scalar (text) columns
   for (const ref of SCALAR_REFS) {
     try {
-      const { count } = await supabase
-        .from(ref.table)
-        .select('*', { count: 'exact', head: true })
-        .or(`${ref.column}.eq.${publicUrl},${ref.column}.eq.${filePath}`);
-
-      if (count && count > 0) return true;
-    } catch {
-      // Table/column might not exist — skip silently
+      let from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from(ref.table)
+          .select(ref.column)
+          .not(ref.column, 'is', null)
+          .range(from, from + PAGE - 1);
+        if (error) throw new Error(`${ref.table}.${ref.column}: ${error.message}`);
+        if (!data || data.length === 0) break;
+        for (const row of data) {
+          const norm = normalizePath(row[ref.column]);
+          if (norm) {
+            refs.add(norm);
+            refs.add(norm.split('/').slice(1).join('/')); // strip bucket prefix too
+          }
+        }
+        if (data.length < PAGE) break;
+        from += PAGE;
+      }
+    } catch (e) {
+      console.error(`[Storage Cleanup] WARN: cannot load ${ref.table}.${ref.column}: ${e.message}`);
     }
   }
 
-  // 2. Check array (text[]) columns
+  // Array (text[]) columns
   for (const ref of ARRAY_REFS) {
     try {
-      const { count } = await supabase
-        .from(ref.table)
-        .select('*', { count: 'exact', head: true })
-        .contains(ref.column, [publicUrl]);
-
-      if (count && count > 0) return true;
-
-      // Also check with just the filePath (some may store relative paths)
-      const { count: count2 } = await supabase
-        .from(ref.table)
-        .select('*', { count: 'exact', head: true })
-        .contains(ref.column, [filePath]);
-
-      if (count2 && count2 > 0) return true;
-    } catch {
-      // Skip silently
+      let from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from(ref.table)
+          .select(ref.column)
+          .not(ref.column, 'is', null)
+          .range(from, from + PAGE - 1);
+        if (error) throw new Error(`${ref.table}.${ref.column}: ${error.message}`);
+        if (!data || data.length === 0) break;
+        for (const row of data) {
+          const arr = Array.isArray(row[ref.column]) ? row[ref.column] : [];
+          for (const v of arr) {
+            const norm = normalizePath(v);
+            if (norm) {
+              refs.add(norm);
+              refs.add(norm.split('/').slice(1).join('/'));
+            }
+          }
+        }
+        if (data.length < PAGE) break;
+        from += PAGE;
+      }
+    } catch (e) {
+      console.error(`[Storage Cleanup] WARN: cannot load ${ref.table}.${ref.column}: ${e.message}`);
     }
   }
 
-  return false;
+  return refs;
 }
 
 /**
@@ -145,7 +190,7 @@ async function listAllFiles(bucket, folder) {
     // Filter out folder placeholders and actual sub-folders
     for (const item of data) {
       if (item.name === '.emptyFolderPlaceholder') continue;
-      
+
       const fullPath = folder ? `${folder}/${item.name}` : item.name;
 
       if (item.id === null) {
@@ -171,7 +216,7 @@ async function listAllFiles(bucket, folder) {
  */
 async function cleanOldReceipts() {
   console.log(`[Storage Cleanup] Checking for receipts older than 30 days to auto-delete...`);
-  
+
   // Calculate threshold date (30 days ago)
   const thresholdDate = new Date();
   thresholdDate.setDate(thresholdDate.getDate() - 30);
@@ -203,11 +248,11 @@ async function cleanOldReceipts() {
     // Example: https://.../storage/v1/object/public/polymart-receipts/receipts/orderId/filename.png
     const bucketMarker = 'polymart-receipts/';
     const markerIndex = receiptUrl.indexOf(bucketMarker);
-    
+
     if (markerIndex !== -1) {
       const filePath = decodeURIComponent(receiptUrl.substring(markerIndex + bucketMarker.length));
       console.log(`[Storage Cleanup] Deleting old receipt: ${filePath} for order ${order.id}`);
-      
+
       const { error: deleteError } = await supabase.storage
         .from('polymart-receipts')
         .remove([filePath]);
@@ -242,13 +287,23 @@ async function runCleanup() {
   }
 
   console.log(`[Storage Cleanup] Started at ${new Date().toISOString()}`);
-  
+
   // First run the 30-day receipt auto-cleanup
   try {
     await cleanOldReceipts();
   } catch (err) {
     console.error(`[Storage Cleanup] Error during cleanOldReceipts:`, err.message);
   }
+
+  // ── SAFETY: bulk-load ALL referenced paths BEFORE deleting anything ──
+  const referencedPaths = await loadReferencedPaths();
+
+  if (referencedPaths.size === 0) {
+    // If the reference DB can't be loaded, deleting ANYTHING is unsafe.
+    console.error("[Storage Cleanup] ABORT: 0 referenced paths loaded — refusing to delete. Check DB connectivity.");
+    return;
+  }
+  console.log(`[Storage Cleanup] Loaded ${referencedPaths.size} referenced path(s) from DB.`);
 
   let totalScanned = 0;
   let totalDeleted = 0;
@@ -268,10 +323,19 @@ async function runCleanup() {
         for (const filePath of files) {
           totalScanned++;
 
-          // Build public URL for this file
-          const { data: { publicUrl } } = supabase.storage.from(bucket.name).getPublicUrl(filePath);
+          // Match file against referenced set:
+          //   - raw relative path (listAllFiles form, e.g. "8b53e2a5.../img.jpg")
+          //   - bucket-prefixed form ("keusahawanan-products/8b53e2a5.../img.jpg")
+          //   - decoded variants (DB may store %-encoded chars)
+          let referenced = false;
+          const variants = [filePath, `${bucket.name}/${filePath}`];
+          try {
+            variants.push(decodeURIComponent(filePath), `${bucket.name}/${decodeURIComponent(filePath)}`);
+          } catch { /* keep as-is */ }
 
-          const referenced = await isFileReferenced(publicUrl, filePath);
+          for (const v of variants) {
+            if (referencedPaths.has(v)) { referenced = true; break; }
+          }
 
           if (!referenced) {
             console.log(`[Storage Cleanup]   ❌ Orphaned: ${bucket.name}/${filePath}`);
