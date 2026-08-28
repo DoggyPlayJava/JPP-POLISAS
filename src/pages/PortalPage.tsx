@@ -23,22 +23,31 @@ import { SupsasMegaBanner } from '@/components/portal/SupsasMegaBanner';
 import { QuickActions } from '@/components/portal/QuickActions';
 import { PortalNavbar } from '@/components/portal/PortalNavbar';
 import { PortalFooter } from '@/components/portal/PortalFooter';
-import { PortalSkeleton } from '@/components/portal/PortalSkeleton';
-import { SystemTour } from '@/components/ui/SystemTour';
 import { useTour } from '@/hooks/useTour';
 import { Step } from 'react-joyride';
 import { KamsisAppealModal } from '@/components/kamsis/KamsisAppealModal';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { LayoutDashboard, GraduationCap, ShieldAlert as ShieldIcon } from 'lucide-react';
+import { useDevicePerformance } from '@/hooks/useDevicePerformance';
+
+// Lazy-load SystemTour so react-joyride DOM watchers are completely bypassed during normal visits
+const SystemTour = React.lazy(() => import('@/components/ui/SystemTour').then(m => ({ default: m.SystemTour })));
 
 export function PortalPage() {
   const { profile, isSuperAdmin, hasKebajikanAccess } = useAuth();
   const navigate = useNavigate();
   const karnivalStatus = useKarnivalStatus();
   const karnivalActive = !!karnivalStatus?.isActive;
+  const { isLowPerf } = useDevicePerformance();
 
-  const [settings, setSettings] = useState<ExcoColorSetting[]>([]);
-  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
+  // Initialize settings synchronously from localStorage to eliminate white flashes and skeleton blocking
+  const [settings, setSettings] = useState<ExcoColorSetting[]>(() => {
+    try {
+      const cached = localStorage.getItem('jpp_portal_settings_cache');
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return [];
+  });
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { runTour, startTour, closeTour } = useTour('jpp_has_seen_portal_tour', !!profile);
@@ -192,6 +201,9 @@ export function PortalPage() {
       if (settingsRes.data) {
         const settingsData = settingsRes.data as ExcoColorSetting[];
         setSettings(settingsData);
+        try {
+          localStorage.setItem('jpp_portal_settings_cache', JSON.stringify(settingsData));
+        } catch {}
 
         // SUPSAS edition — only fetch if supsas module is enabled
         const supsasSetting = settingsData.find(s => s.exco_module === 'supsas');
@@ -224,7 +236,6 @@ export function PortalPage() {
       }
     } finally {
       clearTimeout(timeoutId);
-      setIsLoadingSettings(false);
     }
   }, []);
 
@@ -272,73 +283,78 @@ export function PortalPage() {
           : 'bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-white selection:bg-emerald-500/20'
     )}>
 
-      <SystemTour 
-        run={runTour}
-        onClose={closeTour}
-        steps={[
-          {
-            target: 'body',
-            content: 'Selamat Datang ke Ekosistem Digital JPP-POLISAS! Mari luangkan masa 1 minit untuk mengenali setiap butang dan fungsi supaya anda tidak keliru.',
-            title: 'Selamat Datang! 👋',
-            placement: 'center',
-            disableBeacon: true,
-          },
-          {
-            target: '.tour-navbar-profile',
-            content: 'Klik di sini untuk buka menu Profil. Anda boleh tukar nama, gambar profil, kata laluan, atau log keluar dari sistem di sini.',
-            title: 'Menu Profil ⚙️',
-            placement: 'bottom',
-          },
-          {
-            target: '.tour-qa-polyservices',
-            content: 'Ini adalah PolyServices. Di dalam ini terdapat pelbagai perkhidmatan pantas seperti tempahan dan perkhidmatan luar.',
-            title: 'PolyServices ⚡',
-            placement: 'top',
-          },
-          {
-            target: '.tour-qa-kebajikan',
-            content: 'Perlu lapor kerosakan bilik kuliah? Atau mohon bantuan tabung siswa? Tekan butang E-Kebajikan ini untuk membuat aduan rasmi.',
-            title: 'E-Kebajikan ❤️',
-            placement: 'top',
-          },
-          {
-            target: '.tour-qa-qr',
-            content: 'Semasa menghadiri program atau aktiviti, tekan butang ini untuk imbas Kod QR dan secara automatik kumpul mata merit ke dalam akaun anda.',
-            title: 'Imbas QR Merit 📸',
-            placement: 'top',
-          },
-          {
-            target: '.tour-qa-takwim',
-            content: 'Takwim Rasmi JPP dan POLISAS. Anda boleh semak senarai cuti, tarikh penting, dan program yang akan datang di sini.',
-            title: 'Takwim & Jadual 🗓️',
-            placement: 'top',
-          },
-          {
-            target: '.tour-mod-ekpp',
-            content: 'Modul Sistem Kelab (EKPP). Jika anda adalah wakil kelab persatuan, pengurusan pendaftaran, laporan, dan aktiviti akan dilakukan di sini.',
-            title: 'Sistem Kelab 🏛️',
-            placement: 'top',
-          },
-          {
-            target: '.tour-mod-keusahawanan',
-            content: 'PolyMart. Ruang khas untuk pelajar memulakan bisnes kecil, mengiklankan produk jualan, dan menjalankan perniagaan e-Dagang kampus.',
-            title: 'e-Keusahawanan 💡',
-            placement: 'top',
-          },
-          {
-            target: '.tour-mod-akademik',
-            content: 'Modul e-Akademik. Di sinilah tempat anda menyemak baki jumlah mata merit semasa, senarai program, dan maklumat akademik anda.',
-            title: 'e-Akademik 🎓',
-            placement: 'top',
-          },
-          {
-            target: '.tour-bottomnav-fab',
-            content: 'Terakhir dan paling penting! Ini adalah Navigasi Pintar. Jika anda tersesat di halaman mana sekalipun, tekan butang (+) ini untuk menu pintas.',
-            title: 'Navigasi Pintar (FAB) 🧭',
-            placement: 'top',
-          }
-        ]}
-      />
+      {/* SystemTour loaded lazily ONLY if runTour is true */}
+      {runTour && (
+        <React.Suspense fallback={null}>
+          <SystemTour 
+            run={runTour}
+            onClose={closeTour}
+            steps={[
+              {
+                target: 'body',
+                content: 'Selamat Datang ke Ekosistem Digital JPP-POLISAS! Mari luangkan masa 1 minit untuk mengenali setiap butang dan fungsi supaya anda tidak keliru.',
+                title: 'Selamat Datang! 👋',
+                placement: 'center',
+                disableBeacon: true,
+              },
+              {
+                target: '.tour-navbar-profile',
+                content: 'Klik di sini untuk buka menu Profil. Anda boleh tukar nama, gambar profil, kata laluan, atau log keluar dari sistem di sini.',
+                title: 'Menu Profil ⚙️',
+                placement: 'bottom',
+              },
+              {
+                target: '.tour-qa-polyservices',
+                content: 'Ini adalah PolyServices. Di dalam ini terdapat pelbagai perkhidmatan pantas seperti tempahan dan perkhidmatan luar.',
+                title: 'PolyServices ⚡',
+                placement: 'top',
+              },
+              {
+                target: '.tour-qa-kebajikan',
+                content: 'Perlu lapor kerosakan bilik kuliah? Atau mohon bantuan tabung siswa? Tekan butang E-Kebajikan ini untuk membuat aduan rasmi.',
+                title: 'E-Kebajikan ❤️',
+                placement: 'top',
+              },
+              {
+                target: '.tour-qa-qr',
+                content: 'Semasa menghadiri program atau aktiviti, tekan butang ini untuk imbas Kod QR dan secara automatik kumpul mata merit ke dalam akaun anda.',
+                title: 'Imbas QR Merit 📸',
+                placement: 'top',
+              },
+              {
+                target: '.tour-qa-takwim',
+                content: 'Takwim Rasmi JPP dan POLISAS. Anda boleh semak senarai cuti, tarikh penting, dan program yang akan datang di sini.',
+                title: 'Takwim & Jadual 🗓️',
+                placement: 'top',
+              },
+              {
+                target: '.tour-mod-ekpp',
+                content: 'Modul Sistem Kelab (EKPP). Jika anda adalah wakil kelab persatuan, pengurusan pendaftaran, laporan, dan aktiviti akan dilakukan di sini.',
+                title: 'Sistem Kelab 🏛️',
+                placement: 'top',
+              },
+              {
+                target: '.tour-mod-keusahawanan',
+                content: 'PolyMart. Ruang khas untuk pelajar memulakan bisnes kecil, mengiklankan produk jualan, dan menjalankan perniagaan e-Dagang kampus.',
+                title: 'e-Keusahawanan 💡',
+                placement: 'top',
+              },
+              {
+                target: '.tour-mod-akademik',
+                content: 'Modul e-Akademik. Di sinilah tempat anda menyemak baki jumlah mata merit semasa, senarai program, dan maklumat akademik anda.',
+                title: 'e-Akademik 🎓',
+                placement: 'top',
+              },
+              {
+                target: '.tour-bottomnav-fab',
+                content: 'Terakhir dan paling penting! Ini adalah Navigasi Pintar. Jika anda tersesat di halaman mana sekalipun, tekan butang (+) ini untuk menu pintas.',
+                title: 'Navigasi Pintar (FAB) 🧭',
+                placement: 'top',
+              }
+            ]}
+          />
+        </React.Suspense>
+      )}
 
       {/* Help Button — Manual Tour Restart */}
       <button
@@ -348,9 +364,6 @@ export function PortalPage() {
       >
         <HelpCircle className="w-5 h-5" />
       </button>
-
-      {/* Global Noise Overlay */}
-      <div className="pointer-events-none fixed inset-0 z-50 opacity-[0.015] dark:opacity-[0.03] mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
 
       <PortalSidebar
         isOpen={isSidebarOpen}
@@ -373,29 +386,31 @@ export function PortalPage() {
         setIsSidebarOpen={setIsSidebarOpen}
       />
 
-      {isLoadingSettings ? (
-        <PortalSkeleton />
-      ) : (
-        <main className="relative z-10 pt-32 md:pt-40 after:content-[''] after:block after:h-32 after:shrink-0 px-4 md:px-8 max-w-7xl mx-auto flex-1">
-          {/* Title Section */}
-          <div className="flex flex-col items-center text-center mb-16 md:mb-24 space-y-6 md:space-y-8">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/[0.03] dark:bg-white/5 border border-black/5 dark:border-white/10 shadow-lg backdrop-blur-md"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-              <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 dark:text-white/50">
-                EKOSISTEM DIGITAL V{__APP_VERSION__}
-              </span>
-            </motion.div>
+      {/* Main Content — Renders IMMEDIATELY without waiting for DB waterfalls, optimizing LCP & INP */}
+      <main className="relative z-10 pt-32 md:pt-40 after:content-[''] after:block after:h-32 after:shrink-0 px-4 md:px-8 max-w-7xl mx-auto flex-1">
+        {/* Title Section */}
+        <div className="flex flex-col items-center text-center mb-16 md:mb-24 space-y-6 md:space-y-8">
+          <motion.div
+            initial={{ opacity: isLowPerf ? 1 : 0, scale: isLowPerf ? 1 : 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={isLowPerf ? { duration: 0 } : undefined}
+            className={cn(
+              "inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/[0.03] dark:bg-white/5 border border-black/5 dark:border-white/10 shadow-lg",
+              !isLowPerf && "backdrop-blur-md"
+            )}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+            <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 dark:text-white/50">
+              EKOSISTEM DIGITAL V{__APP_VERSION__}
+            </span>
+          </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="space-y-4"
-            >
+          <motion.div
+            initial={{ opacity: isLowPerf ? 1 : 0, y: isLowPerf ? 0 : 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={isLowPerf ? { duration: 0 } : { delay: 0.2 }}
+            className="space-y-4"
+          >
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1] max-w-4xl mx-auto text-transparent bg-clip-text bg-gradient-to-b from-slate-900 to-slate-600 dark:from-white dark:to-white/60">
                 {supsasActive && !karnivalActive ? 'Semangat Sukan,' :
                   (() => {
@@ -567,7 +582,6 @@ export function PortalPage() {
             </motion.div>
           )}
         </main>
-      )}
 
       <PortalFooter />
 

@@ -1,29 +1,80 @@
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo } from 'react';
+import {
+  Landmark,
+  HeartHandshake,
+  Lightbulb,
+  GraduationCap,
+  CalendarDays,
+  LayoutDashboard,
+  LayoutGrid,
+  Trophy,
+  Store,
+  Flag,
+  Shield,
+  Crown,
+  Bike,
+  Map,
+  Search,
+  Building2,
+  Users,
+  Award,
+  CircleDot,
+  Dumbbell,
+  Flame,
+  Activity,
+  Medal,
+  Swords,
+  Target,
+  Zap,
+  Footprints,
+  Sparkles,
+  HelpCircle,
+  Clock,
+  Compass,
+  Layers,
+  FileText
+} from 'lucide-react';
 
 /**
- * DynamicIcon — Lazy-loads a Lucide icon by name.
- *
- * Instead of `import * as LucideIcons from 'lucide-react'` (540KB),
- * this component loads the entire module ONLY when first rendered,
- * keeping it out of the initial critical bundle.
- *
- * Usage:
- *   <DynamicIcon name="Trophy" className="w-5 h-5" />
+ * Static icon map for known Portal, Exco, and SUPSAS icons.
+ * Eliminates dynamic `import('lucide-react')` which forced the browser to
+ * parse 2MB of JS (1,500+ Lucide icons) during initial portal load.
  */
-
-// Module-level cache — loaded once, shared across all instances
-let _iconsModule: Record<string, React.ComponentType<any>> | null = null;
-let _loadPromise: Promise<void> | null = null;
-
-function loadIcons(): Promise<void> {
-  if (_iconsModule) return Promise.resolve();
-  if (!_loadPromise) {
-    _loadPromise = import('lucide-react').then((mod) => {
-      _iconsModule = mod as any;
-    });
-  }
-  return _loadPromise;
-}
+const KNOWN_ICONS: Record<string, React.ComponentType<any>> = {
+  Landmark,
+  HeartHandshake,
+  Lightbulb,
+  GraduationCap,
+  CalendarDays,
+  LayoutDashboard,
+  LayoutGrid,
+  Trophy,
+  Store,
+  Flag,
+  Shield,
+  Crown,
+  Bike,
+  Map,
+  Search,
+  Building2,
+  Users,
+  Award,
+  CircleDot,
+  Dumbbell,
+  Flame,
+  Activity,
+  Medal,
+  Swords,
+  Target,
+  Zap,
+  Footprints,
+  Sparkles,
+  HelpCircle,
+  Clock,
+  Compass,
+  Layers,
+  FileText
+};
 
 interface DynamicIconProps extends React.SVGAttributes<SVGSVGElement> {
   /** The PascalCase name of the Lucide icon, e.g. "Trophy", "HeartHandshake" */
@@ -34,24 +85,9 @@ interface DynamicIconProps extends React.SVGAttributes<SVGSVGElement> {
   size?: number | string;
 }
 
-function DynamicIconInner({ name, fallback = 'LayoutDashboard', ...props }: DynamicIconProps) {
-  const [ready, setReady] = useState(!!_iconsModule);
-
-  useEffect(() => {
-    if (!_iconsModule) {
-      loadIcons().then(() => setReady(true));
-    }
-  }, []);
-
-  if (!ready || !_iconsModule) {
-    // Render an empty placeholder with same dimensions to prevent layout shift
-    return <div className={props.className} style={{ width: props.size, height: props.size }} />;
-  }
-
-  const Icon = _iconsModule[name] || _iconsModule[fallback];
-  if (!Icon) return null;
-
-  return <Icon {...props} />;
+function DynamicIconInner({ name, fallback = 'LayoutDashboard', size, className, ...props }: DynamicIconProps) {
+  const Icon = KNOWN_ICONS[name] || KNOWN_ICONS[fallback] || LayoutDashboard;
+  return <Icon className={className} size={size} {...props} />;
 }
 
 export const DynamicIcon = memo(DynamicIconInner);

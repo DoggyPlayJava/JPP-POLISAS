@@ -1,5 +1,9 @@
-import React from 'react';
-import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
+import React, { Suspense, lazy } from 'react';
+
+// Lazy load FloatingAiChat to prevent react-markdown and large chat logic from blocking Portal initial paint
+const FloatingAiChat = lazy(() =>
+  import('@/components/ai/FloatingAiChat').then(m => ({ default: m.FloatingAiChat }))
+);
 
 export function PortalFooter() {
   return (
@@ -34,7 +38,9 @@ export function PortalFooter() {
           </div>
         </div>
       </footer>
-      <FloatingAiChat />
+      <Suspense fallback={null}>
+        <FloatingAiChat />
+      </Suspense>
     </>
   );
 }

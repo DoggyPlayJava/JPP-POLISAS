@@ -5,7 +5,8 @@ describe('Device Performance Detection Logic', () => {
     const concurrency = 4;
     const memory = 8;
     const prefersReducedMotion = false;
-    const isLowPerf = concurrency <= 4 || (memory !== null && memory <= 4) || prefersReducedMotion;
+    const isThrottledCpu = false;
+    const isLowPerf = concurrency <= 4 || (memory !== null && memory <= 4) || prefersReducedMotion || isThrottledCpu;
     expect(isLowPerf).toBe(true);
   });
 
@@ -13,7 +14,8 @@ describe('Device Performance Detection Logic', () => {
     const concurrency = 8;
     const memory = 3;
     const prefersReducedMotion = false;
-    const isLowPerf = concurrency <= 4 || (memory !== null && memory <= 4) || prefersReducedMotion;
+    const isThrottledCpu = false;
+    const isLowPerf = concurrency <= 4 || (memory !== null && memory <= 4) || prefersReducedMotion || isThrottledCpu;
     expect(isLowPerf).toBe(true);
   });
 
@@ -21,15 +23,26 @@ describe('Device Performance Detection Logic', () => {
     const concurrency = 8;
     const memory = 16;
     const prefersReducedMotion = true;
-    const isLowPerf = concurrency <= 4 || (memory !== null && memory <= 4) || prefersReducedMotion;
+    const isThrottledCpu = false;
+    const isLowPerf = concurrency <= 4 || (memory !== null && memory <= 4) || prefersReducedMotion || isThrottledCpu;
     expect(isLowPerf).toBe(true);
   });
 
-  it('identifies 8-core, 8GB+ machines as high performance', () => {
+  it('identifies devices with throttled or slow CPU benchmark as low-performance mode', () => {
+    const concurrency = 8;
+    const memory = 16;
+    const prefersReducedMotion = false;
+    const isThrottledCpu = true;
+    const isLowPerf = concurrency <= 4 || (memory !== null && memory <= 4) || prefersReducedMotion || isThrottledCpu;
+    expect(isLowPerf).toBe(true);
+  });
+
+  it('identifies 8-core, 8GB+ unthrottled machines as high performance', () => {
     const concurrency = 8;
     const memory = 8;
     const prefersReducedMotion = false;
-    const isLowPerf = concurrency <= 4 || (memory !== null && memory <= 4) || prefersReducedMotion;
+    const isThrottledCpu = false;
+    const isLowPerf = concurrency <= 4 || (memory !== null && memory <= 4) || prefersReducedMotion || isThrottledCpu;
     expect(isLowPerf).toBe(false);
   });
 });

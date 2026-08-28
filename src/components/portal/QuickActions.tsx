@@ -5,6 +5,7 @@ import { HeartHandshake, MessageSquarePlus, ArrowRight, Layers, QrCode, Crown, C
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { PolymartServiceModal } from './PolymartServiceModal';
+import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 export interface QuickActionsProps {
   isSuperAdmin: boolean;
@@ -17,8 +18,8 @@ export interface QuickActionsProps {
   supsasActive?: boolean;
 }
 
-// Custom hook for Holographic Tilt Effect
-function useHolographicTilt() {
+// Custom hook for Holographic Tilt Effect with Low-Perf Bypass
+function useHolographicTilt(isLowPerf: boolean) {
   const ref = useRef<HTMLButtonElement | HTMLDivElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -31,6 +32,19 @@ function useHolographicTilt() {
   const shineOpacity = useTransform(mouseYSpring, [-0.5, 0.5], [0.1, 0.5]);
   const shineY = useTransform(mouseYSpring, [-0.5, 0.5], ["-100%", "200%"]);
   const shineX = useTransform(mouseXSpring, [-0.5, 0.5], ["-100%", "200%"]);
+
+  if (isLowPerf) {
+    return { 
+      ref, 
+      rotateX: "0deg" as any, 
+      rotateY: "0deg" as any, 
+      shineOpacity: 0 as any, 
+      shineX: "-100%" as any, 
+      shineY: "-100%" as any, 
+      handleMouseMove: undefined, 
+      handleMouseLeave: undefined 
+    };
+  }
 
   const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
     if (!ref.current) return;
@@ -65,13 +79,14 @@ export function QuickActions({
 }: QuickActionsProps) {
   const navigate = useNavigate();
   const [showPolymartModal, setShowPolymartModal] = useState(false);
+  const { isLowPerf } = useDevicePerformance();
 
-  // Holographic hooks for all 4 boxes
-  const polyServicesTilt = useHolographicTilt();
-  const kebajikanTilt = useHolographicTilt();
-  const qrTilt = useHolographicTilt();
-  const takwimTilt = useHolographicTilt();
-  const jppTilt = useHolographicTilt();
+  // Holographic hooks for all 4 boxes (bypassed on low perf)
+  const polyServicesTilt = useHolographicTilt(isLowPerf);
+  const kebajikanTilt = useHolographicTilt(isLowPerf);
+  const qrTilt = useHolographicTilt(isLowPerf);
+  const takwimTilt = useHolographicTilt(isLowPerf);
+  const jppTilt = useHolographicTilt(isLowPerf);
 
   // Helper to determine active skin classes
   const getSkinClasses = (baseClasses: string, karnivalColor: string, supsasGradient: string, index: number) => {

@@ -6,8 +6,8 @@ import { DynamicIcon } from '@/components/ui/DynamicIcon';
 import { toast } from 'react-hot-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { cn, hexToRgba, getContrastText, triggerHaptic } from '@/lib/utils';
 import { ExcoModule } from '@/config/excoModules';
+import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 // ─── Color Picker Popover ───
 interface ColorPickerProps {
@@ -134,6 +134,7 @@ export interface ExcoCardProps {
 export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onToggle, onColorSave, karnivalActive, supsasActive, badgeText, notificationCount, className }: ExcoCardProps) {
   const navigate = useNavigate();
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const { isLowPerf } = useDevicePerformance();
 
   const canAccess = isEnabled || isSuperAdmin;
   const isPreviewMode = !isEnabled && isSuperAdmin;
@@ -162,18 +163,19 @@ export function ExcoCard({ module, color, index, isEnabled, isSuperAdmin, onTogg
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: isLowPerf ? 1 : 0, y: isLowPerf ? 0 : 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      transition={isLowPerf ? { duration: 0 } : { delay: index * 0.05, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       onClick={handleClick}
       className={cn(
         `tour-mod-${module.id}`,
         "group relative cursor-pointer overflow-hidden rounded-[2rem] p-8 transition-all duration-500 min-h-[280px] flex flex-col justify-between",
-        "border shadow-sm hover:shadow-2xl dark:shadow-none backdrop-blur-xl",
+        "border shadow-sm hover:shadow-2xl dark:shadow-none",
+        !isLowPerf && "backdrop-blur-xl",
         !canAccess && "opacity-60 grayscale-[0.8] cursor-not-allowed",
         isEventMode 
           ? cn(
-              karnivalActive ? "bg-black/40 backdrop-blur-xl border-violet-500/20" : "bg-black/20 border-white/10",
+              karnivalActive ? (isLowPerf ? "bg-black/80 border-violet-500/20" : "bg-black/40 backdrop-blur-xl border-violet-500/20") : "bg-black/20 border-white/10",
               karnivalActive ? "hover:border-transparent hover:bg-violet-950/30 hover:shadow-[inset_0_0_30px_rgba(192,132,252,0.15),0_10px_50px_rgba(192,132,252,0.25)]" : "hover:border-amber-500/40 hover:bg-amber-500/10 hover:shadow-[0_8px_40px_rgba(245,158,11,0.15)]"
             )
           : "bg-white/80 dark:bg-slate-900/40 border-slate-200/50 dark:border-white/5 hover:bg-white dark:hover:bg-slate-900/80 hover:-translate-y-1",

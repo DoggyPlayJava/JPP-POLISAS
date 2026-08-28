@@ -253,6 +253,10 @@ body.supsas-route {
   mix-blend-mode: normal !important;
 }
 
+.low-perf-device body::after {
+  display: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;
