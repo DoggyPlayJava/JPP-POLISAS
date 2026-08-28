@@ -31,6 +31,7 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AIGrammarCheck } from '@/components/ai/AIGrammarCheck';
 import { JPP_EXCO_POSITIONS, JPP_MT_POSITIONS } from '@/types';
+import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 const ACTIVITY_STATUS: Record<string, { label: string; color: string; bg: string }> = {
@@ -62,6 +63,15 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
   const [dialogOpen, setDialogOpen]     = useState(false);
   const [editTarget, setEditTarget]     = useState<any>(null);
   const [saving, setSaving]             = useState(false);
+  
+  const { isLowPerf } = useDevicePerformance();
+  const PAGE_SIZE = isLowPerf ? 10 : 20;
+  const [displayLimit, setDisplayLimit] = useState(PAGE_SIZE);
+
+  // Reset limit when filter changes
+  useEffect(() => {
+    setDisplayLimit(PAGE_SIZE);
+  }, [filterStatus, PAGE_SIZE]);
 
   // ── Access ─────────────────────────────────────────────────────────────────
   const jppPos  = profile?.jpp_position as string | undefined;
@@ -203,6 +213,8 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
     acc[a.status] = (acc[a.status] || 0) + 1;
     return acc;
   }, {});
+  
+  const displayedActivities = filtered.slice(0, displayLimit);
 
   const groupActivitiesByMonth = (acts: any[]) => {
     const grouped: Record<string, any[]> = {};
@@ -226,7 +238,7 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
     return { grouped, keys };
   };
 
-  const { grouped, keys: groupKeys } = groupActivitiesByMonth(filtered);
+  const { grouped, keys: groupKeys } = groupActivitiesByMonth(displayedActivities);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -347,6 +359,18 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
                 </motion.div>
               ))}
             </AnimatePresence>
+
+            {filtered.length > displayLimit && (
+              <div className="pt-8 flex justify-center">
+                <Button
+                  onClick={() => setDisplayLimit(prev => prev + PAGE_SIZE)}
+                  variant="outline"
+                  className="rounded-full px-8 h-12 bg-white/[0.02] hover:bg-white/[0.05] border-white/[0.1] text-white/70 hover:text-white text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
+                >
+                  Muat Lagi
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
