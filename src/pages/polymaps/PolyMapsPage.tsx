@@ -57,21 +57,19 @@ const buildingIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-// ── Low-end device detection (run once on mount) ──────────────────────────────
-function isLowEndDevice(): boolean {
-  const lowCpu = navigator.hardwareConcurrency <= 4;
-  const lowRam = (navigator as any).deviceMemory != null && (navigator as any).deviceMemory < 4;
-  const conn = (navigator as any).connection;
-  const slowNet = conn && ['slow-2g', '2g', '3g'].includes(conn.effectiveType);
-  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  return lowCpu || lowRam || slowNet || prefersReduced;
-}
+import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
-function MapRecenter({ lat, lng, zoom }: { lat: number, lng: number, zoom: number }) {
+// Smooth GPS follow during navigation
+
+function MapRecenter({ lat, lng, zoom, isLowEnd }: { lat: number, lng: number, zoom: number, isLowEnd: boolean }) {
   const map = useMap();
   useEffect(() => {
-    map.flyTo([lat, lng], zoom, { animate: true, duration: 1.5 });
-  }, [lat, lng, zoom, map]);
+    if (isLowEnd) {
+      map.setView([lat, lng], zoom, { animate: false });
+    } else {
+      map.flyTo([lat, lng], zoom, { animate: true, duration: 1.5 });
+    }
+  }, [lat, lng, zoom, map, isLowEnd]);
   return null;
 }
 
@@ -90,12 +88,17 @@ function MapFollower({ lat, lng, isLowEnd }: { lat: number, lng: number, isLowEn
 }
 
 // One-shot initial zoom when navigation starts — flies once then calls onDone
-function MapFlyOnce({ lat, lng, zoom, onDone }: { lat: number, lng: number, zoom: number, onDone: () => void }) {
+function MapFlyOnce({ lat, lng, zoom, onDone, isLowEnd }: { lat: number, lng: number, zoom: number, onDone: () => void, isLowEnd: boolean }) {
   const map = useMap();
   useEffect(() => {
-    map.flyTo([lat, lng], zoom, { animate: true, duration: 1.2 });
-    const t = setTimeout(onDone, 1300);
-    return () => clearTimeout(t);
+    if (isLowEnd) {
+      map.setView([lat, lng], zoom, { animate: false });
+      onDone();
+    } else {
+      map.flyTo([lat, lng], zoom, { animate: true, duration: 1.2 });
+      const t = setTimeout(onDone, 1300);
+      return () => clearTimeout(t);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // intentionally empty — run once on mount only
   return null;
@@ -408,7 +411,7 @@ export function PolyMapsPage() {
   // Follow mode: true = map follows user; false = user panned away (show re-center button)
   const [isFollowingUser, setIsFollowingUser] = useState(false);
   const { user, profile } = useAuth();
-  const isLowEnd = React.useRef(isLowEndDevice()).current;
+  const { isLowPerf: isLowEnd } = useDevicePerformance();
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [reportForm, setReportForm] = useState({
@@ -1356,6 +1359,7 @@ export function PolyMapsPage() {
               lat={activeBuilding.center_lat - 0.0010}
               lng={activeBuilding.center_lng} 
               zoom={18} 
+              isLowEnd={isLowEnd}
             />
           )}
 
@@ -1370,6 +1374,7 @@ export function PolyMapsPage() {
               lat={userLocation[0]}
               lng={userLocation[1]}
               zoom={19}
+              isLowEnd={isLowEnd}
               onDone={() => {
                 setHasZoomedToNavigation(true);
                 setIsFollowingUser(true); // Activate follow mode after initial zoom
@@ -1676,7 +1681,7 @@ export function PolyMapsPage() {
                 animate={{ opacity: 1, y: 0 }} 
                 exit={{ opacity: 0, y: 20 }}
                 transition={{ layout: { duration: 0.3, ease: [0.16, 1, 0.3, 1] } }}
-                className="bg-blue-600/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-400/30 overflow-hidden relative"
+                className={`rounded-3xl shadow-2xl border border-blue-400/30 overflow-hidden relative ${isLowEnd ? 'bg-blue-600' : 'bg-blue-600/95 backdrop-blur-xl'}`}
               >
                 {/* ── COLLAPSED: Mini Nav Bar ── */}
                 {!cardExpanded && (
@@ -2037,7 +2042,7 @@ export function PolyMapsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 50 }}
                 transition={{ layout: { duration: 0.3, ease: [0.16, 1, 0.3, 1] } }}
-                className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/60 dark:border-slate-800/60 overflow-hidden relative"
+                className={`rounded-3xl shadow-2xl border border-slate-200/60 dark:border-slate-800/60 overflow-hidden relative ${isLowEnd ? 'bg-white dark:bg-slate-900' : 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl'}`}
               >
                 {/* ── COLLAPSED: Mini Bar ── */}
                 {!cardExpanded && (
@@ -2091,7 +2096,7 @@ export function PolyMapsPage() {
                     {/* Close Button */}
                     <button 
                       onClick={() => setCardExpanded(false)}
-                      className="absolute top-3 right-3 z-10 w-8 h-8 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors"
+                      className={`absolute top-3 right-3 z-10 w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white transition-colors ${!isLowEnd && 'backdrop-blur-md'}`}
                     >
                       <ChevronDown className="w-4 h-4" />
                     </button>
@@ -2130,14 +2135,14 @@ export function PolyMapsPage() {
                       )}
                       
                       {selectedLocation && (
-                        <div className="absolute top-3 left-3 bg-emerald-500/90 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase">
+                        <div className={`absolute top-3 left-3 bg-emerald-500/90 text-white px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${!isLowEnd && 'backdrop-blur-md'}`}>
                           LOKASI JUMPA
                         </div>
                       )}
 
                       {/* Media Tabs */}
                       {((activeBuilding.entrance_image_url ? 1 : 0) + (activeBuilding.floorplan_image_url ? 1 : 0) + ((selectedLocation && selectedLocation.image_url) ? 1 : 0)) > 1 && (
-                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 bg-black/40 backdrop-blur-md p-1 rounded-full border border-white/10">
+                        <div className={`absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 bg-black/40 p-1 rounded-full border border-white/10 ${!isLowEnd && 'backdrop-blur-md'}`}>
                           {activeBuilding.entrance_image_url && (
                             <button onClick={() => setActiveImageTab('entrance')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'entrance' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Depan</button>
                           )}
@@ -2251,7 +2256,7 @@ export function PolyMapsPage() {
         {showFullscreenImage && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[3000] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4"
+            className={`fixed inset-0 z-[3000] flex items-center justify-center p-4 ${isLowEnd ? 'bg-black' : 'bg-black/95 backdrop-blur-sm'}`}
           >
             <button 
               onClick={() => setShowFullscreenImage(null)}
@@ -2277,7 +2282,7 @@ export function PolyMapsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsReportModalOpen(false)}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+              className={`absolute inset-0 ${isLowEnd ? 'bg-slate-900/90' : 'bg-slate-900/60 backdrop-blur-sm'}`}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}

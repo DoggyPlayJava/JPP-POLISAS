@@ -45,6 +45,7 @@ import { useBusinessData } from '@/hooks/useBusinessData';
 import { BusinessSwitcher } from '@/components/ui/BusinessSwitcher';
 import { useTour } from '@/hooks/useTour';
 import { SystemTour } from '@/components/ui/SystemTour';
+import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 // --- Dashboard Component ---
 export function KeusahawananDashboard() {
@@ -55,6 +56,7 @@ export function KeusahawananDashboard() {
   const navigate = useNavigate();
   const displayName = getMalaysianNickname(profile?.full_name);
   const { runTour, startTour, closeTour } = useTour('KEUSAHAWANAN_DASHBOARD', !!profile);
+  const { isLowPerf } = useDevicePerformance();
 
   const [isSubmittingPuskep, setIsSubmittingPuskep] = useState(false);
 
@@ -656,7 +658,7 @@ export function KeusahawananDashboard() {
             <div className="h-12 w-24">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.revenueHistory}>
-                  <Bar dataKey="value" fill={color} radius={[2,2,0,0]} opacity={0.8} />
+                  <Bar isAnimationActive={!isLowPerf} dataKey="value" fill={color} radius={[2,2,0,0]} opacity={0.8} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -684,7 +686,7 @@ export function KeusahawananDashboard() {
             <div className="h-12 w-24">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.orderHistory}>
-                  <Bar dataKey="value" fill="#a855f7" radius={[2,2,0,0]} opacity={0.8} />
+                  <Bar isAnimationActive={!isLowPerf} dataKey="value" fill="#a855f7" radius={[2,2,0,0]} opacity={0.8} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -714,7 +716,7 @@ export function KeusahawananDashboard() {
           <div className="w-24 h-24 relative flex-shrink-0">
              <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={pieData} innerRadius={35} outerRadius={45} dataKey="value" stroke="none" startAngle={90} endAngle={-270}>
+                <Pie isAnimationActive={!isLowPerf} data={pieData} innerRadius={35} outerRadius={45} dataKey="value" stroke="none" startAngle={90} endAngle={-270}>
                   <Cell fill={color} />
                   <Cell fill="hsl(var(--muted))" />
                 </Pie>
@@ -787,8 +789,8 @@ export function KeusahawananDashboard() {
                     name === 'sales' ? 'Jualan Selesai' : 'Kutipan Online (Bank)'
                   ]}
                 />
-                <Line type="monotone" dataKey="sales" stroke={color} strokeWidth={3} name="sales" dot={false} activeDot={{ r: 6, fill: color, stroke: 'hsl(var(--background))', strokeWidth: 2 }} />
-                <Line type="monotone" dataKey="onlineCash" stroke="#3b82f6" strokeWidth={3} name="onlineCash" dot={false} activeDot={{ r: 6, fill: '#3b82f6', stroke: 'hsl(var(--background))', strokeWidth: 2 }} />
+                <Line isAnimationActive={!isLowPerf} type="monotone" dataKey="sales" stroke={color} strokeWidth={3} name="sales" dot={false} activeDot={{ r: 6, fill: color, stroke: 'hsl(var(--background))', strokeWidth: 2 }} />
+                <Line isAnimationActive={!isLowPerf} type="monotone" dataKey="onlineCash" stroke="#3b82f6" strokeWidth={3} name="onlineCash" dot={false} activeDot={{ r: 6, fill: '#3b82f6', stroke: 'hsl(var(--background))', strokeWidth: 2 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
