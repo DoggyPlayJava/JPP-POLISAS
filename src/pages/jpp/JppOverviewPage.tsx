@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 import { Smartphone, Monitor, Trash2, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -39,11 +40,12 @@ function BigStatCard({
   label: string; value: number | string; icon: React.ElementType;
   color: string; sub?: string; delay: number; onClick?: () => void;
 }) {
+  const { isLowPerf } = useDevicePerformance();
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: isLowPerf ? 0 : 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ delay: isLowPerf ? 0 : delay, duration: isLowPerf ? 0 : 0.5, ease: [0.16, 1, 0.3, 1] }}
       onClick={onClick}
       className={`rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-5 transition-all ${
         onClick ? 'cursor-pointer hover:bg-white/[0.08] hover:scale-[1.02] active:scale-[0.98]' : 'hover:bg-white/[0.05]'
@@ -72,6 +74,7 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
   const { isSuperAdmin } = useAuth();
   const [subs, setSubs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { isLowPerf } = useDevicePerformance();
 
   const fetchSubs = async () => {
     setLoading(true);
@@ -121,9 +124,10 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        initial={{ opacity: 0, scale: isLowPerf ? 1 : 0.95, y: isLowPerf ? 0 : 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        exit={{ opacity: 0, scale: isLowPerf ? 1 : 0.95, y: isLowPerf ? 0 : 20 }}
+        transition={isLowPerf ? { duration: 0 } : undefined}
         className="relative w-full max-w-2xl max-h-[85vh] bg-[#0a0a0f] border border-white/10 rounded-3xl overflow-hidden flex flex-col shadow-2xl"
       >
         <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
@@ -248,6 +252,7 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
   });
   const [reviewNote, setReviewNote] = useState('');
   const [processing, setProcessing] = useState(false);
+  const { isLowPerf } = useDevicePerformance();
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -341,7 +346,7 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
   ];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.55 }} className="space-y-4">
+    <motion.div initial={{ opacity: 0, y: isLowPerf ? 0 : 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: isLowPerf ? 0 : 0.5, delay: isLowPerf ? 0 : 0.55 }} className="space-y-4">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: hexToRgba(themeColor, 0.15), border: `1px solid ${hexToRgba(themeColor, 0.25)}` }}>
           <ClipboardList className="w-5 h-5" style={{ color: themeColor }} />
@@ -442,12 +447,12 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
       <AnimatePresence>
         {reviewModal.open && reviewModal.req && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={isLowPerf ? { duration: 0 } : undefined}
               className="absolute inset-0 bg-black/70 backdrop-blur-sm"
               onClick={() => !processing && setReviewModal({ open: false, req: null, action: null })}
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              initial={{ opacity: 0, scale: isLowPerf ? 1 : 0.95, y: isLowPerf ? 0 : 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: isLowPerf ? 1 : 0.95, y: isLowPerf ? 0 : 10 }} transition={isLowPerf ? { duration: 0 } : undefined}
               className="relative w-full max-w-md rounded-[2rem] p-6 border border-white/10 bg-[#0f0f1a] z-10"
             >
               <div className="space-y-5">
@@ -499,6 +504,7 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 export function JppOverviewPage() {
   const { isSuperAdmin, isJppMember } = useAuth();
+  const { isLowPerf } = useDevicePerformance();
 
   const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
   const [stats, setStats]           = useState<SystemStats | null>(null);
@@ -631,9 +637,9 @@ export function JppOverviewPage() {
 
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: isLowPerf ? 0 : 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: isLowPerf ? 0 : 0.5 }}
           className="space-y-2"
         >
           <div className="flex items-center gap-3">
@@ -683,9 +689,9 @@ export function JppOverviewPage() {
               
               {/* Registration Trend Area Chart */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: isLowPerf ? 0 : 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.45 }}
+                transition={{ delay: isLowPerf ? 0 : 0.45 }}
                 className="lg:col-span-2 rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-6 flex flex-col"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
@@ -748,7 +754,7 @@ export function JppOverviewPage() {
                         strokeWidth={3}
                         fillOpacity={1} 
                         fill="url(#colorCount)" 
-                        animationDuration={1500}
+                        animationDuration={isLowPerf ? 0 : 1500}
                         animationEasing="ease-in-out"
                       />
                     </AreaChart>
@@ -758,9 +764,9 @@ export function JppOverviewPage() {
 
               {/* Kebajikan Tickets Pie Chart */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: isLowPerf ? 0 : 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
+                transition={{ delay: isLowPerf ? 0 : 0.5 }}
                 className="rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-6 flex flex-col"
               >
                 <h2 className="text-xs font-black uppercase tracking-[0.25em] text-white/40 mb-2">
@@ -785,7 +791,7 @@ export function JppOverviewPage() {
                           paddingAngle={5}
                           dataKey="value"
                           stroke="none"
-                          animationDuration={1500}
+                          animationDuration={isLowPerf ? 0 : 1500}
                         >
                           {ticketStats.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />

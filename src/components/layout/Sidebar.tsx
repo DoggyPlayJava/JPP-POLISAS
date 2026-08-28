@@ -39,6 +39,7 @@ import { useAiSettings } from '@/contexts/AiSettingsContext';
 import { useKarnivalStatus } from '@/contexts/KarnivalContext';
 import { EXCO_MODULES, getExcoModule } from '@/config/excoModules';
 import { ChevronDown } from 'lucide-react';
+import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 
 
@@ -116,6 +117,7 @@ const EMS_NAV: NavItem[] = [
 // SubKomponen: NavItem generik
 // ─────────────────────────────────────────────────────────────────────────────
 function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accentColor?: string }) {
+  const { isLowPerf } = useDevicePerformance();
   const colorMap: Record<string, { active: string; dot: string; iconBg: string; iconText?: string }> = {
     amber: {
       active: 'bg-white/12 text-white shadow-inner',
@@ -160,14 +162,16 @@ function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accent
     <NavLink
       to={item.href}
       className={({ isActive }) => cn(
-        'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
+        'flex items-center gap-3 px-3 py-2.5 rounded-xl group',
+        isLowPerf ? '' : 'transition-all duration-200',
         isActive ? c.active : 'text-white/50 hover:bg-white/7 hover:text-white/85'
       )}
     >
       {({ isActive }) => (
         <>
           <div className={cn(
-            'w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200',
+            'w-7 h-7 rounded-lg flex items-center justify-center',
+            isLowPerf ? '' : 'transition-all duration-200',
             isActive ? c.iconBg : 'group-hover:bg-white/8'
           )}>
             <item.icon className={cn('w-3.5 h-3.5', isActive ? (c.iconText ?? `text-${accentColor}-400`) : '')} />
@@ -412,6 +416,7 @@ function PlaceholderSidebarContent({ excoId }: { excoId: string }) {
 function CustomClubSelect({ value, onChange, clubs }: { value: string | null, onChange: (val: string | null) => void, clubs: typeof ALL_CLUBS }) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { isLowPerf } = useDevicePerformance();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -429,7 +434,7 @@ function CustomClubSelect({ value, onChange, clubs }: { value: string | null, on
     <div className="relative mt-2.5 z-[9999]" ref={ref}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between bg-white/5 border border-white/10 border-dashed hover:bg-white/10 rounded-xl px-4 py-2.5 text-[10px] font-black text-white/80 uppercase tracking-widest transition-all backdrop-blur-md shadow-sm"
+        className={cn("w-full flex items-center justify-between bg-white/5 border border-white/10 border-dashed hover:bg-white/10 rounded-xl px-4 py-2.5 text-[10px] font-black text-white/80 uppercase tracking-widest backdrop-blur-md shadow-sm", isLowPerf ? "" : "transition-all")}
       >
         <div className="flex items-center gap-2.5 truncate">
           {selectedClub ? (
@@ -441,7 +446,7 @@ function CustomClubSelect({ value, onChange, clubs }: { value: string | null, on
              <span className="truncate">— PILIH KELAB —</span>
           )}
         </div>
-        <ChevronDown className={cn("w-3.5 h-3.5 text-white/40 transition-transform duration-200", isOpen && "rotate-180")} />
+        <ChevronDown className={cn("w-3.5 h-3.5 text-white/40", isLowPerf ? "" : "transition-transform duration-200", isOpen && "rotate-180")} />
       </button>
 
       {isOpen && (

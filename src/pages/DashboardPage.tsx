@@ -41,6 +41,7 @@ import {
   EmptyDescription,
   EmptyMedia,
 } from '@/components/ui/empty';
+import { useDevicePerformance } from '@/hooks/useDevicePerformance';
 
 // --- 1. KOMPONEN KECIL: ITEM TUGASAN ---
 function TaskItem({ task, isNormalMember, canApprove, onOpen, onApprove, onReject, onVerify }: any) {
@@ -136,6 +137,7 @@ export function DashboardPage() {
   const { user, profile, isAdvisor, isPresident, isMT, isMember, effectiveRole, selectedClubId, userClubIds } = useAuth();
   const { allowAiBudget } = useAiSettings();
   const navigate = useNavigate();
+  const { isLowPerf } = useDevicePerformance();
 
   // ── OPTIMISED: Guna hook yang consolidate 8 queries → 1 RPC + cache ──
   const { data: dashData, isLoading, isRefreshing, fetchData: fetchDashboard, refresh } = useDashboardData();
@@ -330,7 +332,7 @@ export function DashboardPage() {
     }
   ];
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="page-container space-y-10 pb-20">
+    <motion.div initial={{ opacity: 0, y: isLowPerf ? 0 : 20 }} animate={{ opacity: 1, y: 0 }} transition={isLowPerf ? { duration: 0 } : undefined} className="page-container space-y-10 pb-20">
       {/* ── REFRESH INDICATOR (subtle bar, no skeleton flash) ── */}
       {isRefreshing && (
         <div className="fixed top-0 left-0 right-0 z-[9999] h-[3px] bg-primary/20 overflow-hidden">
@@ -400,6 +402,7 @@ export function DashboardPage() {
                   paddingAngle={8} 
                   dataKey="value"
                   stroke="none"
+                  isAnimationActive={!isLowPerf}
                 >
                   {clubStats.taskProgress.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} fillOpacity={0.8} />
@@ -453,6 +456,7 @@ export function DashboardPage() {
                   fill="#10b981" 
                   radius={[6, 6, 0, 0]} 
                   barSize={40}
+                  isAnimationActive={!isLowPerf}
                 />
               </BarChart>
             </ResponsiveContainer>
