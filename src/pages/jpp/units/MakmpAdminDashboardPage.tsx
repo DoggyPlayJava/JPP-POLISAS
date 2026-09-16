@@ -31,6 +31,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -65,6 +66,7 @@ export const PRESET_CATEGORY_GROUPS = [
 
 export default function MakmpAdminDashboardPage() {
   const { user, profile } = useAuth();
+  const isJppOrAdmin = profile?.role === 'SUPER_ADMIN_JPP' || profile?.role === 'JPP';
 
   // Active Tab: 'submissions' | 'categories' | 'pins' | 'editions'
   const [tab, setTab] = useState<'submissions' | 'categories' | 'pins' | 'editions'>('submissions');
@@ -383,6 +385,20 @@ export default function MakmpAdminDashboardPage() {
   const handleSavePin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!juryName.trim() || !selectedEditionId) return;
+
+    if (!user) {
+      alert(
+        'Akses Ditolak (RLS): Anda belum log masuk ke portal.\n\nPangkalan data memerlukan sesi log masuk Pentadbir JPP yang sah untuk menjana atau mengemas kini kod PIN juri.\n\nSila log masuk di /login terlebih dahulu.'
+      );
+      return;
+    }
+
+    if (!isJppOrAdmin) {
+      alert(
+        `Akses Ditolak (RLS): Akaun anda (${profile?.email || user.email}) mempunyai peranan "${profile?.role || 'Pelajar'}".\n\nUntuk menjana atau mengemas kini PIN juri, akaun anda mestilah mempunyai peranan 'JPP' atau 'SUPER_ADMIN_JPP' dalam pangkalan data.`
+      );
+      return;
+    }
 
     const assigned = selectedJuryCategories.length === 0 ? ['ALL'] : selectedJuryCategories;
 
@@ -859,6 +875,31 @@ export default function MakmpAdminDashboardPage() {
           </button>
         </div>
       </div>
+
+      {/* Not Logged In / Non-Admin Warning Banner */}
+      {!user ? (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg animate-fade-in">
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+            <div>
+              <span className="font-bold">Mod Pratonton (Belum Log Masuk):</span> Anda sedang melihat data MAKMP sebagai tetamu. Tindakan menjana PIN juri atau mengurus anugerah memerlukan log masuk sebagai JPP / Pentadbir.
+            </div>
+          </div>
+          <Link
+            to="/login?redirect=/jpp/unit/akademik?tab=makmp"
+            className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shrink-0 text-center transition shadow-md shadow-amber-500/20"
+          >
+            Log Masuk Pentadbir
+          </Link>
+        </div>
+      ) : !isJppOrAdmin ? (
+        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2.5 shadow-lg animate-fade-in">
+          <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
+          <div>
+            <span className="font-bold">Akses Terhad (Bukan JPP):</span> Anda log masuk sebagai <strong className="text-white">{profile?.full_name || user.email}</strong> (Peranan: <code className="text-amber-300 font-mono">{profile?.role || 'Pelajar'}</code>). Tindakan menjana PIN dan mengurus anugerah dihadkan kepada akaun JPP / SUPER_ADMIN_JPP.
+          </div>
+        </div>
+      ) : null}
 
       {/* KPI Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -2036,6 +2077,15 @@ export default function MakmpAdminDashboardPage() {
                       </div>
                     </div>
                   </div>
+
+                  {!isJppOrAdmin && (
+                    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                      <span>
+                        Peringatan: Anda belum log masuk sebagai Pentadbir JPP. Sila log masuk dengan akaun JPP di /login sebelum menjana PIN.
+                      </span>
+                    </div>
+                  )}
 
                   <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
                     <button
