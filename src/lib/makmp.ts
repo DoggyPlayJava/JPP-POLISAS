@@ -840,11 +840,20 @@ export async function fetchJuryAwardApplications(
   // 2. Tapis mengikut assignedCategories jika bukan 'ALL'
   if (assignedCategories.length > 0 && !assignedCategories.includes('ALL')) {
     list = list.filter((a) => {
-      const group = (a.award?.category_group || '').toUpperCase();
-      const name = (a.award?.name || '').toUpperCase();
+      const group = (a.award?.category_group || '').trim().toUpperCase();
+      const name = (a.award?.name || '').trim().toUpperCase();
+      const awardId = (a.award?.id || a.award_id || '').trim().toUpperCase();
+
       return assignedCategories.some((cat) => {
-        const c = cat.toUpperCase();
-        return c === group || c === name || group.includes(c) || name.includes(c);
+        const c = cat.trim().toUpperCase();
+        // 1. Padanan tepat mengikut nama anugerah rasmi (cth: "Tokoh Keusahawanan Terbaik")
+        if (name && c === name) return true;
+        // 2. Padanan tepat mengikut ID / Kod anugerah
+        if (awardId && c === awardId) return true;
+        // 3. Padanan kumpulan kategori (cth: "ANUGERAH KEUSAHAWANAN")
+        if (group && (c === group || group.includes(c) || c.includes(group))) return true;
+
+        return false;
       });
     });
   }

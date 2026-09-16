@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Award,
   Users,
@@ -27,6 +27,9 @@ import {
   AlertTriangle,
   FileText,
   Settings,
+  Trophy,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -115,6 +118,7 @@ export default function MakmpAdminDashboardPage() {
   const [juryName, setJuryName] = useState('');
   const [juryOrg, setJuryOrg] = useState('');
   const [selectedJuryCategories, setSelectedJuryCategories] = useState<string[]>(['ALL']);
+  const [juryCategorySearch, setJuryCategorySearch] = useState('');
 
   // Detail / Review Modal
   const [activeSub, setActiveSub] = useState<MakmpSubmission | null>(null);
@@ -196,11 +200,162 @@ export default function MakmpAdminDashboardPage() {
   // ============================================================================
   // PIN JURI HANDLERS (Multi-Category Assignment)
   // ============================================================================
+  // Kumpulan anugerah berhierarki mengikut category_group
+  const groupedAwards = useMemo(() => {
+    const map = new Map<string, MakmpAwardDefinition[]>();
+
+    // Initialise dengan urutan preset group
+    for (const group of PRESET_CATEGORY_GROUPS) {
+      map.set(group, []);
+    }
+
+    for (const a of awards) {
+      const g = a.category_group || 'LAIN-LAIN';
+      if (!map.has(g)) {
+        map.set(g, []);
+      }
+      map.get(g)!.push(a);
+    }
+
+    return Array.from(map.entries())
+      .filter(([_, groupAwards]) => groupAwards.length > 0)
+      .map(([groupName, groupAwards]) => ({
+        groupName,
+        awards: groupAwards.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
+      }));
+  }, [awards]);
+
+  // Carian anugerah dalam modal PIN juri
+  const filteredGroupedAwards = useMemo(() => {
+    if (!juryCategorySearch.trim()) return groupedAwards;
+    const q = juryCategorySearch.toLowerCase().trim();
+
+    return groupedAwards
+      .map(({ groupName, awards: groupAwards }) => {
+        const groupMatches = groupName.toLowerCase().includes(q);
+        const matchingAwards = groupAwards.filter(
+          (a) =>
+            a.name.toLowerCase().includes(q) ||
+            (a.description || '').toLowerCase().includes(q) ||
+            a.target_type.toLowerCase().includes(q)
+        );
+
+        if (groupMatches) {
+          return { groupName, awards: groupAwards };
+        } else if (matchingAwards.length > 0) {
+          return { groupName, awards: matchingAwards };
+        }
+        return null;
+      })
+      .filter(Boolean) as Array<{ groupName: string; awards: MakmpAwardDefinition[] }>;
+  }, [groupedAwards, juryCategorySearch]);
+
+  // Semak status pilihan anugerah khusus
+  const isAwardSelected = (award: MakmpAwardDefinition) => {
+    if (selectedJuryCategories.includes('ALL')) return true;
+    if (selectedJuryCategories.includes(award.name)) return true;
+    if (selectedJuryCategories.includes(award.category_group)) return true;
+    return false;
+  };
+
+  // Semak jika seluruh kumpulan kategori telah dipilih
+  const isGroupFullySelected = (catGroup: string, groupAwards: MakmpAwardDefinition[]) => {
+    if (selectedJuryCategories.includes('ALL')) return true;
+    if (selectedJuryCategories.includes(catGroup)) return true;
+    if (
+      groupAwards.length > 0 &&
+      groupAwards.every((a) => selectedJuryCategories.includes(a.name))
+    ) {
+      return true;
+    }
+    return false;
+  };
+
+  // Toggle satu anugerah secara khusus
+  const handleToggleAward = (award: MakmpAwardDefinition) => {
+    setSelectedJuryCategories((prev) => {
+      // Jika sebelum ini 'ALL', kembangkan menjadi semua anugerah KECUALI yang ini
+      if (prev.includes('ALL')) {
+        const allAwardNames = awards.map((a) => a.name);
+        return allAwardNames.filter((name) => name !== award.name);
+      }
+
+      const groupAwards = awards.filter((a) => a.category_group === award.category_group);
+      const isGroupTagged = prev.includes(award.category_group);
+
+      if (isGroupTagged) {
+        // Nyahbungkus tag kumpulan kepada anugerah-anugerah lain kecuali anugerah ini
+        const withoutGroup = prev.filter((c) => c !== award.category_group);
+        const otherSiblings = groupAwards
+          .filter((a) => a.name !== award.name)
+          .map((a) => a.name);
+        return Array.from(new Set([...withoutGroup, ...otherSiblings]));
+      }
+
+      if (prev.includes(award.name)) {
+        return prev.filter((c) => c !== award.name);
+      } else {
+        const next = [...prev, award.name];
+        // Jika kini SEMUA anugerah dalam kumpulan ini telah dipilih, padatkan dengan tag kumpulan
+        const allSiblingNames = groupAwards.map((a) => a.name);
+        if (groupAwards.length > 0 && allSiblingNames.every((n) => next.includes(n))) {
+          const withoutSiblings = next.filter((c) => !allSiblingNames.includes(c));
+          return [...withoutSiblings, award.category_group];
+        }
+        return next;
+      }
+    });
+  };
+
+  // Toggle semua anugerah dalam sesuatu kumpulan
+  const handleToggleGroup = (catGroup: string) => {
+    setSelectedJuryCategories((prev) => {
+      const groupAwards = awards.filter((a) => a.category_group === catGroup);
+      const groupAwardNames = groupAwards.map((a) => a.name);
+
+      if (prev.includes('ALL')) {
+        // Tukar 'ALL' kepada semua anugerah selain kumpulan ini
+        const otherAwards = awards
+          .filter((a) => a.category_group !== catGroup)
+          .map((a) => a.name);
+        return otherAwards;
+      }
+
+      const isGroupSelected =
+        prev.includes(catGroup) ||
+        (groupAwards.length > 0 && groupAwardNames.every((n) => prev.includes(n)));
+
+      if (isGroupSelected) {
+        // Buang tag kumpulan dan semua nama anugerah dalam kumpulan ini
+        return prev.filter((c) => c !== catGroup && !groupAwardNames.includes(c));
+      } else {
+        // Bersihkan nama anugerah individu dalam kumpulan ini, dan letakkan tag kumpulan
+        const cleanPrev = prev.filter(
+          (c) => c !== catGroup && !groupAwardNames.includes(c)
+        );
+        return [...cleanPrev, catGroup];
+      }
+    });
+  };
+
+  // Toggle item kategori klasik (jika berkenaan)
+  const handleToggleClassicCategory = (catName: string) => {
+    setSelectedJuryCategories((prev) => {
+      const withoutAll = prev.filter((c) => c !== 'ALL');
+      if (withoutAll.includes(catName)) {
+        return withoutAll.filter((c) => c !== catName);
+      } else {
+        return [...withoutAll, catName];
+      }
+    });
+  };
+
   const handleOpenCreatePin = () => {
     setEditingPin(null);
     setJuryName('');
     setJuryOrg('Jawatankuasa MAKMP POLISAS');
     setSelectedJuryCategories(['ALL']);
+    setJuryCategorySearch('');
     setIsPinModalOpen(true);
   };
 
@@ -213,6 +368,7 @@ export default function MakmpAdminDashboardPage() {
         ? pin.assigned_categories
         : ['ALL']
     );
+    setJuryCategorySearch('');
     setIsPinModalOpen(true);
   };
 
@@ -222,18 +378,6 @@ export default function MakmpAdminDashboardPage() {
     } else {
       setSelectedJuryCategories(['ALL']);
     }
-  };
-
-  const handleToggleJuryCategoryItem = (catVal: string) => {
-    setSelectedJuryCategories((prev) => {
-      const withoutAll = prev.filter((c) => c !== 'ALL');
-      if (withoutAll.includes(catVal)) {
-        const next = withoutAll.filter((c) => c !== catVal);
-        return next.length === 0 ? ['ALL'] : next;
-      } else {
-        return [...withoutAll, catVal];
-      }
-    });
   };
 
   const handleSavePin = async (e: React.FormEvent) => {
@@ -1541,29 +1685,40 @@ export default function MakmpAdminDashboardPage() {
                       </button>
                     </div>
 
-                    {/* Assigned Categories Badges */}
-                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1.5">
+                    {/* Assigned Categories / Awards Badges */}
+                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 space-y-2">
                       <div className="text-[10px] uppercase font-bold text-slate-500 flex items-center justify-between">
-                        <span>Tugasan Kategori:</span>
+                        <span>Tugasan Semakan:</span>
                         <span className="text-slate-400 font-mono">
-                          {isAll ? 'Semua' : `${pin.assigned_categories.length} Kategori`}
+                          {isAll
+                            ? 'Akses Penuh'
+                            : `${pin.assigned_categories.length} Ditugaskan`}
                         </span>
                       </div>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
                         {isAll ? (
                           <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                             ⭐ Semua Kategori & Anugerah (Akses Penuh)
                           </span>
                         ) : (
-                          pin.assigned_categories.map((cat, i) => (
-                            <span
-                              key={i}
-                              className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20 max-w-[200px] truncate"
-                              title={cat}
-                            >
-                              {cat}
-                            </span>
-                          ))
+                          pin.assigned_categories.map((cat, i) => {
+                            const isGroup =
+                              PRESET_CATEGORY_GROUPS.includes(cat) ||
+                              awards.some((a) => a.category_group === cat);
+                            return (
+                              <span
+                                key={i}
+                                className={`px-2 py-0.5 rounded text-[10px] font-medium border max-w-[220px] truncate ${
+                                  isGroup
+                                    ? 'bg-purple-500/10 text-purple-300 border-purple-500/30 font-semibold'
+                                    : 'bg-amber-500/10 text-amber-300 border-amber-500/20'
+                                }`}
+                                title={cat}
+                              >
+                                {isGroup ? `📁 ${cat}` : `🏆 ${cat}`}
+                              </span>
+                            );
+                          })
                         )}
                       </div>
                     </div>
@@ -1665,17 +1820,28 @@ export default function MakmpAdminDashboardPage() {
                     />
                   </div>
 
-                  {/* Multi-Category Assignment Component */}
-                  <div className="space-y-2">
+                  {/* Multi-Award / Multi-Category Assignment Component */}
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <label className="block text-slate-300 font-semibold">
-                        Tugasan Kategori Semakan (Boleh Pilih Pelbagai) *
+                        Tugasan Anugerah / Kategori Semakan *
                       </label>
-                      <span className="text-[11px] text-amber-400 font-medium">
-                        {selectedJuryCategories.includes('ALL')
-                          ? 'Akses Penuh Semua'
-                          : `${selectedJuryCategories.length} Kategori Dipilih`}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-amber-400 font-medium">
+                          {selectedJuryCategories.includes('ALL')
+                            ? 'Akses Penuh Semua Anugerah'
+                            : `${selectedJuryCategories.length} Tugasan Dipilih`}
+                        </span>
+                        {!selectedJuryCategories.includes('ALL') && selectedJuryCategories.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedJuryCategories([])}
+                            className="text-[10px] text-slate-400 hover:text-rose-400 underline transition"
+                          >
+                            Kosongkan
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Option 1: Full Access Toggle */}
@@ -1688,7 +1854,7 @@ export default function MakmpAdminDashboardPage() {
                           : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
                       }`}
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2.5">
                         {selectedJuryCategories.includes('ALL') ? (
                           <CheckSquare className="w-4 h-4 text-amber-400 shrink-0" />
                         ) : (
@@ -1699,49 +1865,174 @@ export default function MakmpAdminDashboardPage() {
                             ⭐ SEMUA KATEGORI & ANUGERAH (Akses Penuh)
                           </div>
                           <div className="text-[11px] text-slate-400">
-                            Pegawai ini boleh menyemak semua 18 anugerah rasmi tanpa had
+                            Pegawai ini boleh menyemak semua {awards.length || 18} anugerah rasmi tanpa had
                           </div>
                         </div>
                       </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        Pilihan Utama
+                      </span>
                     </button>
 
-                    {/* Option 2: Category Checklist */}
-                    <div className="space-y-1 pt-1">
-                      <div className="text-[11px] text-slate-400 font-medium">
-                        Atau pilih kumpulan kategori spesifik untuk pegawai ini:
+                    {/* Option 2: Hierarchical Award Checklist */}
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-[11px] text-slate-400 font-medium">
+                          Atau peruntukkan anugerah / kategori spesifik bagi pegawai ini:
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-52 overflow-y-auto p-2 rounded-xl bg-slate-950 border border-slate-800">
-                        {Array.from(
-                          new Set([
-                            ...PRESET_CATEGORY_GROUPS,
-                            ...awards.map((a) => a.category_group).filter(Boolean),
-                          ])
-                        ).map((catGroup) => {
-                          const isChecked =
-                            selectedJuryCategories.includes('ALL') ||
-                            selectedJuryCategories.includes(catGroup);
+                      {/* Quick Search inside modal */}
+                      <div className="relative">
+                        <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          value={juryCategorySearch}
+                          onChange={(e) => setJuryCategorySearch(e.target.value)}
+                          placeholder="Cari nama anugerah atau kumpulan... (cth: Keusahawanan, Siswa, Sukan)"
+                          className="w-full pl-8 pr-8 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500"
+                        />
+                        {juryCategorySearch && (
+                          <button
+                            type="button"
+                            onClick={() => setJuryCategorySearch('')}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
 
-                          return (
-                            <button
-                              type="button"
-                              key={catGroup}
-                              onClick={() => handleToggleJuryCategoryItem(catGroup)}
-                              className={`p-2 rounded-lg border text-left flex items-center gap-2 transition ${
-                                isChecked
-                                  ? 'bg-amber-500/10 border-amber-500/40 text-white'
-                                  : 'bg-slate-900 border-slate-800/80 text-slate-400 hover:bg-slate-800'
-                              }`}
-                            >
-                              {isChecked ? (
-                                <CheckSquare className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                              ) : (
-                                <Square className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-                              )}
-                              <span className="text-[11px] font-medium truncate">{catGroup}</span>
-                            </button>
-                          );
-                        })}
+                      {/* Grouped Awards Accordion / List */}
+                      <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+                        {filteredGroupedAwards.length === 0 ? (
+                          <div className="p-4 text-center text-xs text-slate-500 bg-slate-950 rounded-xl border border-slate-800">
+                            Tiada anugerah sepadan dengan carian "{juryCategorySearch}".
+                          </div>
+                        ) : (
+                          filteredGroupedAwards.map(({ groupName, awards: groupAwards }) => {
+                            const isGroupSelected = isGroupFullySelected(groupName, groupAwards);
+                            const isPartial = !isGroupSelected && groupAwards.some((a) => isAwardSelected(a));
+
+                            return (
+                              <div
+                                key={groupName}
+                                className="rounded-xl border border-slate-800 bg-slate-950/70 overflow-hidden"
+                              >
+                                {/* Group Header Bar */}
+                                <div className="p-2.5 bg-slate-900/90 border-b border-slate-800/80 flex items-center justify-between gap-2">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleGroup(groupName)}
+                                      className="flex items-center gap-2 text-left"
+                                    >
+                                      {isGroupSelected ? (
+                                        <CheckSquare className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                      ) : isPartial ? (
+                                        <div className="w-3.5 h-3.5 rounded border border-amber-500/50 bg-amber-500/20 flex items-center justify-center shrink-0">
+                                          <div className="w-2 h-0.5 bg-amber-400 rounded-full" />
+                                        </div>
+                                      ) : (
+                                        <Square className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                                      )}
+                                      <span className="font-bold text-xs text-slate-200 truncate">
+                                        {groupName}
+                                      </span>
+                                    </button>
+                                    <span className="text-[10px] text-slate-500 shrink-0">
+                                      ({groupAwards.length} anugerah)
+                                    </span>
+                                  </div>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleGroup(groupName)}
+                                    className={`text-[10px] font-semibold px-2 py-0.5 rounded transition shrink-0 ${
+                                      isGroupSelected
+                                        ? 'bg-rose-500/10 text-rose-300 hover:bg-rose-500/20'
+                                        : 'bg-slate-800 hover:bg-slate-700 text-amber-300'
+                                    }`}
+                                  >
+                                    {isGroupSelected ? 'Nyahpilih Kumpulan' : 'Pilih Semua Kumpulan'}
+                                  </button>
+                                </div>
+
+                                {/* List of Awards under this group */}
+                                <div className="p-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-slate-950/40">
+                                  {groupAwards.map((aw) => {
+                                    const isChecked = isAwardSelected(aw);
+                                    return (
+                                      <button
+                                        type="button"
+                                        key={aw.id}
+                                        onClick={() => handleToggleAward(aw)}
+                                        className={`p-2 rounded-lg border text-left flex items-start gap-2 transition ${
+                                          isChecked
+                                            ? 'bg-amber-500/10 border-amber-500/40 text-white'
+                                            : 'bg-slate-900/60 border-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                                        }`}
+                                      >
+                                        {isChecked ? (
+                                          <CheckSquare className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                                        ) : (
+                                          <Square className="w-3.5 h-3.5 text-slate-600 shrink-0 mt-0.5" />
+                                        )}
+                                        <div className="min-w-0 flex-1">
+                                          <div className="text-[11px] font-medium leading-tight text-white truncate" title={aw.name}>
+                                            {aw.name}
+                                          </div>
+                                          <div className="flex items-center gap-1.5 mt-1 text-[9px] text-slate-500">
+                                            <span className="px-1 py-0.2 rounded bg-slate-800 text-slate-400">
+                                              {aw.target_type === 'ENTITY' ? 'ENTITI / KELAB' : 'INDIVIDU'}
+                                            </span>
+                                            <span>Maks {aw.max_merit || 50}m</span>
+                                          </div>
+                                        </div>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+
+                        {/* Fallback / Kategori Asas jika ada kategori yang belum dipetakan ke anugerah */}
+                        {categories.length > 0 && groupedAwards.length === 0 && (
+                          <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-2.5 space-y-2">
+                            <div className="text-xs font-bold text-slate-300">
+                              Kategori Asas (Klasik):
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                              {categories.map((c) => {
+                                const isChecked =
+                                  selectedJuryCategories.includes('ALL') ||
+                                  selectedJuryCategories.includes(c.name) ||
+                                  selectedJuryCategories.includes(c.id);
+                                return (
+                                  <button
+                                    type="button"
+                                    key={c.id}
+                                    onClick={() => handleToggleClassicCategory(c.name)}
+                                    className={`p-2 rounded-lg border text-left flex items-center gap-2 transition ${
+                                      isChecked
+                                        ? 'bg-amber-500/10 border-amber-500/40 text-white'
+                                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
+                                    }`}
+                                  >
+                                    {isChecked ? (
+                                      <CheckSquare className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                    ) : (
+                                      <Square className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                                    )}
+                                    <span className="text-[11px] font-medium truncate">{c.name}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
