@@ -2481,11 +2481,17 @@ Bagi mensimulasikan penggunaan sebenar tanpa kecacatan sebelum dilancarkan kepad
    - Penjanaan & kemaskini PIN juri dengan pilihan multi-kategori dan mod akses penuh (`SEMUA`).
    - Eksport data CSV berbilang anugerah dengan nama jabatan POLISAS rasmi.
 
+### 23.8 Penjajaran Anugerah Rasmi dalam Penugasan PIN Juri
 
-
-
-
-
+Bagi mengelakkan kekeliruan di mana modal PIN juri hanya memaparkan nama kumpulan kategori generik, sistem penugasan PIN juri telah diselaraskan dengan senarai anugerah rasmi (`makmp_award_definitions`):
+- **Hierarki Kumpulan & Anugerah**: Setiap anugerah tersusun kemas di bawah Kumpulan Kategori masing-masing (cth: *ANUGERAH KEUSAHAWANAN* mengandungi *Tokoh Keusahawanan*, *Inkubator Terbaik*, *Program Keusahawanan*, & *Perusahaan Terbaik*).
+- **Fleksibiliti Penugasan**:
+  1. **⭐ Akses Penuh Semua Anugerah** (`'ALL'`).
+  2. **Pilih Seluruh Kumpulan** (cth: Klik butang "Pilih Semua Kumpulan" untuk melantik juri menyemak keseluruhan anugerah dalam kumpulan berkenaan).
+  3. **Pilih Anugerah Khusus** (cth: Pegawai A hanya menyemak *Inkubator Terbaik* & *Perusahaan Terbaik*).
+- **Carian Masa Nyata (*Real-Time Filter*)**: Membolehkan urus setia menapis anugerah serta-merta semasa menetapkan tugasan juri.
+- **Logik Penapisan Queue Juri (`fetchJuryAwardApplications`)**: Memadankan `assigned_categories` mengikut nama anugerah rasmi secara tepat, ID anugerah, mahupun nama kumpulan kategori tanpa konflik padanan rentetan.
+- **Lencana Kad Juri**: Kad PIN membezakan lencana kumpulan (`📁 Kumpulan`) dan anugerah khusus (`🏆 Anugerah`) untuk kejelasan pengurusan.
 
 
 
