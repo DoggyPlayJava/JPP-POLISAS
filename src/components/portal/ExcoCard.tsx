@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { ExcoModule } from '@/config/excoModules';
 import { useDevicePerformance } from '@/hooks/useDevicePerformance';
+import { cn, hexToRgba, getContrastText } from '@/lib/utils';
 
 // ─── Color Picker Popover ───
 interface ColorPickerProps {

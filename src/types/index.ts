@@ -1102,4 +1102,159 @@ export interface EmsCertificate {
   qr_code_url?: string | null;
   created_at: string;
 }
+
+// ─── Majlis Anugerah Kecemerlangan POLISAS (MAKMP) Types ───────────────────
+
+export type MakmpSubmissionStatus = 'MENUNGGU' | 'DALAM_SEMAKAN' | 'DISAHKAN' | 'DITOLAK';
+
+export type MakmpPeringkat = 'ANTARABANGSA' | 'KEBANGSAAN' | 'NEGERI' | 'DAERAH' | 'POLITEKNIK';
+
+export type MakmpPencapaianType = 'JOHAN' | 'NAIB_JOHAN' | 'KETIGA' | 'EMAS' | 'PERAK' | 'GANGSA' | 'PESERTA' | 'LAIN';
+
+export interface MakmpEdition {
+  id: string;
+  year: number;
+  title: string;
+  description?: string | null;
+  is_active: boolean;
+  submission_deadline?: string | null;
+  created_at: string;
+  created_by?: string | null;
+}
+
+export interface MakmpCategory {
+  id: string;
+  edition_id: string;
+  name: string;
+  department_scope: string; // 'UMUM' | 'AKADEMIK' | 'HEP' | 'KEUSAHAWANAN' | 'SUKAN'
+  max_certificates: number;
+  max_merit: number;
+  description?: string | null;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface MakmpJuryPin {
+  id: string;
+  edition_id: string;
+  pin_code: string;
+  jury_name: string;
+  organization?: string | null;
+  assigned_categories: string[];
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface MakmpSubmission {
+  id: string;
+  tracking_code: string;
+  edition_id: string;
+  category_id: string;
+  user_id?: string | null;
+  has_portal_account: boolean;
+  full_name: string;
+  matric_no: string;
+  email?: string | null;
+  phone: string;
+  department: string;
+  programme_code?: string | null;
+  semester?: number | null;
+  status: MakmpSubmissionStatus;
+  total_merit_awarded: number;
+  reviewer_pin_id?: string | null;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  review_notes?: string | null;
+  rejection_reason?: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined relation fields:
+  category?: MakmpCategory;
+  edition?: MakmpEdition;
+  items?: MakmpSubmissionItem[];
+  awards?: MakmpSubmissionAward[];
+  reviewer_pin?: MakmpJuryPin;
+}
+
+export type MakmpTargetType = 'INDIVIDUAL' | 'ENTITY';
+export type MakmpDocRequirementType = 'CERTIFICATES' | 'REPORT_AND_EVIDENCE';
+export type MakmpDocumentType = 'SIJIL' | 'LAPORAN' | 'BUKTI_SOKONGAN';
+
+export interface MakmpAwardDefinition {
+  id: string;
+  edition_id: string;
+  category_group: string;
+  name: string;
+  target_type: MakmpTargetType;
+  doc_requirement_type: MakmpDocRequirementType;
+  template_url?: string | null;
+  template_name?: string | null;
+  doc_instructions?: string | null;
+  description?: string | null;
+  max_certificates: number;
+  max_merit: number;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface MakmpSubmissionAward {
+  id: string;
+  submission_id: string;
+  award_id: string;
+  entity_name?: string | null;
+  applicant_role?: string | null;
+  status: MakmpSubmissionStatus;
+  total_merit_granted: number;
+  reviewed_by_pin_id?: string | null;
+  reviewed_at?: string | null;
+  rejection_reason?: string | null;
+  review_notes?: string | null;
+  created_at: string;
+  // Joined relation fields:
+  award?: MakmpAwardDefinition;
+  items?: MakmpSubmissionItem[];
+  reviewer_pin?: MakmpJuryPin;
+}
+
+export interface MakmpSubmissionItem {
+  id: string;
+  submission_id: string;
+  submission_award_id?: string | null;
+  document_type?: MakmpDocumentType;
+  nama_pencapaian: string;
+  peringkat: MakmpPeringkat;
+  pencapaian_type: MakmpPencapaianType;
+  penganjur?: string | null;
+  tarikh?: string | null;
+  drive_view_url: string;
+  drive_download_url?: string | null;
+  drive_file_id?: string | null;
+  merit_suggested: number;
+  merit_awarded: number;
+  is_verified: boolean;
+  akademik_pencapaian_id?: string | null;
+  source?: 'MANUAL_UPLOAD' | 'E_AKADEMIK';
+  created_at: string;
+}
+
+export interface AkademikImportCertItem {
+  id: string;
+  user_id: string;
+  nama_pencapaian: string;
+  jenis: string;
+  peringkat: string;
+  penganjur?: string | null;
+  tarikh?: string | null;
+  drive_view_url?: string | null;
+  drive_download_url?: string | null;
+  drive_file_id?: string | null;
+  status: 'MENUNGGU' | 'DISAHKAN' | 'DITOLAK';
+  merit_auto?: number;
+  merit_override?: number;
+  created_at: string;
+}
+
+
 

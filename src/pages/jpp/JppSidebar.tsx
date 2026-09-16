@@ -5,7 +5,7 @@ import {
   Lock, ShieldCheck, Palette, Settings, Megaphone,
   Briefcase, CalendarDays, FileWarning, Sparkles,
   Zap, FileText, ClipboardCheck, ChevronDown, ExternalLink, Store,
-  ChevronLeft, LayoutGrid, Building2, QrCode, Activity, Map,
+  ChevronLeft, LayoutGrid, Building2, QrCode, Activity, Map, Award,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -482,6 +482,10 @@ export function JppSidebar() {
                   subItems.push({ icon: ShieldCheck,     label: 'Moderasi Awam',    href: '/jpp/polyservices' });
                   subItems.push({ icon: FileText,         label: 'Laporan Bulanan',  href: '/kebajikan/laporan' });
                 }
+                // AKADEMIK tambahan: Pusat Kawalan MAKMP
+                if (code === 'AKADEMIK') {
+                  subItems.push({ icon: Award, label: 'Pusat Kawalan MAKMP', href: '/jpp/unit/akademik?tab=makmp' });
+                }
                 // SUPSAS shortcuts untuk SRK
                 if (code === 'SRK') {
                   subItems.push({ icon: ExternalLink,    label: 'SUPSAS Admin',     href: '/supsas/admin' });
@@ -500,6 +504,8 @@ export function JppSidebar() {
                     subItems.push({ icon: ClipboardCheck, label: 'Semak Laporan Kelab', href: '/semakan-laporan' });
                   if (code === 'KEUSAHAWANAN')
                     subItems.push({ icon: Store, label: 'Portal Dashboard', href: '/keusahawanan/dashboard' });
+                  if (code === 'AKADEMIK')
+                    subItems.push({ icon: Award, label: 'Pusat Kawalan MAKMP', href: '/jpp/unit/akademik?tab=makmp' });
                   // YDP boleh tengok Rujukan Asrama dan QR Merit melalui KK
                   if (code === 'KK') {
                     subItems.push({ icon: Building2, label: 'Rujukan Asrama', href: '/jpp/asrama' });
@@ -512,6 +518,9 @@ export function JppSidebar() {
                 }
                 // Semak laporan exco unit ini (universal)
                 subItems.push({ icon: ClipboardCheck, label: 'Semak Laporan', href: `/jpp/semak-laporan-exco/${unitLower}` });
+                if (!isYDP && code === 'AKADEMIK') {
+                  subItems.push({ icon: Award, label: 'Pusat Kawalan MAKMP', href: '/jpp/unit/akademik?tab=makmp' });
+                }
               }
 
 

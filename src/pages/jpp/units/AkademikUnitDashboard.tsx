@@ -4,10 +4,11 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { hexToRgba } from '@/lib/utils';
 import { sendNotificationToUser } from '@/lib/notifications';
+import { useSearchParams } from 'react-router-dom';
 import {
   Trophy, Users, Star, CheckCircle, XCircle, Clock,
   Settings, LayoutDashboard, QrCode, AlertCircle, Loader2,
-  ChevronLeft, ChevronRight, Shield, Unlock, BarChart3, ShieldAlert,
+  ChevronLeft, ChevronRight, Shield, Unlock, BarChart3, ShieldAlert, Award,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { format, parseISO } from 'date-fns';
@@ -15,6 +16,7 @@ import { ms } from 'date-fns/locale';
 import { QrMeritManager } from '@/pages/akademik/AkademikQrScan';
 import { JPP_MT_POSITIONS } from '@/types';
 import { DemeritManager } from '@/pages/akademik/DemeritManager';
+import MakmpAdminDashboardPage from './MakmpAdminDashboardPage';
 
 const THEME = '#818CF8';
 
@@ -638,38 +640,55 @@ function UnlockRequestsPanel() {
 
 // ─── Tab definition ───────────────────────────────────────────
 const TABS = [
-  { id: 'overview',     label: 'Overview',       icon: LayoutDashboard },
-  { id: 'semak',        label: 'Semak',          icon: Trophy },
-  { id: 'buka-kunci',   label: 'Buka Kunci',     icon: Unlock },
-  { id: 'qr',           label: 'QR Merit',       icon: QrCode },
-  { id: 'demerit',      label: 'Demerit',        icon: ShieldAlert },
-  { id: 'merit-config', label: 'Tetapan Merit',  icon: Settings },
+  { id: 'overview',     label: 'Overview',            icon: LayoutDashboard },
+  { id: 'makmp',        label: 'Pusat Kawalan MAKMP', icon: Award },
+  { id: 'semak',        label: 'Semak Sijil',         icon: Trophy },
+  { id: 'buka-kunci',   label: 'Buka Kunci',          icon: Unlock },
+  { id: 'qr',           label: 'QR Merit',            icon: QrCode },
+  { id: 'demerit',      label: 'Demerit',             icon: ShieldAlert },
+  { id: 'merit-config', label: 'Tetapan Merit',       icon: Settings },
 ];
 
 // ─── Main Admin Dashboard ─────────────────────────────────────
 export function AkademikUnitDashboard() {
   const { profile, isSuperAdmin } = useAuth();
-  const [tab, setTab]     = useState('overview');
-  const [stats, setStats] = useState({ menunggu: 0, disahkan: 0, ditolak: 0, totalMerit: 0, pendingUnlock: 0 });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlTab = searchParams.get('tab');
+  const [tab, setTab]     = useState(urlTab || 'overview');
+  const [stats, setStats] = useState({ menunggu: 0, disahkan: 0, ditolak: 0, totalMerit: 0, pendingUnlock: 0, makmpPending: 0 });
   const [loadingStats, setLoadingStats] = useState(true);
 
   const jppPos = profile?.jpp_position as string | undefined;
   const isMT   = JPP_MT_POSITIONS.includes(jppPos as any);
 
   useEffect(() => {
+    const currentUrlTab = searchParams.get('tab');
+    if (currentUrlTab && currentUrlTab !== tab) {
+      setTab(currentUrlTab);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (newTab: string) => {
+    setTab(newTab);
+    setSearchParams(newTab === 'overview' ? {} : { tab: newTab });
+  };
+
+  useEffect(() => {
     Promise.all([
       supabase.from('akademik_pencapaian').select('status'),
       supabase.from('merit_transactions').select('points').eq('source', 'AKADEMIK'),
       supabase.from('akademik_unlock_requests').select('id').eq('status', 'MENUNGGU'),
-    ]).then(([pencRes, meritRes, unlockRes]) => {
+      supabase.from('makmp_submissions').select('id').in('status', ['MENUNGGU', 'DALAM_SEMAKAN']),
+    ]).then(([pencRes, meritRes, unlockRes, makmpRes]) => {
       const pencs = pencRes.data || [];
       const merits = meritRes.data || [];
       setStats({
-        menunggu:     pencs.filter(p => p.status === 'MENUNGGU').length,
-        disahkan:     pencs.filter(p => p.status === 'DISAHKAN').length,
-        ditolak:      pencs.filter(p => p.status === 'DITOLAK').length,
-        totalMerit:   merits.reduce((s, m) => s + (m.points || 0), 0),
-        pendingUnlock:(unlockRes.data || []).length,
+        menunggu:      pencs.filter(p => p.status === 'MENUNGGU').length,
+        disahkan:      pencs.filter(p => p.status === 'DISAHKAN').length,
+        ditolak:       pencs.filter(p => p.status === 'DITOLAK').length,
+        totalMerit:    merits.reduce((s, m) => s + (m.points || 0), 0),
+        pendingUnlock: (unlockRes.data || []).length,
+        makmpPending:  (makmpRes.data || []).length,
       });
       setLoadingStats(false);
     });
@@ -681,11 +700,11 @@ export function AkademikUnitDashboard() {
       <div className="flex gap-2 flex-wrap">
         {TABS.map(t => {
           const Icon = t.icon;
-          const badgeCount = t.id === 'buka-kunci' ? stats.pendingUnlock : t.id === 'semak' ? stats.menunggu : 0;
+          const badgeCount = t.id === 'buka-kunci' ? stats.pendingUnlock : t.id === 'semak' ? stats.menunggu : t.id === 'makmp' ? stats.makmpPending : 0;
           return (
             <button
               key={t.id}
-              onClick={() => setTab(t.id)}
+              onClick={() => handleTabChange(t.id)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all relative"
               style={tab === t.id
                 ? { background: `${THEME}20`, borderColor: THEME, color: THEME }
@@ -695,7 +714,7 @@ export function AkademikUnitDashboard() {
               <Icon className="w-3.5 h-3.5" />
               {t.label}
               {badgeCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[8px] font-black flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 px-1.5 py-0.5 min-w-[16px] h-4 rounded-full bg-rose-500 text-white text-[8px] font-black flex items-center justify-center">
                   {badgeCount}
                 </span>
               )}
@@ -715,6 +734,38 @@ export function AkademikUnitDashboard() {
         >
           {tab === 'overview' && (
             <div className="space-y-4">
+              {/* Highlight MAKMP Banner */}
+              <div
+                className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl cursor-pointer border border-amber-500/25 bg-gradient-to-r from-amber-500/10 via-amber-600/5 to-transparent hover:border-amber-500/40 transition-all group"
+                onClick={() => handleTabChange('makmp')}
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <Award className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-black text-white">Majlis Anugerah Kecemerlangan POLISAS (MAKMP 2026)</p>
+                      {stats.makmpPending > 0 ? (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          {stats.makmpPending} Menunggu Semakan
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          Aktif
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-amber-300/70 mt-0.5">
+                      Pusat Urus Setia Exco Akademik: 18 Anugerah Rasmi, Templat Laporan, Penjanaan Kod PIN Juri & Semakan Pencalonan Pelajar.
+                    </p>
+                  </div>
+                </div>
+                <button className="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 group-hover:bg-amber-500/30 transition-all flex items-center gap-1.5 shrink-0">
+                  Buka Urus Setia MAKMP &rarr;
+                </button>
+              </div>
+
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
                   { label: 'Menunggu Semak', value: stats.menunggu, color: '#F59E0B', icon: Clock },
@@ -740,7 +791,7 @@ export function AkademikUnitDashboard() {
               {stats.menunggu > 0 && (
                 <div
                   className="flex items-center gap-3 p-4 rounded-2xl cursor-pointer border border-amber-500/20 bg-amber-500/10 hover:bg-amber-500/15 transition-all"
-                  onClick={() => setTab('semak')}
+                  onClick={() => handleTabChange('semak')}
                 >
                   <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
                   <p className="text-xs font-black text-amber-300">
@@ -750,13 +801,15 @@ export function AkademikUnitDashboard() {
               )}
             </div>
           )}
-              {tab.startsWith('semak')       && <PencapaianReviewPanel />}
-              {tab === 'buka-kunci'          && <UnlockRequestsPanel />}
-              {tab === 'qr'                  && <QrMeritManager themeColor={THEME} />}
-              {tab === 'demerit'             && <DemeritManager sourceOverride="AKADEMIK" />}
-              {tab === 'merit-config'        && <MeritConfigPanel />}
+          {tab === 'makmp'             && <MakmpAdminDashboardPage />}
+          {tab.startsWith('semak')     && <PencapaianReviewPanel />}
+          {tab === 'buka-kunci'        && <UnlockRequestsPanel />}
+          {tab === 'qr'                && <QrMeritManager themeColor={THEME} />}
+          {tab === 'demerit'           && <DemeritManager sourceOverride="AKADEMIK" />}
+          {tab === 'merit-config'      && <MeritConfigPanel />}
         </motion.div>
       </AnimatePresence>
     </div>
   );
 }
+

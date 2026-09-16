@@ -19,9 +19,54 @@
 import fs from 'fs';
 import path from 'path';
 
-const REMOTE_URL = "http://100.104.229.84:8080/mcp";
-const API_KEY    = "8dfbc8cc6be3930e6127089cfa35cbd350573732856ced96460455bdf1c5052b";
-const DEBUG      = process.env.JPP_BRIDGE_DEBUG === "1";
+const TARGETS = {
+  ro: {
+    endpoints: [
+      {
+        url: "http://100.104.229.84:8080/mcp",
+        key: "8dfbc8cc6be3930e6127089cfa35cbd350573732856ced96460455bdf1c5052b",
+        name: "Tailscale-RO"
+      },
+      {
+        url: "http://192.168.0.45:8080/mcp",
+        key: "3790e66cdbe2d6a675a785b388f9b1f85e6f0ed380444f93810471d13bac88d3",
+        name: "LAN-RO"
+      }
+    ]
+  },
+  rw: {
+    endpoints: [
+      {
+        url: "http://100.104.229.84:8080/mcp",
+        key: "8dfbc8cc6be3930e6127089cfa35cbd350573732856ced96460455bdf1c5052b",
+        name: "Tailscale-RW"
+      },
+      {
+        url: "http://192.168.0.45:8081/mcp",
+        key: "65b267b068927d6a841b4918f3703ec2c397dd76833ae933c80f970955489879",
+        name: "LAN-RW"
+      }
+    ]
+  }
+};
+
+const modeArg = (process.argv[2] || process.env.MCP_MODE || "rw").toLowerCase();
+let targetEndpoints = [];
+
+if (modeArg.startsWith("http://") || modeArg.startsWith("https://")) {
+  targetEndpoints = [{
+    url: modeArg,
+    key: process.argv[3] || process.env.MCP_API_KEY || "",
+    name: "Custom"
+  }];
+} else if (modeArg === "ro" || modeArg === "--ro") {
+  targetEndpoints = TARGETS.ro.endpoints;
+} else {
+  // Default to RW
+  targetEndpoints = TARGETS.rw.endpoints;
+}
+
+const DEBUG = process.env.JPP_BRIDGE_DEBUG === "1";
 
 // ---------- Logging ke STDERR (supaya tak ganggu JSON-RPC kat stdout) ----------
 function log(...args) {
@@ -31,39 +76,68 @@ function log(...args) {
   }
 }
 
-// ---------- POST JSON-RPC ke remote MCP server (return parsed JSON-RPC) ----------
-async function forwardToRemote(message) {
-  log("→ POST", JSON.stringify(message).slice(0, 200));
+let currentEndpointIndex = 0;
 
-  const response = await fetch(REMOTE_URL, {
-    method: "POST",
-    headers: {
-      "X-API-Key":   API_KEY,
-      "Accept":      "application/json, text/event-stream",
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(message)
-  });
+async function sendToEndpoint(endpoint, message) {
+  log(`→ POST [${endpoint.name}] ${endpoint.url}`, JSON.stringify(message).slice(0, 160));
 
-  if (!response.ok) {
-    const errText = await response.text().catch(() => "");
-    throw new Error(`HTTP ${response.status}: ${errText.slice(0, 200)}`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+  try {
+    const response = await fetch(endpoint.url, {
+      method: "POST",
+      headers: {
+        "X-API-Key":   endpoint.key,
+        "Accept":      "application/json, text/event-stream",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(message),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => "");
+      throw new Error(`HTTP ${response.status}: ${errText.slice(0, 200)}`);
+    }
+
+    const text = await response.text();
+    const lines = text.split("\n");
+    let dataLine = null;
+    for (const line of lines) {
+      if (line.startsWith("data: ")) {
+        dataLine = line.slice(6).trim();
+        break;
+      }
+    }
+    if (!dataLine) throw new Error("No 'data:' line in SSE response");
+    return JSON.parse(dataLine);
+  } finally {
+    clearTimeout(timeoutId);
   }
+}
 
-  // Parse SSE response — format: "event: message\ndata: {json}\n\n"
-  const text = await response.text();
-  log("← SSE:", text.slice(0, 300).replace(/\n/g, " | "));
+// ---------- POST JSON-RPC ke remote MCP server (dengan automatic failover) ----------
+async function forwardToRemote(message) {
+  let lastError = null;
 
-  const lines = text.split("\n");
-  let dataLine = null;
-  for (const line of lines) {
-    if (line.startsWith("data: ")) {
-      dataLine = line.slice(6).trim();
-      break;
+  for (let i = 0; i < targetEndpoints.length; i++) {
+    const idx = (currentEndpointIndex + i) % targetEndpoints.length;
+    const ep = targetEndpoints[idx];
+
+    try {
+      const res = await sendToEndpoint(ep, message);
+      currentEndpointIndex = idx;
+      return res;
+    } catch (err) {
+      lastError = err;
+      log(`[${ep.name}] Error: ${err.message}. Trying next fallback...`);
     }
   }
-  if (!dataLine) throw new Error("No 'data:' line in SSE response");
-  return JSON.parse(dataLine);
+
+  throw lastError;
 }
 
 // ---------- Detect framing style dari first message ----------
@@ -170,5 +244,6 @@ process.stdin.on("end", () => {
 process.on("SIGTERM", () => { log("SIGTERM, exiting"); process.exit(0); });
 process.on("SIGINT",  () => { log("SIGINT, exiting");  process.exit(0); });
 
-log(`mcp-bridge.js started → ${REMOTE_URL}`);
+log(`mcp-bridge.js started in [${modeArg}] mode. Available endpoints: ${targetEndpoints.map(e => e.name + " (" + e.url + ")").join(", ")}`);
 log(`Debug mode: ${DEBUG ? "ON" : "OFF"} (set JPP_BRIDGE_DEBUG=1 to enable)`);
+

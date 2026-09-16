@@ -13,11 +13,12 @@ export function GlobalPullToUpdate() {
   const isRefreshingRef = React.useRef(false);
   const pullProgressRef = React.useRef(0);
 
-  // Pilihan 1: Tutup Pull-to-Refresh 100% di PolyMaps (Route Exclusion)
-  const isPolyMaps = location.pathname.startsWith('/polymaps') || location.pathname.startsWith('/jpp/polymaps');
+  // Pull-to-Refresh HANYA aktif di Homepage utama ('/') dan Portal ('/portal').
+  // Ini mengelakkan gangguan reload tidak sengaja semasa pelajar menatal borang/modul lain.
+  const isAllowedPath = location.pathname === '/' || location.pathname === '/portal';
 
   useEffect(() => {
-    if (isPolyMaps) return; // Batalkan pendaftaran pengesan sentuhan jika di PolyMaps
+    if (!isAllowedPath) return; // Batalkan pendaftaran pengesan sentuhan jika bukan di homepage/portal
 
     let startY = 0;
     let isPulling = false;
@@ -106,9 +107,9 @@ export function GlobalPullToUpdate() {
       document.removeEventListener('touchstart', handleTouchStart);
       cleanupActivePull();
     };
-  }, [isPolyMaps]); // React akan pasang balik listener jika keluar dari kawasan PolyMaps
+  }, [isAllowedPath]);
 
-  if (isPolyMaps) return null; // Sembunyikan terus komponen UI
+  if (!isAllowedPath) return null; // Sembunyikan terus komponen UI jika bukan di laluan dibenarkan
 
   return (
     <AnimatePresence>

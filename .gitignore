@@ -61,5 +61,17 @@ out/
 patch_launch_video.js
 patch_launch_video.cjs
 
+# Playwright & Testing Reports
+playwright-report/
+test-results/
+.superpowers/
+docs/superpowers/
+BioMedical_Prescription_*.pdf
+*.zip
+*.csv
+ekpp_presentation.html
+e2e/fixtures/oversized_*.pdf
+
+
 
 

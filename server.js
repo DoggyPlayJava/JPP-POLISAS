@@ -695,6 +695,103 @@ app.post('/api/upload-to-drive', requireAuth, upload.single('file'), async (req,
 });
 
 // ==========================================
+// 5A-2. Upload Sijil MAKMP ke Google Drive (Awam)
+// Membenarkan pelajar awam memuat naik sijil tanpa perlu login
+// Dilindungi dengan IP Rate Limiter & validasi jenis fail
+// ==========================================
+const makmpUploadLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 40,
+    message: { error: "Terlalu banyak muat naik fail. Sila tunggu sebentar sebelum mencuba lagi." },
+    standardHeaders: true,
+    legacyHeaders: false,
+    validate: { xForwardedForHeader: false, trustProxy: false, default: false },
+});
+
+app.post('/api/makmp/upload-sijil', makmpUploadLimiter, upload.single('file'), async (req, res) => {
+    try {
+        const file = req.file;
+        const subfolder = req.body.subfolder || "makmp_sijil";
+        const customName = req.body.customName || null;
+
+        if (!file) {
+            return res.status(400).json({ error: "Fail tidak ditemui." });
+        }
+
+        const isPdf = file.mimetype === "application/pdf" || file.originalname.toLowerCase().endsWith('.pdf');
+        const isImage = file.mimetype.startsWith('image/') || /\.(jpg|jpeg|png|webp)$/i.test(file.originalname);
+
+        if (!isPdf && !isImage) {
+            return res.status(400).json({ error: "Hanya fail PDF atau gambar sijil (JPG/PNG) dibenarkan." });
+        }
+
+        const rawFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+        if (!rawFolderId) throw new Error("GOOGLE_DRIVE_FOLDER_ID tiada.");
+
+        const parentFolderId = extractFolderId(rawFolderId);
+        const accessToken = await getGoogleAccessToken();
+        const timestamp = Date.now();
+        const ext = isPdf ? '.pdf' : (file.originalname.match(/\.[^.]+$/)?.[0] || '.jpg');
+        const fileName = customName ? customName + ext : subfolder + "_" + timestamp + ext;
+
+        const metadata = {
+            name: fileName,
+            parents: [parentFolderId],
+            description: "JPP-POLISAS MAKMP | " + subfolder + " | " + new Date().toISOString(),
+        };
+
+        const boundary = "boundary_jpp_makmp_upload";
+        const metadataPart = "--" + boundary + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" + JSON.stringify(metadata) + "\r\n";
+        
+        const contentType = isPdf ? 'application/pdf' : file.mimetype;
+        const bodyBuffer = Buffer.concat([
+            Buffer.from(metadataPart),
+            Buffer.from("--" + boundary + "\r\nContent-Type: " + contentType + "\r\n\r\n"),
+            file.buffer,
+            Buffer.from("\r\n--" + boundary + "--")
+        ]);
+
+        const uploadResponse = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink", {
+            method: "POST",
+            headers: {
+                Authorization: "Bearer " + accessToken,
+                "Content-Type": "multipart/related; boundary=\"" + boundary + "\"",
+            },
+            body: bodyBuffer,
+        });
+
+        if (!uploadResponse.ok) {
+            const errText = await uploadResponse.text();
+            throw new Error("Drive upload failed (" + uploadResponse.status + "): " + errText);
+        }
+
+        const uploadedFile = await uploadResponse.json();
+
+        // Set public read permissions
+        await fetch("https://www.googleapis.com/drive/v3/files/" + uploadedFile.id + "/permissions", {
+            method: "POST",
+            headers: {
+                Authorization: "Bearer " + accessToken,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ role: "reader", type: "anyone" }),
+        });
+
+        const viewUrl = uploadedFile.webViewLink || "https://drive.google.com/file/d/" + uploadedFile.id + "/view";
+
+        return res.status(200).json({
+            url: viewUrl,
+            fileId: uploadedFile.id,
+            fileName: uploadedFile.name,
+        });
+
+    } catch (error) {
+        console.error("[makmp-upload-sijil] Error:", error.message);
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+// ==========================================
 // 5B. Parse CGPA from PDF (Server-Side)
 // iOS WebKit cannot run pdfjs-dist client-side — this
 // endpoint does the extraction on the server instead.

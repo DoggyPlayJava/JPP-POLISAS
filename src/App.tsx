@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useState, useCallback } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Toaster, ToastBar, resolveValue } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { Check, X, Bell } from 'lucide-react';
@@ -190,6 +190,11 @@ const EmsAudienceScanPage = lazy(() => import('./pages/ems/EmsAudienceScanPage')
 const EmsCheckinSelectorPage = lazy(() => import('./pages/ems/EmsCheckinSelectorPage').then(m => ({ default: m.EmsCheckinSelectorPage })));
 const EmsCertVerifyPage = lazy(() => import('./pages/ems/EmsCertVerifyPage').then(m => ({ default: m.EmsCertVerifyPage })));
 
+// ── MAKMP (Majlis Anugerah Kecemerlangan POLISAS) ──
+const MakmpPublicFormPage = lazy(() => import('./pages/makmp/MakmpPublicFormPage').then(m => ({ default: m.default })));
+const MakmpStatusTrackingPage = lazy(() => import('./pages/makmp/MakmpStatusTrackingPage').then(m => ({ default: m.default })));
+const MakmpJuryPortalPage = lazy(() => import('./pages/makmp/MakmpJuryPortalPage').then(m => ({ default: m.default })));
+const MakmpAdminDashboardPage = lazy(() => import('./pages/jpp/units/MakmpAdminDashboardPage').then(m => ({ default: m.default })));
 
 // ── Global Modals (lazy-loaded, deferred after paint) ──
 const CompleteProfileModal = lazy(() => import('@/components/ui/CompleteProfileModal').then(m => ({ default: m.CompleteProfileModal })));
@@ -261,6 +266,14 @@ function InitialPageLoader() {
   );
 }
 
+function UnitRouteRedirect() {
+  const { unitCode } = useParams();
+  if (unitCode?.toLowerCase() === 'akademik') {
+    return <Navigate to="/jpp/unit/akademik?tab=makmp" replace />;
+  }
+  return <Navigate to={`/jpp/unit/${unitCode || ''}`} replace />;
+}
+
 function AppRoutes() {
   return (
     <Suspense fallback={<InitialPageLoader />}>
@@ -291,6 +304,11 @@ function AppRoutes() {
       <Route path="/ems/cert/verify" element={<EmsCertVerifyPage />} />
       <Route path="/ems/cert/:certId" element={<EmsCertificatePage />} />
 
+      {/* 🏆 MAKMP — Majlis Anugerah Kecemerlangan POLISAS (Awam & Juri Tanpa Login) */}
+      <Route path="/makmp" element={<MakmpPublicFormPage />} />
+      <Route path="/makmp/status" element={<MakmpStatusTrackingPage />} />
+      <Route path="/makmp/juri" element={<MakmpJuryPortalPage />} />
+
       {/* 🔐 PROTECTED ROUTES */}
       <Route element={<ProtectedRoute />}>
         <Route path="/onboarding" element={<OnboardingPage />} />
@@ -307,6 +325,10 @@ function AppRoutes() {
         {/* ── PolyServices — standalone tanpa sidebar ── */}
         <Route path="/polysuara" element={<RequireApproval><PolySuaraPage /></RequireApproval>} />
         <Route path="/polyrent" element={<RequireApproval><PolyRentPage /></RequireApproval>} />
+
+        {/* ── Unit Alias Redirects ── */}
+        <Route path="/unit/:unitCode" element={<RequireApproval><UnitRouteRedirect /></RequireApproval>} />
+        <Route path="/unit" element={<RequireApproval><Navigate to="/jpp" replace /></RequireApproval>} />
 
         {/* ✅ WRAP HALAMAN EXCO DALAM APPLAYOUT (ada sidebar) */}
         <Route element={<RequireApproval><AppLayout /></RequireApproval>}>
@@ -337,6 +359,7 @@ function AppRoutes() {
           <Route path="/jpp/takwim"           element={<JppTakwimPage />} />
           <Route path="/jpp/polymaps"            element={<JppPolyMapsAdmin />} />
           <Route path="/jpp/demerit"          element={<DemeritManager sourceOverride="MANUAL" />} />
+          <Route path="/jpp/makmp"            element={<Navigate to="/jpp/unit/akademik?tab=makmp" replace />} />
           <Route path="/jpp/logs"             element={<JppLogsPage />} />
           <Route path="/jpp/settings"         element={<JppSettingsPage />} />
           <Route path="/jpp/nexus"            element={<JppNexusPage />} />

@@ -2350,6 +2350,140 @@ Semua 12 laluan EMS menggunakan prefix `/ems/*` dan dipeta kepada komponen halam
 | `/ems/cert/verify` | `src/pages/ems/EmsCertVerifyPage.tsx` | Public Standalone | **Semakan Carian E-Sijil** — Digital E-Certificate Verification Lookup: halaman carian nombor siri E-Sijil rasmi (cth: `CERT-EMS-2026-XXXXX`) dan pengesahan ketulenan. |
 | `/ems/cert/:certId` | `src/pages/ems/EmsCertificatePage.tsx` | Public Standalone | **Portal Sijil PDF & Verifikasi Ber-QR** — Digital E-Certificate PDF & Verification Portal: portal muat turun PDF sijil digital, pratinjau & verifikasi ber-QR (`EmsCertificateTemplate.tsx`). |
 
+---
+
+## 23. Modul Majlis Anugerah Kecemerlangan POLISAS (MAKMP)
+
+Modul **Majlis Anugerah Kecemerlangan POLISAS (MAKMP)** ialah subsistem pencalonan, semakan, pemarkahan matriks, dan penganugerahan merit anugerah kecemerlangan tahunan bagi pelajar dan kelab/entiti Politeknik Sultan Haji Ahmad Shah.
+
+### 23.1 Ciri-Ciri Utama Senibina MAKMP
+
+1. **Permohonan Berbilang Anugerah Serentak (Multi-Award System — Lampiran IV)**:
+   - Pelajar boleh memohon **lebih daripada satu anugerah serentak** dalam satu borang (`makmp_submission_awards`).
+   - Merangkumi **9 Kumpulan Kategori** dan **18 Anugerah Rasmi** mengikut Garis Panduan Lampiran IV (Akademik, Kepimpinan, Sukan, Kebudayaan, Inovasi, Keusahawanan, Khidmat Masyarakat, Sahsiah, Khas).
+   - Setiap anugerah yang dimohon menerima status kelulusan, catatan juri, dan kiraan merit yang berasingan (`MENUNGGU`, `DALAM_SEMAKAN`, `DISAHKAN`, `DITOLAK`).
+
+2. **Dwi-Model Dokumen (Logik Khas Unit Keusahawanan & Kelab Entiti)**:
+   - **Model A — Sijil & Pencapaian (`CERTIFICATES`)**: Digunakan untuk anugerah individu seperti *Tokoh Keusahawanan*, *Olahragawan*, *Tokoh Siswa*, dll. Dinilai berdasarkan matriks automatik Peringkat & Tahap Kejayaan (fast matrix merit scoring).
+   - **Model B — Laporan Projek & Bukti Sokongan (`REPORT_AND_EVIDENCE`)**: Digunakan untuk kategori anugerah entiti/kumpulan seperti *Inkubator Terbaik*, *Perusahaan Terbaik*, dan *Program Terbaik*. 
+     - Menyediakan sepanduk rasmi muat turun **Templat Laporan Rasmi** (Google Docs/PDF rasmi Unit Keusahawanan).
+     - Dokumen #1 wajib mengandungi Laporan Projek PDF yang lengkap.
+     - Dokumen #2 dan seterusnya memuatkan bukti sokongan (pendaftaran SSM, rekod jualan, transaksi kewangan, atau gambar operasi).
+     - Borang meminta input nama entiti/kelab (`entity_name`) dan peranan pemohon (`applicant_role`).
+
+3. **Borang Penyerahan Awam Berautentikasi Segera & Tanpa Syarat Login (`/makmp`)**:
+   - Pelajar boleh memilih sama ada memiliki akaun portal (`PORTAL`) atau belum berdaftar (`MANUAL`).
+   - **Log Masuk Segera (Inline Login Langkah 1)**: Pelajar dengan akaun portal boleh memasukkan No Matrik / Emel dan Kata Laluan secara terus di Langkah 1. Sistem mengesahkan identiti melalui RPC `resolve_login_identifier` dan `signInWithPassword`, auto-fill biodata pelajar, serta membuka capaian selamat ke repositori sijil e-Akademik peribadi.
+   - **Import 1-Klik Sijil e-Akademik (`akademik_pencapaian`)**:
+     - Pelajar yang telah mendaftar sijil dalam sistem e-Akademik tidak perlu memuat naik semula dokumen ke Google Drive.
+     - Disediakan butang "✨ Pilih Dari e-Akademik Saya" dan modal pemilih sijil (`AkademikCertPickerModal`).
+     - **Penapisan Tahun Edisi Automatik**: Sijil ditapis mengikut tahun edisi MAKMP secara lalai (cth: borang MAKMP 2026 menapis sijil tahun 2026 sahaja; sijil 2026 tidak akan mengelirukan edisi 2027), berserta tab pilihan "Semua Sijil".
+     - Memaparkan status pengesahan e-Akademik (`DISAHKAN`, `MENUNGGU`, `DITOLAK`), pautan pratinjau Google Drive, dan pengisian automatik tajuk, peringkat, serta tahap pencapaian.
+     - Rekod dokumen disimpan dengan punca `source = 'E_AKADEMIK'` dan foreign key `akademik_pencapaian_id`.
+   - **Prinsip Integriti & Kebebasan Rekod e-Akademik**:
+     - Penilaian juri MAKMP (`/makmp/juri`) adalah bebas sepenuhnya daripada rekod e-akademik asal.
+     - Sekiranya juri MAKMP menolak atau mengubah markah anugerah MAKMP, status dan merit sijil asal dalam `akademik_pencapaian` kekal utuh dan tidak terjejas sama sekali.
+   - Integrasi `StudentSearchCombobox` sebagai alternatif carian pantas profil pelajar jika tidak log masuk.
+   - Pelajar tidak berdaftar boleh mengisi borang secara manual tanpa dihalang oleh sekatan log masuk.
+
+4. **Resit Digital Penyerahan & Integrasi WhatsApp**:
+   - Penjanaan Kod Rujukan tunggal (`MAKMP-2026-XXXXX`) dan Kod QR interaktif.
+   - Pautan 1-klik pantas "Simpan ke WhatsApp" (`getMakmpWhatsAppUrl`) dengan teks pra-format rasmi merangkumi senarai semua anugerah yang dipohon.
+   - Portal semakan status berterusan di `/makmp/status?code=...` yang memaparkan perincian status setiap anugerah secara berasingan.
+
+5. **Portal Juri Mudah Alih Tanpa Login (`/makmp/juri`)**:
+   - Pegawai/juri mengakses portal semakan melalui **Kod PIN Rahsia 6-Digit** (`makmp_jury_pins`) tanpa perlu mendaftar akaun portal.
+   - Penapisan tugasan juri mengikut **Kumpulan Kategori** (`assigned_categories`, cth: PIN khas Unit Keusahawanan hanya melihat anugerah keusahawanan).
+   - Antara muka *Split-View Workbench*: memaparkan dokumen laporan/sijil (`iframe` Drive / imej) di sebelah kiri berserta lencana punca `✨ e-Akademik` jika diimport dari e-akademik, dan panel penilaian di sebelah kanan.
+   - Untuk anugerah berteraskan laporan, juri memasukkan markah merit secara terus berpandukan kualiti laporan. Untuk anugerah bersijil, juri melaraskan matriks peringkat/pencapaian.
+   - Butang tindakan "1-Click Sahkan & Seterusnya" dan senarai pilihan pantas sebab penolakan rasmi (*canned rejection reasons*).
+
+6. **Integrasi & Auto-Sync Sempurna ke e-Akademik & Merit**:
+   - Menggunakan fungsi RPC PostgreSQL `sync_makmp_submission_to_akademik(submission_id)`.
+   - Apabila disahkan, sijil yang dimuat naik secara manual (`source = 'MANUAL_UPLOAD'`) dimasukkan ke `akademik_pencapaian`, disusun automatik ke folder fail pelajar (`auto_sort_pencapaian_file`), dan merit ditambah melalui `increment_merit_by_source(user_id, points, 'AKADEMIK')` serta dicatat dalam `merit_transactions`. Sijil yang diimport dari e-Akademik tidak diduplikasi.
+   - Jika pelajar belum berdaftar semasa penyerahan dan disahkan, *database trigger* `trg_sync_makmp_on_profile_create` akan memadankan `matric_no` dan menyelaraskan rekod secara automatik sebaik sahaja pelajar mendaftar akaun portal pada masa hadapan.
+
+### 23.2 Skema Pangkalan Data MAKMP
+
+| Jadual | Keterangan |
+|---|---|
+| `makmp_editions` | Edisi tahunan anugerah (tahun, tajuk, tarikh tutup, status aktif). |
+| `makmp_award_definitions` | Definisi 18 anugerah rasmi (Lampiran IV): nama, kumpulan kategori, target (`INDIVIDUAL` vs `ENTITY`), syarat dokumen (`CERTIFICATES` vs `REPORT_AND_EVIDENCE`), pautan templat rasmi (`template_url`), had dokumen & merit maksima. |
+| `makmp_categories` | Kategori asas pangkalan data legasi (nama, skop jabatan, kuota sijil, had maksima merit). |
+| `makmp_jury_pins` | Kod PIN akses 6-digit juri/pegawai penilai, nama juri, organisasi, dan array tugasan kumpulan kategori (`assigned_categories`). |
+| `makmp_submissions` | Rekod induk penyerahan pelajar (kod rujukan `MAKMP-2026-XXXXX`, matrik, nama, telefon, emel, jabatan, jumlah merit keseluruhan). |
+| `makmp_submission_awards` | Junction table permohonan berbilang anugerah: menghubungkan permohonan ke anugerah (`award_id`), nama entiti (`entity_name`), peranan pemohon (`applicant_role`), status anugerah, merit yang diluluskan, sebab tolak, dan ulasan juri. |
+| `makmp_submission_items` | Senarai dokumen/fail bagi setiap anugerah (`submission_award_id`), jenis dokumen (`SIJIL`, `LAPORAN`, `BUKTI_SOKONGAN`), sumber fail (`source`: `MANUAL_UPLOAD` / `E_AKADEMIK`), rujukan `akademik_pencapaian_id`, peringkat, tahap pencapaian, pautan Google Drive, merit cadangan, dan merit sah. |
+
+### 23.3 Laluan (Routes) & Fail Halaman MAKMP
+
+| Route | Fail Komponen | Mod Akses | Deskripsi |
+|---|---|---|---|
+| `/makmp` | `src/pages/makmp/MakmpPublicFormPage.tsx` | Public Standalone | **Borang Pencalonan Awam Berbilang Anugerah** — Pilihan akaun / manual, log masuk segera Langkah 1, 1-klik import sijil e-akademik, 9 kumpulan kategori & 18 anugerah rasmi, penjajaran jabatan rasmi POLISAS (JP, JKM, JTM, JKE, JKA, FTV) dengan auto-fill, muat naik tabbed per-anugerah, templat laporan rasmi, & resit WhatsApp. |
+| `/makmp/status` | `src/pages/makmp/MakmpStatusTrackingPage.tsx` | Public Standalone | **Semakan Status Multi-Award** — Carian tracking code, kad status berasingan setiap anugerah, tag jenis dokumen (`LAPORAN`, `BUKTI_SOKONGAN`, `SIJIL`), sebab tolak & merit sah. |
+| `/makmp/juri` | `src/pages/makmp/MakmpJuryPortalPage.tsx` | Public Standalone (PIN Protected) | **Portal Juri Berpusat** — Log masuk PIN 6-digit, tapisan pelbagai kategori tugasan (`assigned_categories: text[]` atau `SEMUA`), split-view workbench semakan laporan & bukti berserta lencana `✨ e-Akademik`, pemarkahan laporan projek vs matriks sijil (siling merit 50), lightbox fullscreen, & 1-click approve. |
+| `/jpp/unit/akademik?tab=makmp` (alias: `/unit/akademik`, `/jpp/makmp`) | `src/pages/jpp/units/MakmpAdminDashboardPage.tsx` & `AkademikUnitDashboard.tsx` | Protected (Exco Akademik / JPP / Super Admin) | **Pusat Urus Setia & Kawalan MAKMP (Exco Akademik)** — Ditempatkan terus di bawah modul Exco Akademik (`/unit/akademik`): CRUD penuh 18 Anugerah Rasmi & Kategori Asas (Tambah, Kemaskini, Padam, Toggle Aktif), pengurusan PIN juri berbilang kategori dengan lencana & kawalan akses penuh, perincian multi-award permohonan, & eksport CSV dengan label jabatan POLISAS sebenar. |
+
+### 23.4 Keselamatan, RLS & Table Grants (PostgreSQL Anon Access)
+
+Bagi membolehkan borang awam `/makmp` dan semakan status `/makmp/status` diakses oleh sesi tanpa log masuk (`anon`), di samping polisi RLS, hak capaian jadual PostgreSQL (*table-level grants*) diberikan secara eksplisit:
+
+```sql
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.makmp_editions TO anon, authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.makmp_award_definitions TO anon, authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.makmp_categories TO anon, authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.makmp_jury_pins TO anon, authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.makmp_submissions TO anon, authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.makmp_submission_awards TO anon, authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.makmp_submission_items TO anon, authenticated, service_role;
+```
+> [!IMPORTANT]
+> Polisi RLS pada `makmp_*` mengawal baris mana yang boleh dibaca/ditulis mengikut prinsip `(SELECT auth.uid())` dan kod rujukan awam, manakala `GRANT` membenarkan role Supabase melepasi *table privilege check* (mengelakkan *PostgreSQL Error 42501: permission denied for table*).
+
+### 23.5 Penjajaran Jabatan Sebenar POLISAS (`department`)
+
+Tiada jabatan JTMK, JMSK atau JPA dalam struktur akademik POLISAS semasa. Semua modul MAKMP (`src/lib/makmp.ts`, borang awam, dan dashboard pentadbir) diselaraskan secara rasmi dengan `profiles.department` dan `JABATAN_LIST`:
+- `perdagangan` — Jabatan Perdagangan (JP)
+- `mekanikal` — Jabatan Kejuruteraan Mekanikal (JKM)
+- `makanan` — Jabatan Teknologi Makanan (JTM)
+- `elektrik` — Jabatan Kejuruteraan Elektrik (JKE)
+- `awam` — Jabatan Kejuruteraan Awam (JKA)
+- `ftv` — Asasi Teknologi Kejuruteraan (FTV)
+
+Utiliti `getJabatanLabel(dept)` dan `JABATAN_OPTIONS` dalam `src/lib/makmp.ts` memastikan konsistensi paparan di seluruh antara muka pengguna.
+
+### 23.6 Penyelarasan Siling Maksimum Merit (Max Merit 50)
+
+Mengikut Matriks Merit Rasmi MAKMP (`MAKMP_MERIT_MATRIX`), mata merit dihitung mengikut Peringkat × Tahap Pencapaian di mana peringkat Antarabangsa Johan/Emas bersamaan 10 mata setiap sijil.
+- **5 Sijil**: Siling maksimum merit ialah **50 mata** ($5 \times 10$ mata).
+- **3 Sijil** (cth: Anugerah Inovasi & Rekacipta): Siling maksimum merit ialah **30 mata** ($3 \times 10$ mata).
+- Jadual `makmp_award_definitions` dan `makmp_categories` telah dikemas kini melalui migrasi `20260916_makmp_update_max_merit_to_50.sql` bagi memastikan pelajar antarabangsa tidak mengalami pemotongan mata yang tidak adil.
+
+### 23.7 Pengesahan E2E Multi-Agent Beta Testing (`e2e/makmp_full_beta_test.spec.ts`)
+
+Bagi mensimulasikan penggunaan sebenar tanpa kecacatan sebelum dilancarkan kepada 1,500 pelajar, modul MAKMP telah diuji menggunakan suit ujian Playwright 13-Persona (`e2e/makmp_full_beta_test.spec.ts`):
+1. **6 Sub-Agent Pelajar**:
+   - Pelajar Berdaftar Multi-Award (Desktop): Memohon Tokoh Keusahawanan + Olahragawan serentak, muat naik sijil berbilang tab, & pengesahan resit WhatsApp.
+   - Pelajar Manual Entiti (Mobile iPhone 14): Borang tanpa akaun, permohonan Inkubator Terbaik (Kelab Koperasi), pengesanan templat laporan rasmi, & muat naik laporan projek PDF.
+   - Penguatkuasaan Had Kuota: Menguji sekatan kuota dokumen kategori Inovasi (tambah dan buang dokumen secara dinamik).
+   - Format Sijil Gambar PNG (Mobile Pixel 7): Muat naik format imej sijil Olahragawati dan penentukuran merit automatik.
+   - Ujian Sempadan & Had Fail: Sekatan fail >10MB dan semakan status penyerahan di `/makmp/status`.
+   - **Import Sijil e-Akademik 2026 (Persona 13)**: Mengimport sijil sedia ada daripada rekod e-akademik pelajar, menapis mengikut tahun edisi 2026, menghantar tanpa muat naik semula fail, serta mengesahkan lencana `✨ e-Akademik` pada portal juri.
+2. **5 Sub-Agent Juri / Pegawai Penilai**:
+   - Log masuk PIN 6-digit (`884920`) dengan penapisan berbilang kategori tugasan juri.
+   - Split-screen document workbench & fullscreen image/PDF lightbox dengan zoom in/out.
+   - Pelarasan markah merit laporan projek dan matriks sijil (siling maksimum sehingga 50 mata).
+   - Aliran 1-click "Sahkan & Seterusnya" berserta penyelarasan automatik ke e-akademik.
+   - Aliran penolakan anugerah dengan pilihan pantas sebab rasmi (*canned rejection reasons*).
+3. **2 Sub-Agent EXCO / Urus Setia**:
+   - Pemantauan KPI masa nyata dan penapisan status permohonan di bawah Pusat Kawalan Exco Akademik.
+   - CRUD penuh Anugerah & Kategori: Tambah anugerah/kategori baharu, edit syarat dokumen dan kuota, toggle status aktif/nyahaktif, dan padam rekod selamat.
+   - Penjanaan & kemaskini PIN juri dengan pilihan multi-kategori dan mod akses penuh (`SEMUA`).
+   - Eksport data CSV berbilang anugerah dengan nama jabatan POLISAS rasmi.
+
+
+
+
 
 
 

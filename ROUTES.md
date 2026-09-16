@@ -53,6 +53,7 @@ Setiap exco baharu yang ditambah **MESTI** menggunakan prefix dengan ID exco mer
 | `/polytask/*` | PolyTask | ✅ Aktif |
 | `/karnival/*` | Sistem Karnival JPP | ✅ Aktif |
 | `/ems/*` | EMS (Event Management System) | ✅ Aktif |
+| `/makmp/*` | MAKMP (Majlis Anugerah Kecemerlangan POLISAS) | ✅ Aktif |
 | `/sukan/*` | e-Sukan | 🔜 Akan Datang |
 
 **Contoh route exco / modul tambahan:**
@@ -68,6 +69,10 @@ Setiap exco baharu yang ditambah **MESTI** menggunakan prefix dengan ID exco mer
 /polyrider-admin        (Pusat Kawalan PolyRider)
 /ems/dashboard          (Papan Pemuka Utama EMS)
 /ems/juri               (Portal Penilaian Juri EMS)
+/makmp                  (Borang Pencalonan Awam MAKMP)
+/makmp/status           (Semakan Status Resit MAKMP)
+/makmp/juri             (Portal Semakan PIN Juri MAKMP)
+/jpp/makmp              (Pusat Kawalan MAKMP JPP)
 ```
 
 ---
@@ -91,6 +96,19 @@ Semua laluan bagi modul Event Management System (EMS) menggunakan prefix `/ems/*
 | `/ems/v/:eventId/scan` | Portal Imbas Kehadiran Pengunjung & Milestone — Portal imbasan QR pendaftaran kehadiran pengunjung awam & milestone winner | Public Standalone |
 | `/ems/cert/verify` | Semakan Carian E-Sijil — Halaman carian nombor siri E-Sijil rasmi (cth: `CERT-EMS-2026-XXXXX`) dan pengesahan | Public Standalone |
 | `/ems/cert/:certId` | Portal Sijil PDF & Verifikasi Ber-QR — Muat turun PDF sijil digital & verifikasi ketulenan menerusi QR | Public Standalone |
+
+---
+
+## Modul MAKMP (Majlis Anugerah Kecemerlangan POLISAS)
+
+Semua laluan bagi modul Majlis Anugerah Kecemerlangan POLISAS (MAKMP):
+
+| Route | Deskripsi | Jenis Akses |
+|---|---|---|
+| `/makmp` | Borang Pencalonan Awam — Pilihan akaun portal/manual, kuota kategori anugerah, muat naik batch sijil, resit ber-QR & pautan WhatsApp | Public Standalone |
+| `/makmp/status` | Semakan Status Penyerahan — Carian kod rujukan rasmi (`MAKMP-2026-XXXXX`), paparan status kelulusan & pecahan merit | Public Standalone |
+| `/makmp/juri` | Portal Juri Mudah Alih — Log masuk PIN rahsia 6-digit tanpa akaun, split-view pratonton sijil, pelarasan matriks pantas & aliran 1-click review | Public Standalone (PIN Protected) |
+| `/jpp/makmp` | Pusat Kawalan Pentadbir MAKMP — Konfigurasi edisi tahunan, kuota kategori anugerah, penjanaan kod PIN juri & eksport CSV | Protected (JPP / Super Admin) |
 
 ---
 

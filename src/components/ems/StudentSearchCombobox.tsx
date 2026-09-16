@@ -6,6 +6,8 @@ export interface StudentSelectData {
   full_name: string;
   matrix_no: string;
   email?: string;
+  department?: string;
+  phone?: string;
 }
 
 export interface StudentSearchComboboxProps {
@@ -21,6 +23,8 @@ interface ProfileResult {
   matrix_no: string;
   email?: string;
   avatar_url?: string;
+  department?: string;
+  phone?: string;
 }
 
 export function StudentSearchCombobox({
@@ -69,7 +73,7 @@ export function StudentSearchCombobox({
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, matric_no, email, avatar_url')
+          .select('id, full_name, matric_no, email, avatar_url, department, phone')
           .or(`full_name.ilike.%${trimmed}%,matric_no.ilike.%${trimmed}%`)
           .limit(8);
 
@@ -80,6 +84,8 @@ export function StudentSearchCombobox({
             matrix_no: p.matrix_no || p.matric_no || '',
             email: p.email || '',
             avatar_url: p.avatar_url || '',
+            department: p.department || '',
+            phone: p.phone || '',
           }));
           setResults(mapped);
           setIsOpen(true);
@@ -102,6 +108,8 @@ export function StudentSearchCombobox({
       full_name: student.full_name,
       matrix_no: student.matrix_no,
       email: student.email,
+      department: student.department,
+      phone: student.phone,
     });
     setQuery(student.full_name);
     setIsOpen(false);
