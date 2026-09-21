@@ -61,6 +61,18 @@ export function EmsPublicRegisterPage() {
 
   // Multi-step state (1: Info, 2: Dynamic Fields, 3: Media, 4: Pass)
   const [currentStep, setCurrentStep] = useState<number>(1);
+
+  // Scroll ke atas bila step bertukar — guna double rAF + behavior auto supaya
+  // tak dibatalkan oleh re-render (smooth scroll boleh ter-cancel pada mobile).
+  const scrollToTop = () => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      });
+    });
+  };
   const [submitting, setSubmitting] = useState(false);
 
   // Form Step 1: Category & Basic Info
@@ -409,13 +421,13 @@ export function EmsPublicRegisterPage() {
       if (!validateStep2()) return;
       setCurrentStep(3);
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToTop();
   };
 
   const handlePrevStep = () => {
     if (currentStep > 1 && currentStep < 4) {
       setCurrentStep(currentStep - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollToTop();
     }
   };
 

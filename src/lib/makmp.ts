@@ -667,6 +667,9 @@ export async function submitMakmpMultiAwardApplication(params: {
 
       if (itErr) {
         console.error('[MAKMP Multi-Award Items Error]', itErr);
+        // GAGAL menyimpan dokumen = permohonan tak lengkap. Throw supaya
+        // student nampak ralat (bukan silent success tapi 0 dokumen).
+        throw new Error('Gagal menyimpan dokumen/sijil: ' + itErr.message);
       } else if (itemsRows) {
         createdItems.push(...(itemsRows as MakmpSubmissionItem[]));
       }

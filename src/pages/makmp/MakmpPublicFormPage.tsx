@@ -95,10 +95,18 @@ export default function MakmpPublicFormPage() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
 
-  // Scroll ke atas (header form) — dipanggil bila step bertukar / error muncul
-  // supaya student nampak perubahan & error di atas, bukan tersangkut di bawah.
+  // Scroll ke atas (header form) — dipanggil bila step bertukar / error muncul.
+  // Guna behavior 'auto' (instant) + double requestAnimationFrame supaya tak
+  // dibatalkan oleh React re-render (smooth scroll boleh ter-cancel bila DOM
+  // berubah mid-animation, terutama pada mobile).
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      });
+    });
   };
 
   // Data Edisi, Kategori & Definisi Anugerah
@@ -661,7 +669,7 @@ export default function MakmpPublicFormPage() {
       setSubmissionResult(submission);
       setCreatedAwardsList(createdAwards);
       setStep(4);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollToTop();
     } catch (err: any) {
       console.error('[MAKMP Multi-Award Submission Error]', err);
       setErrorMessage(err.message || 'Berlaku ralat semasa menghantar permohonan. Sila cuba lagi.');
