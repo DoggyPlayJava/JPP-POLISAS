@@ -543,6 +543,8 @@ export async function submitMakmpMultiAwardApplication(params: {
     department: string;
     programme_code?: string | null;
     semester?: number | null;
+    intake_year?: number | null;
+    intake_period?: number | null;
   };
   awards: {
     award_id: string;
@@ -568,32 +570,39 @@ export async function submitMakmpMultiAwardApplication(params: {
   awards: MakmpSubmissionAward[];
   items: MakmpSubmissionItem[];
 }> {
-  // 1. Masukkan rekod submission utama
-  const { data: subData, error: subErr } = await supabase
-    .from('makmp_submissions')
-    .insert([
-      {
-        tracking_code: params.submission.tracking_code,
-        edition_id: params.submission.edition_id,
-        user_id: params.submission.user_id || null,
-        has_portal_account: params.submission.has_portal_account || false,
-        full_name: params.submission.full_name,
-        matric_no: params.submission.matric_no.toUpperCase().trim(),
-        email: params.submission.email || null,
-        phone: params.submission.phone.trim(),
-        department: params.submission.department,
-        programme_code: params.submission.programme_code || null,
-        semester: params.submission.semester || null,
-        intake_year: params.submission.intake_year || null,
-        intake_period: params.submission.intake_period || null,
-        status: 'MENUNGGU',
-        total_merit_awarded: 0,
-      },
-    ])
-    .select()
-    .single();
+  // NOTA: Insert guna id digenerate di CLIENT (crypto.randomUUID) dan TANPA `.select()`.
+  // Ini penting kerana policy SELECT makmp_submissions/awards/items sekarang ketat
+  // (hanya pemilik/staff) untuk tutup data leak. Guest (user_id = NULL) tak boleh
+  // `.select()` RETURNING sebab `user_id = auth.uid()` => NULL = NULL => false.
+  // Jadi kita INSERT sahaja (policy INSERT masih WITH CHECK true) dan bina return
+  // object secara manual dari nilai yang frontend dah tahu.
 
-  if (subErr || !subData) {
+  const submissionId = crypto.randomUUID();
+  const now = new Date().toISOString();
+
+  // 1. Masukkan rekod submission utama
+  const { error: subErr } = await supabase.from('makmp_submissions').insert([
+    {
+      id: submissionId,
+      tracking_code: params.submission.tracking_code,
+      edition_id: params.submission.edition_id,
+      user_id: params.submission.user_id || null,
+      has_portal_account: params.submission.has_portal_account || false,
+      full_name: params.submission.full_name,
+      matric_no: params.submission.matric_no.toUpperCase().trim(),
+      email: params.submission.email || null,
+      phone: params.submission.phone.trim(),
+      department: params.submission.department,
+      programme_code: params.submission.programme_code || null,
+      semester: params.submission.semester || null,
+      intake_year: params.submission.intake_year || null,
+      intake_period: params.submission.intake_period || null,
+      status: 'MENUNGGU',
+      total_merit_awarded: 0,
+    },
+  ]);
+
+  if (subErr) {
     throw new Error(`Gagal menyimpan permohonan utama: ${subErr?.message || 'Ralat pangkalan data'}`);
   }
 
@@ -619,67 +628,96 @@ export async function submitMakmpMultiAwardApplication(params: {
       }
     }
 
-    const { data: awardRow, error: awardErr } = await supabase
-      .from('makmp_submission_awards')
-      .insert([
-        {
-          submission_id: subData.id,
-          award_id: realAwardId,
-          entity_name: aw.entity_name || null,
-          applicant_role: aw.applicant_role || null,
-          status: 'MENUNGGU',
-          total_merit_granted: 0,
-        },
-      ])
-      .select()
-      .single();
+    const awardId = crypto.randomUUID();
+    const awardRow = {
+      id: awardId,
+      submission_id: submissionId,
+      award_id: realAwardId,
+      entity_name: aw.entity_name || null,
+      applicant_role: aw.applicant_role || null,
+      status: 'MENUNGGU' as const,
+      total_merit_granted: 0,
+    };
 
-    if (awardErr || !awardRow) {
+    const { error: awardErr } = await supabase
+      .from('makmp_submission_awards')
+      .insert([awardRow]);
+
+    if (awardErr) {
       console.error('[MAKMP Multi-Award Error]', awardErr);
       continue;
     }
 
-    createdAwards.push(awardRow as MakmpSubmissionAward);
+    createdAwards.push({
+      ...awardRow,
+      created_at: now,
+    } as unknown as MakmpSubmissionAward);
 
     // 3. Masukkan item dokumen/sijil bagi anugerah ini
     if (aw.items && aw.items.length > 0) {
-      const itemsToInsert = aw.items.map((it) => ({
-        submission_id: subData.id,
-        submission_award_id: awardRow.id,
-        document_type: it.document_type || 'SIJIL',
-        nama_pencapaian: it.nama_pencapaian,
-        peringkat: it.peringkat,
-        pencapaian_type: it.pencapaian_type,
-        penganjur: it.penganjur || null,
-        tarikh: it.tarikh || null,
-        drive_view_url: it.drive_view_url,
-        drive_download_url: it.drive_download_url || null,
-        drive_file_id: it.drive_file_id || null,
-        merit_suggested: it.merit_suggested || 0,
+      const itemsToInsert = aw.items.map((item) => ({
+        id: crypto.randomUUID(),
+        submission_id: submissionId,
+        submission_award_id: awardId,
+        document_type: item.document_type || 'SIJIL',
+        nama_pencapaian: item.nama_pencapaian,
+        peringkat: item.peringkat,
+        pencapaian_type: item.pencapaian_type,
+        penganjur: item.penganjur || null,
+        tarikh: item.tarikh || null,
+        drive_view_url: item.drive_view_url,
+        drive_download_url: item.drive_download_url || null,
+        drive_file_id: item.drive_file_id || null,
+        merit_suggested: item.merit_suggested || 0,
         merit_awarded: 0,
         is_verified: false,
-        akademik_pencapaian_id: it.akademik_pencapaian_id || null,
-        source: it.source || 'MANUAL_UPLOAD',
+        akademik_pencapaian_id: item.akademik_pencapaian_id || null,
+        source: item.source || 'MANUAL_UPLOAD',
       }));
 
-      const { data: itemsRows, error: itErr } = await supabase
+      const { error: itErr } = await supabase
         .from('makmp_submission_items')
-        .insert(itemsToInsert)
-        .select();
+        .insert(itemsToInsert);
 
       if (itErr) {
         console.error('[MAKMP Multi-Award Items Error]', itErr);
-        // GAGAL menyimpan dokumen = permohonan tak lengkap. Throw supaya
-        // student nampak ralat (bukan silent success tapi 0 dokumen).
+        // GAGAL menyimpan dokumen = permohonan tak lengkap.
         throw new Error('Gagal menyimpan dokumen/sijil: ' + itErr.message);
-      } else if (itemsRows) {
-        createdItems.push(...(itemsRows as MakmpSubmissionItem[]));
       }
+
+      createdItems.push(
+        ...(itemsToInsert.map((item) => ({
+          ...item,
+          created_at: now,
+        })) as unknown as MakmpSubmissionItem[])
+      );
     }
   }
 
+  const submission = {
+    id: submissionId,
+    tracking_code: params.submission.tracking_code,
+    edition_id: params.submission.edition_id,
+    category_id: null,
+    user_id: params.submission.user_id || null,
+    has_portal_account: params.submission.has_portal_account || false,
+    full_name: params.submission.full_name,
+    matric_no: params.submission.matric_no.toUpperCase().trim(),
+    email: params.submission.email || null,
+    phone: params.submission.phone.trim(),
+    department: params.submission.department,
+    programme_code: params.submission.programme_code || null,
+    semester: params.submission.semester || null,
+    intake_year: params.submission.intake_year || null,
+    intake_period: params.submission.intake_period || null,
+    status: 'MENUNGGU' as MakmpSubmissionStatus,
+    total_merit_awarded: 0,
+    created_at: now,
+    updated_at: now,
+  } as unknown as MakmpSubmission;
+
   return {
-    submission: subData as MakmpSubmission,
+    submission,
     awards: createdAwards,
     items: createdItems,
   };
