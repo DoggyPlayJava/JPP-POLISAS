@@ -469,20 +469,56 @@ export default function MakmpPublicFormPage() {
         return;
       }
 
+      // ── GUARD INTEGRITY ─────────────────────────────────────────────
+      // JANGAN overwrite matric_no profile sedia ada dengan matric borang yang
+      // BERBEZA. Ini punca asal bug: tekan "Login Google" pada borang orang
+      // lain menukar matric akaun kita & trigger auto-link submission orang itu.
+      const { data: existingProf, error: profErr } = await supabase
+        .from('profiles')
+        .select('matric_no')
+        .eq('id', uid)
+        .maybeSingle();
+
+      if (profErr) {
+        console.warn('Gagal baca profil sedia ada:', profErr.message);
+        return;
+      }
+
+      const existingMatric = (existingProf?.matric_no || '').trim().toUpperCase();
+      const matricChanged = existingMatric && existingMatric !== dMatric;
+
+      // Build payload — matric hanya di-update jika kosong/sama (bukan berbeza).
+      const payload: Record<string, any> = {
+        full_name: dName,
+        phone: dPhone,
+        department: dDept,
+        programme_code: dProg,
+        intake_year: dIntakeYear ? Number(dIntakeYear) : null,
+        intake_period: dIntakePeriod ? Number(dIntakePeriod) : null,
+      };
+      if (!matricChanged) {
+        payload.matric_no = dMatric;
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          full_name: dName,
-          matric_no: dMatric,
-          phone: dPhone,
-          department: dDept,
-          programme_code: dProg,
-          intake_year: dIntakeYear ? Number(dIntakeYear) : null,
-          intake_period: dIntakePeriod ? Number(dIntakePeriod) : null,
-        })
+        .update(payload)
         .eq('id', uid);
-      if (error) console.warn('Gagal lengkapkan profil dari MAKMP:', error.message);
-      else console.log('✅ Profil dilengkapkan dari data MAKMP untuk', dMatric);
+
+      if (error) {
+        console.warn('Gagal lengkapkan profil dari MAKMP:', error.message);
+      } else if (matricChanged) {
+        console.warn(
+          `⚠️ Matric tidak ditukar: profil=${existingMatric}, borang=${dMatric}. ` +
+          `Profil anda kekal ${existingMatric}.`
+        );
+        setLoginError(
+          `No. Matrik borang (${dMatric}) tidak sepadan dengan akaun anda (${existingMatric}). ` +
+          `Profil anda dikekalkan — tiada perubahan dibuat pada No. Matrik.`
+        );
+      } else {
+        console.log('✅ Profil dilengkapkan dari data MAKMP untuk', dMatric);
+      }
     } catch (e) {
       console.warn('Ralat lengkapkan profil:', e);
     }

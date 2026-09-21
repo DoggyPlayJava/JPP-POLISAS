@@ -115,21 +115,42 @@ export default function MakmpStatusTrackingPage() {
   const completeProfileFromSubmission = async () => {
     if (!user || !submission) return;
     try {
-      const { error } = await supabase
+      // ── GUARD INTEGRITY ─────────────────────────────────────────────
+      // JANGAN overwrite matric_no profil dengan matric submission yang berbeza.
+      const { data: existingProf, error: profErr } = await supabase
         .from('profiles')
-        .update({
-          matric_no: (profile?.matric_no?.trim() ? profile.matric_no : submission.matric_no).toUpperCase(),
-          full_name: (profile?.full_name?.trim() ? profile.full_name : submission.full_name).toUpperCase(),
-          phone: (profile?.phone?.trim() ? profile.phone : submission.phone || '').trim(),
-          department: profile?.department?.trim() ? profile.department : (submission.department || ''),
-          programme_code: profile?.programme_code?.trim() ? profile.programme_code : (submission.programme_code || null),
-          intake_year: profile?.intake_year ? profile.intake_year : (submission.intake_year || null),
-          intake_period: profile?.intake_period ? profile.intake_period : (submission.intake_period || null),
-        })
-        .eq('id', user.id);
-      if (error) console.warn('Gagal lengkapkan profil dari submission:', error.message);
-      else {
-        console.log('✅ Profil dilengkapkan dari submission MAKMP');
+        .select('matric_no')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (profErr) {
+        console.warn('Gagal baca profil sedia ada:', profErr.message);
+        return;
+      }
+
+      const existingMatric = (existingProf?.matric_no || '').trim().toUpperCase();
+      const subMatric = (submission.matric_no || '').trim().toUpperCase();
+      const matricChanged = existingMatric && existingMatric !== subMatric;
+
+      const payload: Record<string, any> = {
+        full_name: (profile?.full_name?.trim() ? profile.full_name : submission.full_name).toUpperCase(),
+        phone: (profile?.phone?.trim() ? profile.phone : submission.phone || '').trim(),
+        department: profile?.department?.trim() ? profile.department : (submission.department || ''),
+        programme_code: profile?.programme_code?.trim() ? profile.programme_code : (submission.programme_code || null),
+        intake_year: profile?.intake_year ? profile.intake_year : (submission.intake_year || null),
+        intake_period: profile?.intake_period ? profile.intake_period : (submission.intake_period || null),
+      };
+      // matric hanya diisi jika profil belum ada matric, atau sama dengan submission.
+      if (!matricChanged && !existingMatric) {
+        payload.matric_no = subMatric;
+      }
+
+      const { error } = await supabase.from('profiles').update(payload).eq('id', user.id);
+
+      if (error) {
+        console.warn('Gagal lengkapkan profil dari submission:', error.message);
+      } else {
+        console.log('✅ Profil dilengkapkan dari submission MAKMP (matric dikekalkan)');
         await refetchProfile?.();
       }
     } catch (e) {

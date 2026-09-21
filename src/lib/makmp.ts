@@ -754,31 +754,21 @@ export async function submitMakmpApplication(params: {
   return { submission: subData, items: [] };
 }
 
-/** Semak status penyerahan menggunakan Tracking Code (Menyokong Berbilang Anugerah) */
+/** Semak status penyerahan menggunakan Tracking Code (Menyokong Berbilang Anugerah).
+ *  Guna RPC SECURITY DEFINER `get_makmp_submission_by_tracking_code` supaya
+ *  tracking awam TIDAK bocor data semua submission (policy SELECT dah tiada `OR true`). */
 export async function fetchSubmissionByTrackingCode(code: string): Promise<MakmpSubmission | null> {
   const cleanCode = code.trim().toUpperCase();
 
-  const { data, error } = await supabase
-    .from('makmp_submissions')
-    .select(`
-      *,
-      category:makmp_categories(*),
-      edition:makmp_editions(*),
-      items:makmp_submission_items(*),
-      awards:makmp_submission_awards(
-        *,
-        award:makmp_award_definitions(*),
-        items:makmp_submission_items(*)
-      )
-    `)
-    .eq('tracking_code', cleanCode)
-    .maybeSingle();
+  const { data, error } = await supabase.rpc('get_makmp_submission_by_tracking_code', {
+    p_code: cleanCode,
+  });
 
-  if (error || !data) {
+  if (error || !data || data.found !== true || !data.submission) {
     return null;
   }
 
-  return data as MakmpSubmission;
+  return data.submission as MakmpSubmission;
 }
 
 /** Claim (pautkan) submission MAKMP tetamu ke akaun pengguna semasa.
