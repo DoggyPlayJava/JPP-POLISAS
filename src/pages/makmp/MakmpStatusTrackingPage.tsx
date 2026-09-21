@@ -18,11 +18,14 @@ import {
   Building,
   Calendar,
   Loader2,
+  FolderOpen,
 } from 'lucide-react';
 import { fetchSubmissionByTrackingCode, getMakmpWhatsAppUrl } from '@/lib/makmp';
+import { useAuth } from '@/contexts/AuthContext';
 import type { MakmpSubmission } from '@/types';
 
 export default function MakmpStatusTrackingPage() {
+  const { profile } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialCode = searchParams.get('code') || '';
 
@@ -256,6 +259,39 @@ export default function MakmpStatusTrackingPage() {
                       +{submission.total_merit_awarded}
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Dokumen Peribadi sync banner (hanya bila disahkan & pelajar ada akaun) */}
+              {submission.status === 'DISAHKAN' && (
+                <div className="p-4 rounded-xl bg-indigo-950/30 border border-indigo-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500/15 flex items-center justify-center text-indigo-300 shrink-0">
+                      <FolderOpen className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm text-white">Sijil Telah Disimpan ke Dokumen Peribadi</div>
+                      <div className="text-xs text-indigo-200/80 mt-0.5">
+                        Sijil anda telah disusun secara automatik ke dalam folder "Sijil Penghargaan" di e-akademik.
+                      </div>
+                    </div>
+                  </div>
+                  {submission.user_id && profile?.id === submission.user_id ? (
+                    <Link
+                      to="/akademik/folder"
+                      className="shrink-0 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 hover:bg-indigo-500/30"
+                    >
+                      <FolderOpen className="w-4 h-4" />
+                      Lihat dalam Dokumen Peribadi
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/login"
+                      className="shrink-0 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 hover:bg-indigo-500/30"
+                    >
+                      Log Masuk untuk Lihat Dokumen
+                    </Link>
+                  )}
                 </div>
               )}
 
