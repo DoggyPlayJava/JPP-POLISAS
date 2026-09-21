@@ -1160,6 +1160,8 @@ export interface MakmpSubmission {
   department: string;
   programme_code?: string | null;
   semester?: number | null;
+  intake_year?: number | null;
+  intake_period?: number | null;
   status: MakmpSubmissionStatus;
   total_merit_awarded: number;
   reviewer_pin_id?: string | null;
@@ -1257,4 +1259,4 @@ export interface AkademikImportCertItem {
 }
 
 
-
+

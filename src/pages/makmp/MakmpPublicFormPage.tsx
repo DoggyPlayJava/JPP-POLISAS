@@ -72,7 +72,7 @@ import type {
   MakmpDocumentType,
   AkademikImportCertItem,
 } from '@/types';
-import { getSemesterInfo } from '@/types';
+import { getSemesterInfo, INTAKE_YEARS } from '@/types';
 import { MakmpJppChrome, MakmpJppHeader } from '@/components/makmp/MakmpJppChrome';
 
 interface CertFormItem {
@@ -146,6 +146,8 @@ export default function MakmpPublicFormPage() {
   const [department, setDepartment] = useState('perdagangan');
   const [programmeCode, setProgrammeCode] = useState('');
   const [semester, setSemester] = useState<number>(1);
+  const [intakeYear, setIntakeYear] = useState<number | ''>('');
+  const [intakePeriod, setIntakePeriod] = useState<1 | 2 | ''>('');
   const [hasPortalAccount, setHasPortalAccount] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
@@ -163,6 +165,7 @@ export default function MakmpPublicFormPage() {
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isGoogleLinking, setIsGoogleLinking] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -182,6 +185,7 @@ export default function MakmpPublicFormPage() {
   const [createdAwardsList, setCreatedAwardsList] = useState<MakmpSubmissionAward[]>([]);
   const [copiedCode, setCopiedCode] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const draftRestoredRef = useRef(false);
 
   // 1. Muat turun edisi aktif, kategori & 18 anugerah rasmi
   useEffect(() => {
@@ -201,15 +205,50 @@ export default function MakmpPublicFormPage() {
     loadData();
   }, []);
 
+  // 1b. Pulihkan draf borang (jika ada) selepas redirect Google OAuth
+  //     atau sekadar refresh pertengahan isi borang sebagai tetamu.
+  useEffect(() => {
+    if (restoreDraft()) {
+      draftRestoredRef.current = true;
+    }
+    // Bersihkan draf selepas 30 saat supaya tak kekal lama dalam session
+    const t = setTimeout(() => {
+      sessionStorage.removeItem(MAKMP_DRAFT_KEY);
+    }, 30000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 1c. Auto-kira semester daripada cohort (tahun + sesi) yang dipilih
+  //     oleh tetamu (manual path). Login path sudah dikira dalam effect #2.
+  useEffect(() => {
+    if (intakeYear && intakePeriod) {
+      const si = getSemesterInfo(
+        Number(intakeYear),
+        intakePeriod as 1 | 2,
+        programmeCode === 'FTV',
+        undefined,
+        undefined,
+        undefined
+      );
+      setSemester(si.semester || 1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intakeYear, intakePeriod, programmeCode]);
+
   // 2. Auto-populate profil jika user log masuk di JPP Portal
   useEffect(() => {
     if (profile && user) {
-      setFullName(profile.full_name || '');
-      setMatricNo(profile.matric_no || '');
-      setEmail(profile.email || user.email || '');
-      setPhone(profile.phone || '');
+      // Merge: guna nilai profil kalau ada, kalau tak kekalkan nilai sedia ada
+      // (penting supaya draf yang dipulihkan selepas OAuth tidak ditimpa kosong).
+      if (profile.full_name) setFullName(profile.full_name);
+      if (profile.matric_no) setMatricNo(profile.matric_no);
+      if (profile.email || user.email) setEmail(profile.email || user.email || '');
+      if (profile.phone) setPhone(profile.phone);
       if (profile.department) setDepartment(profile.department.toLowerCase());
       if (profile.programme_code) setProgrammeCode(profile.programme_code);
+      if (profile.intake_year) setIntakeYear(profile.intake_year);
+      if (profile.intake_period) setIntakePeriod(profile.intake_period as 1 | 2);
       // Auto-fetch semester dari data intake (profiles takde column 'semester' — dikira dari intake_year/period)
       if (profile.semester_override) {
         setSemester(Number(profile.semester_override) || 1);
@@ -229,6 +268,18 @@ export default function MakmpPublicFormPage() {
       setAccountType('PORTAL');
     }
   }, [profile, user]);
+
+  // 2b. Selepas login Google melalui MAKMP, lengkapkan profil portal secara
+  //     automatik daripada data borang (matric, dept, cohort, phone, programme)
+  //     supaya profile modal auto-fill 100% — pelajar tak perlu isi semula.
+  useEffect(() => {
+    if (user && draftRestoredRef.current && matricNo.trim()) {
+      completeProfileFromMakmp(user.id);
+      // Sekali sahaja — jangan ulang setiap kali matricNo berubah
+      draftRestoredRef.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // 3. Muat turun sijil e-Akademik pelajar apabila user atau matricNo wujud
   useEffect(() => {
@@ -294,6 +345,107 @@ export default function MakmpPublicFormPage() {
       setLoginError(err.message || 'Log masuk gagal. Sila cuba lagi.');
     } finally {
       setIsLoggingIn(false);
+    }
+  };
+
+  // ── Simpan & pulih draf borang merentasi redirect Google OAuth ──────────
+  // Google OAuth redirect keluar page & balik semula — state React akan hilang.
+  // Jadi kita simpan draf (termasuk anugerah & dokumen yang dipilih) ke
+  // sessionStorage sebelum redirect, dan pulihkan selepas login selesai.
+  const MAKMP_DRAFT_KEY = 'makmp_draft_v1';
+
+  const persistDraft = () => {
+    try {
+      sessionStorage.setItem(
+        MAKMP_DRAFT_KEY,
+        JSON.stringify({
+          fullName,
+          matricNo,
+          email,
+          phone,
+          department,
+          programmeCode,
+          semester,
+          intakeYear,
+          intakePeriod,
+          selectedAwardIds,
+          awardEntityData,
+          awardDocuments,
+          accountType,
+          step,
+        })
+      );
+    } catch (e) {
+      console.warn('Gagal simpan draf MAKMP:', e);
+    }
+  };
+
+  const restoreDraft = () => {
+    try {
+      const raw = sessionStorage.getItem(MAKMP_DRAFT_KEY);
+      if (!raw) return false;
+      const d = JSON.parse(raw);
+      if (d.fullName) setFullName(d.fullName);
+      if (d.matricNo) setMatricNo(d.matricNo);
+      if (d.email) setEmail(d.email);
+      if (d.phone) setPhone(d.phone);
+      if (d.department) setDepartment(d.department);
+      if (d.programmeCode) setProgrammeCode(d.programmeCode);
+      if (d.semester) setSemester(d.semester);
+      if (d.intakeYear) setIntakeYear(d.intakeYear);
+      if (d.intakePeriod) setIntakePeriod(d.intakePeriod);
+      if (Array.isArray(d.selectedAwardIds)) setSelectedAwardIds(d.selectedAwardIds);
+      if (d.awardEntityData) setAwardEntityData(d.awardEntityData);
+      if (d.awardDocuments) setAwardDocuments(d.awardDocuments);
+      if (d.accountType) setAccountType(d.accountType);
+      return true;
+    } catch (e) {
+      console.warn('Gagal pulih draf MAKMP:', e);
+      return false;
+    }
+  };
+
+  // ── Lengkapkan profil portal daripada data borang MAKMP ──────────────────
+  // Bila pelajar daftar/login Google melalui MAKMP, profil OAuth mereka
+  // selalunya tak lengkap (tiada matric/department/cohort). Kita upsert
+  // field yang diisi dalam borang MAKMP supaya profile modal auto-fill 100%.
+  const completeProfileFromMakmp = async (uid: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: fullName.trim().toUpperCase(),
+          matric_no: matricNo.trim().toUpperCase(),
+          phone: phone.trim(),
+          department: department,
+          programme_code: programmeCode.trim() || null,
+          intake_year: intakeYear ? Number(intakeYear) : null,
+          intake_period: intakePeriod ? Number(intakePeriod) : null,
+        })
+        .eq('id', uid);
+      if (error) console.warn('Gagal lengkapkan profil dari MAKMP:', error.message);
+      else console.log('✅ Profil dilengkapkan dari data MAKMP untuk', matricNo);
+    } catch (e) {
+      console.warn('Ralat lengkapkan profil:', e);
+    }
+  };
+
+  // ── Daftar/Login dengan Google (simpan draf + redirect) ──────────────────
+  const handleGoogleLink = async () => {
+    try {
+      setIsGoogleLinking(true);
+      persistDraft();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.href,
+        },
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      console.error('[MAKMP Google link error]', err);
+      setLoginError(err.message || 'Gagal menyambung ke Google.');
+      setIsGoogleLinking(false);
     }
   };
 
@@ -515,6 +667,8 @@ export default function MakmpPublicFormPage() {
     if (!matricNo.trim()) return 'Sila masukkan No. Matrik POLISAS yang sah.';
     if (!phone.trim()) return 'Sila masukkan No. Telefon / WhatsApp untuk dihubungi.';
     if (!department) return 'Sila pilih Jabatan akademik anda.';
+    if (!intakeYear) return 'Sila pilih Tahun Pengambilan anda.';
+    if (!intakePeriod) return 'Sila pilih Sesi Pengambilan anda.';
     return null;
   };
 
@@ -682,6 +836,8 @@ export default function MakmpPublicFormPage() {
           department: department,
           programme_code: programmeCode.trim() || null,
           semester: Number(semester) || 1,
+          intake_year: intakeYear ? Number(intakeYear) : null,
+          intake_period: intakePeriod ? Number(intakePeriod) : null,
         },
         awards: preparedAwardsPayload,
       });
@@ -1060,6 +1216,39 @@ export default function MakmpPublicFormPage() {
                     </div>
                   </form>
 
+                  <div className="flex items-center gap-3 pt-1">
+                    <div className="h-px flex-1 bg-slate-800/80" />
+                    <span className="text-[11px] font-semibold text-slate-500">atau</span>
+                    <div className="h-px flex-1 bg-slate-800/80" />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleGoogleLink}
+                    disabled={isGoogleLinking}
+                    className="w-full py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs transition flex items-center justify-center gap-2 disabled:opacity-60 shadow-sm"
+                  >
+                    {isGoogleLinking ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Menyambung ke Google...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
+                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        <span>Daftar / Log Masuk dengan Google</span>
+                      </>
+                    )}
+                  </button>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    💡 Daftar dengan Google supaya sijil & merit MAKMP anda auto-link ke akaun JPP Portal dan profil diisi automatik.
+                  </p>
+
                   <div className="pt-3 border-t border-slate-800/80">
                     <label className="text-[11px] font-semibold text-slate-400 flex items-center gap-1.5 mb-2">
                       <Search className="w-3.5 h-3.5 text-amber-400" />
@@ -1162,20 +1351,58 @@ export default function MakmpPublicFormPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                      Semester
+                      Tahun Pengambilan <span className="text-rose-400">*</span>
                     </label>
                     <select
-                      value={semester}
-                      onChange={(e) => setSemester(Number(e.target.value))}
+                      value={intakeYear}
+                      onChange={(e) => setIntakeYear(e.target.value ? Number(e.target.value) : '')}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-amber-500 transition"
                     >
-                      {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
-                        <option key={s} value={s}>
-                          Sem {s}
+                      <option value="">Pilih tahun...</option>
+                      {INTAKE_YEARS().map((y) => (
+                        <option key={y} value={y}>
+                          {y}
                         </option>
                       ))}
                     </select>
                   </div>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                    Sesi Pengambilan <span className="text-rose-400">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIntakePeriod(1)}
+                      className={`px-3 py-2.5 rounded-xl border text-sm font-semibold transition ${
+                        intakePeriod === 1
+                          ? 'border-amber-500 bg-amber-500/10 text-amber-300'
+                          : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      Intake 1
+                      <span className="block text-[10px] font-normal opacity-70">Pertengahan Tahun</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIntakePeriod(2)}
+                      className={`px-3 py-2.5 rounded-xl border text-sm font-semibold transition ${
+                        intakePeriod === 2
+                          ? 'border-amber-500 bg-amber-500/10 text-amber-300'
+                          : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      Intake 2
+                      <span className="block text-[10px] font-normal opacity-70">Awal Tahun</span>
+                    </button>
+                  </div>
+                  {intakeYear && intakePeriod && (
+                    <p className="text-[11px] text-slate-500 mt-1">
+                      Semasa: Semester {semester}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -1985,6 +2212,48 @@ export default function MakmpPublicFormPage() {
                   </span>
                 </div>
               </div>
+
+              {/* Tawaran daftar Google untuk tetamu (belum ada akaun) */}
+              {!user && !submissionResult.has_portal_account && (
+                <div className="p-4 rounded-xl bg-gradient-to-b from-amber-500/10 to-slate-900 border border-amber-500/30 space-y-3">
+                  <div className="flex items-start gap-2.5">
+                    <div className="p-2 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400 shrink-0">
+                      <UserPlus className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-white">
+                        Belum ada akaun JPP Portal?
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Daftar dengan Google sekarang supaya sijil & merit MAKMP ini auto-link ke dokumen peribadi e-akademik anda, dan profil diisi automatik daripada data borang ini.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleGoogleLink}
+                    disabled={isGoogleLinking}
+                    className="w-full py-3 rounded-xl bg-white hover:bg-slate-100 text-slate-800 font-bold text-sm transition flex items-center justify-center gap-2 disabled:opacity-60"
+                  >
+                    {isGoogleLinking ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Menyambung ke Google...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
+                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        <span>Daftar / Log Masuk dengan Google</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
