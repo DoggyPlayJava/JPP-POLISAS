@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import {
   Search,
   Award,
@@ -19,14 +19,19 @@ import {
   Calendar,
   Loader2,
   FolderOpen,
+  LogIn,
+  UserPlus,
+  ShieldCheck,
 } from 'lucide-react';
-import { fetchSubmissionByTrackingCode, getMakmpWhatsAppUrl } from '@/lib/makmp';
+import { fetchSubmissionByTrackingCode, getMakmpWhatsAppUrl, claimMakmpSubmission, MakmpClaimResult } from '@/lib/makmp';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import type { MakmpSubmission } from '@/types';
 import { MakmpJppChrome, MakmpJppHeader } from '@/components/makmp/MakmpJppChrome';
 
 export default function MakmpStatusTrackingPage() {
-  const { profile } = useAuth();
+  const { user, profile, refetchProfile } = useAuth();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialCode = searchParams.get('code') || '';
 
@@ -36,6 +41,13 @@ export default function MakmpStatusTrackingPage() {
   const [hasSearched, setHasSearched] = useState(false);
   const [copied, setCopied] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Claim state (pautkan submission tetamu ke akaun)
+  const [claiming, setClaiming] = useState(false);
+  const [claimMsg, setClaimMsg] = useState<{ type: 'success' | 'error' | 'confirm'; text: string } | null>(null);
+  const [pendingClaim, setPendingClaim] = useState<MakmpClaimResult | null>(null);
+  const [isGoogleLinking, setIsGoogleLinking] = useState(false);
+  const claimAttemptedRef = useRef(false);
 
   // Auto-load jika ada parameter code dalam URL
   useEffect(() => {
@@ -75,6 +87,101 @@ export default function MakmpStatusTrackingPage() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  // ── Claim / pautkan submission tetamu ke akaun ────────────────────────────
+  const persistClaimCode = () => {
+    try {
+      sessionStorage.setItem('makmp_claim_code', submission?.tracking_code || '');
+    } catch { /* abaikan */ }
+  };
+
+  const handleGoogleClaim = async () => {
+    try {
+      setIsGoogleLinking(true);
+      persistClaimCode();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.href },
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      console.error('[MAKMP claim Google error]', err);
+      setClaimMsg({ type: 'error', text: err.message || 'Gagal menyambung ke Google.' });
+      setIsGoogleLinking(false);
+    }
+  };
+
+  // Lengkapkan profil portal daripada data submission (selepas claim)
+  const completeProfileFromSubmission = async () => {
+    if (!user || !submission) return;
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          matric_no: (profile?.matric_no?.trim() ? profile.matric_no : submission.matric_no).toUpperCase(),
+          full_name: (profile?.full_name?.trim() ? profile.full_name : submission.full_name).toUpperCase(),
+          phone: (profile?.phone?.trim() ? profile.phone : submission.phone || '').trim(),
+          department: profile?.department?.trim() ? profile.department : (submission.department || ''),
+          programme_code: profile?.programme_code?.trim() ? profile.programme_code : (submission.programme_code || null),
+          intake_year: profile?.intake_year ? profile.intake_year : (submission.intake_year || null),
+          intake_period: profile?.intake_period ? profile.intake_period : (submission.intake_period || null),
+        })
+        .eq('id', user.id);
+      if (error) console.warn('Gagal lengkapkan profil dari submission:', error.message);
+      else {
+        console.log('✅ Profil dilengkapkan dari submission MAKMP');
+        await refetchProfile?.();
+      }
+    } catch (e) {
+      console.warn('Ralat lengkapkan profil:', e);
+    }
+  };
+
+  const doClaim = async (force: boolean) => {
+    if (!submission) return;
+    setClaiming(true);
+    setClaimMsg(null);
+    try {
+      const res = await claimMakmpSubmission(submission.tracking_code, force);
+      if (res.success && res.claimed) {
+        setClaimMsg({
+          type: 'success',
+          text: res.message || 'Permohonan berjaya dipautkan ke akaun anda.',
+        });
+        setPendingClaim(null);
+        await completeProfileFromSubmission();
+        // Refresh submission supaya user_id ter-update
+        const fresh = await fetchSubmissionByTrackingCode(submission.tracking_code);
+        if (fresh) setSubmission(fresh);
+      } else if (res.needs_confirmation) {
+        setPendingClaim(res);
+        setClaimMsg({
+          type: 'confirm',
+          text: 'Maklumat akaun tidak sepadan. Sahkan ini permohonan anda?',
+        });
+      } else {
+        setClaimMsg({ type: 'error', text: res.message || 'Gagal memautkan permohonan.' });
+      }
+    } catch (err: any) {
+      setClaimMsg({ type: 'error', text: err.message || 'Gagal memautkan permohonan.' });
+    } finally {
+      setClaiming(false);
+    }
+  };
+
+  // Auto-claim selepas login Google (bila ada kod claim disimpan & submission tetamu)
+  useEffect(() => {
+    if (!user || !submission || submission.user_id) return;
+    if (claimAttemptedRef.current) return;
+    const savedCode = sessionStorage.getItem('makmp_claim_code');
+    if (!savedCode) return;
+    if (savedCode.toUpperCase() !== submission.tracking_code.toUpperCase()) return;
+
+    claimAttemptedRef.current = true;
+    sessionStorage.removeItem('makmp_claim_code');
+    doClaim(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, submission]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -241,6 +348,99 @@ export default function MakmpStatusTrackingPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Claim / Pautkan ke Akaun (hanya bila submission belum ada user_id) */}
+              {!submission.user_id && (
+                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-3">
+                  <div className="flex items-start gap-2.5">
+                    <div className="p-2 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400 shrink-0">
+                      <UserPlus className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm text-white">
+                        Permohonan ini belum dipautkan ke akaun JPP Portal
+                      </div>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Pautkan akaun anda supaya sijil & merit yang diluluskan nanti auto-simpan ke dokumen peribadi e-akademik anda.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Belum login → tawarkan login Google */}
+                  {!user && (
+                    <button
+                      type="button"
+                      onClick={handleGoogleClaim}
+                      disabled={isGoogleLinking}
+                      className="w-full py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs transition flex items-center justify-center gap-2 disabled:opacity-60"
+                    >
+                      {isGoogleLinking ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Menyambung ke Google...</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                          </svg>
+                          <span>Log Masuk dengan Google untuk Pautkan</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+
+                  {/* Sudah login → tawarkan claim */}
+                  {user && (
+                    <>
+                      {claimMsg?.type === 'confirm' && pendingClaim ? (
+                        <div className="p-3 rounded-lg bg-amber-950/40 border border-amber-500/40 space-y-2">
+                          <p className="text-xs text-amber-200">
+                            Akaun anda (<span className="font-mono">{pendingClaim.profile_matric || pendingClaim.profile_email || 'tiada matric'}</span>) tidak sepadan dengan permohonan (<span className="font-mono">{pendingClaim.submission_matric}</span>). Adakah ini permohonan anda?
+                          </p>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => doClaim(true)}
+                              disabled={claiming}
+                              className="flex-1 px-3 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+                            >
+                              {claiming ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+                              Ya, Pautkan
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setClaimMsg(null); setPendingClaim(null); }}
+                              className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition"
+                            >
+                              Batal
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => doClaim(false)}
+                          disabled={claiming}
+                          className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          {claiming ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-4 h-4" />}
+                          <span>Pautkan ke Akaun Saya</span>
+                        </button>
+                      )}
+                    </>
+                  )}
+
+                  {claimMsg && claimMsg.type !== 'confirm' && (
+                    <p className={`text-xs ${claimMsg.type === 'success' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {claimMsg.type === 'success' ? '✅ ' : '⚠️ '}{claimMsg.text}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Lulus Merit Highlight */}
               {submission.status === 'DISAHKAN' && (

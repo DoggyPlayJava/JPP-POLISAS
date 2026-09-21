@@ -781,6 +781,37 @@ export async function fetchSubmissionByTrackingCode(code: string): Promise<Makmp
   return data as MakmpSubmission;
 }
 
+/** Claim (pautkan) submission MAKMP tetamu ke akaun pengguna semasa.
+ *  RPC validate matric_no/email match; return metadata untuk UI confirm. */
+export interface MakmpClaimResult {
+  success: boolean;
+  claimed?: boolean;
+  already_claimed?: boolean;
+  needs_confirmation?: boolean;
+  matric_match?: boolean;
+  email_match?: boolean;
+  profile_matric?: string;
+  submission_matric?: string;
+  profile_email?: string;
+  submission_email?: string;
+  message?: string;
+}
+
+export async function claimMakmpSubmission(
+  trackingCode: string,
+  force: boolean = false
+): Promise<MakmpClaimResult> {
+  const { data, error } = await supabase.rpc('claim_makmp_submission', {
+    p_tracking_code: trackingCode.trim().toUpperCase(),
+    p_force: force,
+  });
+
+  if (error) {
+    return { success: false, message: error.message };
+  }
+  return (data as MakmpClaimResult) || { success: false, message: 'Tiada maklum balas daripada pelayan.' };
+}
+
 /** Sahkan Kod PIN Juri MAKMP */
 export async function verifyJuryPin(pinCode: string): Promise<{
   isValid: boolean;
