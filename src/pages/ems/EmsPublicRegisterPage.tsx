@@ -409,11 +409,13 @@ export function EmsPublicRegisterPage() {
       if (!validateStep2()) return;
       setCurrentStep(3);
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handlePrevStep = () => {
     if (currentStep > 1 && currentStep < 4) {
       setCurrentStep(currentStep - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 

@@ -397,25 +397,35 @@ export async function uploadMakmpCertificate(
   const cleanMatric = (matricNo || 'PELAJAR').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
   const customName = `MAKMP_${cleanMatric}_SIJIL_${index + 1}_${Date.now()}`;
 
-  // 1. Cuba upload ke Google Drive via Express backend
+  // 1. Cuba upload ke Google Drive via Express backend (dengan timeout supaya
+  //    tak hang bila Google lambat → "failed to fetch")
   try {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('subfolder', 'makmp_sijil');
     formData.append('customName', customName);
 
-    const res = await fetch('/api/makmp/upload-sijil', {
-      method: 'POST',
-      body: formData,
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s
 
-    if (res.ok) {
-      const data = await res.json();
-      if (data?.url) {
-        return { url: data.url, fileId: data.fileId };
+    try {
+      const res = await fetch('/api/makmp/upload-sijil', {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.url) {
+          clearTimeout(timeoutId);
+          return { url: data.url, fileId: data.fileId };
+        }
       }
+      console.warn('[MAKMP Upload] Drive upload endpoint returned non-OK, falling back to Supabase Storage.');
+    } finally {
+      clearTimeout(timeoutId);
     }
-    console.warn('[MAKMP Upload] Drive upload endpoint returned non-OK, falling back to Supabase Storage.');
   } catch (err) {
     console.warn('[MAKMP Upload] Drive upload failed, falling back to Supabase Storage:', err);
   }

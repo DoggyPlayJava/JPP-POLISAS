@@ -72,6 +72,7 @@ import type {
   MakmpDocumentType,
   AkademikImportCertItem,
 } from '@/types';
+import { getSemesterInfo } from '@/types';
 
 interface CertFormItem {
   id: string;
@@ -93,6 +94,12 @@ interface CertFormItem {
 export default function MakmpPublicFormPage() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
+
+  // Scroll ke atas (header form) — dipanggil bila step bertukar / error muncul
+  // supaya student nampak perubahan & error di atas, bukan tersangkut di bawah.
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Data Edisi, Kategori & Definisi Anugerah
   const [loadingInitial, setLoadingInitial] = useState(true);
@@ -176,7 +183,20 @@ export default function MakmpPublicFormPage() {
       setPhone(profile.phone || '');
       if (profile.department) setDepartment(profile.department.toLowerCase());
       if (profile.programme_code) setProgrammeCode(profile.programme_code);
-      if (profile.semester) setSemester(Number(profile.semester) || 1);
+      // Auto-fetch semester dari data intake (profiles takde column 'semester' — dikira dari intake_year/period)
+      if (profile.semester_override) {
+        setSemester(Number(profile.semester_override) || 1);
+      } else if (profile.intake_year) {
+        const si = getSemesterInfo(
+          profile.intake_year,
+          (profile.intake_period as 1 | 2) || 1,
+          profile.programme_code === 'FTV',
+          undefined,
+          undefined,
+          profile.semester_override
+        );
+        setSemester(si.semester || 1);
+      }
       setHasPortalAccount(true);
       setSelectedUserId(user.id);
       setAccountType('PORTAL');
@@ -645,6 +665,7 @@ export default function MakmpPublicFormPage() {
     } catch (err: any) {
       console.error('[MAKMP Multi-Award Submission Error]', err);
       setErrorMessage(err.message || 'Berlaku ralat semasa menghantar permohonan. Sila cuba lagi.');
+      scrollToTop();
     } finally {
       setIsSubmitting(false);
       setUploadProgressText('');
@@ -1134,11 +1155,12 @@ export default function MakmpPublicFormPage() {
                   const err = validateStep1();
                   if (err) {
                     setErrorMessage(err);
+                    scrollToTop();
                     return;
                   }
                   setErrorMessage(null);
                   setStep(2);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  scrollToTop();
                 }}
                 className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-sm hover:brightness-110 shadow-lg shadow-amber-500/20 transition flex items-center gap-2"
               >
@@ -1329,7 +1351,7 @@ export default function MakmpPublicFormPage() {
             <div className="flex items-center justify-between">
               <button
                 type="button"
-                onClick={() => setStep(1)}
+                onClick={() => { setStep(1); scrollToTop(); }}
                 className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm transition flex items-center gap-2"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -1342,6 +1364,7 @@ export default function MakmpPublicFormPage() {
                   const err = validateStep2();
                   if (err) {
                     setErrorMessage(err);
+                    scrollToTop();
                     return;
                   }
                   setErrorMessage(null);
@@ -1349,7 +1372,7 @@ export default function MakmpPublicFormPage() {
                     setActiveAwardTabId(selectedAwardIds[0]);
                   }
                   setStep(3);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  scrollToTop();
                 }}
                 className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-sm hover:brightness-110 shadow-lg shadow-amber-500/20 transition flex items-center gap-2"
               >
@@ -1785,7 +1808,7 @@ export default function MakmpPublicFormPage() {
               <button
                 type="button"
                 disabled={isSubmitting}
-                onClick={() => setStep(2)}
+                onClick={() => { setStep(2); scrollToTop(); }}
                 className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm transition flex items-center gap-2 disabled:opacity-50"
               >
                 <ArrowLeft className="w-4 h-4" />
