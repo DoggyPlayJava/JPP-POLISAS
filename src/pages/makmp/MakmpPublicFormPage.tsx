@@ -922,7 +922,7 @@ export default function MakmpPublicFormPage() {
           tracking_code: trackingCode,
           edition_id: edition.id,
           user_id: selectedUserId || (user ? user.id : null),
-          has_portal_account: hasPortalAccount || !!user,
+          has_portal_account: !!(selectedUserId || user),
           full_name: fullName.trim().toUpperCase(),
           matric_no: matricNo.trim().toUpperCase(),
           email: email.trim() || null,
