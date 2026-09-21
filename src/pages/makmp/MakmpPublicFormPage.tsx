@@ -166,6 +166,7 @@ export default function MakmpPublicFormPage() {
   const [loginPassword, setLoginPassword] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isGoogleLinking, setIsGoogleLinking] = useState(false);
+  const [emailMismatch, setEmailMismatch] = useState<{ google: string; form: string } | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -274,12 +275,48 @@ export default function MakmpPublicFormPage() {
   //     supaya profile modal auto-fill 100% — pelajar tak perlu isi semula.
   useEffect(() => {
     if (user && draftRestoredRef.current && matricNo.trim()) {
+      // Semak emel Google vs emel borang — kalau berbeza, minta confirm dulu.
+      let dFormEmail = '';
+      try {
+        const raw = sessionStorage.getItem(MAKMP_DRAFT_KEY);
+        if (raw) dFormEmail = JSON.parse(raw)?.email || '';
+      } catch { /* abaikan */ }
+      const googleEmail = user.email || '';
+      const formEmail = dFormEmail || email || '';
+
+      if (
+        formEmail &&
+        googleEmail &&
+        formEmail.trim().toLowerCase() !== googleEmail.trim().toLowerCase()
+      ) {
+        setEmailMismatch({ google: googleEmail, form: formEmail });
+        // Jangan auto-lengkap — tunggu pengguna sahkan.
+        draftRestoredRef.current = false;
+        return;
+      }
+
       completeProfileFromMakmp(user.id);
       // Sekali sahaja — jangan ulang setiap kali matricNo berubah
       draftRestoredRef.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // Pengesahan emel berbeza — link profil selepas pengguna sahkan.
+  const confirmEmailMismatchLink = async () => {
+    if (!user) return;
+    await completeProfileFromMakmp(user.id);
+    setEmailMismatch(null);
+    sessionStorage.removeItem(MAKMP_DRAFT_KEY);
+  };
+
+  const cancelEmailMismatch = async () => {
+    setEmailMismatch(null);
+    await supabase.auth.signOut();
+    setSelectedUserId(null);
+    setHasPortalAccount(false);
+    setAccountType('MANUAL');
+  };
 
   // 3. Muat turun sijil e-Akademik pelajar apabila user atau matricNo wujud
   useEffect(() => {
@@ -411,20 +448,41 @@ export default function MakmpPublicFormPage() {
   // field yang diisi dalam borang MAKMP supaya profile modal auto-fill 100%.
   const completeProfileFromMakmp = async (uid: string) => {
     try {
+      // Baca nilai autoritatif daripada draf (sessionStorage) — bukan state
+      // React — supaya tak kena isu async timing selepas redirect OAuth.
+      let d: any = null;
+      try {
+        const raw = sessionStorage.getItem(MAKMP_DRAFT_KEY);
+        if (raw) d = JSON.parse(raw);
+      } catch { /* abaikan */ }
+
+      const dName = (d?.fullName || fullName || '').trim().toUpperCase();
+      const dMatric = (d?.matricNo || matricNo || '').trim().toUpperCase();
+      const dPhone = (d?.phone || phone || '').trim();
+      const dDept = d?.department || department || '';
+      const dProg = (d?.programmeCode || programmeCode || '').trim() || null;
+      const dIntakeYear = d?.intakeYear || intakeYear || '';
+      const dIntakePeriod = d?.intakePeriod || intakePeriod || '';
+
+      if (!dMatric) {
+        console.warn('completeProfileFromMakmp: matric kosong, skip.');
+        return;
+      }
+
       const { error } = await supabase
         .from('profiles')
         .update({
-          full_name: fullName.trim().toUpperCase(),
-          matric_no: matricNo.trim().toUpperCase(),
-          phone: phone.trim(),
-          department: department,
-          programme_code: programmeCode.trim() || null,
-          intake_year: intakeYear ? Number(intakeYear) : null,
-          intake_period: intakePeriod ? Number(intakePeriod) : null,
+          full_name: dName,
+          matric_no: dMatric,
+          phone: dPhone,
+          department: dDept,
+          programme_code: dProg,
+          intake_year: dIntakeYear ? Number(dIntakeYear) : null,
+          intake_period: dIntakePeriod ? Number(dIntakePeriod) : null,
         })
         .eq('id', uid);
       if (error) console.warn('Gagal lengkapkan profil dari MAKMP:', error.message);
-      else console.log('✅ Profil dilengkapkan dari data MAKMP untuk', matricNo);
+      else console.log('✅ Profil dilengkapkan dari data MAKMP untuk', dMatric);
     } catch (e) {
       console.warn('Ralat lengkapkan profil:', e);
     }
@@ -1088,6 +1146,40 @@ export default function MakmpPublicFormPage() {
                   </div>
                 </button>
               </div>
+
+              {/* Amaran emel berbeza selepas login Google */}
+              {emailMismatch && (
+                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/40 space-y-3">
+                  <div className="flex items-start gap-2.5">
+                    <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <div className="font-bold text-amber-200">Emel Google berbeza dengan emel borang</div>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Akaun Google anda (<span className="font-mono text-amber-300">{emailMismatch.google}</span>) tidak sama dengan emel yang anda isi dalam borang (<span className="font-mono text-amber-300">{emailMismatch.form}</span>).
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Jika No. Matrik anda betul, tekan <b>Sahkan & Link</b>. Jika ini akaun Google yang salah, tekan <b>Tukar Akaun</b>.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      type="button"
+                      onClick={confirmEmailMismatchLink}
+                      className="flex-1 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition"
+                    >
+                      Sahkan & Link Akaun
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelEmailMismatch}
+                      className="flex-1 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition"
+                    >
+                      Tukar Akaun Google
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Jika pilih akaun portal dan sudah login, tampilkan kad profil disahkan */}
               {accountType === 'PORTAL' && profile && (
