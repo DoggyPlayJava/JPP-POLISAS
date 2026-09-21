@@ -47,6 +47,7 @@ import type {
   MakmpPeringkat,
   MakmpPencapaianType,
 } from '@/types';
+import { MakmpJppChrome, MakmpJppHeader } from '@/components/makmp/MakmpJppChrome';
 
 const CANNED_REJECTION_REASONS = [
   'Fail laporan / sijil kabur atau tidak dapat dibaca.',
@@ -398,6 +399,8 @@ export default function MakmpJuryPortalPage() {
   // ==========================================================================
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-slate-950">
+
+      <MakmpJppHeader subtitle="Portal Juri" />
       {/* Header Bar */}
       <header className="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-xl sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -1091,6 +1094,8 @@ export default function MakmpJuryPortalPage() {
           </div>
         </div>
       )}
+
+      <MakmpJppChrome />
     </div>
   );
 }

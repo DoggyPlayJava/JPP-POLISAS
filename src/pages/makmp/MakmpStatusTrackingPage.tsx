@@ -23,6 +23,7 @@ import {
 import { fetchSubmissionByTrackingCode, getMakmpWhatsAppUrl } from '@/lib/makmp';
 import { useAuth } from '@/contexts/AuthContext';
 import type { MakmpSubmission } from '@/types';
+import { MakmpJppChrome, MakmpJppHeader } from '@/components/makmp/MakmpJppChrome';
 
 export default function MakmpStatusTrackingPage() {
   const { profile } = useAuth();
@@ -110,6 +111,8 @@ export default function MakmpStatusTrackingPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-slate-950">
+
+      <MakmpJppHeader subtitle="Semakan Status Permohonan" />
       {/* Header Bar */}
       <header className="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-xl sticky top-0 z-30">
         <div className="max-w-4xl mx-auto px-4 py-3.5 flex items-center justify-between">
@@ -555,6 +558,8 @@ export default function MakmpStatusTrackingPage() {
           </div>
         )}
       </main>
+
+      <MakmpJppChrome />
     </div>
   );
 }

@@ -73,6 +73,7 @@ import type {
   AkademikImportCertItem,
 } from '@/types';
 import { getSemesterInfo } from '@/types';
+import { MakmpJppChrome, MakmpJppHeader } from '@/components/makmp/MakmpJppChrome';
 
 interface CertFormItem {
   id: string;
@@ -719,6 +720,8 @@ export default function MakmpPublicFormPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-slate-950">
+
+      <MakmpJppHeader subtitle="Majlis Anugerah Kecemerlangan" />
       {/* Header Bar */}
       <header className="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-xl sticky top-0 z-30">
         <div className="max-w-4xl mx-auto px-4 py-3.5 flex items-center justify-between">
@@ -2215,6 +2218,8 @@ export default function MakmpPublicFormPage() {
         </div>
       )}
       </main>
+
+      <MakmpJppChrome />
     </div>
   );
 }
