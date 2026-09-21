@@ -33,6 +33,7 @@ import {
   verifyJuryPin,
   fetchJuryAwardApplications,
   saveJuryAwardReview,
+  markAwardInReview,
   calculateSuggestedMerit,
   PERINGKAT_OPTIONS,
   PENCAPAIAN_TYPE_OPTIONS,
@@ -174,6 +175,19 @@ export default function MakmpJuryPortalPage() {
     setActiveAward(awApp);
     setReviewNotes(awApp.review_notes || '');
     setRejectionReason(awApp.rejection_reason || '');
+
+    // Bila juri buka anugerah yang masih MENUNGGU, auto tanda DALAM_SEMAKAN
+    // supaya student nampak permohonan mereka sedang disemak (bukan terus
+    // lompat MENUNGGU -> DISAHKAN/DITOLAK).
+    if (awApp.status === 'MENUNGGU') {
+      markAwardInReview(awApp.id).then((ok) => {
+        if (ok) {
+          setAwardApplications((prev) =>
+            prev.map((a) => (a.id === awApp.id ? { ...a, status: 'DALAM_SEMAKAN' as MakmpSubmissionStatus } : a))
+          );
+        }
+      });
+    }
 
     const items = (awApp.items || []).map((item) => ({
       id: item.id,

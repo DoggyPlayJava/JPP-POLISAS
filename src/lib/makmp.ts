@@ -904,6 +904,50 @@ export async function fetchJurySubmissions(editionId: string, assignedCategories
   return (data || []) as MakmpSubmission[];
 }
 
+/** Tanda anugerah sebagai DALAM_SEMAKAN bila juri mula menyemaknya */
+export async function markAwardInReview(
+  awardApplicationId: string
+): Promise<boolean> {
+  // Dapatkan submission_id terlebih dahulu
+  const { data: awardRow, error: fetchErr } = await supabase
+    .from('makmp_submission_awards')
+    .select('submission_id, status')
+    .eq('id', awardApplicationId)
+    .maybeSingle();
+
+  if (fetchErr || !awardRow) {
+    console.error('[MAKMP] markAwardInReview fetch error:', fetchErr);
+    return false;
+  }
+
+  // Cuma tanda DALAM_SEMAKAN kalau anugerah masih MENUNGGU
+  if (awardRow.status === 'MENUNGGU') {
+    const { error } = await supabase
+      .from('makmp_submission_awards')
+      .update({ status: 'DALAM_SEMAKAN' })
+      .eq('id', awardApplicationId);
+
+    if (error) {
+      console.error('[MAKMP] markAwardInReview update error:', error);
+      return false;
+    }
+  }
+
+  // Turunkan status master submission kepada DALAM_SEMAKAN (jika masih MENUNGGU)
+  // supaya student nampak "sedang disemak" pada tracking page sekali.
+  const { error: masterErr } = await supabase
+    .from('makmp_submissions')
+    .update({ status: 'DALAM_SEMAKAN' })
+    .eq('id', awardRow.submission_id)
+    .eq('status', 'MENUNGGU');
+
+  if (masterErr) {
+    console.error('[MAKMP] markAwardInReview master error:', masterErr);
+  }
+
+  return true;
+}
+
 /** Simpan semakan Juri ke atas sesuatu permohonan anugerah khusus (Multi-Award Review) */
 export async function saveJuryAwardReview(params: {
   awardApplicationId: string;

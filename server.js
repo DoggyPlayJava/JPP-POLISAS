@@ -1347,6 +1347,105 @@ app.post('/api/polysuara-interaction-notify', requireWebhookSecret, async (req, 
 });
 
 // ==========================================
+// 6d-bis. MAKMP Status Change Notification
+// Dicetuskan oleh Supabase DB Trigger pada UPDATE status makmp_submissions /
+// makmp_submission_awards. Hantar in-app + push notification kepada pelajar
+// pemohon bila status permohonan anugerah mereka berubah (DALAM_SEMAKAN,
+// DISAHKAN, DITOLAK).
+// ==========================================
+app.post('/api/makmp-notify', requireWebhookSecret, async (req, res) => {
+    try {
+        if (!supabaseAdmin) throw new Error('Supabase Admin Client not initialized.');
+
+        const { recipientId, title, message, type, link, referenceId } = req.body || {};
+
+        if (!recipientId || !title || !message) {
+            return res.status(400).json({ error: 'recipientId, title, and message are required.' });
+        }
+
+        // 1. Masukkan notifikasi in-app
+        const { error: notifErr } = await supabaseAdmin
+            .from('notifications')
+            .insert({
+                user_id: recipientId,
+                title,
+                message,
+                type: type || 'MAKMP',
+                module: 'MAKMP',
+                link: link || '/makmp/status',
+                reference_id: referenceId || null,
+                is_read: false
+            });
+
+        if (notifErr) {
+            console.error('[makmp-notify] In-app insert error:', notifErr.message);
+        }
+
+        // 2. Dapatkan push subscriptions untuk penerima
+        const { data: subs, error: subsError } = await supabaseAdmin
+            .from('push_subscriptions')
+            .select('id, user_id, endpoint, p256dh, auth')
+            .eq('user_id', recipientId);
+
+        if (subsError) throw subsError;
+
+        let sent = 0;
+        let failed = 0;
+        const staleIds = [];
+
+        if (subs && subs.length > 0) {
+            const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:jpp@cipher-node.org';
+            const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
+            const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+
+            if (vapidPublicKey && vapidPrivateKey) {
+                webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+
+                const pushPayload = JSON.stringify({
+                    title,
+                    body: message,
+                    icon: '/icon-192-maskable.png',
+                    badge: '/icon-192-maskable.png',
+                    tag: 'makmp-status',
+                    renotify: true,
+                    data: { url: link || '/makmp/status', link: link || '/makmp/status', module: 'MAKMP', type: type || 'MAKMP' }
+                });
+
+                const BATCH_SIZE = 20;
+                for (let i = 0; i < subs.length; i += BATCH_SIZE) {
+                    const batch = subs.slice(i, i + BATCH_SIZE);
+                    await Promise.allSettled(
+                        batch.map(async (sub) => {
+                            try {
+                                await webpush.sendNotification(
+                                    { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+                                    pushPayload
+                                );
+                                sent++;
+                            } catch (e) {
+                                failed++;
+                                if (e.statusCode === 410) staleIds.push(sub.id);
+                            }
+                        })
+                    );
+                }
+
+                if (staleIds.length > 0) {
+                    await supabaseAdmin.from('push_subscriptions').delete().in('id', staleIds);
+                    console.log(`[makmp-notify] Removed ${staleIds.length} stale subscription(s).`);
+                }
+            }
+        }
+
+        console.log(`[makmp-notify] Notified user:${recipientId} -> Sent:${sent} Failed:${failed}`);
+        return res.status(200).json({ success: true, sent, failed });
+    } catch (error) {
+        console.error('[makmp-notify] Error:', error.message);
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+// ==========================================
 // 6d. PolyMart Chat Notification
 // Dicetuskan oleh Supabase DB Trigger pada INSERT ke `polymart_messages`.
 // Logik recipient (BUKAN broadcast semua pelajar):
