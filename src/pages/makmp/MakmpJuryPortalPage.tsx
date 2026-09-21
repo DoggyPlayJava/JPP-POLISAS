@@ -154,7 +154,7 @@ export default function MakmpJuryPortalPage() {
   const loadApplications = async (editionId: string, assignedCats: string[]) => {
     setLoadingAwards(true);
     try {
-      const data = await fetchJuryAwardApplications(editionId, assignedCats);
+      const data = await fetchJuryAwardApplications(editionId, assignedCats, juryPin?.pin_code);
       setAwardApplications(data);
     } catch (err) {
       console.error(err);
@@ -181,7 +181,7 @@ export default function MakmpJuryPortalPage() {
     // supaya student nampak permohonan mereka sedang disemak (bukan terus
     // lompat MENUNGGU -> DISAHKAN/DITOLAK).
     if (awApp.status === 'MENUNGGU') {
-      markAwardInReview(awApp.id).then((ok) => {
+      markAwardInReview(awApp.id, juryPin?.pin_code).then((ok) => {
         if (ok) {
           setAwardApplications((prev) =>
             prev.map((a) => (a.id === awApp.id ? { ...a, status: 'DALAM_SEMAKAN' as MakmpSubmissionStatus } : a))
@@ -250,6 +250,7 @@ export default function MakmpJuryPortalPage() {
         awardApplicationId: activeAward.id,
         submissionId: activeAward.submission.id,
         pinId: juryPin?.id,
+        pinCode: juryPin?.pin_code,
         status,
         reviewNotes,
         rejectionReason: finalReason,

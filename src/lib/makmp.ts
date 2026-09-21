@@ -811,57 +811,37 @@ export async function verifyJuryPin(pinCode: string): Promise<{
 }> {
   const cleanPin = pinCode.trim();
 
-  const { data: pin, error: pinErr } = await supabase
-    .from('makmp_jury_pins')
-    .select('*')
-    .eq('pin_code', cleanPin)
-    .eq('is_active', true)
-    .maybeSingle();
+  // PIN diverifikasi di DATABASE (RPC SECURITY DEFINER) — bukan client sahaja.
+  const { data, error } = await supabase.rpc('verify_jury_pin', {
+    p_pin: cleanPin,
+  });
 
-  if (pinErr || !pin) {
-    return { isValid: false, pinData: null, edition: null, message: 'Kod PIN tidak sah atau telah dinyahaktifkan.' };
+  if (error || !data || data.valid !== true) {
+    return {
+      isValid: false,
+      pinData: null,
+      edition: null,
+      message: data?.message || error?.message || 'Kod PIN tidak sah atau telah dinyahaktifkan.',
+    };
   }
-
-  const { data: edition } = await supabase
-    .from('makmp_editions')
-    .select('*')
-    .eq('id', pin.edition_id)
-    .maybeSingle();
 
   return {
     isValid: true,
-    pinData: pin,
-    edition: edition || null,
+    pinData: (data.pin as MakmpJuryPin) || null,
+    edition: (data.edition as MakmpEdition) || null,
   };
 }
 
 /** Dapatkan senarai permohonan anugerah untuk semakan Juri (Multi-Award Review Queue) */
 export async function fetchJuryAwardApplications(
   editionId: string,
-  assignedCategories: string[] = []
+  assignedCategories: string[] = [],
+  pinCode?: string
 ): Promise<MakmpSubmissionAward[]> {
-  const { data, error } = await supabase
-    .from('makmp_submission_awards')
-    .select(`
-      *,
-      submission:makmp_submissions(
-        id,
-        tracking_code,
-        edition_id,
-        full_name,
-        matric_no,
-        phone,
-        email,
-        department,
-        programme_code,
-        semester,
-        has_portal_account,
-        user_id
-      ),
-      award:makmp_award_definitions(*),
-      items:makmp_submission_items(*)
-    `)
-    .order('created_at', { ascending: false });
+  // Data diambil melalui RPC SECURITY DEFINER yang verify PIN di DB.
+  const { data, error } = await supabase.rpc('fetch_jury_award_applications', {
+    p_pin: pinCode || '',
+  });
 
   if (error) {
     console.error('[fetchJuryAwardApplications Error]', error);
@@ -870,12 +850,11 @@ export async function fetchJuryAwardApplications(
 
   let list = (data || []) as MakmpSubmissionAward[];
 
-  // 1. Tapis mengikut editionId jika ada
+  // Tapisan kategori masih dilakukan di client (sama seperti sebelum ini).
   if (editionId) {
     list = list.filter((a) => a.submission?.edition_id === editionId);
   }
 
-  // 2. Tapis mengikut assignedCategories jika bukan 'ALL'
   if (assignedCategories.length > 0 && !assignedCategories.includes('ALL')) {
     list = list.filter((a) => {
       const group = (a.award?.category_group || '').trim().toUpperCase();
@@ -884,13 +863,9 @@ export async function fetchJuryAwardApplications(
 
       return assignedCategories.some((cat) => {
         const c = cat.trim().toUpperCase();
-        // 1. Padanan tepat mengikut nama anugerah rasmi (cth: "Tokoh Keusahawanan Terbaik")
         if (name && c === name) return true;
-        // 2. Padanan tepat mengikut ID / Kod anugerah
         if (awardId && c === awardId) return true;
-        // 3. Padanan kumpulan kategori (cth: "ANUGERAH KEUSAHAWANAN")
         if (group && (c === group || group.includes(c) || c.includes(group))) return true;
-
         return false;
       });
     });
@@ -931,46 +906,20 @@ export async function fetchJurySubmissions(editionId: string, assignedCategories
 
 /** Tanda anugerah sebagai DALAM_SEMAKAN bila juri mula menyemaknya */
 export async function markAwardInReview(
-  awardApplicationId: string
+  awardApplicationId: string,
+  pinCode?: string
 ): Promise<boolean> {
-  // Dapatkan submission_id terlebih dahulu
-  const { data: awardRow, error: fetchErr } = await supabase
-    .from('makmp_submission_awards')
-    .select('submission_id, status')
-    .eq('id', awardApplicationId)
-    .maybeSingle();
+  const { data, error } = await supabase.rpc('mark_award_in_review', {
+    p_pin: pinCode || '',
+    p_award_id: awardApplicationId,
+  });
 
-  if (fetchErr || !awardRow) {
-    console.error('[MAKMP] markAwardInReview fetch error:', fetchErr);
+  if (error) {
+    console.error('[MAKMP] markAwardInReview error:', error);
     return false;
   }
 
-  // Cuma tanda DALAM_SEMAKAN kalau anugerah masih MENUNGGU
-  if (awardRow.status === 'MENUNGGU') {
-    const { error } = await supabase
-      .from('makmp_submission_awards')
-      .update({ status: 'DALAM_SEMAKAN' })
-      .eq('id', awardApplicationId);
-
-    if (error) {
-      console.error('[MAKMP] markAwardInReview update error:', error);
-      return false;
-    }
-  }
-
-  // Turunkan status master submission kepada DALAM_SEMAKAN (jika masih MENUNGGU)
-  // supaya student nampak "sedang disemak" pada tracking page sekali.
-  const { error: masterErr } = await supabase
-    .from('makmp_submissions')
-    .update({ status: 'DALAM_SEMAKAN' })
-    .eq('id', awardRow.submission_id)
-    .eq('status', 'MENUNGGU');
-
-  if (masterErr) {
-    console.error('[MAKMP] markAwardInReview master error:', masterErr);
-  }
-
-  return true;
+  return !!data?.success;
 }
 
 /** Simpan semakan Juri ke atas sesuatu permohonan anugerah khusus (Multi-Award Review) */
@@ -978,93 +927,30 @@ export async function saveJuryAwardReview(params: {
   awardApplicationId: string;
   submissionId: string;
   pinId?: string;
+  pinCode?: string;
   reviewerUserId?: string;
   status: MakmpSubmissionStatus;
   reviewNotes?: string;
   rejectionReason?: string;
   items: { id: string; merit_awarded: number; is_verified: boolean }[];
 }): Promise<{ success: boolean; message?: string }> {
-  // 1. Kemaskini item-item sijil / dokumen bagi anugerah ini
-  let totalMeritForAward = 0;
-  for (const item of params.items) {
-    const merit = params.status === 'DISAHKAN' ? Math.max(0, item.merit_awarded) : 0;
-    totalMeritForAward += merit;
+  // Seluruh semakan dilakukan dalam RPC SECURITY DEFINER (verify PIN di DB).
+  const { data, error } = await supabase.rpc('save_jury_award_review', {
+    p_pin: params.pinCode || '',
+    p_award_id: params.awardApplicationId,
+    p_submission_id: params.submissionId,
+    p_status: params.status,
+    p_review_notes: params.reviewNotes || null,
+    p_rejection_reason: params.rejectionReason || null,
+    p_items: params.items,
+  });
 
-    await supabase
-      .from('makmp_submission_items')
-      .update({
-        merit_awarded: merit,
-        is_verified: params.status === 'DISAHKAN',
-      })
-      .eq('id', item.id);
+  if (error) {
+    return { success: false, message: error.message };
   }
 
-  // 2. Kemaskini status permohonan anugerah khusus (makmp_submission_awards)
-  const { error: awErr } = await supabase
-    .from('makmp_submission_awards')
-    .update({
-      status: params.status,
-      total_merit_granted: totalMeritForAward,
-      reviewed_by_pin_id: params.pinId || null,
-      reviewed_at: new Date().toISOString(),
-      review_notes: params.reviewNotes || null,
-      rejection_reason: params.status === 'DITOLAK' ? params.rejectionReason : null,
-    })
-    .eq('id', params.awardApplicationId);
-
-  if (awErr) {
-    return { success: false, message: awErr.message };
-  }
-
-  // 3. Kemaskini status submission induk jika relevan
-  // Ambil semua anugerah bagi submission ini untuk kira status aggregate
-  const { data: allAwards } = await supabase
-    .from('makmp_submission_awards')
-    .select('status, total_merit_granted')
-    .eq('submission_id', params.submissionId);
-
-  if (allAwards && allAwards.length > 0) {
-    const hasAnyPending = allAwards.some((a) => a.status === 'MENUNGGU' || a.status === 'DALAM_SEMAKAN');
-    const allApproved = allAwards.every((a) => a.status === 'DISAHKAN');
-    const allRejected = allAwards.every((a) => a.status === 'DITOLAK');
-    const sumMerit = allAwards.reduce((acc, curr) => acc + (Number(curr.total_merit_granted) || 0), 0);
-
-    let masterStatus: MakmpSubmissionStatus = 'DALAM_SEMAKAN';
-    if (!hasAnyPending) {
-      if (allApproved) masterStatus = 'DISAHKAN';
-      else if (allRejected) masterStatus = 'DITOLAK';
-      else masterStatus = 'DISAHKAN'; // Sekurang-kurangnya satu lulus
-    }
-
-    const { error: masterErr } = await supabase
-      .from('makmp_submissions')
-      .update({
-        status: masterStatus,
-        total_merit_awarded: sumMerit,
-        reviewer_pin_id: params.pinId || null,
-        reviewed_by: params.reviewerUserId || null,
-        reviewed_at: new Date().toISOString(),
-        rejection_reason: masterStatus === 'DITOLAK' ? params.rejectionReason : null,
-        review_notes: params.reviewNotes || null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', params.submissionId);
-
-    if (masterErr) {
-      console.error('[Master Submission Update Error]', masterErr);
-    }
-  }
-
-  // 4. Jika anugerah DISAHKAN, sync ke akademik & merit
-  if (params.status === 'DISAHKAN') {
-    try {
-      await supabase.rpc('sync_makmp_submission_to_akademik', {
-        p_submission_id: params.submissionId,
-        p_reviewer_user_id: params.reviewerUserId || null,
-      });
-    } catch (e) {
-      console.warn('[Sync to Akademik RPC Warning]', e);
-    }
+  if (data && data.success === false) {
+    return { success: false, message: data.message || 'Gagal menyimpan keputusan.' };
   }
 
   return { success: true };
