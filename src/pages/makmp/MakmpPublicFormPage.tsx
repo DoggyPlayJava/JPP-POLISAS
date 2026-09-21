@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Award,
@@ -106,6 +106,24 @@ export default function MakmpPublicFormPage() {
         window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
+      });
+    });
+  };
+
+  // Ref ke banner error — supaya boleh scroll terus ke error bila validasi gagal.
+  const errorRef = useRef<HTMLDivElement | null>(null);
+
+  // Scroll terus ke banner error (bukan sekadar ke atas page). Bila student
+  // tekan "Hantar Permohonan" tapi form tak lengkap, error banner ada di atas
+  // content — auto-scroll ke sana supaya student nampak apa yang patut dibetulkan.
+  const scrollToError = () => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (errorRef.current) {
+          errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          scrollToTop();
+        }
       });
     });
   };
@@ -554,6 +572,7 @@ export default function MakmpPublicFormPage() {
     const step3Err = validateStep3();
     if (step3Err) {
       setErrorMessage(step3Err);
+      scrollToError();
       return;
     }
 
@@ -823,7 +842,9 @@ export default function MakmpPublicFormPage() {
 
         {/* Error Notification */}
         {errorMessage && (
-          <div className="mb-6 p-4 rounded-xl bg-red-950/60 border border-red-500/30 text-red-200 text-sm flex items-start gap-3 shadow-lg">
+          <div
+            ref={errorRef}
+            className="mb-6 scroll-mt-28 p-4 rounded-xl bg-red-950/60 border border-red-500/30 text-red-200 text-sm flex items-start gap-3 shadow-lg">
             <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
             <div className="flex-1">{errorMessage}</div>
             <button
@@ -1166,7 +1187,7 @@ export default function MakmpPublicFormPage() {
                   const err = validateStep1();
                   if (err) {
                     setErrorMessage(err);
-                    scrollToTop();
+                    scrollToError();
                     return;
                   }
                   setErrorMessage(null);
@@ -1375,7 +1396,7 @@ export default function MakmpPublicFormPage() {
                   const err = validateStep2();
                   if (err) {
                     setErrorMessage(err);
-                    scrollToTop();
+                    scrollToError();
                     return;
                   }
                   setErrorMessage(null);
