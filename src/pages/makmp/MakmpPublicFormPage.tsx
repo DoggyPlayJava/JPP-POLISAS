@@ -1138,6 +1138,7 @@ export default function MakmpPublicFormPage() {
                   }
                   setErrorMessage(null);
                   setStep(2);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-sm hover:brightness-110 shadow-lg shadow-amber-500/20 transition flex items-center gap-2"
               >
@@ -1348,6 +1349,7 @@ export default function MakmpPublicFormPage() {
                     setActiveAwardTabId(selectedAwardIds[0]);
                   }
                   setStep(3);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-sm hover:brightness-110 shadow-lg shadow-amber-500/20 transition flex items-center gap-2"
               >
@@ -1666,7 +1668,7 @@ export default function MakmpPublicFormPage() {
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-2 shrink-0">
-                                    <div className="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-500/30 text-center">
+                                    <div className="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-500/30 text-center whitespace-nowrap shrink-0">
                                       <div className="text-[9px] text-slate-400 font-semibold uppercase">Merit</div>
                                       <div className="text-xs font-bold text-amber-300">+{doc.merit_suggested}</div>
                                     </div>
@@ -1743,7 +1745,7 @@ export default function MakmpPublicFormPage() {
                                   )}
 
                                   {!isReportFile && (
-                                    <div className="shrink-0 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
+                                    <div className="shrink-0 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center whitespace-nowrap">
                                       <div className="text-[10px] text-slate-400 uppercase font-semibold">
                                         Merit
                                       </div>

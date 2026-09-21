@@ -105,7 +105,7 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
       initial={{ opacity: 0, scale: 0.97, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.96, y: 8 }}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
     >
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-lg bg-slate-900 rounded-[2rem] border border-white/[0.08] overflow-hidden max-h-[90vh] overflow-y-auto">
@@ -121,7 +121,7 @@ function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {
           </button>
         </div>
 
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4 pb-8">
           {/* Kategori */}
           <div>
             <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Kategori Sijil</label>
