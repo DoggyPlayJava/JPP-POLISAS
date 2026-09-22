@@ -383,7 +383,7 @@ export function KeusahawananAdminPanel() {
           message: `Tahniah! Perniagaan "${b.name}" telah diluluskan oleh JPP. Anda kini boleh mengakses sistem POS dan mula beroperasi.`,
           type: 'STATUS_UPDATE',
           module: 'KEUSAHAWANAN',
-          link: '/keusahawanan',
+          link: '/keusahawanan/dashboard',
         });
       } catch {}
 
@@ -418,7 +418,7 @@ export function KeusahawananAdminPanel() {
           message: `Perniagaan "${b.name}" telah ditolak${reason ? `. Sebab: ${reason}` : '. Sila hubungi JPP untuk maklumat lanjut.'}`,
           type: 'STATUS_UPDATE',
           module: 'KEUSAHAWANAN',
-          link: '/keusahawanan',
+          link: '/keusahawanan/dashboard',
         });
       } catch {}
 

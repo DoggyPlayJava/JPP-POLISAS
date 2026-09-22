@@ -298,7 +298,7 @@ export function UrusPerniagaanPage() {
         message: `Anda telah diluluskan sebagai ahli perniagaan "${businessData?.name}". Selamat datang!`,
         type: 'STATUS_UPDATE',
         module: 'KEUSAHAWANAN',
-        link: '/keusahawanan',
+        link: '/keusahawanan/dashboard',
       });
     } catch {}
     toast.success(`${userName} diluluskan!`);
@@ -317,7 +317,7 @@ export function UrusPerniagaanPage() {
         message: `Permohonan anda untuk menyertai perniagaan "${businessData?.name}" telah ditolak oleh pemilik.`,
         type: 'STATUS_UPDATE',
         module: 'KEUSAHAWANAN',
-        link: '/keusahawanan',
+        link: '/keusahawanan/dashboard',
       });
     } catch {}
     toast.success('Permohonan ditolak.');
@@ -338,7 +338,7 @@ export function UrusPerniagaanPage() {
         message: `Keahlian anda dalam perniagaan "${businessData?.name}" telah ditarik balik oleh pemilik.`,
         type: 'STATUS_UPDATE',
         module: 'KEUSAHAWANAN',
-        link: '/keusahawanan',
+        link: '/keusahawanan/dashboard',
       });
     } catch {}
     toast.success(`${userName} dibuang.`);

@@ -320,7 +320,7 @@ function CancelModal({ order, onClose }: { order: Order; onClose: (cancelled: bo
               message: `Pembeli meminta pembatalan pesanan ${order.business_products?.name}. Sebab: ${finalReason}`,
               type: 'polymart_cancellation_request',
               module: 'POLYMART',
-              link: '/keusahawanan/polymart',
+              link: '/polymart/vendor',
               reference_id: order.id,
             });
           }

@@ -31,7 +31,7 @@ const KEUSAHAWANAN_UNIT_LINKS = [
   { label: 'Dashboard Perniagaan', path: '/keusahawanan' },
   { label: 'PolyMart Marketplace', path: '/polymart' },
   { label: 'Program Keusahawanan', path: '/keusahawanan/program' },
-  { label: 'Urus Produk / Perkhidmatan', path: '/keusahawanan/produk' },
+  { label: 'Urus Produk / Perkhidmatan', path: '/keusahawanan/pos/products' },
 ];
 const MODULE_ID = 'keusahawanan';
 const DEFAULT_COLOR = '#1B5E20';

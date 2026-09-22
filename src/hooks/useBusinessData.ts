@@ -133,7 +133,7 @@ export function useBusinessData() {
           message: 'Permohonan untuk menubuhkan perniagaan anda telah direkodkan. Sistem / pentadbir akan menetapkan tarikh temuduga.',
           type: 'SYSTEM',
           module: 'KEUSAHAWANAN',
-          link: '/keusahawanan',
+          link: '/keusahawanan/dashboard',
         });
       } catch {}
 
@@ -182,7 +182,7 @@ export function useBusinessData() {
                  message: `Pelajar ${profileRes.data.full_name} membuat rayuan semula untuk menyertai ${businessRes.data.name}. Sila semak di menu Urus Perniagaan. ${phoneInfo}`,
                  type: 'SYSTEM',
                  module: 'KEUSAHAWANAN',
-                 link: '/keusahawanan',
+                 link: '/keusahawanan/dashboard',
                });
              } catch {}
           }
@@ -226,7 +226,7 @@ export function useBusinessData() {
              message: `Pelajar ${profRes.data.full_name} memohon untuk menyertai ${busRes.data.name}. Sila semak di menu Urus Perniagaan. ${phoneInfo}`,
              type: 'INFO',
              module: 'KEUSAHAWANAN',
-             link: '/keusahawanan/admin'
+             link: '/keusahawanan/urus-perniagaan'
            });
         }
       } catch (err) {
