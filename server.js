@@ -585,6 +585,11 @@ function extractFolderId(input) {
     return input.trim();
 }
 
+// Cache access token Google supaya tak fetch token baru SETIAP kali upload
+// (jimat 1 round-trip OAuth per fail). Token valid ~1 jam; kita refresh 5 min awal.
+let _gTokenCache = null;        // { token: string, expiresAt: number }
+let _gTokenInflight = null;     // Promise dalam flight (elak race bila banyak upload serentak)
+
 async function getGoogleAccessToken() {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -594,22 +599,47 @@ async function getGoogleAccessToken() {
         throw new Error("Missing Google Drive secrets");
     }
 
-    const response = await fetch("https://oauth2.googleapis.com/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-            client_id: clientId,
-            client_secret: clientSecret,
-            refresh_token: refreshToken,
-            grant_type: "refresh_token",
-        }),
-    });
-
-    const data = await response.json();
-    if (!response.ok || !data.access_token) {
-        throw new Error("Google OAuth error: " + (data.error_description || data.error || "failed"));
+    // Guna cache kalau belum expire (buffer 5 minit sebelum tamat)
+    if (_gTokenCache && _gTokenCache.expiresAt > Date.now() + 5 * 60 * 1000) {
+        return _gTokenCache.token;
     }
-    return data.access_token;
+
+    // Elak race: banyak upload serentak kongsi fetch token yang sama
+    if (_gTokenInflight) {
+        return _gTokenInflight;
+    }
+
+    _gTokenInflight = (async () => {
+        try {
+            const response = await fetch("https://oauth2.googleapis.com/token", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({
+                    client_id: clientId,
+                    client_secret: clientSecret,
+                    refresh_token: refreshToken,
+                    grant_type: "refresh_token",
+                }),
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.access_token) {
+                throw new Error("Google OAuth error: " + (data.error_description || data.error || "failed"));
+            }
+
+            // Google return 'expires_in' dalam saat (biasanya 3600)
+            const expiresInSec = data.expires_in || 3600;
+            _gTokenCache = {
+                token: data.access_token,
+                expiresAt: Date.now() + expiresInSec * 1000,
+            };
+            return data.access_token;
+        } finally {
+            _gTokenInflight = null;
+        }
+    })();
+
+    return _gTokenInflight;
 }
 
 app.post('/api/upload-to-drive', requireAuth, upload.single('file'), async (req, res) => {
