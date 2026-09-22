@@ -142,7 +142,7 @@ export default function MakmpJuryPortalPage() {
         setJuryPin(res.pinData);
         setEdition(res.edition);
         sessionStorage.setItem('makmp_jury_pin', clean);
-        loadApplications(res.edition.id, res.pinData.assigned_categories || []);
+        loadApplications(res.edition.id, res.pinData.assigned_categories || [], res.pinData.pin_code);
       }
     } catch (err: any) {
       setPinError('Ralat sambungan: ' + err.message);
@@ -151,10 +151,10 @@ export default function MakmpJuryPortalPage() {
     }
   };
 
-  const loadApplications = async (editionId: string, assignedCats: string[]) => {
+  const loadApplications = async (editionId: string, assignedCats: string[], pinCode?: string) => {
     setLoadingAwards(true);
     try {
-      const data = await fetchJuryAwardApplications(editionId, assignedCats, juryPin?.pin_code);
+      const data = await fetchJuryAwardApplications(editionId, assignedCats, pinCode);
       setAwardApplications(data);
     } catch (err) {
       console.error(err);
@@ -442,7 +442,7 @@ export default function MakmpJuryPortalPage() {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => loadApplications(edition.id, juryPin.assigned_categories || [])}
+              onClick={() => loadApplications(edition.id, juryPin.assigned_categories || [], juryPin.pin_code)}
               title="Muat Semula Senarai"
               className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition"
             >

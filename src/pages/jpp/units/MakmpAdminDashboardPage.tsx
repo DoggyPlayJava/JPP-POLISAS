@@ -22,6 +22,7 @@ import {
   Loader2,
   RefreshCw,
   Eye,
+  Lock,
   CheckSquare,
   Square,
   AlertTriangle,
@@ -156,6 +157,38 @@ export default function MakmpAdminDashboardPage() {
             }
           : prev
       );
+    } catch (err: any) {
+      alert('Ralat: ' + err.message);
+    } finally {
+      setUnlockingAwardId(null);
+    }
+  };
+
+  // Buka semula SEMUA award terkunci dalam satu submission (untuk butang dalam senarai utama)
+  const handleUnlockSubmission = async (sub: MakmpSubmission) => {
+    const lockedAwards = (sub.awards || []).filter(
+      (a) => a.status === 'DISAHKAN' || a.status === 'DITOLAK'
+    );
+    if (lockedAwards.length === 0) return;
+
+    const names = lockedAwards.map((a) => a.award?.name || 'anugerah').join(', ');
+    if (!confirm(`Buka semula ${lockedAwards.length} anugerah terkunci untuk ${sub.full_name}?\n\nAnugerah: ${names}\n\nIni akan reset keputusan juri dan menolak semula merit (jika disahkan). Juri perlu menyemak semula.`)) {
+      return;
+    }
+
+    setUnlockingAwardId('__submission__' + sub.id);
+    try {
+      let failed = 0;
+      for (const aw of lockedAwards) {
+        const res = await unlockJuryAwardReview(aw.id);
+        if (!res.success) failed++;
+      }
+      if (failed > 0) {
+        alert(`Selesai dengan ${failed} kegagalan. Sila semak semula.`);
+      } else {
+        alert(`${lockedAwards.length} anugerah telah dibuka semula untuk semakan.`);
+      }
+      await loadAllData();
     } catch (err: any) {
       alert('Ralat: ' + err.message);
     } finally {
@@ -1145,13 +1178,30 @@ export default function MakmpAdminDashboardPage() {
                           {sub.status === 'DISAHKAN' ? `+${sub.total_merit_awarded}` : '-'}
                         </td>
                         <td className="py-3 px-4 text-right">
-                          <button
-                            onClick={() => setActiveSub(sub)}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition inline-flex items-center gap-1 text-[11px]"
-                          >
-                            <Eye className="w-3.5 h-3.5 text-amber-400" />
-                            <span>Perincian</span>
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            {(sub.awards || []).some((a) => a.status === 'DISAHKAN' || a.status === 'DITOLAK') && (
+                              <button
+                                onClick={() => handleUnlockSubmission(sub)}
+                                disabled={unlockingAwardId === '__submission__' + sub.id}
+                                title="Buka semula anugerah yang terkunci"
+                                className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 text-amber-300 transition inline-flex items-center gap-1 text-[11px] disabled:opacity-50"
+                              >
+                                {unlockingAwardId === '__submission__' + sub.id ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                  <Lock className="w-3.5 h-3.5" />
+                                )}
+                                <span>Buka Semula</span>
+                              </button>
+                            )}
+                            <button
+                              onClick={() => setActiveSub(sub)}
+                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition inline-flex items-center gap-1 text-[11px]"
+                            >
+                              <Eye className="w-3.5 h-3.5 text-amber-400" />
+                              <span>Perincian</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
