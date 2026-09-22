@@ -38,6 +38,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   saveJuryReview,
   unlockJuryAwardReview,
+  fetchReviewLog,
   calculateSuggestedMerit,
   PERINGKAT_OPTIONS,
   PENCAPAIAN_TYPE_OPTIONS,
@@ -129,6 +130,7 @@ export default function MakmpAdminDashboardPage() {
 
   // Buka semula semakan juri (pentadbir sahaja)
   const [unlockingAwardId, setUnlockingAwardId] = useState<string | null>(null);
+  const [reviewLog, setReviewLog] = useState<any[]>([]);
 
   const handleUnlockAward = async (awardApplicationId: string, awardName?: string) => {
     if (!confirm(`Buka semula semakan untuk anugerah "${awardName || 'ini'}"?\n\nIni akan reset keputusan juri kembali ke DALAM_SEMAKAN dan menolak semula merit (jika telah disahkan). Juri perlu menyemak semula permohonan ini.`)) {
@@ -194,6 +196,19 @@ export default function MakmpAdminDashboardPage() {
     } finally {
       setUnlockingAwardId(null);
     }
+  };
+
+  // Buka perincian submission + load log buka semula untuk semua award
+  const openSubDetail = async (sub: MakmpSubmission) => {
+    setActiveSub(sub);
+    const allLogs: any[] = [];
+    for (const aw of sub.awards || []) {
+      try {
+        const logs = await fetchReviewLog(aw.id);
+        logs.forEach((l) => allLogs.push({ ...l, awardId: aw.id }));
+      } catch {}
+    }
+    setReviewLog(allLogs);
   };
 
   useEffect(() => {
@@ -1195,7 +1210,7 @@ export default function MakmpAdminDashboardPage() {
                               </button>
                             )}
                             <button
-                              onClick={() => setActiveSub(sub)}
+                              onClick={() => openSubDetail(sub)}
                               className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition inline-flex items-center gap-1 text-[11px]"
                             >
                               <Eye className="w-3.5 h-3.5 text-amber-400" />
@@ -2303,6 +2318,29 @@ export default function MakmpAdminDashboardPage() {
                             )}
                           </div>
                         </div>
+
+                        {/* Sejarah buka semula award ini */}
+                        {reviewLog.filter((l) => l.awardId === awApp.id).length > 0 && (
+                          <div className="space-y-1.5 pt-1">
+                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                              Sejarah Buka Semula:
+                            </div>
+                            {reviewLog
+                              .filter((l) => l.awardId === awApp.id)
+                              .map((log, li) => (
+                                <div key={log.id || li} className="text-[11px] text-slate-400 flex items-start gap-2">
+                                  <span className="text-amber-400 font-mono shrink-0">#{log.unlock_count}</span>
+                                  <span>
+                                    {log.jury_name || log.admin_name || 'Pentadbir'} — {log.previous_status} → DALAM_SEMAKAN
+                                    {log.reason ? ` • "${log.reason}"` : ''}
+                                    <span className="block text-[10px] text-slate-600">
+                                      {new Date(log.created_at).toLocaleString('ms-MY')}
+                                    </span>
+                                  </span>
+                                </div>
+                              ))}
+                          </div>
+                        )}
 
                         {/* Documents for this award */}
                         <div className="space-y-2">

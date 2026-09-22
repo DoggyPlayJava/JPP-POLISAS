@@ -28,12 +28,15 @@ import {
   Building,
   FileCheck,
   Download,
+  History,
 } from 'lucide-react';
 import {
   verifyJuryPin,
   fetchJuryAwardApplications,
   saveJuryAwardReview,
   markAwardInReview,
+  unlockAwardReview,
+  fetchReviewLog,
   calculateSuggestedMerit,
   PERINGKAT_OPTIONS,
   PENCAPAIAN_TYPE_OPTIONS,
@@ -112,6 +115,10 @@ export default function MakmpJuryPortalPage() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [isSavingReview, setIsSavingReview] = useState(false);
   const [reviewToast, setReviewToast] = useState<string | null>(null);
+  const [isUnlocking, setIsUnlocking] = useState(false);
+  const [unlockReason, setUnlockReason] = useState('');
+  const [reviewLog, setReviewLog] = useState<any[]>([]);
+  const [showUnlockDialog, setShowUnlockDialog] = useState(false);
 
   // Fullscreen Preview & Zoom State
   const [isFullscreenPreview, setIsFullscreenPreview] = useState(false);
@@ -211,6 +218,9 @@ export default function MakmpJuryPortalPage() {
     } else {
       setSelectedDocUrl(null);
     }
+
+    // Load log buka semula bagi award ini (untuk tunjuk kepada juri)
+    fetchReviewLog(awApp.id).then((log) => setReviewLog(log)).catch(() => setReviewLog([]));
   };
 
   // Kemaskini matriks / status verifikasi item
@@ -315,6 +325,41 @@ export default function MakmpJuryPortalPage() {
       alert('Ralat: ' + err.message);
     } finally {
       setIsSavingReview(false);
+    }
+  };
+
+  // Buka semula semakan (juri boleh unlock sendiri, direkod dalam log)
+  const handleUnlockReview = async () => {
+    if (!activeAward) return;
+    if (!unlockReason.trim()) {
+      alert('Sila nyatakan sebab membuka semula (untuk rekod log).');
+      return;
+    }
+
+    setIsUnlocking(true);
+    try {
+      const res = await unlockAwardReview(juryPin?.pin_code || '', activeAward.id, unlockReason.trim());
+      if (!res.success) {
+        alert('Gagal membuka semula: ' + res.message);
+        return;
+      }
+
+      setShowUnlockDialog(false);
+      setUnlockReason('');
+      setReviewToast(`Permohonan "${activeAward.award?.name}" telah dibuka semula untuk semakan (kali ke-${res.unlockCount ?? '?'}).`);
+      setTimeout(() => setReviewToast(null), 4000);
+
+      // Muat semula senarai + log
+      await loadApplications(edition?.id || '', juryPin?.assigned_categories || [], juryPin?.pin_code);
+      const log = await fetchReviewLog(activeAward.id);
+      setReviewLog(log);
+
+      // Kemaskini status activeAward ke DALAM_SEMAKAN supaya form boleh edit semula
+      setActiveAward((prev) => (prev ? { ...prev, status: 'DALAM_SEMAKAN' as MakmpSubmissionStatus } : prev));
+    } catch (err: any) {
+      alert('Ralat: ' + err.message);
+    } finally {
+      setIsUnlocking(false);
     }
   };
 
@@ -1002,11 +1047,45 @@ export default function MakmpJuryPortalPage() {
                 {/* Tindakan Keputusan (1-Click Review & Next) */}
                 <div className="pt-2 flex flex-col gap-3">
                   {activeAward.status === 'DISAHKAN' || activeAward.status === 'DITOLAK' ? (
-                    <div className="p-3 rounded-xl bg-slate-800/60 border border-slate-700 flex items-center gap-2 text-xs text-slate-300">
-                      <Lock className="w-4 h-4 text-amber-400 shrink-0" />
-                      <span>
-                        Permohonan ini telah dikunci ({activeAward.status}). Hubungi pentadbir untuk sebarang pembetulan.
-                      </span>
+                    <div className="space-y-3">
+                      {/* Sejarah buka semula (jika ada) */}
+                      {reviewLog.length > 0 && (
+                        <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
+                          <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                            <History className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Sejarah Buka Semula ({reviewLog.length})</span>
+                          </div>
+                          {reviewLog.map((log, i) => (
+                            <div key={log.id || i} className="text-xs text-slate-300 flex items-start gap-2">
+                              <span className="text-amber-400 font-mono shrink-0">#{log.unlock_count}</span>
+                              <span>
+                                {log.jury_name || log.admin_name || 'Pentadbir'} — {log.previous_status} → DALAM_SEMAKAN
+                                {log.reason ? ` • "${log.reason}"` : ''}
+                                <span className="block text-[10px] text-slate-500">
+                                  {new Date(log.created_at).toLocaleString('ms-MY')}
+                                </span>
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="p-3 rounded-xl bg-slate-800/60 border border-slate-700 flex items-center gap-2 text-xs text-slate-300">
+                        <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                        <span>
+                          Permohonan ini telah {activeAward.status === 'DISAHKAN' ? 'disahkan' : 'ditolak'}. Anda boleh buka semula jika perlu semakan semula.
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={isUnlocking}
+                        onClick={() => setShowUnlockDialog(true)}
+                        className="w-full py-3 px-4 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 font-bold text-xs hover:bg-amber-500/25 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        <span>Buka Semula Semakan</span>
+                      </button>
                     </div>
                   ) : (
                     <div className="flex flex-col sm:flex-row gap-3">
@@ -1115,6 +1194,69 @@ export default function MakmpJuryPortalPage() {
                 allow="autoplay"
               />
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================================== */}
+      {/* DIALOG BUKA SEMULA SEMAKAN (JURI)                                    */}
+      {/* ==================================================================== */}
+      {showUnlockDialog && activeAward && (
+        <div className="fixed inset-0 z-[110] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full max-w-md p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl space-y-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4 text-amber-400" />
+                  Buka Semula Semakan
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  {activeAward.award?.name} — {activeAward.submission?.full_name}
+                </p>
+              </div>
+              <button
+                onClick={() => { setShowUnlockDialog(false); setUnlockReason(''); }}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                Sebab Buka Semula (wajib — direkod dalam log):
+              </label>
+              <textarea
+                rows={3}
+                value={unlockReason}
+                onChange={(e) => setUnlockReason(e.target.value)}
+                placeholder="cth: Tersilap menandakan dokumen sah, perlu semak semula sijil #2..."
+                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition"
+              />
+            </div>
+
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200">
+              ⚠️ Buka semula akan menolak semula merit (jika telah disahkan) dan reset semua tanda dokumen. Tindakan ini akan direkod dalam log sejarah semakan.
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => { setShowUnlockDialog(false); setUnlockReason(''); }}
+                className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={isUnlocking || !unlockReason.trim()}
+                onClick={handleUnlockReview}
+                className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isUnlocking ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                <span>Buka Semula</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

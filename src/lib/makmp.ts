@@ -977,6 +977,43 @@ export async function unlockJuryAwardReview(awardApplicationId: string): Promise
   return { success: true };
 }
 
+/** Buka semula semakan — JURI (PIN) atau pentadbir. Rekod dalam log. */
+export async function unlockAwardReview(
+  pinCode: string,
+  awardApplicationId: string,
+  reason?: string
+): Promise<{ success: boolean; message?: string; unlockCount?: number }> {
+  const { data, error } = await supabase.rpc('unlock_award_review', {
+    p_pin: pinCode || '',
+    p_award_id: awardApplicationId,
+    p_reason: reason || null,
+  });
+
+  if (error) {
+    return { success: false, message: error.message };
+  }
+
+  if (data && data.success === false) {
+    return { success: false, message: data.message || 'Gagal membuka semula semakan.' };
+  }
+
+  return { success: true, unlockCount: data?.unlock_count };
+}
+
+/** Ambil log buka semula bagi sesuatu anugerah (siapa, bila, berapa kali) */
+export async function fetchReviewLog(awardApplicationId: string): Promise<any[]> {
+  const { data, error } = await supabase.rpc('fetch_review_log', {
+    p_award_id: awardApplicationId,
+  });
+
+  if (error) {
+    console.error('[fetchReviewLog Error]', error);
+    return [];
+  }
+
+  return (data || []) as any[];
+}
+
 /** Simpan semakan Juri ke atas sesuatu permohonan anugerah khusus (Multi-Award Review) */
 export async function saveJuryAwardReview(params: {
   awardApplicationId: string;
