@@ -194,7 +194,13 @@ export default function MakmpJuryPortalPage() {
       id: item.id,
       document_type: item.document_type || 'SIJIL',
       merit_awarded: item.merit_awarded > 0 ? item.merit_awarded : (item.merit_suggested || 3),
-      is_verified: awApp.status === 'DISAHKAN' ? true : true, // default checked untuk mudahkan juri
+      // Untuk award yang BELUM selesai disemak, default tick = true (mudahkan juri).
+      // Untuk award yang dah DISAHKAN/DITOLAK, hormati is_verified sebenar dari DB
+      // supaya refresh tak auto-accept semula dokumen yang di-untick.
+      is_verified:
+        awApp.status === 'DISAHKAN' || awApp.status === 'DITOLAK'
+          ? item.is_verified === true
+          : true,
       peringkat: item.peringkat,
       pencapaian_type: item.pencapaian_type,
     }));
@@ -236,6 +242,12 @@ export default function MakmpJuryPortalPage() {
   // Simpan Keputusan & Auto-pindah ke Permohonan Seterusnya
   const handleSaveDecision = async (status: MakmpSubmissionStatus) => {
     if (!activeAward || !activeAward.submission) return;
+
+    // LOCK: elak re-edit award yang dah selesai disemak (DISAHKAN/DITOLAK).
+    if (activeAward.status === 'DISAHKAN' || activeAward.status === 'DITOLAK') {
+      alert('Permohonan ini telah selesai disemak dan dikunci. Hubungi pentadbir untuk sebarang pembetulan.');
+      return;
+    }
 
     const finalReason = rejectionReason.trim() || reviewNotes.trim() || (status === 'DITOLAK' ? 'Penyertaan tidak memenuhi syarat kelayakan kategori anugerah ini.' : '');
 
@@ -988,30 +1000,41 @@ export default function MakmpJuryPortalPage() {
                 </div>
 
                 {/* Tindakan Keputusan (1-Click Review & Next) */}
-                <div className="pt-2 flex flex-col sm:flex-row gap-3">
-                  <button
-                    type="button"
-                    disabled={isSavingReview}
-                    onClick={() => handleSaveDecision('DITOLAK')}
-                    className="flex-1 py-3 px-4 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-300 font-bold text-xs hover:bg-rose-900/80 transition flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    <XCircle className="w-4 h-4" />
-                    <span>Tolak Anugerah Ini</span>
-                  </button>
+                <div className="pt-2 flex flex-col gap-3">
+                  {activeAward.status === 'DISAHKAN' || activeAward.status === 'DITOLAK' ? (
+                    <div className="p-3 rounded-xl bg-slate-800/60 border border-slate-700 flex items-center gap-2 text-xs text-slate-300">
+                      <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                      <span>
+                        Permohonan ini telah dikunci ({activeAward.status}). Hubungi pentadbir untuk sebarang pembetulan.
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <button
+                        type="button"
+                        disabled={isSavingReview}
+                        onClick={() => handleSaveDecision('DITOLAK')}
+                        className="flex-1 py-3 px-4 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-300 font-bold text-xs hover:bg-rose-900/80 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        <XCircle className="w-4 h-4" />
+                        <span>Tolak Anugerah Ini</span>
+                      </button>
 
-                  <button
-                    type="button"
-                    disabled={isSavingReview}
-                    onClick={() => handleSaveDecision('DISAHKAN')}
-                    className="flex-[2] py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold text-xs hover:brightness-110 shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {isSavingReview ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <CheckCircle2 className="w-4 h-4" />
-                    )}
-                    <span>1-Click Sahkan & Seterusnya (+{currentTotalMerit} Merit)</span>
-                  </button>
+                      <button
+                        type="button"
+                        disabled={isSavingReview}
+                        onClick={() => handleSaveDecision('DISAHKAN')}
+                        className="flex-[2] py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold text-xs hover:brightness-110 shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        {isSavingReview ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="w-4 h-4" />
+                        )}
+                        <span>1-Click Sahkan & Seterusnya (+{currentTotalMerit} Merit)</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
