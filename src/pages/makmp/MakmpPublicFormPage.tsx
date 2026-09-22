@@ -206,6 +206,19 @@ export default function MakmpPublicFormPage() {
     loadData();
   }, []);
 
+  // 1a2. Kalau student dah submit sebelum ni (marker dalam sessionStorage),
+  //      terus bawa ke halaman status supaya tak isi semula (elak double submit).
+  useEffect(() => {
+    try {
+      const doneCode = sessionStorage.getItem('makmp_submitted_code');
+      if (doneCode) {
+        sessionStorage.removeItem('makmp_submitted_code');
+        navigate(`/makmp/status?code=${encodeURIComponent(doneCode)}`, { replace: true });
+      }
+    } catch { /* abaikan */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // 1b. Pulihkan draf borang (jika ada) selepas redirect Google OAuth
   //     atau sekadar refresh pertengahan isi borang sebagai tetamu.
   useEffect(() => {
@@ -435,6 +448,10 @@ export default function MakmpPublicFormPage() {
       if (d.awardEntityData) setAwardEntityData(d.awardEntityData);
       if (d.awardDocuments) setAwardDocuments(d.awardDocuments);
       if (d.accountType) setAccountType(d.accountType);
+      // Pulihkan step supaya student balik ke langkah SAMA selepas redirect
+      // Google OAuth (bukan lompat ke step 1 semula). Step 4 (resit) dikecualikan
+      // kerana ia hanya dicapai selepas submit & draft tak patut paksa ke sana.
+      if (d.step && d.step >= 1 && d.step <= 3) setStep(d.step as 1 | 2 | 3);
       return true;
     } catch (e) {
       console.warn('Gagal pulih draf MAKMP:', e);
@@ -650,7 +667,7 @@ export default function MakmpPublicFormPage() {
         [award.id]: [
           {
             id: crypto.randomUUID(),
-            nama_pencapaian: isReport ? `Laporan ${award.name}` : '',
+            nama_pencapaian: isReport ? `Laporan ${award?.name || 'Anugerah'}` : '',
             document_type: isReport ? 'LAPORAN' : 'SIJIL',
             peringkat: isReport ? 'POLITEKNIK' : 'KEBANGSAAN',
             pencapaian_type: isReport ? 'PESERTA' : 'PESERTA',
@@ -817,6 +834,15 @@ export default function MakmpPublicFormPage() {
     e.preventDefault();
     setErrorMessage(null);
 
+    // Double-submission guard: kalau dah berjaya submit, jangan hantar lagi.
+    if (submissionResult) {
+      setErrorMessage('Permohonan anda telah dihantar. Semak status menggunakan kod rujukan di bawah.');
+      setStep(4);
+      scrollToTop();
+      return;
+    }
+    if (isSubmitting) return;
+
     const step3Err = validateStep3();
     if (step3Err) {
       setErrorMessage(step3Err);
@@ -852,10 +878,52 @@ export default function MakmpPublicFormPage() {
         }>;
       }> = [];
 
-      let totalUploadedFiles = 0;
       const totalFilesToUpload = selectedAwardIds.reduce(
         (sum, id) => sum + (awardDocuments[id] || []).length,
         0
+      );
+
+      // 1a. Kumpul SEMUA fail yang perlu dimuat naik, kemudian upload secara
+      //     SELARI (parallel) — jauh lebih pantas daripada satu-satu.
+      //     Key: `${awardId}::${docIndex}` supaya boleh rujuk hasil kemudian.
+      type PendingUpload = { key: string; doc: any; file: File };
+      const pendingUploads: PendingUpload[] = [];
+      let uploadIdx = 0;
+      for (const awardId of selectedAwardIds) {
+        const docs = awardDocuments[awardId] || [];
+        for (let i = 0; i < docs.length; i++) {
+          const doc = docs[i];
+          if (!doc.uploadedUrl && doc.file) {
+            pendingUploads.push({ key: `${awardId}::${i}`, doc, file: doc.file });
+          }
+          uploadIdx++;
+        }
+      }
+
+      // Jalankan semua upload serentak. Progress text dikemas kini mengikut
+      // bilangan yang selesai (bukan urutan).
+      let completedUploads = 0;
+      setUploadProgressText(
+        pendingUploads.length > 0
+          ? `Memuat naik ${pendingUploads.length} fail secara serentak...`
+          : ''
+      );
+
+      const uploadResults: Record<string, { url: string; fileId?: string }> = {};
+      await Promise.all(
+        pendingUploads.map((pu) =>
+          uploadMakmpCertificate(pu.file, matricNo, uploadIdx++)
+            .then((res) => {
+              uploadResults[pu.key] = res;
+              completedUploads++;
+              setUploadProgressText(
+                `Memuat naik fail ${completedUploads} / ${pendingUploads.length}...`
+              );
+            })
+            .catch((e) => {
+              throw new Error(`Gagal memuat naik fail: ${e?.message || 'ralat tidak diketahui'}`);
+            })
+        )
       );
 
       for (const awardId of selectedAwardIds) {
@@ -867,26 +935,18 @@ export default function MakmpPublicFormPage() {
 
         for (let i = 0; i < docs.length; i++) {
           const doc = docs[i];
-          totalUploadedFiles++;
-          setUploadProgressText(
-            `Memuat naik fail ${totalUploadedFiles} / ${totalFilesToUpload} (${aw?.name})...`
-          );
+          const key = `${awardId}::${i}`;
 
           let fileUrl = doc.uploadedUrl;
           let fileId = doc.uploadedFileId;
 
-          if (!fileUrl && doc.file) {
-            const uploadRes = await uploadMakmpCertificate(
-              doc.file,
-              matricNo,
-              totalUploadedFiles - 1
-            );
-            fileUrl = uploadRes.url;
-            fileId = uploadRes.fileId;
+          if (!fileUrl && uploadResults[key]) {
+            fileUrl = uploadResults[key].url;
+            fileId = uploadResults[key].fileId;
           }
 
           if (!fileUrl) {
-            throw new Error(`Gagal memuat naik fail untuk ${aw?.name} (#${i + 1}).`);
+            throw new Error(`Gagal memuat naik fail untuk ${aw?.name || 'anugerah'} (#${i + 1}).`);
           }
 
           uploadedItemsForAward.push({
@@ -939,6 +999,11 @@ export default function MakmpPublicFormPage() {
       setSubmissionResult(submission);
       setCreatedAwardsList(createdAwards);
       setStep(4);
+      // Tandakan dalam sessionStorage supaya refresh/tutup-tab tak bagi student
+      // isi semula & submit dua kali (double submission).
+      try {
+        sessionStorage.setItem('makmp_submitted_code', submission.tracking_code);
+      } catch { /* abaikan */ }
       scrollToTop();
     } catch (err: any) {
       console.error('[MAKMP Multi-Award Submission Error]', err);

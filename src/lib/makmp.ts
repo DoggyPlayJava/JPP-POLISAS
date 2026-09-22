@@ -406,7 +406,7 @@ export async function uploadMakmpCertificate(
     formData.append('customName', customName);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s (fallback lebih cepat)
 
     try {
       const res = await fetch('/api/makmp/upload-sijil', {
