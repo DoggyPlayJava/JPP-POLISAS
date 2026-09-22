@@ -94,7 +94,7 @@ export default function MakmpJuryPortalPage() {
   // Multi-Award Applications Queue
   const [awardApplications, setAwardApplications] = useState<MakmpSubmissionAward[]>([]);
   const [loadingAwards, setLoadingAwards] = useState(false);
-  const [filterStatus, setFilterStatus] = useState<string>('ALL');
+  const [filterStatus, setFilterStatus] = useState<string>('BELUM_SELESAI');
   const [filterCategoryGroup, setFilterCategoryGroup] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -370,7 +370,11 @@ export default function MakmpJuryPortalPage() {
 
   // Filter queue
   const filteredAwards = awardApplications.filter((a) => {
-    if (filterStatus !== 'ALL' && a.status !== filterStatus) return false;
+    if (filterStatus === 'BELUM_SELESAI') {
+      if (a.status !== 'MENUNGGU' && a.status !== 'DALAM_SEMAKAN') return false;
+    } else if (filterStatus !== 'ALL' && a.status !== filterStatus) {
+      return false;
+    }
     if (filterCategoryGroup !== 'ALL' && a.award?.category_group !== filterCategoryGroup) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -519,17 +523,24 @@ export default function MakmpJuryPortalPage() {
         <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between bg-slate-900/70 p-4 rounded-2xl border border-slate-800">
           {/* Status Tabs */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
-            {['ALL', 'MENUNGGU', 'DALAM_SEMAKAN', 'DISAHKAN', 'DITOLAK'].map((st) => (
+            {[
+              { value: 'BELUM_SELESAI', label: 'Belum Selesai' },
+              { value: 'ALL', label: 'Semua Status' },
+              { value: 'MENUNGGU', label: 'Menunggu' },
+              { value: 'DALAM_SEMAKAN', label: 'Dalam Semakan' },
+              { value: 'DISAHKAN', label: 'Disahkan' },
+              { value: 'DITOLAK', label: 'Ditolak' },
+            ].map((tab) => (
               <button
-                key={st}
-                onClick={() => setFilterStatus(st)}
+                key={tab.value}
+                onClick={() => setFilterStatus(tab.value)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
-                  filterStatus === st
+                  filterStatus === tab.value
                     ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
                     : 'bg-slate-800/80 text-slate-400 hover:text-white'
                 }`}
               >
-                {st === 'ALL' ? 'Semua Status' : st}
+                {tab.label}
               </button>
             ))}
           </div>
@@ -575,7 +586,9 @@ export default function MakmpJuryPortalPage() {
             <Award className="w-12 h-12 text-slate-600 mx-auto mb-3" />
             <h3 className="text-sm font-semibold text-white">Tiada Permohonan Anugerah Dijumpai</h3>
             <p className="text-xs text-slate-500 mt-1">
-              {filterStatus !== 'ALL'
+              {filterStatus === 'BELUM_SELESAI'
+                ? 'Tiada permohonan yang belum selesai disemak. Semua kerja anda telah siap! 🎉'
+                : filterStatus !== 'ALL'
                 ? `Tiada rekod dengan status "${filterStatus}".`
                 : 'Belum ada pelajar yang memohon bagi kategori anugerah yang diperuntukkan kepada anda.'}
             </p>
