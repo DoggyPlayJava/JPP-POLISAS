@@ -60,7 +60,7 @@ export function KamsisAppealModal({ onClose, userId, onSuccess }: KamsisAppealMo
           message: `Pelajar telah menghantar rayuan asrama baru.`,
           type: 'INFO',
           module: 'KAMSIS',
-          link: '/kamsis/senarai-permohonan'
+          link: '/jpp/asrama'
         });
       } catch (e) {
         console.error("Gagal menghantar notifikasi push", e);

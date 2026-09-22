@@ -126,7 +126,7 @@ export function KamsisApplicationModal() {
           message: `Pelajar ${profile?.full_name || ''} telah menghantar permohonan asrama.`,
           type: 'INFO',
           module: 'KAMSIS',
-          link: '/kamsis/senarai-permohonan'
+          link: '/jpp/asrama'
         });
       } catch (e) {
         console.error("Gagal menghantar notifikasi push", e);

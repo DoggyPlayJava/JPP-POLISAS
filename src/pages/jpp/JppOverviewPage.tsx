@@ -322,7 +322,7 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
           : `Permintaan anda untuk menukar ${fieldLabel} kepada "${req.requested_value}" telah ditolak. Sebab: ${reviewNote.trim()}`,
         type: 'SYSTEM',
         module: 'EKPP',
-        link: '/settings',
+        link: '/tetapan',
         actor_name: profile.full_name,
         is_read: false,
       });

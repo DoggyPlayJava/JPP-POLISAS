@@ -427,7 +427,7 @@ export function PolySuaraPage() {
            message: 'Luahan telah melebihi had downvote (>60% daripada 40 undian). Sila semak di panel Moderasi PolySuara.',
            type: 'ALERT',
            module: 'KEBAJIKAN',
-           link: '/jpp/kebajikan'
+           link: '/jpp/polyservices'
          }).catch(console.error);
          setConfessions(prev => prev.filter(c => c.id !== confessionId));
          toast('Luahan ini telah disembunyikan dari awam', { icon: '🚨' });
@@ -522,7 +522,7 @@ export function PolySuaraPage() {
         message: 'Pengguna telah membalas maklum balas rasmi JPP.',
         type: 'INFO',
         module: 'KEBAJIKAN',
-        link: '/jpp/kebajikan'
+        link: '/jpp/polyservices'
       }).catch(console.error);
     } catch (e) {
       toast.error('Gagal menghantar balas');
@@ -602,7 +602,7 @@ export function PolySuaraPage() {
         message: 'Terdapat satu luahan baru yang dilaporkan dan memerlukan semakan moderasi.',
         type: 'WARNING',
         module: 'KEBAJIKAN',
-        link: '/jpp/kebajikan'
+        link: '/jpp/polyservices'
       }).catch(console.error);
       
     } catch (err: any) {
@@ -827,7 +827,7 @@ export function PolySuaraPage() {
         message: `Pelajar melaporkan ulasan ("${comment.content.substring(0, 30)}...") memerlukan tindakan kebajikan segera.`,
         type: 'ALERT',
         module: 'KEBAJIKAN',
-        link: '/jpp/kebajikan'
+        link: '/jpp/polyservices'
       });
 
       toast.success('Bantuan Kebajikan telah disegerakan! Exco Kebajikan telah dimaklumkan secara sulit.', { duration: 5000 });
