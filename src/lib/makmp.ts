@@ -960,6 +960,23 @@ export async function markAwardInReview(
   return !!data?.success;
 }
 
+/** Buka semula semakan juri (pentadbir sahaja) — reset keputusan award ke DALAM_SEMAKAN */
+export async function unlockJuryAwardReview(awardApplicationId: string): Promise<{ success: boolean; message?: string }> {
+  const { data, error } = await supabase.rpc('unlock_jury_award_review', {
+    p_award_id: awardApplicationId,
+  });
+
+  if (error) {
+    return { success: false, message: error.message };
+  }
+
+  if (data && data.success === false) {
+    return { success: false, message: data.message || 'Gagal membuka semula semakan.' };
+  }
+
+  return { success: true };
+}
+
 /** Simpan semakan Juri ke atas sesuatu permohonan anugerah khusus (Multi-Award Review) */
 export async function saveJuryAwardReview(params: {
   awardApplicationId: string;

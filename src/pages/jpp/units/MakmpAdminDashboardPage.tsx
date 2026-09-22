@@ -36,6 +36,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   saveJuryReview,
+  unlockJuryAwardReview,
   calculateSuggestedMerit,
   PERINGKAT_OPTIONS,
   PENCAPAIAN_TYPE_OPTIONS,
@@ -124,6 +125,43 @@ export default function MakmpAdminDashboardPage() {
 
   // Detail / Review Modal
   const [activeSub, setActiveSub] = useState<MakmpSubmission | null>(null);
+
+  // Buka semula semakan juri (pentadbir sahaja)
+  const [unlockingAwardId, setUnlockingAwardId] = useState<string | null>(null);
+
+  const handleUnlockAward = async (awardApplicationId: string, awardName?: string) => {
+    if (!confirm(`Buka semula semakan untuk anugerah "${awardName || 'ini'}"?\n\nIni akan reset keputusan juri kembali ke DALAM_SEMAKAN dan menolak semula merit (jika telah disahkan). Juri perlu menyemak semula permohonan ini.`)) {
+      return;
+    }
+
+    setUnlockingAwardId(awardApplicationId);
+    try {
+      const res = await unlockJuryAwardReview(awardApplicationId);
+      if (!res.success) {
+        alert('Gagal membuka semula: ' + res.message);
+        return;
+      }
+      alert('Permohonan anugerah telah dibuka semula untuk semakan.');
+      await loadAllData();
+      // Kemaskini activeSub supaya UI reflect status baru
+      setActiveSub((prev) =>
+        prev
+          ? {
+              ...prev,
+              awards: prev.awards?.map((a) =>
+                a.id === awardApplicationId
+                  ? { ...a, status: 'DALAM_SEMAKAN' as MakmpSubmissionStatus, total_merit_granted: 0 }
+                  : a
+              ),
+            }
+          : prev
+      );
+    } catch (err: any) {
+      alert('Ralat: ' + err.message);
+    } finally {
+      setUnlockingAwardId(null);
+    }
+  };
 
   useEffect(() => {
     loadAllData();
@@ -2199,6 +2237,19 @@ export default function MakmpAdminDashboardPage() {
                               <span className="text-xs font-bold text-emerald-400">
                                 +{awApp.total_merit_granted} Merit
                               </span>
+                            )}
+                            {(awApp.status === 'DISAHKAN' || awApp.status === 'DITOLAK') && (
+                              <button
+                                type="button"
+                                disabled={unlockingAwardId === awApp.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUnlockAward(awApp.id, awApp.award?.name);
+                                }}
+                                className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-bold hover:bg-amber-500/20 transition flex items-center gap-1 disabled:opacity-50"
+                              >
+                                {unlockingAwardId === awApp.id ? 'Membuka...' : '🔓 Buka Semula'}
+                              </button>
                             )}
                           </div>
                         </div>
