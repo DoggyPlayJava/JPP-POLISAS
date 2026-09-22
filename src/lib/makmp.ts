@@ -530,6 +530,30 @@ export async function fetchActiveMakmpEdition(): Promise<{
 }
 
 /** Hantar borang permohonan BERBILANG ANUGERAH (Multi-Award Submission) */
+/**
+ * Log aktiviti MAKMP ke admin_audit_logs (muncul di /jpp/logs).
+ * Guna RPC SECURITY DEFINER supaya juri (anon) & student guest boleh log
+ * walaupun tiada profile. Nama pelaku diletakkan dalam description.
+ */
+export async function logMakmpAudit(params: {
+  action: string;
+  entityId?: string;
+  description: string;
+  metadata?: Record<string, unknown>;
+}): Promise<void> {
+  try {
+    await supabase.rpc('log_makmp_audit', {
+      p_action: params.action,
+      p_entity_id: params.entityId || null,
+      p_description: params.description,
+      p_metadata: params.metadata || {},
+    });
+  } catch {
+    // Silent fail — jangan ganggu UX
+    console.warn('[MAKMP Audit] Gagal log:', params.action);
+  }
+}
+
 export async function submitMakmpMultiAwardApplication(params: {
   submission: {
     tracking_code: string;
@@ -694,6 +718,22 @@ export async function submitMakmpMultiAwardApplication(params: {
     }
   }
 
+  logMakmpAudit({
+    action: 'HANTAR',
+    entityId: submissionId,
+    description:
+      'Pelajar "' + params.submission.full_name + '" menghantar permohonan MAKMP (' +
+      params.submission.tracking_code + ') — ' + createdAwards.length + ' anugerah',
+    metadata: {
+      submission_id: submissionId,
+      student: params.submission.full_name,
+      matric_no: params.submission.matric_no,
+      tracking_code: params.submission.tracking_code,
+      award_count: createdAwards.length,
+      has_portal_account: params.submission.has_portal_account,
+    },
+  });
+
   const submission = {
     id: submissionId,
     tracking_code: params.submission.tracking_code,
@@ -756,6 +796,20 @@ export async function submitMakmpApplication(params: {
   if (subErr || !subData) {
     throw new Error(`Gagal menyimpan permohonan: ${subErr?.message || 'Ralat tidak diketahui'}`);
   }
+
+  logMakmpAudit({
+    action: 'HANTAR',
+    entityId: subData.id,
+    description:
+      'Pelajar "' + (subData.full_name || '-') + '" menghantar permohonan MAKMP (' +
+      (subData.tracking_code || '-') + ')',
+    metadata: {
+      submission_id: subData.id,
+      student: subData.full_name,
+      matric_no: subData.matric_no,
+      tracking_code: subData.tracking_code,
+    },
+  });
 
   if (params.items.length > 0) {
     const itemsToInsert = params.items.map((item) => ({
