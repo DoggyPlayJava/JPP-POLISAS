@@ -362,12 +362,6 @@ export default function MakmpStatusTrackingPage() {
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-0.5">
-                  <span className="text-[10px] uppercase font-bold text-slate-500">Jumlah Merit Diluluskan</span>
-                  <div className="font-bold text-emerald-400 text-sm">
-                    {submission.total_merit_awarded > 0 ? `+${submission.total_merit_awarded} Merit` : '0 (Belum Disahkan)'}
-                  </div>
-                </div>
               </div>
 
               {/* Claim / Pautkan ke Akaun (hanya bila submission belum ada user_id) */}
@@ -475,12 +469,6 @@ export default function MakmpStatusTrackingPage() {
                       <div className="text-xs text-emerald-300/90 mt-0.5">
                         Markah merit dan rekod pencapaian telah dikemas kini ke dalam profil e-akademik anda.
                       </div>
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-[10px] uppercase font-bold text-emerald-400">Total Merit</div>
-                    <div className="text-2xl font-black text-emerald-300">
-                      +{submission.total_merit_awarded}
                     </div>
                   </div>
                 </div>
@@ -592,11 +580,6 @@ export default function MakmpStatusTrackingPage() {
 
                             <div className="flex flex-col sm:items-end gap-1 shrink-0">
                               {getStatusBadge(awApp.status)}
-                              {awApp.status === 'DISAHKAN' && (
-                                <span className="text-xs font-bold text-emerald-400">
-                                  +{awApp.total_merit_granted} Merit
-                                </span>
-                              )}
                             </div>
                           </div>
 
@@ -665,15 +648,6 @@ export default function MakmpStatusTrackingPage() {
                                     </div>
 
                                     <div className="flex items-center gap-3 shrink-0">
-                                      {awApp.status === 'DISAHKAN' ? (
-                                        <div className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 font-bold border border-emerald-500/20 text-[11px]">
-                                          +{doc.merit_awarded} Merit
-                                        </div>
-                                      ) : (
-                                        <div className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 font-medium border border-amber-500/20 text-[11px]">
-                                          ~{doc.merit_suggested} Cadangan
-                                        </div>
-                                      )}
 
                                       <a
                                         href={doc.drive_view_url}
@@ -731,15 +705,6 @@ export default function MakmpStatusTrackingPage() {
                         </div>
 
                         <div className="flex items-center gap-3 shrink-0">
-                          {submission.status === 'DISAHKAN' ? (
-                            <div className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 font-bold border border-emerald-500/20">
-                              +{item.merit_awarded} Merit
-                            </div>
-                          ) : (
-                            <div className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 font-semibold border border-amber-500/20">
-                              ~{item.merit_suggested} Cadangan
-                            </div>
-                          )}
 
                           <a
                             href={item.drive_view_url}
