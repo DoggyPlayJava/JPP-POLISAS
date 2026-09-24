@@ -12,6 +12,8 @@ import helmet from 'helmet';
 
 import cron from 'node-cron';
 import runCleanup from './scripts/storage-cleanup.js';
+import sharp from 'sharp';
+import { execFile } from 'child_process';
 
 dotenv.config();
 
@@ -170,7 +172,7 @@ app.use(express.urlencoded({ extended: true, limit: '50kb' }));
 // Configure multer for file uploads in memory
 const upload = multer({ 
     storage: multer.memoryStorage(),
-    limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit (laporan MAKMP boleh cecah 30MB+)
+    limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit (sijil MAKMP boleh besar; akan dicompress sebelum simpan)
 });
 
 // Initialize Supabase Admin Client
@@ -738,6 +740,111 @@ app.post('/api/upload-to-drive', requireAuth, upload.single('file'), async (req,
 
     } catch (error) {
         console.error("[upload-to-drive] Error:", error.message);
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+// ==========================================
+// 5A. MAKMP sijil upload — compress (gambar via sharp, PDF via ghostscript)
+//     then store the COMPRESSED file to Supabase Storage bucket 'reports'.
+//     Accepts up to 100MB in, stores a much smaller file out.
+// ==========================================
+function compressPdfWithGhostscript(inputBuffer) {
+    return new Promise((resolve, reject) => {
+        execFile('gs', [
+            '-sDEVICE=pdfwrite',
+            '-dPDFSETTINGS=/ebook',
+            '-dCompatibilityLevel=1.4',
+            '-dNOPAUSE',
+            '-dQUIET',
+            '-dBATCH',
+            '-sOutputFile=-',
+            '-',
+        ], { maxBuffer: 200 * 1024 * 1024 }, (err, stdout) => {
+            if (err) {
+                // gs writes the PDF to stdout; stderr may carry warnings. Only
+                // treat a missing output as a real failure.
+                if (stdout && stdout.length > 0) return resolve(stdout);
+                return reject(err);
+            }
+            resolve(stdout);
+        });
+    });
+}
+
+app.post('/api/makmp/upload-sijil', requireAuth, upload.single('file'), async (req, res) => {
+    try {
+        const file = req.file;
+        const customName = (req.body.customName || 'MAKMP_sijil').replace(/[^a-zA-Z0-9_-]/g, '');
+
+        if (!file) {
+            return res.status(400).json({ error: "Fail tidak ditemui." });
+        }
+
+        const isImage = /^image\/(png|jpeg|webp)$/.test(file.mimetype);
+        const isPdf = file.mimetype === 'application/pdf';
+
+        if (!isImage && !isPdf) {
+            return res.status(400).json({ error: "Hanya fail PDF atau gambar (PNG/JPG/WebP) dibenarkan." });
+        }
+
+        let outBuffer = file.buffer;
+        let outExt = file.originalname.toLowerCase().split('.').pop() || (isPdf ? 'pdf' : 'jpg');
+        let contentType = file.mimetype;
+
+        try {
+            if (isImage) {
+                // Convert image -> JPEG (WebP/PNG may be large or unsupported by some viewers)
+                outBuffer = await sharp(file.buffer)
+                    .rotate()                      // respect EXIF orientation
+                    .resize({ width: 2000, height: 2000, fit: 'inside', withoutEnlargement: true })
+                    .jpeg({ quality: 72, mozjpeg: true })
+                    .toBuffer();
+                outExt = 'jpg';
+                contentType = 'image/jpeg';
+            } else if (isPdf) {
+                outBuffer = await compressPdfWithGhostscript(file.buffer);
+                outExt = 'pdf';
+                contentType = 'application/pdf';
+            }
+        } catch (compressErr) {
+            // Compression failed — fall back to the original buffer so the
+            // upload never hard-fails just because compression is unavailable.
+            console.warn('[makmp/upload-sijil] Compression failed, using original:', compressErr.message);
+            outBuffer = file.buffer;
+            outExt = file.originalname.toLowerCase().split('.').pop() || (isPdf ? 'pdf' : 'jpg');
+            contentType = file.mimetype;
+        }
+
+        if (!supabaseAdmin) {
+            return res.status(500).json({ error: "Supabase Admin Client not initialized." });
+        }
+
+        const ts = Date.now();
+        const path = `makmp_sijil/${customName}_${ts}.${outExt}`;
+        const { error: uploadErr } = await supabaseAdmin.storage
+            .from('reports')
+            .upload(path, outBuffer, {
+                contentType,
+                cacheControl: '3600',
+                upsert: false,
+            });
+
+        if (uploadErr) {
+            throw new Error(`Storage upload failed: ${uploadErr.message}`);
+        }
+
+        const { data: publicUrlData } = supabaseAdmin.storage.from('reports').getPublicUrl(path);
+
+        console.log(`[makmp/upload-sijil] ${(file.size/1024/1024).toFixed(1)}MB -> ${(outBuffer.length/1024/1024).toFixed(2)}MB (${path})`);
+
+        return res.status(200).json({
+            url: publicUrlData.publicUrl,
+            fileId: null,
+            fileName: path,
+        });
+    } catch (error) {
+        console.error('[makmp/upload-sijil] Error:', error.message);
         return res.status(500).json({ error: error.message });
     }
 });

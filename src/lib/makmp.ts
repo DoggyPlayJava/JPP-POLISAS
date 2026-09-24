@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { compressImage } from '@/lib/imageCompression';
 import type {
   MakmpEdition,
   MakmpCategory,
@@ -397,16 +398,29 @@ export async function uploadMakmpCertificate(
   const cleanMatric = (matricNo || 'PELAJAR').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
   const customName = `MAKMP_${cleanMatric}_SIJIL_${index + 1}_${Date.now()}`;
 
-  // 1. Cuba upload ke Google Drive via Express backend (dengan timeout supaya
-  //    tak hang bila Google lambat → "failed to fetch")
+  // 0. Compress IMAGES client-side (browser) dulu supaya upload jadi kecil &
+  //    jimat bandwidth. PDF dibiarkan — server akan compress PDF guna ghostscript.
+  let fileToUpload: File = file;
+  if (file.type.startsWith('image/')) {
+    try {
+      const originalSize = file.size;
+      fileToUpload = await compressImage(file);
+      console.log(`[MAKMP Upload] Image compressed: ${(originalSize/1024/1024).toFixed(1)}MB -> ${(fileToUpload.size/1024/1024).toFixed(2)}MB`);
+    } catch (e) {
+      console.warn('[MAKMP Upload] Client image compression failed, using original:', e);
+      fileToUpload = file;
+    }
+  }
+
+  // 1. Cuba upload melalui backend `/api/makmp/upload-sijil` (compress + simpan
+  //    ke Supabase Storage). Timeout supaya tak hang bila server lambat.
   try {
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('subfolder', 'makmp_sijil');
+    formData.append('file', fileToUpload);
     formData.append('customName', customName);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s (fallback lebih cepat)
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s (compression boleh ambil masa)
 
     try {
       const res = await fetch('/api/makmp/upload-sijil', {
@@ -422,18 +436,18 @@ export async function uploadMakmpCertificate(
           return { url: data.url, fileId: data.fileId };
         }
       }
-      console.warn('[MAKMP Upload] Drive upload endpoint returned non-OK, falling back to Supabase Storage.');
+      console.warn('[MAKMP Upload] Backend upload returned non-OK, falling back to direct Supabase Storage.');
     } finally {
       clearTimeout(timeoutId);
     }
   } catch (err) {
-    console.warn('[MAKMP Upload] Drive upload failed, falling back to Supabase Storage:', err);
+    console.warn('[MAKMP Upload] Backend upload failed, falling back to direct Supabase Storage:', err);
   }
 
-  // 2. Fallback: Supabase Storage bucket 'reports'
-  const ext = file.name.split('.').pop() || 'pdf';
+  // 2. Fallback: Supabase Storage bucket 'reports' (guna file yang dah compressed)
+  const ext = fileToUpload.name.split('.').pop() || 'pdf';
   const path = `makmp_sijil/${customName}.${ext}`;
-  const { error: uploadErr } = await supabase.storage.from('reports').upload(path, file, {
+  const { error: uploadErr } = await supabase.storage.from('reports').upload(path, fileToUpload, {
     cacheControl: '3600',
     upsert: false,
   });

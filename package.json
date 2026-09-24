@@ -1,7 +1,7 @@
 {
   "name": "vite-react-app",
   "private": true,
-  "version": "2.7.40",
+  "version": "2.7.41",
   "type": "module",
   "engines": {
     "node": ">=22.12.0"
@@ -129,6 +129,7 @@
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "serialize-javascript": "^7.0.5",
+    "sharp": "^0.35.4",
     "sonner": "^2.0.7",
     "stylelint": "^17.0.0",
     "stylelint-config-standard": "^40.0.0",

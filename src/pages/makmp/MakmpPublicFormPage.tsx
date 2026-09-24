@@ -907,11 +907,11 @@ export default function MakmpPublicFormPage() {
         if (!d.file && !d.uploadedUrl) {
           return `${aw?.name} - Dokumen #${i + 1}: Sila pilih fail PDF atau gambar sijil.`;
         }
-        if (d.file && d.file.size > 50 * 1024 * 1024) {
+        if (d.file && d.file.size > 100 * 1024 * 1024) {
           return `${aw?.name} - Dokumen #${i + 1}: Saiz fail "${d.file.name}" (${(
             d.file.size /
             (1024 * 1024)
-          ).toFixed(1)}MB) melebihi had maksimum 50MB. Sila pilih fail yang lebih kecil.`;
+          ).toFixed(1)}MB) melebihi had maksimum 100MB. Sila pilih fail yang lebih kecil.`;
         }
       }
     }
@@ -2333,7 +2333,7 @@ export default function MakmpPublicFormPage() {
                                       className="hidden"
                                       onChange={(e) => {
                                         const f = e.target.files?.[0] || null;
-                                        if (f && f.size > 50 * 1024 * 1024) {
+                                        if (f && f.size > 100 * 1024 * 1024) {
                                           alert(
                                             `Fail "${f.name}" berukuran ${(
                                               f.size /
