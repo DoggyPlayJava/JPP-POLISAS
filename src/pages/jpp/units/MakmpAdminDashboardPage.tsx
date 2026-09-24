@@ -31,6 +31,7 @@ import {
   Trophy,
   ChevronDown,
   ChevronUp,
+  CalendarClock,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -116,6 +117,16 @@ export default function MakmpAdminDashboardPage() {
   const [catMaxMerit, setCatMaxMerit] = useState(50);
   const [catDesc, setCatDesc] = useState('');
   const [catIsActive, setCatIsActive] = useState(true);
+
+  // Edition Modal (Create & Edit) — tarikh tutup, tajuk, tahun, buka/tutup sesi
+  const [isEditionModalOpen, setIsEditionModalOpen] = useState(false);
+  const [editingEdition, setEditingEdition] = useState<MakmpEdition | null>(null);
+  const [editionTitle, setEditionTitle] = useState('');
+  const [editionYear, setEditionYear] = useState(new Date().getFullYear());
+  const [editionDesc, setEditionDesc] = useState('');
+  const [editionDeadline, setEditionDeadline] = useState('');
+  const [editionIsActive, setEditionIsActive] = useState(true);
+  const [savingEdition, setSavingEdition] = useState(false);
 
   // Jury PIN Modal (Create & Edit) with Multi-Select Categories
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
@@ -687,6 +698,115 @@ export default function MakmpAdminDashboardPage() {
   };
 
   // ============================================================================
+  // EDISI HANDLERS (makmp_editions CRUD) — tarikh tutup, tajuk, tahun, sesi
+  // ============================================================================
+  // Helper: ISO <-> datetime-local (input value format YYYY-MM-DDTHH:mm)
+  const isoToLocalInput = (iso?: string | null): string => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  const handleOpenCreateEdition = () => {
+    setEditingEdition(null);
+    setEditionTitle('');
+    setEditionYear(new Date().getFullYear() + 1);
+    setEditionDesc('');
+    setEditionDeadline('');
+    setEditionIsActive(true);
+    setIsEditionModalOpen(true);
+  };
+
+  const handleOpenEditEdition = (ed: MakmpEdition) => {
+    setEditingEdition(ed);
+    setEditionTitle(ed.title || '');
+    setEditionYear(ed.year || new Date().getFullYear());
+    setEditionDesc(ed.description || '');
+    setEditionDeadline(isoToLocalInput(ed.submission_deadline));
+    setEditionIsActive(ed.is_active ?? true);
+    setIsEditionModalOpen(true);
+  };
+
+  const handleSaveEdition = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editionTitle.trim()) { alert('Sila nyatakan tajuk edisi.'); return; }
+    if (!editionYear) { alert('Sila nyatakan tahun edisi.'); return; }
+    setSavingEdition(true);
+
+    // Convert local datetime -> ISO (UTC). Empty deadline => null.
+    let deadlineIso: string | null = null;
+    if (editionDeadline) {
+      const d = new Date(editionDeadline);
+      if (isNaN(d.getTime())) { alert('Format tarikh tutup tidak sah.'); setSavingEdition(false); return; }
+      deadlineIso = d.toISOString();
+    }
+
+    const payload = {
+      title: editionTitle.trim(),
+      year: Number(editionYear),
+      description: editionDesc.trim() || null,
+      submission_deadline: deadlineIso,
+      is_active: editionIsActive,
+    };
+
+    if (editingEdition) {
+      const { data, error } = await supabase
+        .from('makmp_editions')
+        .update(payload)
+        .eq('id', editingEdition.id)
+        .select()
+        .single();
+      if (error) { alert('Gagal mengemas kini edisi: ' + error.message); setSavingEdition(false); return; }
+      setEditions((prev) => prev.map((e) => (e.id === editingEdition.id ? data : e)));
+    } else {
+      const { data, error } = await supabase
+        .from('makmp_editions')
+        .insert([payload])
+        .select()
+        .single();
+      if (error) { alert('Gagal menambah edisi: ' + error.message); setSavingEdition(false); return; }
+      setEditions((prev) => [...prev, data]);
+    }
+
+    setSavingEdition(false);
+    setIsEditionModalOpen(false);
+    setEditingEdition(null);
+  };
+
+  const handleToggleEditionActive = async (ed: MakmpEdition) => {
+    const newStatus = !ed.is_active;
+    const { error } = await supabase
+      .from('makmp_editions')
+      .update({ is_active: newStatus })
+      .eq('id', ed.id);
+    if (error) { alert('Gagal menukar status sesi: ' + error.message); return; }
+    setEditions((prev) => prev.map((e) => (e.id === ed.id ? { ...e, is_active: newStatus } : e)));
+  };
+
+  const handleDeleteEdition = async (ed: MakmpEdition) => {
+    const confirmDelete = window.confirm(
+      `Adakah anda pasti mahu memadam edisi "${ed.title}" (${ed.year})?\n\n` +
+      `Ini akan memadam edisi sahaja — kategori, anugerah & permohonan di bawahnya perlu dipadam secara berasingan. Tindakan ini tidak boleh diundur.`
+    );
+    if (!confirmDelete) return;
+    const { error } = await supabase
+      .from('makmp_editions')
+      .delete()
+      .eq('id', ed.id);
+    if (error) {
+      if (error.code === '23503' || error.message?.includes('foreign key')) {
+        alert('Tidak dapat memadam edisi ini kerana masih ada kategori / anugerah / permohonan yang merujuk kepadanya. Sila nyahaktifkan (tutup sesi) sebaliknya.');
+      } else {
+        alert('Gagal memadam edisi: ' + error.message);
+      }
+      return;
+    }
+    setEditions((prev) => prev.filter((e) => e.id !== ed.id));
+  };
+
+  // ============================================================================
   // ANUGERAH RASMI HANDLERS (makmp_award_definitions CRUD)
   // ============================================================================
   const handleOpenCreateAward = () => {
@@ -1050,6 +1170,18 @@ export default function MakmpAdminDashboardPage() {
         >
           <KeyRound className="w-3.5 h-3.5" />
           <span>Kod PIN Juri ({pins.length})</span>
+        </button>
+
+        <button
+          onClick={() => setTab('editions')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+            tab === 'editions'
+              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/10'
+              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+          }`}
+        >
+          <CalendarClock className="w-3.5 h-3.5" />
+          <span>Edisi & Sesi ({editions.length})</span>
         </button>
       </div>
 
@@ -2423,6 +2555,202 @@ export default function MakmpAdminDashboardPage() {
           </div>
         </div>
       )}
+      {/* ==================================================================== */}
+      {/* TAB 4: EDISI & SESI — tarikh tutup, tajuk, tahun, buka/tutup sesi   */}
+      {/* ==================================================================== */}
+      {tab === 'editions' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-slate-400">
+              Urus edisi tahunan MAKMP — tukar tarikh tutup permohonan, tajuk, tahun, dan buka/tutup sesi.
+            </p>
+            {isJppOrAdmin && (
+              <button
+                onClick={handleOpenCreateEdition}
+                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-2 transition"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Edisi Baharu</span>
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            {editions.map((ed) => (
+              <div
+                key={ed.id}
+                className={`p-4 rounded-2xl border ${
+                  ed.is_active ? 'border-amber-500/30 bg-amber-500/5' : 'border-slate-800 bg-slate-900/60 opacity-75'
+                } flex flex-col sm:flex-row sm:items-center justify-between gap-3`}
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="font-bold text-white text-sm">{ed.title}</h4>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300">
+                      {ed.year}
+                    </span>
+                    {ed.is_active ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/20">
+                        Sesi Dibuka
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/20">
+                        Sesi Ditutup
+                      </span>
+                    )}
+                  </div>
+                  {ed.description && (
+                    <p className="text-[11px] text-slate-400">{ed.description}</p>
+                  )}
+                  <div className="flex items-center gap-1.5 text-[11px] text-slate-300">
+                    <CalendarClock className="w-3.5 h-3.5 text-amber-400" />
+                    <span>
+                      Tarikh tutup:{' '}
+                      {ed.submission_deadline
+                        ? new Date(ed.submission_deadline).toLocaleString('ms-MY', {
+                            day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+                          })
+                        : '— belum ditetapkan —'}
+                    </span>
+                  </div>
+                </div>
+
+                {isJppOrAdmin && (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => handleToggleEditionActive(ed)}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold transition ${
+                        ed.is_active
+                          ? 'bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 border border-rose-500/20'
+                          : 'bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 border border-emerald-500/20'
+                      }`}
+                    >
+                      {ed.is_active ? 'Tutup Sesi' : 'Buka Sesi'}
+                    </button>
+                    <button
+                      onClick={() => handleOpenEditEdition(ed)}
+                      className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+                      title="Kemaskini edisi"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteEdition(ed)}
+                      className="p-2 rounded-xl bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 transition"
+                      title="Padam edisi"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+            {editions.length === 0 && (
+              <div className="p-6 text-center text-slate-500 text-xs">
+                Tiada edisi lagi. Klik "Edisi Baharu" untuk mula.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edisi (Create & Edit) */}
+      {isEditionModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+              <h3 className="font-bold text-base text-white">
+                {editingEdition ? 'Kemaskini Edisi' : 'Edisi Baharu'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsEditionModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdition} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Tajuk Edisi *</label>
+                <input
+                  type="text"
+                  required
+                  value={editionTitle}
+                  onChange={(e) => setEditionTitle(e.target.value)}
+                  placeholder="cth: Majlis Anugerah Kecemerlangan POLISAS 2027"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Tahun *</label>
+                  <input
+                    type="number"
+                    min={2020}
+                    max={2100}
+                    value={editionYear}
+                    onChange={(e) => setEditionYear(Number(e.target.value))}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Tarikh Tutup</label>
+                  <input
+                    type="datetime-local"
+                    value={editionDeadline}
+                    onChange={(e) => setEditionDeadline(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Penerangan</label>
+                <textarea
+                  rows={2}
+                  value={editionDesc}
+                  onChange={(e) => setEditionDesc(e.target.value)}
+                  placeholder="Penerangan ringkas edisi ini..."
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <label className="relative flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={editionIsActive}
+                    onChange={(e) => setEditionIsActive(e.target.checked)}
+                    className="w-4 h-4 rounded text-amber-500 bg-slate-950 border-slate-800 focus:ring-amber-500"
+                  />
+                  <span className="text-white font-semibold text-xs">Sesi Dibuka (aktif)</span>
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsEditionModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdition}
+                  className="px-5 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold disabled:opacity-50"
+                >
+                  {savingEdition ? 'Menyimpan...' : editingEdition ? 'Kemaskini Edisi' : 'Simpan Edisi'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
