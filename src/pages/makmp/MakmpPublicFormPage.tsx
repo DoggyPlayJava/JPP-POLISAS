@@ -163,6 +163,7 @@ export default function MakmpPublicFormPage() {
 
   // Step 3: Documents per Award
   const [awardDocuments, setAwardDocuments] = useState<Record<string, CertFormItem[]>>({});
+  const [submissionAwardIdMap, setSubmissionAwardIdMap] = useState<Record<string, string>>({});
   const [activeAwardTabId, setActiveAwardTabId] = useState<string>('');
 
   // Step 1: Inline Login State
@@ -249,10 +250,14 @@ export default function MakmpPublicFormPage() {
         const awardIdSet = new Set<string>();
         const docsMap: Record<string, CertFormItem[]> = {};
         const entityMap: Record<string, { entity_name: string; applicant_role: string }> = {};
+        const submissionAwardIdMap: Record<string, string> = {};
 
         for (const aw of awardsList) {
           if (!aw.award_id) continue;
           awardIdSet.add(aw.award_id);
+          // Simpan mapping award_definition_id -> submission_award_id supaya item
+          // BARU yang ditambah kemudian boleh diikat pada submission_award yang betul.
+          submissionAwardIdMap[aw.award_id] = aw.id;
           entityMap[aw.award_id] = {
             entity_name: aw.entity_name || '',
             applicant_role: aw.applicant_role || '',
@@ -269,7 +274,7 @@ export default function MakmpPublicFormPage() {
             file: null,
             uploadedUrl: it.drive_view_url || '',
             uploadedFileId: it.drive_file_id || undefined,
-            submission_award_id: (it as any).submission_award_id || null,
+            submission_award_id: aw.id || (it as any).submission_award_id || null,
             merit_suggested: it.merit_suggested || 0,
             akademik_pencapaian_id: it.akademik_pencapaian_id || null,
             source: it.source || 'MANUAL_UPLOAD',
@@ -279,6 +284,7 @@ export default function MakmpPublicFormPage() {
         setSelectedAwardIds(Array.from(awardIdSet));
         setAwardEntityData(entityMap);
         setAwardDocuments(docsMap);
+        setSubmissionAwardIdMap(submissionAwardIdMap);
         setExistingSubmissionId(existing.id);
         setExistingTrackingCode(existing.tracking_code || '');
         setIsEditMode(true);
@@ -1048,7 +1054,7 @@ export default function MakmpPublicFormPage() {
 
           uploadedItemsForAward.push({
             id: (doc as any).id || null,
-            submission_award_id: (doc as any).submission_award_id || null,
+            submission_award_id: submissionAwardIdMap[awardId] || (doc as any).submission_award_id || null,
             nama_pencapaian: doc.nama_pencapaian.trim(),
             document_type: doc.document_type || 'SIJIL',
             peringkat: doc.peringkat,
