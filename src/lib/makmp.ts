@@ -947,6 +947,7 @@ export async function updateMakmpSubmissionItems(
   submissionId: string,
   items: {
     id?: string | null;
+    submission_award_id?: string | null;
     nama_pencapaian: string;
     peringkat: string;
     pencapaian_type: string;

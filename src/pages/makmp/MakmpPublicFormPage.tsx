@@ -90,6 +90,7 @@ interface CertFormItem {
   filePreviewName?: string;
   uploadedUrl?: string;
   uploadedFileId?: string;
+  submission_award_id?: string | null;
   merit_suggested: number;
   akademik_pencapaian_id?: string | null;
   source?: 'MANUAL_UPLOAD' | 'E_AKADEMIK';
@@ -268,6 +269,7 @@ export default function MakmpPublicFormPage() {
             file: null,
             uploadedUrl: it.drive_view_url || '',
             uploadedFileId: it.drive_file_id || undefined,
+            submission_award_id: (it as any).submission_award_id || null,
             merit_suggested: it.merit_suggested || 0,
             akademik_pencapaian_id: it.akademik_pencapaian_id || null,
             source: it.source || 'MANUAL_UPLOAD',
@@ -831,11 +833,9 @@ export default function MakmpPublicFormPage() {
   };
 
   const handleRemoveDocument = (awardId: string, docId: string) => {
-    const docs = awardDocuments[awardId] || [];
-    if (docs.length <= 1) return;
     setAwardDocuments((prev) => ({
       ...prev,
-      [awardId]: prev[awardId].filter((d) => d.id !== docId),
+      [awardId]: (prev[awardId] || []).filter((d) => d.id !== docId),
     }));
   };
 
@@ -850,6 +850,12 @@ export default function MakmpPublicFormPage() {
       [awardId]: (prev[awardId] || []).map((d) => {
         if (d.id !== docId) return d;
         const updated = { ...d, [field]: value };
+        // Bila fail baru dipilih, kosongkan uploadedUrl supaya fail BARU
+        // betul-betul menggantikan sijil lama (bukan kekal URL lama).
+        if (field === 'file' && value) {
+          updated.uploadedUrl = '';
+          updated.uploadedFileId = undefined;
+        }
         if (field === 'peringkat' || field === 'pencapaian_type') {
           updated.merit_suggested = calculateSuggestedMerit(
             field === 'peringkat' ? value : d.peringkat,
@@ -982,7 +988,7 @@ export default function MakmpPublicFormPage() {
         const docs = awardDocuments[awardId] || [];
         for (let i = 0; i < docs.length; i++) {
           const doc = docs[i];
-          if (!doc.uploadedUrl && doc.file) {
+          if (doc.file) {
             pendingUploads.push({ key: `${awardId}::${i}`, doc, file: doc.file });
           }
           uploadIdx++;
@@ -1029,7 +1035,9 @@ export default function MakmpPublicFormPage() {
           let fileUrl = doc.uploadedUrl;
           let fileId = doc.uploadedFileId;
 
-          if (!fileUrl && uploadResults[key]) {
+          // Jika pelajar pilih fail BARU, hasil upload baharu mesti menggantikan
+          // sijil lama (bukan kekal URL lama).
+          if (doc.file && uploadResults[key]) {
             fileUrl = uploadResults[key].url;
             fileId = uploadResults[key].fileId;
           }
@@ -1040,6 +1048,7 @@ export default function MakmpPublicFormPage() {
 
           uploadedItemsForAward.push({
             id: (doc as any).id || null,
+            submission_award_id: (doc as any).submission_award_id || null,
             nama_pencapaian: doc.nama_pencapaian.trim(),
             document_type: doc.document_type || 'SIJIL',
             peringkat: doc.peringkat,
@@ -1071,6 +1080,7 @@ export default function MakmpPublicFormPage() {
         const flatItems = preparedAwardsPayload.flatMap((aw) =>
           aw.items.map((it) => ({
             id: (it as any).id || null,
+            submission_award_id: (it as any).submission_award_id || null,
             nama_pencapaian: it.nama_pencapaian,
             peringkat: it.peringkat,
             pencapaian_type: it.pencapaian_type,
@@ -2316,13 +2326,27 @@ export default function MakmpPublicFormPage() {
                                     <Upload className="w-4 h-4 text-amber-400 shrink-0" />
                                     <span className="truncate">
                                       {doc.file
-                                        ? `Dipilih: ${doc.file.name} (${(doc.file.size / 1024).toFixed(
+                                        ? `Dipilih (baharu): ${doc.file.name} (${(doc.file.size / 1024).toFixed(
                                             0
                                           )} KB)`
+                                        : doc.uploadedUrl
+                                        ? 'Sijil sedia ada — klik untuk tukar fail baharu'
                                         : isReportFile
                                         ? 'Pilih Fail Laporan Projek (PDF mengikut templat)...'
                                         : 'Pilih Fail Sijil / Bukti (PDF / Gambar)...'}
                                     </span>
+                                    {doc.uploadedUrl && (
+                                      <a
+                                        href={doc.uploadedUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="shrink-0 inline-flex items-center gap-1 text-amber-400 hover:underline font-semibold"
+                                      >
+                                        <ExternalLink className="w-3 h-3" />
+                                        <span>Papar</span>
+                                      </a>
+                                    )}
                                     <input
                                       type="file"
                                       accept={
