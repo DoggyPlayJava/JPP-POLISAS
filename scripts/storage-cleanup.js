@@ -20,6 +20,25 @@ const supabase = (supabaseUrl && supabaseServiceKey)
   : null;
 
 // ──────────────────────────────────────────────────────────
+// DRY-RUN GUARD (data-integrity safety)
+//
+// DEFAULT = DRY-RUN. The script will NOT delete anything unless
+// you explicitly pass --confirm (or --force).
+//
+//   node scripts/storage-cleanup.js            → dry-run (safe, read-only)
+//   node scripts/storage-cleanup.js --confirm  → actually deletes
+//
+// Rationale: on 2026-09-24 an old version of this script wrongly
+// deleted 38+ MAKMP sijil (student certificates) because
+// `makmp_submission_items` was missing from the reference list.
+// We now (a) include MAKMP refs, (b) bulk-load refs with an abort
+// safety-net, and (c) default to dry-run so a bare invocation can
+// never destroy data again.
+// ──────────────────────────────────────────────────────────
+const args = process.argv.slice(2);
+const DRY_RUN = !(args.includes('--confirm') || args.includes('--force'));
+
+// ──────────────────────────────────────────────────────────
 // MAP: Which DB tables/columns reference files in storage?
 // Verified against actual DB schema on 2026-05-05.
 // ──────────────────────────────────────────────────────────
@@ -216,6 +235,9 @@ async function listAllFiles(bucket, folder) {
 /**
  * Auto-delete receipt files older than 30 days from the polymart-receipts bucket
  * and set their references (payment_receipt_url) in polymart_orders to null.
+ *
+ * NOTE: In dry-run mode this only logs what WOULD be deleted, and does NOT
+ * nullify any DB column. A --confirm run is required for real mutation.
  */
 async function cleanOldReceipts() {
   console.log(`[Storage Cleanup] Checking for receipts older than 30 days to auto-delete...`);
@@ -254,39 +276,54 @@ async function cleanOldReceipts() {
 
     if (markerIndex !== -1) {
       const filePath = decodeURIComponent(receiptUrl.substring(markerIndex + bucketMarker.length));
-      console.log(`[Storage Cleanup] Deleting old receipt: ${filePath} for order ${order.id}`);
+      console.log(`[Storage Cleanup] ${DRY_RUN ? 'WOULD delete' : 'Deleting'} old receipt: ${filePath} for order ${order.id}`);
 
-      const { error: deleteError } = await supabase.storage
-        .from('polymart-receipts')
-        .remove([filePath]);
+      if (!DRY_RUN) {
+        const { error: deleteError } = await supabase.storage
+          .from('polymart-receipts')
+          .remove([filePath]);
 
-      if (deleteError) {
-        console.error(`[Storage Cleanup] Failed to delete receipt file ${filePath}:`, deleteError.message);
-      } else {
-        deletedCount++;
+        if (deleteError) {
+          console.error(`[Storage Cleanup] Failed to delete receipt file ${filePath}:`, deleteError.message);
+        } else {
+          deletedCount++;
+        }
       }
     } else {
       console.warn(`[Storage Cleanup] Could not extract storage file path from receipt URL: ${receiptUrl}`);
     }
 
-    // Always nullify payment_receipt_url in DB to ensure consistency
-    const { error: updateError } = await supabase
-      .from('polymart_orders')
-      .update({ payment_receipt_url: null })
-      .eq('id', order.id);
+    if (!DRY_RUN) {
+      // Always nullify payment_receipt_url in DB to ensure consistency
+      const { error: updateError } = await supabase
+        .from('polymart_orders')
+        .update({ payment_receipt_url: null })
+        .eq('id', order.id);
 
-    if (updateError) {
-      console.error(`[Storage Cleanup] Failed to clear payment_receipt_url for order ${order.id}:`, updateError.message);
+      if (updateError) {
+        console.error(`[Storage Cleanup] Failed to clear payment_receipt_url for order ${order.id}:`, updateError.message);
+      }
     }
   }
 
-  console.log(`[Storage Cleanup] Auto-deleted ${deletedCount} receipt files and updated database.`);
+  console.log(`[Storage Cleanup] ${DRY_RUN ? 'Dry-run — would have auto-deleted' : 'Auto-deleted'} ${deletedCount} receipt files.`);
 }
 
 async function runCleanup() {
   if (!supabase) {
     console.warn("[Storage Cleanup] Skipped — Supabase client not initialized (missing env vars).");
     return;
+  }
+
+  if (DRY_RUN) {
+    console.log("────────────────────────────────────────────────────────────");
+    console.log("[Storage Cleanup] DRY-RUN MODE — no files will be deleted.");
+    console.log("[Storage Cleanup] Re-run with --confirm to actually delete.");
+    console.log("────────────────────────────────────────────────────────────");
+  } else {
+    console.log("────────────────────────────────────────────────────────────");
+    console.log("[Storage Cleanup] LIVE MODE — files WILL be deleted.");
+    console.log("────────────────────────────────────────────────────────────");
   }
 
   console.log(`[Storage Cleanup] Started at ${new Date().toISOString()}`);
@@ -309,6 +346,7 @@ async function runCleanup() {
   console.log(`[Storage Cleanup] Loaded ${referencedPaths.size} referenced path(s) from DB.`);
 
   let totalScanned = 0;
+  let totalToDelete = 0;
   let totalDeleted = 0;
   let totalKept = 0;
 
@@ -341,12 +379,17 @@ async function runCleanup() {
           }
 
           if (!referenced) {
-            console.log(`[Storage Cleanup]   ❌ Orphaned: ${bucket.name}/${filePath}`);
-            const { error: deleteError } = await supabase.storage.from(bucket.name).remove([filePath]);
-            if (deleteError) {
-              console.error(`[Storage Cleanup]   Failed to delete: ${deleteError.message}`);
+            totalToDelete++;
+            if (DRY_RUN) {
+              console.log(`[Storage Cleanup]   ❌ Orphaned (dry-run, skipped): ${bucket.name}/${filePath}`);
             } else {
-              totalDeleted++;
+              console.log(`[Storage Cleanup]   ❌ Orphaned: ${bucket.name}/${filePath}`);
+              const { error: deleteError } = await supabase.storage.from(bucket.name).remove([filePath]);
+              if (deleteError) {
+                console.error(`[Storage Cleanup]   Failed to delete: ${deleteError.message}`);
+              } else {
+                totalDeleted++;
+              }
             }
           } else {
             totalKept++;
@@ -356,9 +399,10 @@ async function runCleanup() {
     }
 
     console.log(`[Storage Cleanup] ─── Summary ───`);
-    console.log(`[Storage Cleanup]   Scanned: ${totalScanned}`);
-    console.log(`[Storage Cleanup]   Kept:    ${totalKept}`);
-    console.log(`[Storage Cleanup]   Deleted: ${totalDeleted}`);
+    console.log(`[Storage Cleanup]   Scanned:      ${totalScanned}`);
+    console.log(`[Storage Cleanup]   Kept:         ${totalKept}`);
+    console.log(`[Storage Cleanup]   Orphaned:     ${totalToDelete}`);
+    console.log(`[Storage Cleanup]   Deleted:      ${totalDeleted}${DRY_RUN ? ' (dry-run, 0 actually deleted)' : ''}`);
     console.log(`[Storage Cleanup] Completed at ${new Date().toISOString()}`);
   } catch (error) {
     console.error(`[Storage Cleanup] Unexpected error:`, error);
