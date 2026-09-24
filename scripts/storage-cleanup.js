@@ -46,6 +46,9 @@ const SCALAR_REFS = [
   { table: 'supsas_medal_tally',  column: 'logo_url' },
   { table: 'polymart_orders',     column: 'payment_receipt_url' },
   { table: 'keusahawanan_businesses', column: 'payment_qr_url' },
+  // MAKMP sijil — JANGAN padam (sebelum ni tersalah anggap orphaned)
+  { table: 'makmp_submission_items', column: 'drive_view_url' },
+  { table: 'makmp_submission_items', column: 'drive_download_url' },
 ];
 
 // Array columns — need special handling with .contains()
