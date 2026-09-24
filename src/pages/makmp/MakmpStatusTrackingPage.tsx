@@ -22,6 +22,7 @@ import {
   LogIn,
   UserPlus,
   ShieldCheck,
+  Pencil,
 } from 'lucide-react';
 import { fetchSubmissionByTrackingCode, getMakmpWhatsAppUrl, claimMakmpSubmission, MakmpClaimResult } from '@/lib/makmp';
 import { supabase } from '@/lib/supabase';
@@ -341,6 +342,17 @@ export default function MakmpStatusTrackingPage() {
                   </div>
                   {getStatusBadge(submission.status)}
                 </div>
+
+                  {/* Butang Kemaskini — hanya pemilik yang log masuk & status masih MENUNGGU */}
+                  {submission.status === 'MENUNGGU' && user && submission.user_id === user.id && (
+                    <button
+                      onClick={() => navigate('/makmp')}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition shadow-md shadow-amber-500/20"
+                    >
+                      <Pencil className="w-4 h-4" />
+                      <span>Kemaskini Permohonan</span>
+                    </button>
+                  )}
               </div>
 
               {/* Biodata Pelajar Grid */}
