@@ -12,6 +12,7 @@ import {
   Copy,
   Check,
   Search,
+  Save,
   UserCheck,
   UserPlus,
   ShieldCheck,
@@ -279,6 +280,9 @@ export default function MakmpPublicFormPage() {
         setExistingSubmissionId(existing.id);
         setExistingTrackingCode(existing.tracking_code || '');
         setIsEditMode(true);
+        // Terus bawa ke step dokumen (3) supaya student boleh terus tambah/edit sijil.
+        // Mereka masih boleh klik "Kembali" ke step biodata/anugerah jika perlu.
+        setStep(3);
       } catch (err: any) {
         console.warn('[MAKMP Edit] Gagal muat submission sedia ada:', err?.message);
       } finally {
@@ -1213,6 +1217,27 @@ export default function MakmpPublicFormPage() {
 
       {/* Main Container */}
       <main className="max-w-4xl mx-auto px-4 pt-6 pb-28 md:pb-12">
+        {/* Banner Mod Kemaskini (edit mode) */}
+        {isEditMode && step !== 4 && (
+          <div className="mb-6 p-4 md:p-5 rounded-2xl border border-sky-500/30 bg-sky-500/10 flex items-start gap-3 shadow-lg">
+            <div className="p-2 rounded-lg bg-sky-500/20 border border-sky-500/30 text-sky-300 shrink-0">
+              <Save className="w-4 h-4" />
+            </div>
+            <div className="flex-1">
+              <div className="font-bold text-sm text-sky-200 flex items-center gap-2">
+                Mod Kemaskini Permohonan
+              </div>
+              <p className="text-xs text-sky-300/80 mt-0.5">
+                Anda sedang mengemaskini permohonan sedia ada
+                {existingTrackingCode && (
+                  <span className="ml-1 font-mono text-sky-200">({existingTrackingCode})</span>
+                )}.
+                Kod rujukan anda kekal sama. Sila semak & simpan perubahan sebelum juri mula menyemak.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Banner Hero */}
         {step !== 4 && (
           <div className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-b from-amber-500/10 via-slate-900/40 to-slate-900 p-6 md:p-8 mb-8 shadow-xl">
@@ -2395,17 +2420,21 @@ export default function MakmpPublicFormPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-7 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-sm hover:brightness-110 shadow-lg shadow-amber-500/20 transition flex items-center gap-2 disabled:opacity-50"
+                className={
+                  isEditMode
+                    ? "px-7 py-3 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold text-sm hover:brightness-110 shadow-lg shadow-sky-500/20 transition flex items-center gap-2 disabled:opacity-50"
+                    : "px-7 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-sm hover:brightness-110 shadow-lg shadow-amber-500/20 transition flex items-center gap-2 disabled:opacity-50"
+                }
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>{uploadProgressText || 'Memproses Permohonan...'}</span>
+                    <span>{uploadProgressText || (isEditMode ? 'Mengemaskini...' : 'Memproses Permohonan...')}</span>
                   </>
                 ) : (
                   <>
-                    <ShieldCheck className="w-4 h-4" />
-                    <span>Hantar Permohonan ({selectedAwardIds.length} Anugerah)</span>
+                    {isEditMode ? <Save className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
+                    <span>{isEditMode ? 'Kemaskini Permohonan' : `Hantar Permohonan (${selectedAwardIds.length} Anugerah)`}</span>
                   </>
                 )}
               </button>
