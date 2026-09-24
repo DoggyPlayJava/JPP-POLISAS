@@ -105,6 +105,7 @@ export default function MakmpJuryPortalPage() {
       id: string;
       document_type?: string;
       merit_awarded: number;
+      report_score: number;
       is_verified: boolean;
       peringkat: MakmpPeringkat;
       pencapaian_type: MakmpPencapaianType;
@@ -201,6 +202,14 @@ export default function MakmpJuryPortalPage() {
       id: item.id,
       document_type: item.document_type || 'SIJIL',
       merit_awarded: item.merit_awarded > 0 ? item.merit_awarded : (item.merit_suggested || 3),
+      // Markah mentah 0-100: jika laporan & ada report_score guna nilai itu,
+      // selainnya derive daripada merit_awarded (x10) supaya juri nampak anggaran.
+      report_score:
+        item.document_type === 'LAPORAN'
+          ? item.report_score > 0
+            ? item.report_score
+            : Math.round((item.merit_awarded > 0 ? item.merit_awarded : (item.merit_suggested || 0)) * 10)
+          : 0,
       // Untuk award yang BELUM selesai disemak, default tick = true (mudahkan juri).
       // Untuk award yang dah DISAHKAN/DITOLAK, hormati is_verified sebenar dari DB
       // supaya refresh tak auto-accept semula dokumen yang di-untick.
@@ -226,14 +235,19 @@ export default function MakmpJuryPortalPage() {
   // Kemaskini matriks / status verifikasi item
   const handleUpdateItemReview = (
     id: string,
-    field: 'merit_awarded' | 'is_verified' | 'peringkat' | 'pencapaian_type',
+    field: 'merit_awarded' | 'report_score' | 'is_verified' | 'peringkat' | 'pencapaian_type',
     value: any
   ) => {
     setReviewItems((prev) =>
       prev.map((item) => {
         if (item.id !== id) return item;
         const updated = { ...item, [field]: value };
-        if (field === 'peringkat' || field === 'pencapaian_type') {
+        if (field === 'report_score') {
+          // Markah 0-100 -> merit = round(score/10)
+          const score = Math.max(0, Math.min(100, Number(value) || 0));
+          updated.report_score = score;
+          updated.merit_awarded = Math.round(score / 10);
+        } else if (field === 'peringkat' || field === 'pencapaian_type') {
           updated.merit_awarded = calculateSuggestedMerit(
             field === 'peringkat' ? value : item.peringkat,
             field === 'pencapaian_type' ? value : item.pencapaian_type
@@ -279,6 +293,7 @@ export default function MakmpJuryPortalPage() {
         items: reviewItems.map((r) => ({
           id: r.id,
           merit_awarded: r.merit_awarded,
+          report_score: r.report_score,
           is_verified: r.is_verified,
         })),
       });
@@ -865,6 +880,7 @@ export default function MakmpJuryPortalPage() {
                       const rItem = reviewItems.find((r) => r.id === item.id) || {
                         document_type: item.document_type || 'SIJIL',
                         merit_awarded: item.merit_suggested,
+                        report_score: Math.round((item.report_score || item.merit_suggested || 0) * 10),
                         is_verified: true,
                         peringkat: item.peringkat,
                         pencapaian_type: item.pencapaian_type,
@@ -923,27 +939,34 @@ export default function MakmpJuryPortalPage() {
 
                           {/* Controls Penilaian Juri */}
                           {isReportDoc ? (
-                            /* Layout Khas Laporan Projek */
-                            <div className="p-3 rounded-lg bg-slate-900/80 border border-slate-800 space-y-2">
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-slate-300 font-medium">Markah Merit Laporan Projek:</span>
+                            /* Layout Khas Laporan Projek — Juri beri markah 0-100 */
+                            <div className="p-3 rounded-lg bg-sky-500/10 border border-sky-500/40 space-y-2">
+                              <div className="flex items-center justify-between text-xs gap-2">
+                                <span className="text-sky-200 font-semibold flex items-center gap-1.5">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                                  Markah Laporan (0-100):
+                                </span>
                                 <div className="flex items-center gap-2">
                                   <input
                                     type="number"
                                     min={0}
-                                    max={activeAward.award?.max_merit || 50}
-                                    value={rItem.merit_awarded}
+                                    max={100}
+                                    value={rItem.report_score}
                                     onChange={(e) =>
                                       handleUpdateItemReview(
                                         item.id,
-                                        'merit_awarded',
+                                        'report_score',
                                         Number(e.target.value) || 0
                                       )
                                     }
-                                    className="w-16 px-2 py-1 rounded bg-slate-950 border border-slate-700 text-center font-bold text-amber-400 text-xs"
+                                    className="w-20 px-2 py-1.5 rounded-lg bg-sky-950 border border-sky-500/60 text-center font-extrabold text-sky-300 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
                                   />
-                                  <span className="text-slate-500 text-xs">/ {activeAward.award?.max_merit || 50}</span>
+                                  <span className="text-slate-400 text-xs">/ 100</span>
                                 </div>
+                              </div>
+                              <div className="text-[11px] text-sky-200/70 pt-1 border-t border-sky-500/20">
+                                Merit auto-dikira: <span className="font-bold text-sky-300">+{Math.round((rItem.report_score || 0) / 10)} merit</span>{' '}
+                                (markah ÷ 10, dibundarkan)
                               </div>
                             </div>
                           ) : (

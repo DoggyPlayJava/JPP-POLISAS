@@ -1156,7 +1156,7 @@ export async function saveJuryAwardReview(params: {
   status: MakmpSubmissionStatus;
   reviewNotes?: string;
   rejectionReason?: string;
-  items: { id: string; merit_awarded: number; is_verified: boolean }[];
+  items: { id: string; merit_awarded: number; is_verified: boolean; report_score?: number }[];
 }): Promise<{ success: boolean; message?: string }> {
   // Seluruh semakan dilakukan dalam RPC SECURITY DEFINER (verify PIN di DB).
   const { data, error } = await supabase.rpc('save_jury_award_review', {
@@ -1188,7 +1188,7 @@ export async function saveJuryReview(params: {
   status: MakmpSubmissionStatus;
   reviewNotes?: string;
   rejectionReason?: string;
-  items: { id: string; merit_awarded: number; is_verified: boolean }[];
+  items: { id: string; merit_awarded: number; is_verified: boolean; report_score?: number }[];
 }): Promise<{ success: boolean; message?: string }> {
   let totalMerit = 0;
   for (const item of params.items) {

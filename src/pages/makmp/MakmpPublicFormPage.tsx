@@ -2147,18 +2147,33 @@ export default function MakmpPublicFormPage() {
                       return (
                         <div
                           key={doc.id}
-                          className="p-4 md:p-5 rounded-xl bg-slate-950/80 border border-slate-800/90 relative space-y-4 shadow-sm"
+                          className={
+                            isReportFile
+                              ? 'p-4 md:p-5 rounded-xl bg-sky-500/[0.07] border-2 border-sky-500/50 relative space-y-4 shadow-md shadow-sky-500/10'
+                              : 'p-4 md:p-5 rounded-xl bg-slate-950/80 border border-slate-800/90 relative space-y-4 shadow-sm'
+                          }
                         >
+                          {isReportFile && (
+                            <div className="absolute -top-3 left-4 px-2.5 py-0.5 rounded-full bg-sky-500 text-white text-[10px] font-bold uppercase tracking-wide shadow">
+                              Kotak Lampiran Laporan
+                            </div>
+                          )}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <span className="w-6 h-6 rounded-full bg-slate-800 text-amber-400 text-xs font-bold flex items-center justify-center">
+                              <span
+                                className={
+                                  isReportFile
+                                    ? 'w-6 h-6 rounded-full bg-sky-500/30 text-sky-300 text-xs font-bold flex items-center justify-center'
+                                    : 'w-6 h-6 rounded-full bg-slate-800 text-amber-400 text-xs font-bold flex items-center justify-center'
+                                }
+                              >
                                 {index + 1}
                               </span>
                               <h4 className="font-bold text-sm text-white">
                                 {isReportFile ? 'Dokumen Laporan Utama (PDF) *' : `Dokumen / Sijil #${index + 1}`}
                               </h4>
                               {isReportFile && (
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40">
                                   Wajib
                                 </span>
                               )}
@@ -2175,6 +2190,23 @@ export default function MakmpPublicFormPage() {
                               </button>
                             )}
                           </div>
+
+                          {isReportFile && (
+                            <div className="p-3 rounded-lg bg-sky-500/10 border border-sky-500/30 text-xs text-sky-100/90 leading-relaxed space-y-1">
+                              <p className="font-semibold text-sky-200">
+                                📄 Apa yang perlu dimuat naik?
+                              </p>
+                              <p>
+                                Muat naik <strong>laporan lengkap dalam format PDF</strong> mengikut templat rasmi
+                                ({currentAward?.template_name || 'templat disediakan'}).{' '}
+                                {currentAward?.doc_instructions || ''}
+                              </p>
+                              <p className="text-sky-200/70">
+                                Anda <strong>tidak perlu</strong> isi markah atau tahap pencapaian — penilaian akan
+                                diberikan oleh juri/pegawai (markah 0-100).
+                              </p>
+                            </div>
+                          )}
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {/* Tajuk Dokumen / Pencapaian */}

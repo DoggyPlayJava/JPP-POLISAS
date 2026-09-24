@@ -1235,6 +1235,7 @@ export interface MakmpSubmissionItem {
   drive_file_id?: string | null;
   merit_suggested: number;
   merit_awarded: number;
+  report_score?: number;
   is_verified: boolean;
   akademik_pencapaian_id?: string | null;
   source?: 'MANUAL_UPLOAD' | 'E_AKADEMIK';

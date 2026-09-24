@@ -2498,6 +2498,11 @@ export default function MakmpAdminDashboardPage() {
                                     {doc.document_type || 'SIJIL'}
                                   </span>
                                   <span className="text-white font-medium truncate">{doc.nama_pencapaian}</span>
+                                  {doc.document_type === 'LAPORAN' && doc.report_score > 0 && (
+                                    <span className="px-1.5 py-0.5 rounded bg-sky-500/20 border border-sky-500/30 text-sky-300 font-bold text-[9px] whitespace-nowrap">
+                                      {doc.report_score}/100 → +{Math.round(doc.report_score / 10)}m
+                                    </span>
+                                  )}
                                 </div>
 
                                 <a
