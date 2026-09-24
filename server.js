@@ -170,7 +170,7 @@ app.use(express.urlencoded({ extended: true, limit: '50kb' }));
 // Configure multer for file uploads in memory
 const upload = multer({ 
     storage: multer.memoryStorage(),
-    limits: { fileSize: 30 * 1024 * 1024 } // 30MB limit
+    limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit (laporan MAKMP boleh cecah 30MB+)
 });
 
 // Initialize Supabase Admin Client

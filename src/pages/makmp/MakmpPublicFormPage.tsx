@@ -49,6 +49,8 @@ import {
   fetchActiveMakmpEdition,
   uploadMakmpCertificate,
   submitMakmpMultiAwardApplication,
+  fetchMyPendingMakmpSubmission,
+  updateMakmpSubmissionItems,
   generateTrackingCode,
   getMakmpWhatsAppUrl,
   calculateSuggestedMerit,
@@ -188,6 +190,12 @@ export default function MakmpPublicFormPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const draftRestoredRef = useRef(false);
 
+  // Edit Mode State (student kemaskini submission MENUNGGU sedia ada)
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [existingSubmissionId, setExistingSubmissionId] = useState<string | null>(null);
+  const [existingTrackingCode, setExistingTrackingCode] = useState<string>('');
+  const [loadingExisting, setLoadingExisting] = useState(false);
+
   // 1. Muat turun edisi aktif, kategori & 18 anugerah rasmi
   useEffect(() => {
     async function loadData() {
@@ -205,6 +213,83 @@ export default function MakmpPublicFormPage() {
     }
     loadData();
   }, []);
+
+  // 1a. AUTO-LOAD submission MENUNGGU sedia ada (edit mode) — hanya untuk
+  //     student yang dah login & pautkan akaun. Kalau jumpa submission milik
+  //     user yang masih MENUNGGU, prefill borang & tukar ke mod edit (bukan
+  //     hantar baru). Ini elak double submission bila student buka semula.
+  useEffect(() => {
+    if (!edition || !user) return;
+    let cancelled = false;
+
+    async function loadExisting() {
+      setLoadingExisting(true);
+      try {
+        const existing = await fetchMyPendingMakmpSubmission(edition.id);
+        if (cancelled || !existing) return;
+
+        // Prefill biodata
+        setFullName(existing.full_name || '');
+        setMatricNo(existing.matric_no || '');
+        setEmail(existing.email || '');
+        setPhone(existing.phone || '');
+        setDepartment((existing.department || 'perdagangan').toLowerCase());
+        setProgrammeCode(existing.programme_code || '');
+        setSemester(existing.semester || 1);
+        setIntakeYear(existing.intake_year || '');
+        setIntakePeriod((existing.intake_period as 1 | 2) || '');
+        setHasPortalAccount(true);
+        setSelectedUserId(existing.user_id || user.id);
+        setAccountType('PORTAL');
+
+        // Prefill anugerah + dokumen dari items sedia ada
+        const awardsList = existing.awards || [];
+        const awardIdSet = new Set<string>();
+        const docsMap: Record<string, CertFormItem[]> = {};
+        const entityMap: Record<string, { entity_name: string; applicant_role: string }> = {};
+
+        for (const aw of awardsList) {
+          if (!aw.award_id) continue;
+          awardIdSet.add(aw.award_id);
+          entityMap[aw.award_id] = {
+            entity_name: aw.entity_name || '',
+            applicant_role: aw.applicant_role || '',
+          };
+          const items = aw.items || [];
+          docsMap[aw.award_id] = items.map((it) => ({
+            id: it.id,
+            nama_pencapaian: it.nama_pencapaian || '',
+            document_type: (it.document_type || 'SIJIL') as MakmpDocumentType,
+            peringkat: (it.peringkat || 'NEGERI') as MakmpPeringkat,
+            pencapaian_type: (it.pencapaian_type || 'PESERTA') as MakmpPencapaianType,
+            penganjur: it.penganjur || '',
+            tarikh: it.tarikh || '',
+            file: null,
+            uploadedUrl: it.drive_view_url || '',
+            uploadedFileId: it.drive_file_id || undefined,
+            merit_suggested: it.merit_suggested || 0,
+            akademik_pencapaian_id: it.akademik_pencapaian_id || null,
+            source: it.source || 'MANUAL_UPLOAD',
+          }));
+        }
+
+        setSelectedAwardIds(Array.from(awardIdSet));
+        setAwardEntityData(entityMap);
+        setAwardDocuments(docsMap);
+        setExistingSubmissionId(existing.id);
+        setExistingTrackingCode(existing.tracking_code || '');
+        setIsEditMode(true);
+      } catch (err: any) {
+        console.warn('[MAKMP Edit] Gagal muat submission sedia ada:', err?.message);
+      } finally {
+        if (!cancelled) setLoadingExisting(false);
+      }
+    }
+
+    loadExisting();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [edition?.id, user?.id]);
 
   // 1a2. Kalau student dah submit sebelum ni (marker dalam sessionStorage),
   //      terus bawa ke halaman status supaya tak isi semula (elak double submit).
@@ -818,11 +903,11 @@ export default function MakmpPublicFormPage() {
         if (!d.file && !d.uploadedUrl) {
           return `${aw?.name} - Dokumen #${i + 1}: Sila pilih fail PDF atau gambar sijil.`;
         }
-        if (d.file && d.file.size > 10 * 1024 * 1024) {
+        if (d.file && d.file.size > 50 * 1024 * 1024) {
           return `${aw?.name} - Dokumen #${i + 1}: Saiz fail "${d.file.name}" (${(
             d.file.size /
             (1024 * 1024)
-          ).toFixed(1)}MB) melebihi had maksimum 10MB. Sila pilih fail yang lebih kecil.`;
+          ).toFixed(1)}MB) melebihi had maksimum 50MB. Sila pilih fail yang lebih kecil.`;
         }
       }
     }
@@ -950,6 +1035,7 @@ export default function MakmpPublicFormPage() {
           }
 
           uploadedItemsForAward.push({
+            id: (doc as any).id || null,
             nama_pencapaian: doc.nama_pencapaian.trim(),
             document_type: doc.document_type || 'SIJIL',
             peringkat: doc.peringkat,
@@ -971,6 +1057,45 @@ export default function MakmpPublicFormPage() {
           applicant_role: entData?.applicant_role?.trim() || null,
           items: uploadedItemsForAward,
         });
+      }
+
+      // ── EDIT MODE: kemaskini submission sedia ada (bukan hantar baru) ──
+      if (isEditMode && existingSubmissionId) {
+        setUploadProgressText('Menyimpan kemaskini sijil...');
+
+        // Flatkan semua items (semua anugerah) ke satu array untuk RPC.
+        const flatItems = preparedAwardsPayload.flatMap((aw) =>
+          aw.items.map((it) => ({
+            id: (it as any).id || null,
+            nama_pencapaian: it.nama_pencapaian,
+            peringkat: it.peringkat,
+            pencapaian_type: it.pencapaian_type,
+            penganjur: it.penganjur,
+            tarikh: it.tarikh,
+            drive_view_url: it.drive_view_url,
+            drive_download_url: it.drive_download_url,
+            drive_file_id: it.drive_file_id,
+            merit_suggested: it.merit_suggested,
+            document_type: it.document_type,
+            source: it.source,
+          }))
+        );
+
+        const updResult = await updateMakmpSubmissionItems(existingSubmissionId, flatItems);
+
+        if (!updResult.success) {
+          throw new Error(updResult.message || 'Gagal mengemaskini permohonan.');
+        }
+
+        // Berjaya — bawa ke halaman status (bukan resit baru).
+        // tracking_code sedia ada kekal sama.
+        if (existingTrackingCode) {
+          navigate(`/makmp/status?code=${encodeURIComponent(existingTrackingCode)}`, { replace: true });
+        } else {
+          setErrorMessage('Permohonan berjaya dikemaskini. Sila semak status anda.');
+        }
+        scrollToTop();
+        return;
       }
 
       setUploadProgressText('Menyimpan rekod permohonan berbilang anugerah...');
@@ -2183,12 +2308,12 @@ export default function MakmpPublicFormPage() {
                                       className="hidden"
                                       onChange={(e) => {
                                         const f = e.target.files?.[0] || null;
-                                        if (f && f.size > 10 * 1024 * 1024) {
+                                        if (f && f.size > 50 * 1024 * 1024) {
                                           alert(
                                             `Fail "${f.name}" berukuran ${(
                                               f.size /
                                               (1024 * 1024)
-                                            ).toFixed(1)}MB melebihi had maksimum 10MB.`
+                                            ).toFixed(1)}MB melebihi had maksimum 50MB.`
                                           );
                                           e.target.value = '';
                                           return;

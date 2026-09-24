@@ -894,6 +894,69 @@ export async function claimMakmpSubmission(
   return (data as MakmpClaimResult) || { success: false, message: 'Tiada maklum balas daripada pelayan.' };
 }
 
+/** Fetch submission MAKMP milik pengguna semasa yang masih MENUNGGU (untuk edit).
+ *  Hanya kembali submission yang user_id = auth.uid() (pemilik) & status MENUNGGU.
+ *  Guest (belum login) → null. */
+export async function fetchMyPendingMakmpSubmission(editionId: string): Promise<MakmpSubmission | null> {
+  // Dapatkan uid semasa (jika login)
+  const { data: authData } = await supabase.auth.getUser();
+  const uid = authData?.user?.id;
+  if (!uid) return null;
+
+  const { data, error } = await supabase
+    .from('makmp_submissions')
+    .select('*, items:makmp_submission_items(*), awards:makmp_submission_awards(*, items:makmp_submission_items(*))')
+    .eq('user_id', uid)
+    .eq('edition_id', editionId)
+    .eq('status', 'MENUNGGU')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as unknown as MakmpSubmission;
+}
+
+/** Kemaskini item sijil pada submission MENUNGGU milik pengguna (tambah/edit/buang).
+ *  RPC SECURITY DEFINER enforce: pemilik sahaja + status MENUNGGU sahaja.
+ *  Return { success, message?, locked?, added?, updated?, deleted? }. */
+export interface MakmpUpdateItemsResult {
+  success: boolean;
+  locked?: boolean;
+  message?: string;
+  added?: number;
+  updated?: number;
+  deleted?: number;
+}
+
+export async function updateMakmpSubmissionItems(
+  submissionId: string,
+  items: {
+    id?: string | null;
+    nama_pencapaian: string;
+    peringkat: string;
+    pencapaian_type: string;
+    penganjur?: string | null;
+    tarikh?: string | null;
+    drive_view_url: string;
+    drive_download_url?: string | null;
+    drive_file_id?: string | null;
+    merit_suggested: number;
+    document_type?: string;
+    source?: string;
+  }[]
+): Promise<MakmpUpdateItemsResult> {
+  const { data, error } = await supabase.rpc('update_makmp_submission_items', {
+    p_submission_id: submissionId,
+    p_items: items,
+  });
+
+  if (error) {
+    return { success: false, message: error.message };
+  }
+  return (data as MakmpUpdateItemsResult) || { success: false, message: 'Tiada maklum balas daripada pelayan.' };
+}
+
 /** Sahkan Kod PIN Juri MAKMP */
 export async function verifyJuryPin(pinCode: string): Promise<{
   isValid: boolean;
