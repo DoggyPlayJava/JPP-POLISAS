@@ -125,66 +125,73 @@ function normalizePath(value) {
  */
 async function loadReferencedPaths() {
   const refs = new Set();
+  const failedColumns = [];
   const PAGE = 1000;
+  const RETRIES = 3;
+
+  // Helper: paginated select with retry on transient network errors.
+  async function paginatedSelect(table, column) {
+    const rows = [];
+    let from = 0;
+    while (true) {
+      let data, error;
+      for (let attempt = 0; attempt < RETRIES; attempt++) {
+        ({ data, error } = await supabase
+          .from(table)
+          .select(column)
+          .not(column, 'is', null)
+          .range(from, from + PAGE - 1));
+        if (!error) break;
+        console.error(`[Storage Cleanup] WARN: retry ${attempt + 1}/${RETRIES} for ${table}.${column}: ${error.message}`);
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+      }
+      if (error) throw new Error(`${table}.${column}: ${error.message}`);
+      if (!data || data.length === 0) break;
+      rows.push(...data);
+      if (data.length < PAGE) break;
+      from += PAGE;
+    }
+    return rows;
+  }
 
   // Scalar (text) columns
   for (const ref of SCALAR_REFS) {
     try {
-      let from = 0;
-      while (true) {
-        const { data, error } = await supabase
-          .from(ref.table)
-          .select(ref.column)
-          .not(ref.column, 'is', null)
-          .range(from, from + PAGE - 1);
-        if (error) throw new Error(`${ref.table}.${ref.column}: ${error.message}`);
-        if (!data || data.length === 0) break;
-        for (const row of data) {
-          const norm = normalizePath(row[ref.column]);
-          if (norm) {
-            refs.add(norm);
-            refs.add(norm.split('/').slice(1).join('/')); // strip bucket prefix too
-          }
+      const data = await paginatedSelect(ref.table, ref.column);
+      for (const row of data) {
+        const norm = normalizePath(row[ref.column]);
+        if (norm) {
+          refs.add(norm);
+          refs.add(norm.split('/').slice(1).join('/')); // strip bucket prefix too
         }
-        if (data.length < PAGE) break;
-        from += PAGE;
       }
     } catch (e) {
-      console.error(`[Storage Cleanup] WARN: cannot load ${ref.table}.${ref.column}: ${e.message}`);
+      console.error(`[Storage Cleanup] ERROR: cannot load ${ref.table}.${ref.column}: ${e.message}`);
+      failedColumns.push(`${ref.table}.${ref.column}`);
     }
   }
 
   // Array (text[]) columns
   for (const ref of ARRAY_REFS) {
     try {
-      let from = 0;
-      while (true) {
-        const { data, error } = await supabase
-          .from(ref.table)
-          .select(ref.column)
-          .not(ref.column, 'is', null)
-          .range(from, from + PAGE - 1);
-        if (error) throw new Error(`${ref.table}.${ref.column}: ${error.message}`);
-        if (!data || data.length === 0) break;
-        for (const row of data) {
-          const arr = Array.isArray(row[ref.column]) ? row[ref.column] : [];
-          for (const v of arr) {
-            const norm = normalizePath(v);
-            if (norm) {
-              refs.add(norm);
-              refs.add(norm.split('/').slice(1).join('/'));
-            }
+      const data = await paginatedSelect(ref.table, ref.column);
+      for (const row of data) {
+        const arr = Array.isArray(row[ref.column]) ? row[ref.column] : [];
+        for (const v of arr) {
+          const norm = normalizePath(v);
+          if (norm) {
+            refs.add(norm);
+            refs.add(norm.split('/').slice(1).join('/'));
           }
         }
-        if (data.length < PAGE) break;
-        from += PAGE;
       }
     } catch (e) {
-      console.error(`[Storage Cleanup] WARN: cannot load ${ref.table}.${ref.column}: ${e.message}`);
+      console.error(`[Storage Cleanup] ERROR: cannot load ${ref.table}.${ref.column}: ${e.message}`);
+      failedColumns.push(`${ref.table}.${ref.column}`);
     }
   }
 
-  return refs;
+  return { refs, failedColumns };
 }
 
 /**
@@ -312,7 +319,7 @@ async function cleanOldReceipts() {
 async function runCleanup() {
   if (!supabase) {
     console.warn("[Storage Cleanup] Skipped — Supabase client not initialized (missing env vars).");
-    return;
+    return { totalScanned: 0, totalKept: 0, totalToDelete: 0, totalDeleted: 0, orphanedFiles: [], dryRun: DRY_RUN, aborted: true };
   }
 
   if (DRY_RUN) {
@@ -336,19 +343,29 @@ async function runCleanup() {
   }
 
   // ── SAFETY: bulk-load ALL referenced paths BEFORE deleting anything ──
-  const referencedPaths = await loadReferencedPaths();
+  const { refs: referencedPaths, failedColumns } = await loadReferencedPaths();
 
   if (referencedPaths.size === 0) {
     // If the reference DB can't be loaded, deleting ANYTHING is unsafe.
     console.error("[Storage Cleanup] ABORT: 0 referenced paths loaded — refusing to delete. Check DB connectivity.");
-    return;
+    return { totalScanned: 0, totalKept: 0, totalToDelete: 0, totalDeleted: 0, orphanedFiles: [], dryRun: DRY_RUN, aborted: true };
   }
+
+  if (failedColumns.length > 0) {
+    // If ANY reference column failed to load (after retries), a false
+    // "orphaned" verdict is possible — refuse to delete to be safe.
+    console.error(`[Storage Cleanup] ABORT: ${failedColumns.length} reference column(s) failed to load — refusing to delete to avoid false positives.`);
+    for (const c of failedColumns) console.error(`[Storage Cleanup]   - ${c}`);
+    return { totalScanned: 0, totalKept: 0, totalToDelete: 0, totalDeleted: 0, orphanedFiles: [], dryRun: DRY_RUN, aborted: true, failedColumns };
+  }
+
   console.log(`[Storage Cleanup] Loaded ${referencedPaths.size} referenced path(s) from DB.`);
 
   let totalScanned = 0;
   let totalToDelete = 0;
   let totalDeleted = 0;
   let totalKept = 0;
+  const orphanedFiles = [];
 
   try {
     for (const bucket of BUCKETS_TO_CLEAN) {
@@ -380,6 +397,7 @@ async function runCleanup() {
 
           if (!referenced) {
             totalToDelete++;
+            orphanedFiles.push(`${bucket.name}/${filePath}`);
             if (DRY_RUN) {
               console.log(`[Storage Cleanup]   ❌ Orphaned (dry-run, skipped): ${bucket.name}/${filePath}`);
             } else {
@@ -404,8 +422,11 @@ async function runCleanup() {
     console.log(`[Storage Cleanup]   Orphaned:     ${totalToDelete}`);
     console.log(`[Storage Cleanup]   Deleted:      ${totalDeleted}${DRY_RUN ? ' (dry-run, 0 actually deleted)' : ''}`);
     console.log(`[Storage Cleanup] Completed at ${new Date().toISOString()}`);
+
+    return { totalScanned, totalKept, totalToDelete, totalDeleted, orphanedFiles, dryRun: DRY_RUN, aborted: false };
   } catch (error) {
     console.error(`[Storage Cleanup] Unexpected error:`, error);
+    return { totalScanned, totalKept, totalToDelete, totalDeleted, orphanedFiles, dryRun: DRY_RUN, aborted: true, error: error.message };
   }
 }
 

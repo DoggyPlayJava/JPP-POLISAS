@@ -18,11 +18,95 @@ dotenv.config();
 // ==========================================
 // BACKGROUND CRON JOBS
 // ==========================================
-// Run storage cleanup every day at 02:00 AM
-cron.schedule('0 2 * * *', () => {
-    console.log('[CRON] Starting daily storage cleanup job...');
-    runCleanup();
+// Storage audit runs daily at 02:00 AM — DRY-RUN ONLY (no auto-delete).
+//
+// On 2026-09-24 an older version of storage-cleanup.js auto-deleted 38+
+// student MAKMP certificates because `makmp_submission_items` was missing
+// from its reference list. To prevent any recurrence, the daily job now
+// only SCANS for orphaned files and EMAILS a report to the admin. Actual
+// deletion requires a manual `node scripts/storage-cleanup.js --confirm`.
+cron.schedule('0 2 * * *', async () => {
+    console.log('[CRON] Starting daily storage audit (dry-run)...');
+    try {
+        const result = await runCleanup();
+
+        // Only email when there's something to review.
+        if (result && result.orphanedFiles && result.orphanedFiles.length > 0) {
+            await sendStorageCleanupAlert(result);
+        } else if (result && result.aborted) {
+            console.error('[CRON] Storage audit aborted — see logs above.');
+        } else {
+            console.log('[CRON] Storage audit complete — no orphaned files found.');
+        }
+    } catch (err) {
+        console.error('[CRON] Storage audit failed:', err.message);
+    }
 });
+
+/**
+ * Email a storage-cleanup report to the admin (Resend), so orphaned files
+ * are reviewed by a human BEFORE anything is deleted.
+ */
+async function sendStorageCleanupAlert(result) {
+    const RESEND_API_KEY = process.env.RESEND_API_KEY;
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'jpp@cipher-node.org';
+
+    if (!RESEND_API_KEY) {
+        console.error('[CRON] Cannot send storage cleanup alert: RESEND_API_KEY not set.');
+        return;
+    }
+
+    const MAX_LISTED = 200;
+    const orphaned = result.orphanedFiles || [];
+    const listed = orphaned.slice(0, MAX_LISTED);
+    const remaining = orphaned.length - listed.length;
+
+    const rows = listed
+        .map((p) => `<tr><td style="padding:4px 8px;border:1px solid #e2e8f0;font-family:monospace;font-size:12px;">${String(p).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td></tr>`)
+        .join('');
+
+    const html = `
+        <div style="font-family:sans-serif;padding:20px;">
+            <h2 style="color:#e11d48;">🗑️ Laporan Audit Storage JPP-POLISAS</h2>
+            <p>Audit harian (dry-run) menjumpai <strong>${orphaned.length}</strong> fail "orphaned" (tiada rujukan DB).</p>
+            <p><strong>Tidak ada sebarang fail dipadam secara automatik.</strong></p>
+            <table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;">
+                <tr style="background:#f87171;color:#fff;">
+                    <th style="padding:8px;text-align:left;">Fail (bucket/path)</th>
+                </tr>
+                ${rows}
+            </table>
+            ${remaining > 0 ? `<p style="color:#b45309;">… dan ${remaining} lagi fail (dipotong).</p>` : ''}
+            <p style="margin-top:20px;">Untuk memadam fail yang disahkan tidak diperlukan, jalankan:</p>
+            <pre style="background:#f1f5f9;padding:12px;border-radius:8px;font-size:12px;">node scripts/storage-cleanup.js --confirm</pre>
+            <p style="color:#64748b;font-size:12px;">Sila semak senarai ini dengan teliti sebelum memadam — pastikan tiada sijil pelajar (makmp_sijil) tersenarai.</p>
+        </div>
+    `;
+
+    try {
+        const response = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${RESEND_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                from: 'JPP Polisas <jpp@cipher-node.org>',
+                to: ADMIN_EMAIL,
+                subject: `🗑️ [Storage Audit] ${orphaned.length} fail orphaned dikesan`,
+                html,
+            }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Gagal menghantar email audit storage');
+        }
+        console.log(`[CRON] Storage cleanup alert emailed to ${ADMIN_EMAIL} (${orphaned.length} files).`);
+    } catch (err) {
+        console.error('[CRON] Failed to send storage cleanup alert:', err.message);
+    }
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -130,28 +214,17 @@ const requireAuth = async (req, res, next) => {
 // ==========================================
 const requireWebhookSecret = (req, res, next) => {
     const secret = req.headers['x-webhook-secret'] || req.query.secret;
-    const defaultSecret = 'f5e193c6de54ab1dde87f7990302b343a9055de6ed180e0e76cb777f2af9a748';
-    let expectedSecret = process.env.WEBHOOK_SECRET;
-    
-    if (expectedSecret) {
-        // Strip surrounding double or single quotes if present
-        if ((expectedSecret.startsWith('"') && expectedSecret.endsWith('"')) ||
-            (expectedSecret.startsWith("'") && expectedSecret.endsWith("'"))) {
-            expectedSecret = expectedSecret.slice(1, -1);
-        }
-    }
-
-    // Accept if it matches either expectedSecret or the default fallback secret
-    if (secret === defaultSecret || (expectedSecret && secret === expectedSecret)) {
-        return next();
-    }
+    const expectedSecret = process.env.WEBHOOK_SECRET;
     
     if (!expectedSecret) {
         console.error("FATAL: WEBHOOK_SECRET is not set. Webhook endpoints are disabled for security.");
         return res.status(503).json({ error: "Webhook endpoint unavailable: server misconfigured." });
     }
     
-    return res.status(401).json({ error: "Unauthorized: Invalid webhook secret." });
+    if (secret !== expectedSecret) {
+        return res.status(401).json({ error: "Unauthorized: Invalid webhook secret." });
+    }
+    next();
 };
 
 // ==========================================
@@ -522,45 +595,20 @@ app.post('/api/kebajikan-new-ticket-notify', requireWebhookSecret, async (req, r
                 .eq("role", "JPP")
                 .eq("jpp_unit", "KEBAJIKAN");
         
-            const excoEmails = (excoUsers ?? []).map(u => u.email).filter(Boolean);
-            if (excoEmails.length > 0) {
-                const emailHtml = `<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Aduan Baru | E-Kebajikan</title></head>
-<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background-color:#f4f4f5;">
-<div style="background-color:#f4f4f5;padding:40px 20px;text-align:center;">
-<table align="center" style="max-width:550px;margin:0 auto;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 25px -5px rgba(0,0,0,0.05);width:100%;border-collapse:collapse;" cellpadding="0" cellspacing="0">
-<tr><td style="padding:40px 30px;text-align:center;border-bottom:1px solid #f1f5f9;background-color:#ffffff;">
-<h1 style="color:#881B1B;font-size:26px;font-weight:900;margin:0;letter-spacing:-0.5px;">E-KEBAJIKAN</h1>
-<p style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:3px;margin-top:6px;font-weight:800;margin-bottom:0;">JPP POLISAS</p>
-</td></tr>
-<tr><td style="padding:40px 30px;text-align:center;background-color:#ffffff;">
-<div style="width:64px;height:64px;background-color:#fef2f2;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:24px;">
-<span style="font-size:32px;">📣</span></div>
-<h2 style="color:#0f172a;font-size:22px;font-weight:800;margin:0 0 16px 0;">Aduan Baru Diterima</h2>
-<table style="width:100%;border-collapse:collapse;margin:20px 0;">
-<tr><td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:13px;width:100px;">No. Tiket</td>
-<td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;font-weight:700;font-size:14px;color:#0f172a;">${ticket_no}</td></tr>
-<tr><td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:13px;">Tajuk</td>
-<td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;font-weight:600;font-size:14px;color:#0f172a;">${title}</td></tr>
-<tr><td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:13px;">Kategori</td>
-<td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;font-size:14px;color:#0f172a;">${category}</td></tr>
-<tr><td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:13px;">Dari</td>
-<td style="padding:12px 16px;border-bottom:1px solid #f1f5f9;font-weight:600;font-size:14px;color:#0f172a;">${full_name}</td></tr>
-</table>
-<div style="margin:24px 0;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;">
-<p style="margin:0;color:#881B1B;font-size:14px;font-weight:600;">⚠️ Tindakan diperlukan</p>
-<p style="margin:8px 0 0 0;color:#dc2626;font-size:13px;">Sila log masuk ke portal E-Kebajikan untuk mengambil tindakan.</p></div>
-</td></tr>
-<tr><td style="padding:24px 30px;background-color:#f8fafc;text-align:center;border-top:1px solid #f1f5f9;">
-<p style="color:#94a3b8;font-size:12px;margin:0;font-weight:500;">&copy; ${new Date().getFullYear()} Jawatankuasa Perwakilan Pelajar POLISAS.<br/>Hak cipta terpelihara.</p>
-</td></tr></table></div></body></html>`;
-                sendEmailInternal(
-                    excoEmails,
-                    `[E-Kebajikan] Aduan Baru: ${ticket_no}`,
-                    emailHtml
-                ).then(r => console.log("[kebajikan-new-ticket-notify] Email sent to", excoEmails.length, "exco members:", excoEmails.join(",")))
-                .catch(err => console.error("[kebajikan-new-ticket-notify] Email error:", err.message));
+            for (const exco of excoUsers ?? []) {
+                fetch("https://api.resend.com/emails", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${RESEND_API_KEY}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        from: "E-Kebajikan <kebajikan@polisas.edu.my>",
+                        to: exco.email,
+                        subject: `[E-Kebajikan] Aduan Baru: ${ticket_no}`,
+                        html: `<p>Salam, ${exco.full_name}.<br/>Aduan baru <strong>${ticket_no}</strong> telah diterima.<br/><strong>${title}</strong><br/>Sila log masuk ke sistem untuk mengambil tindakan.</p>`,
+                    }),
+                });
             }
         }
 
@@ -585,11 +633,6 @@ function extractFolderId(input) {
     return input.trim();
 }
 
-// Cache access token Google supaya tak fetch token baru SETIAP kali upload
-// (jimat 1 round-trip OAuth per fail). Token valid ~1 jam; kita refresh 5 min awal.
-let _gTokenCache = null;        // { token: string, expiresAt: number }
-let _gTokenInflight = null;     // Promise dalam flight (elak race bila banyak upload serentak)
-
 async function getGoogleAccessToken() {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -599,47 +642,22 @@ async function getGoogleAccessToken() {
         throw new Error("Missing Google Drive secrets");
     }
 
-    // Guna cache kalau belum expire (buffer 5 minit sebelum tamat)
-    if (_gTokenCache && _gTokenCache.expiresAt > Date.now() + 5 * 60 * 1000) {
-        return _gTokenCache.token;
+    const response = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+            client_id: clientId,
+            client_secret: clientSecret,
+            refresh_token: refreshToken,
+            grant_type: "refresh_token",
+        }),
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.access_token) {
+        throw new Error("Google OAuth error: " + (data.error_description || data.error || "failed"));
     }
-
-    // Elak race: banyak upload serentak kongsi fetch token yang sama
-    if (_gTokenInflight) {
-        return _gTokenInflight;
-    }
-
-    _gTokenInflight = (async () => {
-        try {
-            const response = await fetch("https://oauth2.googleapis.com/token", {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams({
-                    client_id: clientId,
-                    client_secret: clientSecret,
-                    refresh_token: refreshToken,
-                    grant_type: "refresh_token",
-                }),
-            });
-
-            const data = await response.json();
-            if (!response.ok || !data.access_token) {
-                throw new Error("Google OAuth error: " + (data.error_description || data.error || "failed"));
-            }
-
-            // Google return 'expires_in' dalam saat (biasanya 3600)
-            const expiresInSec = data.expires_in || 3600;
-            _gTokenCache = {
-                token: data.access_token,
-                expiresAt: Date.now() + expiresInSec * 1000,
-            };
-            return data.access_token;
-        } finally {
-            _gTokenInflight = null;
-        }
-    })();
-
-    return _gTokenInflight;
+    return data.access_token;
 }
 
 app.post('/api/upload-to-drive', requireAuth, upload.single('file'), async (req, res) => {
@@ -720,103 +738,6 @@ app.post('/api/upload-to-drive', requireAuth, upload.single('file'), async (req,
 
     } catch (error) {
         console.error("[upload-to-drive] Error:", error.message);
-        return res.status(500).json({ error: error.message });
-    }
-});
-
-// ==========================================
-// 5A-2. Upload Sijil MAKMP ke Google Drive (Awam)
-// Membenarkan pelajar awam memuat naik sijil tanpa perlu login
-// Dilindungi dengan IP Rate Limiter & validasi jenis fail
-// ==========================================
-const makmpUploadLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 40,
-    message: { error: "Terlalu banyak muat naik fail. Sila tunggu sebentar sebelum mencuba lagi." },
-    standardHeaders: true,
-    legacyHeaders: false,
-    validate: { xForwardedForHeader: false, trustProxy: false, default: false },
-});
-
-app.post('/api/makmp/upload-sijil', makmpUploadLimiter, upload.single('file'), async (req, res) => {
-    try {
-        const file = req.file;
-        const subfolder = req.body.subfolder || "makmp_sijil";
-        const customName = req.body.customName || null;
-
-        if (!file) {
-            return res.status(400).json({ error: "Fail tidak ditemui." });
-        }
-
-        const isPdf = file.mimetype === "application/pdf" || file.originalname.toLowerCase().endsWith('.pdf');
-        const isImage = file.mimetype.startsWith('image/') || /\.(jpg|jpeg|png|webp)$/i.test(file.originalname);
-
-        if (!isPdf && !isImage) {
-            return res.status(400).json({ error: "Hanya fail PDF atau gambar sijil (JPG/PNG) dibenarkan." });
-        }
-
-        const rawFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
-        if (!rawFolderId) throw new Error("GOOGLE_DRIVE_FOLDER_ID tiada.");
-
-        const parentFolderId = extractFolderId(rawFolderId);
-        const accessToken = await getGoogleAccessToken();
-        const timestamp = Date.now();
-        const ext = isPdf ? '.pdf' : (file.originalname.match(/\.[^.]+$/)?.[0] || '.jpg');
-        const fileName = customName ? customName + ext : subfolder + "_" + timestamp + ext;
-
-        const metadata = {
-            name: fileName,
-            parents: [parentFolderId],
-            description: "JPP-POLISAS MAKMP | " + subfolder + " | " + new Date().toISOString(),
-        };
-
-        const boundary = "boundary_jpp_makmp_upload";
-        const metadataPart = "--" + boundary + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" + JSON.stringify(metadata) + "\r\n";
-        
-        const contentType = isPdf ? 'application/pdf' : file.mimetype;
-        const bodyBuffer = Buffer.concat([
-            Buffer.from(metadataPart),
-            Buffer.from("--" + boundary + "\r\nContent-Type: " + contentType + "\r\n\r\n"),
-            file.buffer,
-            Buffer.from("\r\n--" + boundary + "--")
-        ]);
-
-        const uploadResponse = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink", {
-            method: "POST",
-            headers: {
-                Authorization: "Bearer " + accessToken,
-                "Content-Type": "multipart/related; boundary=\"" + boundary + "\"",
-            },
-            body: bodyBuffer,
-        });
-
-        if (!uploadResponse.ok) {
-            const errText = await uploadResponse.text();
-            throw new Error("Drive upload failed (" + uploadResponse.status + "): " + errText);
-        }
-
-        const uploadedFile = await uploadResponse.json();
-
-        // Set public read permissions
-        await fetch("https://www.googleapis.com/drive/v3/files/" + uploadedFile.id + "/permissions", {
-            method: "POST",
-            headers: {
-                Authorization: "Bearer " + accessToken,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ role: "reader", type: "anyone" }),
-        });
-
-        const viewUrl = uploadedFile.webViewLink || "https://drive.google.com/file/d/" + uploadedFile.id + "/view";
-
-        return res.status(200).json({
-            url: viewUrl,
-            fileId: uploadedFile.id,
-            fileName: uploadedFile.name,
-        });
-
-    } catch (error) {
-        console.error("[makmp-upload-sijil] Error:", error.message);
         return res.status(500).json({ error: error.message });
     }
 });
@@ -1120,29 +1041,21 @@ app.post('/api/polysuara-new-confession-notify', requireWebhookSecret, async (re
                 return res.status(200).json({ success: true, sent: 0, waiting_fallback: true, minutesLeft: minLeft });
             }
 
-            // Look back since the last notification, or up to 24 hours ago if lastNotified is null or very old
-            const lookupSince = lastNotified 
-                ? new Date(Math.max(lastNotified.getTime(), now - 24 * ONE_HOUR_MS))
-                : new Date(now - 24 * ONE_HOUR_MS);
-
-            const fallbackQuery = supabaseAdmin
+            // 3+ jam tanpa notif — pilih confession terbaik dalam 3 jam terakhir
+            const { data: fallbackPosts } = await supabaseAdmin
                 .from('polysuara_confessions')
                 .select('id, author_id, category, codename, content, upvotes')
                 .eq('is_hidden_by_community', false)
                 .eq('is_archived', false)
-                .gte('created_at', lookupSince.toISOString())
+                .gte('created_at', new Date(now - THREE_HOURS_MS).toISOString())
                 .order('upvotes', { ascending: false })
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .limit(1);
 
-            if (lastConfessionId) {
-                fallbackQuery.neq('id', lastConfessionId);
-            }
-
-            const { data: fallbackPosts } = await fallbackQuery.limit(1);
             const fallbackPost = fallbackPosts?.[0] ?? null;
 
             if (!fallbackPost) {
-                console.log('[polysuara-notify] Tiada confession baharu sejak notifikasi terakhir. Silent skip.');
+                console.log('[polysuara-notify] Tiada confession dalam 3 jam terakhir. Silent skip.');
                 return res.status(200).json({ success: true, sent: 0, skipped: 'no_confessions_in_window' });
             }
 
@@ -1274,334 +1187,6 @@ app.post('/api/polysuara-new-confession-notify', requireWebhookSecret, async (re
 
     } catch (error) {
         console.error('[polysuara-notify] Error:', error.message);
-        return res.status(500).json({ error: error.message });
-    }
-});
-
-// ==========================================
-// 6d. PolySuara Personal Interaction Webhook Notification
-// Hantar push + in-app notification kepada pengarang luahan/ulasan
-// yang terkesan oleh ulasan, balasan ulasan, upvote milestone, dll.
-// ==========================================
-app.post('/api/polysuara-interaction-notify', requireWebhookSecret, async (req, res) => {
-    try {
-        if (!supabaseAdmin) throw new Error('Supabase Admin Client not initialized.');
-
-        const { recipientId, title, message, type, link, referenceId } = req.body;
-
-        if (!recipientId || !title || !message) {
-            return res.status(400).json({ error: 'recipientId, title, and message are required.' });
-        }
-
-        // 1. Masukkan notifikasi in-app
-        const { error: notifErr } = await supabaseAdmin
-            .from('notifications')
-            .insert({
-                user_id: recipientId,
-                title,
-                message,
-                type: type || 'POLYSUARA',
-                module: 'POLYSUARA',
-                link: link || '/polysuara',
-                reference_id: referenceId,
-                is_read: false
-            });
-
-        if (notifErr) {
-            console.error('[polysuara-interaction-notify] In-app insert error:', notifErr.message);
-        }
-
-        // 2. Dapatkan push subscriptions untuk penerima
-        const { data: subs, error: subsError } = await supabaseAdmin
-            .from('push_subscriptions')
-            .select('id, user_id, endpoint, p256dh, auth')
-            .eq('user_id', recipientId);
-
-        if (subsError) throw subsError;
-
-        let sent = 0;
-        let failed = 0;
-        const staleIds = [];
-
-        if (subs && subs.length > 0) {
-            const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:jpp@cipher-node.org';
-            const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
-            const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
-
-            if (vapidPublicKey && vapidPrivateKey) {
-                webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
-
-                const pushPayload = JSON.stringify({
-                    title,
-                    body: message,
-                    icon: '/icon-192-maskable.png',
-                    badge: '/icon-192-maskable.png',
-                    tag: 'polysuara-interaction',
-                    renotify: true,
-                    data: { url: link || '/polysuara', link: link || '/polysuara', module: 'POLYSUARA', type: type || 'POLYSUARA' }
-                });
-
-                const BATCH_SIZE = 20;
-                for (let i = 0; i < subs.length; i += BATCH_SIZE) {
-                    const batch = subs.slice(i, i + BATCH_SIZE);
-                    await Promise.allSettled(
-                        batch.map(async (sub) => {
-                            try {
-                                await webpush.sendNotification(
-                                    { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-                                    pushPayload
-                                );
-                                sent++;
-                            } catch (e) {
-                                failed++;
-                                if (e.statusCode === 410) staleIds.push(sub.id);
-                            }
-                        })
-                    );
-                }
-
-                // Bersihkan stale subscriptions
-                if (staleIds.length > 0) {
-                    await supabaseAdmin.from('push_subscriptions').delete().in('id', staleIds);
-                    console.log(`[polysuara-interaction-notify] Removed ${staleIds.length} stale subscription(s).`);
-                }
-            }
-        }
-
-        console.log(`[polysuara-interaction-notify] Notified user:${recipientId} type:${type} -> Sent:${sent} Failed:${failed}`);
-        return res.status(200).json({ success: true, sent, failed });
-    } catch (error) {
-        console.error('[polysuara-interaction-notify] Error:', error.message);
-        return res.status(500).json({ error: error.message });
-    }
-});
-
-// ==========================================
-// 6d-bis. MAKMP Status Change Notification
-// Dicetuskan oleh Supabase DB Trigger pada UPDATE status makmp_submissions /
-// makmp_submission_awards. Hantar in-app + push notification kepada pelajar
-// pemohon bila status permohonan anugerah mereka berubah (DALAM_SEMAKAN,
-// DISAHKAN, DITOLAK).
-// ==========================================
-app.post('/api/makmp-notify', requireWebhookSecret, async (req, res) => {
-    try {
-        if (!supabaseAdmin) throw new Error('Supabase Admin Client not initialized.');
-
-        const { recipientId, title, message, type, link, referenceId } = req.body || {};
-
-        if (!recipientId || !title || !message) {
-            return res.status(400).json({ error: 'recipientId, title, and message are required.' });
-        }
-
-        // 1. Masukkan notifikasi in-app
-        const { error: notifErr } = await supabaseAdmin
-            .from('notifications')
-            .insert({
-                user_id: recipientId,
-                title,
-                message,
-                type: type || 'MAKMP',
-                module: 'MAKMP',
-                link: link || '/makmp/status',
-                reference_id: referenceId || null,
-                is_read: false
-            });
-
-        if (notifErr) {
-            console.error('[makmp-notify] In-app insert error:', notifErr.message);
-        }
-
-        // 2. Dapatkan push subscriptions untuk penerima
-        const { data: subs, error: subsError } = await supabaseAdmin
-            .from('push_subscriptions')
-            .select('id, user_id, endpoint, p256dh, auth')
-            .eq('user_id', recipientId);
-
-        if (subsError) throw subsError;
-
-        let sent = 0;
-        let failed = 0;
-        const staleIds = [];
-
-        if (subs && subs.length > 0) {
-            const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:jpp@cipher-node.org';
-            const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
-            const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
-
-            if (vapidPublicKey && vapidPrivateKey) {
-                webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
-
-                const pushPayload = JSON.stringify({
-                    title,
-                    body: message,
-                    icon: '/icon-192-maskable.png',
-                    badge: '/icon-192-maskable.png',
-                    tag: 'makmp-status',
-                    renotify: true,
-                    data: { url: link || '/makmp/status', link: link || '/makmp/status', module: 'MAKMP', type: type || 'MAKMP' }
-                });
-
-                const BATCH_SIZE = 20;
-                for (let i = 0; i < subs.length; i += BATCH_SIZE) {
-                    const batch = subs.slice(i, i + BATCH_SIZE);
-                    await Promise.allSettled(
-                        batch.map(async (sub) => {
-                            try {
-                                await webpush.sendNotification(
-                                    { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-                                    pushPayload
-                                );
-                                sent++;
-                            } catch (e) {
-                                failed++;
-                                if (e.statusCode === 410) staleIds.push(sub.id);
-                            }
-                        })
-                    );
-                }
-
-                if (staleIds.length > 0) {
-                    await supabaseAdmin.from('push_subscriptions').delete().in('id', staleIds);
-                    console.log(`[makmp-notify] Removed ${staleIds.length} stale subscription(s).`);
-                }
-            }
-        }
-
-        console.log(`[makmp-notify] Notified user:${recipientId} -> Sent:${sent} Failed:${failed}`);
-        return res.status(200).json({ success: true, sent, failed });
-    } catch (error) {
-        console.error('[makmp-notify] Error:', error.message);
-        return res.status(500).json({ error: error.message });
-    }
-});
-
-// ==========================================
-// 6d. PolyMart Chat Notification
-// Dicetuskan oleh Supabase DB Trigger pada INSERT ke `polymart_messages`.
-// Logik recipient (BUKAN broadcast semua pelajar):
-//   - Customer (buyer) hantar mesej -> staff VENDOR BERKENAAN je dapat
-//     (owner + ahli ACTIVE student_business_memberships)
-//   - Staff vendor hantar -> customer (buyer) dalam conversation tu je dapat
-// ==========================================
-app.post('/api/polymart-chat-notify', requireWebhookSecret, async (req, res) => {
-    try {
-        if (!supabaseAdmin) throw new Error('Supabase Admin Client not initialized.');
-
-        const { record } = req.body || {};
-        if (!record || !record.conversation_id || !record.sender_id) {
-            return res.status(200).json({ success: true, skipped: 'invalid record' });
-        }
-        const { conversation_id, sender_id, content } = record;
-
-        const { data: conv, error: convErr } = await supabaseAdmin
-            .from('polymart_conversations')
-            .select('id, buyer_id, vendor_business_id')
-            .eq('id', conversation_id)
-            .maybeSingle();
-        if (convErr) throw new Error(convErr.message);
-        if (!conv) return res.status(200).json({ success: true, skipped: 'conversation not found' });
-
-        const messagePreview = String(content || '').replace(/\s+/g, ' ').trim().slice(0, 80) || 'Mesej baharu';
-
-        let recipients = [];
-        let title = '';
-        const isCustomerMsg = sender_id === conv.buyer_id;
-
-        if (isCustomerMsg) {
-            // Hantar ke staff vendor berkenaan sahaja
-            const { data: biz, error: bizErr } = await supabaseAdmin
-                .from('keusahawanan_businesses')
-                .select('owner_id, name')
-                .eq('id', conv.vendor_business_id)
-                .maybeSingle();
-            if (bizErr) throw new Error(bizErr.message);
-
-            const { data: members, error: memErr } = await supabaseAdmin
-                .from('student_business_memberships')
-                .select('user_id')
-                .eq('business_id', conv.vendor_business_id)
-                .eq('status', 'ACTIVE');
-            if (memErr) throw new Error(memErr.message);
-
-            recipients = [...new Set([
-                ...(members || []).map(m => m.user_id),
-                ...(biz?.owner_id ? [biz.owner_id] : []),
-            ])];
-            title = `💬 Mesej Baru dari Pelanggan${biz?.name ? ` (${biz.name})` : ''}`;
-        } else {
-            // Staff hantar -> customer itu sahaja
-            recipients = [conv.buyer_id];
-            const { data: biz, error: bizErr } = await supabaseAdmin
-                .from('keusahawanan_businesses')
-                .select('name')
-                .eq('id', conv.vendor_business_id)
-                .maybeSingle();
-            if (bizErr) throw new Error(bizErr.message);
-            title = `💬 Mesej Baru dari ${biz?.name || 'Vendor'}`;
-        }
-
-        if (recipients.length === 0) {
-            return res.status(200).json({ success: true, sent: 0, message: 'Tiada recipient.' });
-        }
-
-        const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:jpp@cipher-node.org';
-        const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
-        const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
-        if (!vapidPublicKey || !vapidPrivateKey) {
-            throw new Error('VAPID keys belum dikonfigurasi.');
-        }
-        webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
-
-        const { data: subs, error: subsError } = await supabaseAdmin
-            .from('push_subscriptions')
-            .select('id, user_id, endpoint, p256dh, auth')
-            .in('user_id', recipients);
-        if (subsError) throw new Error(subsError.message);
-        if (!subs || subs.length === 0) {
-            return res.status(200).json({ success: true, sent: 0, message: 'Tiada subscription.' });
-        }
-
-        const payload = JSON.stringify({
-            title,
-            body: messagePreview,
-            icon: '/icon-192-maskable.png',
-            badge: '/icon-192-maskable.png',
-            tag: `polymart-chat-${conversation_id}`,
-            renotify: true,
-            requireInteraction: false,
-            data: { url: '/polymart' },
-        });
-
-        let sent = 0;
-        let failed = 0;
-        const staleIds = [];
-        await Promise.allSettled(
-            subs.map(async (sub) => {
-                const subscription = {
-                    endpoint: sub.endpoint,
-                    keys: { p256dh: sub.p256dh, auth: sub.auth },
-                };
-                try {
-                    await webpush.sendNotification(subscription, payload);
-                    sent++;
-                } catch (e) {
-                    failed++;
-                    if (e.statusCode === 410) staleIds.push(sub.id);
-                    console.warn(`[polymart-chat-notify] Sub failed (${e.statusCode}): ${sub.endpoint.slice(-20)}`);
-                }
-            })
-        );
-
-        if (staleIds.length > 0) {
-            await supabaseAdmin.from('push_subscriptions').delete().in('id', staleIds);
-            console.log(`[polymart-chat-notify] Removed ${staleIds.length} stale subscription(s).`);
-        }
-
-        console.log(`[polymart-chat-notify] "${title}" -> Sent: ${sent}/${subs.length}, Failed: ${failed}, Recipients: ${recipients.length}`);
-        return res.status(200).json({ success: true, sent, failed, total: subs.length, recipients: recipients.length });
-
-    } catch (error) {
-        console.error('[polymart-chat-notify] Error:', error.message);
         return res.status(500).json({ error: error.message });
     }
 });
@@ -1788,7 +1373,7 @@ app.post('/api/notify-anomaly', requireAuth, anomalyNotifyLimiter, async (req, r
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                from: 'JPP Polisas <jpp@cipher-node.org>',
+                from: 'Audit JPP-POLISAS <noreply@jpp-polisas.com>',
                 to: ADMIN_EMAIL,
                 subject: `🚨 [AMARAN] ${alerts.length} Anomali Sistem Dikesan`,
                 html: html
@@ -3171,6 +2756,7 @@ cron.schedule('*/5 * * * *', async () => {
         console.error('[WATCHDOG] Cron error:', err.message);
     }
 });
+
 // ==========================================
 // Serve Static Frontend (Vite Build)
 // ==========================================
@@ -3207,23 +2793,6 @@ try {
     console.log('[STARTUP] ✅ index.html cached in memory (' + Buffer.byteLength(cachedIndexHtml) + ' bytes)');
 } catch (err) {
     console.warn('[STARTUP] ⚠️ index.html not found in dist/ — SPA fallback will use sendFile (slower)');
-}
-
-// Auto-refresh cache bila rebuild — tak perlu PM2 restart lepas npm run build
-try {
-    fs.watchFile(INDEX_HTML_PATH, { interval: 1000 }, () => {
-        try {
-            const fresh = fs.readFileSync(INDEX_HTML_PATH, 'utf8');
-            if (fresh !== cachedIndexHtml) {
-                cachedIndexHtml = fresh;
-                console.log('[WATCH] ✅ index.html cache auto-refreshed (' + Buffer.byteLength(cachedIndexHtml) + ' bytes)');
-            }
-        } catch (err) {
-            console.warn('[WATCH] ⚠️ Failed to refresh index.html:', err.message);
-        }
-    });
-} catch (err) {
-    console.warn('[WATCH] ⚠️ Cannot watch index.html — auto-refresh disabled');
 }
 
 // SPA Fallback: Any route not matched by API or static files will return index.html
