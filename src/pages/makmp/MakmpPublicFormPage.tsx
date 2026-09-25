@@ -2078,8 +2078,8 @@ export default function MakmpPublicFormPage() {
                     </div>
                   </div>
 
-                  {/* Banner Muat Turun Templat Laporan jika jenis REPORT_AND_EVIDENCE */}
-                  {currentAward.doc_requirement_type === 'REPORT_AND_EVIDENCE' && (
+                  {/* Banner Muat Turun Templat Laporan — hanya jika templat BENAR-BENAR disediakan */}
+                  {currentAward.doc_requirement_type === 'REPORT_AND_EVIDENCE' && currentAward.template_url && (
                     <div className="p-4 md:p-5 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md">
                       <div className="space-y-1">
                         <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400">
@@ -2092,7 +2092,7 @@ export default function MakmpPublicFormPage() {
                       </div>
 
                       <a
-                        href={currentAward.template_url || 'https://docs.google.com/document/d/1_makmp_default_template/edit'}
+                        href={currentAward.template_url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition flex items-center gap-2 shrink-0 shadow-md"
@@ -2197,8 +2197,10 @@ export default function MakmpPublicFormPage() {
                                 📄 Apa yang perlu dimuat naik?
                               </p>
                               <p>
-                                Muat naik <strong>laporan lengkap dalam format PDF</strong> mengikut templat rasmi
-                                ({currentAward?.template_name || 'templat disediakan'}).{' '}
+                                Muat naik <strong>laporan lengkap dalam format PDF</strong>{' '}
+                                {currentAward?.template_url
+                                  ? <>mengikut templat rasmi ({currentAward?.template_name || 'Format Laporan'}).{' '}</>
+                                  : <><strong>tiada templat khusus</strong> — gunakan format laporan anda sendiri.{' '}</>}
                                 {currentAward?.doc_instructions || ''}
                               </p>
                               <p className="text-sky-200/70">
