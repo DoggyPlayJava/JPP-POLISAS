@@ -1468,8 +1468,9 @@ export default function MakmpAdminDashboardPage() {
                               <span className="truncate">{aw.template_url}</span>
                             </a>
                           ) : (
-                            <span className="text-[10px] text-slate-500 italic block">
-                              Tiada pautan templat
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[10px] font-semibold">
+                              <AlertTriangle className="w-3 h-3 shrink-0" />
+                              Tiada Templat — student akan muat naik format sendiri
                             </span>
                           )}
                         </div>
@@ -1736,6 +1737,15 @@ export default function MakmpAdminDashboardPage() {
                           placeholder="https://docs.google.com/..."
                           className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white font-mono text-xs"
                         />
+                        {!awardTemplateUrl.trim() && (
+                          <p className="flex items-start gap-1.5 mt-1.5 text-[11px] text-rose-300 leading-relaxed">
+                            <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                            <span>
+                              Tiada templat ditetapkan — pelajar akan diminta muat naik laporan dalam
+                              format sendiri (banner "Muat Turun Templat" tidak akan dipaparkan).
+                            </span>
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}
