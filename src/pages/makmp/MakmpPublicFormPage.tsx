@@ -2302,7 +2302,7 @@ export default function MakmpPublicFormPage() {
                                     : 'Muat Naik Sijil / Dokumen Bukti (PDF / Gambar) *'}
                                 </label>
                                 <span className="text-[10px] text-slate-500">
-                                  {doc.source === 'E_AKADEMIK' ? 'Sumber: e-Akademik' : 'Maksimum 10MB'}
+                                  {doc.source === 'E_AKADEMIK' ? 'Sumber: e-Akademik' : 'Maksimum 100MB'}
                                 </span>
                               </div>
 
@@ -2402,7 +2402,7 @@ export default function MakmpPublicFormPage() {
                                             `Fail "${f.name}" berukuran ${(
                                               f.size /
                                               (1024 * 1024)
-                                            ).toFixed(1)}MB melebihi had maksimum 50MB.`
+                                            ).toFixed(1)}MB melebihi had maksimum 100MB.`
                                           );
                                           e.target.value = '';
                                           return;
