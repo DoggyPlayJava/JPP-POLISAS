@@ -257,6 +257,21 @@ export function GlobalAnnouncementModal() {
           )}
         </div>
 
+        {/* Butang Buka Pautan — atas sekali, prominent, sentiasa nampak tanpa scroll */}
+        {current.action_url && (
+          <div className="px-6 sm:px-8 pb-3 shrink-0">
+            <a
+              href={current.action_url}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center gap-2 w-full px-5 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black tracking-wide text-[12px] uppercase shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 transition-all group"
+            >
+              <ExternalLink size={16} className="text-white/90 group-hover:scale-110 transition-transform" />
+              <span>Buka Pautan</span>
+            </a>
+          </div>
+        )}
+
         {/* Scrollable content area — image included */}
         <div className="flex-1 overflow-y-auto">
           {/* Image inside scroll so it doesn't steal fixed space */}
@@ -279,18 +294,6 @@ export function GlobalAnnouncementModal() {
             <div className="text-white/60 text-[13px] leading-relaxed text-center font-medium whitespace-pre-wrap">
               {current.content_body}
             </div>
-
-            {current.action_url && (
-              <a
-                href={current.action_url}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center justify-center gap-2 p-4 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all group mt-2"
-              >
-                <span className="font-bold text-white/80 text-[11px] uppercase tracking-wider">Buka Pautan Tindakan</span>
-                <ExternalLink size={14} className="text-white/40 group-hover:text-white transition-colors" />
-              </a>
-            )}
 
             {current.form_schema && current.form_schema.length > 0 && (
               <div className="space-y-4 pt-4 text-left">
@@ -333,7 +336,11 @@ export function GlobalAnnouncementModal() {
           )}
 
           {current.priority === 'EASY' && (
-            <button onClick={() => handleDismiss(true)} className="text-[10px] font-bold text-white/30 uppercase tracking-widest mt-2 hover:text-white/70 transition-colors text-center w-full">
+            <button
+              onClick={() => handleDismiss(true)}
+              className="flex items-center justify-center gap-1.5 w-full text-[11px] font-bold text-rose-400 uppercase tracking-widest mt-2 py-2 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 hover:text-rose-300 transition-colors text-center"
+            >
+              <ShieldAlert size={13} className="shrink-0" />
               Jangan Tunjuk Notis Ini Lagi
             </button>
           )}
