@@ -931,47 +931,6 @@ export async function fetchMyPendingMakmpSubmission(editionId: string): Promise<
   return data as unknown as MakmpSubmission;
 }
 
-/** Kemaskini item sijil pada submission MENUNGGU milik pengguna (tambah/edit/buang).
- *  RPC SECURITY DEFINER enforce: pemilik sahaja + status MENUNGGU sahaja.
- *  Return { success, message?, locked?, added?, updated?, deleted? }. */
-export interface MakmpUpdateItemsResult {
-  success: boolean;
-  locked?: boolean;
-  message?: string;
-  added?: number;
-  updated?: number;
-  deleted?: number;
-}
-
-export async function updateMakmpSubmissionItems(
-  submissionId: string,
-  items: {
-    id?: string | null;
-    submission_award_id?: string | null;
-    nama_pencapaian: string;
-    peringkat: string;
-    pencapaian_type: string;
-    penganjur?: string | null;
-    tarikh?: string | null;
-    drive_view_url: string;
-    drive_download_url?: string | null;
-    drive_file_id?: string | null;
-    merit_suggested: number;
-    document_type?: string;
-    source?: string;
-  }[]
-): Promise<MakmpUpdateItemsResult> {
-  const { data, error } = await supabase.rpc('update_makmp_submission_items', {
-    p_submission_id: submissionId,
-    p_items: items,
-  });
-
-  if (error) {
-    return { success: false, message: error.message };
-  }
-  return (data as MakmpUpdateItemsResult) || { success: false, message: 'Tiada maklum balas daripada pelayan.' };
-}
-
 /** Kemaskini permohonan MAKMP (EDIT mode) termasuk penambahan anugerah BARU.
  *  RPC SECURITY DEFINER `save_makmp_submission_edit` menyelesaikan `submission_award_id`
  *  secara server-side berdasarkan `award_id`, jadi item baru/anugerah baru tidak
