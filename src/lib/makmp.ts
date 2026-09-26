@@ -972,6 +972,55 @@ export async function updateMakmpSubmissionItems(
   return (data as MakmpUpdateItemsResult) || { success: false, message: 'Tiada maklum balas daripada pelayan.' };
 }
 
+/** Kemaskini permohonan MAKMP (EDIT mode) termasuk penambahan anugerah BARU.
+ *  RPC SECURITY DEFINER `save_makmp_submission_edit` menyelesaikan `submission_award_id`
+ *  secara server-side berdasarkan `award_id`, jadi item baru/anugerah baru tidak
+ *  lagi jadi orphan (submission_award_id = NULL) atau hilang daripada senarai.
+ *  Return { success, message?, locked?, awards_added?, added?, updated?, deleted? }. */
+export interface MakmpSaveEditResult {
+  success: boolean;
+  locked?: boolean;
+  message?: string;
+  awards_added?: number;
+  added?: number;
+  updated?: number;
+  deleted?: number;
+}
+
+export async function saveMakmpSubmissionEdit(
+  submissionId: string,
+  awards: {
+    award_id: string;
+    entity_name?: string | null;
+    applicant_role?: string | null;
+    items: {
+      id?: string | null;
+      nama_pencapaian: string;
+      document_type?: string;
+      peringkat: string;
+      pencapaian_type: string;
+      penganjur?: string | null;
+      tarikh?: string | null;
+      drive_view_url: string;
+      drive_download_url?: string | null;
+      drive_file_id?: string | null;
+      merit_suggested: number;
+      akademik_pencapaian_id?: string | null;
+      source?: string;
+    }[];
+  }[]
+): Promise<MakmpSaveEditResult> {
+  const { data, error } = await supabase.rpc('save_makmp_submission_edit', {
+    p_submission_id: submissionId,
+    p_awards: awards,
+  });
+
+  if (error) {
+    return { success: false, message: error.message };
+  }
+  return (data as MakmpSaveEditResult) || { success: false, message: 'Tiada maklum balas daripada pelayan.' };
+}
+
 /** Sahkan Kod PIN Juri MAKMP */
 export async function verifyJuryPin(pinCode: string): Promise<{
   isValid: boolean;

@@ -51,7 +51,7 @@ import {
   uploadMakmpCertificate,
   submitMakmpMultiAwardApplication,
   fetchMyPendingMakmpSubmission,
-  updateMakmpSubmissionItems,
+  saveMakmpSubmissionEdit,
   generateTrackingCode,
   getMakmpWhatsAppUrl,
   calculateSuggestedMerit,
@@ -1082,12 +1082,17 @@ export default function MakmpPublicFormPage() {
       if (isEditMode && existingSubmissionId) {
         setUploadProgressText('Menyimpan kemaskini sijil...');
 
-        // Flatkan semua items (semua anugerah) ke satu array untuk RPC.
-        const flatItems = preparedAwardsPayload.flatMap((aw) =>
-          aw.items.map((it) => ({
+        // Hantar SEMUA anugerah (termasuk anugerah BARU yang ditambah semasa edit).
+        // RPC `save_makmp_submission_edit` akan cipta rekod anugerah baru + bind
+        // submission_award_id secara server-side, jadi tiada lagi item orphan.
+        const awardsPayload = preparedAwardsPayload.map((aw) => ({
+          award_id: aw.award_id,
+          entity_name: aw.entity_name,
+          applicant_role: aw.applicant_role,
+          items: aw.items.map((it) => ({
             id: (it as any).id || null,
-            submission_award_id: (it as any).submission_award_id || null,
             nama_pencapaian: it.nama_pencapaian,
+            document_type: it.document_type,
             peringkat: it.peringkat,
             pencapaian_type: it.pencapaian_type,
             penganjur: it.penganjur,
@@ -1096,12 +1101,12 @@ export default function MakmpPublicFormPage() {
             drive_download_url: it.drive_download_url,
             drive_file_id: it.drive_file_id,
             merit_suggested: it.merit_suggested,
-            document_type: it.document_type,
+            akademik_pencapaian_id: it.akademik_pencapaian_id,
             source: it.source,
-          }))
-        );
+          })),
+        }));
 
-        const updResult = await updateMakmpSubmissionItems(existingSubmissionId, flatItems);
+        const updResult = await saveMakmpSubmissionEdit(existingSubmissionId, awardsPayload);
 
         if (!updResult.success) {
           throw new Error(updResult.message || 'Gagal mengemaskini permohonan.');
