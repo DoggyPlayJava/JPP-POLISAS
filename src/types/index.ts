@@ -1227,6 +1227,7 @@ export interface MakmpSubmissionAward {
   finalized_by?: string | null;
   // Joined relation fields:
   award?: MakmpAwardDefinition;
+  submission?: MakmpSubmission;
   items?: MakmpSubmissionItem[];
   reviewer_pin?: MakmpJuryPin;
 }
