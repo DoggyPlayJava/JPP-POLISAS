@@ -345,7 +345,7 @@ import { something } from '../lib/supabase';  // ❌ Elakkan relative
 |---|---|---|
 | `AuthContext` | `useAuth()` | User, profile, role flags, JPP HQ states, club switching |
 | `BusinessSwitcherContext` | `useBusinessSwitcher()` | Mengawal & menukar navigasi antara perniagaan yang dipantau (untuk Business Owner & JPP Admin) |
-| `ThemeContext` | `useTheme()` | Dark/light mode, toggle |
+| `ThemeContext` | `useTheme()` | Dark/light mode, toggle (Lalai global: Light mode) |
 | `AiSettingsContext` | `useAiSettings()` | Tetapan AI (concise mode, model pilihan) |
 | `KarnivalContext` | `useKarnival()` | State undian karnival |
 | `ExcoThemeContext` | `useExcoTheme()` | Warna exco aktif untuk theming |
@@ -2493,5 +2493,34 @@ Bagi mengelakkan kekeliruan di mana modal PIN juri hanya memaparkan nama kumpula
 - **Logik Penapisan Queue Juri (`fetchJuryAwardApplications`)**: Memadankan `assigned_categories` mengikut nama anugerah rasmi secara tepat, ID anugerah, mahupun nama kumpulan kategori tanpa konflik padanan rentetan.
 - **Lencana Kad Juri**: Kad PIN membezakan lencana kumpulan (`📁 Kumpulan`) dan anugerah khusus (`🏆 Anugerah`) untuk kejelasan pengurusan.
 
+---
 
+## 24. Modul Persembahan Eksekutif Berasaskan Web (`WEBSITE/`)
 
+Persembahan slaid eksekutif berasaskan web yang berasingan di dalam direktori `WEBSITE/` direka khas untuk pembentangan aras tinggi kepada pihak pengurusan kanan dan Pegawai JHEP POLISAS.
+
+### 24.1 Senibina Modular & Ciri Utama
+- **Fail Kendiri:** `WEBSITE/index.html`, `WEBSITE/app.js`, `WEBSITE/style.css`, dan `WEBSITE/assets/`.
+- **Tema Visual:** Modern Tech Minimalist (Light Theme) berteraskan reka bentuk Double-Bezel ala Apple/Linear.
+- **Navigasi Slaid:** Enjin slaid native JavaScript berasaskan hash URL (`#slide-1` hingga `#slide-11`), papan kekunci (`ArrowRight`, `Space`, `Enter`, `ArrowLeft`, `F` untuk Fullscreen, `P` untuk Cetak/PDF, `M` untuk Slide Drawer, `1-9` untuk lompat slaid).
+- **Bar Kawalan Terapung:** `#floating-nav` dan `#progress-bar` memaparkan penunjuk slaid semasa (`01 / 11`) dan kawalan interaktif pantas.
+
+### 24.2 Senarai 11 Slaid Eksekutif & Komponen Interaktif
+1. **Slaid 1 (Muka Depan):** Identiti berkembar POLISAS & JPP, lencana inisiatif kampus pintar JHEP.
+2. **Slaid 2 (Impak & Angka Sebenar):** Kaunter metrik beranimasi disahkan pangkalan data (2,733+ Pelajar, 60 Bisnes Usahawan Siswa, 276 Produk PolyMart, 850 Push Subscribers, 21 Kelab, 1,500 kapasiti serentak) dengan suis togol tangkapan skrin sebenar JPP HQ & Gambaran Sistem Portal.
+3. **Slaid 3 (PolyMaps):** Navigasi satelit kampus pintar (`real_polymaps.jpg`), penukar laluan berbumbung hujan & carian blok zon jabatan.
+4. **Slaid 4 (PolyMart & POS):** Marketplace siswa (`real_polymart.png`) dan terminal juruwang Web POS (`real_pos.png`) imbas kod bar serta resit digital.
+5. **Slaid 5 (E-Kebajikan):** Perbandingan Google Form dulu vs Sistem Tiket Sebenar (`real_kebajikan.png`, SLA < 24-48j) berserta simulasi sembang langsung 2-hala.
+6. **Slaid 6 (E-Akademik):** Rekod HPNM sebenar 3.97 Cemerlang (`real_akademik_hpnm.png`), kalkulator CGPA unjuran graduasi & pemuat turun e-Sijil digital terverifikasi.
+7. **Slaid 7 (EMS & Kehakiman):** Papan pemuka pengurusan acara sebenar (`real_ems_events.png` - Gema Merdeka, Siswapreneur Showcase, iFAMB), check-in QR, kalkulator rubrik live berkod PIN juri & penjanaan e-sijil berkod QR.
+8. **Slaid 8 (Laporan Auto-Generate):** Pusat Dokumen Kelab Mechanical Student Society (`real_laporan_auto.png`) dengan enjin penjanaan laporan bulanan automatik berstatus DILULUSKAN dalam 60 saat serta kelulusan berperingkat.
+9. **Slaid 9 (MAKMP):** Pencalonan Terbuka MAKMP 2026 Multi-Award (`real_makmp_awards.png`), kalkulator skor merit rasmi (Antarabangsa 100m, Kebangsaan 80m, Negeri 60m, Daerah 40m, Politeknik 20m) dan portal juri berjejak audit.
+10. **Slaid 10 (Nexus AI & Dual-RBAC):** Pembantu pintar draf kertas kerja berkuasa Gemini API, matriks hierarki 4 peranan (Super Admin, Majlis Tertinggi, Exco, Pelajar) dan pengasingan data PostgreSQL Row Level Security (`(SELECT auth.uid())`).
+11. **Slaid 11 (Rumusan Eksekutif, ROI & Hala Tuju Strategik — Tanpa Q&A):** Reka bentuk Hero Showcase Split (40/60) berprestij: Ruang kiri memaparkan 3 metrik nombor besar (2,733+ Pelajar Sah, 59 Usahawan Siswa, < 24 Jam SLA Respon) & Lencana Penghantaran Exco KPP (100% Sedia); Ruang kanan memaparkan tingkap pelayar uncompressed UI sebenar Hab Eksekutif JPP HQ (`real_jpp_pengurusan.png`) dengan suis ke Laman Utama (`real_mainpage.png`), 3 cip lencana terapung, dan Lightbox zoom.
+
+### 24.3 Standard Visual & Kad Before-After (Slaid 3–10)
+- **Format 2-Bullet Ringkas:** Setiap kad *SEBELUM* (Rose) dan *SELEPAS* (Emerald) menggunakan format senarai berpoin tajuk tebal (bold keywords) 1-baris tanpa teks perenggan berjela-jela, menjamin imbasan eksekutif pantas dalam masa 3 saat tanpa kesesakan teks (*word cluttered*).
+- **Pengesyoran Cetakan PDF (`@media print`):**
+  - Konfigurasi `@page { size: 297mm 210mm landscape; margin: 0; }`.
+  - Setiap `.slide` diformat sebagai satu mukasurat landskap tepat dengan `break-after: page;` dan `page-break-inside: avoid;`.
+  - Elemen terapung `.no-print`, `#floating-nav`, `#progress-bar`, `#slide-drawer`, `#toast-container` disembunyikan secara automatik semasa cetakan PDF.
