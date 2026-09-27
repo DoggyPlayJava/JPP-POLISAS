@@ -10,12 +10,16 @@ import {
   Lock,
   Loader2,
   Users,
+  AlertTriangle,
+  Info,
 } from 'lucide-react';
 import {
   fetchMakmpAwardRanking,
+  fetchMakmpAwardReviewStatus,
   saveMakmpAwardRanking,
   finalizeMakmpAward,
   type MakmpRankingEntry,
+  type MakmpAwardReviewStatus,
 } from '@/lib/makmp';
 import { sendNotificationToUser } from '@/lib/notifications';
 import { sendEmail } from '@/lib/email';
@@ -41,6 +45,7 @@ export default function MakmpRankingPanel({
   onChanged,
 }: MakmpRankingPanelProps) {
   const [ranking, setRanking] = useState<MakmpRankingEntry[]>([]);
+  const [reviewStatus, setReviewStatus] = useState<MakmpAwardReviewStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingRank, setSavingRank] = useState(false);
   const [finalizing, setFinalizing] = useState(false);
@@ -51,8 +56,12 @@ export default function MakmpRankingPanel({
 
   const load = useCallback(async () => {
     setLoading(true);
-    const data = await fetchMakmpAwardRanking(award.id);
+    const [data, status] = await Promise.all([
+      fetchMakmpAwardRanking(award.id),
+      fetchMakmpAwardReviewStatus(award.id),
+    ]);
     setRanking(data);
+    setReviewStatus(status);
     setDirty(false);
     setLoading(false);
   }, [award.id]);
@@ -62,6 +71,10 @@ export default function MakmpRankingPanel({
   }, [load]);
 
   const isLocked = ranking.some((r) => r.is_finalized);
+  const pendingCount = reviewStatus
+    ? (reviewStatus.menunggu ?? 0) + (reviewStatus.dalam_semakan ?? 0)
+    : 0;
+  const isReady = reviewStatus?.ready === true && ranking.length > 0;
 
   // Laras ranking: tukar kedudukan dua item bersebelahan
   const moveRank = (index: number, dir: -1 | 1) => {
@@ -96,14 +109,13 @@ export default function MakmpRankingPanel({
   };
 
   const handleFinalize = async () => {
-    if (!isAdmin) return;
     const ok = window.confirm(
       `Sahkan keputusan untuk "${award.name}"?\n\nTindakan ini akan KUNCI ranking dan menghantar notifikasi kepada pemenang (Top 3).`
     );
     if (!ok) return;
     setFinalizing(true);
     setError(null);
-    const res = await finalizeMakmpAward(award.id, 3);
+    const res = await finalizeMakmpAward(award.id, 3, pinCode || null);
     setFinalizing(false);
     if (!res.success) {
       setError(res.message || 'Gagal mengesahkan keputusan.');
@@ -194,6 +206,44 @@ export default function MakmpRankingPanel({
           </span>
         )}
       </div>
+
+      {/* Banner kesediaan + panduan laras */}
+      {!isLocked && (
+        <div className="mx-5 mt-4 space-y-2">
+          {isReady ? (
+            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
+              <div className="text-xs text-emerald-300">
+                <div className="font-bold text-emerald-200">Sedia untuk disahkan</div>
+                Semua {reviewStatus?.total ?? 0} calon telah selesai disemak. Anda boleh{' '}
+                <span className="font-semibold text-white">melaraskan kedudukan</span> (butang ↑↓)
+                jika perlu, kemudian tekan <span className="font-semibold text-white">SAHKAN KEDUDUKAN CALON</span>.
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+              <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+              <div className="text-xs text-amber-300">
+                <div className="font-bold text-amber-200">Belum sedia disahkan</div>
+                Masih ada <span className="font-semibold text-white">{pendingCount}</span> calon belum selesai
+                {reviewStatus?.menunggu ? ` (${reviewStatus.menunggu} Menunggu` : '('}
+                {reviewStatus?.dalam_semakan ? `, ${reviewStatus.dalam_semakan} Dalam Semakan)` : ')'}.
+                Sila selesaikan semakan semua calon dahulu sebelum mengesahkan kedudukan.
+              </div>
+            </div>
+          )}
+
+          {/* Panduan manual override */}
+          <div className="flex items-start gap-2 p-3 rounded-xl bg-slate-800/40 border border-slate-700/50">
+            <Info className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Kedudukan calon <span className="text-slate-200 font-semibold">dikira automatik ikut merit</span>.
+              Jika perlu, anda boleh <span className="text-slate-200 font-semibold">menukar kedudukan secara manual</span>{' '}
+              menggunakan butang ↑↓ pada senarai di bawah, kemudian tekan "Simpan Kedudukan".
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Podium Top 3 */}
       <div className="px-5 pt-5">
@@ -325,16 +375,15 @@ export default function MakmpRankingPanel({
               {savingRank ? 'Menyimpan...' : 'Simpan Kedudukan'}
             </button>
 
-            {isAdmin && (
-              <button
+            <button
                 onClick={handleFinalize}
-                disabled={finalizing}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20 disabled:opacity-60"
+                disabled={finalizing || !isReady}
+                title={!isReady ? 'Selesaikan semakan semua calon dahulu' : 'Sahkan & kunci kedudukan calon'}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                {finalizing ? 'Mengesahkan...' : 'Sahkan Keputusan'}
+                {finalizing ? 'Mengesahkan...' : 'Sahkan Kedudukan Calon'}
               </button>
-            )}
           </div>
 
           {message && (

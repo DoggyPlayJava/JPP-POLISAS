@@ -1306,6 +1306,29 @@ export interface MakmpRankingEntry extends MakmpSubmissionAward {
   eff_rank: number;
   submission?: MakmpSubmission;
 }
+/** Status semakan anugerah (untuk kesediaan "Sahkan Kedudukan Calon"). */
+export interface MakmpAwardReviewStatus {
+  total: number;
+  menunggu: number;
+  dalam_semakan: number;
+  disahkan: number;
+  ditolak: number;
+  ready: boolean;
+}
+
+/** Dapatkan status semakan bagi satu anugerah (berapa lagi belum selesai). */
+export async function fetchMakmpAwardReviewStatus(
+  awardDefinitionId: string
+): Promise<MakmpAwardReviewStatus | null> {
+  const { data, error } = await supabase.rpc('get_makmp_award_review_status', {
+    p_award_definition_id: awardDefinitionId,
+  });
+  if (error) {
+    console.error('[fetchMakmpAwardReviewStatus Error]', error.message);
+    return null;
+  }
+  return (data as MakmpAwardReviewStatus) || null;
+}
 
 /** Dapatkan ranking peserta bagi satu anugerah (definition id).
  *  Hanya peserta DISAHKAN disertakan. Susun ikut final_rank (manual) / merit. */
@@ -1342,14 +1365,24 @@ export async function saveMakmpAwardRanking(
   return (data as any) || { success: false, message: 'Tiada maklum balas daripada pelayan.' };
 }
 
-/** Sahkan & kunci keputusan anugerah. Hanya pegawai (role JPP/SUPER_ADMIN_JPP). */
+/** Sahkan & kunci keputusan anugerah. Pegawai (role) ATAU juri (PIN). */
 export async function finalizeMakmpAward(
   awardDefinitionId: string,
-  topCount: number = 3
-): Promise<{ success: boolean; message?: string; winner_count?: number }> {
+  topCount: number = 3,
+  pinCode?: string | null
+): Promise<{
+  success: boolean;
+  ready?: boolean;
+  locked?: boolean;
+  menunggu?: number;
+  dalam_semakan?: number;
+  message?: string;
+  winner_count?: number;
+}> {
   const { data, error } = await supabase.rpc('finalize_makmp_award', {
     p_award_definition_id: awardDefinitionId,
     p_top_count: topCount,
+    p_pin: pinCode || '',
   });
   if (error) {
     return { success: false, message: error.message };
