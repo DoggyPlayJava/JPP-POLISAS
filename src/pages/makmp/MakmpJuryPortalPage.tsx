@@ -112,7 +112,7 @@ function RankingViewContent({
 
   if (uniqueAwards.length === 0) {
     return (
-      <div className="p-8 rounded-2xl bg-slate-900 border border-slate-800 text-center text-slate-500 text-sm">
+      <div className="p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center text-slate-500 dark:text-slate-400 text-sm">
         Tiada anugerah untuk dipaparkan.
       </div>
     );
@@ -122,7 +122,7 @@ function RankingViewContent({
     <div className="space-y-8">
       {Array.from(groups.entries()).map(([group, awards]) => (
         <div key={group}>
-          <h3 className="text-sm font-bold text-amber-400 uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-3">
             {group}
           </h3>
           <div className="space-y-4">
@@ -474,14 +474,14 @@ export default function MakmpJuryPortalPage() {
   // ==========================================================================
   if (!juryPin || !edition) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md p-6 md:p-8 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl space-y-6">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 transition-colors">
+        <div className="w-full max-w-md p-6 md:p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6">
           <div className="text-center space-y-2">
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-amber-400 mb-4 shadow-lg shadow-amber-500/10">
+            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-amber-600 dark:text-amber-400 mb-4 shadow-lg shadow-amber-500/10">
               <KeyRound className="w-7 h-7" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight">Portal Pegawai Penilai MAKMP</h1>
-            <p className="text-xs text-slate-400">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Portal Pegawai Penilai MAKMP</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Sila masukkan Kod PIN 6-Digit yang diperuntukkan bagi kategori anugerah anda untuk memulakan semakan.
             </p>
           </div>
@@ -494,7 +494,7 @@ export default function MakmpJuryPortalPage() {
             className="space-y-4"
           >
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 Kod PIN Juri (6-Digit)
               </label>
               <input
@@ -503,13 +503,13 @@ export default function MakmpJuryPortalPage() {
                 value={pinInput}
                 onChange={(e) => setPinInput(e.target.value)}
                 placeholder="••••••"
-                className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-center text-2xl tracking-widest font-mono text-amber-400 focus:outline-none focus:border-amber-500 transition"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center text-2xl tracking-widest font-mono text-amber-600 dark:text-amber-400 focus:outline-none focus:border-amber-500 transition"
               />
             </div>
 
             {pinError && (
-              <div className="p-3 rounded-xl bg-red-950/50 border border-red-500/30 text-xs text-red-300 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
+              <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-500/30 text-xs text-red-600 dark:text-red-300 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-red-500 dark:text-red-400" />
                 <span>{pinError}</span>
               </div>
             )}
@@ -524,8 +524,8 @@ export default function MakmpJuryPortalPage() {
             </button>
           </form>
 
-          <div className="pt-4 border-t border-slate-800 text-center">
-            <Link to="/makmp" className="text-xs text-slate-500 hover:text-slate-300 transition">
+          <div className="pt-4 border-t border-slate-200 dark:border-slate-800 text-center">
+            <Link to="/makmp" className="text-xs text-slate-600 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-300 transition">
               ← Kembali ke Borang Pelajar MAKMP
             </Link>
           </div>
@@ -538,27 +538,27 @@ export default function MakmpJuryPortalPage() {
   // DASHBOARD JURI YANG SAH
   // ==========================================================================
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-slate-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-amber-500 selection:text-slate-950 transition-colors">
 
       <MakmpJppHeader subtitle="Portal Juri" />
       {/* Header Bar */}
-      <header className="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-xl sticky top-0 z-30">
+      <header className="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-bold text-xs shadow-inner">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold text-xs shadow-inner">
               JURI
             </div>
             <div>
-              <div className="font-bold text-xs md:text-sm text-white flex items-center gap-2">
+              <div className="font-bold text-xs md:text-sm text-slate-900 dark:text-white flex items-center gap-2">
                 <span>{juryPin.jury_name}</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-amber-300 font-mono border border-slate-700">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-amber-700 dark:text-amber-300 font-mono border border-slate-200 dark:border-slate-700">
                   MAKMP {edition.year}
                 </span>
               </div>
-              <div className="text-[11px] text-slate-400 flex items-center gap-1.5">
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                 <span>{juryPin.organization || 'Panel Penilai Rasmi'}</span>
                 <span>•</span>
-                <span className="text-amber-400 font-medium">
+                <span className="text-amber-600 dark:text-amber-400 font-medium">
                   {juryPin.assigned_categories?.includes('ALL')
                     ? 'Semua Kategori'
                     : juryPin.assigned_categories?.join(', ')}
@@ -571,14 +571,14 @@ export default function MakmpJuryPortalPage() {
             <button
               onClick={() => loadApplications(edition.id, juryPin.assigned_categories || [], juryPin.pin_code)}
               title="Muat Semula Senarai"
-              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition"
+              className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition"
             >
               <RefreshCw className={`w-4 h-4 ${loadingAwards ? 'animate-spin' : ''}`} />
             </button>
 
             <button
               onClick={handleLogout}
-              className="px-3 py-1.5 rounded-lg bg-rose-950/40 border border-rose-500/30 text-rose-300 text-xs font-semibold hover:bg-rose-900/60 transition flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 dark:bg-rose-950/40 dark:border-rose-500/30 dark:text-rose-300 text-xs font-semibold dark:hover:bg-rose-900/60 transition flex items-center gap-1.5"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>Keluar</span>
@@ -591,20 +591,20 @@ export default function MakmpJuryPortalPage() {
       <main className="max-w-7xl mx-auto px-4 pt-6 pb-28 md:pb-12 space-y-6">
         {/* Toast Notifikasi */}
         {reviewToast && (
-          <div className="p-4 rounded-xl bg-emerald-950/90 border border-emerald-500/40 text-emerald-200 text-xs flex items-center gap-2 shadow-xl animate-fade-in">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/90 border border-emerald-200 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-200 text-xs flex items-center gap-2 shadow-xl animate-fade-in">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>{reviewToast}</span>
           </div>
         )}
 
         {/* View Mode Toggle: Semakan vs Ranking */}
-        <div className="flex items-center gap-2 bg-slate-900/70 p-1.5 rounded-2xl border border-slate-800 w-fit">
+        <div className="flex items-center gap-2 bg-white dark:bg-slate-900/70 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 w-fit shadow-sm">
           <button
             onClick={() => setViewMode('REVIEW')}
             className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${
               viewMode === 'REVIEW'
                 ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             Semakan Penilaian
@@ -614,7 +614,7 @@ export default function MakmpJuryPortalPage() {
             className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${
               viewMode === 'RANKING'
                 ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             Keputusan & Ranking
@@ -631,7 +631,7 @@ export default function MakmpJuryPortalPage() {
         ) : (
           <>
         {/* Filter & Search Bar */}
-        <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between bg-slate-900/70 p-4 rounded-2xl border border-slate-800">
+        <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between bg-white dark:bg-slate-900/70 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
           {/* Status Tabs */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
             {[
@@ -648,7 +648,7 @@ export default function MakmpJuryPortalPage() {
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
                   filterStatus === tab.value
                     ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-                    : 'bg-slate-800/80 text-slate-400 hover:text-white'
+                    : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 {tab.label}
@@ -662,7 +662,7 @@ export default function MakmpJuryPortalPage() {
               <select
                 value={filterCategoryGroup}
                 onChange={(e) => setFilterCategoryGroup(e.target.value)}
-                className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-amber-500 transition"
+                className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 transition"
               >
                 <option value="ALL">Semua Kumpulan Kategori</option>
                 {uniqueCategoryGroups.map((grp) => (
@@ -674,13 +674,13 @@ export default function MakmpJuryPortalPage() {
             )}
 
             <div className="relative w-full sm:w-64">
-              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari Calon / Matrik / Anugerah..."
-                className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition"
+                className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition"
               />
             </div>
           </div>
@@ -689,14 +689,14 @@ export default function MakmpJuryPortalPage() {
         {/* Senarai Queue Permohonan Anugerah */}
         {loadingAwards ? (
           <div className="py-24 text-center">
-            <Loader2 className="w-8 h-8 text-amber-400 animate-spin mx-auto mb-2" />
-            <p className="text-xs text-slate-400">Memuat turun permohonan anugerah pelajar...</p>
+            <Loader2 className="w-8 h-8 text-amber-500 dark:text-amber-400 animate-spin mx-auto mb-2" />
+            <p className="text-xs text-slate-500 dark:text-slate-400">Memuat turun permohonan anugerah pelajar...</p>
           </div>
         ) : filteredAwards.length === 0 ? (
-          <div className="py-20 text-center rounded-2xl bg-slate-900/40 border border-slate-800">
-            <Award className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-            <h3 className="text-sm font-semibold text-white">Tiada Permohonan Anugerah Dijumpai</h3>
-            <p className="text-xs text-slate-500 mt-1">
+          <div className="py-20 text-center rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <Award className="w-12 h-12 text-slate-400 dark:text-slate-600 mx-auto mb-3" />
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Tiada Permohonan Anugerah Dijumpai</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {filterStatus === 'BELUM_SELESAI'
                 ? 'Tiada permohonan yang belum selesai disemak. Semua kerja anda telah siap! 🎉'
                 : filterStatus !== 'ALL'
@@ -718,20 +718,20 @@ export default function MakmpJuryPortalPage() {
                   data-testid="jury-award-card"
                   data-tracking-code={sub?.tracking_code || ''}
                   onClick={() => handleOpenReview(awApp)}
-                  className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-amber-500/60 cursor-pointer transition shadow-sm hover:shadow-xl space-y-3 group"
+                  className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-500/50 cursor-pointer transition shadow-sm hover:shadow-xl space-y-3 group"
                 >
                   {/* Top Bar: Tracking code + Status */}
                   <div className="flex items-start justify-between gap-2">
-                    <span className="font-mono text-[11px] font-bold text-amber-400">
+                    <span className="font-mono text-[11px] font-bold text-amber-600 dark:text-amber-400">
                       {sub?.tracking_code || 'MAKMP-2026'}
                     </span>
                     <span
                       className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
                         awApp.status === 'DISAHKAN'
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20'
                           : awApp.status === 'DITOLAK'
-                          ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                          : 'bg-amber-500/10 text-amber-300 border border-amber-500/20'
+                          ? 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20'
+                          : 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20'
                       }`}
                     >
                       {awApp.status}
@@ -740,25 +740,25 @@ export default function MakmpJuryPortalPage() {
 
                   {/* Award Name & Group */}
                   <div>
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       {aw?.category_group || 'ANUGERAH MAKMP'}
                     </div>
-                    <h4 className="font-bold text-sm text-white group-hover:text-amber-300 transition line-clamp-1 mt-0.5">
+                    <h4 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-300 transition line-clamp-1 mt-0.5">
                       {aw?.name}
                     </h4>
                   </div>
 
                   {/* Candidate / Entity Details */}
-                  <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-1">
-                    <div className="text-xs font-semibold text-white truncate">
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/80 space-y-1">
+                    <div className="text-xs font-semibold text-slate-900 dark:text-white truncate">
                       {sub?.full_name}
                     </div>
-                    <div className="text-[11px] text-slate-400 font-mono">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                       {sub?.matric_no} • {sub?.department}
                     </div>
 
                     {awApp.entity_name && (
-                      <div className="text-[11px] text-purple-300 pt-1 border-t border-slate-800/60 flex items-center gap-1.5">
+                      <div className="text-[11px] text-purple-700 dark:text-purple-300 pt-1 border-t border-slate-200 dark:border-slate-800/60 flex items-center gap-1.5">
                         <Building className="w-3 h-3 shrink-0" />
                         <span className="truncate">
                           {awApp.entity_name} {awApp.applicant_role ? `(${awApp.applicant_role})` : ''}
@@ -768,14 +768,14 @@ export default function MakmpJuryPortalPage() {
                   </div>
 
                   {/* Footer Stats */}
-                  <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                  <div className="pt-2 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                     <div className="flex items-center gap-1.5">
                       {isReportType ? (
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/20 font-medium">
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/20 font-medium">
                           Laporan & Bukti
                         </span>
                       ) : (
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 font-medium">
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20 font-medium">
                           Matriks Sijil
                         </span>
                       )}
@@ -783,9 +783,9 @@ export default function MakmpJuryPortalPage() {
                     </div>
 
                     {awApp.status === 'DISAHKAN' ? (
-                      <span className="font-bold text-emerald-400">+{awApp.total_merit_granted} Merit</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">+{awApp.total_merit_granted} Merit</span>
                     ) : (
-                      <span className="text-slate-500 text-[11px] flex items-center gap-0.5 group-hover:text-amber-400 transition">
+                      <span className="text-slate-500 dark:text-slate-400 text-[11px] flex items-center gap-0.5 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
                         Semak <ChevronRight className="w-3 h-3" />
                       </span>
                     )}
@@ -803,33 +803,33 @@ export default function MakmpJuryPortalPage() {
       {/* MODAL / SPLIT-VIEW REVIEW WORKBENCH                                  */}
       {/* ==================================================================== */}
       {activeAward && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-7xl max-h-[94vh] flex flex-col shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-7xl max-h-[94vh] flex flex-col shadow-2xl overflow-hidden">
             {/* Header Dialog */}
-            <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/90">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white/90 dark:bg-slate-900/90">
               <div className="space-y-0.5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-mono text-xs font-bold text-amber-400">
+                  <span className="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
                     {activeAward.submission?.tracking_code}
                   </span>
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-300 font-bold border border-amber-500/20">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 font-bold border border-amber-200 dark:border-amber-500/20">
                     {activeAward.award?.category_group}
                   </span>
                   {activeAward.award?.target_type === 'ENTITY' && (
-                    <span className="text-xs px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-300 border border-purple-500/20 flex items-center gap-1">
+                    <span className="text-xs px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300 border border-purple-200 dark:border-purple-500/20 flex items-center gap-1">
                       <Building className="w-3 h-3" />
                       {activeAward.entity_name || 'Entiti / Projek'}
                     </span>
                   )}
                 </div>
-                <h3 className="text-base font-bold text-white">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   {activeAward.award?.name} — {activeAward.submission?.full_name} ({activeAward.submission?.matric_no})
                 </h3>
               </div>
 
               <button
                 onClick={() => setActiveAward(null)}
-                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition"
+                className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -838,7 +838,7 @@ export default function MakmpJuryPortalPage() {
             {/* Split View Content */}
             <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 overflow-y-auto">
               {/* Sebelah Kiri: Preview Dokumen / Laporan / Sijil */}
-              <div className="p-4 border-b lg:border-b-0 lg:border-r border-slate-800 flex flex-col bg-slate-950/60">
+              <div className="p-4 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 flex flex-col bg-slate-100 dark:bg-slate-950/60">
                 {/* Dokumen Tab Switcher */}
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-[70%]">
@@ -850,7 +850,7 @@ export default function MakmpJuryPortalPage() {
                         className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition flex items-center gap-1.5 ${
                           selectedDocUrl === doc.drive_view_url
                             ? 'bg-amber-500 text-slate-950 font-bold'
-                            : 'bg-slate-800/80 text-slate-300 hover:text-white'
+                            : 'bg-white hover:bg-slate-200 text-slate-700 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:text-white border border-slate-200 dark:border-transparent'
                         }`}
                       >
                         {doc.source === 'E_AKADEMIK' ? (
@@ -873,16 +873,16 @@ export default function MakmpJuryPortalPage() {
                         <button
                           type="button"
                           onClick={() => setIsFullscreenPreview(true)}
-                          className="text-xs text-slate-300 hover:text-white px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 transition flex items-center gap-1"
+                          className="text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-2.5 py-1 rounded-lg bg-white hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-transparent transition flex items-center gap-1"
                         >
-                          <Maximize2 className="w-3.5 h-3.5 text-amber-400" />
+                          <Maximize2 className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                           <span className="hidden sm:inline">Skrin Penuh</span>
                         </button>
                         <a
                           href={selectedDocUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-amber-400 hover:underline flex items-center gap-1"
+                          className="text-xs text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                           <span>Tab Asal</span>
@@ -894,7 +894,7 @@ export default function MakmpJuryPortalPage() {
 
                 {/* Info Templat Laporan jika ada */}
                 {activeAward.award?.template_url && (
-                  <div className="mb-2 p-2.5 rounded-xl bg-sky-950/40 border border-sky-500/20 text-sky-200 text-xs flex items-center justify-between gap-2">
+                  <div className="mb-2 p-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-500/20 text-sky-800 dark:text-sky-200 text-xs flex items-center justify-between gap-2">
                     <span className="text-[11px] truncate">
                       Templat Rasmi: {activeAward.award.template_name || 'Format Laporan Standard'}
                     </span>
@@ -902,7 +902,7 @@ export default function MakmpJuryPortalPage() {
                       href={activeAward.award.template_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-2 py-0.5 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 font-bold text-[10px] shrink-0 flex items-center gap-1"
+                      className="px-2 py-0.5 rounded bg-sky-100 hover:bg-sky-200 text-sky-800 dark:bg-sky-500/20 dark:hover:bg-sky-500/30 dark:text-sky-300 font-bold text-[10px] shrink-0 flex items-center gap-1"
                     >
                       <Download className="w-3 h-3" />
                       <span>Rujuk Templat</span>
@@ -911,14 +911,14 @@ export default function MakmpJuryPortalPage() {
                 )}
 
                 {/* Viewer Box */}
-                <div className="flex-1 min-h-[360px] lg:min-h-[500px] rounded-xl border border-slate-800 overflow-hidden bg-slate-900 flex items-center justify-center relative">
+                <div className="flex-1 min-h-[360px] lg:min-h-[500px] rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-50 dark:bg-slate-900 flex items-center justify-center relative">
                   {selectedDocUrl ? (
                     (() => {
                       const { embedUrl, isImage } = getEmbeddableCertUrl(selectedDocUrl);
                       if (isImage) {
                         return (
                           <div
-                            className="w-full h-full flex items-center justify-center p-2 overflow-auto bg-slate-950 cursor-pointer"
+                            className="w-full h-full flex items-center justify-center p-2 overflow-auto bg-slate-100 dark:bg-slate-950 cursor-pointer"
                             onClick={() => setIsFullscreenPreview(true)}
                             title="Klik untuk skrin penuh"
                           >
@@ -940,7 +940,7 @@ export default function MakmpJuryPortalPage() {
                       );
                     })()
                   ) : (
-                    <div className="text-center text-slate-500 text-xs">
+                    <div className="text-center text-slate-400 dark:text-slate-500 text-xs">
                       Pilih dokumen dari senarai di atas untuk memulakan semakan.
                     </div>
                   )}
@@ -950,14 +950,14 @@ export default function MakmpJuryPortalPage() {
               {/* Sebelah Kanan: Semakan Item & Keputusan */}
               <div className="p-5 overflow-y-auto space-y-6">
                 {/* Header Maklumat Anugerah */}
-                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400 font-medium">Syarat Anugerah:</span>
-                    <span className="text-xs font-bold text-amber-400">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Syarat Anugerah:</span>
+                    <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
                       Maksimum Merit: {activeAward.award?.max_merit || 50} Mata
                     </span>
                   </div>
-                  <p className="text-xs text-slate-300 leading-relaxed">
+                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
                     {activeAward.award?.doc_instructions || 'Sila semak dokumen sokongan yang dimuat naik.'}
                   </p>
                 </div>
@@ -965,10 +965,10 @@ export default function MakmpJuryPortalPage() {
                 {/* Senarai Dokumen / Sijil untuk Semakan */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                    <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Item Dokumen / Sijil ({reviewItems.length})
                     </h4>
-                    <div className="text-xs font-bold text-amber-400">
+                    <div className="text-xs font-bold text-amber-600 dark:text-amber-400">
                       Jumlah Merit Dinilai: {currentTotalMerit} Mata
                     </div>
                   </div>
@@ -989,11 +989,11 @@ export default function MakmpJuryPortalPage() {
                       return (
                         <div
                           key={item.id}
-                          className="p-4 rounded-xl bg-slate-950 border border-slate-800/90 space-y-3"
+                          className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/90 space-y-3"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex items-start gap-2.5">
-                              <span className="w-5 h-5 rounded-full bg-slate-800 text-amber-400 text-xs font-bold flex items-center justify-center mt-0.5 shrink-0">
+                              <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 text-amber-700 dark:text-amber-400 text-xs font-bold flex items-center justify-center mt-0.5 shrink-0">
                                 {idx + 1}
                               </span>
                               <div>
@@ -1001,25 +1001,25 @@ export default function MakmpJuryPortalPage() {
                                   <span
                                     className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
                                       item.document_type === 'LAPORAN'
-                                        ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+                                        ? 'bg-sky-100 text-sky-800 border border-sky-200 dark:bg-sky-500/20 dark:text-sky-300 dark:border-sky-500/30'
                                         : item.document_type === 'BUKTI_SOKONGAN'
-                                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                        : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                                        ? 'bg-purple-100 text-purple-800 border border-purple-200 dark:bg-purple-500/20 dark:text-purple-300 dark:border-purple-500/30'
+                                        : 'bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30'
                                     }`}
                                   >
                                     {item.document_type || 'SIJIL'}
                                   </span>
                                   {item.source === 'E_AKADEMIK' && (
-                                    <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                                    <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30 flex items-center gap-1">
                                       <Sparkles className="w-2.5 h-2.5" />
                                       <span>e-Akademik</span>
                                     </span>
                                   )}
-                                  <span className="font-bold text-xs text-white">
+                                  <span className="font-bold text-xs text-slate-900 dark:text-white">
                                     {item.nama_pencapaian}
                                   </span>
                                 </div>
-                                <div className="text-[11px] text-slate-400 mt-1">
+                                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                                   Tuntutan Calon: {item.peringkat} • {item.pencapaian_type}
                                 </div>
                               </div>
@@ -1028,7 +1028,7 @@ export default function MakmpJuryPortalPage() {
                             <button
                               type="button"
                               onClick={() => setSelectedDocUrl(item.drive_view_url)}
-                              className="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-[11px] text-amber-400 transition flex items-center gap-1 shrink-0"
+                              className="px-2.5 py-1 rounded-md bg-white hover:bg-slate-100 text-amber-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-amber-400 border border-slate-200 dark:border-transparent text-[11px] transition flex items-center gap-1 shrink-0"
                             >
                               <Eye className="w-3 h-3" />
                               <span>Lihat</span>
@@ -1038,10 +1038,10 @@ export default function MakmpJuryPortalPage() {
                           {/* Controls Penilaian Juri */}
                           {isReportDoc ? (
                             /* Layout Khas Laporan Projek — Juri beri markah 0-100 */
-                            <div className="p-3 rounded-lg bg-sky-500/10 border border-sky-500/40 space-y-2">
+                            <div className="p-3 rounded-lg bg-sky-50 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/40 space-y-2">
                               <div className="flex items-center justify-between text-xs gap-2">
-                                <span className="text-sky-200 font-semibold flex items-center gap-1.5">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                                <span className="text-sky-800 dark:text-sky-200 font-semibold flex items-center gap-1.5">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500 dark:bg-sky-400" />
                                   Markah Laporan (0-100):
                                 </span>
                                 <div className="flex items-center gap-2">
@@ -1057,13 +1057,13 @@ export default function MakmpJuryPortalPage() {
                                         Number(e.target.value) || 0
                                       )
                                     }
-                                    className="w-20 px-2 py-1.5 rounded-lg bg-sky-950 border border-sky-500/60 text-center font-extrabold text-sky-300 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                                    className="w-20 px-2 py-1.5 rounded-lg bg-white dark:bg-sky-950 border border-sky-300 dark:border-sky-500/60 text-center font-extrabold text-sky-800 dark:text-sky-300 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
                                   />
-                                  <span className="text-slate-400 text-xs">/ 100</span>
+                                  <span className="text-slate-500 dark:text-slate-400 text-xs">/ 100</span>
                                 </div>
                               </div>
-                              <div className="text-[11px] text-sky-200/70 pt-1 border-t border-sky-500/20">
-                                Merit auto-dikira: <span className="font-bold text-sky-300">+{Math.round((rItem.report_score || 0) / 10)} merit</span>{' '}
+                              <div className="text-[11px] text-sky-700 dark:text-sky-200/70 pt-1 border-t border-sky-200 dark:border-sky-500/20">
+                                Merit auto-dikira: <span className="font-bold text-sky-800 dark:text-sky-300">+{Math.round((rItem.report_score || 0) / 10)} merit</span>{' '}
                                 (markah ÷ 10, dibundarkan)
                               </div>
                             </div>
@@ -1071,7 +1071,7 @@ export default function MakmpJuryPortalPage() {
                             /* Matriks Sijil Standard (Peringkat & Tahap) */
                             <div className="grid grid-cols-2 gap-2 text-xs pt-1">
                               <div>
-                                <label className="block text-[10px] text-slate-500 mb-1">
+                                <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-1">
                                   Peringkat Sah
                                 </label>
                                 <select
@@ -1083,7 +1083,7 @@ export default function MakmpJuryPortalPage() {
                                       e.target.value as MakmpPeringkat
                                     )
                                   }
-                                  className="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white"
+                                  className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white"
                                 >
                                   {PERINGKAT_OPTIONS.map((p) => (
                                     <option key={p.value} value={p.value}>
@@ -1094,7 +1094,7 @@ export default function MakmpJuryPortalPage() {
                               </div>
 
                               <div>
-                                <label className="block text-[10px] text-slate-500 mb-1">
+                                <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-1">
                                   Tahap Sah
                                 </label>
                                 <select
@@ -1106,7 +1106,7 @@ export default function MakmpJuryPortalPage() {
                                       e.target.value as MakmpPencapaianType
                                     )
                                   }
-                                  className="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white"
+                                  className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white"
                                 >
                                   {PENCAPAIAN_TYPE_OPTIONS.map((pt) => (
                                     <option key={pt.value} value={pt.value}>
@@ -1119,7 +1119,7 @@ export default function MakmpJuryPortalPage() {
                           )}
 
                           {/* Checkbox Pengesahan Dokumen */}
-                          <div className="flex items-center justify-between pt-2 border-t border-slate-900">
+                          <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-900">
                             <label className="flex items-center gap-2 cursor-pointer text-xs">
                               <input
                                 type="checkbox"
@@ -1127,14 +1127,14 @@ export default function MakmpJuryPortalPage() {
                                 onChange={(e) =>
                                   handleUpdateItemReview(item.id, 'is_verified', e.target.checked)
                                 }
-                                className="w-4 h-4 rounded text-amber-500 focus:ring-0 bg-slate-900 border-slate-700"
+                                className="w-4 h-4 rounded text-amber-500 focus:ring-0 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
                               />
-                              <span className={rItem.is_verified ? 'text-white' : 'text-slate-500'}>
+                              <span className={rItem.is_verified ? 'text-slate-900 dark:text-white font-medium' : 'text-slate-500'}>
                                 {rItem.is_verified ? 'Dokumen Sah Diterima' : 'Dokumen Tidak Diterima'}
                               </span>
                             </label>
 
-                            <div className="text-xs font-bold text-amber-400">
+                            <div className="text-xs font-bold text-amber-600 dark:text-amber-400">
                               +{rItem.is_verified ? rItem.merit_awarded : 0} Merit
                             </div>
                           </div>
@@ -1145,15 +1145,15 @@ export default function MakmpJuryPortalPage() {
                 </div>
 
                 {/* Canned Rejection Reasons & Catatan */}
-                <div className="space-y-3 pt-2 border-t border-slate-800">
+                <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                       Pilihan Cepat Sebab Tolak (jika menolak):
                     </label>
                     <select
                       value={rejectionReason}
                       onChange={(e) => setRejectionReason(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-amber-500 transition"
+                      className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 transition"
                     >
                       <option value="">-- Pilih Sebab Penolakan Rasmi --</option>
                       {CANNED_REJECTION_REASONS.map((r, i) => (
@@ -1165,7 +1165,7 @@ export default function MakmpJuryPortalPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                       Catatan Tambahan Penilai:
                     </label>
                     <textarea
@@ -1173,7 +1173,7 @@ export default function MakmpJuryPortalPage() {
                       value={reviewNotes}
                       onChange={(e) => setReviewNotes(e.target.value)}
                       placeholder="Catatan juri atau ulasan kepada calon..."
-                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition"
+                      className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition"
                     />
                   </div>
                 </div>
@@ -1184,18 +1184,18 @@ export default function MakmpJuryPortalPage() {
                     <div className="space-y-3">
                       {/* Sejarah buka semula (jika ada) */}
                       {reviewLog.length > 0 && (
-                        <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
-                          <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                            <History className="w-3.5 h-3.5 text-amber-400" />
+                        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+                          <div className="flex items-center gap-2 text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                            <History className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                             <span>Sejarah Buka Semula ({reviewLog.length})</span>
                           </div>
                           {reviewLog.map((log, i) => (
-                            <div key={log.id || i} className="text-xs text-slate-300 flex items-start gap-2">
-                              <span className="text-amber-400 font-mono shrink-0">#{log.unlock_count}</span>
+                            <div key={log.id || i} className="text-xs text-slate-700 dark:text-slate-300 flex items-start gap-2">
+                              <span className="text-amber-600 dark:text-amber-400 font-mono shrink-0">#{log.unlock_count}</span>
                               <span>
                                 {log.jury_name || log.admin_name || 'Pentadbir'} — {log.previous_status} → DALAM_SEMAKAN
                                 {log.reason ? ` • "${log.reason}"` : ''}
-                                <span className="block text-[10px] text-slate-500">
+                                <span className="block text-[10px] text-slate-400 dark:text-slate-500">
                                   {new Date(log.created_at).toLocaleString('ms-MY')}
                                 </span>
                               </span>
@@ -1204,8 +1204,8 @@ export default function MakmpJuryPortalPage() {
                         </div>
                       )}
 
-                      <div className="p-3 rounded-xl bg-slate-800/60 border border-slate-700 flex items-center gap-2 text-xs text-slate-300">
-                        <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                      <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
+                        <Lock className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
                         <span>
                           Permohonan ini telah {activeAward.status === 'DISAHKAN' ? 'disahkan' : 'ditolak'}. Anda boleh buka semula jika perlu semakan semula.
                         </span>
@@ -1215,7 +1215,7 @@ export default function MakmpJuryPortalPage() {
                         type="button"
                         disabled={isUnlocking}
                         onClick={() => setShowUnlockDialog(true)}
-                        className="w-full py-3 px-4 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 font-bold text-xs hover:bg-amber-500/25 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="w-full py-3 px-4 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:border-amber-500/40 dark:text-amber-300 font-bold text-xs dark:hover:bg-amber-500/25 transition flex items-center justify-center gap-2 disabled:opacity-50"
                       >
                         <RefreshCw className="w-4 h-4" />
                         <span>Buka Semula Semakan</span>
@@ -1227,7 +1227,7 @@ export default function MakmpJuryPortalPage() {
                         type="button"
                         disabled={isSavingReview}
                         onClick={() => handleSaveDecision('DITOLAK')}
-                        className="flex-1 py-3 px-4 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-300 font-bold text-xs hover:bg-rose-900/80 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="flex-1 py-3 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 dark:bg-rose-950/60 dark:border-rose-500/40 dark:text-rose-300 font-bold text-xs dark:hover:bg-rose-900/80 transition flex items-center justify-center gap-2 disabled:opacity-50"
                       >
                         <XCircle className="w-4 h-4" />
                         <span>Tolak Anugerah Ini</span>
@@ -1336,28 +1336,28 @@ export default function MakmpJuryPortalPage() {
       {/* DIALOG BUKA SEMULA SEMAKAN (JURI)                                    */}
       {/* ==================================================================== */}
       {showUnlockDialog && activeAward && (
-        <div className="fixed inset-0 z-[110] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-md p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-[110] bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full max-w-md p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <RefreshCw className="w-4 h-4 text-amber-400" />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                   Buka Semula Semakan
                 </h3>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   {activeAward.award?.name} — {activeAward.submission?.full_name}
                 </p>
               </div>
               <button
                 onClick={() => { setShowUnlockDialog(false); setUnlockReason(''); }}
-                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white"
+                className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 Sebab Buka Semula (wajib — direkod dalam log):
               </label>
               <textarea
@@ -1365,11 +1365,11 @@ export default function MakmpJuryPortalPage() {
                 value={unlockReason}
                 onChange={(e) => setUnlockReason(e.target.value)}
                 placeholder="cth: Tersilap menandakan dokumen sah, perlu semak semula sijil #2..."
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition"
+                className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition"
               />
             </div>
 
-            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200">
+            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-[11px] text-amber-800 dark:text-amber-200">
               ⚠️ Buka semula akan menolak semula merit (jika telah disahkan) dan reset semua tanda dokumen. Tindakan ini akan direkod dalam log sejarah semakan.
             </div>
 
@@ -1377,7 +1377,7 @@ export default function MakmpJuryPortalPage() {
               <button
                 type="button"
                 onClick={() => { setShowUnlockDialog(false); setUnlockReason(''); }}
-                className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition"
+                className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition"
               >
                 Batal
               </button>
