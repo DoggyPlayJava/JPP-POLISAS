@@ -199,10 +199,20 @@ export default function MakmpRankingPanel({
           </div>
         </div>
 
-        {isLocked && (
+        {isLocked ? (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold">
             <Lock className="w-3.5 h-3.5" />
             Keputusan Disahkan
+          </span>
+        ) : isReady ? (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Sedia Disahkan
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">
+            <AlertTriangle className="w-3.5 h-3.5" />
+            {pendingCount} Belum Selesai
           </span>
         )}
       </div>
