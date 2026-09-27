@@ -1192,24 +1192,24 @@ export default function MakmpPublicFormPage() {
 
   if (loadingInitial) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
-        <Loader2 className="w-10 h-10 text-amber-400 animate-spin mb-4" />
-        <p className="text-slate-400 font-medium">Memuat turun maklumat anugerah POLISAS...</p>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 transition-colors">
+        <Loader2 className="w-10 h-10 text-amber-500 dark:text-amber-400 animate-spin mb-4" />
+        <p className="text-slate-600 dark:text-slate-400 font-medium">Memuat turun maklumat anugerah POLISAS...</p>
       </div>
     );
   }
 
   if (!edition) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4 text-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 text-center transition-colors">
         <AlertCircle className="w-12 h-12 text-amber-500 mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Pencalonan Belum Dibuka</h1>
-        <p className="text-slate-400 max-w-md mb-6">
+        <h1 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">Pencalonan Belum Dibuka</h1>
+        <p className="text-slate-600 dark:text-slate-400 max-w-md mb-6">
           Tiada edisi Majlis Anugerah Kecemerlangan Mahasiswa POLISAS (MAKMP) yang dibuka pada masa ini.
         </p>
         <Link
           to="/"
-          className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-semibold transition"
+          className="px-5 py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 transition shadow-sm"
         >
           Kembali ke Laman Utama
         </Link>
@@ -1223,23 +1223,23 @@ export default function MakmpPublicFormPage() {
   //   - tiada -> tunjuk mesej "tempoh tamat" (bukan borang baru)
   if (isDeadlinePassed && !isEditMode && loadingExisting) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
-        <Loader2 className="w-10 h-10 text-amber-400 animate-spin mb-4" />
-        <p className="text-slate-400 font-medium">Menyemak permohonan sedia ada...</p>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 transition-colors">
+        <Loader2 className="w-10 h-10 text-amber-500 dark:text-amber-400 animate-spin mb-4" />
+        <p className="text-slate-600 dark:text-slate-400 font-medium">Menyemak permohonan sedia ada...</p>
       </div>
     );
   }
 
   if (isDeadlinePassed && !isEditMode && !loadingExisting) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4 text-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 text-center transition-colors">
         <CalendarX className="w-12 h-12 text-rose-500 mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Tempoh Permohonan Telah Tamat</h1>
-        <p className="text-slate-400 max-w-md mb-2">
+        <h1 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">Tempoh Permohonan Telah Tamat</h1>
+        <p className="text-slate-600 dark:text-slate-400 max-w-md mb-2">
           Tempoh menghantar permohonan baharu bagi edisi MAKMP ini telah ditutup.
         </p>
         {edition?.submission_deadline && (
-          <p className="text-xs text-slate-500 mb-6">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
             Tarikh tutup: {new Date(edition.submission_deadline).toLocaleString('ms-MY', {
               dateStyle: 'long',
               timeStyle: 'short',
@@ -1249,13 +1249,13 @@ export default function MakmpPublicFormPage() {
         <div className="flex items-center gap-3 flex-wrap justify-center">
           <Link
             to="/makmp/status"
-            className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-semibold transition"
+            className="px-5 py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 transition shadow-sm"
           >
             Semak Status Permohonan
           </Link>
           <Link
             to="/"
-            className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-semibold transition"
+            className="px-5 py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 transition shadow-sm"
           >
             Kembali ke Laman Utama
           </Link>
@@ -1265,33 +1265,33 @@ export default function MakmpPublicFormPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-slate-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-amber-500 selection:text-slate-950 transition-colors">
 
       <MakmpJppHeader subtitle="Majlis Anugerah Kecemerlangan" />
       {/* Header Bar */}
-      <header className="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-xl sticky top-0 z-30">
+      <header className="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/60 backdrop-blur-xl sticky top-0 z-30 transition-colors">
         <div className="max-w-4xl mx-auto px-4 py-3.5 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition">
               <Award className="w-5 h-5 text-slate-950" />
             </div>
             <div>
-              <div className="font-bold text-sm tracking-tight text-white flex items-center gap-1.5">
-                MAKMP <span className="text-amber-400">{edition.year}</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20 font-semibold">
+              <div className="font-bold text-sm tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
+                MAKMP <span className="text-amber-600 dark:text-amber-400">{edition.year}</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 font-semibold">
                   Multi-Award
                 </span>
               </div>
-              <div className="text-[11px] text-slate-400">POLISAS Excellence Awards</div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400">POLISAS Excellence Awards</div>
             </div>
           </Link>
 
           <div className="flex items-center gap-3">
             <Link
               to="/makmp/status"
-              className="text-xs font-semibold text-slate-300 hover:text-white px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 transition flex items-center gap-1.5 border border-slate-700/60"
+              className="text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-700/60 shadow-sm"
             >
-              <Search className="w-3.5 h-3.5 text-amber-400" />
+              <Search className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
               <span>Semak Status</span>
             </Link>
           </div>
@@ -1302,18 +1302,18 @@ export default function MakmpPublicFormPage() {
       <main className="max-w-4xl mx-auto px-4 pt-6 pb-28 md:pb-12">
         {/* Banner Mod Kemaskini (edit mode) */}
         {isEditMode && step !== 4 && (
-          <div className="mb-6 p-4 md:p-5 rounded-2xl border border-sky-500/30 bg-sky-500/10 flex items-start gap-3 shadow-lg">
-            <div className="p-2 rounded-lg bg-sky-500/20 border border-sky-500/30 text-sky-300 shrink-0">
+          <div className="mb-6 p-4 md:p-5 rounded-2xl border border-sky-300 dark:border-sky-500/30 bg-sky-50 dark:bg-sky-500/10 flex items-start gap-3 shadow-sm dark:shadow-lg">
+            <div className="p-2 rounded-lg bg-sky-100 dark:bg-sky-500/20 border border-sky-200 dark:border-sky-500/30 text-sky-600 dark:text-sky-300 shrink-0">
               <Save className="w-4 h-4" />
             </div>
             <div className="flex-1">
-              <div className="font-bold text-sm text-sky-200 flex items-center gap-2">
+              <div className="font-bold text-sm text-sky-900 dark:text-sky-200 flex items-center gap-2">
                 Mod Kemaskini Permohonan
               </div>
-              <p className="text-xs text-sky-300/80 mt-0.5">
+              <p className="text-xs text-sky-700 dark:text-sky-300/80 mt-0.5">
                 Anda sedang mengemaskini permohonan sedia ada
                 {existingTrackingCode && (
-                  <span className="ml-1 font-mono text-sky-200">({existingTrackingCode})</span>
+                  <span className="ml-1 font-mono font-semibold text-sky-800 dark:text-sky-200">({existingTrackingCode})</span>
                 )}.
                 Kod rujukan anda kekal sama. Sila semak & simpan perubahan sebelum juri mula menyemak.
               </p>
@@ -1323,30 +1323,30 @@ export default function MakmpPublicFormPage() {
 
         {/* Banner Hero */}
         {step !== 4 && (
-          <div className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-b from-amber-500/10 via-slate-900/40 to-slate-900 p-6 md:p-8 mb-8 shadow-xl">
+          <div className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-white dark:via-slate-900/40 dark:to-slate-900 p-6 md:p-8 mb-8 shadow-sm dark:shadow-xl transition-colors">
             <div className="absolute -right-8 -top-8 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold mb-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-semibold mb-3">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Pencalonan Terbuka Rasmi Pelajar & Kelab POLISAS</span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight mb-2">
+              <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
                 {edition.title}
               </h1>
-              <p className="text-sm text-slate-400 max-w-2xl leading-relaxed">
+              <p className="text-sm text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">
                 Anda boleh memohon lebih daripada satu anugerah serentak. Hantar sijil pencapaian, portfolio, atau laporan projek keusahawanan/kelab anda untuk dinilai oleh pegawai penilai POLISAS.
               </p>
 
               {/* Step indicator */}
-              <div className="mt-6 pt-6 border-t border-slate-800/80 grid grid-cols-3 gap-2">
+              <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800/80 grid grid-cols-3 gap-2">
                 <div
                   className={`flex items-center gap-2 text-xs font-medium ${
-                    step >= 1 ? 'text-amber-400' : 'text-slate-500'
+                    step >= 1 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'
                   }`}
                 >
                   <div
                     className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
-                      step >= 1 ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-400'
+                      step >= 1 ? 'bg-amber-500 text-slate-950' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     1
@@ -1356,12 +1356,12 @@ export default function MakmpPublicFormPage() {
 
                 <div
                   className={`flex items-center gap-2 text-xs font-medium ${
-                    step >= 2 ? 'text-amber-400' : 'text-slate-500'
+                    step >= 2 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'
                   }`}
                 >
                   <div
                     className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
-                      step >= 2 ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-400'
+                      step >= 2 ? 'bg-amber-500 text-slate-950' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     2
@@ -1371,12 +1371,12 @@ export default function MakmpPublicFormPage() {
 
                 <div
                   className={`flex items-center gap-2 text-xs font-medium ${
-                    step >= 3 ? 'text-amber-400' : 'text-slate-500'
+                    step >= 3 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'
                   }`}
                 >
                   <div
                     className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
-                      step >= 3 ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-400'
+                      step >= 3 ? 'bg-amber-500 text-slate-950' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     3
@@ -1392,12 +1392,12 @@ export default function MakmpPublicFormPage() {
         {errorMessage && (
           <div
             ref={errorRef}
-            className="mb-6 scroll-mt-28 p-4 rounded-xl bg-red-950/60 border border-red-500/30 text-red-200 text-sm flex items-start gap-3 shadow-lg">
-            <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+            className="mb-6 scroll-mt-28 p-4 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-200 text-sm flex items-start gap-3 shadow-sm dark:shadow-lg">
+            <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 shrink-0 mt-0.5" />
             <div className="flex-1">{errorMessage}</div>
             <button
               onClick={() => setErrorMessage(null)}
-              className="text-red-400 hover:text-red-300 font-bold"
+              className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-bold"
             >
               ✕
             </button>
@@ -1409,13 +1409,13 @@ export default function MakmpPublicFormPage() {
         {/* ==================================================================== */}
         {step === 1 && (
           <div className="space-y-6">
-            <div className="p-5 md:p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-6">
+            <div className="p-5 md:p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl space-y-6 transition-colors">
               <div>
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <UserCheck className="w-5 h-5 text-amber-400" />
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <UserCheck className="w-5 h-5 text-amber-500 dark:text-amber-400" />
                   Status Akaun JPP Portal Anda
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Pilih sama ada anda mempunyai akaun berdaftar dalam portal atau mengisi borang secara terus.
                 </p>
               </div>
@@ -1427,24 +1427,24 @@ export default function MakmpPublicFormPage() {
                   onClick={() => setAccountType('PORTAL')}
                   className={`p-4 rounded-xl border text-left transition-all ${
                     accountType === 'PORTAL'
-                      ? 'border-amber-500 bg-amber-500/10 shadow-lg shadow-amber-500/10'
-                      : 'border-slate-800 bg-slate-800/40 hover:bg-slate-800'
+                      ? 'border-amber-500 bg-amber-50/80 dark:bg-amber-500/10 shadow-sm dark:shadow-lg dark:shadow-amber-500/10'
+                      : 'border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:bg-slate-100/80 dark:hover:bg-slate-800'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <UserCheck
                       className={`w-5 h-5 ${
-                        accountType === 'PORTAL' ? 'text-amber-400' : 'text-slate-400'
+                        accountType === 'PORTAL' ? 'text-amber-500 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'
                       }`}
                     />
                     {accountType === 'PORTAL' && (
-                      <CheckCircle2 className="w-4 h-4 text-amber-400" />
+                      <CheckCircle2 className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                     )}
                   </div>
-                  <div className="font-semibold text-sm text-white">
+                  <div className="font-semibold text-sm text-slate-900 dark:text-white">
                     Saya Ada Akaun JPP Portal
                   </div>
-                  <div className="text-xs text-slate-400 mt-1">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Cari profil anda secara pantas atau guna akaun sedia ada untuk auto-fill.
                   </div>
                 </button>
@@ -1458,24 +1458,24 @@ export default function MakmpPublicFormPage() {
                   }}
                   className={`p-4 rounded-xl border text-left transition-all ${
                     accountType === 'MANUAL'
-                      ? 'border-amber-500 bg-amber-500/10 shadow-lg shadow-amber-500/10'
-                      : 'border-slate-800 bg-slate-800/40 hover:bg-slate-800'
+                      ? 'border-amber-500 bg-amber-50/80 dark:bg-amber-500/10 shadow-sm dark:shadow-lg dark:shadow-amber-500/10'
+                      : 'border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:bg-slate-100/80 dark:hover:bg-slate-800'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <UserPlus
                       className={`w-5 h-5 ${
-                        accountType === 'MANUAL' ? 'text-amber-400' : 'text-slate-400'
+                        accountType === 'MANUAL' ? 'text-amber-500 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'
                       }`}
                     />
                     {accountType === 'MANUAL' && (
-                      <CheckCircle2 className="w-4 h-4 text-amber-400" />
+                      <CheckCircle2 className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                     )}
                   </div>
-                  <div className="font-semibold text-sm text-white">
+                  <div className="font-semibold text-sm text-slate-900 dark:text-white">
                     Saya Belum Ada Akaun
                   </div>
-                  <div className="text-xs text-slate-400 mt-1">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Isi butiran secara manual. Sijil & merit akan auto-link bila anda mendaftar nanti.
                   </div>
                 </button>
@@ -1483,15 +1483,15 @@ export default function MakmpPublicFormPage() {
 
               {/* Amaran emel berbeza selepas login Google */}
               {emailMismatch && (
-                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/40 space-y-3">
+                <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/40 space-y-3">
                   <div className="flex items-start gap-2.5">
-                    <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                    <AlertCircle className="w-5 h-5 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
                     <div className="text-sm">
-                      <div className="font-bold text-amber-200">Emel Google berbeza dengan emel borang</div>
-                      <p className="text-xs text-slate-400 mt-1">
-                        Akaun Google anda (<span className="font-mono text-amber-300">{emailMismatch.google}</span>) tidak sama dengan emel yang anda isi dalam borang (<span className="font-mono text-amber-300">{emailMismatch.form}</span>).
+                      <div className="font-bold text-amber-900 dark:text-amber-200">Emel Google berbeza dengan emel borang</div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                        Akaun Google anda (<span className="font-mono font-semibold text-amber-700 dark:text-amber-300">{emailMismatch.google}</span>) tidak sama dengan emel yang anda isi dalam borang (<span className="font-mono font-semibold text-amber-700 dark:text-amber-300">{emailMismatch.form}</span>).
                       </p>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                         Jika No. Matrik anda betul, tekan <b>Sahkan & Link</b>. Jika ini akaun Google yang salah, tekan <b>Tukar Akaun</b>.
                       </p>
                     </div>
@@ -1500,14 +1500,14 @@ export default function MakmpPublicFormPage() {
                     <button
                       type="button"
                       onClick={confirmEmailMismatchLink}
-                      className="flex-1 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition"
+                      className="flex-1 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition shadow-sm"
                     >
                       Sahkan & Link Akaun
                     </button>
                     <button
                       type="button"
                       onClick={cancelEmailMismatch}
-                      className="flex-1 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition"
+                      className="flex-1 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs transition border border-slate-200 dark:border-transparent"
                     >
                       Tukar Akaun Google
                     </button>
@@ -1517,20 +1517,20 @@ export default function MakmpPublicFormPage() {
 
               {/* Jika pilih akaun portal dan sudah login, tampilkan kad profil disahkan */}
               {accountType === 'PORTAL' && profile && (
-                <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 via-slate-900 to-slate-900 border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 via-slate-50 to-white dark:via-slate-900 dark:to-slate-900 border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
                       <ShieldCheck className="w-5 h-5" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-white">{profile.full_name}</span>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                        <span className="text-sm font-bold text-slate-900 dark:text-white">{profile.full_name}</span>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40">
                           Akaun Disahkan
                         </span>
                       </div>
-                      <div className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
-                        <span className="font-mono text-amber-400">{profile.matric_no}</span>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-0.5">
+                        <span className="font-mono font-semibold text-amber-600 dark:text-amber-400">{profile.matric_no}</span>
                         <span>•</span>
                         <span>{getJabatanLabel(profile.department)}</span>
                         {profile.semester && (
@@ -1553,7 +1553,7 @@ export default function MakmpPublicFormPage() {
                         setEmail('');
                         setPhone('');
                       }}
-                      className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 transition flex items-center gap-1.5"
+                      className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 shadow-xs"
                     >
                       <LogOut className="w-3.5 h-3.5" />
                       <span>Tukar Akaun</span>
@@ -1564,13 +1564,13 @@ export default function MakmpPublicFormPage() {
 
               {/* Jika pilih akaun portal dan belum login, sediakan log masuk inline atau carian */}
               {accountType === 'PORTAL' && !profile && (
-                <div className="p-5 rounded-2xl bg-gradient-to-b from-amber-500/10 via-slate-900/60 to-slate-900/80 border border-amber-500/30 space-y-4">
+                <div className="p-5 rounded-2xl bg-gradient-to-b from-amber-500/10 via-amber-50/40 to-white dark:via-slate-900/60 dark:to-slate-900/80 border border-amber-300/80 dark:border-amber-500/30 space-y-4 shadow-sm">
                   <div>
-                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                      <Lock className="w-4 h-4 text-amber-400" />
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <Lock className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                       Log Masuk Akaun JPP Portal
                     </h4>
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                       Log masuk untuk auto-fill biodata dan buka akses 1-klik import sijil daripada rekod e-Akademik anda.
                     </p>
                   </div>
@@ -1578,7 +1578,7 @@ export default function MakmpPublicFormPage() {
                   <form onSubmit={handleInlineLogin} className="space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-semibold text-slate-300 mb-1">
+                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                           No. Matrik atau Emel POLISAS
                         </label>
                         <input
@@ -1587,11 +1587,11 @@ export default function MakmpPublicFormPage() {
                           value={loginIdentifier}
                           onChange={(e) => setLoginIdentifier(e.target.value)}
                           placeholder="cth: 02DNS22F1001 atau emel"
-                          className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500"
+                          className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 shadow-xs"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-slate-300 mb-1">
+                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                           Kata Laluan Portal
                         </label>
                         <div className="relative">
@@ -1601,12 +1601,12 @@ export default function MakmpPublicFormPage() {
                             value={loginPassword}
                             onChange={(e) => setLoginPassword(e.target.value)}
                             placeholder="Kata laluan portal"
-                            className="w-full px-3.5 py-2 pr-10 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500"
+                            className="w-full px-3.5 py-2 pr-10 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 shadow-xs"
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                           >
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </button>
@@ -1615,8 +1615,8 @@ export default function MakmpPublicFormPage() {
                     </div>
 
                     {loginError && (
-                      <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                      <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 shrink-0 text-rose-500 dark:text-rose-400" />
                         <span>{loginError}</span>
                       </div>
                     )}
@@ -1643,16 +1643,16 @@ export default function MakmpPublicFormPage() {
                   </form>
 
                   <div className="flex items-center gap-3 pt-1">
-                    <div className="h-px flex-1 bg-slate-800/80" />
-                    <span className="text-[11px] font-semibold text-slate-500">atau</span>
-                    <div className="h-px flex-1 bg-slate-800/80" />
+                    <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800/80" />
+                    <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">atau</span>
+                    <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800/80" />
                   </div>
 
                   <button
                     type="button"
                     onClick={handleGoogleLink}
                     disabled={isGoogleLinking}
-                    className="w-full py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs transition flex items-center justify-center gap-2 disabled:opacity-60 shadow-sm"
+                    className="w-full py-2.5 rounded-xl bg-white hover:bg-slate-50 dark:hover:bg-slate-100 text-slate-800 font-bold text-xs transition flex items-center justify-center gap-2 disabled:opacity-60 shadow-sm border border-slate-200 dark:border-transparent"
                   >
                     {isGoogleLinking ? (
                       <>
@@ -1671,13 +1671,13 @@ export default function MakmpPublicFormPage() {
                       </>
                     )}
                   </button>
-                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
                     💡 Daftar dengan Google supaya sijil & merit MAKMP anda auto-link ke akaun JPP Portal dan profil diisi automatik.
                   </p>
 
-                  <div className="pt-3 border-t border-slate-800/80">
-                    <label className="text-[11px] font-semibold text-slate-400 flex items-center gap-1.5 mb-2">
-                      <Search className="w-3.5 h-3.5 text-amber-400" />
+                  <div className="pt-3 border-t border-slate-200 dark:border-slate-800/80">
+                    <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5 mb-2">
+                      <Search className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                       Atau cari profil secara pantas tanpa log masuk (Mod Carian Sahaja):
                     </label>
                     <StudentSearchCombobox
@@ -1691,8 +1691,8 @@ export default function MakmpPublicFormPage() {
               {/* Form Input Butiran Biodata */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                    Nama Penuh (seperti dalam Kad Pelajar) <span className="text-rose-400">*</span>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Nama Penuh (seperti dalam Kad Pelajar) <span className="text-rose-500 dark:text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -1700,13 +1700,13 @@ export default function MakmpPublicFormPage() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Ahmad bin Abu"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition shadow-xs"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                    Nombor Matrik <span className="text-rose-400">*</span>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Nombor Matrik <span className="text-rose-500 dark:text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -1714,13 +1714,13 @@ export default function MakmpPublicFormPage() {
                     value={matricNo}
                     onChange={(e) => setMatricNo(e.target.value.toUpperCase())}
                     placeholder="02DNS22F1001"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white uppercase placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition font-mono"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm text-slate-900 dark:text-white uppercase placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition font-mono shadow-xs"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                    No. Telefon / WhatsApp <span className="text-rose-400">*</span>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    No. Telefon / WhatsApp <span className="text-rose-500 dark:text-rose-400">*</span>
                   </label>
                   <input
                     type="tel"
@@ -1728,12 +1728,12 @@ export default function MakmpPublicFormPage() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="0123456789"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition shadow-xs"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                     Emel Pelajar
                   </label>
                   <input
@@ -1741,18 +1741,18 @@ export default function MakmpPublicFormPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="ahmad@polisas.edu.my"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition shadow-xs"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                    Jabatan Pengajian <span className="text-rose-400">*</span>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Jabatan Pengajian <span className="text-rose-500 dark:text-rose-400">*</span>
                   </label>
                   <select
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-amber-500 transition"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 transition shadow-xs"
                   >
                     {JABATAN_OPTIONS.map((j) => (
                       <option key={j.value} value={j.value}>
@@ -1764,7 +1764,7 @@ export default function MakmpPublicFormPage() {
 
                 <div className="grid grid-cols-2 gap-3 sm:col-span-2">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                       Kod Program
                     </label>
                     <input
@@ -1772,17 +1772,17 @@ export default function MakmpPublicFormPage() {
                       value={programmeCode}
                       onChange={(e) => setProgrammeCode(e.target.value.toUpperCase())}
                       placeholder="DDT / DKA"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white uppercase placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm text-slate-900 dark:text-white uppercase placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition shadow-xs"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                      Tahun Pengambilan <span className="text-rose-400">*</span>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Tahun Pengambilan <span className="text-rose-500 dark:text-rose-400">*</span>
                     </label>
                     <select
                       value={intakeYear}
                       onChange={(e) => setIntakeYear(e.target.value ? Number(e.target.value) : '')}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-amber-500 transition"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 transition shadow-xs"
                     >
                       <option value="">Pilih tahun...</option>
                       {INTAKE_YEARS().map((y) => (
@@ -1795,8 +1795,8 @@ export default function MakmpPublicFormPage() {
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                    Sesi Pengambilan <span className="text-rose-400">*</span>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Sesi Pengambilan <span className="text-rose-500 dark:text-rose-400">*</span>
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
@@ -1804,8 +1804,8 @@ export default function MakmpPublicFormPage() {
                       onClick={() => setIntakePeriod(1)}
                       className={`px-3 py-2.5 rounded-xl border text-sm font-semibold transition ${
                         intakePeriod === 1
-                          ? 'border-amber-500 bg-amber-500/10 text-amber-300'
-                          : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                          ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 shadow-xs'
+                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                     >
                       Intake 1
@@ -1816,8 +1816,8 @@ export default function MakmpPublicFormPage() {
                       onClick={() => setIntakePeriod(2)}
                       className={`px-3 py-2.5 rounded-xl border text-sm font-semibold transition ${
                         intakePeriod === 2
-                          ? 'border-amber-500 bg-amber-500/10 text-amber-300'
-                          : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                          ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 shadow-xs'
+                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                     >
                       Intake 2
@@ -1825,7 +1825,7 @@ export default function MakmpPublicFormPage() {
                     </button>
                   </div>
                   {intakeYear && intakePeriod && (
-                    <p className="text-[11px] text-slate-500 mt-1">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
                       Semasa: Semester {semester}
                     </p>
                   )}
@@ -1859,20 +1859,23 @@ export default function MakmpPublicFormPage() {
         {/* ==================================================================== */}
         {/* STEP 2: PILIHAN BERBILANG ANUGERAH (MULTI-AWARD SELECTION)           */}
         {/* ==================================================================== */}
+        {/* ==================================================================== */}
+        {/* STEP 2: PILIHAN BERBILANG ANUGERAH (MULTI-AWARD SELECTION)           */}
+        {/* ==================================================================== */}
         {step === 2 && (
           <div className="space-y-6">
-            <div className="p-5 md:p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-6">
+            <div className="p-5 md:p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl space-y-6 transition-colors">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                    <Award className="w-5 h-5 text-amber-400" />
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Award className="w-5 h-5 text-amber-500 dark:text-amber-400" />
                     Pilih Jenis Anugerah Kecemerlangan
                   </h2>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Anda boleh memilih lebih daripada satu anugerah. Tanda anugerah yang ingin dimohon mengikut kategori di bawah.
                   </p>
                 </div>
-                <div className="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 font-bold text-xs shrink-0">
+                <div className="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-300 font-bold text-xs shrink-0">
                   {selectedAwardIds.length} Anugerah Dipilih
                 </div>
               </div>
@@ -1892,24 +1895,24 @@ export default function MakmpPublicFormPage() {
                   return (
                     <div
                       key={groupName}
-                      className="rounded-2xl border border-slate-800/90 bg-slate-950/60 overflow-hidden shadow-sm"
+                      className="rounded-2xl border border-slate-200 dark:border-slate-800/90 bg-slate-50/50 dark:bg-slate-950/60 overflow-hidden shadow-sm"
                     >
                       {/* Header Kumpulan */}
-                      <div className="p-4 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between">
+                      <div className="p-4 bg-slate-100/70 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
-                          <div className={`p-1.5 rounded-lg bg-slate-800 text-amber-400`}>
+                          <div className="p-1.5 rounded-lg bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 border border-slate-200 dark:border-slate-700/50 shadow-xs">
                             <Trophy className="w-4 h-4" />
                           </div>
                           <div>
-                            <span className="font-bold text-sm text-white">{groupName}</span>
-                            <span className="text-[11px] text-slate-400 ml-2">
+                            <span className="font-bold text-sm text-slate-900 dark:text-white">{groupName}</span>
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 ml-2">
                               ({groupAwardList.length} Anugerah)
                             </span>
                           </div>
                         </div>
 
                         {selectedInGroup > 0 && (
-                          <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-bold border border-amber-500/30">
+                          <span className="px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 text-[11px] font-bold border border-amber-300 dark:border-amber-500/30">
                             {selectedInGroup} dipilih
                           </span>
                         )}
@@ -1927,8 +1930,8 @@ export default function MakmpPublicFormPage() {
                               key={award.id}
                               className={`p-3.5 rounded-xl border transition-all ${
                                 isSelected
-                                  ? 'border-amber-500/80 bg-amber-500/10 shadow-sm'
-                                  : 'border-slate-800/80 bg-slate-900/40 hover:bg-slate-800/40'
+                                  ? 'border-amber-300 dark:border-amber-500/80 bg-amber-50/80 dark:bg-amber-500/10 shadow-sm'
+                                  : 'border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/40 hover:bg-slate-50 dark:hover:bg-slate-800/40'
                               }`}
                             >
                               <div
@@ -1939,8 +1942,8 @@ export default function MakmpPublicFormPage() {
                                   <div
                                     className={`w-5 h-5 rounded-lg border flex items-center justify-center mt-0.5 transition ${
                                       isSelected
-                                        ? 'border-amber-400 bg-amber-500'
-                                        : 'border-slate-700 bg-slate-900'
+                                        ? 'border-amber-500 bg-amber-500'
+                                        : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900'
                                     }`}
                                   >
                                     {isSelected && (
@@ -1948,21 +1951,21 @@ export default function MakmpPublicFormPage() {
                                     )}
                                   </div>
                                   <div>
-                                    <div className="font-bold text-sm text-white flex items-center gap-2">
+                                    <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                                       <span>{award.name}</span>
                                       {isEntity && (
-                                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold">
+                                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30 font-semibold">
                                           Kumpulan / Entiti
                                         </span>
                                       )}
                                       {isReport && (
-                                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold">
+                                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 font-semibold">
                                           Laporan Projek
                                         </span>
                                       )}
                                     </div>
                                     {award.doc_instructions && (
-                                      <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                                         {award.doc_instructions}
                                       </p>
                                     )}
@@ -1970,7 +1973,7 @@ export default function MakmpPublicFormPage() {
                                 </div>
 
                                 <div className="flex flex-col items-end gap-1 shrink-0">
-                                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-transparent">
                                     Maks. {award.max_certificates} Dokumen
                                   </span>
                                 </div>
@@ -1978,10 +1981,10 @@ export default function MakmpPublicFormPage() {
 
                               {/* Seksyen Tambahan Input Entiti jika target_type === 'ENTITY' dan dipilih */}
                               {isSelected && isEntity && (
-                                <div className="mt-3 pt-3 border-t border-amber-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div className="mt-3 pt-3 border-t border-amber-200 dark:border-amber-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3">
                                   <div>
-                                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                                      Nama Kelab / Syarikat / Pasukan / Projek <span className="text-rose-400">*</span>
+                                    <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                      Nama Kelab / Syarikat / Pasukan / Projek <span className="text-rose-500 dark:text-rose-400">*</span>
                                     </label>
                                     <input
                                       type="text"
@@ -1997,12 +2000,12 @@ export default function MakmpPublicFormPage() {
                                         }))
                                       }
                                       placeholder="cth: Kelab Robotik POLISAS / RichTech Enterprise"
-                                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition"
+                                      className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition shadow-xs"
                                     />
                                   </div>
 
                                   <div>
-                                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                                    <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                       Jawatan / Peranan Anda
                                     </label>
                                     <input
@@ -2018,7 +2021,7 @@ export default function MakmpPublicFormPage() {
                                         }))
                                       }
                                       placeholder="cth: Yang Dipertua / Pengarah Projek / Pengasas"
-                                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition"
+                                      className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition shadow-xs"
                                     />
                                   </div>
                                 </div>
@@ -2037,7 +2040,7 @@ export default function MakmpPublicFormPage() {
               <button
                 type="button"
                 onClick={() => { setStep(1); scrollToTop(); }}
-                className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm transition flex items-center gap-2"
+                className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm transition flex items-center gap-2 border border-slate-200 dark:border-transparent"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Kembali</span>
@@ -2073,19 +2076,19 @@ export default function MakmpPublicFormPage() {
         {/* ==================================================================== */}
         {step === 3 && (
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="p-5 md:p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-6">
+            <div className="p-5 md:p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl space-y-6 transition-colors">
               <div>
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-amber-400" />
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-amber-500 dark:text-amber-400" />
                   Muat Naik Dokumen Sijil & Laporan
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Pilih tab anugerah di bawah untuk memuat naik dokumen yang diperlukan bagi setiap anugerah yang anda mohon.
                 </p>
               </div>
 
               {/* Tab Selector untuk Setiap Anugerah yang Dipilih */}
-              <div className="flex gap-2 overflow-x-auto pb-2 border-b border-slate-800 scrollbar-none">
+              <div className="flex gap-2 overflow-x-auto pb-2 border-b border-slate-200 dark:border-slate-800 scrollbar-none">
                 {selectedAwardIds.map((awardId) => {
                   const aw = awards.find((a) => a.id === awardId);
                   const docs = awardDocuments[awardId] || [];
@@ -2099,14 +2102,14 @@ export default function MakmpPublicFormPage() {
                       className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 whitespace-nowrap transition-all ${
                         isActive
                           ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                          : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-700/60'
+                          : 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700/60'
                       }`}
                     >
                       <Award className="w-3.5 h-3.5" />
                       <span>{aw?.name || 'Anugerah'}</span>
                       <span
                         className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                          isActive ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-700 text-amber-300'
+                          isActive ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-amber-300'
                         }`}
                       >
                         {docs.length}/{aw?.max_certificates || 5}
@@ -2120,16 +2123,16 @@ export default function MakmpPublicFormPage() {
               {currentAward && (
                 <div className="space-y-6">
                   {/* Header Ringkasan Anugerah */}
-                  <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
                     <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                         {currentAward.category_group}
                       </span>
-                      <h3 className="text-base font-extrabold text-white mt-0.5">
+                      <h3 className="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">
                         {currentAward.name}
                       </h3>
                       {awardEntityData[currentAward.id]?.entity_name && (
-                        <p className="text-xs text-purple-300 mt-0.5">
+                        <p className="text-xs text-purple-700 dark:text-purple-300 mt-0.5">
                           🏢 Entiti: <strong>{awardEntityData[currentAward.id].entity_name}</strong>
                           {awardEntityData[currentAward.id].applicant_role && (
                             <span> ({awardEntityData[currentAward.id].applicant_role})</span>
@@ -2139,7 +2142,7 @@ export default function MakmpPublicFormPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="text-xs px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 font-semibold">
+                      <span className="text-xs px-3 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold shadow-xs">
                         Had: {maxDocsAllowed} Dokumen
                       </span>
                     </div>
@@ -2147,13 +2150,13 @@ export default function MakmpPublicFormPage() {
 
                   {/* Banner Muat Turun Templat Laporan — hanya jika templat BENAR-BENAR disediakan */}
                   {currentAward.doc_requirement_type === 'REPORT_AND_EVIDENCE' && currentAward.template_url && (
-                    <div className="p-4 md:p-5 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md">
+                    <div className="p-4 md:p-5 rounded-xl border border-amber-300 dark:border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-50 to-white dark:via-slate-900 dark:to-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm dark:shadow-md">
                       <div className="space-y-1">
-                        <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400">
+                        <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-400">
                           <FileDown className="w-4 h-4" />
                           <span>Templat Laporan Rasmi Disediakan</span>
                         </div>
-                        <p className="text-xs text-slate-300">
+                        <p className="text-xs text-slate-600 dark:text-slate-300">
                           Unit penganjur menyediakan templat format laporan rasmi ({currentAward.template_name || 'Format Laporan'}). Sila muat turun dan lengkapkan laporan sebelum memuat naik sebagai fail PDF di bawah.
                         </p>
                       </div>
@@ -2172,19 +2175,19 @@ export default function MakmpPublicFormPage() {
 
                   {/* Butang / Banner Import dari e-Akademik */}
                   {currentAward.doc_requirement_type !== 'REPORT_AND_EVIDENCE' && (
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 border border-amber-500/30">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-gradient-to-r from-amber-500/10 via-amber-50 to-white dark:via-slate-900 dark:to-slate-900 border border-amber-300 dark:border-amber-500/30 shadow-sm">
                       <div className="flex items-center gap-2.5">
-                        <div className="p-2 rounded-lg bg-amber-500/20 text-amber-400">
+                        <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30">
                           <Sparkles className="w-4 h-4" />
                         </div>
                         <div>
-                          <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                          <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                             <span>Pernah muat naik sijil ke e-Akademik?</span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30 font-semibold">
                               1-Klik Import
                             </span>
                           </div>
-                          <div className="text-[11px] text-slate-400">
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
                             {studentAkademikCerts.length > 0
                               ? `${studentAkademikCerts.length} sijil e-Akademik dikesan untuk profil ini.`
                               : 'Pilih terus sijil sedia ada daripada portal tanpa perlu muat naik semula fail.'}
@@ -2216,8 +2219,8 @@ export default function MakmpPublicFormPage() {
                           key={doc.id}
                           className={
                             isReportFile
-                              ? 'p-4 md:p-5 rounded-xl bg-sky-500/[0.07] border-2 border-sky-500/50 relative space-y-4 shadow-md shadow-sky-500/10'
-                              : 'p-4 md:p-5 rounded-xl bg-slate-950/80 border border-slate-800/90 relative space-y-4 shadow-sm'
+                              ? 'p-4 md:p-5 rounded-xl bg-sky-50 dark:bg-sky-500/[0.07] border-2 border-sky-300 dark:border-sky-500/50 relative space-y-4 shadow-sm dark:shadow-md dark:shadow-sky-500/10'
+                              : 'p-4 md:p-5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800/90 relative space-y-4 shadow-sm'
                           }
                         >
                           {isReportFile && (
@@ -2230,17 +2233,17 @@ export default function MakmpPublicFormPage() {
                               <span
                                 className={
                                   isReportFile
-                                    ? 'w-6 h-6 rounded-full bg-sky-500/30 text-sky-300 text-xs font-bold flex items-center justify-center'
-                                    : 'w-6 h-6 rounded-full bg-slate-800 text-amber-400 text-xs font-bold flex items-center justify-center'
+                                    ? 'w-6 h-6 rounded-full bg-sky-100 dark:bg-sky-500/30 text-sky-700 dark:text-sky-300 text-xs font-bold flex items-center justify-center'
+                                    : 'w-6 h-6 rounded-full bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 border border-slate-200 dark:border-transparent text-xs font-bold flex items-center justify-center shadow-xs'
                                 }
                               >
                                 {index + 1}
                               </span>
-                              <h4 className="font-bold text-sm text-white">
+                              <h4 className="font-bold text-sm text-slate-900 dark:text-white">
                                 {isReportFile ? 'Dokumen Laporan Utama (PDF) *' : `Dokumen / Sijil #${index + 1}`}
                               </h4>
                               {isReportFile && (
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40">
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-500/40">
                                   Wajib
                                 </span>
                               )}
@@ -2250,7 +2253,7 @@ export default function MakmpPublicFormPage() {
                               <button
                                 type="button"
                                 onClick={() => handleRemoveDocument(currentAward.id, doc.id)}
-                                className="text-xs text-rose-400 hover:text-rose-300 px-2 py-1 rounded-md hover:bg-rose-500/10 transition flex items-center gap-1"
+                                className="text-xs text-rose-500 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 px-2 py-1 rounded-md hover:bg-rose-50 dark:hover:bg-rose-500/10 transition flex items-center gap-1"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                                 <span>Buang</span>
@@ -2259,8 +2262,8 @@ export default function MakmpPublicFormPage() {
                           </div>
 
                           {isReportFile && (
-                            <div className="p-3 rounded-lg bg-sky-500/10 border border-sky-500/30 text-xs text-sky-100/90 leading-relaxed space-y-1">
-                              <p className="font-semibold text-sky-200">
+                            <div className="p-3 rounded-lg bg-sky-100/60 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/30 text-xs text-sky-900 dark:text-sky-100/90 leading-relaxed space-y-1">
+                              <p className="font-semibold text-sky-900 dark:text-sky-200">
                                 📄 Apa yang perlu dimuat naik?
                               </p>
                               <p>
@@ -2270,7 +2273,7 @@ export default function MakmpPublicFormPage() {
                                   : <><strong>tiada templat khusus</strong> — gunakan format laporan anda sendiri.{' '}</>}
                                 {currentAward?.doc_instructions || ''}
                               </p>
-                              <p className="text-sky-200/70">
+                              <p className="text-sky-700 dark:text-sky-200/70">
                                 Anda <strong>tidak perlu</strong> isi markah atau tahap pencapaian — penilaian akan
                                 diberikan oleh juri/pegawai (markah 0-100).
                               </p>
@@ -2280,11 +2283,11 @@ export default function MakmpPublicFormPage() {
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {/* Tajuk Dokumen / Pencapaian */}
                             <div className="sm:col-span-2">
-                              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                 {isReportFile
                                   ? 'Tajuk Laporan Projek / Perusahaan / Kelab'
                                   : 'Nama Aktiviti / Pertandingan / Anugerah'}{' '}
-                                <span className="text-rose-400">*</span>
+                                <span className="text-rose-500 dark:text-rose-400">*</span>
                               </label>
                               <input
                                 type="text"
@@ -2303,7 +2306,7 @@ export default function MakmpPublicFormPage() {
                                     ? 'cth: Laporan Tahunan Perusahaan RichTech Solutions 2025/2026'
                                     : 'cth: Kejohanan Olahraga Politeknik Malaysia (SUKIPT)'
                                 }
-                                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition"
+                                className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition shadow-xs"
                               />
                             </div>
 
@@ -2311,8 +2314,8 @@ export default function MakmpPublicFormPage() {
                             {!isReportFile && (
                               <>
                                 <div>
-                                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                                    Peringkat <span className="text-rose-400">*</span>
+                                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                                    Peringkat <span className="text-rose-500 dark:text-rose-400">*</span>
                                   </label>
                                   <select
                                     value={doc.peringkat}
@@ -2324,7 +2327,7 @@ export default function MakmpPublicFormPage() {
                                         e.target.value as MakmpPeringkat
                                       )
                                     }
-                                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:outline-none focus:border-amber-500 transition"
+                                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 transition shadow-xs"
                                   >
                                     {PERINGKAT_OPTIONS.map((p) => (
                                       <option key={p.value} value={p.value}>
@@ -2335,8 +2338,8 @@ export default function MakmpPublicFormPage() {
                                 </div>
 
                                 <div>
-                                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                                    Tahap Kejayaan <span className="text-rose-400">*</span>
+                                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                                    Tahap Kejayaan <span className="text-rose-500 dark:text-rose-400">*</span>
                                   </label>
                                   <select
                                     value={doc.pencapaian_type}
@@ -2348,7 +2351,7 @@ export default function MakmpPublicFormPage() {
                                         e.target.value as MakmpPencapaianType
                                       )
                                     }
-                                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:outline-none focus:border-amber-500 transition"
+                                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 transition shadow-xs"
                                   >
                                     {PENCAPAIAN_TYPE_OPTIONS.map((pt) => (
                                       <option key={pt.value} value={pt.value}>
@@ -2363,32 +2366,32 @@ export default function MakmpPublicFormPage() {
                             {/* Lampiran Fail */}
                             <div className="sm:col-span-2">
                               <div className="flex items-center justify-between mb-1.5">
-                                <label className="block text-xs font-semibold text-slate-300">
+                                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                                   {isReportFile
                                     ? 'Muat Naik Laporan Lengkap (PDF sahaja) *'
                                     : 'Muat Naik Sijil / Dokumen Bukti (PDF / Gambar) *'}
                                 </label>
-                                <span className="text-[10px] text-slate-500">
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400">
                                   {doc.source === 'E_AKADEMIK' ? 'Sumber: e-Akademik' : 'Maksimum 100MB'}
                                 </span>
                               </div>
 
                               {doc.source === 'E_AKADEMIK' ? (
-                                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
                                   <div className="flex items-center gap-2.5 min-w-0">
-                                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                                    <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-500/20 border border-amber-200 dark:border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
                                       <Sparkles className="w-4 h-4" />
                                     </div>
                                     <div className="min-w-0">
                                       <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/30 text-amber-300 border border-amber-500/40">
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-500/30 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/40">
                                           ✨ e-Akademik
                                         </span>
-                                        <span className="text-xs text-white font-medium truncate">
+                                        <span className="text-xs text-slate-900 dark:text-white font-medium truncate">
                                           {doc.filePreviewName || doc.nama_pencapaian}
                                         </span>
                                       </div>
-                                      <div className="text-[11px] text-slate-400 flex items-center gap-3 mt-0.5">
+                                      <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-3 mt-0.5">
                                         <span>{doc.peringkat}</span>
                                         <span>•</span>
                                         <span>{doc.pencapaian_type}</span>
@@ -2399,7 +2402,7 @@ export default function MakmpPublicFormPage() {
                                               href={doc.uploadedUrl}
                                               target="_blank"
                                               rel="noopener noreferrer"
-                                              className="text-amber-400 hover:underline flex items-center gap-1 font-semibold"
+                                              className="text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 font-semibold"
                                             >
                                               <ExternalLink className="w-3 h-3" />
                                               <span>Papar Sijil</span>
@@ -2410,9 +2413,9 @@ export default function MakmpPublicFormPage() {
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-2 shrink-0">
-                                    <div className="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-500/30 text-center whitespace-nowrap shrink-0">
-                                      <div className="text-[9px] text-slate-400 font-semibold uppercase">Merit</div>
-                                      <div className="text-xs font-bold text-amber-300">+{doc.merit_suggested}</div>
+                                    <div className="px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-500/20 border border-amber-200 dark:border-amber-500/30 text-center whitespace-nowrap shrink-0">
+                                      <div className="text-[9px] text-slate-500 dark:text-slate-400 font-semibold uppercase">Merit</div>
+                                      <div className="text-xs font-bold text-amber-700 dark:text-amber-300">+{doc.merit_suggested}</div>
                                     </div>
                                     <button
                                       type="button"
@@ -2421,7 +2424,7 @@ export default function MakmpPublicFormPage() {
                                         setCertPickerTargetDocId(doc.id);
                                         setIsCertPickerOpen(true);
                                       }}
-                                      className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 transition"
+                                      className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 transition border border-slate-200 dark:border-slate-700 shadow-xs"
                                     >
                                       Tukar Sijil
                                     </button>
@@ -2429,8 +2432,8 @@ export default function MakmpPublicFormPage() {
                                 </div>
                               ) : (
                                 <div className="flex items-center gap-2">
-                                  <label className="cursor-pointer flex-1 flex items-center gap-2 px-4 py-3 rounded-xl border border-dashed border-slate-700 bg-slate-900/60 hover:bg-slate-900 hover:border-amber-500/60 text-xs text-slate-300 transition">
-                                    <Upload className="w-4 h-4 text-amber-400 shrink-0" />
+                                  <label className="cursor-pointer flex-1 flex items-center gap-2 px-4 py-3 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-900 hover:border-amber-500/60 text-xs text-slate-700 dark:text-slate-300 transition shadow-xs">
+                                    <Upload className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
                                     <span className="truncate">
                                       {doc.file
                                         ? `Dipilih (baharu): ${doc.file.name} (${(doc.file.size / 1024).toFixed(
@@ -2448,7 +2451,7 @@ export default function MakmpPublicFormPage() {
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         onClick={(e) => e.stopPropagation()}
-                                        className="shrink-0 inline-flex items-center gap-1 text-amber-400 hover:underline font-semibold"
+                                        className="shrink-0 inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 hover:underline font-semibold"
                                       >
                                         <ExternalLink className="w-3 h-3" />
                                         <span>Papar</span>
@@ -2493,7 +2496,7 @@ export default function MakmpPublicFormPage() {
                                         setCertPickerTargetDocId(doc.id);
                                         setIsCertPickerOpen(true);
                                       }}
-                                      className="px-3 py-3 rounded-xl bg-slate-900 border border-slate-700 hover:border-amber-500/60 text-xs text-amber-400 flex items-center gap-1.5 transition shrink-0"
+                                      className="px-3 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-amber-500/60 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5 transition shrink-0 shadow-xs"
                                     >
                                       <Sparkles className="w-4 h-4" />
                                       <span className="hidden sm:inline">e-Akademik</span>
@@ -2501,11 +2504,11 @@ export default function MakmpPublicFormPage() {
                                   )}
 
                                   {!isReportFile && (
-                                    <div className="shrink-0 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center whitespace-nowrap">
-                                      <div className="text-[10px] text-slate-400 uppercase font-semibold">
+                                    <div className="shrink-0 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-center whitespace-nowrap shadow-xs">
+                                      <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold">
                                         Merit
                                       </div>
-                                      <div className="text-sm font-extrabold text-amber-400">
+                                      <div className="text-sm font-extrabold text-amber-600 dark:text-amber-400">
                                         +{doc.merit_suggested}
                                       </div>
                                     </div>
@@ -2524,7 +2527,7 @@ export default function MakmpPublicFormPage() {
                     <button
                       type="button"
                       onClick={() => handleAddDocument(currentAward.id)}
-                      className="w-full py-3 rounded-xl border border-dashed border-slate-700 hover:border-amber-500 text-xs font-semibold text-slate-300 hover:text-amber-400 transition flex items-center justify-center gap-2"
+                      className="w-full py-3 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-amber-500 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 bg-white/60 dark:bg-transparent transition flex items-center justify-center gap-2"
                     >
                       <Plus className="w-4 h-4" />
                       <span>
@@ -2542,7 +2545,7 @@ export default function MakmpPublicFormPage() {
                 type="button"
                 disabled={isSubmitting}
                 onClick={() => { setStep(2); scrollToTop(); }}
-                className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm transition flex items-center gap-2 disabled:opacity-50"
+                className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm transition flex items-center gap-2 disabled:opacity-50 border border-slate-200 dark:border-transparent"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Kembali</span>
@@ -2578,30 +2581,30 @@ export default function MakmpPublicFormPage() {
         {/* ==================================================================== */}
         {step === 4 && submissionResult && (
           <div className="space-y-6 max-w-2xl mx-auto">
-            <div className="p-6 md:p-8 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-emerald-500/30 shadow-2xl text-center space-y-6">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/10">
-                <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+            <div className="p-6 md:p-8 rounded-2xl bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-950 border border-slate-200 dark:border-emerald-500/30 shadow-xl dark:shadow-2xl text-center space-y-6 transition-colors">
+              <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 flex items-center justify-center mx-auto shadow-sm dark:shadow-lg dark:shadow-emerald-500/10">
+                <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
               </div>
 
               <div>
-                <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
                   Permohonan Berjaya Dihantar
                 </span>
-                <h2 className="text-2xl font-extrabold text-white mt-3">
+                <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white mt-3">
                   Resit Penyerahan Rasmi MAKMP
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Sila simpan kod rujukan anda untuk semakan keputusan dan status penilai.
                 </p>
               </div>
 
               {/* Kod Rujukan Badge */}
-              <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="p-4 rounded-xl bg-amber-50/70 dark:bg-slate-900/90 border border-amber-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
                 <div className="text-left">
-                  <div className="text-[10px] text-slate-500 uppercase font-semibold">
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold">
                     Kod Rujukan Rasmi
                   </div>
-                  <div className="text-xl font-mono font-extrabold text-amber-400 tracking-wider">
+                  <div className="text-xl font-mono font-extrabold text-amber-700 dark:text-amber-400 tracking-wider">
                     {submissionResult.tracking_code}
                   </div>
                 </div>
@@ -2609,11 +2612,11 @@ export default function MakmpPublicFormPage() {
                 <button
                   type="button"
                   onClick={handleCopyCode}
-                  className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white flex items-center gap-1.5 transition shrink-0"
+                  className="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-white flex items-center gap-1.5 transition shrink-0 border border-slate-200 dark:border-transparent shadow-xs"
                 >
                   {copiedCode ? (
                     <>
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                       <span>Disalin!</span>
                     </>
                   ) : (
@@ -2626,7 +2629,7 @@ export default function MakmpPublicFormPage() {
               </div>
 
               {/* QR Code */}
-              <div className="p-4 rounded-xl bg-white/95 max-w-[200px] mx-auto shadow-md">
+              <div className="p-4 rounded-xl bg-white border border-slate-200 dark:border-slate-800 max-w-[200px] mx-auto shadow-md">
                 <QRCode
                   value={`${window.location.origin}/makmp/status?code=${encodeURIComponent(
                     submissionResult.tracking_code
@@ -2635,16 +2638,16 @@ export default function MakmpPublicFormPage() {
                   style={{ height: 'auto', maxWidth: '100%', width: '100%' }}
                   viewBox={`0 0 256 256`}
                 />
-                <div className="text-[10px] text-slate-800 font-semibold mt-2">
+                <div className="text-[10px] text-slate-600 dark:text-slate-700 font-semibold mt-2">
                   Imbas untuk semak status
                 </div>
               </div>
 
               {/* Senarai Anugerah yang Dimohon */}
-              <div className="text-left p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-3 text-xs">
-                <div className="font-bold text-slate-200 border-b border-slate-800 pb-2 flex items-center justify-between">
+              <div className="text-left p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 space-y-3 text-xs">
+                <div className="font-bold text-slate-900 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center justify-between">
                   <span>Senarai Anugerah Yang Dihantar:</span>
-                  <span className="text-amber-400">{selectedAwardIds.length} Anugerah</span>
+                  <span className="text-amber-600 dark:text-amber-400">{selectedAwardIds.length} Anugerah</span>
                 </div>
 
                 <div className="space-y-2">
@@ -2656,22 +2659,22 @@ export default function MakmpPublicFormPage() {
                     return (
                       <div
                         key={awardId}
-                        className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 flex items-center justify-between"
+                        className="p-2.5 rounded-lg bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-xs"
                       >
                         <div>
-                          <div className="font-bold text-white flex items-center gap-1.5">
+                          <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                             <span>{idx + 1}.</span>
                             <span>{aw?.name}</span>
                           </div>
-                          <div className="text-[11px] text-slate-400">
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
                             {aw?.category_group}
                             {ent?.entity_name && (
-                              <span className="text-purple-300"> • {ent.entity_name}</span>
+                              <span className="text-purple-700 dark:text-purple-300"> • {ent.entity_name}</span>
                             )}
                           </div>
                         </div>
 
-                        <span className="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                        <span className="text-[11px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-transparent">
                           {docs.length} dokumen
                         </span>
                       </div>
@@ -2679,13 +2682,13 @@ export default function MakmpPublicFormPage() {
                   })}
                 </div>
 
-                <div className="flex justify-between pt-2 border-t border-slate-800 text-slate-400">
+                <div className="flex justify-between pt-2 border-t border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400">
                   <span>Nama Pemohon:</span>
-                  <span className="font-semibold text-white">{submissionResult.full_name}</span>
+                  <span className="font-semibold text-slate-900 dark:text-white">{submissionResult.full_name}</span>
                 </div>
-                <div className="flex justify-between text-slate-400">
+                <div className="flex justify-between text-slate-500 dark:text-slate-400">
                   <span>No. Matrik:</span>
-                  <span className="font-semibold text-amber-400 font-mono">
+                  <span className="font-semibold text-amber-600 dark:text-amber-400 font-mono">
                     {submissionResult.matric_no}
                   </span>
                 </div>
@@ -2693,16 +2696,16 @@ export default function MakmpPublicFormPage() {
 
               {/* Tawaran daftar Google untuk tetamu (belum ada akaun) */}
               {!user && !submissionResult.has_portal_account && (
-                <div className="p-4 rounded-xl bg-gradient-to-b from-amber-500/10 to-slate-900 border border-amber-500/30 space-y-3">
+                <div className="p-4 rounded-xl bg-gradient-to-b from-amber-500/10 via-amber-50 to-white dark:via-slate-900/60 dark:to-slate-900 border border-amber-300 dark:border-amber-500/30 space-y-3 shadow-sm">
                   <div className="flex items-start gap-2.5">
-                    <div className="p-2 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400 shrink-0">
+                    <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 text-amber-600 dark:text-amber-400 shrink-0">
                       <UserPlus className="w-4 h-4" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-white">
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                         Belum ada akaun JPP Portal?
                       </h4>
-                      <p className="text-xs text-slate-400 mt-0.5">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                         Daftar dengan Google sekarang supaya sijil & merit MAKMP ini auto-link ke dokumen peribadi e-akademik anda, dan profil diisi automatik daripada data borang ini.
                       </p>
                     </div>
@@ -2711,7 +2714,7 @@ export default function MakmpPublicFormPage() {
                     type="button"
                     onClick={handleGoogleLink}
                     disabled={isGoogleLinking}
-                    className="w-full py-3 rounded-xl bg-white hover:bg-slate-100 text-slate-800 font-bold text-sm transition flex items-center justify-center gap-2 disabled:opacity-60"
+                    className="w-full py-3 rounded-xl bg-white hover:bg-slate-50 dark:hover:bg-slate-100 text-slate-800 font-bold text-sm transition flex items-center justify-center gap-2 disabled:opacity-60 border border-slate-200 dark:border-transparent shadow-sm"
                   >
                     {isGoogleLinking ? (
                       <>
@@ -2750,35 +2753,35 @@ export default function MakmpPublicFormPage() {
 
                 <Link
                   to={`/makmp/status?code=${encodeURIComponent(submissionResult.tracking_code)}`}
-                  className="flex-1 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm transition flex items-center justify-center gap-2"
+                  className="flex-1 py-3 px-4 rounded-xl bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-semibold text-sm transition flex items-center justify-center gap-2 border border-slate-200 dark:border-transparent shadow-sm"
                 >
-                  <Search className="w-4 h-4 text-amber-400" />
+                  <Search className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                   <span>Semak Status Sekarang</span>
                 </Link>
               </div>
 
               {/* Note */}
-              <p className="text-[11px] text-slate-400 leading-relaxed max-w-lg mx-auto">
-                💡 <span className="text-slate-300 font-medium">Nota Penting:</span> Setiap anugerah akan dinilai secara bebas oleh juri berkaitan (cth: Unit Keusahawanan untuk anugerah keusahawanan, Unit Sukan untuk anugerah sukan). Merit yang diluluskan akan terus diselaraskan dengan e-akademik anda.
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-lg mx-auto">
+                💡 <span className="text-slate-700 dark:text-slate-300 font-medium">Nota Penting:</span> Setiap anugerah akan dinilai secara bebas oleh juri berkaitan (cth: Unit Keusahawanan untuk anugerah keusahawanan, Unit Sukan untuk anugerah sukan). Merit yang diluluskan akan terus diselaraskan dengan e-akademik anda.
               </p>
             </div>
           </div>
         )}
       {/* Modal Pemilihan Sijil e-Akademik */}
       {isCertPickerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
             {/* Header */}
-            <div className="p-4 sm:p-5 border-b border-slate-800 flex items-start justify-between gap-3 bg-slate-950/50">
+            <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-3 bg-slate-50/80 dark:bg-slate-950/50">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-600 dark:text-amber-400">
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     Pilih Sijil Dari e-Akademik
                   </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Import terus sijil pencapaian yang pernah didaftarkan ke dalam sistem.
                   </p>
                 </div>
@@ -2790,14 +2793,14 @@ export default function MakmpPublicFormPage() {
                   setCertPickerTargetAwardId(null);
                   setCertPickerTargetDocId(null);
                 }}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Filter Tabs & Search */}
-            <div className="p-4 border-b border-slate-800 space-y-3 bg-slate-900">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 space-y-3 bg-white dark:bg-slate-900">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -2805,7 +2808,7 @@ export default function MakmpPublicFormPage() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                     certPickerYearFilter === 'EDITION'
                       ? 'bg-amber-500 text-slate-950 shadow-md'
-                      : 'bg-slate-800 text-slate-300 hover:text-white'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent'
                   }`}
                 >
                   Tahun Edisi ({edition?.year || 2026})
@@ -2816,7 +2819,7 @@ export default function MakmpPublicFormPage() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                     certPickerYearFilter === 'ALL'
                       ? 'bg-amber-500 text-slate-950 shadow-md'
-                      : 'bg-slate-800 text-slate-300 hover:text-white'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent'
                   }`}
                 >
                   Semua Sijil ({studentAkademikCerts.length})
@@ -2830,7 +2833,7 @@ export default function MakmpPublicFormPage() {
                   value={certPickerSearch}
                   onChange={(e) => setCertPickerSearch(e.target.value)}
                   placeholder="Cari nama aktiviti atau penganjur..."
-                  className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition"
+                  className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition shadow-xs"
                 />
               </div>
             </div>
@@ -2838,8 +2841,8 @@ export default function MakmpPublicFormPage() {
             {/* Certificate List */}
             <div className="p-4 overflow-y-auto flex-1 space-y-3">
               {loadingAkademikCerts ? (
-                <div className="py-12 text-center text-slate-400 space-y-2">
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-amber-400" />
+                <div className="py-12 text-center text-slate-500 dark:text-slate-400 space-y-2">
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-amber-500 dark:text-amber-400" />
                   <div className="text-xs">Memuat turun rekod sijil e-Akademik...</div>
                 </div>
               ) : (() => {
@@ -2863,14 +2866,14 @@ export default function MakmpPublicFormPage() {
                 if (filtered.length === 0) {
                   return (
                     <div className="py-10 text-center space-y-3 px-4">
-                      <div className="w-12 h-12 rounded-full bg-slate-800/80 border border-slate-700 flex items-center justify-center mx-auto text-slate-400">
+                      <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-center mx-auto text-slate-400">
                         <FileText className="w-6 h-6" />
                       </div>
                       <div>
-                        <div className="text-sm font-bold text-white">
+                        <div className="text-sm font-bold text-slate-900 dark:text-white">
                           Tiada Sijil Dijumpai
                         </div>
-                        <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
                           {certPickerYearFilter === 'EDITION'
                             ? `Tiada rekod sijil bagi tahun ${targetYear}. Anda boleh menukar ke tab 'Semua Sijil' atau memuat naik fail PDF sijil secara manual.`
                             : 'Tiada rekod sijil dijumpai untuk akaun ini. Sila muat naik secara manual.'}
@@ -2880,7 +2883,7 @@ export default function MakmpPublicFormPage() {
                         <button
                           type="button"
                           onClick={() => setCertPickerYearFilter('ALL')}
-                          className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-amber-400 transition"
+                          className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-amber-700 dark:text-amber-400 transition border border-slate-200 dark:border-transparent"
                         >
                           Lihat Sijil Semua Tahun ({studentAkademikCerts.length})
                         </button>
@@ -2897,7 +2900,7 @@ export default function MakmpPublicFormPage() {
                   return (
                     <div
                       key={cert.id}
-                      className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-amber-500/50 transition space-y-2.5"
+                      className="p-3.5 rounded-xl bg-white dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-500/50 shadow-xs transition space-y-2.5"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="space-y-1 min-w-0">
@@ -2905,10 +2908,10 @@ export default function MakmpPublicFormPage() {
                             <span
                               className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
                                 cert.status === 'DISAHKAN'
-                                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                                  ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30'
                                   : cert.status === 'DITOLAK'
-                                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
-                                  : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                                  ? 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
+                                  : 'bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
                               }`}
                             >
                               {cert.status === 'DISAHKAN'
@@ -2917,17 +2920,17 @@ export default function MakmpPublicFormPage() {
                                 ? 'Ditolak'
                                 : 'Menunggu Pengesahan'}
                             </span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono border border-slate-200 dark:border-transparent">
                               {certYear}
                             </span>
                           </div>
-                          <h4 className="font-bold text-xs sm:text-sm text-white leading-snug">
+                          <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white leading-snug">
                             {cert.nama_pencapaian}
                           </h4>
-                          <div className="text-[11px] text-slate-400 flex flex-wrap items-center gap-2">
-                            <span>Peringkat: <strong className="text-slate-200">{cert.peringkat}</strong></span>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-2">
+                            <span>Peringkat: <strong className="text-slate-800 dark:text-slate-200">{cert.peringkat}</strong></span>
                             <span>•</span>
-                            <span>Pencapaian: <strong className="text-slate-200">{cert.jenis}</strong></span>
+                            <span>Pencapaian: <strong className="text-slate-800 dark:text-slate-200">{cert.jenis}</strong></span>
                             {cert.penganjur && (
                               <>
                                 <span>•</span>
@@ -2947,12 +2950,12 @@ export default function MakmpPublicFormPage() {
                       </div>
 
                       {cert.drive_view_url && (
-                        <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
+                        <div className="pt-2 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between text-[11px]">
                           <a
                             href={cert.drive_view_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-amber-400 hover:underline flex items-center gap-1"
+                            className="text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 font-semibold"
                           >
                             <ExternalLink className="w-3 h-3" />
                             <span>Papar Pratonton Sijil Asal</span>
@@ -2966,8 +2969,8 @@ export default function MakmpPublicFormPage() {
             </div>
 
             {/* Footer */}
-            <div className="p-3 sm:p-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between">
-              <span className="text-[11px] text-slate-400">
+            <div className="p-3 sm:p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 flex items-center justify-between">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">
                 Peringatan: Juri MAKMP akan menyemak sijil secara bebas.
               </span>
               <button
@@ -2977,7 +2980,7 @@ export default function MakmpPublicFormPage() {
                   setCertPickerTargetAwardId(null);
                   setCertPickerTargetDocId(null);
                 }}
-                className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition"
+                className="px-3.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition border border-slate-200 dark:border-transparent"
               >
                 Tutup
               </button>
