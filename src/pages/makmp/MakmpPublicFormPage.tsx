@@ -20,6 +20,7 @@ import {
   ChevronDown,
   ArrowLeft,
   Calendar,
+  CalendarX,
   Sparkles,
   Phone,
   Mail,
@@ -198,6 +199,12 @@ export default function MakmpPublicFormPage() {
   const [existingSubmissionId, setExistingSubmissionId] = useState<string | null>(null);
   const [existingTrackingCode, setExistingTrackingCode] = useState<string>('');
   const [loadingExisting, setLoadingExisting] = useState(false);
+
+  // Gating tempoh: permohonan BARU ditutup selepas submission_deadline.
+  // Kemaskini (edit) TIDAK dihalang oleh deadline — hanya dihalang oleh status
+  // (hanya MENUNGGU boleh edit, dikuatkuasakan dalam RPC save_makmp_submission_edit).
+  const isDeadlinePassed = !!edition?.submission_deadline
+    && new Date(edition.submission_deadline).getTime() < Date.now();
 
   // 1. Muat turun edisi aktif, kategori & 18 anugerah rasmi
   useEffect(() => {
@@ -956,6 +963,14 @@ export default function MakmpPublicFormPage() {
       return;
     }
 
+    // Gating tempoh (defense-in-depth): halang permohonan BARU selepas deadline.
+    // Edit (kemaskini) TIDAK dihalang di sini — hanya permohonan baru.
+    if (!isEditMode && isDeadlinePassed) {
+      setErrorMessage('Tempoh permohonan telah tamat. Permohonan baharu tidak lagi diterima.');
+      scrollToError();
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       // 1. Muat naik semua fail bagi setiap anugerah
@@ -1198,6 +1213,53 @@ export default function MakmpPublicFormPage() {
         >
           Kembali ke Laman Utama
         </Link>
+      </div>
+    );
+  }
+
+  // Gating tempoh: kalau deadline dah berlalu:
+  //   - masih menyemak submission MENUNGGU sedia ada -> tunjuk loading
+  //   - ada submission MENUNGGU untuk edit -> tunjuk borang (edit mode)
+  //   - tiada -> tunjuk mesej "tempoh tamat" (bukan borang baru)
+  if (isDeadlinePassed && !isEditMode && loadingExisting) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
+        <Loader2 className="w-10 h-10 text-amber-400 animate-spin mb-4" />
+        <p className="text-slate-400 font-medium">Menyemak permohonan sedia ada...</p>
+      </div>
+    );
+  }
+
+  if (isDeadlinePassed && !isEditMode && !loadingExisting) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4 text-center">
+        <CalendarX className="w-12 h-12 text-rose-500 mb-4" />
+        <h1 className="text-2xl font-bold mb-2">Tempoh Permohonan Telah Tamat</h1>
+        <p className="text-slate-400 max-w-md mb-2">
+          Tempoh menghantar permohonan baharu bagi edisi MAKMP ini telah ditutup.
+        </p>
+        {edition?.submission_deadline && (
+          <p className="text-xs text-slate-500 mb-6">
+            Tarikh tutup: {new Date(edition.submission_deadline).toLocaleString('ms-MY', {
+              dateStyle: 'long',
+              timeStyle: 'short',
+            })}
+          </p>
+        )}
+        <div className="flex items-center gap-3 flex-wrap justify-center">
+          <Link
+            to="/makmp/status"
+            className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-semibold transition"
+          >
+            Semak Status Permohonan
+          </Link>
+          <Link
+            to="/"
+            className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-semibold transition"
+          >
+            Kembali ke Laman Utama
+          </Link>
+        </div>
       </div>
     );
   }
