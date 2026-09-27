@@ -17,6 +17,7 @@ import { JPP_MT_POSITIONS } from '@/types';
 import { toast } from 'react-hot-toast';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID, getJppSidebarBg, JPP_COLOR_PRESETS } from './jppConfig';
 import { useJppConfig } from '@/contexts/JppConfigContext';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 // Auto-calculate current academic session based on date
 function getCurrentAcademicSession(): string {
@@ -158,6 +159,7 @@ export function JppSidebar() {
             </div>
           </div>
           <div className="ml-auto flex items-center gap-1">
+            <ThemeToggle />
             {canCustomize && (
               <button
                 onClick={() => setShowPicker(v => !v)}

@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { JppSidebar } from './JppSidebar';
 import { Menu, X } from 'lucide-react';
 import { NotificationBell } from '@/components/ui/NotificationBell';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { QrCodeFab } from '@/components/jpp/QrCodeFab';
 import { BottomNav } from '@/components/layout/BottomNav';
@@ -64,7 +65,7 @@ export function JppLayout() {
   }
 
   return (
-    <div className="dark flex h-screen overflow-hidden bg-[#0a0a0f]">
+    <div className="flex h-screen overflow-hidden bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white transition-colors">
 
       {/* Mobile backdrop */}
       <AnimatePresence>
@@ -101,29 +102,30 @@ export function JppLayout() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {/* Top header (mobile + tablet) */}
-        <header className="flex md:hidden items-center justify-between px-4 py-3 border-b border-white/5 bg-[#0a0a0f]/80 backdrop-blur-xl sticky top-0 z-50">
+        <header className="flex md:hidden items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-[#0a0a0f]/80 backdrop-blur-xl sticky top-0 z-50 text-slate-900 dark:text-white">
           <button
             onClick={() => setIsMobileOpen(true)}
-            className="p-2 -ml-1 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-all"
+            className="p-2 -ml-1 rounded-xl text-slate-600 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all"
           >
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex flex-col items-center">
             <div className="flex items-center gap-2">
               <img src="/jpp-logo.png" alt="JPP" className="h-7 object-contain" />
-              <span className="text-sm font-black text-white tracking-tight">JPP HQ</span>
+              <span className="text-sm font-black tracking-tight text-slate-900 dark:text-white">JPP HQ</span>
             </div>
-            <span className="text-[8px] font-black uppercase tracking-widest text-white/25 mt-0.5">
+            <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-white/25 mt-0.5">
               {getCurrentAcademicSession()}
             </span>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <NotificationBell />
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto scrollbar-hide after:content-[''] after:block after:h-32 after:shrink-0">
+        <main className="flex-1 overflow-y-auto scrollbar-hide after:content-[''] after:block after:h-32 after:shrink-0 bg-slate-100 dark:bg-[#0a0a0f]">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
