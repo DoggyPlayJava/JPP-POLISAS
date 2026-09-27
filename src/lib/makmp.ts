@@ -1297,3 +1297,79 @@ export async function fetchStudentAkademikCertificates(params: {
   }
 }
 
+// ============================================================================
+// RANKING & KEPUTUSAN MAKMP
+// ============================================================================
+
+/** Entry ranking bagi satu anugerah (return dari RPC get_makmp_award_ranking). */
+export interface MakmpRankingEntry extends MakmpSubmissionAward {
+  eff_rank: number;
+  submission?: MakmpSubmission;
+}
+
+/** Dapatkan ranking peserta bagi satu anugerah (definition id).
+ *  Hanya peserta DISAHKAN disertakan. Susun ikut final_rank (manual) / merit. */
+export async function fetchMakmpAwardRanking(
+  awardDefinitionId: string
+): Promise<MakmpRankingEntry[]> {
+  const { data, error } = await supabase.rpc('get_makmp_award_ranking', {
+    p_award_definition_id: awardDefinitionId,
+  });
+  if (error) {
+    console.error('[fetchMakmpAwardRanking Error]', error.message);
+    return [];
+  }
+  return (data as MakmpRankingEntry[]) || [];
+}
+
+/** Simpan laras ranking manual bagi satu anugerah.
+ *  p_ranking = array { award_application_id, rank }. */
+export async function saveMakmpAwardRanking(
+  pinCode: string | null,
+  awardDefinitionId: string,
+  ranking: { award_application_id: string; rank: number }[],
+  note?: string
+): Promise<{ success: boolean; locked?: boolean; message?: string; updated?: number }> {
+  const { data, error } = await supabase.rpc('save_makmp_award_ranking', {
+    p_pin: pinCode || '',
+    p_award_definition_id: awardDefinitionId,
+    p_ranking: ranking,
+    p_note: note || null,
+  });
+  if (error) {
+    return { success: false, message: error.message };
+  }
+  return (data as any) || { success: false, message: 'Tiada maklum balas daripada pelayan.' };
+}
+
+/** Sahkan & kunci keputusan anugerah. Hanya pegawai (role JPP/SUPER_ADMIN_JPP). */
+export async function finalizeMakmpAward(
+  awardDefinitionId: string,
+  topCount: number = 3
+): Promise<{ success: boolean; message?: string; winner_count?: number }> {
+  const { data, error } = await supabase.rpc('finalize_makmp_award', {
+    p_award_definition_id: awardDefinitionId,
+    p_top_count: topCount,
+  });
+  if (error) {
+    return { success: false, message: error.message };
+  }
+  return (data as any) || { success: false, message: 'Tiada maklum balas daripada pelayan.' };
+}
+
+/** Pelajar (pemenang) submit no IC. Semak deadline + status DIJEMPUT di DB. */
+export async function submitMakmpWinnerInfo(
+  submissionId: string,
+  icNo: string
+): Promise<{ success: boolean; message?: string }> {
+  const { data, error } = await supabase.rpc('submit_makmp_winner_info', {
+    p_submission_id: submissionId,
+    p_ic_no: icNo,
+  });
+  if (error) {
+    return { success: false, message: error.message };
+  }
+  return (data as any) || { success: false, message: 'Tiada maklum balas daripada pelayan.' };
+}
+
+

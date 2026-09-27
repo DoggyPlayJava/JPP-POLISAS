@@ -55,6 +55,7 @@ import type {
   MakmpPeringkat,
   MakmpPencapaianType,
 } from '@/types';
+import MakmpRankingPanel from '@/components/makmp/MakmpRankingView';
 
 export const PRESET_CATEGORY_GROUPS = [
   'ANUGERAH UTAMA',
@@ -72,8 +73,8 @@ export default function MakmpAdminDashboardPage() {
   const { user, profile } = useAuth();
   const isJppOrAdmin = profile?.role === 'SUPER_ADMIN_JPP' || profile?.role === 'JPP';
 
-  // Active Tab: 'submissions' | 'categories' | 'pins' | 'editions'
-  const [tab, setTab] = useState<'submissions' | 'categories' | 'pins' | 'editions'>('submissions');
+  // Active Tab: 'submissions' | 'categories' | 'pins' | 'editions' | 'ranking'
+  const [tab, setTab] = useState<'submissions' | 'categories' | 'pins' | 'editions' | 'ranking'>('submissions');
 
   // Loading & State
   const [loading, setLoading] = useState(true);
@@ -1183,6 +1184,18 @@ export default function MakmpAdminDashboardPage() {
           <CalendarClock className="w-3.5 h-3.5" />
           <span>Edisi & Sesi ({editions.length})</span>
         </button>
+
+        <button
+          onClick={() => setTab('ranking')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+            tab === 'ranking'
+              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/10'
+              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+          }`}
+        >
+          <Trophy className="w-3.5 h-3.5" />
+          <span>Keputusan & Ranking</span>
+        </button>
       </div>
 
       {/* ==================================================================== */}
@@ -1357,6 +1370,57 @@ export default function MakmpAdminDashboardPage() {
               </table>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ==================================================================== */}
+      {/* TAB: KEPUTUSAN & RANKING                                             */}
+      {/* ==================================================================== */}
+      {tab === 'ranking' && (
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-amber-400" />
+              Keputusan & Ranking Mengikut Anugerah
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Susun kedudukan Top 1/2/3 bagi setiap anugerah, kemudian sahkan keputusan
+              untuk menghantar notifikasi kepada pemenang.
+            </p>
+          </div>
+
+          {awards.length === 0 ? (
+            <div className="p-8 rounded-2xl bg-slate-900 border border-slate-800 text-center text-slate-500 text-sm">
+              Tiada anugerah untuk edisi yang dipilih.
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {(() => {
+                const groups = new Map<string, MakmpAwardDefinition[]>();
+                for (const aw of awards) {
+                  const g = aw.category_group || 'ANUGERAH MAKMP';
+                  if (!groups.has(g)) groups.set(g, []);
+                  groups.get(g)!.push(aw);
+                }
+                return Array.from(groups.entries()).map(([group, list]) => (
+                  <div key={group}>
+                    <h3 className="text-sm font-bold text-amber-400 uppercase tracking-wider mb-3">
+                      {group}
+                    </h3>
+                    <div className="space-y-4">
+                      {list.map((aw) => (
+                        <MakmpRankingPanel
+                          key={aw.id}
+                          award={aw}
+                          isAdmin={true}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+          )}
         </div>
       )}
 

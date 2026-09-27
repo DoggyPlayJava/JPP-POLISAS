@@ -51,6 +51,8 @@ import type {
   MakmpPencapaianType,
 } from '@/types';
 import { MakmpJppChrome, MakmpJppHeader } from '@/components/makmp/MakmpJppChrome';
+import MakmpRankingPanel from '@/components/makmp/MakmpRankingView';
+import type { MakmpAwardDefinition } from '@/types';
 
 const CANNED_REJECTION_REASONS = [
   'Fail laporan / sijil kabur atau tidak dapat dibaca.',
@@ -80,6 +82,65 @@ function getEmbeddableCertUrl(url: string): { embedUrl: string; isImage: boolean
   return { embedUrl: url, isImage: isImg };
 }
 
+// ─── View: Keputusan & Ranking ────────────────────────────────────────────────
+// Grup anugerah unik (definition) dari senarai aplikasi, render panel ranking.
+function RankingViewContent({
+  awardApplications,
+  pinCode,
+  edition,
+}: {
+  awardApplications: MakmpSubmissionAward[];
+  pinCode?: string;
+  edition?: MakmpEdition | null;
+}) {
+  // Kumpul anugerah unik (definition id) yang ada dalam senarai
+  const awardMap = new Map<string, MakmpAwardDefinition>();
+  for (const a of awardApplications) {
+    if (a.award && !awardMap.has(a.award.id)) {
+      awardMap.set(a.award.id, a.award);
+    }
+  }
+  const uniqueAwards = Array.from(awardMap.values());
+
+  // Grup ikut category_group
+  const groups = new Map<string, MakmpAwardDefinition[]>();
+  for (const aw of uniqueAwards) {
+    const g = aw.category_group || 'ANUGERAH MAKMP';
+    if (!groups.has(g)) groups.set(g, []);
+    groups.get(g)!.push(aw);
+  }
+
+  if (uniqueAwards.length === 0) {
+    return (
+      <div className="p-8 rounded-2xl bg-slate-900 border border-slate-800 text-center text-slate-500 text-sm">
+        Tiada anugerah untuk dipaparkan.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {Array.from(groups.entries()).map(([group, awards]) => (
+        <div key={group}>
+          <h3 className="text-sm font-bold text-amber-400 uppercase tracking-wider mb-3">
+            {group}
+          </h3>
+          <div className="space-y-4">
+            {awards.map((aw) => (
+              <MakmpRankingPanel
+                key={aw.id}
+                award={aw}
+                pinCode={pinCode || null}
+                isAdmin={false}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function MakmpJuryPortalPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const urlPin = searchParams.get('pin') || '';
@@ -97,6 +158,8 @@ export default function MakmpJuryPortalPage() {
   const [filterStatus, setFilterStatus] = useState<string>('BELUM_SELESAI');
   const [filterCategoryGroup, setFilterCategoryGroup] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  // View mode: 'REVIEW' = semakan satu-satu, 'RANKING' = keputusan & ranking
+  const [viewMode, setViewMode] = useState<'REVIEW' | 'RANKING'>('REVIEW');
 
   // Active Review Workbench Modal
   const [activeAward, setActiveAward] = useState<MakmpSubmissionAward | null>(null);
@@ -534,6 +597,39 @@ export default function MakmpJuryPortalPage() {
           </div>
         )}
 
+        {/* View Mode Toggle: Semakan vs Ranking */}
+        <div className="flex items-center gap-2 bg-slate-900/70 p-1.5 rounded-2xl border border-slate-800 w-fit">
+          <button
+            onClick={() => setViewMode('REVIEW')}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${
+              viewMode === 'REVIEW'
+                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            Semakan Penilaian
+          </button>
+          <button
+            onClick={() => setViewMode('RANKING')}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${
+              viewMode === 'RANKING'
+                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            Keputusan & Ranking
+          </button>
+        </div>
+
+        {viewMode === 'RANKING' ? (
+          /* ============ VIEW: KEPUTUSAN & RANKING ============ */
+          <RankingViewContent
+            awardApplications={awardApplications}
+            pinCode={juryPin?.pin_code}
+            edition={edition}
+          />
+        ) : (
+          <>
         {/* Filter & Search Bar */}
         <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between bg-slate-900/70 p-4 rounded-2xl border border-slate-800">
           {/* Status Tabs */}
@@ -698,6 +794,8 @@ export default function MakmpJuryPortalPage() {
               );
             })}
           </div>
+        )}
+          </>
         )}
       </main>
 

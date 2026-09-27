@@ -1118,6 +1118,7 @@ export interface MakmpEdition {
   description?: string | null;
   is_active: boolean;
   submission_deadline?: string | null;
+  winner_upload_deadline?: string | null;
   created_at: string;
   created_by?: string | null;
 }
@@ -1177,6 +1178,10 @@ export interface MakmpSubmission {
   items?: MakmpSubmissionItem[];
   awards?: MakmpSubmissionAward[];
   reviewer_pin?: MakmpJuryPin;
+  // Winner info (keputusan MAKMP)
+  winner_status?: 'DIJEMPUT' | 'TIDAK_TERPILIH' | null;
+  winner_ic_no?: string | null;
+  winner_photo_url?: string | null;
 }
 
 export type MakmpTargetType = 'INDIVIDUAL' | 'ENTITY';
@@ -1214,6 +1219,12 @@ export interface MakmpSubmissionAward {
   rejection_reason?: string | null;
   review_notes?: string | null;
   created_at: string;
+  // Ranking & finalize fields
+  final_rank?: number | null;
+  rank_note?: string | null;
+  is_finalized?: boolean;
+  finalized_at?: string | null;
+  finalized_by?: string | null;
   // Joined relation fields:
   award?: MakmpAwardDefinition;
   items?: MakmpSubmissionItem[];

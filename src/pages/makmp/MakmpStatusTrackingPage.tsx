@@ -23,8 +23,12 @@ import {
   UserPlus,
   ShieldCheck,
   Pencil,
+  PartyPopper,
+  Upload,
+  IdCard,
+  Camera,
 } from 'lucide-react';
-import { fetchSubmissionByTrackingCode, getMakmpWhatsAppUrl, claimMakmpSubmission, MakmpClaimResult } from '@/lib/makmp';
+import { fetchSubmissionByTrackingCode, getMakmpWhatsAppUrl, claimMakmpSubmission, submitMakmpWinnerInfo, MakmpClaimResult } from '@/lib/makmp';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import type { MakmpSubmission } from '@/types';
@@ -49,6 +53,12 @@ export default function MakmpStatusTrackingPage() {
   const [pendingClaim, setPendingClaim] = useState<MakmpClaimResult | null>(null);
   const [isGoogleLinking, setIsGoogleLinking] = useState(false);
   const claimAttemptedRef = useRef(false);
+
+  // Winner info (IC + passport) — hanya untuk pemenang DIJEMPUT
+  const [icNo, setIcNo] = useState('');
+  const [passportFile, setPassportFile] = useState<File | null>(null);
+  const [uploadingWinnerInfo, setUploadingWinnerInfo] = useState(false);
+  const [winnerMsg, setWinnerMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Auto-load jika ada parameter code dalam URL
   useEffect(() => {
@@ -87,6 +97,63 @@ export default function MakmpStatusTrackingPage() {
     navigator.clipboard.writeText(submission.tracking_code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  // ── Submit winner info (no IC + gambar passport) ───────────────────────────
+  const handleSubmitWinnerInfo = async () => {
+    if (!submission) return;
+    setWinnerMsg(null);
+
+    // 1. Sahkan no IC
+    if (!/^\d{12}$/.test(icNo.trim())) {
+      setWinnerMsg({ type: 'error', text: 'Nombor IC mesti 12 digit (angka sahaja).' });
+      return;
+    }
+
+    setUploadingWinnerInfo(true);
+    try {
+      // 2. Simpan no IC via RPC (semak deadline + status DIJEMPUT)
+      const res = await submitMakmpWinnerInfo(submission.id, icNo.trim());
+      if (!res.success) {
+        setWinnerMsg({ type: 'error', text: res.message || 'Gagal menyimpan maklumat.' });
+        setUploadingWinnerInfo(false);
+        return;
+      }
+
+      // 3. Upload gambar passport (jika dipilih) → bucket makmp_pemenang
+      let photoUrl: string | null = null;
+      if (passportFile) {
+        const cleanMatric = (submission.matric_no || 'PELAJAR').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+        const ext = passportFile.name.split('.').pop() || 'jpg';
+        const path = `${cleanMatric}_passport_${Date.now()}.${ext}`;
+        const { error: uploadErr } = await supabase.storage
+          .from('makmp_pemenang')
+          .upload(path, passportFile, { cacheControl: '3600', upsert: false });
+
+        if (uploadErr) {
+          setWinnerMsg({ type: 'error', text: 'Gagal memuat naik gambar: ' + uploadErr.message });
+          setUploadingWinnerInfo(false);
+          return;
+        }
+
+        const { data: urlData } = supabase.storage.from('makmp_pemenang').getPublicUrl(path);
+        photoUrl = urlData.publicUrl;
+
+        // 4. Update submission winner_photo_url + profile avatar
+        await supabase.from('makmp_submissions').update({ winner_photo_url: photoUrl }).eq('id', submission.id);
+        if (submission.user_id) {
+          await supabase.from('profiles').update({ avatar_url: photoUrl }).eq('id', submission.user_id);
+        }
+      }
+
+      setWinnerMsg({ type: 'success', text: 'Maklumat anda berjaya disimpan. Terima kasih!' });
+      // refresh submission data
+      await handleSearchCode(submission.tracking_code);
+    } catch (err: any) {
+      setWinnerMsg({ type: 'error', text: 'Ralat: ' + err.message });
+    } finally {
+      setUploadingWinnerInfo(false);
+    }
   };
 
   // ── Claim / pautkan submission tetamu ke akaun ────────────────────────────
@@ -312,6 +379,102 @@ export default function MakmpStatusTrackingPage() {
         {/* Submission Details */}
         {submission && (
           <div className="space-y-6">
+            {/* ── Banner Keputusan MAKMP (hanya bila dah di-finalize) ── */}
+            {submission.winner_status === 'DIJEMPUT' && (
+              <div className="p-6 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500/40 shadow-xl space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                    <PartyPopper className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <div className="text-lg font-extrabold text-emerald-300">
+                      Anda Dijemput ke MAKMP 2026! 🎉
+                    </div>
+                    <p className="text-xs text-emerald-200/80 mt-0.5">
+                      Tahniah! Anda terpilih sebagai pemenang. Sila lengkapkan maklumat di bawah.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Form maklumat pemenang */}
+                <div className="p-4 rounded-xl bg-slate-900/60 border border-emerald-500/20 space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                      <IdCard className="w-3.5 h-3.5 text-emerald-400" />
+                      Nombor Kad Pengenalan (12 digit)
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={12}
+                      value={icNo}
+                      onChange={(e) => setIcNo(e.target.value.replace(/[^0-9]/g, ''))}
+                      placeholder="Contoh: 020101141234"
+                      className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-sm text-white font-mono focus:outline-none focus:border-emerald-500 transition"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                      <Camera className="w-3.5 h-3.5 text-emerald-400" />
+                      Gambar Passport (akan dijadikan gambar profil)
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setPassportFile(e.target.files?.[0] || null)}
+                      className="w-full text-xs text-slate-400 file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-emerald-600 file:text-white file:font-semibold file:cursor-pointer hover:file:bg-emerald-500"
+                    />
+                    {passportFile && (
+                      <div className="text-[11px] text-emerald-300">
+                        {passportFile.name} ({(passportFile.size / 1024 / 1024).toFixed(2)} MB)
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={handleSubmitWinnerInfo}
+                    disabled={uploadingWinnerInfo}
+                    className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition flex items-center justify-center gap-2 disabled:opacity-60"
+                  >
+                    <Upload className="w-4 h-4" />
+                    {uploadingWinnerInfo ? 'Menghantar...' : 'Hantar Maklumat'}
+                  </button>
+
+                  {winnerMsg && (
+                    <div
+                      className={`text-xs flex items-center gap-1.5 ${
+                        winnerMsg.type === 'success' ? 'text-emerald-300' : 'text-rose-300'
+                      }`}
+                    >
+                      {winnerMsg.type === 'success' ? (
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      ) : (
+                        <AlertCircle className="w-3.5 h-3.5" />
+                      )}
+                      {winnerMsg.text}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {submission.winner_status === 'TIDAK_TERPILIH' && (
+              <div className="p-6 rounded-2xl bg-rose-500/10 border-2 border-rose-500/40 shadow-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+                    <XCircle className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <div className="text-lg font-extrabold text-rose-300">Maaf, Anda Tidak Terpilih</div>
+                    <p className="text-xs text-rose-200/80 mt-0.5">
+                      Terima kasih atas penyertaan anda. Kami harap anda mencuba lagi pada masa hadapan.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Main Status Card */}
             <div className="p-6 md:p-8 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800">

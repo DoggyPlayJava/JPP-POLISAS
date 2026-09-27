@@ -20,6 +20,7 @@ import { CurtainReveal } from '@/components/portal/CurtainReveal';
 import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import { KarnivalMegaBanner } from '@/components/portal/KarnivalMegaBanner';
 import { SupsasMegaBanner } from '@/components/portal/SupsasMegaBanner';
+import MakmpWinnerBanner from '@/components/makmp/MakmpWinnerBanner';
 import { QuickActions } from '@/components/portal/QuickActions';
 import { PortalNavbar } from '@/components/portal/PortalNavbar';
 import { PortalFooter } from '@/components/portal/PortalFooter';
@@ -444,6 +445,9 @@ export function PortalPage() {
                   <KarnivalMegaBanner karnivalStatus={karnivalStatus} />
                 )}
               </AnimatePresence>
+
+              {/* ── MAKMP WINNER BANNER ── */}
+              <MakmpWinnerBanner />
 
               {/* ── KAMSIS STATUS BANNER ── */}
               <AnimatePresence>
