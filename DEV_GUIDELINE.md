@@ -2549,25 +2549,31 @@ Sistem beroperasi secara rasmi dengan **Light Theme sebagai mod lalai (*default 
   - Kad dan panel menggunakan `bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm`.
   - Mengekalkan aksen emas diraja (*Royal Gold / Amber* `text-amber-600 dark:text-amber-400`, `bg-amber-500`) bagi mengekalkan prestij majlis anugerah.
 
-### 25.3 Hab Pengurusan Utama JPPHQ (`/jpp`)
+### 25.3 Hab Pengurusan Utama JPPHQ (`/jpp`) & Sidebar Maroon Lembut
 - **Komponen & Halaman Terlibat:**
   - `src/pages/jpp/JppLayout.tsx`: Penyingkiran kelas `dark` statik pada akar shell; `ThemeToggle` pada bar navigasi mobile.
-  - `src/pages/jpp/JppSidebar.tsx`: Butang `ThemeToggle` di header sidebar bersebelahan palet warna.
+  - `src/pages/jpp/JppSidebar.tsx` & `src/pages/jpp/jppConfig.ts`:
+    - **Mod Cerah (Light Mode)**: Menggunakan kecerunan *Soft Maroon Tint* (`#fff8f8` hingga `#fee2e2`) dengan sempadan mawar lembut (`border-rose-200/70`) dan tipografi berkontras tinggi (`text-rose-950`). Menghilangkan ketidakselarasan sidebar hitam pekat pada mod cerah sambil mengekalkan identiti warna rasmi POLISAS.
+    - **Mod Gelap (Dark Mode)**: Mengekalkan warna Maroon tandatangan POLISAS mendalam (`rgb(r*0.07, g*0.03, b*0.03)`).
   - `src/pages/jpp/JppHomePage.tsx`: Dashboard ringkasan (StatCard, UnitCard, TakwimCard, QuickActions dalam mod dwi-tema).
   - `src/pages/jpp/JppMembersPage.tsx`: Pengurusan ahli JPP, modal pendaftaran, kad status & hierarki exco.
   - `src/pages/jpp/JppUsersPage.tsx`: Pengurusan akaun pengguna sistem, carian, penapis peranan & tindakan pengguna.
   - `src/pages/jpp/JppOverviewPage.tsx`: Pemantauan aktiviti kelab rentas-organisasi & metrik kelulusan.
 - **Standard Visual**:
   - Kawasan kandungan (*content area*) bertukar kepada mod cerah (`bg-slate-100 dark:bg-[#0a0a0f]`) dengan kad putih berbayang halus (`shadow-sm`) dan teks kontras tinggi (`text-slate-900 dark:text-white`).
-  - Sidebar JPP mengekalkan warna Maroon tandatangan POLISAS (`getJppSidebarBg(themeColor)`) untuk memastikan identiti korporat JPP kekal kukuh dalam kedua-dua mod.
 
-### 25.4 Operasi Kampus (`/jpp/polymaps`, `/jpp/takwim`, `/jpp/pengumuman`)
+### 25.4 Pengurusan Demerit & Merit (`DemeritManager.tsx` & `AkademikMeritPage.tsx`)
+- **Komponen Terlibat:**
+  - `src/pages/akademik/DemeritManager.tsx`: Modul pengurusan demerit pelajar (digunakan dalam tab unit KK, KPP, Akademik dan pentadbir). Kad carian pelajar, rekod potongan, panel rayuan pelajar, dan dialog tutup kohort ditukar kepada dwi-tema berkontras tinggi.
+  - `src/pages/akademik/AkademikMeritPage.tsx`: Pusat rekod merit pelajar, kad jumlah merit semasa, grid pecahan (Kelab, Akademik, Asrama, Demerit), garis masa transaksi dan modal rayuan.
+
+### 25.5 Operasi Kampus (`/jpp/polymaps`, `/jpp/takwim`, `/jpp/pengumuman`)
 - **Komponen & Halaman Terlibat:**
   - `src/pages/jpp/JppPolyMapsAdmin.tsx`: Pengurusan PolyMaps (header, penapis tab, kad bangunan, jadual lokasi, laluan pejalan kaki & dialog modal).
   - `src/pages/jpp/JppTakwimPage.tsx`: Takwim aktiviti (tukar sesi, paparan jadual `TakwimTable`, paparan kalendar `TakwimCalendar`, dialog CRUD acara).
   - `src/pages/jpp/AnnouncementsPage.tsx`: Pengumuman rasmi & hebahan kampus (lencana sasaran, modal respon & kontras teks tajuk).
 
-### 25.5 Sistem & Utiliti Pentadbiran (`/jpp/logs`, `/jpp/settings`, `/jpp/nexus`, `/jpp/telemetry`, `/jpp/services`, `/jpp/structure`, `/jpp/asrama`)
+### 25.6 Sistem & Utiliti Pentadbiran (`/jpp/logs`, `/jpp/settings`, `/jpp/nexus`, `/jpp/telemetry`, `/jpp/services`, `/jpp/structure`, `/jpp/asrama`)
 - **Komponen & Halaman Terlibat:**
   - `src/pages/jpp/JppLogsPage.tsx`: Audit log sistem, kad ringkasan AI, bar statistik & jadual peristiwa audit.
   - `src/pages/jpp/JppSettingsPage.tsx`: Konfigurasi takwim akademik, kod staf, permintaan sunting profil & pengurus pautan QR.
@@ -2577,14 +2583,26 @@ Sistem beroperasi secara rasmi dengan **Light Theme sebagai mod lalai (*default 
   - `src/pages/jpp/JppStructureSettings.tsx`: Tetapan struktur carta organisasi JPP & input jawatan exco.
   - `src/pages/jpp/JppAsramaPage.tsx`: Papan rujukan asrama KAMSIS & pemohon rayuan.
 
-### 25.6 Papan Pemuka Unit Exco (`/jpp/unit/*`) & Pentadbiran MAKMP
-- **Komponen & Halaman Terlibat:**
-  - `src/pages/jpp/JppUnitDashboard.tsx`: Halaman induk navigasi unit exco (kad unit, header & butang kembali).
-  - `src/pages/jpp/KeusahawananHubLanding.tsx`: Hab pendaratan Keusahawanan (e-Keusahawanan & PolyRider).
-  - `src/pages/jpp/units/AkademikUnitDashboard.tsx`, `KeusahawananUnitDashboard.tsx`, `KebajikanUnitDashboard.tsx`, `SrkUnitDashboard.tsx`, `KkUnitDashboard.tsx`, `KlsUnitDashboard.tsx`, `KppUnitDashboard.tsx`, `ExcoGenericDashboard.tsx`:
-    - Tab navigasi unit adaptif (`bg-white dark:bg-transparent border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-white/35`).
-    - Kad metrik, senarai program, borang input & senarai aktiviti dalam mod dwi-tema.
-  - `src/pages/jpp/units/EventCouponPanel.tsx` & `src/pages/jpp/units/KamsisKlkStatsWidget.tsx`: Widget kupon acara & statistik Kamsis.
-  - `src/pages/jpp/units/MakmpAdminDashboardPage.tsx`: Pusat kawalan pentadbir MAKMP (kad KPI, penjana PIN juri, pengira merit & semakan pencalonan).
+### 25.7 Ekosistem EMS (`/ems/*`) — Tema Ungu & Kontras Tinggi Juri
+- **Warna Tema Rasmi**: **Ungu Diraja (*Royal Purple* / `#7c3aed` / `purple-600`)** sebagai warna aksen primer di seluruh modul EMS.
+- **Penyelesaian Kebolehlihatan Juri (Dark Mode & Light Mode)**:
+  - Isu kesukaran juri menilai dalam mod gelap diselesaikan dengan memperkukuh `LIKERT_OPTIONS`:
+    - Menggantikan lencana pudar dengan warna kontras tinggi bertenaga (`bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-500/50 text-emerald-800 dark:text-emerald-300`).
+    - Butang terpilih (*selected*) menggunakan warna pepejal pekat dengan teks putih terang dan lingkaran *ring* jelas.
+    - Kotak deskriptor kriteria skor menggunakan latar berbeza (`bg-slate-100 dark:bg-slate-800/90`) dengan teks terang yang tajam.
+  - Penambahan `ThemeToggle` pada bar atas portal juri (`EmsJuryPortalPage.tsx`) dan skrin PIN kemasukan.
+- **Liputan Penuh Halaman EMS**:
+  - `src/pages/ems/EmsJuryPortalPage.tsx`: Portal Penjurian, skrin kod PIN, hab kategori, modal rubrik dan kad ringkasan markah.
+  - `src/pages/ems/EmsPublicRegisterPage.tsx`: Borang pendaftaran peserta awam & pelajar, wizard 4-langkah, dropzone fail & tiket pas digital.
+  - `src/pages/ems/EmsAudienceScanPage.tsx`: Portal imbasan QR kehadiran pengunjung, kad pendaftaran & notifikasi milestone pemenang bertuah.
+  - `src/pages/ems/EmsLeaderboardPage.tsx`: Papan pendahulu penganjur dan **Mod Pentas Skrin Besar** (`/ems/stage/:eventId`) yang menyokong pertukaran dwi-tema untuk auditorium bercahaya terang mahupun projektor pentas gelap.
+  - `src/pages/ems/EmsCertificatePage.tsx` & `src/pages/ems/EmsCertVerifyPage.tsx`: Portal semakan sijil digital dan paparan PDF dengan aksen ungu dan ThemeToggle.
+  - `src/pages/ems/EmsDashboardPage.tsx`: Papan pemuka pentadbiran EMS, kad acara, tab penapis status, modal kod juri, modal pendaftaran manual, senarai e-sijil.
+  - `src/pages/ems/EmsEventFormPage.tsx`: Borang cipta/kemaskini acara dan pembina kriteria rubrik juri.
+  - `src/pages/ems/EmsApprovalPage.tsx`: Meja kelulusan kertas kerja acara.
+  - `src/pages/ems/EmsCheckinSelectorPage.tsx` & `src/pages/ems/EmsCheckinPage.tsx`: Hab pengimbas kamera QR kehadiran peserta/pengunjung.
+  - `src/components/ems/EmsJuryAuditMatrix.tsx`: Matriks audit perbandingan skor antara juri.
+  - `src/components/ems/EmsLuckyDrawModal.tsx`: Roda cabutan bertuah dan animasi pusingan pemenang.
+
 
 
