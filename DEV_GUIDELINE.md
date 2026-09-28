@@ -2527,32 +2527,64 @@ Persembahan slaid eksekutif berasaskan web yang berasingan di dalam direktori `W
 
 ---
 
-## 25. Senibina Tema Global (Default Light Theme & Dwi-Tema MAKMP / JPPHQ)
+## 25. Senibina Tema Global (Default Light Theme & Dwi-Tema Menyeluruh MAKMP / JPPHQ)
 
-Sistem kini beroperasi secara rasmi dengan **Light Theme sebagai mod lalai (*default mode*)** bagi seluruh ekosistem aplikasi, terutamanya modul awam MAKMP dan Hab Pengurusan JPPHQ.
+Sistem beroperasi secara rasmi dengan **Light Theme sebagai mod lalai (*default mode*)** bagi seluruh ekosistem aplikasi, terutamanya modul awam MAKMP dan keseluruhan halaman Hab Pengurusan JPPHQ (`/jpp/*`).
 
 ### 25.1 Konvensyen & Keutamaan Pilihan Pengguna
-- **Lalai Tanpa Tetapan (`localStorage === null`)**: Pengguna baharu yang mengakses portal akan dipaparkan dengan **Light Theme** secara automatik.
+- **Lalai Tanpa Tetapan (`localStorage === null`)**: Pengguna baharu atau tetamu yang mengakses mana-mana halaman portal akan dipaparkan dengan **Light Theme** secara automatik.
 - **Keutamaan Pilihan Pengguna**: Sekiranya pengguna menukar tema kepada **Dark Theme**, pilihan tersebut disimpan ke dalam `localStorage.getItem('theme')` dan dihormati secara berterusan merentas sesi.
 - **Pencegahan Flash Latar Belakang**: Skrip sebaris (*inline script*) dalam `<head>` pada `index.html` memeriksa `localStorage` sebelum pemasangan React untuk mengelakkan kelipan putih jika pengguna telah menetapkan tema gelap.
 
 ### 25.2 Modul MAKMP (Dwi-Tema Bersih & Aksen Emas Rasmi)
-- **Fail Terlibat:**
-  - `src/components/makmp/MakmpJppChrome.tsx` (`MakmpJppHeader` kini menyertakan `ThemeToggle` di bar atas kanan).
-  - `src/pages/makmp/MakmpPublicFormPage.tsx` (Borang Pencalonan Pelajar & Wizard Multi-Langkah).
-  - `src/pages/makmp/MakmpStatusTrackingPage.tsx` (Semakan Resit Status & Maklumat Pemenang).
-  - `src/pages/makmp/MakmpJuryPortalPage.tsx` (Skrin PIN Juri, Meja Penilaian & Log Audit).
+- **Komponen & Halaman Terlibat:**
+  - `src/components/makmp/MakmpJppChrome.tsx`: `MakmpJppHeader` menyertakan `ThemeToggle` di bar atas kanan.
+  - `src/components/makmp/MakmpRankingView.tsx`: Kad kedudukan pemenang dan senarai ranking dwi-tema tanpa kotak gelap pada mod cerah.
+  - `src/components/makmp/MakmpWinnerBanner.tsx`: Sepanduk pengumuman pemenang adaptif dengan sempadan dan bayang kemas.
+  - `src/pages/makmp/MakmpPublicFormPage.tsx`: Borang Pencalonan Pelajar & Wizard Multi-Langkah.
+  - `src/pages/makmp/MakmpStatusTrackingPage.tsx`: Semakan Resit Status & Maklumat Pemenang.
+  - `src/pages/makmp/MakmpJuryPortalPage.tsx`: Skrin PIN Juri, Meja Penilaian & Tab Kedudukan.
 - **Standard Visual**:
   - Menggunakan `bg-slate-50 dark:bg-slate-950` sebagai latar belakang utama.
-  - Kad dan panel menggunakan `bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800`.
+  - Kad dan panel menggunakan `bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm`.
   - Mengekalkan aksen emas diraja (*Royal Gold / Amber* `text-amber-600 dark:text-amber-400`, `bg-amber-500`) bagi mengekalkan prestij majlis anugerah.
 
-### 25.3 Hab Pengurusan JPPHQ (`/jpp`) (High Contrast Premium Dashboard)
-- **Fail Terlibat:**
-  - `src/pages/jpp/JppLayout.tsx` (Membuang kelas `dark` statik pada akar; menambah `ThemeToggle` pada header mobile).
-  - `src/pages/jpp/JppSidebar.tsx` (Menyertakan butang `ThemeToggle` di header sidebar bersebelahan butang palet).
-  - `src/pages/jpp/JppHomePage.tsx` (StatCard, UnitCard, TakwimCard, QuickActions dalam mod dwi-tema).
+### 25.3 Hab Pengurusan Utama JPPHQ (`/jpp`)
+- **Komponen & Halaman Terlibat:**
+  - `src/pages/jpp/JppLayout.tsx`: Penyingkiran kelas `dark` statik pada akar shell; `ThemeToggle` pada bar navigasi mobile.
+  - `src/pages/jpp/JppSidebar.tsx`: Butang `ThemeToggle` di header sidebar bersebelahan palet warna.
+  - `src/pages/jpp/JppHomePage.tsx`: Dashboard ringkasan (StatCard, UnitCard, TakwimCard, QuickActions dalam mod dwi-tema).
+  - `src/pages/jpp/JppMembersPage.tsx`: Pengurusan ahli JPP, modal pendaftaran, kad status & hierarki exco.
+  - `src/pages/jpp/JppUsersPage.tsx`: Pengurusan akaun pengguna sistem, carian, penapis peranan & tindakan pengguna.
+  - `src/pages/jpp/JppOverviewPage.tsx`: Pemantauan aktiviti kelab rentas-organisasi & metrik kelulusan.
 - **Standard Visual**:
-  - Kawasan kandungan (*content area*) bertukar kepada mod cerah (`bg-slate-100 dark:bg-[#0a0a0f]`) dengan kad putih berbayang halus (`shadow-sm`) dan teks kontras tinggi.
+  - Kawasan kandungan (*content area*) bertukar kepada mod cerah (`bg-slate-100 dark:bg-[#0a0a0f]`) dengan kad putih berbayang halus (`shadow-sm`) dan teks kontras tinggi (`text-slate-900 dark:text-white`).
   - Sidebar JPP mengekalkan warna Maroon tandatangan POLISAS (`getJppSidebarBg(themeColor)`) untuk memastikan identiti korporat JPP kekal kukuh dalam kedua-dua mod.
+
+### 25.4 Operasi Kampus (`/jpp/polymaps`, `/jpp/takwim`, `/jpp/pengumuman`)
+- **Komponen & Halaman Terlibat:**
+  - `src/pages/jpp/JppPolyMapsAdmin.tsx`: Pengurusan PolyMaps (header, penapis tab, kad bangunan, jadual lokasi, laluan pejalan kaki & dialog modal).
+  - `src/pages/jpp/JppTakwimPage.tsx`: Takwim aktiviti (tukar sesi, paparan jadual `TakwimTable`, paparan kalendar `TakwimCalendar`, dialog CRUD acara).
+  - `src/pages/jpp/AnnouncementsPage.tsx`: Pengumuman rasmi & hebahan kampus (lencana sasaran, modal respon & kontras teks tajuk).
+
+### 25.5 Sistem & Utiliti Pentadbiran (`/jpp/logs`, `/jpp/settings`, `/jpp/nexus`, `/jpp/telemetry`, `/jpp/services`, `/jpp/structure`, `/jpp/asrama`)
+- **Komponen & Halaman Terlibat:**
+  - `src/pages/jpp/JppLogsPage.tsx`: Audit log sistem, kad ringkasan AI, bar statistik & jadual peristiwa audit.
+  - `src/pages/jpp/JppSettingsPage.tsx`: Konfigurasi takwim akademik, kod staf, permintaan sunting profil & pengurus pautan QR.
+  - `src/pages/jpp/JppNexusPage.tsx`: Nexus AI Admin Hub, pemantauan model AI, kill-switch & token analytics.
+  - `src/pages/jpp/JppTelemetryPage.tsx`: Telemetri sistem, status server Node.js, status kluster PostgreSQL & carta aktiviti Recharts.
+  - `src/pages/jpp/PolyServicesAdmin.tsx`: Pentadbiran PolyServices, penapis tab, kad pos/komen confession & panel analitik sentimen.
+  - `src/pages/jpp/JppStructureSettings.tsx`: Tetapan struktur carta organisasi JPP & input jawatan exco.
+  - `src/pages/jpp/JppAsramaPage.tsx`: Papan rujukan asrama KAMSIS & pemohon rayuan.
+
+### 25.6 Papan Pemuka Unit Exco (`/jpp/unit/*`) & Pentadbiran MAKMP
+- **Komponen & Halaman Terlibat:**
+  - `src/pages/jpp/JppUnitDashboard.tsx`: Halaman induk navigasi unit exco (kad unit, header & butang kembali).
+  - `src/pages/jpp/KeusahawananHubLanding.tsx`: Hab pendaratan Keusahawanan (e-Keusahawanan & PolyRider).
+  - `src/pages/jpp/units/AkademikUnitDashboard.tsx`, `KeusahawananUnitDashboard.tsx`, `KebajikanUnitDashboard.tsx`, `SrkUnitDashboard.tsx`, `KkUnitDashboard.tsx`, `KlsUnitDashboard.tsx`, `KppUnitDashboard.tsx`, `ExcoGenericDashboard.tsx`:
+    - Tab navigasi unit adaptif (`bg-white dark:bg-transparent border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-white/35`).
+    - Kad metrik, senarai program, borang input & senarai aktiviti dalam mod dwi-tema.
+  - `src/pages/jpp/units/EventCouponPanel.tsx` & `src/pages/jpp/units/KamsisKlkStatsWidget.tsx`: Widget kupon acara & statistik Kamsis.
+  - `src/pages/jpp/units/MakmpAdminDashboardPage.tsx`: Pusat kawalan pentadbir MAKMP (kad KPI, penjana PIN juri, pengira merit & semakan pencalonan).
+
 
