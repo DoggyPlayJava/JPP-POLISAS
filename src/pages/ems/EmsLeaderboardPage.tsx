@@ -29,6 +29,7 @@ import {
   Gift,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { EmsLuckyDrawModal } from '@/components/ems/EmsLuckyDrawModal';
 import { EmsJuryAuditMatrix } from '@/components/ems/EmsJuryAuditMatrix';
 import {
@@ -272,13 +273,13 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   // Rubric award tabs — shared render between Stage Mode & Leaderboard Mode
   const rubricTabs =
     rubricCategories.length > 1 ? (
-      <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10 overflow-x-auto max-w-md">
+      <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/10 overflow-x-auto max-w-md">
         <button
           onClick={() => setRubricFilter('ALL')}
           className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
             rubricFilter === 'ALL'
-              ? 'bg-teal-400 text-slate-950 shadow-md'
-              : 'text-white/70 hover:text-white hover:bg-white/5'
+              ? 'bg-purple-600 dark:bg-teal-400 text-white dark:text-slate-950 shadow-md'
+              : 'text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/5'
           }`}
         >
           Keseluruhan
@@ -289,8 +290,8 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
             onClick={() => setRubricFilter(rc)}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
               rubricFilter === rc
-                ? 'bg-teal-400 text-slate-950 shadow-md'
-                : 'text-white/70 hover:text-white hover:bg-white/5'
+                ? 'bg-purple-600 dark:bg-teal-400 text-white dark:text-slate-950 shadow-md'
+                : 'text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/5'
             }`}
           >
             {rc}
@@ -464,9 +465,9 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-950 text-white p-6">
-        <div className="w-14 h-14 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4" />
-        <p className="text-xs font-black uppercase tracking-[0.3em] text-white/50 animate-pulse">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white p-6 transition-colors">
+        <div className="w-14 h-14 border-4 border-purple-500/20 border-t-purple-600 rounded-full animate-spin mb-4" />
+        <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 dark:text-white/50 animate-pulse">
           Memuatkan Papan Pendahulu EMS...
         </p>
       </div>
@@ -475,13 +476,13 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
   if (!event) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-900 text-white p-6">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white p-6 transition-colors">
         <AlertTriangle className="w-16 h-16 text-rose-500 mb-4 animate-bounce" />
         <h2 className="text-2xl font-black mb-2">Acara Tidak Ditemui</h2>
-        <p className="text-sm text-slate-400 mb-6">Sila pastikan ID acara adalah sah.</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">Sila pastikan ID acara adalah sah.</p>
         <button
           onClick={() => navigate('/ems/dashboard')}
-          className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition"
+          className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition shadow-lg shadow-purple-600/20"
         >
           Kembali ke Papan Pemuka EMS
         </button>
@@ -492,25 +493,30 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   // Guard private leaderboard from unauthorized students
   if (!canManageLeaderboard && !event.is_leaderboard_public) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 relative overflow-hidden select-none">
-        {/* Ambient Background Lights */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-[140px] pointer-events-none" />
-        <div className="absolute bottom-10 left-10 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-6 relative overflow-hidden select-none transition-colors">
+        {/* Floating ThemeToggle */}
+        <div className="absolute top-4 right-4 z-20">
+          <ThemeToggle />
+        </div>
 
-        <div className="relative z-10 max-w-2xl text-center space-y-8 p-8 md:p-12 rounded-3xl bg-slate-900/60 backdrop-blur-2xl border border-white/10 shadow-[0_32px_64px_rgba(0,0,0,0.8)]">
+        {/* Ambient Background Lights */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/10 dark:bg-amber-500/10 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute bottom-10 left-10 w-96 h-96 bg-indigo-500/10 dark:bg-purple-500/10 rounded-full blur-[120px] pointer-events-none" />
+
+        <div className="relative z-10 max-w-2xl text-center space-y-8 p-8 md:p-12 rounded-3xl bg-white/80 dark:bg-slate-900/60 backdrop-blur-2xl border border-slate-200 dark:border-white/10 shadow-[0_32px_64px_rgba(0,0,0,0.1)] dark:shadow-[0_32px_64px_rgba(0,0,0,0.8)]">
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-b from-amber-500/20 to-amber-500/5 border border-amber-500/30 shadow-[0_0_40px_rgba(245,158,11,0.2)] animate-pulse">
-            <Lock className="w-12 h-12 text-amber-400" />
+            <Lock className="w-12 h-12 text-amber-500 dark:text-amber-400" />
           </div>
 
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black uppercase tracking-widest">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-black uppercase tracking-widest">
+              <span className="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400 animate-ping" />
               Keputusan Sedang Diproses
             </div>
-            <h1 className="text-3xl md:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-amber-200">
+            <h1 className="text-3xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:via-slate-100 dark:to-amber-200">
               Keputusan Belum Didedahkan Oleh Penganjur
             </h1>
-            <p className="text-base md:text-lg text-slate-400 leading-relaxed font-medium">
+            <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
               Kedudukan dan markah peserta sedang disemak dan belum didedahkan kepada awam.
             </p>
           </div>
@@ -518,7 +524,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
           <div className="pt-4 flex flex-col items-center gap-3">
             <button
               onClick={() => navigate('/ems/dashboard')}
-              className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-lg"
+              className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-purple-600/20"
             >
               Kembali ke Papan Pemuka EMS
             </button>
@@ -535,43 +541,48 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
     // Stage Curtain / Locked State when is_leaderboard_public is FALSE
     if (!event.is_leaderboard_public) {
       return (
-        <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 relative overflow-hidden select-none">
-          {/* Ambient Background Lights */}
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-[140px] pointer-events-none" />
-          <div className="absolute bottom-10 left-10 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-6 relative overflow-hidden select-none transition-colors">
+          {/* Floating ThemeToggle */}
+          <div className="absolute top-4 right-4 z-20">
+            <ThemeToggle />
+          </div>
 
-          <div className="relative z-10 max-w-2xl text-center space-y-8 p-8 md:p-12 rounded-3xl bg-slate-900/60 backdrop-blur-2xl border border-white/10 shadow-[0_32px_64px_rgba(0,0,0,0.8)]">
+          {/* Ambient Background Lights */}
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/10 dark:bg-amber-500/10 rounded-full blur-[140px] pointer-events-none" />
+          <div className="absolute bottom-10 left-10 w-96 h-96 bg-indigo-500/10 dark:bg-purple-500/10 rounded-full blur-[120px] pointer-events-none" />
+
+          <div className="relative z-10 max-w-2xl text-center space-y-8 p-8 md:p-12 rounded-3xl bg-white/80 dark:bg-slate-900/60 backdrop-blur-2xl border border-slate-200 dark:border-white/10 shadow-[0_32px_64px_rgba(0,0,0,0.1)] dark:shadow-[0_32px_64px_rgba(0,0,0,0.8)]">
             <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-b from-amber-500/20 to-amber-500/5 border border-amber-500/30 shadow-[0_0_40px_rgba(245,158,11,0.2)] animate-pulse">
-              <Lock className="w-12 h-12 text-amber-400" />
+              <Lock className="w-12 h-12 text-amber-500 dark:text-amber-400" />
             </div>
 
             <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black uppercase tracking-widest">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-black uppercase tracking-widest">
+                <span className="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400 animate-ping" />
                 Keputusan Sedang Diproses
               </div>
-              <h1 className="text-3xl md:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-amber-200">
+              <h1 className="text-3xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:via-slate-100 dark:to-amber-200">
                 KEPUTUSAN BELUM DIDEDAHKAN
               </h1>
-              <p className="text-base md:text-lg text-slate-400 leading-relaxed font-medium">
+              <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
                 Panel Juri dan Pengarah Program sedang memuktamadkan skor rasmi bagi acara{' '}
-                <span className="text-amber-400 font-bold">{event.title}</span>. Keputusan rasmi akan dipaparkan di skrin ini sebentar lagi.
+                <span className="text-amber-600 dark:text-amber-400 font-bold">{event.title}</span>. Keputusan rasmi akan dipaparkan di skrin ini sebentar lagi.
               </p>
             </div>
 
             {/* Loading pulse indicator */}
             <div className="pt-4 flex flex-col items-center gap-3">
-              <div className="w-48 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                <div className="w-full h-full bg-gradient-to-r from-amber-500 to-purple-500 animate-pulse" />
+              <div className="w-48 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="w-full h-full bg-gradient-to-r from-amber-500 to-purple-600 animate-pulse" />
               </div>
-              <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-white/40">
+              <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">
                 MOD SKRIN PENTAS EMS — MENUNGGU ISYARAT URUS SETIA
               </span>
             </div>
 
             {/* Admin quick toggle button if user can manage leaderboard */}
             {canManageLeaderboard && (
-              <div className="pt-6 border-t border-white/5">
+              <div className="pt-6 border-t border-slate-200 dark:border-white/5">
                 <button
                   onClick={handleToggleVisibility}
                   disabled={togglingVisibility}
@@ -594,31 +605,31 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
     const restItems = filteredLeaderboard.slice(3);
 
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between p-4 md:p-8 pb-28 md:pb-8 relative overflow-hidden select-none font-sans">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col justify-between p-4 md:p-8 pb-28 md:pb-8 relative overflow-hidden select-none font-sans transition-colors">
         {/* Background glow effects */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-amber-500/15 via-purple-500/10 to-transparent blur-[140px] pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-amber-500/10 via-purple-500/10 to-transparent blur-[140px] pointer-events-none" />
 
         {/* Top Navigation & Controls */}
-        <header className="relative z-20 flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-white/10">
+        <header className="relative z-20 flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-white/10">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate(`/ems/leaderboard/${eventId}`)}
-              className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition border border-white/10"
+              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white/70 dark:hover:text-white transition border border-slate-200 dark:border-white/10"
               title="Keluar Mod Pentas"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-wider border border-emerald-500/30 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider border border-emerald-500/30 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-ping" />
                   KEMAS KINI MASA-NYATA 🟢
                 </span>
-                <span className="text-xs text-white/50 font-bold uppercase tracking-wider">
+                <span className="text-xs text-slate-500 dark:text-white/50 font-bold uppercase tracking-wider">
                   EMS STAGE MODE
                 </span>
               </div>
-              <h1 className="text-xl md:text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-100 to-amber-400">
+              <h1 className="text-xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:via-amber-100 dark:to-amber-400">
                 {event.title}
               </h1>
             </div>
@@ -630,13 +641,13 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
             {/* Category Filter Tabs — sembunyi utk event rubrik (tab rubrik dah ada) */}
             {!isRubricDriven && categories.length > 0 && (
-              <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10 overflow-x-auto max-w-md">
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/10 overflow-x-auto max-w-md">
                 <button
                   onClick={() => setCategoryFilter('ALL')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
                     categoryFilter === 'ALL'
                       ? 'bg-amber-500 text-slate-950 shadow-md'
-                      : 'text-white/70 hover:text-white hover:bg-white/5'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200 dark:text-white/70 dark:hover:text-white dark:hover:bg-white/5'
                   }`}
                 >
                   Semua Kategori ({leaderboard.length})
@@ -659,7 +670,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
                         categoryFilter === cat
                           ? 'bg-amber-500 text-slate-950 shadow-md'
-                          : 'text-white/70 hover:text-white hover:bg-white/5'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200 dark:text-white/70 dark:hover:text-white dark:hover:bg-white/5'
                       }`}
                     >
                       {cat} ({count})
@@ -689,10 +700,13 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               Bunga Api 🎉
             </button>
 
+            {/* Stage Mode ThemeToggle */}
+            <ThemeToggle />
+
             {/* Fullscreen Toggle */}
             <button
               onClick={toggleFullscreen}
-              className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition border border-white/10"
+              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white/70 dark:hover:text-white transition border border-slate-200 dark:border-white/10"
               title="Skrin Penuh"
             >
               {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
@@ -703,7 +717,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
         {/* Main Stage Content: Top 3 Podium */}
         <main className="relative z-10 my-8 flex-1 flex flex-col justify-center">
           {filteredLeaderboard.length === 0 ? (
-            <div className="text-center py-20 text-white/40">
+            <div className="text-center py-20 text-slate-400 dark:text-white/40">
               <Trophy className="w-16 h-16 mx-auto mb-3 opacity-30" />
               <p className="text-lg font-bold">Tiada data keputusan peserta setakat ini.</p>
             </div>
@@ -714,37 +728,37 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 {/* 2ND PLACE (SILVER) - Left */}
                 {top2 ? (
                   <div className="order-2 md:order-1 flex flex-col items-center">
-                    <div className="w-full bg-gradient-to-b from-slate-800/80 to-slate-900/90 border-2 border-slate-400/40 rounded-3xl p-6 text-center shadow-[0_16px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl relative overflow-hidden group hover:scale-[1.02] transition-transform">
-                      <div className="absolute top-0 inset-x-0 h-1.5 bg-slate-300" />
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-400/20 text-slate-300 border border-slate-400/30 mb-4 shadow-inner">
+                    <div className="w-full bg-white dark:bg-gradient-to-b dark:from-slate-800/80 dark:to-slate-900/90 border-2 border-slate-300 dark:border-slate-400/40 rounded-3xl p-6 text-center shadow-lg dark:shadow-[0_16px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl relative overflow-hidden group hover:scale-[1.02] transition-transform">
+                      <div className="absolute top-0 inset-x-0 h-1.5 bg-slate-400 dark:bg-slate-300" />
+                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-400/20 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-400/30 mb-4 shadow-inner">
                         <Medal className="w-9 h-9" />
                       </div>
-                      <span className="px-3 py-0.5 rounded-full bg-slate-400/20 text-slate-300 text-xs font-black tracking-widest uppercase mb-2 inline-block border border-slate-400/30">
+                      <span className="px-3 py-0.5 rounded-full bg-slate-100 dark:bg-slate-400/20 text-slate-700 dark:text-slate-300 text-xs font-black tracking-widest uppercase mb-2 inline-block border border-slate-300 dark:border-slate-400/30">
                         TEMPAT KE-2 🥈
                       </span>
-                      <div className="text-xs font-black text-amber-400/90 tracking-widest mb-1 uppercase">
+                      <div className="text-xs font-black text-amber-600 dark:text-amber-400/90 tracking-widest mb-1 uppercase">
                         STAN #{top2.participant.booth_no || top2.participant.custom_responses?.booth_no || top2.participant.custom_responses?.booth_number || '-'}
                       </div>
-                      <h2 className="text-xl md:text-2xl font-black text-white leading-tight line-clamp-2 mb-2">
+                      <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white leading-tight line-clamp-2 mb-2">
                         {top2.participant.team_name || top2.participant.leader_name}
                       </h2>
-                      <p className="text-xs text-slate-400 font-medium mb-4 line-clamp-1">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-4 line-clamp-1">
                         {top2.participant.leader_name} {top2.participant.category_name ? `• ${top2.participant.category_name}` : ''}
                       </p>
 
                       {/* Score display */}
-                      <div className="pt-3 border-t border-white/10 flex items-center justify-center gap-2">
-                        <span className="text-xs font-bold text-slate-400 uppercase">Markah Terwajar:</span>
-                        <span className="text-2xl font-black text-slate-200">{top2.average_score.toFixed(1)} / 100%</span>
+                      <div className="pt-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-center gap-2">
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Markah Terwajar:</span>
+                        <span className="text-2xl font-black text-slate-800 dark:text-slate-200">{top2.average_score.toFixed(1)} / 100%</span>
                       </div>
 
                       {top2.is_tie_winner && (
-                        <div className="mt-2 text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                        <div className="mt-2 text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
                           <Scale className="w-3 h-3" /> Penentuan Seret
                         </div>
                       )}
                     </div>
-                    <div className="w-full h-12 bg-slate-800/40 rounded-b-2xl border-x border-b border-white/5 flex items-center justify-center text-xs font-black text-slate-400 tracking-widest">
+                    <div className="w-full h-12 bg-slate-100 dark:bg-slate-800/40 rounded-b-2xl border-x border-b border-slate-200 dark:border-white/5 flex items-center justify-center text-xs font-black text-slate-600 dark:text-slate-400 tracking-widest">
                       PODIUM 2
                     </div>
                   </div>
@@ -753,45 +767,45 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 {/* 1ST PLACE (GOLD) - Center / Highest */}
                 {top1 ? (
                   <div className="order-1 md:order-2 flex flex-col items-center -mt-6 md:-mt-10">
-                    <div className="w-full bg-gradient-to-b from-amber-950/80 via-slate-900/90 to-slate-950/95 border-2 border-amber-400/60 rounded-3xl p-8 text-center shadow-[0_0_60px_rgba(245,158,11,0.35)] backdrop-blur-2xl relative overflow-hidden transform md:scale-105 transition-transform">
-                      <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500 animate-pulse" />
+                    <div className="w-full bg-amber-50/40 dark:bg-gradient-to-b dark:from-amber-950/80 dark:via-slate-900/90 dark:to-slate-950/95 border-2 border-amber-500 dark:border-amber-400/60 rounded-3xl p-8 text-center shadow-xl dark:shadow-[0_0_60px_rgba(245,158,11,0.35)] backdrop-blur-2xl relative overflow-hidden transform md:scale-105 transition-transform">
+                      <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 animate-pulse" />
 
                       {/* Crown / Trophy icon */}
-                      <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-b from-amber-500/30 to-amber-500/10 text-amber-400 border border-amber-400/50 mb-4 shadow-[0_0_30px_rgba(245,158,11,0.4)] animate-bounce">
+                      <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-b from-amber-500/20 to-amber-500/5 dark:from-amber-500/30 dark:to-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 dark:border-amber-400/50 mb-4 shadow-inner dark:shadow-[0_0_30px_rgba(245,158,11,0.4)] animate-bounce">
                         <Trophy className="w-12 h-12" />
                       </div>
 
-                      <span className="px-4 py-1 rounded-full bg-amber-500/30 text-amber-300 text-xs font-black tracking-widest uppercase mb-2 inline-block border border-amber-400/40 shadow-sm">
+                      <span className="px-4 py-1 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-300 text-xs font-black tracking-widest uppercase mb-2 inline-block border border-amber-400/40 shadow-sm">
                         CHAMPION 🥇 JOHAN
                       </span>
 
-                      <div className="text-xs font-black text-amber-300 tracking-widest mb-1 uppercase">
+                      <div className="text-xs font-black text-amber-700 dark:text-amber-300 tracking-widest mb-1 uppercase">
                         STAN #{top1.participant.booth_no || top1.participant.custom_responses?.booth_no || top1.participant.custom_responses?.booth_number || '-'}
                       </div>
 
-                      <h2 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-100 to-yellow-300 leading-tight line-clamp-2 mb-2">
+                      <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:via-amber-100 dark:to-yellow-300 leading-tight line-clamp-2 mb-2">
                         {top1.participant.team_name || top1.participant.leader_name}
                       </h2>
 
-                      <p className="text-xs md:text-sm text-slate-300 font-medium mb-5 line-clamp-1">
+                      <p className="text-xs md:text-sm text-slate-600 dark:text-slate-300 font-medium mb-5 line-clamp-1">
                         {top1.participant.leader_name} {top1.participant.category_name ? `• ${top1.participant.category_name}` : ''}
                       </p>
 
                       {/* Score display */}
                       <div className="pt-4 border-t border-amber-500/20 flex items-center justify-center gap-2">
-                        <span className="text-xs font-bold text-amber-300/70 uppercase">Markah Terwajar:</span>
-                        <span className="text-3xl md:text-4xl font-black text-amber-300 drop-shadow-md">
+                        <span className="text-xs font-bold text-amber-700 dark:text-amber-300/70 uppercase">Markah Terwajar:</span>
+                        <span className="text-3xl md:text-4xl font-black text-amber-600 dark:text-amber-300 drop-shadow-md">
                           {top1.average_score.toFixed(1)} / 100%
                         </span>
                       </div>
 
                       {top1.is_tie_winner && (
-                        <div className="mt-3 text-xs font-bold text-amber-300 bg-amber-500/20 border border-amber-400/30 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+                        <div className="mt-3 text-xs font-bold text-amber-800 dark:text-amber-300 bg-amber-500/20 border border-amber-400/30 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
                           <Scale className="w-3.5 h-3.5" /> Penentuan Seret Pemenang
                         </div>
                       )}
                     </div>
-                    <div className="w-full h-16 bg-amber-500/10 rounded-b-2xl border-x border-b border-amber-500/20 flex items-center justify-center text-xs font-black text-amber-400 tracking-widest shadow-inner">
+                    <div className="w-full h-16 bg-amber-500/20 dark:bg-amber-500/10 rounded-b-2xl border-x border-b border-amber-500/30 dark:border-amber-500/20 flex items-center justify-center text-xs font-black text-amber-800 dark:text-amber-400 tracking-widest shadow-inner">
                       PODIUM 1 — JOHAN
                     </div>
                   </div>
@@ -800,37 +814,37 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 {/* 3RD PLACE (BRONZE) - Right */}
                 {top3 ? (
                   <div className="order-3 flex flex-col items-center">
-                    <div className="w-full bg-gradient-to-b from-amber-950/40 via-slate-900/90 to-slate-950/95 border-2 border-amber-700/40 rounded-3xl p-6 text-center shadow-[0_16px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl relative overflow-hidden group hover:scale-[1.02] transition-transform">
+                    <div className="w-full bg-white dark:bg-gradient-to-b dark:from-amber-950/40 dark:via-slate-900/90 dark:to-slate-950/95 border-2 border-amber-600/30 dark:border-amber-700/40 rounded-3xl p-6 text-center shadow-lg dark:shadow-[0_16px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl relative overflow-hidden group hover:scale-[1.02] transition-transform">
                       <div className="absolute top-0 inset-x-0 h-1.5 bg-amber-700" />
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-700/20 text-amber-500 border border-amber-700/30 mb-4 shadow-inner">
+                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-700/10 dark:bg-amber-700/20 text-amber-700 dark:text-amber-500 border border-amber-700/20 dark:border-amber-700/30 mb-4 shadow-inner">
                         <Award className="w-9 h-9" />
                       </div>
-                      <span className="px-3 py-0.5 rounded-full bg-amber-700/20 text-amber-400 text-xs font-black tracking-widest uppercase mb-2 inline-block border border-amber-700/30">
+                      <span className="px-3 py-0.5 rounded-full bg-amber-700/10 dark:bg-amber-700/20 text-amber-800 dark:text-amber-400 text-xs font-black tracking-widest uppercase mb-2 inline-block border border-amber-700/20 dark:border-amber-700/30">
                         TEMPAT KE-3 🥉
                       </span>
-                      <div className="text-xs font-black text-amber-500/90 tracking-widest mb-1 uppercase">
+                      <div className="text-xs font-black text-amber-700 dark:text-amber-500/90 tracking-widest mb-1 uppercase">
                         STAN #{top3.participant.booth_no || top3.participant.custom_responses?.booth_no || top3.participant.custom_responses?.booth_number || '-'}
                       </div>
-                      <h2 className="text-xl md:text-2xl font-black text-white leading-tight line-clamp-2 mb-2">
+                      <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white leading-tight line-clamp-2 mb-2">
                         {top3.participant.team_name || top3.participant.leader_name}
                       </h2>
-                      <p className="text-xs text-slate-400 font-medium mb-4 line-clamp-1">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-4 line-clamp-1">
                         {top3.participant.leader_name} {top3.participant.category_name ? `• ${top3.participant.category_name}` : ''}
                       </p>
 
                       {/* Score display */}
-                      <div className="pt-3 border-t border-white/10 flex items-center justify-center gap-2">
-                        <span className="text-xs font-bold text-slate-400 uppercase">Markah Terwajar:</span>
-                        <span className="text-2xl font-black text-amber-200">{top3.average_score.toFixed(1)} / 100%</span>
+                      <div className="pt-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-center gap-2">
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Markah Terwajar:</span>
+                        <span className="text-2xl font-black text-amber-700 dark:text-amber-200">{top3.average_score.toFixed(1)} / 100%</span>
                       </div>
 
                       {top3.is_tie_winner && (
-                        <div className="mt-2 text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                        <div className="mt-2 text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
                           <Scale className="w-3 h-3" /> Penentuan Seret
                         </div>
                       )}
                     </div>
-                    <div className="w-full h-10 bg-amber-950/20 rounded-b-2xl border-x border-b border-white/5 flex items-center justify-center text-xs font-black text-amber-600 tracking-widest">
+                    <div className="w-full h-10 bg-amber-100/60 dark:bg-amber-950/20 rounded-b-2xl border-x border-b border-amber-200 dark:border-white/5 flex items-center justify-center text-xs font-black text-amber-800 dark:text-amber-600 tracking-widest">
                       PODIUM 3
                     </div>
                   </div>
@@ -840,8 +854,8 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               {/* REST OF RANKS (4th, 5th, 6th...) */}
               {restItems.length > 0 && (
                 <div className="max-w-6xl mx-auto px-4 pt-6">
-                  <h3 className="text-xs font-black uppercase tracking-[0.25em] text-white/50 mb-4 flex items-center gap-2">
-                    <Layers className="w-4 h-4 text-amber-400" />
+                  <h3 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/50 mb-4 flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                     Kedudukan Seterusnya (Carta Keseluruhan)
                   </h3>
 
@@ -851,29 +865,29 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                       return (
                         <div
                           key={item.participant.id}
-                          className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition backdrop-blur-md"
+                          className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 transition shadow-sm dark:shadow-none backdrop-blur-md"
                         >
                           <div className="flex items-center gap-3 min-w-0">
-                            <span className="w-9 h-9 rounded-xl bg-slate-800 text-white font-black text-sm flex items-center justify-center border border-white/10 shrink-0">
+                            <span className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-white font-black text-sm flex items-center justify-center border border-slate-200 dark:border-white/10 shrink-0">
                               #{item.category_rank || item.rank}
                             </span>
                             <div className="min-w-0">
-                              <p className="text-xs font-black text-amber-400 uppercase tracking-wider">
+                              <p className="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">
                                 STAN #{booth}
                               </p>
-                              <h4 className="text-sm font-bold text-white truncate">
+                              <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
                                 {item.participant.team_name || item.participant.leader_name}
                               </h4>
-                              <p className="text-[11px] text-slate-400 truncate">
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                                 {item.participant.leader_name}
                               </p>
                             </div>
                           </div>
                           <div className="text-right shrink-0">
-                            <div className="text-base font-black text-amber-400">
+                            <div className="text-base font-black text-amber-600 dark:text-amber-400">
                               {item.average_score.toFixed(1)} / 100%
                             </div>
-                            <span className="text-[10px] text-white/40 uppercase font-bold">
+                            <span className="text-[10px] text-slate-400 dark:text-white/40 uppercase font-bold">
                               {item.jury_count} Juri
                             </span>
                           </div>
@@ -888,7 +902,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
         </main>
 
         {/* Footer */}
-        <footer className="relative z-10 pt-6 border-t border-white/10 flex items-center justify-between text-xs text-white/40">
+        <footer className="relative z-10 pt-6 border-t border-slate-200 dark:border-white/10 flex items-center justify-between text-xs text-slate-500 dark:text-white/40">
           <span>JPP POLISAS — Event Management System (EMS)</span>
           <span>Dikuasa oleh Sistem Keputusan Realtime Supabase</span>
         </footer>
@@ -900,14 +914,14 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   // MODE 1: DASHBOARD LEADERBOARD VIEW (/ems/leaderboard/:eventId)
   // =========================================================================
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white p-4 sm:p-6 lg:p-8 pb-28 md:pb-8 space-y-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white p-4 sm:p-6 lg:p-8 pb-28 md:pb-8 space-y-6 transition-colors">
       {/* Top Header & Breadcrumbs */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/ems/dashboard')}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-purple-600 dark:text-slate-400 dark:hover:text-purple-400 transition"
             >
               <ArrowLeft className="w-4 h-4" />
               Kembali ke Papan Pemuka EMS
@@ -932,18 +946,21 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
           {canManageLeaderboard && (
             <button
               onClick={() => setShowLuckyDrawModal(true)}
-              className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider shadow-md transition flex items-center gap-2"
+              className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-purple-600/20 transition flex items-center gap-2"
             >
               <Gift className="w-4 h-4 text-amber-300" />
               Cabutan Bertuah 🎰
             </button>
           )}
 
+          {/* ThemeToggle */}
+          <ThemeToggle />
+
           {/* Refresh Button */}
           <button
             onClick={() => loadData(true)}
             disabled={refreshing}
-            className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-700 dark:text-slate-300"
+            className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-700 dark:text-slate-300 shadow-sm"
             title="Muat Semula Data"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -971,7 +988,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
           }}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition ${
             activeTab === 'LEADERBOARD'
-              ? 'bg-indigo-600 text-white shadow-md'
+              ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
@@ -1001,7 +1018,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
             }}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition ${
               activeTab === 'AUDIT'
-                ? 'bg-purple-600 text-white shadow-md'
+                ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
@@ -1096,14 +1113,14 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
                     Jumlah Peserta & Juri
                   </span>
-                  <h4 className="text-sm font-black text-indigo-600 dark:text-indigo-400">
+                  <h4 className="text-sm font-black text-purple-600 dark:text-purple-400">
                     {leaderboard.length} Peserta Berdaftar
                   </h4>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     Dineka untuk {categories.length || 1} kategori penilaian.
                   </p>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-black text-lg">
+                <div className="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-black text-lg">
                   {leaderboard.length}
                 </div>
               </div>
@@ -1126,7 +1143,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 onClick={() => setCategoryFilter('ALL')}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
                   categoryFilter === 'ALL'
-                    ? 'bg-indigo-600 text-white shadow-md'
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
@@ -1149,7 +1166,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                     onClick={() => setCategoryFilter(cat)}
                     className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
                       categoryFilter === cat
-                        ? 'bg-indigo-600 text-white shadow-md'
+                        ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                     }`}
                   >
@@ -1168,7 +1185,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 placeholder="Cari Stan / Peserta..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-indigo-500 focus:outline-none transition"
+                className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-purple-500 focus:outline-none transition"
               />
             </div>
           </div>
@@ -1252,8 +1269,8 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                             </span>
                           </td>
                           <td className="px-4 py-3.5 text-center">
-                            <div className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60">
-                              <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">
+                            <div className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800/60">
+                              <span className="text-sm font-black text-purple-600 dark:text-purple-400">
                                 {item.average_score.toFixed(1)} / 100%
                               </span>
                             </div>
@@ -1279,7 +1296,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                           <td className="px-4 py-3.5 text-right">
                             <button
                               onClick={() => handleViewComments(item)}
-                              className="px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 font-bold text-xs transition inline-flex items-center gap-1.5 border border-indigo-200 dark:border-indigo-800"
+                              className="px-3 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/50 font-bold text-xs transition inline-flex items-center gap-1.5 border border-purple-200 dark:border-purple-800"
                             >
                               <MessageSquare className="w-3.5 h-3.5" />
                               Lihat Markah & Komen
@@ -1304,7 +1321,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-2xl w-full p-6 space-y-6 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
               <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                <span className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
                   Perincian Penilaian Juri
                 </span>
                 <h3 className="text-lg font-black text-slate-900 dark:text-white">
@@ -1338,7 +1355,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <UserCheck className="w-4 h-4 text-indigo-500" />
+                          <UserCheck className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                           <span className="font-bold text-xs text-slate-900 dark:text-white">
                             Juri: {score.jury?.jury_name || score.jury?.code || 'Kod Juri'}
                           </span>
@@ -1348,7 +1365,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                             </span>
                           )}
                         </div>
-                        <div className="text-xs font-black text-indigo-600 dark:text-indigo-400">
+                        <div className="text-xs font-black text-purple-600 dark:text-purple-400">
                           Skor Criteria: {score.score}
                         </div>
                       </div>
@@ -1376,7 +1393,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
             <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
               <button
                 onClick={() => setSelectedParticipantForComments(null)}
-                className="px-5 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-300 dark:hover:bg-slate-700 transition"
+                className="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition"
               >
                 Tutup
               </button>
@@ -1434,7 +1451,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                           className="text-amber-500 focus:ring-amber-500"
                         />
                         <div>
-                          <p className="text-xs font-black">
+                          <p className="text-xs font-black text-slate-900 dark:text-white">
                             #{p.booth_no || p.custom_responses?.booth_no || '-'} — {p.team_name || p.leader_name}
                           </p>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400">

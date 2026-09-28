@@ -35,6 +35,7 @@ import { supabase } from '@/lib/supabase';
 import type { EmsParticipant } from '@/types';
 import { StudentSearchCombobox } from '@/components/ems/StudentSearchCombobox';
 import { provisionEmsSiswapreneurBusiness } from '@/lib/keusahawanan';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 interface TeamMember {
   name: string;
@@ -503,9 +504,9 @@ export function EmsPublicRegisterPage() {
   // Loading view
   if (loadingEvent) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
-        <RefreshCw className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
-        <p className="text-slate-400 text-sm font-medium animate-pulse">Memuatkan borang pendaftaran acara...</p>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 transition-colors">
+        <RefreshCw className="w-10 h-10 text-purple-600 dark:text-purple-400 animate-spin mb-4" />
+        <p className="text-slate-600 dark:text-slate-400 text-sm font-medium animate-pulse">Memuatkan borang pendaftaran acara...</p>
       </div>
     );
   }
@@ -513,15 +514,15 @@ export function EmsPublicRegisterPage() {
   // Error view
   if (eventError || !eventDetail) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-4 text-rose-400">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-6 text-center transition-colors">
+        <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-4 text-rose-500">
           <AlertCircle className="w-8 h-8" />
         </div>
-        <h1 className="text-2xl font-bold text-slate-100 mb-2">Pendaftaran Tidak Tersedia</h1>
-        <p className="text-slate-400 max-w-md mb-6">{eventError || 'Maklumat acara tidak dapat dijumpai.'}</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Pendaftaran Tidak Tersedia</h1>
+        <p className="text-slate-600 dark:text-slate-400 max-w-md mb-6">{eventError || 'Maklumat acara tidak dapat dijumpai.'}</p>
         <button
           onClick={() => navigate('/')}
-          className="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium transition text-sm"
+          className="px-6 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-medium transition text-sm"
         >
           Kembali ke Halaman Utama
         </button>
@@ -534,7 +535,7 @@ export function EmsPublicRegisterPage() {
   const isQuotaFull = maxParticipants > 0 && totalParticipants >= maxParticipants;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white pb-28 md:pb-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white selection:bg-purple-500 selection:text-white pb-28 md:pb-8 transition-colors">
       {/* Print Specific CSS */}
       <style>{`
         @media print {
@@ -563,37 +564,51 @@ export function EmsPublicRegisterPage() {
       `}</style>
 
       {/* Header Banner */}
-      <header className="relative bg-slate-900 border-b border-slate-800 pt-8 pb-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/30 via-slate-900 to-purple-900/20 opacity-70" />
+      <header className="relative bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pt-6 pb-12 px-4 sm:px-6 lg:px-8 overflow-hidden transition-colors">
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-purple-500/10 dark:from-purple-900/30 dark:via-slate-900 dark:to-purple-900/20 opacity-70" />
+        
+        {/* Top bar with back and ThemeToggle */}
+        <div className="relative max-w-4xl mx-auto flex items-center justify-between mb-6">
+          <button
+            onClick={() => navigate('/')}
+            className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition"
+          >
+            <ArrowLeft className="w-4 h-4" /> Kembali ke Portal
+          </button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+          </div>
+        </div>
+
         <div className="relative max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-700 dark:text-purple-300 text-xs font-semibold uppercase tracking-wider mb-4">
             <Sparkles className="w-3.5 h-3.5" /> Borang Pendaftaran Awam EMS
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-3">
+          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-3">
             {eventDetail.title}
           </h1>
           {eventDetail.description && (
-            <p className="text-slate-400 text-sm max-w-2xl mx-auto line-clamp-2 mb-4">
+            <p className="text-slate-600 dark:text-slate-400 text-sm max-w-2xl mx-auto line-clamp-2 mb-4">
               {eventDetail.description}
             </p>
           )}
 
-          <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-medium text-slate-300">
+          <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-medium text-slate-700 dark:text-slate-300">
             {eventDetail.event_date && (
-              <div className="flex items-center gap-1.5 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/50">
-                <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+              <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700/50">
+                <Calendar className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                 <span>{new Date(eventDetail.event_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
               </div>
             )}
             {eventDetail.location && (
-              <div className="flex items-center gap-1.5 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/50">
-                <MapPin className="w-3.5 h-3.5 text-purple-400" />
+              <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700/50">
+                <MapPin className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                 <span>{eventDetail.location}</span>
               </div>
             )}
             {eventDetail.category && (
-              <div className="flex items-center gap-1.5 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/50">
-                <Tag className="w-3.5 h-3.5 text-emerald-400" />
+              <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700/50">
+                <Tag className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>{eventDetail.category}</span>
               </div>
             )}
@@ -601,11 +616,11 @@ export function EmsPublicRegisterPage() {
               <div
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border ${
                   isQuotaFull
-                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 font-bold'
-                    : 'bg-slate-800/80 text-slate-300 border-slate-700/50'
+                    ? 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30 font-bold'
+                    : 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700/50'
                 }`}
               >
-                <Users className="w-3.5 h-3.5 text-indigo-400" />
+                <Users className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                 <span>
                   Peserta: {totalParticipants} / {maxParticipants}
                 </span>
@@ -624,7 +639,7 @@ export function EmsPublicRegisterPage() {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 -mt-6 relative z-10">
         {/* Step Indicator (Hide on step 4 completion) */}
         {currentStep < 4 && (
-          <div className="bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-4 mb-6 shadow-xl">
+          <div className="bg-white dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 mb-6 shadow-xl transition-colors">
             <div className="flex items-center justify-between">
               {[
                 { step: 1, label: 'Kategori & Info' },
@@ -636,10 +651,10 @@ export function EmsPublicRegisterPage() {
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
                         currentStep === item.step
-                          ? 'bg-indigo-600 text-white ring-4 ring-indigo-500/20'
+                          ? 'bg-purple-600 text-white ring-4 ring-purple-500/20'
                           : currentStep > item.step
-                          ? 'bg-emerald-500 text-slate-950 font-black'
-                          : 'bg-slate-800 text-slate-500'
+                          ? 'bg-emerald-500 text-white font-black'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
                       }`}
                     >
                       {currentStep > item.step ? <Check className="w-4 h-4 stroke-[3]" /> : item.step}
@@ -647,10 +662,10 @@ export function EmsPublicRegisterPage() {
                     <span
                       className={`text-xs font-semibold hidden sm:inline ${
                         currentStep === item.step
-                          ? 'text-white'
+                          ? 'text-slate-900 dark:text-white'
                           : currentStep > item.step
-                          ? 'text-emerald-400'
-                          : 'text-slate-500'
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-slate-400 dark:text-slate-500'
                       }`}
                     >
                       {item.label}
@@ -659,7 +674,7 @@ export function EmsPublicRegisterPage() {
                   {idx < 2 && (
                     <div
                       className={`flex-1 h-0.5 mx-3 transition-colors ${
-                        currentStep > item.step ? 'bg-emerald-500' : 'bg-slate-800'
+                        currentStep > item.step ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-800'
                       }`}
                     />
                   )}
@@ -670,7 +685,7 @@ export function EmsPublicRegisterPage() {
         )}
 
         {/* Wizard Form Card */}
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+        <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl transition-colors text-slate-900 dark:text-white">
           {/* Quota Full Alert Banner */}
           {isQuotaFull && (
             <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-start gap-3 text-xs">
@@ -693,23 +708,23 @@ export function EmsPublicRegisterPage() {
           {currentStep === 1 && (
             <div className="space-y-6 animate-fadeIn">
               <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <User className="w-5 h-5 text-indigo-400" /> Step 1: Kategori & Maklumat Asas
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <User className="w-5 h-5 text-purple-600 dark:text-purple-400" /> Step 1: Kategori & Maklumat Asas
                 </h2>
-                <p className="text-slate-400 text-xs mt-1">Pilih kategori penyertaan anda dan lengkapkan butiran peribadi.</p>
+                <p className="text-slate-600 dark:text-slate-400 text-xs mt-1">Pilih kategori penyertaan anda dan lengkapkan butiran peribadi.</p>
               </div>
 
               {/* Participant Category Toggle */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">Kategori Peserta</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">Kategori Peserta</label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setParticipantCategory('STUDENT')}
                     className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl border text-sm font-semibold transition ${
                       participantCategory === 'STUDENT'
-                        ? 'bg-indigo-600/20 border-indigo-500 text-indigo-300 ring-2 ring-indigo-500/30'
-                        : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:bg-slate-800'
+                        ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 text-purple-700 dark:text-purple-300 ring-2 ring-purple-500/30'
+                        : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
                     <Building2 className="w-4 h-4" /> Pelajar POLISAS
@@ -719,8 +734,8 @@ export function EmsPublicRegisterPage() {
                     onClick={() => setParticipantCategory('PUBLIC')}
                     className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl border text-sm font-semibold transition ${
                       participantCategory === 'PUBLIC'
-                        ? 'bg-indigo-600/20 border-indigo-500 text-indigo-300 ring-2 ring-indigo-500/30'
-                        : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:bg-slate-800'
+                        ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 text-purple-700 dark:text-purple-300 ring-2 ring-purple-500/30'
+                        : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
                     <Users className="w-4 h-4" /> Orang Luar / Awam
@@ -732,36 +747,36 @@ export function EmsPublicRegisterPage() {
               {participantCategory === 'STUDENT' && (
                 <div className="space-y-4 pt-2">
                   {isAuthenticated ? (
-                    <div className="bg-indigo-950/40 border border-indigo-500/30 rounded-2xl p-4 flex items-center justify-between">
+                    <div className="bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-500/30 rounded-2xl p-4 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-indigo-600/20 border border-indigo-400/30 flex items-center justify-center text-indigo-400">
+                        <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-600/20 border border-purple-300 dark:border-purple-400/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
                           <ShieldCheck className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-xs text-indigo-300 font-semibold">Log Masuk Sebagai:</p>
-                          <p className="text-sm font-bold text-white">{profile?.full_name || user?.email}</p>
+                          <p className="text-xs text-purple-700 dark:text-purple-300 font-semibold">Log Masuk Sebagai:</p>
+                          <p className="text-sm font-bold text-slate-900 dark:text-white">{profile?.full_name || user?.email}</p>
                           {(profile?.matrix_no || profile?.matric_no) && (
-                            <p className="text-xs text-slate-400">No. Matrik: <span className="font-mono text-indigo-300">{profile.matrix_no || profile.matric_no}</span></p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">No. Matrik: <span className="font-mono text-purple-700 dark:text-purple-300 font-bold">{profile.matrix_no || profile.matric_no}</span></p>
                           )}
                         </div>
                       </div>
-                      <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">
+                      <span className="text-[10px] bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">
                         Autofilled
                       </span>
                     </div>
                   ) : (
-                    <div className="bg-slate-800/40 border border-slate-700/60 rounded-2xl p-4 space-y-3">
+                    <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-4 space-y-3">
                       <div className="flex items-center justify-between">
-                        <p className="text-xs text-slate-300 font-semibold">Adakah anda mempunyai akaun sistem?</p>
+                        <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold">Adakah anda mempunyai akaun sistem?</p>
                         <button
                           type="button"
                           onClick={handleGoogleLogin}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white text-slate-900 hover:bg-slate-100 font-semibold text-xs transition shadow-sm"
+                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-slate-200 dark:border-transparent text-slate-900 hover:bg-slate-100 font-semibold text-xs transition shadow-sm"
                         >
-                          <LogIn className="w-3.5 h-3.5 text-indigo-600" /> Log Masuk Google
+                          <LogIn className="w-3.5 h-3.5 text-purple-600" /> Log Masuk Google
                         </button>
                       </div>
-                      <p className="text-[11px] text-slate-400">Atau anda boleh memasukkan No. Matrik secara manual di bawah:</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Atau anda boleh memasukkan No. Matrik secara manual di bawah:</p>
                     </div>
                   )}
                 </div>
@@ -769,16 +784,16 @@ export function EmsPublicRegisterPage() {
 
               {/* Entity Mode Toggle (if event supports TEAM or TEAM_BOOTH) */}
               {(eventDetail.event_mode === 'TEAM_BOOTH' || eventDetail.event_mode === 'TEAM') && (
-                <div className="space-y-2 pt-2 border-t border-slate-800">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">Mod Pendaftaran</label>
+                <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">Mod Pendaftaran</label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setEntityMode('INDIVIDUAL')}
                       className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border text-xs font-semibold transition ${
                         entityMode === 'INDIVIDUAL'
-                          ? 'bg-purple-600/20 border-purple-500 text-purple-300 ring-2 ring-purple-500/30'
-                          : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:bg-slate-800'
+                          ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 text-purple-700 dark:text-purple-300 ring-2 ring-purple-500/30'
+                          : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                     >
                       <User className="w-4 h-4" /> Pendaftaran Individu
@@ -788,8 +803,8 @@ export function EmsPublicRegisterPage() {
                       onClick={() => setEntityMode('TEAM')}
                       className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border text-xs font-semibold transition ${
                         entityMode === 'TEAM'
-                          ? 'bg-purple-600/20 border-purple-500 text-purple-300 ring-2 ring-purple-500/30'
-                          : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:bg-slate-800'
+                          ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 text-purple-700 dark:text-purple-300 ring-2 ring-purple-500/30'
+                          : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                     >
                       <Users className="w-4 h-4" /> Pendaftaran Pasukan / Gerai
@@ -801,82 +816,82 @@ export function EmsPublicRegisterPage() {
               {/* Leader / Basic Fields */}
               <div className="space-y-4 pt-2">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Nama Penuh {entityMode === 'TEAM' ? 'Ketua Pasukan' : 'Peserta'} <span className="text-rose-400">*</span>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Nama Penuh {entityMode === 'TEAM' ? 'Ketua Pasukan' : 'Peserta'} <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={leaderName}
                     onChange={(e) => setLeaderName(e.target.value)}
                     placeholder="Contoh: Muhammad Ali bin Ahmad"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-purple-500 transition"
                   />
                 </div>
 
                 {participantCategory === 'STUDENT' && (
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">
-                      Nombor Matrik POLISAS <span className="text-rose-400">*</span>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Nombor Matrik POLISAS <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={matrixNo}
                       onChange={(e) => setMatrixNo(e.target.value)}
                       placeholder="Contoh: 03DPR22F1001"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white font-mono uppercase focus:outline-none focus:border-indigo-500 transition"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white font-mono uppercase placeholder:text-slate-400 focus:outline-none focus:border-purple-500 transition"
                     />
                   </div>
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">
-                      Alamat Emel <span className="text-rose-400">*</span>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Alamat Emel <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="nama@email.com"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-purple-500 transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">
-                      Nombor Telefon / WhatsApp <span className="text-rose-400">*</span>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Nombor Telefon / WhatsApp <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="0123456789"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-purple-500 transition"
                     />
                   </div>
                 </div>
 
                 {/* Team / Booth Fields */}
                 {entityMode === 'TEAM' && (
-                  <div className="space-y-4 pt-4 border-t border-slate-800 animate-fadeIn">
-                    <h3 className="text-sm font-bold text-purple-300 flex items-center gap-2">
+                  <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800 animate-fadeIn">
+                    <h3 className="text-sm font-bold text-purple-600 dark:text-purple-300 flex items-center gap-2">
                       <Users className="w-4 h-4" /> Maklumat Pasukan & Gerai
                     </h3>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-semibold text-slate-300 mb-1">
-                          Nama Pasukan / Projek / Gerai <span className="text-rose-400">*</span>
+                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                          Nama Pasukan / Projek / Gerai <span className="text-rose-500">*</span>
                         </label>
                         <input
                           type="text"
                           value={teamName}
                           onChange={(e) => setTeamName(e.target.value)}
                           placeholder="Contoh: EcoTech Innovators"
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 transition"
+                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-purple-500 transition"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-slate-300 mb-1">
+                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                           Nombor Booth (Jika Ada)
                         </label>
                         <input
@@ -884,13 +899,13 @@ export function EmsPublicRegisterPage() {
                           value={boothNo}
                           onChange={(e) => setBoothNo(e.target.value)}
                           placeholder="Contoh: B-12"
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white uppercase focus:outline-none focus:border-purple-500 transition"
+                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white uppercase placeholder:text-slate-400 focus:outline-none focus:border-purple-500 transition"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                         Kategori Produk / Inovasi
                       </label>
                       <input
@@ -898,7 +913,7 @@ export function EmsPublicRegisterPage() {
                         value={categoryName}
                         onChange={(e) => setCategoryName(e.target.value)}
                         placeholder="Contoh: Inovasi Kejuruteraan / Teknologi Maklumat"
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 transition"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-purple-500 transition"
                       />
                     </div>
 
@@ -906,31 +921,31 @@ export function EmsPublicRegisterPage() {
                     <div className="space-y-4 pt-2">
                       <div className="flex items-center justify-between">
                         <div>
-                          <label className="text-xs font-semibold text-slate-300">Senarai Ahli Pasukan</label>
-                          <p className="text-[11px] text-slate-400">
+                          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Senarai Ahli Pasukan</label>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
                             Cari pelajar POLISAS untuk mengisi nama & no. matrik secara automatik.
                           </p>
                         </div>
                         <button
                           type="button"
                           onClick={handleAddMember}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-xs font-semibold border border-purple-500/30 transition"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 text-xs font-semibold border border-purple-200 dark:border-purple-500/30 transition"
                         >
                           <Plus className="w-3.5 h-3.5" /> Tambah Ahli
                         </button>
                       </div>
 
                       {membersList.map((member, idx) => (
-                        <div key={idx} className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-3">
+                        <div key={idx} className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/20">
+                            <span className="text-xs font-bold text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-200 dark:border-purple-500/20">
                               Ahli Pasukan #{idx + 1}
                             </span>
                             {membersList.length > 1 && (
                               <button
                                 type="button"
                                 onClick={() => handleRemoveMember(idx)}
-                                className="text-slate-500 hover:text-rose-400 p-1 transition"
+                                className="text-slate-400 hover:text-rose-500 p-1 transition"
                                 title="Padam Ahli"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -940,7 +955,7 @@ export function EmsPublicRegisterPage() {
 
                           {/* Student Combobox */}
                           <div>
-                            <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                            <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">
                               Cari & Pilih Pelajar POLISAS:
                             </label>
                             <StudentSearchCombobox
@@ -953,23 +968,23 @@ export function EmsPublicRegisterPage() {
                           {/* Manual adjustment fields */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                              <label className="block text-[11px] font-medium text-slate-400 mb-1">Nama Ahli</label>
+                              <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">Nama Ahli</label>
                               <input
                                 type="text"
                                 value={member.name}
                                 onChange={(e) => handleMemberChange(idx, 'name', e.target.value)}
                                 placeholder="Nama Penuh Ahli"
-                                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-purple-500"
                               />
                             </div>
                             <div>
-                              <label className="block text-[11px] font-medium text-slate-400 mb-1">No. Matrik / IC</label>
+                              <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">No. Matrik / IC</label>
                               <input
                                 type="text"
                                 value={member.matrix_no_or_ic}
                                 onChange={(e) => handleMemberChange(idx, 'matrix_no_or_ic', e.target.value)}
                                 placeholder="No. Matrik / IC"
-                                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono uppercase focus:outline-none focus:border-purple-500"
+                                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-mono uppercase placeholder:text-slate-400 focus:outline-none focus:border-purple-500"
                               />
                             </div>
                           </div>
@@ -981,20 +996,20 @@ export function EmsPublicRegisterPage() {
               </div>
 
               {/* Next Button */}
-              <div className="pt-6 border-t border-slate-800 flex justify-end">
+              <div className="pt-6 border-t border-slate-200 dark:border-slate-800 flex justify-end">
                 <button
                   type="button"
                   onClick={handleNextStep}
                   disabled={isQuotaFull}
                   className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition shadow-lg ${
                     isQuotaFull
-                      ? 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed shadow-none'
-                      : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20'
+                      ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-300 dark:border-slate-700/50 cursor-not-allowed shadow-none'
+                      : 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-600/30'
                   }`}
                 >
                   {isQuotaFull ? (
                     <>
-                      <AlertCircle className="w-4 h-4 text-rose-400" /> Pendaftaran Penuh
+                      <AlertCircle className="w-4 h-4 text-rose-500" /> Pendaftaran Penuh
                     </>
                   ) : (
                     <>
@@ -1010,10 +1025,10 @@ export function EmsPublicRegisterPage() {
           {currentStep === 2 && (
             <div className="space-y-6 animate-fadeIn">
               <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-indigo-400" /> Step 2: Maklumat Tambahan Acara
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" /> Step 2: Maklumat Tambahan Acara
                 </h2>
-                <p className="text-slate-400 text-xs mt-1">Sila isi borang soalan khas yang ditetapkan oleh penganjur.</p>
+                <p className="text-slate-600 dark:text-slate-400 text-xs mt-1">Sila isi borang soalan khas yang ditetapkan oleh penganjur.</p>
               </div>
 
               {(() => {
@@ -1036,10 +1051,10 @@ export function EmsPublicRegisterPage() {
 
                 if (fieldsToRender.length === 0) {
                   return (
-                    <div className="bg-slate-950 border border-slate-800 rounded-2xl p-8 text-center space-y-2">
-                      <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto opacity-80" />
-                      <p className="text-sm font-semibold text-slate-200">Tiada Borang Tambahan Diperlukan</p>
-                      <p className="text-xs text-slate-400">
+                    <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 text-center space-y-2">
+                      <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto opacity-80" />
+                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Tiada Borang Tambahan Diperlukan</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         Penganjur tidak menetapkan sebarang medan dinamik bagi acara ini. Sila terus ke langkah seterusnya.
                       </p>
                     </div>
@@ -1053,9 +1068,9 @@ export function EmsPublicRegisterPage() {
                       const options = parseOptions(field.options);
 
                       return (
-                        <div key={field.id} className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 space-y-2">
-                          <label className="block text-xs font-semibold text-slate-200">
-                            {field.field_label} {field.is_required && <span className="text-rose-400">*</span>}
+                        <div key={field.id} className="bg-slate-50/50 dark:bg-slate-950/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
+                          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200">
+                            {field.field_label} {field.is_required && <span className="text-rose-500">*</span>}
                           </label>
 
                           {field.field_type === 'textarea' ? (
@@ -1064,13 +1079,13 @@ export function EmsPublicRegisterPage() {
                               value={customResponses[fieldKey] || ''}
                               onChange={(e) => setCustomResponses({ ...customResponses, [fieldKey]: e.target.value })}
                               placeholder="Jawapan anda..."
-                              className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition"
+                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-purple-500 transition"
                             />
                           ) : field.field_type === 'select' ? (
                             <select
                               value={customResponses[fieldKey] || ''}
                               onChange={(e) => setCustomResponses({ ...customResponses, [fieldKey]: e.target.value })}
-                              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition"
+                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 transition"
                             >
                               <option value="">-- Pilih Opsi --</option>
                               {options.map((opt, i) => (
@@ -1086,16 +1101,16 @@ export function EmsPublicRegisterPage() {
                                 id={`check_${field.id}`}
                                 checked={!!customResponses[fieldKey]}
                                 onChange={(e) => setCustomResponses({ ...customResponses, [fieldKey]: e.target.checked })}
-                                className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-indigo-500"
+                                className="w-4 h-4 rounded bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-purple-600 focus:ring-purple-500"
                               />
-                              <label htmlFor={`check_${field.id}`} className="text-xs text-slate-300 font-medium">
+                              <label htmlFor={`check_${field.id}`} className="text-xs text-slate-700 dark:text-slate-300 font-medium">
                                 Ya, saya bersetuju / mengesahkan
                               </label>
                             </div>
                           ) : field.field_type === 'image_upload' ? (
                             <div className="space-y-3 pt-1">
                               {customResponses[fieldKey] ? (
-                                <div className="relative group rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 max-w-sm aspect-video flex items-center justify-center">
+                                <div className="relative group rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 max-w-sm aspect-video flex items-center justify-center">
                                   <img
                                     src={customResponses[fieldKey]}
                                     alt={field.field_label}
@@ -1115,7 +1130,7 @@ export function EmsPublicRegisterPage() {
                                   </button>
                                 </div>
                               ) : (
-                                <div className="border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 text-center transition bg-slate-900/40">
+                                <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-purple-500 rounded-2xl p-5 text-center transition bg-slate-50/50 dark:bg-slate-900/40">
                                   <input
                                     type="file"
                                     id={`file_input_${field.id}`}
@@ -1133,18 +1148,18 @@ export function EmsPublicRegisterPage() {
                                     htmlFor={`file_input_${field.id}`}
                                     className="cursor-pointer flex flex-col items-center justify-center space-y-2"
                                   >
-                                    <div className="w-10 h-10 rounded-full bg-indigo-600/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                                    <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-600/10 border border-purple-200 dark:border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
                                       {uploadingFields[field.id] ? (
-                                        <RefreshCw className="w-5 h-5 animate-spin text-indigo-400" />
+                                        <RefreshCw className="w-5 h-5 animate-spin text-purple-600 dark:text-purple-400" />
                                       ) : (
                                         <ImageIcon className="w-5 h-5" />
                                       )}
                                     </div>
                                     <div>
-                                      <p className="text-xs font-bold text-white">
+                                      <p className="text-xs font-bold text-slate-900 dark:text-white">
                                         {uploadingFields[field.id] ? 'Memuat naik gambar...' : 'Pilih / Muat Naik Gambar'}
                                       </p>
-                                      <p className="text-[10px] text-slate-400 mt-0.5">Format disokong: JPG, PNG, WEBP</p>
+                                      <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Format disokong: JPG, PNG, WEBP</p>
                                     </div>
                                   </label>
                                 </div>
@@ -1153,20 +1168,20 @@ export function EmsPublicRegisterPage() {
                           ) : field.field_type === 'document_upload' ? (
                             <div className="space-y-3 pt-1">
                               {customResponses[fieldKey] ? (
-                                <div className="flex items-center justify-between p-4 bg-slate-900 border border-slate-800 rounded-2xl">
+                                <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
                                   <div className="flex items-center gap-3 min-w-0">
-                                    <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 shrink-0">
+                                    <div className="p-2.5 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 shrink-0">
                                       <FileText className="w-5 h-5" />
                                     </div>
                                     <div className="min-w-0">
-                                      <p className="text-xs font-bold text-white truncate max-w-xs sm:max-w-md">
+                                      <p className="text-xs font-bold text-slate-900 dark:text-white truncate max-w-xs sm:max-w-md">
                                         {customResponses[fieldKey].split('/').pop() || 'Dokumen'}
                                       </p>
                                       <a
                                         href={customResponses[fieldKey]}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-[11px] text-indigo-400 hover:text-indigo-300 underline font-medium"
+                                        className="text-[11px] text-purple-600 dark:text-purple-400 hover:underline font-medium"
                                       >
                                         Lihat Dokumen
                                       </a>
@@ -1179,14 +1194,14 @@ export function EmsPublicRegisterPage() {
                                       delete updated[fieldKey];
                                       setCustomResponses(updated);
                                     }}
-                                    className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition"
+                                    className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 transition"
                                     title="Padam Dokumen"
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
                                 </div>
                               ) : (
-                                <div className="border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 text-center transition bg-slate-900/40">
+                                <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-purple-500 rounded-2xl p-5 text-center transition bg-slate-50/50 dark:bg-slate-900/40">
                                   <input
                                     type="file"
                                     id={`file_input_${field.id}`}
@@ -1204,18 +1219,18 @@ export function EmsPublicRegisterPage() {
                                     htmlFor={`file_input_${field.id}`}
                                     className="cursor-pointer flex flex-col items-center justify-center space-y-2"
                                   >
-                                    <div className="w-10 h-10 rounded-full bg-purple-600/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                                    <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-600/10 border border-purple-200 dark:border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
                                       {uploadingFields[field.id] ? (
-                                        <RefreshCw className="w-5 h-5 animate-spin text-purple-400" />
+                                        <RefreshCw className="w-5 h-5 animate-spin text-purple-600 dark:text-purple-400" />
                                       ) : (
                                         <Upload className="w-5 h-5" />
                                       )}
                                     </div>
                                     <div>
-                                      <p className="text-xs font-bold text-white">
+                                      <p className="text-xs font-bold text-slate-900 dark:text-white">
                                         {uploadingFields[field.id] ? 'Memuat naik dokumen...' : 'Pilih / Muat Naik Dokumen'}
                                       </p>
-                                      <p className="text-[10px] text-slate-400 mt-0.5">Format disokong: PDF, DOC, DOCX</p>
+                                      <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Format disokong: PDF, DOC, DOCX</p>
                                     </div>
                                   </label>
                                 </div>
@@ -1227,7 +1242,7 @@ export function EmsPublicRegisterPage() {
                               value={customResponses[fieldKey] || ''}
                               onChange={(e) => setCustomResponses({ ...customResponses, [fieldKey]: e.target.value })}
                               placeholder="Masukkan jawapan anda"
-                              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition"
+                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-purple-500 transition"
                             />
                           )}
                         </div>
@@ -1238,18 +1253,18 @@ export function EmsPublicRegisterPage() {
               })()}
 
               {/* Navigation Buttons */}
-              <div className="pt-6 border-t border-slate-800 flex items-center justify-between">
+              <div className="pt-6 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
                 <button
                   type="button"
                   onClick={handlePrevStep}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm transition"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm transition border border-slate-200 dark:border-transparent"
                 >
                   <ArrowLeft className="w-4 h-4" /> Kembali
                 </button>
                 <button
                   type="button"
                   onClick={handleNextStep}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition shadow-lg shadow-indigo-600/20"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition shadow-lg shadow-purple-600/30"
                 >
                   Seterusnya <ArrowRight className="w-4 h-4" />
                 </button>
@@ -1261,14 +1276,14 @@ export function EmsPublicRegisterPage() {
           {currentStep === 3 && (
             <div className="space-y-6 animate-fadeIn">
               <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <ImageIcon className="w-5 h-5 text-indigo-400" /> Step 3: Muat Naik Media & Gambar
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <ImageIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" /> Step 3: Muat Naik Media & Gambar
                 </h2>
-                <p className="text-slate-400 text-xs mt-1">Muat naik gambar Booth, Poster, Gambar Produk, atau Dokumen berkaitan (jika ada).</p>
+                <p className="text-slate-600 dark:text-slate-400 text-xs mt-1">Muat naik gambar Booth, Poster, Gambar Produk, atau Dokumen berkaitan (jika ada).</p>
               </div>
 
               {/* Upload Box */}
-              <div className="border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 text-center transition bg-slate-950/40">
+              <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-purple-500 rounded-2xl p-6 text-center transition bg-slate-50/50 dark:bg-slate-950/40">
                 <input
                   type="file"
                   id="media_file_input"
@@ -1282,11 +1297,11 @@ export function EmsPublicRegisterPage() {
                   htmlFor="media_file_input"
                   className="cursor-pointer flex flex-col items-center justify-center space-y-2"
                 >
-                  <div className="w-12 h-12 rounded-full bg-indigo-600/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                  <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-600/10 border border-purple-200 dark:border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
                     <Upload className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-white">Klik untuk memilih fail</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">Klik untuk memilih fail</p>
                     <p className="text-xs text-slate-500 mt-0.5">Menyokong format imej (PNG, JPG, WEBP) & PDF (Maks 10MB)</p>
                   </div>
                 </label>
@@ -1295,15 +1310,15 @@ export function EmsPublicRegisterPage() {
               {/* Uploaded items grid */}
               {mediaUrls.length > 0 && (
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Fail Diumuat Naik ({mediaUrls.length})</label>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400">Fail Diumuat Naik ({mediaUrls.length})</label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {mediaUrls.map((url, idx) => (
-                      <div key={idx} className="relative group rounded-xl overflow-hidden border border-slate-800 bg-slate-950 aspect-video flex items-center justify-center">
+                      <div key={idx} className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 aspect-video flex items-center justify-center shadow-sm">
                         {url.match(/\.(jpeg|jpg|gif|png|webp)/i) ? (
                           <img src={url} alt={`Media ${idx + 1}`} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="flex flex-col items-center gap-1 text-slate-400">
-                            <FileText className="w-6 h-6 text-indigo-400" />
+                          <div className="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400">
+                            <FileText className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                             <span className="text-[10px] font-mono truncate max-w-[90%]">Dokumen #{idx + 1}</span>
                           </div>
                         )}
@@ -1321,11 +1336,11 @@ export function EmsPublicRegisterPage() {
               )}
 
               {/* Navigation & Submit Buttons */}
-              <div className="pt-6 border-t border-slate-800 flex items-center justify-between">
+              <div className="pt-6 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
                 <button
                   type="button"
                   onClick={handlePrevStep}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm transition"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm transition border border-slate-200 dark:border-transparent"
                   disabled={submitting}
                 >
                   <ArrowLeft className="w-4 h-4" /> Kembali
@@ -1336,8 +1351,8 @@ export function EmsPublicRegisterPage() {
                   disabled={submitting || uploadingMedia || isQuotaFull}
                   className={`inline-flex items-center gap-2 px-8 py-3 rounded-xl font-extrabold text-sm transition shadow-lg ${
                     isQuotaFull
-                      ? 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed shadow-none'
-                      : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 shadow-emerald-500/20'
+                      ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-300 dark:border-slate-700/50 cursor-not-allowed shadow-none'
+                      : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-purple-600/30'
                   }`}
                 >
                   {submitting ? (
@@ -1346,7 +1361,7 @@ export function EmsPublicRegisterPage() {
                     </>
                   ) : isQuotaFull ? (
                     <>
-                      <AlertCircle className="w-4 h-4 text-rose-400" /> Pendaftaran Penuh
+                      <AlertCircle className="w-4 h-4 text-rose-500" /> Pendaftaran Penuh
                     </>
                   ) : (
                     <>
@@ -1361,33 +1376,33 @@ export function EmsPublicRegisterPage() {
           {/* STEP 4: DIGITAL EVENT PASS */}
           {currentStep === 4 && registeredParticipant && (
             <div className="space-y-6 text-center animate-fadeIn">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 mb-2">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-500 mb-2">
                 <CheckCircle2 className="w-10 h-10 stroke-[2.5]" />
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white">Pendaftaran Berjaya!</h2>
-              <p className="text-slate-400 text-xs sm:text-sm max-w-md mx-auto">
-                Tahniah, pendaftaran anda untuk acara <span className="text-white font-semibold">{eventDetail.title}</span> telah direkodkan. Sila simpan atau cetak Pass Acara anda di bawah.
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Pendaftaran Berjaya!</h2>
+              <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm max-w-md mx-auto">
+                Tahniah, pendaftaran anda untuk acara <span className="text-slate-900 dark:text-white font-semibold">{eventDetail.title}</span> telah direkodkan. Sila simpan atau cetak Pass Acara anda di bawah.
               </p>
 
               {/* Digital Event Pass Card */}
               <div
                 id="digital-pass-card"
-                className="bg-gradient-to-b from-slate-900 to-slate-950 border border-indigo-500/30 rounded-3xl p-6 sm:p-8 text-left shadow-2xl relative overflow-hidden my-6"
+                className="bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-950 border border-slate-200 dark:border-purple-500/30 rounded-3xl p-6 sm:p-8 text-left shadow-2xl relative overflow-hidden my-6 transition-colors"
               >
                 {/* Decorative glow */}
-                <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                   {/* Left Pass Details */}
                   <div className="flex-1 space-y-4">
-                    <div className="border-b border-slate-800 pb-3">
-                      <div className="inline-block px-2.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono text-[10px] font-bold tracking-wider uppercase mb-1">
+                    <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
+                      <div className="inline-block px-2.5 py-0.5 rounded bg-purple-50 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 font-mono text-[10px] font-bold tracking-wider uppercase mb-1">
                         PASS MASUK RASMI EMS
                       </div>
-                      <h3 className="text-xl font-black text-white">{eventDetail.title}</h3>
-                      <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                      <h3 className="text-xl font-black text-slate-900 dark:text-white">{eventDetail.title}</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                         {eventDetail.event_date ? new Date(eventDetail.event_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Tarikh Acara'}
                         {eventDetail.location && ` • ${eventDetail.location}`}
                       </p>
@@ -1395,38 +1410,38 @@ export function EmsPublicRegisterPage() {
 
                     <div className="grid grid-cols-2 gap-4 text-xs">
                       <div>
-                        <span className="text-slate-500 uppercase tracking-wider text-[10px] font-bold block">Peserta / Ketua</span>
-                        <span className="text-white font-bold text-sm block truncate">{registeredParticipant.leader_name}</span>
+                        <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] font-bold block">Peserta / Ketua</span>
+                        <span className="text-slate-900 dark:text-white font-bold text-sm block truncate">{registeredParticipant.leader_name}</span>
                         {registeredParticipant.matrix_no && (
-                          <span className="text-indigo-400 font-mono text-xs block">{registeredParticipant.matrix_no}</span>
+                          <span className="text-purple-600 dark:text-purple-400 font-mono text-xs block">{registeredParticipant.matrix_no}</span>
                         )}
                       </div>
 
                       {registeredParticipant.team_name && (
                         <div>
-                          <span className="text-slate-500 uppercase tracking-wider text-[10px] font-bold block">Nama Pasukan</span>
-                          <span className="text-purple-300 font-bold text-sm block truncate">{registeredParticipant.team_name}</span>
+                          <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] font-bold block">Nama Pasukan</span>
+                          <span className="text-purple-700 dark:text-purple-300 font-bold text-sm block truncate">{registeredParticipant.team_name}</span>
                         </div>
                       )}
 
                       {registeredParticipant.booth_no && (
                         <div>
-                          <span className="text-slate-500 uppercase tracking-wider text-[10px] font-bold block">No. Booth</span>
-                          <span className="text-emerald-400 font-bold text-sm block font-mono">{registeredParticipant.booth_no}</span>
+                          <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] font-bold block">No. Booth</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm block font-mono">{registeredParticipant.booth_no}</span>
                         </div>
                       )}
 
                       <div>
-                        <span className="text-slate-500 uppercase tracking-wider text-[10px] font-bold block">Kategori</span>
-                        <span className="text-slate-300 font-medium block">
+                        <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] font-bold block">Kategori</span>
+                        <span className="text-slate-700 dark:text-slate-300 font-medium block">
                           {registeredParticipant.participant_type === 'STUDENT' ? 'Pelajar POLISAS' : 'Awam / Luar'}
                         </span>
                       </div>
                     </div>
 
                     <div className="pt-2">
-                      <span className="text-slate-500 uppercase tracking-wider text-[10px] font-bold block">ID Pendaftaran Pass</span>
-                      <span className="font-mono text-xs text-indigo-300 bg-indigo-950/60 px-2.5 py-1 rounded border border-indigo-500/30 inline-block mt-0.5">
+                      <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] font-bold block">ID Pendaftaran Pass</span>
+                      <span className="font-mono text-xs text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-2.5 py-1 rounded border border-purple-200 dark:border-purple-500/30 inline-block mt-0.5">
                         {registeredParticipant.id}
                       </span>
                     </div>
@@ -1452,14 +1467,14 @@ export function EmsPublicRegisterPage() {
                 registeredParticipant.entity_mode === 'TEAM' ||
                 teamMemberStatuses.length > 0 ||
                 (membersList && membersList.some((m) => m.name.trim() !== ''))) && (
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-left shadow-xl space-y-5 my-6 no-print">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 text-left shadow-xl space-y-5 my-6 no-print transition-colors">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
                     <div>
-                      <h3 className="text-base font-bold text-white flex items-center gap-2">
-                        <Users className="w-5 h-5 text-indigo-400" />
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                         Status Pendaftaran Akaun Ahli Kumpulan & Akses E-Keusahawanan
                       </h3>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                         Pengesahan akaun Portal POLISAS bagi ahli pasukan untuk akses penuh Dashboard Perniagaan Siswapreneur & POS Polymart.
                       </p>
                     </div>
@@ -1480,8 +1495,8 @@ export function EmsPublicRegisterPage() {
                   </div>
 
                   {loadingTeamStatuses ? (
-                    <div className="flex items-center justify-center py-6 text-xs text-slate-400 gap-2 font-medium">
-                      <RefreshCw className="w-4 h-4 animate-spin text-indigo-400" />
+                    <div className="flex items-center justify-center py-6 text-xs text-slate-500 dark:text-slate-400 gap-2 font-medium">
+                      <RefreshCw className="w-4 h-4 animate-spin text-purple-600 dark:text-purple-400" />
                       Memeriksa status akaun ahli pasukan...
                     </div>
                   ) : teamMemberStatuses.length > 0 ? (
@@ -1489,28 +1504,28 @@ export function EmsPublicRegisterPage() {
                       {teamMemberStatuses.map((member, idx) => (
                         <div
                           key={idx}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-slate-950/80 rounded-2xl border border-slate-800/80 gap-3"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-950/80 rounded-2xl border border-slate-200 dark:border-slate-800/80 gap-3"
                         >
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-white">{member.name}</span>
+                              <span className="text-xs font-bold text-slate-900 dark:text-white">{member.name}</span>
                             </div>
-                            <span className="text-xs text-slate-400 font-mono block mt-0.5">
+                            <span className="text-xs text-slate-500 dark:text-slate-400 font-mono block mt-0.5">
                               No. Matrik / IC: {member.matrix_no}
                             </span>
                           </div>
 
                           <div>
                             {member.hasAccount ? (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                                 <span>🟢</span>
                                 <span>Akaun POLISAS Aktif</span>
-                                <span className="hidden md:inline text-[11px] font-normal text-emerald-300/80">
+                                <span className="hidden md:inline text-[11px] font-normal text-emerald-600/80 dark:text-emerald-300/80">
                                   (Mempunyai Akses Penuh Dashboard Perniagaan)
                                 </span>
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                                 <span>⚠️</span>
                                 <span>Belum Berdaftar di Portal</span>
                               </span>
@@ -1520,7 +1535,7 @@ export function EmsPublicRegisterPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-slate-400 italic">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 italic">
                       Sila pastikan semua ahli pasukan mendaftar akaun di Portal POLISAS supaya anda boleh memberikan akses penuh Dashboard Perniagaan.
                     </p>
                   )}
@@ -1532,7 +1547,7 @@ export function EmsPublicRegisterPage() {
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition shadow-lg shadow-indigo-600/20"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition shadow-lg shadow-purple-600/20"
                 >
                   <Printer className="w-4 h-4" /> Cetak / Muat Turun Pass
                 </button>
@@ -1549,7 +1564,7 @@ export function EmsPublicRegisterPage() {
                     navigator.clipboard.writeText(registeredParticipant.id);
                     toast.success('ID Pendaftaran disalin!');
                   }}
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm transition"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm transition border border-slate-200 dark:border-transparent"
                 >
                   Salin ID Pass
                 </button>
@@ -1568,7 +1583,7 @@ export function EmsPublicRegisterPage() {
                     setCurrentStep(1);
                     setRegisteredParticipant(null);
                   }}
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-400 font-medium text-sm transition"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-medium text-sm transition"
                 >
                   Daftar Peserta Lain
                 </button>
