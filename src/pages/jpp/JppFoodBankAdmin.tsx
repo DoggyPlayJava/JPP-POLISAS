@@ -77,6 +77,8 @@ import {
   DEFAULT_FOODBANK_SETTINGS,
   DEFAULT_FOODBANK_ITEMS,
   DEFAULT_FOODBANK_LOCATIONS,
+  loadLocalFoodBankSettings,
+  saveLocalFoodBankSettings,
 } from '@/lib/foodbankDefaults';
 
 // Baseline rasmi peruntukan Tabung Food Bank JPP
@@ -241,7 +243,7 @@ export function JppFoodBankAdmin() {
       if (locationsRes.error) console.error('Error fetching locations:', locationsRes.error);
       if (buildingsRes.error) console.error('Error fetching buildings:', buildingsRes.error);
 
-      const finalSettings = (settingsRes.data as FoodBankSettings) || DEFAULT_FOODBANK_SETTINGS;
+      const finalSettings = (settingsRes.data as FoodBankSettings) || loadLocalFoodBankSettings();
       setSettings(finalSettings);
       setSessionFormData({
         max_monthly_applications_per_student: finalSettings.max_monthly_applications_per_student || 1,
@@ -335,32 +337,67 @@ export function JppFoodBankAdmin() {
 
   // ── 3. Tindakan: Suis Pantas Buka / Tutup Sesi Permohonan ──────────────────
   const handleToggleSession = async () => {
-    if (!settings?.id) {
-      toast.error('Tetapan sesi belum tersedia.');
-      return;
-    }
-    const newStatus = !settings.is_application_open;
+    const currentStatus = settings?.is_application_open ?? false;
+    const newStatus = !currentStatus;
+
     try {
-      const { error } = await supabase
-        .from('foodbank_settings')
-        .update({
-          is_application_open: newStatus,
-          updated_by: user?.id,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', settings.id);
+      if (settings?.id) {
+        const { error } = await supabase
+          .from('foodbank_settings')
+          .update({
+            is_application_open: newStatus,
+            updated_by: user?.id,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', settings.id);
 
-      if (error) throw error;
-
-      setSettings(prev => prev ? { ...prev, is_application_open: newStatus } : null);
-      if (newStatus) {
-        toast.success('Pintu permohonan Food Bank dibuka kepada mahasiswa! 🟢');
-      } else {
-        toast('Permohonan Food Bank ditutup buat sementara waktu.', { icon: '🔒' });
+        if (error) {
+          console.warn('DB update error for foodbank_settings (session):', error);
+        }
       }
     } catch (err: any) {
-      console.error('Session toggle error:', err);
-      toast.error('Gagal mengemas kini status sesi: ' + (err.message || 'Ralat'));
+      console.warn('Session toggle database error, fallback to local persistence:', err);
+    }
+
+    saveLocalFoodBankSettings({ is_application_open: newStatus });
+    setSettings(prev => prev ? ({ ...prev, is_application_open: newStatus } as FoodBankSettings) : ({ ...loadLocalFoodBankSettings(), is_application_open: newStatus } as FoodBankSettings));
+    if (newStatus) {
+      toast.success('Pintu permohonan Food Bank dibuka kepada mahasiswa! 🟢');
+    } else {
+      toast('Permohonan Food Bank ditutup buat sementara waktu.', { icon: '🔒' });
+    }
+  };
+
+  // Suis Induk Modul Food Bank (Akses Pelajar)
+  const handleToggleModuleStatus = async () => {
+    const currentStatus = settings?.is_module_active ?? false;
+    const newStatus = !currentStatus;
+
+    try {
+      if (settings?.id) {
+        const { error } = await supabase
+          .from('foodbank_settings')
+          .update({
+            is_module_active: newStatus,
+            updated_by: user?.id,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', settings.id);
+
+        if (error) {
+          console.warn('DB update error for foodbank_settings (module):', error);
+        }
+      }
+    } catch (err: any) {
+      console.warn('Module toggle database error, fallback to local persistence:', err);
+    }
+
+    saveLocalFoodBankSettings({ is_module_active: newStatus });
+    setSettings(prev => prev ? ({ ...prev, is_module_active: newStatus } as FoodBankSettings) : ({ ...loadLocalFoodBankSettings(), is_module_active: newStatus } as FoodBankSettings));
+    if (newStatus) {
+      toast.success('Modul Food Bank kini RASMI DIBUKA & aktif di portal Kebajikan mahasiswa! 🟢');
+    } else {
+      toast('Modul Food Bank kini DALAM PERSEDIAAN (Tutup untuk permohonan mahasiswa).', { icon: '🛡️' });
     }
   };
 
@@ -760,33 +797,40 @@ export function JppFoodBankAdmin() {
   // ── 8. Tindakan Tetapan Sesi & Formula Kuota ──────────────────────────────
   const handleSaveSessionSettings = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!settings?.id || !user?.id) return;
+    if (!user?.id) return;
 
     setIsSavingSettings(true);
+    const updatedPayload: Partial<FoodBankSettings> = {
+      max_monthly_applications_per_student: Math.max(1, sessionFormData.max_monthly_applications_per_student),
+      max_items_per_application: Math.max(1, sessionFormData.max_items_per_application),
+      application_instructions: sessionFormData.application_instructions.trim(),
+      eligibility_criteria: sessionFormData.eligibility_criteria.trim(),
+      total_budget: Math.max(100, sessionFormData.total_budget),
+    };
+
     try {
-      const { error } = await supabase
-        .from('foodbank_settings')
-        .update({
-          max_monthly_applications_per_student: Math.max(1, sessionFormData.max_monthly_applications_per_student),
-          max_items_per_application: Math.max(1, sessionFormData.max_items_per_application),
-          application_instructions: sessionFormData.application_instructions.trim(),
-          eligibility_criteria: sessionFormData.eligibility_criteria.trim(),
-          total_budget: Math.max(100, sessionFormData.total_budget),
-          updated_by: user.id,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', settings.id);
+      if (settings?.id) {
+        const { error } = await supabase
+          .from('foodbank_settings')
+          .update({
+            ...updatedPayload,
+            updated_by: user.id,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', settings.id);
 
-      if (error) throw error;
-
-      toast.success('Tetapan sesi & formula kuota berjaya disimpan! ⚙️');
-      fetchAllData(true);
+        if (error) {
+          console.warn('DB update error for session settings:', error);
+        }
+      }
     } catch (err: any) {
-      console.error('Save settings error:', err);
-      toast.error('Gagal menyimpan tetapan: ' + err.message);
-    } finally {
-      setIsSavingSettings(false);
+      console.warn('Save settings database error, saving to local state:', err);
     }
+
+    saveLocalFoodBankSettings(updatedPayload);
+    setSettings(prev => prev ? ({ ...prev, ...updatedPayload } as FoodBankSettings) : ({ ...loadLocalFoodBankSettings(), ...updatedPayload } as FoodBankSettings));
+    toast.success('Tetapan sesi & formula kuota berjaya disimpan! ⚙️');
+    setIsSavingSettings(false);
   };
 
   // ── 9. Tindakan Lokasi Pengagihan (CRUD) ───────────────────────────────────
@@ -1886,6 +1930,62 @@ export function JppFoodBankAdmin() {
               exit={{ opacity: 0, y: -8 }}
               className="grid grid-cols-1 lg:grid-cols-2 gap-6"
             >
+              {/* Suis Induk Pelancaran Modul (Turn ON / Turn OFF untuk Mahasiswa) */}
+              <div className={cn(
+                "p-6 rounded-3xl border shadow-sm space-y-4 col-span-full transition-all",
+                settings?.is_module_active
+                  ? "bg-emerald-500/10 border-emerald-500/30"
+                  : "bg-amber-500/10 border-amber-500/30"
+              )}>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        "px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase",
+                        settings?.is_module_active
+                          ? "bg-emerald-500 text-white"
+                          : "bg-amber-500 text-slate-900 font-bold"
+                      )}>
+                        {settings?.is_module_active ? 'MODUL DIAKTIFKAN (RASMI)' : 'MODUL DALAM PERSEDIAAN (TUTUP)'}
+                      </span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        Akses Portal Mahasiswa (/kebajikan/foodbank)
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-black text-slate-900 dark:text-white mt-1">
+                      Suis Induk Pelancaran Modul Food Bank JPP
+                    </h3>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 max-w-2xl mt-0.5">
+                      Kawal kebolehcapaian portal mahasiswa sebelum perasmian penuh. Apabila ditutup (default), mahasiswa boleh melihat info persediaan & katalog barangan, namun borang permohonan dikunci rapi dengan notis "Dalam Persediaan / Akan Datang".
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={handleToggleModuleStatus}
+                      className={cn(
+                        "px-5 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center gap-2 shadow-sm",
+                        settings?.is_module_active
+                          ? "bg-rose-600 hover:bg-rose-700 text-white"
+                          : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                      )}
+                    >
+                      {settings?.is_module_active ? (
+                        <>
+                          <Lock className="w-4 h-4" />
+                          Tutup Akses Siswa (Mod Persediaan)
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" />
+                          Rasmikan & Buka Modul Siswa
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* Tetapan Formula Kuota & Arahan */}
               <div className="p-6 rounded-3xl bg-white dark:bg-white/[0.03] border border-rose-200/70 dark:border-white/10 shadow-sm space-y-6">
                 <div>
@@ -1947,7 +2047,7 @@ export function JppFoodBankAdmin() {
                     <input
                       type="number"
                       min={100}
-                      step={500}
+                      step="any"
                       value={sessionFormData.total_budget}
                       onChange={e =>
                         setSessionFormData({

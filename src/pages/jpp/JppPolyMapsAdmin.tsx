@@ -6,14 +6,24 @@ import 'leaflet/dist/leaflet.css';
 import { 
   Map, MapPin, Building2, Plus, Edit2, Trash2, 
   Search, RefreshCw, AlertCircle, Save, X, Navigation, UploadCloud, Image as ImageIcon,
-  Compass, LayoutGrid, List
+  Compass, LayoutGrid, List, Eye, ToggleLeft, ToggleRight
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { logAuditAction } from '@/lib/auditLogger';
-import { getBuilding360Url, getLocation360Url } from '@/lib/polymaps360Data';
+import { 
+  getBuilding360Url, 
+  getLocation360Url,
+  getBuilding360Status,
+  getLocation360Status,
+  toggleBuilding360,
+  toggleLocation360,
+  isBuilding360Active,
+  isLocation360Active
+} from '@/lib/polymaps360Data';
+import { Pannellum360Viewer } from '@/components/polymaps/Pannellum360Viewer';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -307,6 +317,12 @@ export function JppPolyMapsAdmin() {
   
   const [activeReportId, setActiveReportId] = useState<string | null>(null);
   const [isProcessingReport, setIsProcessingReport] = useState<Record<string, boolean>>({});
+
+  // 360 Admin Controls State
+  const [filter360Status, setFilter360Status] = useState<'all' | 'active' | 'available' | 'none'>('all');
+  const [preview360Url, setPreview360Url] = useState<string | null>(null);
+  const [preview360Title, setPreview360Title] = useState<string>('');
+  const [toggleRevision, setToggleRevision] = useState<number>(0);
 
   const rejectReport = async (reportId: string) => {
     if (!window.confirm('Adakah anda pasti mahu menolak laporan ini?')) return;
@@ -758,7 +774,12 @@ export function JppPolyMapsAdmin() {
     const matchSearch = b.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                         b.code.toLowerCase().includes(searchQuery.toLowerCase());
     const matchZone = filterZone === 'all' || b.zone_name === filterZone;
-    return matchSearch && matchZone;
+    const status360 = getBuilding360Status(b);
+    const match360 = filter360Status === 'all' ||
+                     (filter360Status === 'active' && status360 === 'active') ||
+                     (filter360Status === 'available' && status360 === 'available') ||
+                     (filter360Status === 'none' && status360 === 'none');
+    return matchSearch && matchZone && match360;
   });
 
   const filteredLocations = locations.filter(l => {
@@ -766,7 +787,12 @@ export function JppPolyMapsAdmin() {
                         l.search_tags?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                         buildings.find(b => b.id === l.building_id)?.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchBuilding = filterBuilding === 'all' || l.building_id === filterBuilding;
-    return matchSearch && matchBuilding;
+    const status360 = getLocation360Status(l);
+    const match360 = filter360Status === 'all' ||
+                     (filter360Status === 'active' && status360 === 'active') ||
+                     (filter360Status === 'available' && status360 === 'available') ||
+                     (filter360Status === 'none' && status360 === 'none');
+    return matchSearch && matchBuilding && match360;
   });
 
   const uniqueZones = Array.from(new Set(buildings.map(b => b.zone_name).filter(Boolean))) as string[];
@@ -990,6 +1016,54 @@ export function JppPolyMapsAdmin() {
         </div>
       </div>
 
+      {/* 360 View Status Filter Bar */}
+      {(activeTab === 'buildings' || activeTab === 'locations') && (
+        <div className="flex items-center justify-between flex-wrap gap-2.5 p-3 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 shadow-sm">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mr-1">
+              <Compass className="w-3.5 h-3.5 text-sky-500" />
+              Penapis 360°:
+            </span>
+            {[
+              { id: 'all', label: 'Semua Status' },
+              { id: 'active', label: '360° Aktif (Hijau)' },
+              { id: 'available', label: '360° Tersedia (Biru)' },
+              { id: 'none', label: 'Tiada 360' },
+            ].map((pill) => {
+              const isActive = filter360Status === pill.id;
+              return (
+                <button
+                  key={pill.id}
+                  type="button"
+                  onClick={() => setFilter360Status(pill.id as any)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5",
+                    isActive
+                      ? pill.id === 'active'
+                        ? "bg-emerald-600 text-white"
+                        : pill.id === 'available'
+                        ? "bg-blue-600 text-white"
+                        : "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                      : "bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white/70"
+                  )}
+                >
+                  {pill.id === 'active' && <span className="w-2 h-2 rounded-full bg-emerald-400" />}
+                  {pill.id === 'available' && <span className="w-2 h-2 rounded-full bg-blue-400" />}
+                  {pill.id === 'none' && <span className="w-2 h-2 rounded-full bg-slate-400" />}
+                  <span>{pill.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="text-xs font-semibold text-slate-500 dark:text-white/40">
+            {activeTab === 'buildings'
+              ? `${filteredBuildings.length} bangunan dipaparkan`
+              : `${filteredLocations.length} lokasi dipaparkan`}
+          </div>
+        </div>
+      )}
+
       {/* Content */}
       {loading ? (
         <div className="py-20 flex justify-center">
@@ -1003,54 +1077,112 @@ export function JppPolyMapsAdmin() {
             </div>
           ) : (
             filteredBuildings.map(b => {
-              const has360 = Boolean(b.panorama_360_url && b.panorama_360_url.trim() !== '');
+              const status360 = getBuilding360Status(b);
+              const is360Active = status360 === 'active';
+              const has360Panorama = status360 !== 'none';
+              const panoramaUrl = b.panorama_360_url || getBuilding360Url(b);
+
               return (
                 <div 
                   key={b.id} 
                   className={cn(
-                    "rounded-2xl p-5 transition-all group relative overflow-hidden",
-                    has360 
+                    "rounded-2xl p-5 transition-all group relative overflow-hidden flex flex-col justify-between",
+                    status360 === 'active'
                       ? "border-2 border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/25 shadow-md shadow-emerald-500/10" 
+                      : status360 === 'available'
+                      ? "border-2 border-blue-500 bg-blue-50/70 dark:bg-blue-950/25 shadow-md shadow-blue-500/10"
                       : "bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50/80 dark:hover:bg-white/[0.07] shadow-sm"
                   )}
                 >
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <h3 className="font-bold text-slate-900 dark:text-white text-lg">{b.name}</h3>
-                        {has360 ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
-                            <Compass className="w-3.5 h-3.5" /> 360° AKTIF
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-500 bg-slate-100 dark:bg-white/5">
-                            Tiada 3D
-                          </span>
-                        )}
+                  <div>
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <h3 className="font-bold text-slate-900 dark:text-white text-lg">{b.name}</h3>
+                          {status360 === 'active' && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
+                              <Compass className="w-3 h-3" /> 360° AKTIF
+                            </span>
+                          )}
+                          {status360 === 'available' && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500 text-white shadow-sm">
+                              <Compass className="w-3 h-3" /> 360° TERSEDIA (OFF)
+                            </span>
+                          )}
+                          {status360 === 'none' && (
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-400 bg-slate-100 dark:bg-white/5">
+                              Tiada 3D
+                            </span>
+                          )}
+                        </div>
+                        <span className="inline-block px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-600 dark:text-sky-400 text-[10px] font-black uppercase tracking-wider">
+                          {b.code}
+                        </span>
                       </div>
-                      <span className="inline-block px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-600 dark:text-sky-400 text-[10px] font-black uppercase tracking-wider">
-                        {b.code}
-                      </span>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => { setCurrentBuilding(b); setShowBuildingModal(true); }} className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white/70">
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => deleteBuilding(b.id)} className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:bg-rose-500/20 dark:hover:bg-rose-500/40 dark:text-rose-400">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => { setCurrentBuilding(b); setShowBuildingModal(true); }} className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white/70">
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button onClick={() => deleteBuilding(b.id)} className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:bg-rose-500/20 dark:hover:bg-rose-500/40 dark:text-rose-400">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                    
+                    <div className="space-y-2 mt-4 text-xs font-medium text-slate-500 dark:text-white/50">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-3.5 h-3.5" />
+                        {b.center_lat ? `${b.center_lat}, ${b.center_lng}` : 'Tiada Koordinat GPS'}
+                      </div>
+                      {b.description && (
+                        <p className="line-clamp-2 text-slate-500 dark:text-white/40 text-[11px] leading-relaxed">{b.description}</p>
+                      )}
                     </div>
                   </div>
-                  
-                  <div className="space-y-2 mt-4 text-xs font-medium text-slate-500 dark:text-white/50">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-3.5 h-3.5" />
-                      {b.center_lat ? `${b.center_lat}, ${b.center_lng}` : 'Tiada Koordinat GPS'}
+
+                  {/* 360 Admin Controls Footer */}
+                  {has360Panorama && (
+                    <div className="pt-3 border-t border-slate-200/60 dark:border-white/10 flex items-center justify-between gap-2 mt-4">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPreview360Url(panoramaUrl);
+                          setPreview360Title(`Pratonton 360°: ${b.name}`);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-sky-500" />
+                        <span>Pratonton</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextState = toggleBuilding360(b);
+                          setToggleRevision(r => r + 1);
+                          toast.success(nextState ? `360° untuk ${b.name} telah DIAKTIFKAN (Hijau)` : `360° untuk ${b.name} telah DINYAHAKTIFKAN (Biru)`);
+                        }}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm",
+                          is360Active
+                            ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                            : "bg-blue-600 hover:bg-blue-700 text-white"
+                        )}
+                      >
+                        {is360Active ? (
+                          <>
+                            <ToggleRight className="w-4 h-4" />
+                            <span>360° Aktif</span>
+                          </>
+                        ) : (
+                          <>
+                            <ToggleLeft className="w-4 h-4" />
+                            <span>Aktifkan 360°</span>
+                          </>
+                        )}
+                      </button>
                     </div>
-                    {b.description && (
-                      <p className="line-clamp-2 text-slate-500 dark:text-white/40 text-[11px] leading-relaxed">{b.description}</p>
-                    )}
-                  </div>
+                  )}
                 </div>
               );
             })
@@ -1094,60 +1226,119 @@ export function JppPolyMapsAdmin() {
                 </div>
               ) : (
                 filteredLocations.map(l => {
-                  const has360 = Boolean(l.panorama_360_url && l.panorama_360_url.trim() !== '');
+                  const status360 = getLocation360Status(l);
+                  const is360Active = status360 === 'active';
+                  const has360Panorama = status360 !== 'none';
+                  const panoramaUrl = l.panorama_360_url || getLocation360Url(l);
                   const matchedBuilding = buildings.find(b => b.id === l.building_id);
                   return (
                     <div
                       key={l.id}
                       className={cn(
-                        "rounded-2xl p-5 transition-all group relative overflow-hidden",
-                        has360
+                        "rounded-2xl p-5 transition-all group relative overflow-hidden flex flex-col justify-between",
+                        status360 === 'active'
                           ? "border-2 border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/25 shadow-md shadow-emerald-500/10"
+                          : status360 === 'available'
+                          ? "border-2 border-blue-500 bg-blue-50/70 dark:bg-blue-950/25 shadow-md shadow-blue-500/10"
                           : "bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50/80 dark:hover:bg-white/[0.07] shadow-sm"
                       )}
                     >
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap mb-1">
-                            <h3 className="font-bold text-slate-900 dark:text-white text-lg">{l.room_code}</h3>
-                            {has360 ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
-                                <Compass className="w-3.5 h-3.5" /> 360° AKTIF
-                              </span>
-                            ) : (
-                              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-500 bg-slate-100 dark:bg-white/5">
-                                Tiada 3D
-                              </span>
-                            )}
+                      <div>
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <h3 className="font-bold text-slate-900 dark:text-white text-lg">{l.room_code}</h3>
+                              {status360 === 'active' && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
+                                  <Compass className="w-3 h-3" /> 360° AKTIF
+                                </span>
+                              )}
+                              {status360 === 'available' && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500 text-white shadow-sm">
+                                  <Compass className="w-3 h-3" /> 360° TERSEDIA (OFF)
+                                </span>
+                              )}
+                              {status360 === 'none' && (
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-400 bg-slate-100 dark:bg-white/5">
+                                  Tiada 3D
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs font-semibold text-slate-600 dark:text-white/70">
+                              {matchedBuilding?.name || 'Bangunan tidak diketahui'} · Aras {l.floor_level || 'G'}
+                            </p>
                           </div>
-                          <p className="text-xs font-semibold text-slate-600 dark:text-white/70">
-                            {matchedBuilding?.name || 'Bangunan tidak diketahui'} · Aras {l.floor_level || 'G'}
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => {
+                                setCurrentLocation(l);
+                                setBuildingSearchText(matchedBuilding ? matchedBuilding.code : '');
+                                setShowLocationModal(true);
+                              }}
+                              className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white/70"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => deleteLocation(l.id)}
+                              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:bg-rose-500/20 dark:hover:bg-rose-500/40 dark:text-rose-400"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {l.direction_text && (
+                          <p className="line-clamp-2 text-slate-500 dark:text-white/50 text-[11px] leading-relaxed mt-2">
+                            {l.direction_text}
                           </p>
-                        </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => {
-                              setCurrentLocation(l);
-                              setBuildingSearchText(matchedBuilding ? matchedBuilding.code : '');
-                              setShowLocationModal(true);
-                            }}
-                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white/70"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => deleteLocation(l.id)}
-                            className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:bg-rose-500/20 dark:hover:bg-rose-500/40 dark:text-rose-400"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                        )}
                       </div>
 
-                      {l.direction_text && (
-                        <p className="line-clamp-2 text-slate-500 dark:text-white/50 text-[11px] leading-relaxed mt-2">
-                          {l.direction_text}
-                        </p>
+                      {/* 360 Admin Controls Footer for Location */}
+                      {has360Panorama && (
+                        <div className="pt-3 border-t border-slate-200/60 dark:border-white/10 flex items-center justify-between gap-2 mt-4">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (panoramaUrl) {
+                                setPreview360Url(panoramaUrl);
+                                setPreview360Title(`Pratonton 360°: ${l.room_code} (${matchedBuilding?.name || ''})`);
+                              }
+                            }}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-sky-500" />
+                            <span>Pratonton</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const nextState = toggleLocation360(l);
+                              setToggleRevision(r => r + 1);
+                              toast.success(nextState ? `360° untuk ${l.room_code} telah DIAKTIFKAN (Hijau)` : `360° untuk ${l.room_code} telah DINYAHAKTIFKAN (Biru)`);
+                            }}
+                            className={cn(
+                              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm",
+                              is360Active
+                                ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                                : "bg-blue-600 hover:bg-blue-700 text-white"
+                            )}
+                          >
+                            {is360Active ? (
+                              <>
+                                <ToggleRight className="w-4 h-4" />
+                                <span>360° Aktif</span>
+                              </>
+                            ) : (
+                              <>
+                                <ToggleLeft className="w-4 h-4" />
+                                <span>Aktifkan 360°</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
                       )}
                     </div>
                   );
@@ -1175,14 +1366,20 @@ export function JppPolyMapsAdmin() {
                       </tr>
                     ) : (
                       filteredLocations.map(l => {
-                        const has360 = Boolean(l.panorama_360_url && l.panorama_360_url.trim() !== '');
+                        const status360 = getLocation360Status(l);
+                        const is360Active = status360 === 'active';
+                        const has360Panorama = status360 !== 'none';
+                        const panoramaUrl = l.panorama_360_url || getLocation360Url(l);
+                        const matchedBuilding = buildings.find(b => b.id === l.building_id);
                         return (
                           <tr 
                             key={l.id} 
                             className={cn(
                               "border-b transition-colors group",
-                              has360 
+                              status360 === 'active'
                                 ? "border-emerald-200/50 dark:border-emerald-900/30 bg-emerald-50/40 dark:bg-emerald-950/15 hover:bg-emerald-50/80 dark:hover:bg-emerald-950/30" 
+                                : status360 === 'available'
+                                ? "border-blue-200/50 dark:border-blue-900/30 bg-blue-50/40 dark:bg-blue-950/15 hover:bg-blue-50/80 dark:hover:bg-blue-950/30"
                                 : "border-slate-100 dark:border-white/[0.05] hover:bg-slate-50/80 dark:hover:bg-white/[0.02]"
                             )}
                           >
@@ -1190,25 +1387,63 @@ export function JppPolyMapsAdmin() {
                               <span className="font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-white/10 px-2 py-1 rounded-md">{l.room_code}</span>
                             </td>
                             <td className="p-4">
-                              {has360 ? (
+                              {status360 === 'active' && (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
                                   <Compass className="w-3.5 h-3.5" /> 360° AKTIF
                                 </span>
-                              ) : (
-                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-500 bg-slate-100 dark:bg-white/5">
+                              )}
+                              {status360 === 'available' && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500 text-white shadow-sm">
+                                  <Compass className="w-3.5 h-3.5" /> 360° TERSEDIA (OFF)
+                                </span>
+                              )}
+                              {status360 === 'none' && (
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-400 bg-slate-100 dark:bg-white/5">
                                   Tiada 3D
                                 </span>
                               )}
                             </td>
                             <td className="p-4 text-slate-800 dark:text-white/80">
-                              {buildings.find(b => b.id === l.building_id)?.name || 'Unknown'}
+                              {matchedBuilding?.name || 'Unknown'}
                             </td>
                             <td className="p-4">{l.floor_level || 'G'}</td>
                             <td className="p-4 max-w-xs truncate text-slate-500 dark:text-white/50" title={l.direction_text}>
                               {l.direction_text || '-'}
                             </td>
                             <td className="p-4 text-right">
-                              <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="flex items-center justify-end gap-1.5">
+                                {has360Panorama && (
+                                  <>
+                                    <button
+                                      type="button"
+                                      title="Pratonton 360°"
+                                      onClick={() => {
+                                        if (panoramaUrl) {
+                                          setPreview360Url(panoramaUrl);
+                                          setPreview360Title(`Pratonton 360°: ${l.room_code}`);
+                                        }
+                                      }}
+                                      className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-sky-600 dark:bg-white/10 dark:hover:bg-white/20 dark:text-sky-400 transition-colors"
+                                    >
+                                      <Eye className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      title={is360Active ? "Nyahaktifkan 360°" : "Aktifkan 360°"}
+                                      onClick={() => {
+                                        const nextState = toggleLocation360(l);
+                                        setToggleRevision(r => r + 1);
+                                        toast.success(nextState ? `360° untuk ${l.room_code} telah DIAKTIFKAN` : `360° untuk ${l.room_code} telah DINYAHAKTIFKAN`);
+                                      }}
+                                      className={cn(
+                                        "p-1.5 rounded-lg text-white transition-colors",
+                                        is360Active ? "bg-emerald-600 hover:bg-emerald-700" : "bg-blue-600 hover:bg-blue-700"
+                                      )}
+                                    >
+                                      {is360Active ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                                    </button>
+                                  </>
+                                )}
                                 <button onClick={() => {
                                   setCurrentLocation(l);
                                   const matchedBuilding = buildings.find(b => b.id === l.building_id);
@@ -1949,6 +2184,63 @@ export function JppPolyMapsAdmin() {
                 <button onClick={() => setShowLocationModal(false)} className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white rounded-xl font-bold transition-colors">Batal</button>
                 <button onClick={saveLocation} disabled={isSaving} className="flex-1 py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-colors shadow-lg shadow-indigo-500/20 disabled:opacity-50 flex justify-center items-center gap-2">
                   {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Simpan
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 360 Panorama Preview Modal */}
+      <AnimatePresence>
+        {preview360Url && (
+          <div className="fixed inset-0 z-[4000] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-4xl bg-slate-900 rounded-3xl overflow-hidden border border-white/20 shadow-2xl flex flex-col max-h-[90vh]"
+            >
+              <div className="p-4 bg-slate-950 border-b border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400">
+                    <Compass className="w-5 h-5" />
+                  </span>
+                  <div>
+                    <h3 className="font-bold text-white text-base leading-tight">
+                      {preview360Title || 'Pratonton 360° Street View'}
+                    </h3>
+                    <p className="text-[11px] text-slate-400">
+                      Seret untuk pusing 360°, cubit/skrol untuk zum.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPreview360Url(null)}
+                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="w-full h-[450px] sm:h-[520px] relative bg-black">
+                <Pannellum360Viewer
+                  imageUrl={preview360Url}
+                  title={preview360Title}
+                  height="100%"
+                  className="w-full h-full"
+                />
+              </div>
+
+              <div className="p-4 bg-slate-950 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
+                <span className="font-medium">Enjin WebGL Pannellum 2.5.6</span>
+                <button
+                  type="button"
+                  onClick={() => setPreview360Url(null)}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold transition-colors"
+                >
+                  Tutup Pratonton
                 </button>
               </div>
             </motion.div>

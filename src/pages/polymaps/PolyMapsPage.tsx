@@ -21,7 +21,12 @@ import { SystemTour } from '@/components/ui/SystemTour';
 import { useTour } from '@/hooks/useTour';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { Pannellum360Viewer } from '@/components/polymaps/Pannellum360Viewer';
-import { getBuilding360Url, getLocation360Url } from '@/lib/polymaps360Data';
+import { 
+  getBuilding360Url, 
+  getLocation360Url, 
+  isBuilding360Active, 
+  isLocation360Active 
+} from '@/lib/polymaps360Data';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -904,27 +909,55 @@ export function PolyMapsPage() {
       setWalkways(parsedWalkways);
     }
     
-    // Handle Deep Link (?b=building_id or ?room=room_id)
+    // Handle Deep Link (?b=building_id or ?room=room_id or ?q=search or ?building=...)
     const searchParams = new URLSearchParams(window.location.search);
-    const bId = searchParams.get('b');
-    const rId = searchParams.get('room');
+    const bId = searchParams.get('b') || searchParams.get('building') || searchParams.get('buildingId');
+    const rId = searchParams.get('room') || searchParams.get('roomId');
+    const queryParam = searchParams.get('q') || searchParams.get('search');
     
     if (rId && formatted.length > 0) {
-      // Find the room
-      const targetRoom = formatted.find((r: any) => r.id === rId);
+      // Find the room by ID or code
+      const rClean = rId.toLowerCase().trim();
+      const targetRoom = formatted.find((r: any) => 
+        r.id === rId || 
+        r.room_code?.toLowerCase() === rClean ||
+        r.room_code?.toLowerCase().includes(rClean)
+      );
       if (targetRoom) {
         setTimeout(() => {
           setSelectedLocation(targetRoom);
           setActiveBuilding(targetRoom.building);
-          setActiveImageTab(targetRoom.image_url ? 'room' : (targetRoom.building?.entrance_image_url ? 'entrance' : 'floorplan'));
+          const hasActive360 = isLocation360Active(targetRoom) || (targetRoom.building && isBuilding360Active(targetRoom.building));
+          setActiveImageTab(targetRoom.image_url ? 'room' : (hasActive360 ? '360' : (targetRoom.building?.entrance_image_url ? 'entrance' : 'floorplan')));
         }, 300);
       }
     } else if (bId && bData) {
-      const targetBuilding = bData.find(b => b.id === bId);
+      const bClean = bId.toLowerCase().trim();
+      const targetBuilding = bData.find(b => 
+        b.id === bId || 
+        b.code?.toLowerCase() === bClean || 
+        b.name?.toLowerCase().includes(bClean) || 
+        bClean.includes(b.name?.toLowerCase() || '')
+      );
       if (targetBuilding) {
         setTimeout(() => {
           setActiveBuilding(targetBuilding);
-          setActiveImageTab(targetBuilding.entrance_image_url ? 'entrance' : 'floorplan');
+          const hasActive360 = isBuilding360Active(targetBuilding);
+          setActiveImageTab(hasActive360 ? '360' : (targetBuilding.entrance_image_url ? 'entrance' : 'floorplan'));
+        }, 300);
+      }
+    } else if (queryParam && bData) {
+      const qClean = queryParam.toLowerCase().trim();
+      const targetBuilding = bData.find(b => 
+        b.code?.toLowerCase() === qClean || 
+        b.name?.toLowerCase().includes(qClean) ||
+        qClean.includes(b.name?.toLowerCase() || '')
+      );
+      if (targetBuilding) {
+        setTimeout(() => {
+          setActiveBuilding(targetBuilding);
+          const hasActive360 = isBuilding360Active(targetBuilding);
+          setActiveImageTab(hasActive360 ? '360' : (targetBuilding.entrance_image_url ? 'entrance' : 'floorplan'));
         }, 300);
       }
     }
@@ -1062,7 +1095,7 @@ export function PolyMapsPage() {
   const handleSelectLocation = (loc: Location) => {
     setSelectedLocation(loc);
     setActiveBuilding(loc.building);
-    const has360 = Boolean(loc.panorama_360_url || loc.building?.panorama_360_url);
+    const has360 = isLocation360Active(loc) || (loc.building && isBuilding360Active(loc.building));
     setActiveImageTab(loc.image_url ? 'room' : (has360 ? '360' : (loc.building?.entrance_image_url ? 'entrance' : 'floorplan')));
     setCurrentStep(0);
     setSearchQuery('');
@@ -1074,7 +1107,8 @@ export function PolyMapsPage() {
   const handleSelectBuildingMapMarker = (b: Building) => {
     setSelectedLocation(null);
     setActiveBuilding(b);
-    setActiveImageTab(b.panorama_360_url ? '360' : (b.entrance_image_url ? 'entrance' : 'floorplan'));
+    const has360 = isBuilding360Active(b);
+    setActiveImageTab(has360 ? '360' : (b.entrance_image_url ? 'entrance' : 'floorplan'));
   };
 
   const dismissCard = () => {
@@ -1320,7 +1354,7 @@ export function PolyMapsPage() {
                             Zon {loc.building.zone_name}
                           </span>
                         )}
-                        {(loc.panorama_360_url || loc.building?.panorama_360_url) && (
+                        {(isLocation360Active(loc) || (loc.building && isBuilding360Active(loc.building))) && (
                           <span className="inline-flex items-center gap-1 text-[9px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded font-black tracking-wider uppercase">
                             <Compass className="w-2.5 h-2.5" /> 360°
                           </span>
@@ -2108,7 +2142,7 @@ export function PolyMapsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0 ml-3">
-                      {(selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url) && (
+                      {((selectedLocation ? isLocation360Active(selectedLocation) : isBuilding360Active(activeBuilding)) && (selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url)) && (
                         <button
                           onClick={(e) => { 
                             e.stopPropagation(); 
@@ -2156,7 +2190,8 @@ export function PolyMapsPage() {
 
                     {/* Media Area */}
                     {(() => {
-                      const activePanoUrl = selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url;
+                      const is360Permitted = selectedLocation ? isLocation360Active(selectedLocation) : isBuilding360Active(activeBuilding);
+                      const activePanoUrl = is360Permitted ? (selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url) : null;
                       const hasMultipleMedia = ((activeBuilding.entrance_image_url ? 1 : 0) + (activeBuilding.floorplan_image_url ? 1 : 0) + ((selectedLocation && selectedLocation.image_url) ? 1 : 0) + (activePanoUrl ? 1 : 0)) > 1;
 
                       return (
@@ -2315,7 +2350,7 @@ export function PolyMapsPage() {
 
                       {/* Action Buttons */}
                       <div className="flex flex-col gap-2">
-                        {(selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url) && (
+                        {((selectedLocation ? isLocation360Active(selectedLocation) : isBuilding360Active(activeBuilding)) && (selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url)) && (
                           <button
                             onClick={() => {
                               const pano = selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url;

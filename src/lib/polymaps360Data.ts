@@ -370,3 +370,171 @@ export function hasBuilding360(building?: {
 } | null): boolean {
   return Boolean(getBuilding360Url(building));
 }
+
+// ─── PENGURUSAN STATUS TOOGLE 360 PENTADBIR ──────────────────────────────────
+const STORAGE_KEY_BUILDINGS = 'polymaps_enabled_360_buildings';
+const STORAGE_KEY_LOCATIONS = 'polymaps_enabled_360_locations';
+
+/**
+ * Mendapatkan senarai ID/Kod bangunan yang diaktifkan 360 oleh pentadbir (Lalai: Kosong / Semua OFF)
+ */
+export function getEnabled360BuildingIds(): string[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_BUILDINGS);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Mendapatkan senarai ID lokasi/bilik yang diaktifkan 360 oleh pentadbir (Lalai: Kosong / Semua OFF)
+ */
+export function getEnabled360LocationIds(): string[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_LOCATIONS);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Semak sama ada 360 bagi sesebuah bangunan AKTIF (toggled ON oleh pentadbir)
+ */
+export function isBuilding360Active(building?: any): boolean {
+  if (!building) return false;
+  if (!hasBuilding360(building)) return false;
+
+  // Jika pangkalan data mempunyai nilai eksplisit
+  if (building.is_360_enabled === true) return true;
+
+  const enabledList = getEnabled360BuildingIds();
+  const idStr = String(building.id || '').trim();
+  const codeStr = String(building.code || '').trim().toLowerCase();
+  const nameStr = String(building.name || '').trim().toLowerCase();
+
+  return enabledList.some((item) => {
+    const it = String(item).toLowerCase();
+    return it === idStr.toLowerCase() || (codeStr && it === codeStr) || (nameStr && it === nameStr);
+  });
+}
+
+/**
+ * Semak sama ada 360 bagi bilik/lokasi AKTIF (toggled ON oleh pentadbir)
+ */
+export function isLocation360Active(location?: any): boolean {
+  if (!location) return false;
+  const url = getLocation360Url(location);
+  if (!url) return false;
+
+  if (location.is_360_enabled === true) return true;
+
+  const enabledList = getEnabled360LocationIds();
+  const idStr = String(location.id || '').trim();
+  const roomCode = String(location.room_code || '').trim().toLowerCase();
+
+  return enabledList.some((item) => {
+    const it = String(item).toLowerCase();
+    return it === idStr.toLowerCase() || (roomCode && it === roomCode);
+  });
+}
+
+/**
+ * Togol status 360 bangunan (Lalai: OFF -> ON atau sebaliknya)
+ */
+export function toggleBuilding360(building: any, forceState?: boolean): boolean {
+  if (!building) return false;
+  const identifier = String(building.id || building.code || building.name || '').trim();
+  if (!identifier) return false;
+
+  const current = isBuilding360Active(building);
+  const next = forceState !== undefined ? forceState : !current;
+
+  try {
+    const list = getEnabled360BuildingIds();
+    let updated: string[];
+
+    if (next) {
+      if (!list.includes(identifier)) {
+        updated = [...list, identifier];
+      } else {
+        updated = list;
+      }
+    } else {
+      const matchLowers = [
+        String(building.id || '').toLowerCase(),
+        String(building.code || '').toLowerCase(),
+        String(building.name || '').toLowerCase(),
+      ].filter(Boolean);
+      updated = list.filter((item) => !matchLowers.includes(String(item).toLowerCase()));
+    }
+
+    localStorage.setItem(STORAGE_KEY_BUILDINGS, JSON.stringify(updated));
+    return next;
+  } catch (err) {
+    console.error('Failed to toggle building 360 in localStorage:', err);
+    return next;
+  }
+}
+
+/**
+ * Togol status 360 bilik/lokasi
+ */
+export function toggleLocation360(location: any, forceState?: boolean): boolean {
+  if (!location) return false;
+  const identifier = String(location.id || location.room_code || '').trim();
+  if (!identifier) return false;
+
+  const current = isLocation360Active(location);
+  const next = forceState !== undefined ? forceState : !current;
+
+  try {
+    const list = getEnabled360LocationIds();
+    let updated: string[];
+
+    if (next) {
+      if (!list.includes(identifier)) {
+        updated = [...list, identifier];
+      } else {
+        updated = list;
+      }
+    } else {
+      const matchLowers = [
+        String(location.id || '').toLowerCase(),
+        String(location.room_code || '').toLowerCase(),
+      ].filter(Boolean);
+      updated = list.filter((item) => !matchLowers.includes(String(item).toLowerCase()));
+    }
+
+    localStorage.setItem(STORAGE_KEY_LOCATIONS, JSON.stringify(updated));
+    return next;
+  } catch (err) {
+    console.error('Failed to toggle location 360 in localStorage:', err);
+    return next;
+  }
+}
+
+/**
+ * Menentukan status 360 bangunan untuk penggayaan warna:
+ * - 'active'    -> Hijau (ada 360 & togol ON)
+ * - 'available' -> Biru  (ada 360 & togol OFF - lalai)
+ * - 'none'      -> Neutral (tiada 360)
+ */
+export function getBuilding360Status(building?: any): 'active' | 'available' | 'none' {
+  if (!hasBuilding360(building)) return 'none';
+  return isBuilding360Active(building) ? 'active' : 'available';
+}
+
+/**
+ * Menentukan status 360 bilik/lokasi untuk penggayaan warna:
+ * - 'active'    -> Hijau (ada 360 & togol ON)
+ * - 'available' -> Biru  (ada 360 & togol OFF - lalai)
+ * - 'none'      -> Neutral (tiada 360)
+ */
+export function getLocation360Status(location?: any): 'active' | 'available' | 'none' {
+  const url = getLocation360Url(location);
+  if (!url) return 'none';
+  return isLocation360Active(location) ? 'active' : 'available';
+}
+

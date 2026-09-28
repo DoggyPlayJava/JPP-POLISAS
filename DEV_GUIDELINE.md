@@ -2667,3 +2667,23 @@ Sistem beroperasi secara rasmi dengan **Light Theme sebagai mod lalai (*default 
 - **Pengalaman Interaktif Pelajar (`PolyMapsPage.tsx` & `Pannellum360Viewer.tsx`):**
   - Kad perincian bangunan memaparkan butang terapung beranimasi `🧭 360° Street View` supaya pelajar dapat melihat pandangan 360° dengan serta-merta tanpa perlu menekan tab manual.
   - Paparan skrin penuh interaktif dikuasakan oleh enjin WebGL Pannellum 2.5.6 dengan sokongan sentuhan mudah alih, kawalan seretan tetikus (*mouse drag*), putaran auto (*auto-rotate*), dan kompas orientasi.
+
+### 25.11 Penambahbaikan Kawalan Pentadbir 360°, Suis Induk Food Bank & Hab Kebajikan Eksekutif
+- **Kawalan Berbutir Pentadbir PolyMaps 360° (`JppPolyMapsAdmin.tsx`, `polymaps360Data.ts`):**
+  - **Status Lalai:** Setiap integrasi 360° bagi bangunan dan bilik ditetapkan kepada **MATI (OFF)** secara lalai sehingga disahkan oleh pentadbir.
+  - **Skema Warna Lencana Dwi-Status:**
+    - *Tersedia tapi MATI:* Kotak bersempadan **BIRU** (`border-2 border-blue-500 bg-blue-50 dark:bg-blue-950/25`) dengan lencana `360° TERSEDIA (OFF)` untuk semakan pentadbir.
+    - *Diaktifkan (ON):* Kotak bersempadan **HIJAU** (`border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/25`) dengan lencana `360° AKTIF`.
+  - **Butang Pratonton 1-Klik:** Pentadbir boleh membuka modal pratonton Pannellum 360° sebelum menukar suis toggle.
+  - **Pills Penapis Status 360:** Penapisan pantas mengikut `Semua`, `360° Aktif (Hijau)`, `360° Tersedia (Biru)`, dan `Tiada 360`.
+  - **Sekatan Paparan Pelajar:** Pelajar di `/polymaps` hanya melihat butang 360° Street View bagi lokasi yang telah disahkan dan diaktifkan (HIJAU) oleh pentadbir.
+- **Suis Induk Pelancaran Modul Food Bank (`JppFoodBankAdmin.tsx`, `KebajikanFoodBankPage.tsx`):**
+  - Menyediakan suis induk pelancaran modul (`is_module_active`) di Tab 4 pentadbiran Food Bank JPP HQ.
+  - **Mod Dalam Persediaan (Akses Mahasiswa):** Apabila modul ditutup, portal `/kebajikan/foodbank` memaparkan banner persediaan rasmi, membuka akses untuk semakan katalog dan lokasi, tetapi mengunci butang permohonan dengan label `Pelancaran Rasmi Tidak Lama Lagi (Dalam Persediaan)`. Mahasiswa dengan pas QR sedia ada tetap boleh mengakses pas mereka.
+  - **Ketahanan Luar Talian & Sandaran Skema:** Sandaran `loadLocalFoodBankSettings` dan `saveLocalFoodBankSettings` memastikan sistem boleh diuji dan beroperasi tanpa ralat skema cache pangkalan data.
+  - **Pembaikan Input Siling Belanjawan:** Menukar `step={500}` kepada `step="any"` pada input nombor belanjawan bagi mengelakkan sekatan pengesahan HTML5 pelayar.
+- **Deep Linking PolyMaps Berketepatan Tinggi:**
+  - Pautan lokasi di Hab Kebajikan dan Food Bank kini menghantar parameter `?b=` yang memadankan kod, ID, atau nama bangunan secara *case-insensitive* untuk autofokus dan pemilihan terus di atas peta.
+- **Reka Bentuk Semula Hab Kebajikan (Linear/Apple Minimalist Executive):**
+  - Muka surat `/kebajikan` (`KebajikanHubPage.tsx`) dirombak sepenuhnya daripada teks generik AI yang berselerak kepada reka bentuk eksekutif berimpak tinggi: 2 kad utama kontras tinggi (Aduan & Fasiliti dengan SLA < 24 Jam; Food Bank JPP dengan lencana status modul masa nyata), serta jalur ringkas akses pantas pentadbiran pegawai/exco di bahagian bawah.
+

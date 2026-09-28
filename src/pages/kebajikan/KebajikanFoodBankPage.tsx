@@ -61,6 +61,7 @@ import {
   DEFAULT_FOODBANK_SETTINGS,
   DEFAULT_FOODBANK_ITEMS,
   DEFAULT_FOODBANK_LOCATIONS,
+  loadLocalFoodBankSettings,
 } from '@/lib/foodbankDefaults';
 
 // Tab Kategori Barangan
@@ -199,7 +200,7 @@ export function KebajikanFoodBankPage() {
       if (itemsRes.error) console.error('Error fetching items:', itemsRes.error);
       if (activeAppRes.error) console.error('Error fetching active app:', activeAppRes.error);
 
-      const finalSettings = (settingsRes.data as FoodBankSettings) || DEFAULT_FOODBANK_SETTINGS;
+      const finalSettings = (settingsRes.data as FoodBankSettings) || loadLocalFoodBankSettings();
       setSettings(finalSettings);
 
       const rawLocations = (locationsRes.data && locationsRes.data.length > 0)
@@ -601,7 +602,9 @@ export function KebajikanFoodBankPage() {
     );
   }
 
-  const isSessionClosed = settings?.is_application_open === false;
+  const isModuleUnderPreparation = settings?.is_module_active === false;
+  const isApplicationWindowClosed = settings?.is_application_open === false;
+  const isSessionClosed = isModuleUnderPreparation || isApplicationWindowClosed;
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4 py-6 sm:py-8 space-y-8 select-none">
@@ -650,8 +653,25 @@ export function KebajikanFoodBankPage() {
         </div>
       </div>
 
-      {/* ── Status Sesi Ditutup (Jika Is Open === false) ── */}
-      {isSessionClosed && (
+      {/* ── Status Modul Dalam Persediaan / Sesi Ditutup ── */}
+      {isModuleUnderPreparation ? (
+        <div className="rounded-2xl p-4 sm:p-5 bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 flex items-start gap-3.5">
+          <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider">
+                Dalam Persediaan / Akan Datang
+              </span>
+              <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
+                Pelancaran Rasmi Tidak Lama Lagi
+              </span>
+            </div>
+            <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed font-normal pt-0.5">
+              Program Food Bank JPP kini sedang dalam fasa persediaan akhir inventori stok barangan dan penyelarasan kaunter agihan oleh barisan Majlis Perwakilan Pelajar bersama JHEP. Mahasiswa dialu-alukan menyemak panduan kelayakan, lokasi edaran serta katalog barangan di bawah. Borang permohonan akan dibuka sebaik sahaja perasmian diumumkan.
+            </p>
+          </div>
+        </div>
+      ) : isApplicationWindowClosed ? (
         <div className="rounded-2xl p-4 sm:p-5 bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 flex items-start gap-3.5">
           <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
           <div className="space-y-1">
@@ -663,7 +683,7 @@ export function KebajikanFoodBankPage() {
             </p>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* ── Kad Permohonan Aktif (1 Active Application Limit Gating) ── */}
       {activeApplication ? (
@@ -733,17 +753,20 @@ export function KebajikanFoodBankPage() {
                   {activeApplication.location?.room_detail || 'Bangunan Pentadbiran Utama'}
                 </p>
 
-                {activeApplication.location?.polymaps_building_id && (
-                  <Link
-                    to={`/polymaps?b=${activeApplication.location.polymaps_building_id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-teal-600 dark:text-teal-400 mt-2 hover:underline"
-                  >
-                    <span>Buka Peta PolyMaps</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </Link>
-                )}
+                {(() => {
+                  const targetParam = activeApplication.location?.polymaps_building_id || (activeApplication.location as any)?.building_id || activeApplication.location?.name;
+                  return targetParam ? (
+                    <Link
+                      to={`/polymaps?b=${encodeURIComponent(targetParam)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-teal-600 dark:text-teal-400 mt-2 hover:underline"
+                    >
+                      <span>Buka Peta PolyMaps</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </Link>
+                  ) : null;
+                })()}
               </div>
 
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
@@ -1406,8 +1429,9 @@ export function KebajikanFoodBankPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {locations.map((loc) => {
                   const isSelected = selectedLocationId === loc.id;
-                  const polymapsUrl = loc.polymaps_building_id
-                    ? `/polymaps?b=${loc.polymaps_building_id}`
+                  const targetParam = (loc as any).building_id || loc.polymaps_building_id || loc.name;
+                  const polymapsUrl = targetParam
+                    ? `/polymaps?b=${encodeURIComponent(targetParam)}`
                     : '/polymaps';
 
                   return (
@@ -1574,13 +1598,26 @@ export function KebajikanFoodBankPage() {
                   totalSelectedCount === 0 ||
                   totalSelectedCount > maxAllowedItems
                 }
-                className="h-12 px-6 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm rounded-2xl gap-2 shadow-xl shadow-amber-500/20"
+                className={cn(
+                  "h-12 px-6 font-black text-sm rounded-2xl gap-2 shadow-xl transition-all",
+                  isModuleUnderPreparation
+                    ? "bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-not-allowed shadow-none"
+                    : isSessionClosed
+                    ? "bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 cursor-not-allowed shadow-none"
+                    : "bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20"
+                )}
               >
                 <ShoppingBag className="w-4 h-4" />
                 <span>
-                  {isSubmitting ? 'Memproses Permohonan...' : 'Hantar Permohonan & Jana Pas QR'}
+                  {isSubmitting
+                    ? 'Memproses Permohonan...'
+                    : isModuleUnderPreparation
+                    ? 'Pelancaran Rasmi Tidak Lama Lagi (Dalam Persediaan)'
+                    : isSessionClosed
+                    ? 'Permohonan Ditutup Buat Sementara Waktu'
+                    : 'Hantar Permohonan & Jana Pas QR'}
                 </span>
-                <ArrowRight className="w-4 h-4" />
+                {!isModuleUnderPreparation && !isSessionClosed && <ArrowRight className="w-4 h-4" />}
               </Button>
             </div>
           </div>

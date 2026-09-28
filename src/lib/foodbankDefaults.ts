@@ -9,20 +9,55 @@ import { FoodBankSettings, FoodBankDistributionLocation, FoodBankItem } from '@/
 
 export const DEFAULT_FOODBANK_SETTINGS: FoodBankSettings = {
   id: '00000000-0000-0000-0000-000000000001',
-  semester_budget: 70000.0,
-  max_items_per_application: 5,
+  is_module_active: false, // Lalai: Tutup / Dalam Persediaan sehingga dirasmikan
   is_application_open: true,
-  current_semester: 'Sesi II 2025/2026',
-  announcement_banner: 'Program Food Bank JPP kini dibuka untuk semua mahasiswa POLISAS yang memerlukan bantuan.',
+  total_budget: 70000.0,
+  current_spent: 0.0,
+  max_monthly_applications_per_student: 1,
+  max_items_per_application: 5,
+  application_instructions: 'Sila bawa kad matrik fizikal atau digital semasa menuntut barangan di kaunter.',
+  eligibility_criteria: 'Terbuka kepada pelajar asnaf dan B40 yang berdaftar di POLISAS.',
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };
 
-export const DEFAULT_FOODBANK_LOCATIONS: FoodBankDistributionLocation[] = [
+export const STORAGE_KEY_FOODBANK_SETTINGS = 'jpp_foodbank_settings';
+
+export function loadLocalFoodBankSettings(): FoodBankSettings {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_FOODBANK_SETTINGS);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return { ...DEFAULT_FOODBANK_SETTINGS, ...parsed };
+    }
+  } catch (e) {
+    console.error('Failed to parse local foodbank settings:', e);
+  }
+  return DEFAULT_FOODBANK_SETTINGS;
+}
+
+export function saveLocalFoodBankSettings(settings: Partial<FoodBankSettings>): FoodBankSettings {
+  try {
+    const current = loadLocalFoodBankSettings();
+    const merged: FoodBankSettings = {
+      ...current,
+      ...settings,
+      updated_at: new Date().toISOString(),
+    };
+    localStorage.setItem(STORAGE_KEY_FOODBANK_SETTINGS, JSON.stringify(merged));
+    return merged;
+  } catch (e) {
+    console.error('Failed to save local foodbank settings:', e);
+    return { ...DEFAULT_FOODBANK_SETTINGS, ...settings };
+  }
+}
+
+export const DEFAULT_FOODBANK_LOCATIONS: (FoodBankDistributionLocation & { polymaps_building_id?: string })[] = [
   {
     id: '00000000-0000-0000-0000-000000000010',
     name: 'Pusat Edaran Utama JPP (Student Centre)',
     building_id: '1c7f4753-2626-4f10-9b6c-6348005341f7',
+    polymaps_building_id: '1c7f4753-2626-4f10-9b6c-6348005341f7',
     room_or_spot: 'Bilik Gerakan JPP, Aras Bawah SC',
     operating_hours: '10:00 AM - 4:30 PM (Isnin - Jumaat)',
     contact_person: 'Exco Kebajikan JPP (011-23456789)',
@@ -33,6 +68,7 @@ export const DEFAULT_FOODBANK_LOCATIONS: FoodBankDistributionLocation[] = [
     id: '00000000-0000-0000-0000-000000000011',
     name: 'Kaunter Kebajikan Blok Pentadbiran',
     building_id: '98592794-6c87-4b8c-8222-c4176dce3b74',
+    polymaps_building_id: '98592794-6c87-4b8c-8222-c4176dce3b74',
     room_or_spot: 'Foyer Aras Bawah, Berhampiran Lobi Utama',
     operating_hours: '11:00 AM - 3:00 PM',
     contact_person: 'Urusetia Kebajikan HEP',
@@ -43,6 +79,7 @@ export const DEFAULT_FOODBANK_LOCATIONS: FoodBankDistributionLocation[] = [
     id: '00000000-0000-0000-0000-000000000012',
     name: 'Hab Edaran Kamsis (Kafe Al-Biruni)',
     building_id: 'cad08be4-c2ab-40fb-a797-b7089d487cfa',
+    polymaps_building_id: 'cad08be4-c2ab-40fb-a797-b7089d487cfa',
     room_or_spot: 'Sudut Kebajikan Pelajar Kafe AB',
     operating_hours: '5:00 PM - 8:00 PM (Hari Bekerja)',
     contact_person: 'Warden Bertugas Kamsis',

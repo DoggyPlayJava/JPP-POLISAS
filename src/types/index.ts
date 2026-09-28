@@ -1308,6 +1308,7 @@ export type FoodBankApplicationStatus =
 
 export interface FoodBankSettings {
   id: string;
+  is_module_active?: boolean; // Master togol: Kawal paparan & status aktif modul Food Bank untuk pelajar
   is_application_open: boolean;
   total_budget: number;
   current_spent: number;
