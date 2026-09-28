@@ -157,6 +157,7 @@ export default function MakmpJuryPortalPage() {
   const [loadingAwards, setLoadingAwards] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('BELUM_SELESAI');
   const [filterCategoryGroup, setFilterCategoryGroup] = useState<string>('ALL');
+  const [filterAwardId, setFilterAwardId] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   // View mode: 'REVIEW' = semakan satu-satu, 'RANKING' = keputusan & ranking
   const [viewMode, setViewMode] = useState<'REVIEW' | 'RANKING'>('REVIEW');
@@ -446,6 +447,20 @@ export default function MakmpJuryPortalPage() {
     new Set(awardApplications.map((a) => a.award?.category_group).filter(Boolean))
   );
 
+  // Senarai anugerah individu (cascade ikut kumpulan dipilih)
+  const uniqueAwards = Array.from(
+    new Map(
+      awardApplications
+        .filter(
+          (a) =>
+            filterCategoryGroup === 'ALL' ||
+            a.award?.category_group === filterCategoryGroup
+        )
+        .map((a) => [a.award?.id, a.award?.name])
+        .filter(([id]) => id) as [string, string][]
+    ).entries()
+  ).map(([id, name]) => ({ id, name }));
+
   // Filter queue
   const filteredAwards = awardApplications.filter((a) => {
     if (filterStatus === 'BELUM_SELESAI') {
@@ -454,6 +469,7 @@ export default function MakmpJuryPortalPage() {
       return false;
     }
     if (filterCategoryGroup !== 'ALL' && a.award?.category_group !== filterCategoryGroup) return false;
+    if (filterAwardId !== 'ALL' && a.award?.id !== filterAwardId) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const sub = a.submission;
@@ -661,13 +677,32 @@ export default function MakmpJuryPortalPage() {
             {uniqueCategoryGroups.length > 1 && (
               <select
                 value={filterCategoryGroup}
-                onChange={(e) => setFilterCategoryGroup(e.target.value)}
+                onChange={(e) => {
+                  setFilterCategoryGroup(e.target.value);
+                  setFilterAwardId('ALL');
+                }}
                 className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 transition"
               >
                 <option value="ALL">Semua Kumpulan Kategori</option>
                 {uniqueCategoryGroups.map((grp) => (
                   <option key={grp} value={grp as string}>
                     {grp}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* Filter Anugerah (sub-anugerah individu) */}
+            {uniqueAwards.length > 0 && (
+              <select
+                value={filterAwardId}
+                onChange={(e) => setFilterAwardId(e.target.value)}
+                className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 transition"
+              >
+                <option value="ALL">Semua Anugerah</option>
+                {uniqueAwards.map((aw) => (
+                  <option key={aw.id} value={aw.id}>
+                    {aw.name}
                   </option>
                 ))}
               </select>
