@@ -75,13 +75,13 @@ export function KlsUnitDashboard() {
       <div className="grid grid-cols-3 gap-3">
         {cards.map((c, i) => (
           <motion.div key={c.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-            className="rounded-2xl p-4 border border-white/[0.05] bg-white/[0.02]">
+            className="rounded-2xl p-4 border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.02] shadow-sm">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3"
               style={{ background: `${c.color}1a` }}>
               <c.icon className="w-4 h-4" style={{ color: c.color }} />
             </div>
-            <p className="text-xl font-black text-white truncate">{c.value}</p>
-            <p className="text-[10px] font-black uppercase tracking-widest mt-0.5" style={{ color: `${c.color}99` }}>{c.label}</p>
+            <p className="text-xl font-black text-slate-900 dark:text-white truncate">{c.value}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest mt-0.5" style={{ color: `${c.color}` }}>{c.label}</p>
           </motion.div>
         ))}
       </div>
@@ -99,22 +99,22 @@ export function KlsUnitDashboard() {
         ].map(link => (
           <motion.button key={link.href} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
             onClick={() => navigate(link.href)}
-            className="flex items-center gap-3 p-4 rounded-2xl border border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.04] transition-all text-left group">
+            className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.02] hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-all text-left group shadow-sm">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{ background: `${link.color}1a` }}>
               <link.icon className="w-4 h-4" style={{ color: link.color }} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-black text-slate-200 truncate">{link.label}</p>
-              <p className="text-[10px] text-slate-500 mt-0.5 truncate">{link.desc}</p>
+              <p className="text-xs font-black text-slate-800 dark:text-slate-200 truncate group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{link.label}</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">{link.desc}</p>
             </div>
-            <ArrowRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 transition-colors flex-shrink-0" />
+            <ArrowRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 group-hover:text-slate-600 dark:group-hover:text-slate-400 transition-colors flex-shrink-0" />
           </motion.button>
         ))}
       </div>
 
       {/* Tahun akademik note */}
-      <p className="text-center text-[10px] font-black uppercase tracking-widest text-white/20">
+      <p className="text-center text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">
         Tahun Akademik {academicYear}
       </p>
     </div>

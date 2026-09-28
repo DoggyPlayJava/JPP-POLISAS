@@ -63,7 +63,7 @@ function AsramaBanner() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.05, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       onClick={() => navigate('/jpp/asrama')}
-      className="w-full flex items-center gap-4 p-5 rounded-[1.5rem] border transition-all group text-left hover:brightness-110"
+      className="w-full flex items-center gap-4 p-5 rounded-[1.5rem] border transition-all group text-left hover:brightness-105 shadow-sm"
       style={{
         background: hexToRgba(KK_COLOR, 0.06),
         borderColor: hexToRgba(KK_COLOR, 0.2),
@@ -76,14 +76,14 @@ function AsramaBanner() {
         <Building2 className="w-6 h-6" style={{ color: KK_COLOR }} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-black text-white leading-tight">
+        <p className="text-sm font-black text-slate-900 dark:text-white leading-tight">
           Papan Rujukan Asrama
         </p>
-        <p className="text-[10px] text-white/40 font-medium mt-1 leading-relaxed">
+        <p className="text-[10px] text-slate-500 dark:text-white/40 font-medium mt-1 leading-relaxed">
           Semak senarai pelajar dengan HPNM & merit untuk kelulusan permohonan kediaman sesi 2025/2026
         </p>
       </div>
-      <ChevronRight className="w-5 h-5 flex-shrink-0 text-white/20 group-hover:text-white/50 group-hover:translate-x-0.5 transition-all" />
+      <ChevronRight className="w-5 h-5 flex-shrink-0 text-slate-400 dark:text-white/20 group-hover:text-slate-600 dark:group-hover:text-white/50 group-hover:translate-x-0.5 transition-all" />
     </motion.button>
   );
 }
@@ -160,7 +160,7 @@ function UnitAsramaTab() {
     >
       {/* Info banner */}
       <div
-        className="rounded-[2rem] p-5 border space-y-2"
+        className="rounded-[2rem] p-5 border space-y-2 shadow-sm"
         style={{
           borderColor: hexToRgba(KK_COLOR, 0.25),
           background: hexToRgba(KK_COLOR, 0.04),
@@ -172,9 +172,9 @@ function UnitAsramaTab() {
             Unit Pengurusan Asrama — Akses Rujukan
           </p>
         </div>
-        <p className="text-xs text-white/40 leading-relaxed">
-          Pengguna yang disenaraikan di sini mendapat akses ke <strong className="text-white/70">Papan Rujukan Asrama</strong> ({' '}
-          <code className="text-[10px] text-fuchsia-400">/jpp/asrama</code>) untuk membantu Exco Kediaman semak merit dan
+        <p className="text-xs text-slate-500 dark:text-white/40 leading-relaxed">
+          Pengguna yang disenaraikan di sini mendapat akses ke <strong className="text-slate-700 dark:text-white/70">Papan Rujukan Asrama</strong> ({' '}
+          <code className="text-[10px] text-fuchsia-600 dark:text-fuchsia-400">/jpp/asrama</code>) untuk membantu Exco Kediaman semak merit dan
           HPNM pelajar bagi tujuan kelulusan permohonan kediaman i-KAMSIS. Mereka <em>tidak</em> mempunyai kuasa edit data pelajar.
         </p>
       </div>
@@ -182,10 +182,9 @@ function UnitAsramaTab() {
       {/* Search + Add (hanya Exco KK & SuperAdmin) */}
       {canManage && (
         <div
-          className="rounded-[2rem] border p-6 space-y-4"
-          style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.07)' }}
+          className="rounded-[2rem] border border-slate-200 dark:border-white/[0.07] bg-white dark:bg-white/[0.02] p-6 space-y-4 shadow-sm"
         >
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/40 flex items-center gap-2">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 flex items-center gap-2">
             <UserPlus className="w-3.5 h-3.5" /> Tambah Pegawai Unit Pengurusan Asrama
           </p>
           <div className="relative">
@@ -193,10 +192,10 @@ function UnitAsramaTab() {
               value={searchUser}
               onChange={e => handleSearchUser(e.target.value)}
               placeholder="Cari nama pengguna..."
-              className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-white/[0.04] border border-white/10 text-white placeholder:text-white/30 focus:border-white/30 transition-all"
+              className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:border-slate-300 dark:focus:border-white/30 transition-all"
             />
             {searchResults.length > 0 && (
-              <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-2xl bg-[#0f0f13] border border-white/10 shadow-xl overflow-hidden">
+              <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-2xl bg-white dark:bg-[#0f0f13] border border-slate-200 dark:border-white/10 shadow-xl overflow-hidden">
                   {searchResults.map(u => {
                     // Tentukan jenis akaun untuk badge
                     const roleLabel =
@@ -214,7 +213,7 @@ function UnitAsramaTab() {
                       <button
                         key={u.id}
                         onClick={() => handleAddAdmin(u.id, u.full_name)}
-                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left border-b border-white/5 last:border-0"
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors text-left border-b border-slate-100 dark:border-white/5 last:border-0"
                       >
                         <div
                           className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black text-white flex-shrink-0"
@@ -224,7 +223,7 @@ function UnitAsramaTab() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <p className="text-xs font-black text-white">{u.full_name}</p>
+                            <p className="text-xs font-black text-slate-900 dark:text-white">{u.full_name}</p>
                             <span
                               className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full text-white"
                               style={{ background: roleBg + '99' }}
@@ -232,7 +231,7 @@ function UnitAsramaTab() {
                               {roleLabel}
                             </span>
                           </div>
-                          <p className="text-[10px] text-white/50">
+                          <p className="text-[10px] text-slate-500 dark:text-white/50">
                             {u.matric_no || u.email || 'Tiada maklumat'}
                           </p>
                         </div>
@@ -253,16 +252,15 @@ function UnitAsramaTab() {
 
       {/* Senarai current unit admins */}
       <div
-        className="rounded-[2rem] border p-6 space-y-4"
-        style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.07)' }}
+        className="rounded-[2rem] border border-slate-200 dark:border-white/[0.07] bg-white dark:bg-white/[0.02] p-6 space-y-4 shadow-sm"
       >
         <div className="flex items-center justify-between">
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/40">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
             Senarai Unit Pengurusan Asrama ({unitAdmins.length})
           </p>
           <button
             onClick={fetchUnitAdmins}
-            className="text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-white/50 flex items-center gap-1.5 transition-all"
+            className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20 hover:text-slate-600 dark:hover:text-white/50 flex items-center gap-1.5 transition-all"
           >
             <RefreshCw className="w-3 h-3" /> Muat Semula
           </button>
@@ -270,10 +268,10 @@ function UnitAsramaTab() {
 
         {loading ? (
           <div className="py-8 flex justify-center">
-            <RefreshCw className="w-5 h-5 animate-spin text-white/20" />
+            <RefreshCw className="w-5 h-5 animate-spin text-slate-400 dark:text-white/20" />
           </div>
         ) : unitAdmins.length === 0 ? (
-          <p className="text-sm text-white/30 text-center py-6">
+          <p className="text-sm text-slate-400 dark:text-white/30 text-center py-6">
             Tiada pegawai unit ditetapkan lagi.
           </p>
         ) : (
@@ -284,8 +282,7 @@ function UnitAsramaTab() {
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.03 * i }}
-                className="flex items-center gap-4 p-4 rounded-2xl"
-                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
+                className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] shadow-sm"
               >
                 <div
                   className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm text-white flex-shrink-0"
@@ -294,16 +291,15 @@ function UnitAsramaTab() {
                   {a.user?.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-black text-white">{a.user?.full_name}</p>
+                  <p className="text-sm font-black text-slate-900 dark:text-white">{a.user?.full_name}</p>
                   <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                    <p className="text-[10px] text-white/50 flex items-center gap-1.5">
+                    <p className="text-[10px] text-slate-500 dark:text-white/50 flex items-center gap-1.5">
                       <ShieldCheck className="w-3 h-3" style={{ color: KK_COLOR }} />
                       Unit Pengurusan Asrama
                     </p>
                     {/* Tunjuk jenis akaun */}
                     {a.user?.role && (
-                      <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full text-white/70"
-                        style={{ background: 'rgba(255,255,255,0.08)' }}
+                      <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full text-slate-700 dark:text-white/70 bg-slate-100 dark:bg-white/[0.08]"
                       >
                         {a.user.role === 'SUPER_ADMIN_JPP' ? 'Super Admin' :
                          a.user.role === 'JPP' ? 'JPP' :
@@ -313,7 +309,7 @@ function UnitAsramaTab() {
                       </span>
                     )}
                     {a.user?.matric_no && (
-                      <span className="text-[9px] text-white/30 font-mono">{a.user.matric_no}</span>
+                      <span className="text-[9px] text-slate-400 dark:text-white/30 font-mono">{a.user.matric_no}</span>
                     )}
                   </div>
                 </div>
@@ -462,8 +458,8 @@ function TakwimKediamanTab() {
           <CalendarDays className="w-4 h-4" style={{ color: KK_COLOR }} />
           <p className="text-xs font-black uppercase tracking-widest" style={{ color: KK_COLOR }}>Takwim Kediaman & Kerohanian</p>
         </div>
-        <p className="text-xs text-white/40 leading-relaxed">
-          Urus takwim khusus kelab kediaman (JPPI, AG, IS, dll.) dan aktiviti exco KK. Takwim kelab kediaman <strong className="text-white/70">hanya visible untuk JPP</strong> — student biasa tidak boleh melihatnya.
+        <p className="text-xs text-slate-500 dark:text-white/40 leading-relaxed">
+          Urus takwim khusus kelab kediaman (JPPI, AG, IS, dll.) dan aktiviti exco KK. Takwim kelab kediaman <strong className="text-slate-700 dark:text-white/70">hanya visible untuk JPP</strong> — student biasa tidak boleh melihatnya.
         </p>
       </div>
 
@@ -501,7 +497,7 @@ function TakwimKediamanTab() {
         <Button onClick={() => openCreate('KELAB_KEDIAMAN')} className="h-10 rounded-xl text-[10px] font-black uppercase tracking-widest" style={{ background: themeColor, color: textOnTheme }}>
           <Plus className="w-3.5 h-3.5 mr-1.5" /> Kelab Kediaman
         </Button>
-        <Button onClick={() => openCreate('KK')} variant="outline" className="h-10 rounded-xl text-[10px] font-black uppercase tracking-widest border-white/10 text-white/60">
+        <Button onClick={() => openCreate('KK')} variant="outline" className="h-10 rounded-xl text-[10px] font-black uppercase tracking-widest border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/60 bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm">
           <Plus className="w-3.5 h-3.5 mr-1.5" /> Exco KK
         </Button>
         <div className="ml-auto">
@@ -542,40 +538,40 @@ function TakwimKediamanTab() {
 
       {/* Table */}
       {loading ? (
-        <div className="py-16 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-white/20" /></div>
+        <div className="py-16 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-slate-400 dark:text-white/20" /></div>
       ) : items.length === 0 ? (
-        <div className="py-16 text-center"><p className="text-xs font-black text-white/20 uppercase tracking-widest">Tiada entri takwim kediaman</p></div>
+        <div className="py-16 text-center"><p className="text-xs font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">Tiada entri takwim kediaman</p></div>
       ) : (
-        <div className="rounded-2xl border border-white/10 overflow-hidden">
+        <div className="rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden bg-white dark:bg-transparent shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-white/[0.04]">
-                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/30">Jenis</th>
-                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/30">Tajuk</th>
-                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/30">Kelab</th>
-                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/30">Tarikh</th>
-                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/30">Minggu</th>
-                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/30 text-right">Tindakan</th>
+                <tr className="bg-slate-50 dark:bg-white/[0.04]">
+                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Jenis</th>
+                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Tajuk</th>
+                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Kelab</th>
+                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Tarikh</th>
+                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Minggu</th>
+                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 text-right">Tindakan</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.04]">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04]">
                 {items.map(item => {
                   const cfg = TAKWIM_JENIS[item.jenis];
                   const color = item.warna_custom || cfg?.color || KK_COLOR;
                   return (
-                    <tr key={item.id} className="hover:bg-white/[0.02] transition-colors">
+                    <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
                       <td className="px-4 py-3">
                         <Badge className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 border-none" style={{ background: hexToRgba(color, 0.15), color }}>{cfg?.shortLabel || item.jenis}</Badge>
                       </td>
-                      <td className="px-4 py-3"><p className="text-xs font-black text-white/90">{item.tajuk}</p></td>
-                      <td className="px-4 py-3"><p className="text-[10px] text-fuchsia-400/70 font-bold">{item.kelab_kediaman_label || '—'}</p></td>
-                      <td className="px-4 py-3 text-[11px] font-bold text-white/60 whitespace-nowrap">{fmtDate(item.tarikh_mula)}{item.tarikh_tamat && item.tarikh_tamat !== item.tarikh_mula ? ` — ${fmtDate(item.tarikh_tamat)}` : ''}</td>
-                      <td className="px-4 py-3 text-xs font-black text-white/40 text-center">{item.bil_minggu || '—'}</td>
+                      <td className="px-4 py-3"><p className="text-xs font-black text-slate-900 dark:text-white/90">{item.tajuk}</p></td>
+                      <td className="px-4 py-3"><p className="text-[10px] text-fuchsia-600 dark:text-fuchsia-400/70 font-bold">{item.kelab_kediaman_label || '—'}</p></td>
+                      <td className="px-4 py-3 text-[11px] font-bold text-slate-600 dark:text-white/60 whitespace-nowrap">{fmtDate(item.tarikh_mula)}{item.tarikh_tamat && item.tarikh_tamat !== item.tarikh_mula ? ` — ${fmtDate(item.tarikh_tamat)}` : ''}</td>
+                      <td className="px-4 py-3 text-xs font-black text-slate-500 dark:text-white/40 text-center">{item.bil_minggu || '—'}</td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-1">
-                          <button onClick={() => openEdit(item)} className="w-7 h-7 rounded-lg bg-white/5 text-white/40 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all"><Pencil className="w-3 h-3" /></button>
-                          <button onClick={() => handleDelete(item)} className="w-7 h-7 rounded-lg bg-rose-500/5 text-rose-400/50 hover:text-rose-400 hover:bg-rose-500/10 flex items-center justify-center transition-all"><Trash2 className="w-3 h-3" /></button>
+                          <button onClick={() => openEdit(item)} className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 flex items-center justify-center transition-all"><Pencil className="w-3 h-3" /></button>
+                          <button onClick={() => handleDelete(item)} className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400/50 hover:text-rose-700 dark:hover:text-rose-400 hover:bg-rose-500/20 flex items-center justify-center transition-all"><Trash2 className="w-3 h-3" /></button>
                         </div>
                       </td>
                     </tr>
@@ -589,16 +585,16 @@ function TakwimKediamanTab() {
 
       {/* CRUD Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[480px] rounded-[2rem] p-0 border-none bg-slate-900 overflow-hidden flex flex-col max-h-[90vh]">
+        <DialogContent className="sm:max-w-[480px] rounded-[2rem] p-0 border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
           <div className="p-8 space-y-5 overflow-y-auto flex-1">
             <DialogHeader>
-              <DialogTitle className="text-xl font-black tracking-tight text-white">{editTarget ? 'Kemaskini' : 'Entri Baharu'}</DialogTitle>
+              <DialogTitle className="text-xl font-black tracking-tight text-slate-900 dark:text-white">{editTarget ? 'Kemaskini' : 'Entri Baharu'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Jenis</Label>
+                <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">Jenis</Label>
                 <Select value={form.jenis} onValueChange={v => setForm({ ...form, jenis: v })} disabled={!!editTarget}>
-                  <SelectTrigger className="h-12 rounded-xl bg-white/5 border-white/10 text-white font-bold"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="KELAB_KEDIAMAN">Kelab Kediaman</SelectItem>
                     <SelectItem value="KK">Exco KK</SelectItem>
@@ -607,47 +603,47 @@ function TakwimKediamanTab() {
               </div>
               {form.jenis === 'KELAB_KEDIAMAN' && (
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Nama Kelab Kediaman</Label>
-                  <Input value={form.kelab_kediaman_label} onChange={e => setForm({ ...form, kelab_kediaman_label: e.target.value })} className="h-12 rounded-xl bg-white/5 border-white/10 text-white font-bold" placeholder="cth: JPPI, AG, IS..." />
+                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">Nama Kelab Kediaman</Label>
+                  <Input value={form.kelab_kediaman_label} onChange={e => setForm({ ...form, kelab_kediaman_label: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" placeholder="cth: JPPI, AG, IS..." />
                 </div>
               )}
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Tajuk *</Label>
-                <Input value={form.tajuk} onChange={e => setForm({ ...form, tajuk: e.target.value })} className="h-12 rounded-xl bg-white/5 border-white/10 text-white font-bold" placeholder="Nama aktiviti..." />
+                <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">Tajuk *</Label>
+                <Input value={form.tajuk} onChange={e => setForm({ ...form, tajuk: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" placeholder="Nama aktiviti..." />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Tarikh Mula *</Label>
-                  <Input type="date" value={form.tarikh_mula} onChange={e => setForm({ ...form, tarikh_mula: e.target.value })} className="h-12 rounded-xl bg-white/5 border-white/10 text-white font-bold" />
+                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">Tarikh Mula *</Label>
+                  <Input type="date" value={form.tarikh_mula} onChange={e => setForm({ ...form, tarikh_mula: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Tarikh Tamat</Label>
-                  <Input type="date" value={form.tarikh_tamat} onChange={e => setForm({ ...form, tarikh_tamat: e.target.value })} className="h-12 rounded-xl bg-white/5 border-white/10 text-white font-bold" />
+                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">Tarikh Tamat</Label>
+                  <Input type="date" value={form.tarikh_tamat} onChange={e => setForm({ ...form, tarikh_tamat: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Bil. Minggu</Label>
-                  <Input type="number" value={form.bil_minggu} onChange={e => setForm({ ...form, bil_minggu: e.target.value })} className="h-12 rounded-xl bg-white/5 border-white/10 text-white font-bold" />
+                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">Bil. Minggu</Label>
+                  <Input type="number" value={form.bil_minggu} onChange={e => setForm({ ...form, bil_minggu: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Catatan</Label>
-                  <Input value={form.catatan} onChange={e => setForm({ ...form, catatan: e.target.value })} className="h-12 rounded-xl bg-white/5 border-white/10 text-white font-bold" />
+                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">Catatan</Label>
+                  <Input value={form.catatan} onChange={e => setForm({ ...form, catatan: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
               </div>
               {/* Color Picker */}
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Warna (Pilihan)</Label>
+                <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">Warna (Pilihan)</Label>
                 <div className="flex items-center gap-3">
-                  <input type="color" value={form.warna_custom || KK_COLOR} onChange={e => setForm({ ...form, warna_custom: e.target.value })} className="w-12 h-12 rounded-xl border-2 border-white/10 cursor-pointer bg-transparent" />
-                  <Input value={form.warna_custom} onChange={e => setForm({ ...form, warna_custom: e.target.value })} className="h-12 rounded-xl bg-white/5 border-white/10 text-white font-mono font-bold flex-1" placeholder={KK_COLOR} />
-                  {form.warna_custom && <button onClick={() => setForm({ ...form, warna_custom: '' })} className="text-[10px] font-bold text-white/30 hover:text-white/60">Reset</button>}
+                  <input type="color" value={form.warna_custom || KK_COLOR} onChange={e => setForm({ ...form, warna_custom: e.target.value })} className="w-12 h-12 rounded-xl border-2 border-slate-200 dark:border-white/10 cursor-pointer bg-transparent" />
+                  <Input value={form.warna_custom} onChange={e => setForm({ ...form, warna_custom: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-mono font-bold flex-1" placeholder={KK_COLOR} />
+                  {form.warna_custom && <button onClick={() => setForm({ ...form, warna_custom: '' })} className="text-[10px] font-bold text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white/60">Reset</button>}
                 </div>
               </div>
             </div>
           </div>
-          <DialogFooter className="p-6 bg-white/[0.02] border-t border-white/5 gap-3">
-            <Button variant="ghost" onClick={() => setDialogOpen(false)} className="flex-1 h-12 rounded-xl text-white/50">Batal</Button>
+          <DialogFooter className="p-6 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/5 gap-3">
+            <Button variant="ghost" onClick={() => setDialogOpen(false)} className="flex-1 h-12 rounded-xl text-slate-600 dark:text-white/50 hover:bg-slate-200 dark:hover:bg-white/10">Batal</Button>
             <Button onClick={handleSave} disabled={saving} className="flex-[2] h-12 rounded-xl font-black text-[10px] uppercase tracking-widest text-white" style={{ background: KK_COLOR }}>
               {saving ? 'Menyimpan...' : editTarget ? 'Kemaskini' : 'Simpan'}
             </Button>
@@ -686,69 +682,93 @@ export function KkUnitDashboard() {
     <div className="space-y-5">
       {/* Tabs — hanya papar jika ada hak manage */}
       {showUnitTab && (
-        <div className="flex gap-1 bg-white/[0.03] border border-white/[0.05] p-1 rounded-2xl overflow-x-auto">
+        <div className="flex gap-1 bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] p-1 rounded-2xl overflow-x-auto">
           <button
             onClick={() => handleTabChange('dashboard')}
-            className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all"
+            className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${
+              activeTab === 'dashboard'
+                ? 'shadow-sm'
+                : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white'
+            }`}
             style={
               activeTab === 'dashboard'
                 ? { background: KK_COLOR, color: '#fff' }
-                : { color: 'rgba(255,255,255,0.4)' }
+                : undefined
             }
           >
             <LayoutGrid className="w-3.5 h-3.5" /> Dashboard
           </button>
           <button
             onClick={() => handleTabChange('unit')}
-            className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all"
+            className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${
+              activeTab === 'unit'
+                ? 'shadow-sm'
+                : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white'
+            }`}
             style={
               activeTab === 'unit'
                 ? { background: KK_COLOR, color: '#fff' }
-                : { color: 'rgba(255,255,255,0.4)' }
+                : undefined
             }
           >
             <ShieldCheck className="w-3.5 h-3.5" /> Unit Pengurusan Asrama
           </button>
           <button
             onClick={() => handleTabChange('merit-rasmi')}
-            className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all"
+            className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${
+              activeTab === 'merit-rasmi'
+                ? 'shadow-sm'
+                : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white'
+            }`}
             style={
               activeTab === 'merit-rasmi'
                 ? { background: KK_COLOR, color: '#fff' }
-                : { color: 'rgba(255,255,255,0.4)' }
+                : undefined
             }
           >
             <Trophy className="w-3.5 h-3.5" /> Merit Rasmi
           </button>
           <button
             onClick={() => handleTabChange('qr')}
-            className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all"
+            className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${
+              activeTab === 'qr'
+                ? 'shadow-sm'
+                : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white'
+            }`}
             style={
               activeTab === 'qr'
                 ? { background: KK_COLOR, color: '#fff' }
-                : { color: 'rgba(255,255,255,0.4)' }
+                : undefined
             }
           >
             <QrCode className="w-3.5 h-3.5" /> QR Merit
           </button>
           <button
             onClick={() => handleTabChange('takwim')}
-            className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all"
+            className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${
+              activeTab === 'takwim'
+                ? 'shadow-sm'
+                : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white'
+            }`}
             style={
               activeTab === 'takwim'
                 ? { background: KK_COLOR, color: '#fff' }
-                : { color: 'rgba(255,255,255,0.4)' }
+                : undefined
             }
           >
             <CalendarDays className="w-3.5 h-3.5" /> Takwim
           </button>
           <button
             onClick={() => handleTabChange('demerit')}
-            className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all"
+            className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${
+              activeTab === 'demerit'
+                ? 'shadow-sm'
+                : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white'
+            }`}
             style={
               activeTab === 'demerit'
                 ? { background: KK_COLOR, color: '#fff' }
-                : { color: 'rgba(255,255,255,0.4)' }
+                : undefined
             }
           >
             <ShieldAlert className="w-3.5 h-3.5" /> Demerit
@@ -799,7 +819,7 @@ export function KkUnitDashboard() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
           >
-            <div className="rounded-[2rem] border p-6 bg-[rgba(255,255,255,0.01)] border-[rgba(255,255,255,0.07)]">
+            <div className="rounded-[2rem] border p-6 bg-white dark:bg-[rgba(255,255,255,0.01)] border-slate-200 dark:border-[rgba(255,255,255,0.07)] shadow-sm">
               <QrMeritManager themeColor={KK_COLOR} />
             </div>
           </motion.div>
@@ -812,7 +832,7 @@ export function KkUnitDashboard() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
           >
-            <div className="rounded-[2rem] border p-6 bg-[rgba(255,255,255,0.01)] border-[rgba(255,255,255,0.07)]">
+            <div className="rounded-[2rem] border p-6 bg-white dark:bg-[rgba(255,255,255,0.01)] border-slate-200 dark:border-[rgba(255,255,255,0.07)] shadow-sm">
               <MeritRasmiReviewPanel reviewerUnit="KEDIAMAN" themeColor={KK_COLOR} />
             </div>
           </motion.div>
@@ -825,7 +845,7 @@ export function KkUnitDashboard() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
           >
-            <div className="rounded-[2rem] border p-6 bg-[rgba(255,255,255,0.01)] border-[rgba(255,255,255,0.07)]">
+            <div className="rounded-[2rem] border p-6 bg-white dark:bg-[rgba(255,255,255,0.01)] border-slate-200 dark:border-[rgba(255,255,255,0.07)] shadow-sm">
               <DemeritManager sourceOverride="QR_SCAN" />
             </div>
           </motion.div>

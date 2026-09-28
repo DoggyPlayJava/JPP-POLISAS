@@ -101,7 +101,7 @@ function SubTabBtn({ id, label, active, onClick }: { id: string; label: string; 
       onClick={onClick}
       className={cn(
         'px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shrink-0',
-        active ? 'text-white shadow-md' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+        active ? 'text-white shadow-md' : 'bg-white dark:bg-white/[0.04] text-slate-600 dark:text-white/40 border border-slate-200 dark:border-transparent hover:bg-slate-100 dark:hover:bg-white/[0.08] hover:text-slate-900 dark:hover:text-white/70 shadow-sm'
       )}
       style={active ? { backgroundColor: KPP_COLOR } : {}}
     >{label}</button>
@@ -114,15 +114,15 @@ function StatCard({ label, value, icon: Icon, color, sub }: { label: string; val
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card border border-border/50 rounded-[1.5rem] p-5 flex flex-col gap-3 hover:shadow-md transition-all"
+      className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] rounded-[1.5rem] p-5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-all"
     >
       <div className="w-9 h-9 rounded-2xl flex items-center justify-center" style={{ background: hexToRgba(color, 0.15) }}>
         <Icon className="w-4 h-4" style={{ color }} />
       </div>
       <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 mb-1">{label}</p>
-        <p className="text-3xl font-black text-foreground leading-none">{value}</p>
-        {sub && <p className="text-[10px] text-muted-foreground/40 mt-1">{sub}</p>}
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/35 mb-1">{label}</p>
+        <p className="text-3xl font-black text-slate-900 dark:text-white leading-none">{value}</p>
+        {sub && <p className="text-[10px] text-slate-400 dark:text-white/20 mt-1">{sub}</p>}
       </div>
     </motion.div>
   );
@@ -507,20 +507,20 @@ export function KppUnitDashboard() {
           </div>
 
           {/* Pengurusan Karnival JPP - Quick Links */}
-          <div className="rounded-[2.5rem] bg-gradient-to-br from-violet-600/10 to-transparent p-6 sm:p-8 border border-violet-500/20">
+          <div className="rounded-[2.5rem] bg-gradient-to-br from-violet-600/10 to-transparent p-6 sm:p-8 border border-violet-500/20 shadow-sm">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-violet-500 text-white rounded-2xl">
+                <div className="p-3 bg-violet-500 text-white rounded-2xl shadow-sm">
                   <PartyPopper className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-black text-lg text-foreground">Sistem Karnival JPP</h3>
-                  <p className="text-xs text-muted-foreground font-medium mt-1">
+                  <h3 className="font-black text-lg text-slate-900 dark:text-white">Sistem Karnival JPP</h3>
+                  <p className="text-xs text-slate-500 dark:text-muted-foreground font-medium mt-1">
                     Panel urusan tiket, gerai, dan keputusan karnival.
                   </p>
                 </div>
               </div>
-              <Button onClick={() => navigate('/karnival')} variant="outline" className="h-10 rounded-xl border-violet-500/30 text-violet-500 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 text-xs font-black uppercase">
+              <Button onClick={() => navigate('/karnival')} variant="outline" className="h-10 rounded-xl border-violet-500/30 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 text-xs font-black uppercase shadow-sm">
                 Buka Portal Karnival
               </Button>
             </div>
@@ -531,20 +531,20 @@ export function KppUnitDashboard() {
                 { label: 'Booth & QR', path: '/karnival/admin/booths', icon: QrCode },
                 { label: 'Scoreboard LCD', path: '/karnival/scoreboard', icon: Building2 },
               ].map(link => (
-                <button key={link.path} onClick={() => navigate(link.path)} className="flex items-center gap-2 bg-card border border-border/40 p-3 rounded-2xl hover:border-violet-500/30 hover:bg-violet-500/5 transition-all text-left">
+                <button key={link.path} onClick={() => navigate(link.path)} className="flex items-center gap-2 bg-white dark:bg-card border border-slate-200 dark:border-border/40 p-3 rounded-2xl hover:border-violet-500/30 hover:bg-violet-500/5 transition-all text-left shadow-sm">
                   <link.icon className="w-4 h-4 text-violet-500 shrink-0" />
-                  <span className="text-[11px] font-black text-foreground truncate">{link.label}</span>
+                  <span className="text-[11px] font-black text-slate-900 dark:text-foreground truncate">{link.label}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Kelulusan Keahlian (Merged into Ringkasan) */}
-          <div className="rounded-[2rem] border border-border/50 bg-card p-6">
+          <div className="rounded-[2rem] border border-slate-200 dark:border-border/50 bg-white dark:bg-card p-6 shadow-sm">
             <div className="flex items-center justify-between mb-6">
                <div>
-                  <h3 className="font-black text-lg text-foreground">Tindakan Menunggu (Keahlian)</h3>
-                  <p className="text-xs text-muted-foreground font-medium mt-1">Sahkan kemasukan pendaftaran kelab baru.</p>
+                  <h3 className="font-black text-lg text-slate-900 dark:text-foreground">Tindakan Menunggu (Keahlian)</h3>
+                  <p className="text-xs text-slate-500 dark:text-muted-foreground font-medium mt-1">Sahkan kemasukan pendaftaran kelab baru.</p>
                </div>
                <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-950/30 text-orange-600 flex items-center justify-center font-black text-lg border border-orange-500/20">
                   {pendingMembersCount}
@@ -552,19 +552,19 @@ export function KppUnitDashboard() {
             </div>
             
             <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 pointer-events-none" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-muted-foreground/40 pointer-events-none" />
               <input
                 value={memberSearch}
                 onChange={e => setMemberSearch(e.target.value)}
                 placeholder="Cari nama pengguna..."
-                className="w-full bg-background border border-border/50 rounded-2xl pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-orange-500/30 outline-none"
+                className="w-full bg-slate-50 dark:bg-background border border-slate-200 dark:border-border/50 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:ring-2 focus:ring-orange-500/30 outline-none"
               />
             </div>
 
             {kppLoading ? (
               <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-orange-500" /></div>
             ) : allMemberships.length === 0 ? (
-              <p className="text-center text-sm text-muted-foreground py-8">✅ Tiada pendaftaran baru.</p>
+              <p className="text-center text-sm text-slate-500 dark:text-muted-foreground py-8">✅ Tiada pendaftaran baru.</p>
             ) : (
               <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                 {allMemberships
@@ -573,17 +573,17 @@ export function KppUnitDashboard() {
                     const p = m.profiles;
                     const club = ALL_CLUBS.find(c => c.id === m.club_id);
                     return (
-                      <div key={m.id} className="flex flex-col sm:flex-row sm:items-center gap-4 bg-background border border-border/40 rounded-2xl px-4 py-3 hover:border-orange-300 transition-all">
+                      <div key={m.id} className="flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-50/70 dark:bg-background border border-slate-200 dark:border-border/40 rounded-2xl px-4 py-3 hover:border-orange-300 transition-all shadow-sm">
                         <div className="flex items-center gap-4 flex-1 min-w-0">
                           <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 font-black text-sm flex-shrink-0">
                             {p?.full_name?.[0] || '?'}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-sm text-foreground truncate">{p?.full_name || m.user_id}</p>
-                            <p className="text-[11px] text-muted-foreground">{p?.matric_no || p?.email} · {club?.shortName || '—'}</p>
+                            <p className="font-semibold text-sm text-slate-900 dark:text-foreground truncate">{p?.full_name || m.user_id}</p>
+                            <p className="text-[11px] text-slate-500 dark:text-muted-foreground">{p?.matric_no || p?.email} · {club?.shortName || '—'}</p>
                           </div>
                         </div>
-                        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/30">
+                        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-border/30">
                           <span className="text-[10px] font-black uppercase bg-orange-100 text-orange-700 px-2.5 py-1 rounded-xl flex-shrink-0">{m.role}</span>
                           <div className="flex items-center gap-1.5">
                             <button onClick={() => handleMembershipAction(m.user_id, m.club_id, 'APPROVED')} className="flex items-center justify-center h-8 w-8 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 transition-colors">
@@ -609,18 +609,18 @@ export function KppUnitDashboard() {
       {kppSubTab === 'rekod' && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           
-          <div className="flex flex-col sm:flex-row items-center gap-4 justify-between bg-card border border-border/50 rounded-2xl p-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4 justify-between bg-white dark:bg-card border border-slate-200 dark:border-border/50 rounded-2xl p-4 shadow-sm">
              {/* Toggle */}
-             <div className="flex items-center bg-background rounded-xl p-1 border border-border/40">
-                <button onClick={() => setRekodView('aktiviti')} className={cn('px-6 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all', rekodView === 'aktiviti' ? 'bg-indigo-500 text-white shadow-sm' : 'text-muted-foreground hover:bg-muted')}>Aktiviti</button>
-                <button onClick={() => setRekodView('laporan')} className={cn('px-6 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all', rekodView === 'laporan' ? 'bg-violet-500 text-white shadow-sm' : 'text-muted-foreground hover:bg-muted')}>Laporan</button>
+             <div className="flex items-center bg-slate-100 dark:bg-background rounded-xl p-1 border border-slate-200 dark:border-border/40">
+                <button onClick={() => setRekodView('aktiviti')} className={cn('px-6 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all', rekodView === 'aktiviti' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-600 dark:text-muted-foreground hover:bg-slate-200 dark:hover:bg-muted')}>Aktiviti</button>
+                <button onClick={() => setRekodView('laporan')} className={cn('px-6 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all', rekodView === 'laporan' ? 'bg-violet-500 text-white shadow-sm' : 'text-slate-600 dark:text-muted-foreground hover:bg-slate-200 dark:hover:bg-muted')}>Laporan</button>
              </div>
 
              {/* Filter Kelab */}
              <div className="flex items-center gap-2">
-                <span className="text-[10px] uppercase font-black text-muted-foreground hidden sm:block">Tapis:</span>
+                <span className="text-[10px] uppercase font-black text-slate-500 dark:text-muted-foreground hidden sm:block">Tapis:</span>
                 <Select value={kppClubFilter} onValueChange={setKppClubFilter}>
-                  <SelectTrigger className="w-[180px] h-10 rounded-xl bg-background border-border/50 text-xs font-bold">
+                  <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white dark:bg-background border-slate-200 dark:border-border/50 text-xs font-bold text-slate-900 dark:text-white">
                     <SelectValue placeholder="Semua Kelab" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl max-h-60">
@@ -639,17 +639,17 @@ export function KppUnitDashboard() {
                 {kppLoading ? (
                   <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>
                 ) : allActivities.length === 0 ? (
-                  <div className="text-center py-16 text-muted-foreground text-sm">Tiada rekod aktiviti.</div>
+                  <div className="text-center py-16 text-slate-500 dark:text-muted-foreground text-sm">Tiada rekod aktiviti.</div>
                 ) : (
                   <div className="space-y-2">
                     {allActivities.map(a => {
                       const club = ALL_CLUBS.find(c => c.id === a.club_id);
                       return (
-                        <div key={a.id} className="flex items-center gap-4 bg-card border border-border/40 rounded-2xl px-4 py-3 hover:border-indigo-300 transition-all">
+                        <div key={a.id} className="flex items-center gap-4 bg-white dark:bg-card border border-slate-200 dark:border-border/40 rounded-2xl px-4 py-3 hover:border-indigo-300 transition-all shadow-sm">
                           <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: club?.color || '#6366f1' }} />
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-sm text-foreground truncate">{a.title}</p>
-                            <p className="text-[11px] text-muted-foreground">{club?.shortName || '—'} · {a.start_date ? new Date(a.start_date).toLocaleDateString('ms-MY') : 'Tiada tarikh'}</p>
+                            <p className="font-semibold text-sm text-slate-900 dark:text-foreground truncate">{a.title}</p>
+                            <p className="text-[11px] text-slate-500 dark:text-muted-foreground">{club?.shortName || '—'} · {a.start_date ? new Date(a.start_date).toLocaleDateString('ms-MY') : 'Tiada tarikh'}</p>
                           </div>
                           <span className={cn('text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-xl flex-shrink-0', ACTIVITY_STATUS_COLOR[a.status] || 'bg-slate-100 text-slate-600')}>{a.status}</span>
                         </div>
@@ -664,12 +664,12 @@ export function KppUnitDashboard() {
           {rekodView === 'laporan' && (
              <div className="space-y-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 pointer-events-none" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-muted-foreground/40 pointer-events-none" />
                   <input
                     value={reportSearch}
                     onChange={e => setReportSearch(e.target.value)}
                     placeholder="Cari tajuk laporan..."
-                    className="w-full bg-card border border-border/50 rounded-2xl pl-10 pr-4 py-2.5 text-sm outline-none"
+                    className="w-full bg-white dark:bg-card border border-slate-200 dark:border-border/50 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 outline-none shadow-sm"
                   />
                 </div>
                 {kppLoading ? (
@@ -679,11 +679,11 @@ export function KppUnitDashboard() {
                     {allReports.filter(r => !reportSearch || r.title?.toLowerCase().includes(reportSearch.toLowerCase())).map(r => {
                         const club = ALL_CLUBS.find(c => c.id === r.club_id);
                         return (
-                          <div key={r.id} className="flex items-center gap-4 bg-card border border-border/40 rounded-2xl px-4 py-3 hover:border-violet-300 transition-all">
+                          <div key={r.id} className="flex items-center gap-4 bg-white dark:bg-card border border-slate-200 dark:border-border/40 rounded-2xl px-4 py-3 hover:border-violet-300 transition-all shadow-sm">
                             <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: club?.color || '#7c3aed' }} />
                             <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-sm text-foreground truncate">{r.title}</p>
-                              <p className="text-[11px] text-muted-foreground">{club?.shortName || '—'} · {r.type} · {new Date(r.created_at).toLocaleDateString('ms-MY')}</p>
+                              <p className="font-semibold text-sm text-slate-900 dark:text-foreground truncate">{r.title}</p>
+                              <p className="text-[11px] text-slate-500 dark:text-muted-foreground">{club?.shortName || '—'} · {r.type} · {new Date(r.created_at).toLocaleDateString('ms-MY')}</p>
                             </div>
                             <span className={cn('text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-xl flex-shrink-0', REPORT_STATUS_COLOR[r.status] || 'bg-slate-100 text-slate-600')}>{r.status}</span>
                           </div>
@@ -692,9 +692,9 @@ export function KppUnitDashboard() {
                   </div>
                 )}
 
-                <button onClick={() => navigate('/semakan-laporan')} className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-2xl border border-violet-400/30 bg-violet-50 dark:bg-violet-950/20 hover:bg-violet-100 transition-all group mt-6">
+                <button onClick={() => navigate('/semakan-laporan')} className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-2xl border border-violet-400/30 bg-violet-50 dark:bg-violet-950/20 hover:bg-violet-100 transition-all group mt-6 shadow-sm">
                   <span className="text-xs font-black text-violet-700 dark:text-violet-400">Buka Halaman Semakan Laporan Penuh</span>
-                  <ExternalLink className="w-3.5 h-3.5 text-violet-400" />
+                  <ExternalLink className="w-3.5 h-3.5 text-violet-500 dark:text-violet-400" />
                 </button>
              </div>
           )}
@@ -721,16 +721,16 @@ export function KppUnitDashboard() {
               const isInactive = inactiveClubs.some(ic => ic.id === c.id);
               return (
                 <div key={c.id} className={cn(
-                  'bg-card border rounded-2xl p-4 hover:shadow-sm transition-all',
-                  isInactive ? 'border-orange-300/50 bg-orange-50/30 dark:bg-orange-950/10' : 'border-border/40 hover:border-teal-300'
+                  'bg-white dark:bg-card border rounded-2xl p-4 hover:shadow-sm transition-all shadow-sm',
+                  isInactive ? 'border-orange-300/50 bg-orange-50/30 dark:bg-orange-950/10' : 'border-slate-200 dark:border-border/40 hover:border-teal-300'
                 )}>
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm flex-shrink-0" style={{ backgroundColor: c.color || '#0d9488' }}>
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm flex-shrink-0 shadow-sm" style={{ backgroundColor: c.color || '#0d9488' }}>
                       {c.shortName?.[0] || '?'}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm text-foreground truncate">{c.name}</p>
-                      <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{c.shortName}</p>
+                      <p className="font-bold text-sm text-slate-900 dark:text-foreground truncate">{c.name}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-muted-foreground font-bold uppercase tracking-widest">{c.shortName}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -750,7 +750,7 @@ export function KppUnitDashboard() {
       ══════════════════════════════════════════════ */}
       {kppSubTab === 'merit-rasmi' && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="rounded-[2rem] border p-6 bg-card border-border/50">
+          <div className="rounded-[2rem] border p-6 bg-white dark:bg-card border-slate-200 dark:border-border/50 shadow-sm">
             <MeritRasmiReviewPanel reviewerUnit="KPP" themeColor={KPP_COLOR} />
           </div>
         </div>
@@ -761,7 +761,7 @@ export function KppUnitDashboard() {
       ══════════════════════════════════════════════ */}
       {kppSubTab === 'demerit' && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="rounded-[2rem] border p-6 bg-card border-border/50">
+          <div className="rounded-[2rem] border p-6 bg-white dark:bg-card border-slate-200 dark:border-border/50 shadow-sm">
             <DemeritManager sourceOverride="KELAB" />
           </div>
         </div>
@@ -777,8 +777,8 @@ export function KppUnitDashboard() {
                   <SettingsIcon className="w-6 h-6" />
               </div>
               <div>
-                  <h1 className="text-xl font-black text-foreground leading-tight">Tetapan KPP & Kelab</h1>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mt-1">Konfigurasi Pengurusan Kelab & rekod</p>
+                  <h1 className="text-xl font-black text-slate-900 dark:text-foreground leading-tight">Tetapan KPP & Kelab</h1>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-muted-foreground mt-1">Konfigurasi Pengurusan Kelab & rekod</p>
               </div>
           </div>
 
@@ -789,76 +789,76 @@ export function KppUnitDashboard() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Laporan Auto PDF */}
-                <div className="p-6 rounded-[2rem] bg-card border border-border/50 flex flex-col justify-between group hover:border-violet-500/30 transition-all">
+                <div className="p-6 rounded-[2rem] bg-white dark:bg-card border border-slate-200 dark:border-border/50 flex flex-col justify-between group hover:border-violet-500/30 transition-all shadow-sm">
                     <div className="flex items-center gap-4 mb-6">
                         <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-500 flex items-center justify-center border border-violet-500/20">
                             <FileText className="w-5 h-5" />
                         </div>
                         <div>
-                            <p className="text-sm font-black text-foreground">Laporan Auto-PDF</p>
-                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Benarkan jana PDF</p>
+                            <p className="text-sm font-black text-slate-900 dark:text-foreground">Laporan Auto-PDF</p>
+                            <p className="text-[10px] text-slate-500 dark:text-muted-foreground font-medium uppercase tracking-tight">Benarkan jana PDF</p>
                         </div>
                     </div>
                     <button onClick={() => toggleSetting('allow_auto_pdf', settings.allow_auto_pdf)}
                         className={cn('rounded-full font-black text-[10px] self-end w-14 h-8 transition-all shadow-md',
-                            settings.allow_auto_pdf ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-500 dark:text-emerald-400' : 'bg-rose-500/10 border border-rose-500/20 text-rose-500 dark:text-rose-400')}>
+                            settings.allow_auto_pdf ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400')}>
                         {settings.allow_auto_pdf ? 'ON' : 'OFF'}
                     </button>
                 </div>
 
                 {/* Tambah Takwim */}
-                <div className="p-6 rounded-[2rem] bg-card border border-border/50 flex flex-col justify-between group hover:border-blue-500/30 transition-all">
+                <div className="p-6 rounded-[2rem] bg-white dark:bg-card border border-slate-200 dark:border-border/50 flex flex-col justify-between group hover:border-blue-500/30 transition-all shadow-sm">
                     <div className="flex items-center gap-4 mb-6">
                         <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center border border-blue-500/20">
                             <CalendarRange className="w-5 h-5" />
                         </div>
                         <div>
-                            <p className="text-sm font-black text-foreground">Tambah Takwim</p>
-                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Kebenaran daftar program aktiviti</p>
+                            <p className="text-sm font-black text-slate-900 dark:text-foreground">Tambah Takwim</p>
+                            <p className="text-[10px] text-slate-500 dark:text-muted-foreground font-medium uppercase tracking-tight">Kebenaran daftar program aktiviti</p>
                         </div>
                     </div>
                     <button onClick={() => toggleSetting('allow_add_takwim', settings.allow_add_takwim)}
                         className={cn('rounded-full font-black text-[10px] self-end w-14 h-8 transition-all shadow-md',
-                            settings.allow_add_takwim ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-500 dark:text-emerald-400' : 'bg-rose-500/10 border border-rose-500/20 text-rose-500 dark:text-rose-400')}>
+                            settings.allow_add_takwim ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400')}>
                         {settings.allow_add_takwim ? 'ON' : 'OFF'}
                     </button>
                 </div>
 
                 {/* Had Keahlian */}
-                <div className="p-6 rounded-[2rem] bg-card border border-border/50 flex flex-col sm:flex-row items-center justify-between gap-6 md:col-span-2 group hover:border-indigo-500/30 transition-all">
+                <div className="p-6 rounded-[2rem] bg-white dark:bg-card border border-slate-200 dark:border-border/50 flex flex-col sm:flex-row items-center justify-between gap-6 md:col-span-2 group hover:border-indigo-500/30 transition-all shadow-sm">
                     <div className="flex items-center gap-4 text-center sm:text-left w-full sm:w-auto flex-col sm:flex-row">
                         <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center border border-indigo-500/20">
                             <Users className="w-6 h-6" />
                         </div>
                         <div>
-                            <p className="text-base font-black text-foreground">Had Keahlian Kelab</p>
-                            <p className="text-xs text-muted-foreground font-medium">Maksimum pendaftaran kelab untuk pelajar biasa.</p>
+                            <p className="text-base font-black text-slate-900 dark:text-foreground">Had Keahlian Kelab</p>
+                            <p className="text-xs text-slate-500 dark:text-muted-foreground font-medium">Maksimum pendaftaran kelab untuk pelajar biasa.</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-4 bg-muted/50 p-2 rounded-2xl border border-border/50">
+                    <div className="flex items-center gap-4 bg-slate-100 dark:bg-muted/50 p-2 rounded-2xl border border-slate-200 dark:border-border/50">
                         <button onClick={() => updateClubLimit(-1)} disabled={Number(settings.max_clubs_per_student) <= 1}
-                            className="h-10 w-10 flex items-center justify-center rounded-xl font-black text-lg bg-background hover:bg-muted-foreground/10 disabled:opacity-30 transition-colors">
+                            className="h-10 w-10 flex items-center justify-center rounded-xl font-black text-lg bg-white dark:bg-background hover:bg-slate-200 dark:hover:bg-muted-foreground/10 disabled:opacity-30 transition-colors shadow-sm">
                             −
                         </button>
-                        <span className="font-black text-3xl text-foreground w-10 text-center tabular-nums">
+                        <span className="font-black text-3xl text-slate-900 dark:text-foreground w-10 text-center tabular-nums">
                             {settings.max_clubs_per_student ?? 2}
                         </span>
                         <button onClick={() => updateClubLimit(1)} disabled={Number(settings.max_clubs_per_student) >= 10}
-                            className="h-10 w-10 flex items-center justify-center rounded-xl font-black text-lg bg-background hover:bg-muted-foreground/10 disabled:opacity-30 transition-colors">
+                            className="h-10 w-10 flex items-center justify-center rounded-xl font-black text-lg bg-white dark:bg-background hover:bg-slate-200 dark:hover:bg-muted-foreground/10 disabled:opacity-30 transition-colors shadow-sm">
                             +
                         </button>
                     </div>
                 </div>
 
                 {/* Form Tambah Kelab Baharu */}
-                <div className="p-6 rounded-[2rem] bg-card border border-border/50 space-y-6 hover:border-teal-500/20 transition-all mt-6 md:col-span-2">
+                <div className="p-6 rounded-[2rem] bg-white dark:bg-card border border-slate-200 dark:border-border/50 space-y-6 hover:border-teal-500/20 transition-all mt-6 md:col-span-2 shadow-sm">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center border border-teal-500/20">
                             <Building2 className="w-5 h-5" />
                         </div>
                         <div>
-                            <h2 className="text-base font-black text-foreground">Tambah Kelab Baharu</h2>
-                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Daftarkan persatuan atau kelab kokurikulum baharu</p>
+                            <h2 className="text-base font-black text-slate-900 dark:text-foreground">Tambah Kelab Baharu</h2>
+                            <p className="text-[10px] text-slate-500 dark:text-muted-foreground font-medium uppercase tracking-tight">Daftarkan persatuan atau kelab kokurikulum baharu</p>
                         </div>
                     </div>
 
@@ -866,38 +866,38 @@ export function KppUnitDashboard() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Nama Penuh Kelab */}
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Nama Penuh Kelab</label>
+                                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-muted-foreground">Nama Penuh Kelab</label>
                                 <input
                                     type="text"
                                     required
                                     value={newClubName}
                                     onChange={(e) => setNewClubName(e.target.value)}
                                     placeholder="Cth: Kelab Sukan Elektronik POLISAS"
-                                    className="w-full h-11 px-4 rounded-xl border border-border/50 bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                                    className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-border/50 bg-slate-50 dark:bg-background text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
                                 />
                             </div>
 
                             {/* Nama Singkatan */}
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Nama Singkatan / Kod</label>
+                                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-muted-foreground">Nama Singkatan / Kod</label>
                                 <input
                                     type="text"
                                     required
                                     value={newClubShortName}
                                     onChange={(e) => setNewClubShortName(e.target.value)}
                                     placeholder="Cth: E-Sport"
-                                    className="w-full h-11 px-4 rounded-xl border border-border/50 bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                                    className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-border/50 bg-slate-50 dark:bg-background text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
                                 />
                             </div>
 
                             {/* Kategori */}
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Kategori Kelab</label>
+                                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-muted-foreground">Kategori Kelab</label>
                                 <Select
                                     value={newClubCategory}
                                     onValueChange={(val: any) => setNewClubCategory(val)}
                                 >
-                                    <SelectTrigger className="h-11 rounded-xl border border-border/50 bg-background text-sm font-medium focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all">
+                                    <SelectTrigger className="h-11 rounded-xl border border-slate-200 dark:border-border/50 bg-slate-50 dark:bg-background text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all">
                                         <SelectValue placeholder="Pilih Kategori" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl">
@@ -911,32 +911,32 @@ export function KppUnitDashboard() {
 
                             {/* Warna Tema */}
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Warna Tema Kelab</label>
+                                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-muted-foreground">Warna Tema Kelab</label>
                                 <div className="flex gap-2">
                                     <input
                                         type="color"
                                         value={newClubColor}
                                         onChange={(e) => setNewClubColor(e.target.value)}
-                                        className="w-12 h-11 rounded-xl border border-border/50 bg-background cursor-pointer p-1"
+                                        className="w-12 h-11 rounded-xl border border-slate-200 dark:border-border/50 bg-slate-50 dark:bg-background cursor-pointer p-1"
                                     />
                                     <input
                                         type="text"
                                         value={newClubColor}
                                         onChange={(e) => setNewClubColor(e.target.value)}
                                         placeholder="#8B1A1A"
-                                        className="flex-1 h-11 px-4 rounded-xl border border-border/50 bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all uppercase"
+                                        className="flex-1 h-11 px-4 rounded-xl border border-slate-200 dark:border-border/50 bg-slate-50 dark:bg-background text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all uppercase"
                                     />
                                 </div>
                             </div>
 
                             {/* Penerangan Kelab */}
                             <div className="space-y-1.5 md:col-span-2">
-                                <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Penerangan Ringkas</label>
+                                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-muted-foreground">Penerangan Ringkas</label>
                                 <textarea
                                     value={newClubDesc}
                                     onChange={(e) => setNewClubDesc(e.target.value)}
                                     placeholder="Terangkan serba sedikit tentang fokus atau fungsi kelab ini..."
-                                    className="w-full min-h-[80px] p-4 rounded-xl border border-border/50 bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-y"
+                                    className="w-full min-h-[80px] p-4 rounded-xl border border-slate-200 dark:border-border/50 bg-slate-50 dark:bg-background text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-y"
                                 />
                             </div>
                         </div>

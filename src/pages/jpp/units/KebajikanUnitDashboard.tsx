@@ -70,7 +70,7 @@ function SubTabBtn({ id, label, active, badge, onClick }: {
       onClick={onClick}
       className={cn(
         'relative px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5',
-        active ? 'text-[#0a0a0f]' : 'bg-white/[0.04] text-white/40 hover:bg-white/[0.08] hover:text-white/70'
+        active ? 'text-slate-900 dark:text-[#0a0a0f] shadow-sm' : 'bg-white dark:bg-white/[0.04] text-slate-600 dark:text-white/40 border border-slate-200 dark:border-transparent hover:bg-slate-100 dark:hover:bg-white/[0.08] hover:text-slate-900 dark:hover:text-white/70 shadow-sm'
       )}
       style={active ? { backgroundColor: TEAL } : {}}
     >
@@ -98,8 +98,8 @@ function StatCard({ label, value, icon: Icon, color, sub, delay = 0, onClick }: 
       transition={{ delay, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       onClick={onClick}
       className={cn(
-        'rounded-[1.5rem] p-5 border border-white/[0.06] bg-white/[0.03] flex flex-col gap-3',
-        onClick && 'cursor-pointer hover:bg-white/[0.06] hover:border-white/[0.1] transition-all'
+        'rounded-[1.5rem] p-5 border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] shadow-sm flex flex-col gap-3',
+        onClick && 'cursor-pointer hover:bg-slate-50 dark:hover:bg-white/[0.06] hover:border-slate-300 dark:hover:border-white/[0.1] transition-all'
       )}
     >
       <div
@@ -109,9 +109,9 @@ function StatCard({ label, value, icon: Icon, color, sub, delay = 0, onClick }: 
         <Icon className="w-4 h-4" style={{ color }} />
       </div>
       <div>
-        <p className="text-3xl font-black text-white leading-none">{value}</p>
-        <p className="text-[10px] font-black uppercase tracking-[0.15em] text-white/35 mt-1">{label}</p>
-        {sub && <p className="text-[10px] text-white/20 mt-0.5">{sub}</p>}
+        <p className="text-3xl font-black text-slate-900 dark:text-white leading-none">{value}</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-white/35 mt-1">{label}</p>
+        {sub && <p className="text-[10px] text-slate-400 dark:text-white/20 mt-0.5">{sub}</p>}
       </div>
     </motion.div>
   );
@@ -127,7 +127,7 @@ function TicketRow({ ticket, onClick }: { ticket: KebajikanTicket; onClick: () =
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={onClick}
-      className="flex items-center gap-4 p-3.5 rounded-2xl border border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.1] transition-all cursor-pointer group"
+      className="flex items-center gap-4 p-3.5 rounded-2xl border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.02] hover:bg-slate-50 dark:hover:bg-white/[0.05] hover:border-slate-300 dark:hover:border-white/[0.1] transition-all cursor-pointer group shadow-sm"
     >
       {/* Priority dot */}
       <div className="w-2 h-2 rounded-full shrink-0" style={{ background: pm.color }} />
@@ -135,16 +135,16 @@ function TicketRow({ ticket, onClick }: { ticket: KebajikanTicket; onClick: () =
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-[10px] font-black uppercase tracking-widest text-white/30">
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">
             {ticket.ticket_no}
           </span>
-          <span className="text-[10px] text-white/20">·</span>
-          <span className="text-[10px] text-white/30">
+          <span className="text-[10px] text-slate-300 dark:text-white/20">·</span>
+          <span className="text-[10px] text-slate-500 dark:text-white/30">
             {KEBAJIKAN_CATEGORY_LABELS[ticket.category]}
           </span>
         </div>
-        <p className="text-xs font-black text-white leading-tight line-clamp-1">{ticket.title}</p>
-        <p className="text-[10px] text-white/30 mt-0.5">
+        <p className="text-xs font-black text-slate-900 dark:text-white leading-tight line-clamp-1">{ticket.title}</p>
+        <p className="text-[10px] text-slate-500 dark:text-white/30 mt-0.5">
           {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true, locale: ms })}
           {ticket.full_name && ` · ${ticket.full_name}`}
         </p>
@@ -158,7 +158,7 @@ function TicketRow({ ticket, onClick }: { ticket: KebajikanTicket; onClick: () =
         {KEBAJIKAN_STATUS_LABELS[ticket.status]}
       </span>
 
-      <ChevronRight className="w-3.5 h-3.5 text-white/15 group-hover:text-white/50 group-hover:translate-x-0.5 transition-all shrink-0" />
+      <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-white/15 group-hover:text-slate-600 dark:group-hover:text-white/50 group-hover:translate-x-0.5 transition-all shrink-0" />
     </motion.div>
   );
 }
@@ -278,7 +278,7 @@ export function KebajikanUnitDashboard() {
             onClick={() => setTab(t.id)}
           />
         ))}
-        <button onClick={() => { fetchTickets(); fetchExco(); }} className="ml-auto flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-white/50 transition-all shrink-0">
+        <button onClick={() => { fetchTickets(); fetchExco(); }} className="ml-auto flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20 hover:text-slate-700 dark:hover:text-white/50 transition-all shrink-0">
           <RefreshCw className="w-3 h-3" /> Segarkan
         </button>
       </div>
@@ -294,16 +294,16 @@ export function KebajikanUnitDashboard() {
             <motion.div
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-3 p-4 rounded-2xl border border-blue-500/20 bg-blue-500/[0.06]"
+              className="flex items-center gap-3 p-4 rounded-2xl border border-blue-500/25 bg-blue-500/10 dark:bg-blue-500/[0.06]"
             >
-              <AlertCircle className="w-4 h-4 text-blue-400 shrink-0" />
+              <AlertCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
               <div className="flex-1">
-                <p className="text-xs font-black text-blue-400">{newCount} aduan baharu belum disemak</p>
-                <p className="text-[10px] text-blue-300/50 mt-0.5">Semak dan assign kepada pegawai yang berkenaan.</p>
+                <p className="text-xs font-black text-blue-700 dark:text-blue-400">{newCount} aduan baharu belum disemak</p>
+                <p className="text-[10px] text-blue-600/70 dark:text-blue-300/50 mt-0.5">Semak dan assign kepada pegawai yang berkenaan.</p>
               </div>
               <button
                 onClick={() => { setStatusFilter('NEW'); setTab('aduan'); }}
-                className="text-[10px] font-black uppercase tracking-widest text-blue-400 hover:text-blue-300 shrink-0"
+                className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 hover:underline shrink-0"
               >
                 Semak →
               </button>
@@ -313,7 +313,7 @@ export function KebajikanUnitDashboard() {
           {/* Stat cards */}
           {ticketLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[1, 2, 3, 4].map(i => <div key={i} className="h-28 rounded-[1.5rem] bg-white/[0.03] animate-pulse border border-white/[0.04]" />)}
+              {[1, 2, 3, 4].map(i => <div key={i} className="h-28 rounded-[1.5rem] bg-slate-200 dark:bg-white/[0.03] animate-pulse border border-slate-200 dark:border-white/[0.04]" />)}
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -332,9 +332,9 @@ export function KebajikanUnitDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             {/* Tiket terkini */}
-            <div className="rounded-[2rem] bg-white/[0.02] border border-white/[0.05] p-5 space-y-3">
+            <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] p-5 space-y-3 shadow-sm">
               <div className="flex items-center justify-between">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-white/40">Aduan Terkini</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Aduan Terkini</h3>
                 <button
                   onClick={() => { setStatusFilter('ALL'); setTab('aduan'); }}
                   className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:opacity-70 transition-opacity"
@@ -345,11 +345,11 @@ export function KebajikanUnitDashboard() {
               </div>
               {ticketLoading ? (
                 <div className="space-y-2">
-                  {[1, 2, 3].map(i => <div key={i} className="h-16 rounded-2xl bg-white/[0.02] animate-pulse" />)}
+                  {[1, 2, 3].map(i => <div key={i} className="h-16 rounded-2xl bg-slate-200 dark:bg-white/[0.02] animate-pulse" />)}
                 </div>
               ) : tickets.slice(0, 4).length === 0 ? (
                 <div className="py-8 text-center">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/15">Tiada aduan lagi</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/15">Tiada aduan lagi</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -365,9 +365,9 @@ export function KebajikanUnitDashboard() {
             </div>
 
             {/* Aktiviti terkini */}
-            <div className="rounded-[2rem] bg-white/[0.02] border border-white/[0.05] p-5 space-y-3">
+            <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] p-5 space-y-3 shadow-sm">
               <div className="flex items-center justify-between">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-white/40">Aktiviti Exco</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Aktiviti Exco</h3>
                 <button
                   onClick={() => setTab('aktiviti')}
                   className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:opacity-70 transition-opacity"
@@ -378,14 +378,14 @@ export function KebajikanUnitDashboard() {
               </div>
               {excoLoading ? (
                 <div className="space-y-2">
-                  {[1, 2, 3].map(i => <div key={i} className="h-14 rounded-2xl bg-white/[0.02] animate-pulse" />)}
+                  {[1, 2, 3].map(i => <div key={i} className="h-14 rounded-2xl bg-slate-200 dark:bg-white/[0.02] animate-pulse" />)}
                 </div>
               ) : activities.length === 0 ? (
                 <div className="py-8 text-center">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/15">Tiada aktiviti lagi</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/15">Tiada aktiviti lagi</p>
                   <button
                     onClick={() => navigate('/exco/kebajikan/aktiviti')}
-                    className="text-[10px] text-white/25 hover:text-white/50 underline underline-offset-2 mt-2 transition-all font-black uppercase tracking-widest"
+                    className="text-[10px] text-slate-400 dark:text-white/25 hover:text-slate-600 dark:hover:text-white/50 underline underline-offset-2 mt-2 transition-all font-black uppercase tracking-widest"
                   >
                     Tambah Aktiviti
                   </button>
@@ -395,13 +395,13 @@ export function KebajikanUnitDashboard() {
                   {activities.slice(0, 4).map(act => {
                     const sc = actStatus[act.status] ?? actStatus.perancangan;
                     return (
-                      <div key={act.id} className="flex items-start gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
+                      <div key={act.id} className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04]">
                         <div className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: sc.color }} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-black text-white leading-tight line-clamp-1">{act.title}</p>
+                          <p className="text-xs font-black text-slate-900 dark:text-white leading-tight line-clamp-1">{act.title}</p>
                           <div className="flex items-center gap-2 mt-1">
                             {act.start_date && (
-                              <span className="text-[10px] text-white/25 font-bold flex items-center gap-1">
+                              <span className="text-[10px] text-slate-500 dark:text-white/25 font-bold flex items-center gap-1">
                                 <Calendar className="w-2.5 h-2.5" />{fmtDate(act.start_date)}
                               </span>
                             )}
@@ -419,7 +419,7 @@ export function KebajikanUnitDashboard() {
 
           {/* Quick actions */}
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/25 mb-3">Tindakan Pantas</p>
+            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-white/25 mb-3">Tindakan Pantas</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
               <QuickAction
                 label="Buka Modul E-Kebajikan"
@@ -462,13 +462,13 @@ export function KebajikanUnitDashboard() {
 
           {/* Header banner */}
           <div
-            className="rounded-[2rem] p-6 text-white relative overflow-hidden"
+            className="rounded-[2rem] p-6 relative overflow-hidden"
             style={{ background: `linear-gradient(135deg, ${hexToRgba(TEAL, 0.25)} 0%, ${hexToRgba(TEAL, 0.05)} 100%)`, border: `1px solid ${hexToRgba(TEAL, 0.2)}` }}
           >
             <div className="relative z-10">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-1" style={{ color: hexToRgba(TEAL, 0.7) }}>Sistem Aduan Pelajar</p>
-              <h2 className="text-2xl font-black text-white">Semua Aduan E-Kebajikan</h2>
-              <p className="text-white/40 text-xs mt-1">{tickets.length} aduan dalam sistem</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-1" style={{ color: hexToRgba(TEAL, 0.8) }}>Sistem Aduan Pelajar</p>
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white">Semua Aduan E-Kebajikan</h2>
+              <p className="text-slate-600 dark:text-white/40 text-xs mt-1">{tickets.length} aduan dalam sistem</p>
             </div>
             <TicketCheck className="absolute bottom-4 right-6 w-20 h-20 opacity-10" style={{ color: TEAL }} />
           </div>
@@ -477,10 +477,14 @@ export function KebajikanUnitDashboard() {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setStatusFilter('ALL')}
-              className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+              className={cn("px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                statusFilter === 'ALL'
+                  ? ""
+                  : "bg-white dark:bg-white/[0.04] text-slate-600 dark:text-white/35 border border-slate-200 dark:border-white/[0.06] hover:bg-slate-50 dark:hover:bg-white/[0.08] shadow-sm"
+              )}
               style={statusFilter === 'ALL'
                 ? { background: hexToRgba(TEAL, 0.2), color: TEAL, border: `1px solid ${hexToRgba(TEAL, 0.3)}` }
-                : { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.06)' }}
+                : {}}
             >
               Semua ({tickets.length})
             </button>
@@ -492,10 +496,14 @@ export function KebajikanUnitDashboard() {
                 <button
                   key={s}
                   onClick={() => setStatusFilter(s)}
-                  className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                  className={cn("px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                    statusFilter === s
+                      ? ""
+                      : "bg-white dark:bg-white/[0.04] text-slate-600 dark:text-white/35 border border-slate-200 dark:border-white/[0.06] hover:bg-slate-50 dark:hover:bg-white/[0.08] shadow-sm"
+                  )}
                   style={statusFilter === s
                     ? { background: sm.bg, color: sm.color, border: `1px solid ${sm.color}33` }
-                    : { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.06)' }}
+                    : {}}
                 >
                   {KEBAJIKAN_STATUS_LABELS[s]} ({cnt})
                 </button>
@@ -505,16 +513,16 @@ export function KebajikanUnitDashboard() {
 
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/20 pointer-events-none" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 dark:text-white/20 pointer-events-none" />
             <input
               value={ticketSearch}
               onChange={e => setTicketSearch(e.target.value)}
               placeholder="Cari ticket no, tajuk, nama, matrik..."
-              className="w-full px-10 py-2.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] text-xs text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors"
+              className="w-full px-10 py-2.5 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 outline-none focus:border-slate-300 dark:focus:border-white/20 transition-colors shadow-sm"
             />
             {ticketSearch && (
               <button onClick={() => setTicketSearch('')} className="absolute right-3.5 top-1/2 -translate-y-1/2">
-                <XCircle className="w-3.5 h-3.5 text-white/25 hover:text-white/50 transition-colors" />
+                <XCircle className="w-3.5 h-3.5 text-slate-400 dark:text-white/25 hover:text-slate-600 dark:hover:text-white/50 transition-colors" />
               </button>
             )}
           </div>
@@ -522,11 +530,11 @@ export function KebajikanUnitDashboard() {
           {/* Ticket list */}
           {ticketLoading ? (
             <div className="space-y-2">
-              {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-16 rounded-2xl bg-white/[0.02] animate-pulse border border-white/[0.04]" />)}
+              {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-16 rounded-2xl bg-slate-200 dark:bg-white/[0.02] animate-pulse border border-slate-200 dark:border-white/[0.04]" />)}
             </div>
           ) : filteredTickets.length === 0 ? (
             <div className="py-16 text-center">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/20">Tiada aduan ditemui</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">Tiada aduan ditemui</p>
             </div>
           ) : (
             <AnimatePresence mode="popLayout">
@@ -545,7 +553,7 @@ export function KebajikanUnitDashboard() {
           {/* CTA: Open full module */}
           <button
             onClick={() => navigate('/kebajikan/tiket')}
-            className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-2xl border hover:opacity-80 transition-all"
+            className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-2xl border hover:opacity-80 transition-all shadow-sm"
             style={{ borderColor: hexToRgba(TEAL, 0.2), background: hexToRgba(TEAL, 0.04) }}
           >
             <span className="text-xs font-black" style={{ color: TEAL }}>Buka Halaman Tiket Penuh dalam E-Kebajikan</span>
@@ -568,23 +576,23 @@ export function KebajikanUnitDashboard() {
       ══════════════════════════════════════════════ */}
       {tab === 'aktiviti' && (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-400">
-          <div className="rounded-[2rem] p-7 text-white relative overflow-hidden"
+          <div className="rounded-[2rem] p-7 relative overflow-hidden"
             style={{ background: `linear-gradient(135deg, ${hexToRgba(TEAL, 0.3)} 0%, ${hexToRgba(TEAL, 0.05)} 100%)`, border: `1px solid ${hexToRgba(TEAL, 0.2)}` }}>
             <div className="relative z-10">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-1" style={{ color: hexToRgba(TEAL, 0.7) }}>Exco Kebajikan</p>
-              <h2 className="text-2xl font-black text-white">Aktiviti Dianjurkan</h2>
-              <p className="text-white/40 text-xs mt-1">{activities.length} aktiviti dalam rekod</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-1" style={{ color: hexToRgba(TEAL, 0.8) }}>Exco Kebajikan</p>
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white">Aktiviti Dianjurkan</h2>
+              <p className="text-slate-600 dark:text-white/40 text-xs mt-1">{activities.length} aktiviti dalam rekod</p>
             </div>
             <Activity className="absolute bottom-4 right-6 w-20 h-20 opacity-10" style={{ color: TEAL }} />
           </div>
 
           {excoLoading ? (
             <div className="space-y-2">
-              {[1, 2, 3].map(i => <div key={i} className="h-16 rounded-2xl bg-white/[0.02] animate-pulse border border-white/[0.04]" />)}
+              {[1, 2, 3].map(i => <div key={i} className="h-16 rounded-2xl bg-slate-200 dark:bg-white/[0.02] animate-pulse border border-slate-200 dark:border-white/[0.04]" />)}
             </div>
           ) : activities.length === 0 ? (
             <div className="py-16 text-center space-y-3">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/20">Tiada aktiviti direkod</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">Tiada aktiviti direkod</p>
               <button
                 onClick={() => navigate('/exco/kebajikan/aktiviti')}
                 className="text-[11px] font-black uppercase tracking-widest underline underline-offset-2 transition-all"
@@ -598,18 +606,18 @@ export function KebajikanUnitDashboard() {
               {activities.map(act => {
                 const sc = actStatus[act.status] ?? actStatus.perancangan;
                 return (
-                  <div key={act.id} className="flex items-start gap-3 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all">
-                    <div className="w-2.5 h-2.5 rounded-full mt-1 shrink-0" style={{ background: sc.color }} />
+                  <div key={act.id} className="flex items-start gap-3 p-4 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-all shadow-sm">
+                    <div className="w-2.5 h-2.5 rounded-full mt-1.5 shrink-0" style={{ background: sc.color }} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-black text-white leading-tight">{act.title}</p>
+                      <p className="text-xs font-black text-slate-900 dark:text-white leading-tight">{act.title}</p>
                       <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                         {act.start_date && (
-                          <span className="text-[10px] text-white/30 font-bold flex items-center gap-1">
+                          <span className="text-[10px] text-slate-500 dark:text-white/30 font-bold flex items-center gap-1">
                             <Calendar className="w-2.5 h-2.5" />{fmtDate(act.start_date)}
                           </span>
                         )}
                         {act.location && (
-                          <span className="text-[10px] text-white/30 font-bold flex items-center gap-1 truncate">
+                          <span className="text-[10px] text-slate-500 dark:text-white/30 font-bold flex items-center gap-1 truncate">
                             <MapPin className="w-2.5 h-2.5 shrink-0" /><span className="truncate">{act.location}</span>
                           </span>
                         )}
@@ -625,7 +633,7 @@ export function KebajikanUnitDashboard() {
 
           <button
             onClick={() => navigate('/exco/kebajikan/aktiviti')}
-            className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-2xl border hover:opacity-80 transition-all"
+            className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-2xl border hover:opacity-80 transition-all shadow-sm"
             style={{ borderColor: hexToRgba(TEAL, 0.2), background: hexToRgba(TEAL, 0.04) }}
           >
             <span className="text-xs font-black" style={{ color: TEAL }}>Urus Semua Aktiviti Exco Kebajikan</span>
@@ -639,37 +647,37 @@ export function KebajikanUnitDashboard() {
       ══════════════════════════════════════════════ */}
       {tab === 'laporan' && (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-400">
-          <div className="rounded-[2rem] p-7 text-white relative overflow-hidden"
+          <div className="rounded-[2rem] p-7 relative overflow-hidden"
             style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(99,102,241,0.04) 100%)', border: '1px solid rgba(99,102,241,0.2)' }}>
             <div className="relative z-10">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-300/60 mb-1">Kebajikan</p>
-              <h2 className="text-2xl font-black text-white">Laporan Exco</h2>
-              <p className="text-white/40 text-xs mt-1">{reports.filter(r => !r.is_archived).length} laporan · {pendingReports} menunggu semakan</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-700 dark:text-indigo-300/60 mb-1">Kebajikan</p>
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white">Laporan Exco</h2>
+              <p className="text-slate-600 dark:text-white/40 text-xs mt-1">{reports.filter(r => !r.is_archived).length} laporan · {pendingReports} menunggu semakan</p>
             </div>
             <FileText className="absolute bottom-4 right-6 w-20 h-20 text-indigo-500/10" />
           </div>
 
           {excoLoading ? (
             <div className="space-y-2">
-              {[1, 2, 3].map(i => <div key={i} className="h-14 rounded-2xl bg-white/[0.02] animate-pulse border border-white/[0.04]" />)}
+              {[1, 2, 3].map(i => <div key={i} className="h-14 rounded-2xl bg-slate-200 dark:bg-white/[0.02] animate-pulse border border-slate-200 dark:border-white/[0.04]" />)}
             </div>
           ) : reports.filter(r => !r.is_archived).length === 0 ? (
             <div className="py-16 text-center">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/20">Tiada laporan lagi</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">Tiada laporan lagi</p>
             </div>
           ) : (
             <div className="space-y-2">
               {reports.filter(r => !r.is_archived).map(r => {
                 const sc = repStatus[r.status] ?? repStatus.Menunggu;
                 return (
-                  <div key={r.id} className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
+                  <div key={r.id} className="flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] shadow-sm">
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                       style={{ background: 'rgba(99,102,241,0.12)' }}>
-                      <FileText className="w-3.5 h-3.5 text-indigo-400" />
+                      <FileText className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-black text-white line-clamp-1 leading-tight">{r.file_name}</p>
-                      <p className="text-[10px] text-white/30 mt-0.5">{fmtDate(r.created_at)}</p>
+                      <p className="text-xs font-black text-slate-900 dark:text-white line-clamp-1 leading-tight">{r.file_name}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-white/30 mt-0.5">{fmtDate(r.created_at)}</p>
                     </div>
                     <span className="text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full shrink-0"
                       style={{ background: sc.bg, color: sc.color }}>{sc.label}</span>
@@ -682,14 +690,14 @@ export function KebajikanUnitDashboard() {
           <div className="grid grid-cols-2 gap-2.5">
             <button
               onClick={() => navigate('/exco/kebajikan/laporan')}
-              className="flex items-center justify-between gap-2 px-4 py-3.5 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05] transition-all"
+              className="flex items-center justify-between gap-2 px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-all shadow-sm"
             >
-              <span className="text-[11px] font-black text-white/50">Jana / Hantar Laporan</span>
-              <ExternalLink className="w-3 h-3 text-white/25" />
+              <span className="text-[11px] font-black text-slate-600 dark:text-white/50">Jana / Hantar Laporan</span>
+              <ExternalLink className="w-3 h-3 text-slate-400 dark:text-white/25" />
             </button>
             <button
               onClick={() => setTab('semakan')}
-              className="flex items-center justify-between gap-2 px-4 py-3.5 rounded-2xl border transition-all"
+              className="flex items-center justify-between gap-2 px-4 py-3.5 rounded-2xl border transition-all shadow-sm"
               style={{ borderColor: hexToRgba(TEAL, 0.2), background: hexToRgba(TEAL, 0.05) }}
             >
               <span className="text-[11px] font-black" style={{ color: TEAL }}>Semak Laporan {pendingReports > 0 && `(${pendingReports})`}</span>
@@ -706,18 +714,18 @@ export function KebajikanUnitDashboard() {
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-400">
 
           {/* CTA Card */}
-          <div className="rounded-[2.5rem] p-8 relative overflow-hidden"
-            style={{ background: `linear-gradient(135deg, ${hexToRgba(TEAL, 0.25)} 0%, rgba(10,10,15,0.5) 100%)`, border: `1px solid ${hexToRgba(TEAL, 0.2)}` }}>
+          <div className="rounded-[2.5rem] p-8 relative overflow-hidden shadow-sm"
+            style={{ background: `linear-gradient(135deg, ${hexToRgba(TEAL, 0.25)} 0%, rgba(10,10,15,0.05) 100%)`, border: `1px solid ${hexToRgba(TEAL, 0.2)}` }}>
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-2xl" style={{ background: hexToRgba(TEAL, 0.2), border: `1px solid ${hexToRgba(TEAL, 0.3)}` }}>
                   <ClipboardCheck className="w-7 h-7" style={{ color: TEAL }} />
                 </div>
                 <div>
-                  <h3 className="font-black text-xl text-white">Semakan Laporan Exco Kebajikan</h3>
-                  <p className="text-xs text-white/40 font-medium mt-1">
+                  <h3 className="font-black text-xl text-slate-900 dark:text-white">Semakan Laporan Exco Kebajikan</h3>
+                  <p className="text-xs text-slate-600 dark:text-white/40 font-medium mt-1">
                     {pendingReports > 0
-                      ? <span className="text-amber-400 font-black">{pendingReports} laporan menunggu kelulusan anda</span>
+                      ? <span className="text-amber-600 dark:text-amber-400 font-black">{pendingReports} laporan menunggu kelulusan anda</span>
                       : 'Tiada laporan menunggu semakan'}
                   </p>
                 </div>
@@ -735,17 +743,17 @@ export function KebajikanUnitDashboard() {
 
           {/* Recent reports pending */}
           {reports.filter(r => r.status === 'Menunggu' && !r.is_archived).length > 0 && (
-            <div className="rounded-[2rem] bg-white/[0.02] border border-white/[0.05] p-5 space-y-3">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-white/40">Laporan Menunggu Semakan</h3>
+            <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] p-5 space-y-3 shadow-sm">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Laporan Menunggu Semakan</h3>
               <div className="space-y-2">
                 {reports.filter(r => r.status === 'Menunggu' && !r.is_archived).map(r => (
-                  <div key={r.id} className="flex items-center gap-3 p-3 rounded-2xl bg-amber-500/[0.05] border border-amber-500/10">
-                    <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <div key={r.id} className="flex items-center gap-3 p-3 rounded-2xl bg-amber-500/10 dark:bg-amber-500/[0.05] border border-amber-500/20 dark:border-amber-500/10">
+                    <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-black text-white line-clamp-1">{r.file_name}</p>
-                      <p className="text-[10px] text-white/30 mt-0.5">{fmtDate(r.created_at)}</p>
+                      <p className="text-xs font-black text-slate-900 dark:text-white line-clamp-1">{r.file_name}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-white/30 mt-0.5">{fmtDate(r.created_at)}</p>
                     </div>
-                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full border border-amber-500/20 text-amber-400 bg-amber-500/10">Menunggu</span>
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full border border-amber-500/20 text-amber-600 dark:text-amber-400 bg-amber-500/10">Menunggu</span>
                   </div>
                 ))}
               </div>
@@ -759,9 +767,9 @@ export function KebajikanUnitDashboard() {
               { label: 'Diluluskan', val: reports.filter(r => r.status === 'Diluluskan').length, color: '#34d399' },
               { label: 'Ditolak', val: reports.filter(r => r.status === 'Ditolak' && !r.is_archived).length, color: '#f87171' },
             ].map(s => (
-              <div key={s.label} className="p-4 rounded-2xl border border-white/[0.05] bg-white/[0.02] text-center">
+              <div key={s.label} className="p-4 rounded-2xl border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.02] text-center shadow-sm">
                 <p className="text-2xl font-black" style={{ color: s.color }}>{s.val}</p>
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mt-1">{s.label}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mt-1">{s.label}</p>
               </div>
             ))}
           </div>
@@ -776,17 +784,17 @@ function QuickAction({ label, description, icon: Icon, color, onClick }: any) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-4 p-4 rounded-2xl border border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.1] transition-all text-left group"
+      className="flex items-center gap-4 p-4 rounded-2xl border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.02] hover:bg-slate-50 dark:hover:bg-white/[0.05] hover:border-slate-300 dark:hover:border-white/[0.1] transition-all text-left group shadow-sm"
     >
       <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform"
         style={{ background: hexToRgba(color, 0.15) }}>
         <Icon className="w-5 h-5" style={{ color }} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-black text-white leading-tight">{label}</p>
-        <p className="text-[10px] text-white/30 font-medium mt-0.5 line-clamp-1">{description}</p>
+        <p className="text-xs font-black text-slate-900 dark:text-white leading-tight">{label}</p>
+        <p className="text-[10px] text-slate-500 dark:text-white/30 font-medium mt-0.5 line-clamp-1">{description}</p>
       </div>
-      <ChevronRight className="w-4 h-4 text-white/15 group-hover:text-white/40 group-hover:translate-x-0.5 transition-all shrink-0" />
+      <ChevronRight className="w-4 h-4 text-slate-400 dark:text-white/15 group-hover:text-slate-600 dark:group-hover:text-white/40 group-hover:translate-x-0.5 transition-all shrink-0" />
     </button>
   );
 }

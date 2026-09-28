@@ -33,12 +33,12 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex flex-col items-center">
       <div
-        className="w-14 h-14 rounded-2xl flex items-center justify-center font-black text-2xl text-white"
+        className="w-14 h-14 rounded-2xl flex items-center justify-center font-black text-2xl text-slate-900 dark:text-white"
         style={{ background: hexToRgba(SUPSAS_COLOR, 0.2), border: `1px solid ${hexToRgba(SUPSAS_COLOR, 0.35)}` }}
       >
         {String(value).padStart(2, '0')}
       </div>
-      <span className="text-[9px] font-black uppercase tracking-[0.25em] mt-1.5" style={{ color: hexToRgba(SUPSAS_COLOR, 0.6) }}>{label}</span>
+      <span className="text-[9px] font-black uppercase tracking-[0.25em] mt-1.5" style={{ color: hexToRgba(SUPSAS_COLOR, 0.8) }}>{label}</span>
     </div>
   );
 }
@@ -145,7 +145,7 @@ export function SrkUnitDashboard() {
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-[1.5rem] border overflow-hidden"
+        className="rounded-[1.5rem] border overflow-hidden shadow-sm"
         style={{ borderColor: hexToRgba(SUPSAS_COLOR, 0.2), background: hexToRgba(SUPSAS_COLOR, 0.04) }}
       >
         {/* Header */}
@@ -155,8 +155,8 @@ export function SrkUnitDashboard() {
             <Trophy className="w-5 h-5" style={{ color: SUPSAS_COLOR }} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-black text-white uppercase tracking-widest">SUPSAS Portal</p>
-            <p className="text-[10px] font-medium mt-0.5" style={{ color: hexToRgba(SUPSAS_COLOR, 0.6) }}>Kawalan pengumuman ke Portal Pelajar</p>
+            <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">SUPSAS Portal</p>
+            <p className="text-[10px] font-medium mt-0.5" style={{ color: hexToRgba(SUPSAS_COLOR, 0.8) }}>Kawalan pengumuman ke Portal Pelajar</p>
           </div>
           {/* Toggle */}
           <button
@@ -165,15 +165,15 @@ export function SrkUnitDashboard() {
             className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest transition-all',
               supsasEnabled
-                ? 'text-amber-300 hover:bg-amber-500/20'
-                : 'text-white/30 hover:text-white/60 hover:bg-white/10'
+                ? 'text-amber-600 dark:text-amber-300 hover:bg-amber-500/20'
+                : 'text-slate-500 dark:text-white/30 hover:text-slate-800 dark:hover:text-white/60 hover:bg-slate-100 dark:hover:bg-white/10'
             )}
           >
             {loadingToggle
               ? <Loader2 className="w-5 h-5 animate-spin" />
               : supsasEnabled
                 ? <ToggleRight className="w-6 h-6" style={{ color: SUPSAS_COLOR }} />
-                : <ToggleLeft className="w-6 h-6 text-white/30" />
+                : <ToggleLeft className="w-6 h-6 text-slate-400 dark:text-white/30" />
             }
             {supsasEnabled ? 'Aktif' : 'Tidak Aktif'}
           </button>
@@ -185,15 +185,15 @@ export function SrkUnitDashboard() {
             {supsasEnabled ? (
               <motion.div key="on" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-start gap-3">
                 <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: SUPSAS_COLOR }} />
-                <p className="text-[11px] text-white/50 leading-relaxed">
-                  Banner SUPSAS <span className="text-amber-400 font-black">sedang dipaparkan</span> dalam Portal Pelajar. Semua pengguna yang log masuk boleh melihat pengumuman dan butang ke SUPSAS.
+                <p className="text-[11px] text-slate-600 dark:text-white/50 leading-relaxed">
+                  Banner SUPSAS <span className="text-amber-600 dark:text-amber-400 font-black">sedang dipaparkan</span> dalam Portal Pelajar. Semua pengguna yang log masuk boleh melihat pengumuman dan butang ke SUPSAS.
                 </p>
               </motion.div>
             ) : (
               <motion.div key="off" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-start gap-3">
-                <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-white/20" />
-                <p className="text-[11px] text-white/30 leading-relaxed">
-                  SUPSAS <span className="font-black text-white/50">tidak dipaparkan</span> dalam Portal Pelajar. Aktifkan toggle untuk mula mengumumkan event. Halaman /supsas masih boleh diakses melalui pautan terus.
+                <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-slate-400 dark:text-white/20" />
+                <p className="text-[11px] text-slate-500 dark:text-white/30 leading-relaxed">
+                  SUPSAS <span className="font-black text-slate-700 dark:text-white/50">tidak dipaparkan</span> dalam Portal Pelajar. Aktifkan toggle untuk mula mengumumkan event. Halaman /supsas masih boleh diakses melalui pautan terus.
                 </p>
               </motion.div>
             )}
@@ -203,7 +203,7 @@ export function SrkUnitDashboard() {
 
       {loadingData ? (
         <div className="flex items-center justify-center py-10">
-          <Loader2 className="w-5 h-5 animate-spin text-white/20" />
+          <Loader2 className="w-5 h-5 animate-spin text-slate-400 dark:text-white/20" />
         </div>
       ) : (
         <>
@@ -213,13 +213,13 @@ export function SrkUnitDashboard() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="rounded-[1.5rem] border p-5 space-y-4"
+              className="rounded-[1.5rem] border p-5 space-y-4 shadow-sm"
               style={{ borderColor: hexToRgba(SUPSAS_COLOR, 0.15), background: hexToRgba(SUPSAS_COLOR, 0.03) }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4" style={{ color: SUPSAS_COLOR }} />
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Countdown</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 dark:text-white/40">Countdown</span>
                 </div>
                 <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
                   style={{ background: hexToRgba(SUPSAS_COLOR, 0.12), color: SUPSAS_COLOR, border: `1px solid ${hexToRgba(SUPSAS_COLOR, 0.2)}` }}>
@@ -228,14 +228,14 @@ export function SrkUnitDashboard() {
               </div>
               <div className="flex items-center gap-3 justify-center py-2">
                 <CountdownUnit value={countdown.days}  label="Hari" />
-                <span className="text-2xl font-black text-white/20 mb-4">:</span>
+                <span className="text-2xl font-black text-slate-300 dark:text-white/20 mb-4">:</span>
                 <CountdownUnit value={countdown.hours} label="Jam" />
-                <span className="text-2xl font-black text-white/20 mb-4">:</span>
+                <span className="text-2xl font-black text-slate-300 dark:text-white/20 mb-4">:</span>
                 <CountdownUnit value={countdown.mins}  label="Minit" />
-                <span className="text-2xl font-black text-white/20 mb-4">:</span>
+                <span className="text-2xl font-black text-slate-300 dark:text-white/20 mb-4">:</span>
                 <CountdownUnit value={countdown.secs}  label="Saat" />
               </div>
-              <p className="text-center text-xs font-black text-white/30">
+              <p className="text-center text-xs font-black text-slate-600 dark:text-white/30">
                 SUPSAS bermula pada{' '}
                 <span style={{ color: SUPSAS_COLOR }}>
                   {new Date(edition!.start_date!).toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
@@ -257,10 +257,10 @@ export function SrkUnitDashboard() {
                 { label: 'Sukan',     value: stats.sportsCount,    icon: Medal },
                 { label: 'Perlawanan', value: stats.fixturesCount, icon: BarChart3 },
               ].map(({ label, value, icon: Icon }) => (
-                <div key={label} className="rounded-2xl p-4 text-center border border-white/[0.05] bg-white/[0.02]">
+                <div key={label} className="rounded-2xl p-4 text-center border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.02] shadow-sm">
                   <Icon className="w-4 h-4 mx-auto mb-1.5" style={{ color: SUPSAS_COLOR }} />
-                  <p className="text-xl font-black text-white">{value}</p>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mt-0.5">{label}</p>
+                  <p className="text-xl font-black text-slate-900 dark:text-white">{value}</p>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30 mt-0.5">{label}</p>
                 </div>
               ))}
             </motion.div>
@@ -273,7 +273,7 @@ export function SrkUnitDashboard() {
             transition={{ delay: 0.2 }}
             className="space-y-2"
           >
-            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/25 mb-3">Panel Pengurusan SUPSAS</p>
+            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-3">Panel Pengurusan SUPSAS</p>
             {[
               { icon: Settings,     label: 'Tetapan Edisi',        href: '/supsas/admin/tetapan',   desc: 'Cipta / aktifkan edisi baru' },
               { icon: Trophy,       label: 'Urus Sukan',           href: '/supsas/admin/sukan',     desc: 'Tambah & uruskan sukan' },
@@ -285,17 +285,17 @@ export function SrkUnitDashboard() {
               <button
                 key={href}
                 onClick={() => navigate(href)}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.06] hover:border-white/10 transition-all group text-left"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] hover:bg-slate-50 dark:hover:bg-white/[0.06] hover:border-slate-300 dark:hover:border-white/10 transition-all group text-left shadow-sm"
               >
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ background: hexToRgba(SUPSAS_COLOR, 0.12) }}>
                   <Icon className="w-3.5 h-3.5" style={{ color: SUPSAS_COLOR }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-black text-white/70 group-hover:text-white transition-colors">{label}</p>
-                  <p className="text-[9px] text-white/25 mt-0.5">{desc}</p>
+                  <p className="text-xs font-black text-slate-700 dark:text-white/70 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{label}</p>
+                  <p className="text-[9px] text-slate-400 dark:text-white/25 mt-0.5">{desc}</p>
                 </div>
-                <ArrowRight className="w-3.5 h-3.5 text-white/20 group-hover:text-white/50 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                <ArrowRight className="w-3.5 h-3.5 text-slate-400 dark:text-white/20 group-hover:text-slate-600 dark:group-hover:text-white/50 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
               </button>
             ))}
           </motion.div>
@@ -305,10 +305,10 @@ export function SrkUnitDashboard() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-8 border border-dashed border-white/10 rounded-2xl space-y-3"
+              className="text-center py-8 border border-dashed border-slate-300 dark:border-white/10 rounded-2xl space-y-3"
             >
-              <Trophy className="w-8 h-8 mx-auto text-white/10" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/20">Belum ada edisi SUPSAS dicipta</p>
+              <Trophy className="w-8 h-8 mx-auto text-slate-300 dark:text-white/10" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">Belum ada edisi SUPSAS dicipta</p>
               <button
                 onClick={() => navigate('/supsas/admin/tetapan')}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all"

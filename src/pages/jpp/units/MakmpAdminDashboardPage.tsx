@@ -1044,17 +1044,17 @@ export default function MakmpAdminDashboardPage() {
   return (
     <div className="space-y-6">
       {/* Header & Edisi Selector */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/[0.08]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-white tracking-tight">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
               Pusat Kawalan MAKMP POLISAS
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/20">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20">
               Pengurusan Anugerah
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Konfigurasi edisi tahunan, kuota kategori anugerah, kod PIN juri & semakan pencalonan pelajar.
           </p>
         </div>
@@ -1064,10 +1064,10 @@ export default function MakmpAdminDashboardPage() {
           <select
             value={selectedEditionId}
             onChange={(e) => handleEditionChange(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-500 transition"
+            className="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm transition"
           >
             {editions.map((ed) => (
-              <option key={ed.id} value={ed.id}>
+              <option key={ed.id} value={ed.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                 {ed.title} ({ed.year}) {ed.is_active ? '• Aktif' : ''}
               </option>
             ))}
@@ -1076,7 +1076,7 @@ export default function MakmpAdminDashboardPage() {
           <button
             onClick={() => selectedEditionId && loadEditionDetails(selectedEditionId)}
             title="Muat Semula Data"
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 shadow-sm transition"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -1085,9 +1085,9 @@ export default function MakmpAdminDashboardPage() {
 
       {/* Not Logged In / Non-Admin Warning Banner */}
       {!user ? (
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg animate-fade-in">
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm animate-fade-in">
           <div className="flex items-center gap-2.5">
-            <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
             <div>
               <span className="font-bold">Mod Pratonton (Belum Log Masuk):</span> Anda sedang melihat data MAKMP sebagai tetamu. Tindakan menjana PIN juri atau mengurus anugerah memerlukan log masuk sebagai JPP / Pentadbir.
             </div>
@@ -1100,49 +1100,49 @@ export default function MakmpAdminDashboardPage() {
           </Link>
         </div>
       ) : !isJppOrAdmin ? (
-        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2.5 shadow-lg animate-fade-in">
-          <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
+        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2.5 shadow-sm animate-fade-in">
+          <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0" />
           <div>
-            <span className="font-bold">Akses Terhad (Bukan JPP):</span> Anda log masuk sebagai <strong className="text-white">{profile?.full_name || user.email}</strong> (Peranan: <code className="text-amber-300 font-mono">{profile?.role || 'Pelajar'}</code>). Tindakan menjana PIN dan mengurus anugerah dihadkan kepada akaun JPP / SUPER_ADMIN_JPP.
+            <span className="font-bold">Akses Terhad (Bukan JPP):</span> Anda log masuk sebagai <strong className="text-slate-900 dark:text-white">{profile?.full_name || user.email}</strong> (Peranan: <code className="text-amber-600 dark:text-amber-300 font-mono">{profile?.role || 'Pelajar'}</code>). Tindakan menjana PIN dan mengurus anugerah dihadkan kepada akaun JPP / SUPER_ADMIN_JPP.
           </div>
         </div>
       ) : null}
 
       {/* KPI Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-1">
-          <div className="text-[11px] text-slate-400 font-semibold uppercase">Jumlah Pencalonan</div>
-          <div className="text-2xl font-extrabold text-white">{totalSubmissions}</div>
-          <div className="text-[10px] text-slate-500">{submissions.length} permohonan masuk</div>
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold uppercase">Jumlah Pencalonan</div>
+          <div className="text-2xl font-extrabold text-slate-900 dark:text-white">{totalSubmissions}</div>
+          <div className="text-[10px] text-slate-400 dark:text-slate-500">{submissions.length} permohonan masuk</div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-1">
-          <div className="text-[11px] text-amber-400 font-semibold uppercase">Menunggu Semakan</div>
-          <div className="text-2xl font-extrabold text-amber-300">{pendingCount}</div>
-          <div className="text-[10px] text-amber-500/80">Perlu tindakan pegawai/juri</div>
+        <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 shadow-sm space-y-1">
+          <div className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold uppercase">Menunggu Semakan</div>
+          <div className="text-2xl font-extrabold text-amber-600 dark:text-amber-300">{pendingCount}</div>
+          <div className="text-[10px] text-amber-600/80 dark:text-amber-500/80">Perlu tindakan pegawai/juri</div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-1">
-          <div className="text-[11px] text-emerald-400 font-semibold uppercase">Diluluskan</div>
-          <div className="text-2xl font-extrabold text-emerald-300">{approvedCount}</div>
-          <div className="text-[10px] text-emerald-500/80">{rejectedCount} ditolak</div>
+        <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 shadow-sm space-y-1">
+          <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase">Diluluskan</div>
+          <div className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-300">{approvedCount}</div>
+          <div className="text-[10px] text-emerald-600/80 dark:text-emerald-500/80">{rejectedCount} ditolak</div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/20 space-y-1">
-          <div className="text-[11px] text-indigo-400 font-semibold uppercase">Merit Dianugerah</div>
-          <div className="text-2xl font-extrabold text-indigo-300">+{totalMeritGiven}</div>
-          <div className="text-[10px] text-indigo-400/80">Diselaraskan ke e-akademik</div>
+        <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/20 shadow-sm space-y-1">
+          <div className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold uppercase">Merit Dianugerah</div>
+          <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-300">+{totalMeritGiven}</div>
+          <div className="text-[10px] text-indigo-500/80 dark:text-indigo-400/80">Diselaraskan ke e-akademik</div>
         </div>
       </div>
 
       {/* Tabs Navigation */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
         <button
           onClick={() => setTab('submissions')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
             tab === 'submissions'
-              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/10'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
           }`}
         >
           <Layers className="w-3.5 h-3.5" />
@@ -1151,10 +1151,10 @@ export default function MakmpAdminDashboardPage() {
 
         <button
           onClick={() => setTab('categories')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
             tab === 'categories'
-              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/10'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
           }`}
         >
           <Award className="w-3.5 h-3.5" />
@@ -1163,10 +1163,10 @@ export default function MakmpAdminDashboardPage() {
 
         <button
           onClick={() => setTab('pins')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
             tab === 'pins'
-              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/10'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
           }`}
         >
           <KeyRound className="w-3.5 h-3.5" />
@@ -1175,10 +1175,10 @@ export default function MakmpAdminDashboardPage() {
 
         <button
           onClick={() => setTab('editions')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
             tab === 'editions'
-              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/10'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
           }`}
         >
           <CalendarClock className="w-3.5 h-3.5" />
@@ -1187,10 +1187,10 @@ export default function MakmpAdminDashboardPage() {
 
         <button
           onClick={() => setTab('ranking')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
             tab === 'ranking'
-              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/10'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
           }`}
         >
           <Trophy className="w-3.5 h-3.5" />
@@ -1209,7 +1209,7 @@ export default function MakmpAdminDashboardPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white"
+                className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white shadow-sm"
               >
                 <option value="ALL">Semua Status</option>
                 <option value="MENUNGGU">Menunggu</option>
@@ -1221,7 +1221,7 @@ export default function MakmpAdminDashboardPage() {
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white max-w-[200px]"
+                className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white max-w-[200px] shadow-sm"
               >
                 <option value="ALL">Semua Kategori</option>
                 {categories.map((c) => (
@@ -1234,31 +1234,31 @@ export default function MakmpAdminDashboardPage() {
 
             <div className="flex items-center gap-2">
               <div className="relative flex-1 md:w-64">
-                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Cari nama, matrik, kod..."
-                  className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500"
+                  className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 shadow-sm"
                 />
               </div>
 
               <button
                 onClick={handleExportCSV}
-                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold flex items-center gap-1.5 transition shrink-0"
+                className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white text-xs font-semibold flex items-center gap-1.5 transition shrink-0 shadow-sm"
               >
-                <Download className="w-3.5 h-3.5 text-amber-400" />
+                <Download className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                 <span>Eksport CSV</span>
               </button>
             </div>
           </div>
 
           {/* Master Table */}
-          <div className="rounded-2xl border border-slate-800 overflow-hidden bg-slate-900/60 shadow-xl">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900/60 shadow-sm">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950 text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-800">
+              <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+                <thead className="bg-slate-50 dark:bg-slate-950 text-[11px] uppercase tracking-wider text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="py-3 px-4">Kod Rujukan</th>
                     <th className="py-3 px-4">Nama Pelajar</th>
@@ -1271,29 +1271,29 @@ export default function MakmpAdminDashboardPage() {
                     <th className="py-3 px-4 text-right">Tindakan</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {filteredSubmissions.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="py-12 text-center text-slate-500">
+                      <td colSpan={9} className="py-12 text-center text-slate-400 dark:text-slate-500">
                         Tiada rekod penyerahan ditemui.
                       </td>
                     </tr>
                   ) : (
                     filteredSubmissions.map((sub) => (
-                      <tr key={sub.id} className="hover:bg-slate-800/40 transition">
-                        <td className="py-3 px-4 font-mono font-bold text-amber-400">
+                      <tr key={sub.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
+                        <td className="py-3 px-4 font-mono font-bold text-amber-600 dark:text-amber-400">
                           {sub.tracking_code}
                         </td>
-                        <td className="py-3 px-4 font-semibold text-white max-w-[180px] truncate">
+                        <td className="py-3 px-4 font-semibold text-slate-900 dark:text-white max-w-[180px] truncate">
                           {sub.full_name}
                         </td>
-                        <td className="py-3 px-4 font-mono">{sub.matric_no}</td>
+                        <td className="py-3 px-4 font-mono text-slate-600 dark:text-slate-300">{sub.matric_no}</td>
                         <td className="py-3 px-4">
-                          <span className="font-semibold text-slate-200">
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
                             {getJabatanLabel(sub.department)}
                           </span>
                           {sub.programme_code && (
-                            <span className="block text-[10px] text-slate-400">
+                            <span className="block text-[10px] text-slate-400 dark:text-slate-400">
                               {sub.programme_code}
                             </span>
                           )}
@@ -1303,11 +1303,11 @@ export default function MakmpAdminDashboardPage() {
                             <div className="space-y-1">
                               {sub.awards.map((aw) => (
                                 <div key={aw.id} className="flex flex-col">
-                                  <span className="font-semibold text-white truncate" title={aw.award?.name}>
+                                  <span className="font-semibold text-slate-900 dark:text-white truncate" title={aw.award?.name}>
                                     {aw.award?.name}
                                   </span>
                                   {aw.entity_name && (
-                                    <span className="text-[10px] text-purple-300 truncate">
+                                    <span className="text-[10px] text-purple-600 dark:text-purple-300 truncate">
                                       {aw.entity_name} ({aw.applicant_role || 'Calon'})
                                     </span>
                                   )}
@@ -1315,26 +1315,26 @@ export default function MakmpAdminDashboardPage() {
                               ))}
                             </div>
                           ) : (
-                            <span className="text-slate-300">{sub.category?.name || '-'}</span>
+                            <span className="text-slate-700 dark:text-slate-300">{sub.category?.name || '-'}</span>
                           )}
                         </td>
-                        <td className="py-3 px-4 font-bold text-white">
+                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">
                           {sub.items?.length || 0}
                         </td>
                         <td className="py-3 px-4">
                           <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                               sub.status === 'DISAHKAN'
-                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                                 : sub.status === 'DITOLAK'
-                                ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                                : 'bg-amber-500/10 text-amber-300 border border-amber-500/20'
+                                ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                                : 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20'
                             }`}
                           >
                             {sub.status}
                           </span>
                         </td>
-                        <td className="py-3 px-4 font-bold text-amber-400">
+                        <td className="py-3 px-4 font-bold text-amber-600 dark:text-amber-400">
                           {sub.status === 'DISAHKAN' ? `+${sub.total_merit_awarded}` : '-'}
                         </td>
                         <td className="py-3 px-4 text-right">
@@ -1344,7 +1344,7 @@ export default function MakmpAdminDashboardPage() {
                                 onClick={() => handleUnlockSubmission(sub)}
                                 disabled={unlockingAwardId === '__submission__' + sub.id}
                                 title="Buka semula anugerah yang terkunci"
-                                className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 text-amber-300 transition inline-flex items-center gap-1 text-[11px] disabled:opacity-50"
+                                className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 text-amber-600 dark:text-amber-300 transition inline-flex items-center gap-1 text-[11px] disabled:opacity-50"
                               >
                                 {unlockingAwardId === '__submission__' + sub.id ? (
                                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1356,9 +1356,9 @@ export default function MakmpAdminDashboardPage() {
                             )}
                             <button
                               onClick={() => openSubDetail(sub)}
-                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition inline-flex items-center gap-1 text-[11px]"
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition inline-flex items-center gap-1 text-[11px] shadow-xs"
                             >
-                              <Eye className="w-3.5 h-3.5 text-amber-400" />
+                              <Eye className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                               <span>Perincian</span>
                             </button>
                           </div>
@@ -1379,18 +1379,18 @@ export default function MakmpAdminDashboardPage() {
       {tab === 'ranking' && (
         <div className="space-y-6">
           <div>
-            <h2 className="text-sm font-bold text-white flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-amber-400" />
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-amber-500 dark:text-amber-400" />
               Keputusan & Ranking Mengikut Anugerah
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Susun kedudukan Top 1/2/3 bagi setiap anugerah, kemudian sahkan keputusan
               untuk menghantar notifikasi kepada pemenang.
             </p>
           </div>
 
           {awards.length === 0 ? (
-            <div className="p-8 rounded-2xl bg-slate-900 border border-slate-800 text-center text-slate-500 text-sm">
+            <div className="p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center text-slate-500 text-sm shadow-sm">
               Tiada anugerah untuk edisi yang dipilih.
             </div>
           ) : (
@@ -1404,7 +1404,7 @@ export default function MakmpAdminDashboardPage() {
                 }
                 return Array.from(groups.entries()).map(([group, list]) => (
                   <div key={group}>
-                    <h3 className="text-sm font-bold text-amber-400 uppercase tracking-wider mb-3">
+                    <h3 className="text-sm font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-3">
                       {group}
                     </h3>
                     <div className="space-y-4">
@@ -1433,11 +1433,11 @@ export default function MakmpAdminDashboardPage() {
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Award className="w-4 h-4 text-amber-400" />
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Award className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                   Senarai Anugerah Rasmi MAKMP ({awards.length})
                 </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Pengurusan anugerah yang boleh dipohon oleh pelajar, syarat dokumen, merit maksimum dan templat laporan.
                 </p>
               </div>
@@ -1455,21 +1455,21 @@ export default function MakmpAdminDashboardPage() {
               {awards.map((aw) => (
                 <div
                   key={aw.id}
-                  className={`p-4 rounded-2xl bg-slate-900 border transition flex flex-col justify-between shadow-md ${
-                    aw.is_active ? 'border-slate-800' : 'border-rose-900/40 opacity-70'
+                  className={`p-4 rounded-2xl bg-white dark:bg-slate-900 border transition flex flex-col justify-between shadow-sm ${
+                    aw.is_active ? 'border-slate-200 dark:border-slate-800' : 'border-rose-300 dark:border-rose-900/40 opacity-70'
                   }`}
                 >
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-2">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20">
                         {aw.category_group}
                       </span>
                       <div className="flex items-center gap-1.5">
                         <span
                           className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
                             aw.target_type === 'ENTITY'
-                              ? 'bg-purple-500/10 text-purple-300 border border-purple-500/20'
-                              : 'bg-blue-500/10 text-blue-300 border border-blue-500/20'
+                              ? 'bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20'
+                              : 'bg-blue-500/10 text-blue-600 dark:text-blue-300 border border-blue-500/20'
                           }`}
                         >
                           {aw.target_type === 'ENTITY' ? 'ENTITI / KELAB' : 'INDIVIDU'}
@@ -1480,8 +1480,8 @@ export default function MakmpAdminDashboardPage() {
                           title="Klik untuk ubah status aktif/nyahaktif"
                           className={`text-[9px] font-bold px-2 py-0.5 rounded-full transition ${
                             aw.is_active
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
-                              : 'bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20'
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
+                              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 hover:bg-rose-500/20'
                           }`}
                         >
                           {aw.is_active ? 'Aktif' : 'Nyahaktif'}
@@ -1491,23 +1491,23 @@ export default function MakmpAdminDashboardPage() {
 
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-500 font-mono">#{aw.sort_order}</span>
-                        <h4 className="font-bold text-sm text-white">{aw.name}</h4>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">#{aw.sort_order}</span>
+                        <h4 className="font-bold text-sm text-slate-900 dark:text-white">{aw.name}</h4>
                       </div>
-                      <p className="text-xs text-slate-400 mt-1 line-clamp-2">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
                         {aw.doc_instructions || 'Tiada arahan khusus.'}
                       </p>
                     </div>
 
                     {/* Badge Dokumen & Template Box */}
-                    <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1.5 text-xs">
+                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80 space-y-1.5 text-xs">
                       <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-slate-400">Keperluan:</span>
+                        <span className="text-slate-500 dark:text-slate-400">Keperluan:</span>
                         <span
                           className={`font-semibold px-2 py-0.5 rounded text-[10px] ${
                             aw.doc_requirement_type === 'REPORT_AND_EVIDENCE'
-                              ? 'bg-sky-500/10 text-sky-300 border border-sky-500/20'
-                              : 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/20'
+                              ? 'bg-sky-500/10 text-sky-600 dark:text-sky-300 border border-sky-500/20'
+                              : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-500/20'
                           }`}
                         >
                           {aw.doc_requirement_type === 'REPORT_AND_EVIDENCE'
@@ -1517,8 +1517,8 @@ export default function MakmpAdminDashboardPage() {
                       </div>
 
                       {aw.doc_requirement_type === 'REPORT_AND_EVIDENCE' && (
-                        <div className="pt-1 border-t border-slate-800/60 space-y-1">
-                          <div className="text-[11px] text-sky-400 font-medium truncate">
+                        <div className="pt-1 border-t border-slate-200 dark:border-slate-800/60 space-y-1">
+                          <div className="text-[11px] text-sky-600 dark:text-sky-400 font-medium truncate">
                             Templat: {aw.template_name || 'Belum Ditetapkan'}
                           </div>
                           {aw.template_url ? (
@@ -1526,13 +1526,13 @@ export default function MakmpAdminDashboardPage() {
                               href={aw.template_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-[10px] text-amber-400 hover:text-amber-300 flex items-center gap-1 truncate"
+                              className="text-[10px] text-amber-600 dark:text-amber-400 hover:text-amber-500 flex items-center gap-1 truncate"
                             >
                               <ExternalLink className="w-3 h-3 shrink-0" />
                               <span className="truncate">{aw.template_url}</span>
                             </a>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[10px] font-semibold">
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-[10px] font-semibold">
                               <AlertTriangle className="w-3 h-3 shrink-0" />
                               Tiada Templat — student akan muat naik format sendiri
                             </span>
@@ -1542,10 +1542,10 @@ export default function MakmpAdminDashboardPage() {
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-800/80 mt-3 space-y-2">
-                    <div className="flex items-center justify-between text-[11px] text-slate-400">
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 mt-3 space-y-2">
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
                       <span>Maks. {aw.max_certificates} Dokumen</span>
-                      <span className="font-bold text-amber-400">Had: {aw.max_merit} Merit</span>
+                      <span className="font-bold text-amber-600 dark:text-amber-400">Had: {aw.max_merit} Merit</span>
                     </div>
 
                     {/* Award Card Action Buttons */}
@@ -1553,17 +1553,17 @@ export default function MakmpAdminDashboardPage() {
                       <button
                         type="button"
                         onClick={() => handleOpenEditAward(aw)}
-                        className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1 transition"
+                        className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1 transition"
                       >
-                        <Edit2 className="w-3 h-3 text-amber-400" />
+                        <Edit2 className="w-3 h-3 text-amber-500 dark:text-amber-400" />
                         <span>Kemaskini</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => handleDeleteAward(aw)}
-                        className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold flex items-center gap-1 transition border border-rose-500/20"
+                        className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-300 text-xs font-semibold flex items-center gap-1 transition border border-rose-500/20"
                       >
-                        <Trash2 className="w-3 h-3 text-rose-400" />
+                        <Trash2 className="w-3 h-3 text-rose-500 dark:text-rose-400" />
                         <span>Padam</span>
                       </button>
                     </div>
@@ -1574,23 +1574,23 @@ export default function MakmpAdminDashboardPage() {
           </div>
 
           {/* Section 2: Kategori Pangkalan Data Asas */}
-          <div className="space-y-4 pt-4 border-t border-slate-800">
+          <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-amber-400" />
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                   Kategori Pangkalan Data Asas ({categories.length})
                 </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Kategori asas arkib dan klasifikasi lama sistem MAKMP.
                 </p>
               </div>
 
               <button
                 onClick={handleOpenCreateCategory}
-                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center gap-1.5 transition self-start sm:self-auto"
+                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition self-start sm:self-auto shadow-sm"
               >
-                <Plus className="w-3.5 h-3.5 text-amber-400" />
+                <Plus className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                 <span>Tambah Kategori Asas</span>
               </button>
             </div>
@@ -1599,15 +1599,15 @@ export default function MakmpAdminDashboardPage() {
               {categories.map((cat) => (
                 <div
                   key={cat.id}
-                  className={`p-4 rounded-xl bg-slate-900 border space-y-2 text-xs flex flex-col justify-between ${
-                    cat.is_active ? 'border-slate-800' : 'border-rose-900/40 opacity-70'
+                  className={`p-4 rounded-xl bg-white dark:bg-slate-900 border space-y-2 text-xs flex flex-col justify-between shadow-sm ${
+                    cat.is_active ? 'border-slate-200 dark:border-slate-800' : 'border-rose-300 dark:border-rose-900/40 opacity-70'
                   }`}
                 >
                   <div className="space-y-1.5">
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-bold text-white text-sm">{cat.name}</h3>
+                      <h3 className="font-bold text-slate-900 dark:text-white text-sm">{cat.name}</h3>
                       <div className="flex items-center gap-1.5">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                           {cat.department_scope || 'UMUM'}
                         </span>
                         <button
@@ -1615,36 +1615,36 @@ export default function MakmpAdminDashboardPage() {
                           onClick={() => handleToggleCategoryActive(cat)}
                           className={`text-[10px] font-semibold px-2 py-0.5 rounded-full transition ${
                             cat.is_active
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                              : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
                           }`}
                         >
                           {cat.is_active ? 'Aktif' : 'Nyahaktif'}
                         </button>
                       </div>
                     </div>
-                    <p className="text-slate-400">{cat.description || 'Tiada penerangan.'}</p>
-                    <div className="flex items-center gap-4 text-[11px] text-slate-400 pt-1">
-                      <span>Maks. Sijil: <strong className="text-white">{cat.max_certificates}</strong></span>
-                      <span>Maks. Merit: <strong className="text-amber-400">{cat.max_merit}</strong></span>
+                    <p className="text-slate-500 dark:text-slate-400">{cat.description || 'Tiada penerangan.'}</p>
+                    <div className="flex items-center gap-4 text-[11px] text-slate-500 dark:text-slate-400 pt-1">
+                      <span>Maks. Sijil: <strong className="text-slate-900 dark:text-white">{cat.max_certificates}</strong></span>
+                      <span>Maks. Merit: <strong className="text-amber-600 dark:text-amber-400">{cat.max_merit}</strong></span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-slate-800/80 mt-2">
+                  <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 mt-2">
                     <button
                       type="button"
                       onClick={() => handleOpenEditCategory(cat)}
-                      className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1 transition"
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1 transition"
                     >
-                      <Edit2 className="w-3 h-3 text-amber-400" />
+                      <Edit2 className="w-3 h-3 text-amber-500 dark:text-amber-400" />
                       <span>Kemaskini</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDeleteCategory(cat)}
-                      className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold flex items-center gap-1 transition border border-rose-500/20"
+                      className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-300 text-xs font-semibold flex items-center gap-1 transition border border-rose-500/20"
                     >
-                      <Trash2 className="w-3 h-3 text-rose-400" />
+                      <Trash2 className="w-3 h-3 text-rose-500 dark:text-rose-400" />
                       <span>Padam</span>
                     </button>
                   </div>
@@ -1657,17 +1657,17 @@ export default function MakmpAdminDashboardPage() {
           {/* MODAL CRUD ANUGERAH RASMI                                         */}
           {/* ================================================================ */}
           {isAwardModalOpen && (
-            <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-              <div className="w-full max-w-lg p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                  <h3 className="font-bold text-base text-white flex items-center gap-2">
-                    <Award className="w-4 h-4 text-amber-400" />
+            <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+              <div className="w-full max-w-lg p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                    <Award className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                     <span>{editingAward ? 'Kemaskini Anugerah Rasmi' : 'Tambah Anugerah Baharu'}</span>
                   </h3>
                   <button
                     type="button"
                     onClick={() => setIsAwardModalOpen(false)}
-                    className="text-slate-400 hover:text-white p-1 rounded-lg"
+                    className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg"
                   >
                     ✕
                   </button>
@@ -1675,134 +1675,134 @@ export default function MakmpAdminDashboardPage() {
 
                 <form onSubmit={handleSaveAward} className="space-y-3.5 text-xs">
                   <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Nama Rasmi Anugerah *</label>
+                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Nama Rasmi Anugerah *</label>
                     <input
                       type="text"
                       required
                       value={awardName}
                       onChange={(e) => setAwardName(e.target.value)}
                       placeholder="cth: Anugerah Khas Pengarah"
-                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-amber-500"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm"
                     />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Kumpulan Kategori *</label>
+                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Kumpulan Kategori *</label>
                       <select
                         value={awardCategoryGroup}
                         onChange={(e) => setAwardCategoryGroup(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-amber-500"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm"
                       >
                         {PRESET_CATEGORY_GROUPS.map((grp) => (
-                          <option key={grp} value={grp}>
+                          <option key={grp} value={grp} className="bg-white dark:bg-slate-900">
                             {grp}
                           </option>
                         ))}
-                        <option value="CUSTOM">+ Kategori Tersuai / Lain-lain...</option>
+                        <option value="CUSTOM" className="bg-white dark:bg-slate-900">+ Kategori Tersuai / Lain-lain...</option>
                       </select>
                     </div>
 
                     <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Sasaran Pemohon *</label>
+                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Sasaran Pemohon *</label>
                       <select
                         value={awardTargetType}
                         onChange={(e) => setAwardTargetType(e.target.value as 'INDIVIDUAL' | 'ENTITY')}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-amber-500"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm"
                       >
-                        <option value="INDIVIDUAL">INDIVIDU (Pelajar Sendiri)</option>
-                        <option value="ENTITY">ENTITI / KELAB (Organisasi)</option>
+                        <option value="INDIVIDUAL" className="bg-white dark:bg-slate-900">INDIVIDU (Pelajar Sendiri)</option>
+                        <option value="ENTITY" className="bg-white dark:bg-slate-900">ENTITI / KELAB (Organisasi)</option>
                       </select>
                     </div>
                   </div>
 
                   {awardCategoryGroup === 'CUSTOM' && (
                     <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Nama Kategori Tersuai *</label>
+                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Nama Kategori Tersuai *</label>
                       <input
                         type="text"
                         required
                         value={customCategoryGroup}
                         onChange={(e) => setCustomCategoryGroup(e.target.value)}
                         placeholder="cth: ANUGERAH INOVASI DIGITAL"
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono uppercase"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono uppercase shadow-sm"
                       />
                     </div>
                   )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Keperluan Dokumen *</label>
+                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Keperluan Dokumen *</label>
                       <select
                         value={awardDocRequirementType}
                         onChange={(e) => setAwardDocRequirementType(e.target.value as any)}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                       >
-                        <option value="CERTIFICATES">Sijil Pencapaian</option>
-                        <option value="REPORT_AND_EVIDENCE">Laporan & Bukti</option>
+                        <option value="CERTIFICATES" className="bg-white dark:bg-slate-900">Sijil Pencapaian</option>
+                        <option value="REPORT_AND_EVIDENCE" className="bg-white dark:bg-slate-900">Laporan & Bukti</option>
                       </select>
                     </div>
 
                     <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Maks. Dokumen / Sijil</label>
+                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Maks. Dokumen / Sijil</label>
                       <input
                         type="number"
                         min={1}
                         max={20}
                         value={awardMaxCertificates}
                         onChange={(e) => setAwardMaxCertificates(Number(e.target.value))}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Had Maks. Merit</label>
+                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Had Maks. Merit</label>
                       <input
                         type="number"
                         min={1}
                         max={50}
                         value={awardMaxMerit}
                         onChange={(e) => setAwardMaxMerit(Number(e.target.value))}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Arahan Dokumen / Syarat Khas</label>
+                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Arahan Dokumen / Syarat Khas</label>
                     <textarea
                       rows={2}
                       value={awardDocInstructions}
                       onChange={(e) => setAwardDocInstructions(e.target.value)}
                       placeholder="cth: Sertakan salinan sijil pencapaian peringkat antarabangsa atau kebangsaan..."
-                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                     />
                   </div>
 
                   {awardDocRequirementType === 'REPORT_AND_EVIDENCE' && (
-                    <div className="p-3.5 rounded-xl bg-slate-950 border border-sky-500/30 space-y-3">
-                      <div className="text-[11px] font-bold text-sky-400">Konfigurasi Templat Laporan Rasmi</div>
+                    <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-sky-400/30 dark:border-sky-500/30 space-y-3">
+                      <div className="text-[11px] font-bold text-sky-600 dark:text-sky-400">Konfigurasi Templat Laporan Rasmi</div>
                       <div>
-                        <label className="block text-slate-300 font-semibold mb-1">Tajuk Templat Laporan</label>
+                        <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Tajuk Templat Laporan</label>
                         <input
                           type="text"
                           value={awardTemplateName}
                           onChange={(e) => setAwardTemplateName(e.target.value)}
                           placeholder="cth: Templat Laporan Inkubator Keusahawanan"
-                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white"
+                          className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-slate-300 font-semibold mb-1">Pautan Muat Turun (Google Docs / Drive)</label>
+                        <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Pautan Muat Turun (Google Docs / Drive)</label>
                         <input
                           type="url"
                           value={awardTemplateUrl}
                           onChange={(e) => setAwardTemplateUrl(e.target.value)}
                           placeholder="https://docs.google.com/..."
-                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white font-mono text-xs"
+                          className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono text-xs shadow-sm"
                         />
                         {!awardTemplateUrl.trim() && (
-                          <p className="flex items-start gap-1.5 mt-1.5 text-[11px] text-rose-300 leading-relaxed">
+                          <p className="flex items-start gap-1.5 mt-1.5 text-[11px] text-rose-600 dark:text-rose-300 leading-relaxed">
                             <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                             <span>
                               Tiada templat ditetapkan — pelajar akan diminta muat naik laporan dalam
@@ -1816,14 +1816,14 @@ export default function MakmpAdminDashboardPage() {
 
                   <div className="grid grid-cols-2 gap-3 pt-1">
                     <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Urutan Susunan (Sort Order)</label>
+                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Urutan Susunan (Sort Order)</label>
                       <input
                         type="number"
                         min={1}
                         max={100}
                         value={awardSortOrder}
                         onChange={(e) => setAwardSortOrder(Number(e.target.value))}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                       />
                     </div>
 
@@ -1833,18 +1833,18 @@ export default function MakmpAdminDashboardPage() {
                           type="checkbox"
                           checked={awardIsActive}
                           onChange={(e) => setAwardIsActive(e.target.checked)}
-                          className="w-4 h-4 rounded text-amber-500 bg-slate-950 border-slate-800 focus:ring-amber-500"
+                          className="w-4 h-4 rounded text-amber-500 bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-800 focus:ring-amber-500"
                         />
-                        <span className="text-white font-semibold text-xs">Aktifkan untuk Permohonan</span>
+                        <span className="text-slate-800 dark:text-white font-semibold text-xs">Aktifkan untuk Permohonan</span>
                       </label>
                     </div>
                   </div>
 
-                  <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                  <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
                     <button
                       type="button"
                       onClick={() => setIsAwardModalOpen(false)}
-                      className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+                      className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition"
                     >
                       Batal
                     </button>
@@ -1864,16 +1864,16 @@ export default function MakmpAdminDashboardPage() {
           {/* MODAL CRUD KATEGORI ASAS                                          */}
           {/* ================================================================ */}
           {isCategoryModalOpen && (
-            <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-              <div className="w-full max-w-md p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 shadow-2xl">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                  <h3 className="font-bold text-base text-white">
+            <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="w-full max-w-md p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <h3 className="font-bold text-base text-slate-900 dark:text-white">
                     {editingCategory ? 'Kemaskini Kategori Asas' : 'Tambah Kategori Asas'}
                   </h3>
                   <button
                     type="button"
                     onClick={() => setIsCategoryModalOpen(false)}
-                    className="text-slate-400 hover:text-white p-1 rounded-lg"
+                    className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg"
                   >
                     ✕
                   </button>
@@ -1881,65 +1881,65 @@ export default function MakmpAdminDashboardPage() {
 
                 <form onSubmit={handleSaveCategory} className="space-y-3 text-xs">
                   <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Nama Kategori *</label>
+                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Nama Kategori *</label>
                     <input
                       type="text"
                       required
                       value={catName}
                       onChange={(e) => setCatName(e.target.value)}
                       placeholder="cth: Anugerah Tokoh Siswa"
-                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Maks. Sijil</label>
+                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Maks. Sijil</label>
                       <input
                         type="number"
                         min={1}
                         max={15}
                         value={catMaxCert}
                         onChange={(e) => setCatMaxCert(Number(e.target.value))}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                       />
                     </div>
                     <div>
-                      <label className="block text-slate-300 font-semibold mb-1">Maks. Merit</label>
+                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Maks. Merit</label>
                       <input
                         type="number"
                         min={1}
                         max={50}
                         value={catMaxMerit}
                         onChange={(e) => setCatMaxMerit(Number(e.target.value))}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Skop Jabatan</label>
+                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Skop Jabatan</label>
                     <select
                       value={catScope}
                       onChange={(e) => setCatScope(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                     >
-                      <option value="UMUM">UMUM (Semua Jabatan)</option>
-                      <option value="AKADEMIK">AKADEMIK</option>
-                      <option value="HEP">HEP</option>
-                      <option value="KEUSAHAWANAN">KEUSAHAWANAN</option>
-                      <option value="SUKAN">SUKAN</option>
+                      <option value="UMUM" className="bg-white dark:bg-slate-900">UMUM (Semua Jabatan)</option>
+                      <option value="AKADEMIK" className="bg-white dark:bg-slate-900">AKADEMIK</option>
+                      <option value="HEP" className="bg-white dark:bg-slate-900">HEP</option>
+                      <option value="KEUSAHAWANAN" className="bg-white dark:bg-slate-900">KEUSAHAWANAN</option>
+                      <option value="SUKAN" className="bg-white dark:bg-slate-900">SUKAN</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Penerangan / Syarat</label>
+                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Penerangan / Syarat</label>
                     <textarea
                       rows={2}
                       value={catDesc}
                       onChange={(e) => setCatDesc(e.target.value)}
                       placeholder="Syarat kelayakan kategori ini..."
-                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                     />
                   </div>
 
@@ -1949,17 +1949,17 @@ export default function MakmpAdminDashboardPage() {
                         type="checkbox"
                         checked={catIsActive}
                         onChange={(e) => setCatIsActive(e.target.checked)}
-                        className="w-4 h-4 rounded text-amber-500 bg-slate-950 border-slate-800 focus:ring-amber-500"
+                        className="w-4 h-4 rounded text-amber-500 bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-800 focus:ring-amber-500"
                       />
-                      <span className="text-white font-semibold text-xs">Aktif</span>
+                      <span className="text-slate-800 dark:text-white font-semibold text-xs">Aktif</span>
                     </label>
                   </div>
 
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                     <button
                       type="button"
                       onClick={() => setIsCategoryModalOpen(false)}
-                      className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300"
+                      className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
                     >
                       Batal
                     </button>
@@ -1984,11 +1984,11 @@ export default function MakmpAdminDashboardPage() {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                <KeyRound className="w-4 h-4 text-amber-400" />
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <KeyRound className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                 Kod PIN Akses Juri & Pegawai Penilai ({pins.length})
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Juri boleh mengakses portal semakan pantas tanpa akaun login. Setiap juri boleh ditugaskan satu atau banyak kategori serentak.
               </p>
             </div>
@@ -2012,23 +2012,23 @@ export default function MakmpAdminDashboardPage() {
               return (
                 <div
                   key={pin.id}
-                  className={`p-5 rounded-2xl bg-slate-900 border space-y-4 shadow-md flex flex-col justify-between transition ${
-                    pin.is_active ? 'border-slate-800' : 'border-rose-900/40 opacity-70'
+                  className={`p-5 rounded-2xl bg-white dark:bg-slate-900 border space-y-4 shadow-sm flex flex-col justify-between transition ${
+                    pin.is_active ? 'border-slate-200 dark:border-slate-800' : 'border-rose-300 dark:border-rose-900/40 opacity-70'
                   }`}
                 >
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <h3 className="font-bold text-sm text-white">{pin.jury_name}</h3>
-                        <div className="text-xs text-slate-400 mt-0.5">{pin.organization}</div>
+                        <h3 className="font-bold text-sm text-slate-900 dark:text-white">{pin.jury_name}</h3>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{pin.organization}</div>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleTogglePin(pin.id, pin.is_active)}
                         className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition ${
                           pin.is_active
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
-                            : 'bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
+                            : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 hover:bg-rose-500/20'
                         }`}
                       >
                         {pin.is_active ? 'Aktif' : 'Dinyahaktif'}
@@ -2036,10 +2036,10 @@ export default function MakmpAdminDashboardPage() {
                     </div>
 
                     {/* Assigned Categories / Awards Badges */}
-                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 space-y-2">
-                      <div className="text-[10px] uppercase font-bold text-slate-500 flex items-center justify-between">
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+                      <div className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 flex items-center justify-between">
                         <span>Tugasan Semakan:</span>
-                        <span className="text-slate-400 font-mono">
+                        <span className="text-slate-500 dark:text-slate-400 font-mono">
                           {isAll
                             ? 'Akses Penuh'
                             : `${pin.assigned_categories.length} Ditugaskan`}
@@ -2047,7 +2047,7 @@ export default function MakmpAdminDashboardPage() {
                       </div>
                       <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
                         {isAll ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                             ⭐ Semua Kategori & Anugerah (Akses Penuh)
                           </span>
                         ) : (
@@ -2060,8 +2060,8 @@ export default function MakmpAdminDashboardPage() {
                                 key={i}
                                 className={`px-2 py-0.5 rounded text-[10px] font-medium border max-w-[220px] truncate ${
                                   isGroup
-                                    ? 'bg-purple-500/10 text-purple-300 border-purple-500/30 font-semibold'
-                                    : 'bg-amber-500/10 text-amber-300 border-amber-500/20'
+                                    ? 'bg-purple-500/10 text-purple-600 dark:text-purple-300 border-purple-500/30 font-semibold'
+                                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border-amber-500/20'
                                 }`}
                                 title={cat}
                               >
@@ -2074,10 +2074,10 @@ export default function MakmpAdminDashboardPage() {
                     </div>
 
                     {/* PIN Code Display Box */}
-                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
                       <div>
-                        <div className="text-[10px] text-slate-500 uppercase font-semibold">Kod PIN</div>
-                        <div className="font-mono text-xl font-extrabold text-amber-400 tracking-wider">
+                        <div className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-semibold">Kod PIN</div>
+                        <div className="font-mono text-xl font-extrabold text-amber-600 dark:text-amber-400 tracking-wider">
                           {pin.pin_code}
                         </div>
                       </div>
@@ -2085,11 +2085,11 @@ export default function MakmpAdminDashboardPage() {
                       <button
                         type="button"
                         onClick={() => handleCopyJuryLink(pin.pin_code)}
-                        className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white transition flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-white border border-slate-200 dark:border-transparent transition flex items-center gap-1.5 shadow-xs"
                       >
                         {copiedPin === pin.pin_code ? (
                           <>
-                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
                             <span>Disalin!</span>
                           </>
                         ) : (
@@ -2103,21 +2103,21 @@ export default function MakmpAdminDashboardPage() {
                   </div>
 
                   {/* PIN Card Actions Footer */}
-                  <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-slate-800/80">
+                  <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800/80">
                     <button
                       type="button"
                       onClick={() => handleOpenEditPin(pin)}
-                      className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1 transition"
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1 transition"
                     >
-                      <Edit2 className="w-3 h-3 text-amber-400" />
+                      <Edit2 className="w-3 h-3 text-amber-500 dark:text-amber-400" />
                       <span>Kemaskini</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDeletePin(pin)}
-                      className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold flex items-center gap-1 transition border border-rose-500/20"
+                      className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-300 text-xs font-semibold flex items-center gap-1 transition border border-rose-500/20"
                     >
-                      <Trash2 className="w-3 h-3 text-rose-400" />
+                      <Trash2 className="w-3 h-3 text-rose-500 dark:text-rose-400" />
                       <span>Padam</span>
                     </button>
                   </div>
@@ -2130,17 +2130,17 @@ export default function MakmpAdminDashboardPage() {
           {/* MODAL JANA / KEMASKINI PIN JURI (MULTI-CATEGORY)                   */}
           {/* ================================================================ */}
           {isPinModalOpen && (
-            <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-              <div className="w-full max-w-lg p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                  <h3 className="font-bold text-base text-white flex items-center gap-2">
-                    <KeyRound className="w-4 h-4 text-amber-400" />
+            <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+              <div className="w-full max-w-lg p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                    <KeyRound className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                     <span>{editingPin ? 'Kemaskini Tugasan Juri & PIN' : 'Jana Kod PIN Juri MAKMP'}</span>
                   </h3>
                   <button
                     type="button"
                     onClick={() => setIsPinModalOpen(false)}
-                    className="text-slate-400 hover:text-white p-1 rounded-lg"
+                    className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg"
                   >
                     ✕
                   </button>
@@ -2148,36 +2148,36 @@ export default function MakmpAdminDashboardPage() {
 
                 <form onSubmit={handleSavePin} className="space-y-4 text-xs">
                   <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Nama Pegawai / Juri *</label>
+                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Nama Pegawai / Juri *</label>
                     <input
                       type="text"
                       required
                       value={juryName}
                       onChange={(e) => setJuryName(e.target.value)}
                       placeholder="cth: Ts. Dr. Ahmad bin Zulkifli"
-                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-amber-500"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-slate-300 font-semibold mb-1">Organisasi / Jabatan / Unit</label>
+                    <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Organisasi / Jabatan / Unit</label>
                     <input
                       type="text"
                       value={juryOrg}
                       onChange={(e) => setJuryOrg(e.target.value)}
                       placeholder="cth: Jabatan Kejuruteraan Elektrik (JKE) / HEP"
-                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-amber-500"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm"
                     />
                   </div>
 
                   {/* Multi-Award / Multi-Category Assignment Component */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <label className="block text-slate-300 font-semibold">
+                      <label className="block text-slate-700 dark:text-slate-300 font-semibold">
                         Tugasan Anugerah / Kategori Semakan *
                       </label>
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-amber-400 font-medium">
+                        <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
                           {selectedJuryCategories.includes('ALL')
                             ? 'Akses Penuh Semua Anugerah'
                             : `${selectedJuryCategories.length} Tugasan Dipilih`}
@@ -2186,7 +2186,7 @@ export default function MakmpAdminDashboardPage() {
                           <button
                             type="button"
                             onClick={() => setSelectedJuryCategories([])}
-                            className="text-[10px] text-slate-400 hover:text-rose-400 underline transition"
+                            className="text-[10px] text-slate-500 hover:text-rose-500 underline transition"
                           >
                             Kosongkan
                           </button>
@@ -2198,28 +2198,28 @@ export default function MakmpAdminDashboardPage() {
                     <button
                       type="button"
                       onClick={handleToggleAllJuryCategories}
-                      className={`w-full p-3 rounded-xl border flex items-center justify-between text-left transition ${
+                      className={`w-full p-3 rounded-xl border flex items-center justify-between text-left transition shadow-xs ${
                         selectedJuryCategories.includes('ALL')
-                          ? 'bg-amber-500/10 border-amber-500 text-amber-300'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                          ? 'bg-amber-500/10 border-amber-500 text-amber-700 dark:text-amber-300'
+                          : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
                         {selectedJuryCategories.includes('ALL') ? (
-                          <CheckSquare className="w-4 h-4 text-amber-400 shrink-0" />
+                          <CheckSquare className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
                         ) : (
-                          <Square className="w-4 h-4 text-slate-500 shrink-0" />
+                          <Square className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
                         )}
                         <div>
-                          <div className="font-bold text-white text-xs">
+                          <div className="font-bold text-slate-900 dark:text-white text-xs">
                             ⭐ SEMUA KATEGORI & ANUGERAH (Akses Penuh)
                           </div>
-                          <div className="text-[11px] text-slate-400">
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
                             Pegawai ini boleh menyemak semua {awards.length || 18} anugerah rasmi tanpa had
                           </div>
                         </div>
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                         Pilihan Utama
                       </span>
                     </button>
@@ -2227,26 +2227,26 @@ export default function MakmpAdminDashboardPage() {
                     {/* Option 2: Hierarchical Award Checklist */}
                     <div className="space-y-2 pt-1">
                       <div className="flex items-center justify-between gap-2">
-                        <div className="text-[11px] text-slate-400 font-medium">
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                           Atau peruntukkan anugerah / kategori spesifik bagi pegawai ini:
                         </div>
                       </div>
 
                       {/* Quick Search inside modal */}
                       <div className="relative">
-                        <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                           type="text"
                           value={juryCategorySearch}
                           onChange={(e) => setJuryCategorySearch(e.target.value)}
                           placeholder="Cari nama anugerah atau kumpulan... (cth: Keusahawanan, Siswa, Sukan)"
-                          className="w-full pl-8 pr-8 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500"
+                          className="w-full pl-8 pr-8 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 shadow-sm"
                         />
                         {juryCategorySearch && (
                           <button
                             type="button"
                             onClick={() => setJuryCategorySearch('')}
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs"
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white text-xs"
                           >
                             ✕
                           </button>
@@ -2256,7 +2256,7 @@ export default function MakmpAdminDashboardPage() {
                       {/* Grouped Awards Accordion / List */}
                       <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
                         {filteredGroupedAwards.length === 0 ? (
-                          <div className="p-4 text-center text-xs text-slate-500 bg-slate-950 rounded-xl border border-slate-800">
+                          <div className="p-4 text-center text-xs text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
                             Tiada anugerah sepadan dengan carian "{juryCategorySearch}".
                           </div>
                         ) : (
@@ -2267,10 +2267,10 @@ export default function MakmpAdminDashboardPage() {
                             return (
                               <div
                                 key={groupName}
-                                className="rounded-xl border border-slate-800 bg-slate-950/70 overflow-hidden"
+                                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 overflow-hidden shadow-xs"
                               >
                                 {/* Group Header Bar */}
-                                <div className="p-2.5 bg-slate-900/90 border-b border-slate-800/80 flex items-center justify-between gap-2">
+                                <div className="p-2.5 bg-slate-100/90 dark:bg-slate-900/90 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-2">
                                   <div className="flex items-center gap-2 min-w-0">
                                     <button
                                       type="button"
@@ -2278,19 +2278,19 @@ export default function MakmpAdminDashboardPage() {
                                       className="flex items-center gap-2 text-left"
                                     >
                                       {isGroupSelected ? (
-                                        <CheckSquare className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                        <CheckSquare className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
                                       ) : isPartial ? (
                                         <div className="w-3.5 h-3.5 rounded border border-amber-500/50 bg-amber-500/20 flex items-center justify-center shrink-0">
-                                          <div className="w-2 h-0.5 bg-amber-400 rounded-full" />
+                                          <div className="w-2 h-0.5 bg-amber-500 dark:bg-amber-400 rounded-full" />
                                         </div>
                                       ) : (
-                                        <Square className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                                        <Square className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 shrink-0" />
                                       )}
-                                      <span className="font-bold text-xs text-slate-200 truncate">
+                                      <span className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate">
                                         {groupName}
                                       </span>
                                     </button>
-                                    <span className="text-[10px] text-slate-500 shrink-0">
+                                    <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0">
                                       ({groupAwards.length} anugerah)
                                     </span>
                                   </div>
@@ -2300,8 +2300,8 @@ export default function MakmpAdminDashboardPage() {
                                     onClick={() => handleToggleGroup(groupName)}
                                     className={`text-[10px] font-semibold px-2 py-0.5 rounded transition shrink-0 ${
                                       isGroupSelected
-                                        ? 'bg-rose-500/10 text-rose-300 hover:bg-rose-500/20'
-                                        : 'bg-slate-800 hover:bg-slate-700 text-amber-300'
+                                        ? 'bg-rose-500/10 text-rose-600 dark:text-rose-300 hover:bg-rose-500/20'
+                                        : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-amber-700 dark:text-amber-300 border border-slate-200 dark:border-transparent'
                                     }`}
                                   >
                                     {isGroupSelected ? 'Nyahpilih Kumpulan' : 'Pilih Semua Kumpulan'}
@@ -2309,7 +2309,7 @@ export default function MakmpAdminDashboardPage() {
                                 </div>
 
                                 {/* List of Awards under this group */}
-                                <div className="p-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-slate-950/40">
+                                <div className="p-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-white/40 dark:bg-slate-950/40">
                                   {groupAwards.map((aw) => {
                                     const isChecked = isAwardSelected(aw);
                                     return (
@@ -2319,21 +2319,21 @@ export default function MakmpAdminDashboardPage() {
                                         onClick={() => handleToggleAward(aw)}
                                         className={`p-2 rounded-lg border text-left flex items-start gap-2 transition ${
                                           isChecked
-                                            ? 'bg-amber-500/10 border-amber-500/40 text-white'
-                                            : 'bg-slate-900/60 border-slate-800/60 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                                            ? 'bg-amber-500/10 border-amber-500/40 text-slate-900 dark:text-white'
+                                            : 'bg-white dark:bg-slate-900/60 border-slate-200/60 dark:border-slate-800/60 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'
                                         }`}
                                       >
                                         {isChecked ? (
-                                          <CheckSquare className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                                          <CheckSquare className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
                                         ) : (
-                                          <Square className="w-3.5 h-3.5 text-slate-600 shrink-0 mt-0.5" />
+                                          <Square className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 shrink-0 mt-0.5" />
                                         )}
                                         <div className="min-w-0 flex-1">
-                                          <div className="text-[11px] font-medium leading-tight text-white truncate" title={aw.name}>
+                                          <div className="text-[11px] font-medium leading-tight text-slate-900 dark:text-white truncate" title={aw.name}>
                                             {aw.name}
                                           </div>
-                                          <div className="flex items-center gap-1.5 mt-1 text-[9px] text-slate-500">
-                                            <span className="px-1 py-0.2 rounded bg-slate-800 text-slate-400">
+                                          <div className="flex items-center gap-1.5 mt-1 text-[9px] text-slate-400 dark:text-slate-500">
+                                            <span className="px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                                               {aw.target_type === 'ENTITY' ? 'ENTITI / KELAB' : 'INDIVIDU'}
                                             </span>
                                             <span>Maks {aw.max_merit || 50}m</span>
@@ -2350,8 +2350,8 @@ export default function MakmpAdminDashboardPage() {
 
                         {/* Fallback / Kategori Asas jika ada kategori yang belum dipetakan ke anugerah */}
                         {categories.length > 0 && groupedAwards.length === 0 && (
-                          <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-2.5 space-y-2">
-                            <div className="text-xs font-bold text-slate-300">
+                          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 p-2.5 space-y-2">
+                            <div className="text-xs font-bold text-slate-700 dark:text-slate-300">
                               Kategori Asas (Klasik):
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -2367,14 +2367,14 @@ export default function MakmpAdminDashboardPage() {
                                     onClick={() => handleToggleClassicCategory(c.name)}
                                     className={`p-2 rounded-lg border text-left flex items-center gap-2 transition ${
                                       isChecked
-                                        ? 'bg-amber-500/10 border-amber-500/40 text-white'
-                                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
+                                        ? 'bg-amber-500/10 border-amber-500/40 text-slate-900 dark:text-white'
+                                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                                     }`}
                                   >
                                     {isChecked ? (
-                                      <CheckSquare className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                      <CheckSquare className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
                                     ) : (
-                                      <Square className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                                      <Square className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 shrink-0" />
                                     )}
                                     <span className="text-[11px] font-medium truncate">{c.name}</span>
                                   </button>
@@ -2388,19 +2388,19 @@ export default function MakmpAdminDashboardPage() {
                   </div>
 
                   {!isJppOrAdmin && (
-                    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
                       <span>
                         Peringatan: Anda belum log masuk sebagai Pentadbir JPP. Sila log masuk dengan akaun JPP di /login sebelum menjana PIN.
                       </span>
                     </div>
                   )}
 
-                  <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                  <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
                     <button
                       type="button"
                       onClick={() => setIsPinModalOpen(false)}
-                      className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+                      className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition"
                     >
                       Batal
                     </button>
@@ -2422,48 +2422,48 @@ export default function MakmpAdminDashboardPage() {
       {/* MODAL PERINCIAN SUBMISSION                                           */}
       {/* ==================================================================== */}
       {activeSub && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="w-full max-w-4xl p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="w-full max-w-4xl p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
               <div>
-                <span className="font-mono text-xs text-amber-400 font-bold">
+                <span className="font-mono text-xs text-amber-600 dark:text-amber-400 font-bold">
                   {activeSub.tracking_code}
                 </span>
-                <h3 className="text-lg font-bold text-white mt-0.5">{activeSub.full_name}</h3>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{activeSub.full_name}</h3>
               </div>
               <button
                 onClick={() => setActiveSub(null)}
-                className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white"
+                className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white"
               >
                 ✕
               </button>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80">
-                <span className="text-[10px] uppercase font-bold text-slate-500">No. Matrik:</span>
-                <div className="font-mono font-bold text-amber-400 mt-0.5">{activeSub.matric_no}</div>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80">
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">No. Matrik:</span>
+                <div className="font-mono font-bold text-amber-600 dark:text-amber-400 mt-0.5">{activeSub.matric_no}</div>
               </div>
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80">
-                <span className="text-[10px] uppercase font-bold text-slate-500">Jabatan & Sem:</span>
-                <div className="font-bold text-white mt-0.5">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80">
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Jabatan & Sem:</span>
+                <div className="font-bold text-slate-900 dark:text-white mt-0.5">
                   {getJabatanLabel(activeSub.department)} (Sem {activeSub.semester || 1})
                 </div>
               </div>
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80">
-                <span className="text-[10px] uppercase font-bold text-slate-500">Telefon:</span>
-                <div className="font-bold text-white mt-0.5">{activeSub.phone}</div>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80">
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Telefon:</span>
+                <div className="font-bold text-slate-900 dark:text-white mt-0.5">{activeSub.phone}</div>
               </div>
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80">
-                <span className="text-[10px] uppercase font-bold text-slate-500">Status Keseluruhan:</span>
-                <div className="font-bold text-amber-400 mt-0.5">{activeSub.status} (+{activeSub.total_merit_awarded}m)</div>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80">
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Status Keseluruhan:</span>
+                <div className="font-bold text-amber-600 dark:text-amber-400 mt-0.5">{activeSub.status} (+{activeSub.total_merit_awarded}m)</div>
               </div>
             </div>
 
             {/* Multi-Award Breakdown if available */}
             {activeSub.awards && activeSub.awards.length > 0 ? (
               <div className="space-y-4">
-                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                   Pecahan Anugerah Yang Dipohon ({activeSub.awards.length})
                 </h4>
                 <div className="space-y-3">
@@ -2475,18 +2475,18 @@ export default function MakmpAdminDashboardPage() {
                     return (
                       <div
                         key={awApp.id || idx}
-                        className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3"
+                        className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3"
                       >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 dark:border-slate-800/80 pb-2.5">
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20">
                                 {awApp.award?.category_group}
                               </span>
-                              <span className="font-bold text-sm text-white">{awApp.award?.name}</span>
+                              <span className="font-bold text-sm text-slate-900 dark:text-white">{awApp.award?.name}</span>
                             </div>
                             {awApp.entity_name && (
-                              <div className="text-xs text-purple-300 mt-1">
+                              <div className="text-xs text-purple-600 dark:text-purple-300 mt-1">
                                 Entiti / Kelab: <strong>{awApp.entity_name}</strong> (Peranan: {awApp.applicant_role || 'Calon'})
                               </div>
                             )}
@@ -2496,16 +2496,16 @@ export default function MakmpAdminDashboardPage() {
                             <span
                               className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                                 awApp.status === 'DISAHKAN'
-                                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                                   : awApp.status === 'DITOLAK'
-                                  ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                                  : 'bg-amber-500/10 text-amber-300 border border-amber-500/20'
+                                  ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                                  : 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20'
                               }`}
                             >
                               {awApp.status}
                             </span>
                             {awApp.status === 'DISAHKAN' && (
-                              <span className="text-xs font-bold text-emerald-400">
+                              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
                                 +{awApp.total_merit_granted} Merit
                               </span>
                             )}
@@ -2517,7 +2517,7 @@ export default function MakmpAdminDashboardPage() {
                                   e.stopPropagation();
                                   handleUnlockAward(awApp.id, awApp.award?.name);
                                 }}
-                                className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-bold hover:bg-amber-500/20 transition flex items-center gap-1 disabled:opacity-50"
+                                className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-[10px] font-bold hover:bg-amber-500/20 transition flex items-center gap-1 disabled:opacity-50"
                               >
                                 {unlockingAwardId === awApp.id ? 'Membuka...' : '🔓 Buka Semula'}
                               </button>
@@ -2528,18 +2528,18 @@ export default function MakmpAdminDashboardPage() {
                         {/* Sejarah buka semula award ini */}
                         {reviewLog.filter((l) => l.awardId === awApp.id).length > 0 && (
                           <div className="space-y-1.5 pt-1">
-                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                            <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                               Sejarah Buka Semula:
                             </div>
                             {reviewLog
                               .filter((l) => l.awardId === awApp.id)
                               .map((log, li) => (
-                                <div key={log.id || li} className="text-[11px] text-slate-400 flex items-start gap-2">
-                                  <span className="text-amber-400 font-mono shrink-0">#{log.unlock_count}</span>
+                                <div key={log.id || li} className="text-[11px] text-slate-600 dark:text-slate-400 flex items-start gap-2">
+                                  <span className="text-amber-600 dark:text-amber-400 font-mono shrink-0">#{log.unlock_count}</span>
                                   <span>
                                     {log.jury_name || log.admin_name || 'Pentadbir'} — {log.previous_status} → DALAM_SEMAKAN
                                     {log.reason ? ` • "${log.reason}"` : ''}
-                                    <span className="block text-[10px] text-slate-600">
+                                    <span className="block text-[10px] text-slate-400 dark:text-slate-600">
                                       {new Date(log.created_at).toLocaleString('ms-MY')}
                                     </span>
                                   </span>
@@ -2550,30 +2550,30 @@ export default function MakmpAdminDashboardPage() {
 
                         {/* Documents for this award */}
                         <div className="space-y-2">
-                          <div className="text-[11px] font-semibold text-slate-400">
+                          <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
                             Dokumen / Laporan Disertakan ({awItems.length}):
                           </div>
                           {awItems.length === 0 ? (
-                            <p className="text-xs text-slate-500 italic">Tiada dokumen dilampirkan.</p>
+                            <p className="text-xs text-slate-400 dark:text-slate-500 italic">Tiada dokumen dilampirkan.</p>
                           ) : (
                             awItems.map((doc, dIdx) => (
                               <div
                                 key={doc.id || dIdx}
-                                className="p-2.5 rounded-lg bg-slate-900 border border-slate-800/80 flex items-center justify-between gap-2 text-xs"
+                                className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-2 text-xs shadow-xs"
                               >
                                 <div className="flex items-center gap-2 truncate">
                                   <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
                                     doc.document_type === 'LAPORAN'
-                                      ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+                                      ? 'bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30'
                                       : doc.document_type === 'BUKTI_SOKONGAN'
-                                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                                      ? 'bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/30'
+                                      : 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30'
                                   }`}>
                                     {doc.document_type || 'SIJIL'}
                                   </span>
-                                  <span className="text-white font-medium truncate">{doc.nama_pencapaian}</span>
+                                  <span className="text-slate-900 dark:text-white font-medium truncate">{doc.nama_pencapaian}</span>
                                   {doc.document_type === 'LAPORAN' && doc.report_score > 0 && (
-                                    <span className="px-1.5 py-0.5 rounded bg-sky-500/20 border border-sky-500/30 text-sky-300 font-bold text-[9px] whitespace-nowrap">
+                                    <span className="px-1.5 py-0.5 rounded bg-sky-500/20 border border-sky-500/30 text-sky-600 dark:text-sky-300 font-bold text-[9px] whitespace-nowrap">
                                       {doc.report_score}/100 → +{Math.round(doc.report_score / 10)}m
                                     </span>
                                   )}
@@ -2583,7 +2583,7 @@ export default function MakmpAdminDashboardPage() {
                                   href={doc.drive_view_url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-amber-400 font-semibold text-xs flex items-center gap-1 shrink-0"
+                                  className="px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 font-semibold text-xs flex items-center gap-1 shrink-0"
                                 >
                                   <ExternalLink className="w-3.5 h-3.5" />
                                   <span>Buka Dokumen</span>
@@ -2599,20 +2599,20 @@ export default function MakmpAdminDashboardPage() {
               </div>
             ) : (
               <div>
-                <h4 className="text-xs font-bold text-slate-300 mb-2">
+                <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
                   Senarai Sijil Dikemukakan ({activeSub.items?.length || 0})
                 </h4>
                 <div className="space-y-2">
                   {activeSub.items?.map((item, i) => (
                     <div
                       key={item.id}
-                      className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between gap-3 text-xs"
+                      className="p-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-3 text-xs shadow-xs"
                     >
                       <div>
-                        <div className="font-bold text-white">
+                        <div className="font-bold text-slate-900 dark:text-white">
                           {i + 1}. {item.nama_pencapaian}
                         </div>
-                        <div className="text-[11px] text-slate-400">
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400">
                           {item.peringkat} • {item.pencapaian_type}
                         </div>
                       </div>
@@ -2621,7 +2621,7 @@ export default function MakmpAdminDashboardPage() {
                         href={item.drive_view_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs font-semibold flex items-center gap-1 shrink-0"
+                        className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 text-xs font-semibold flex items-center gap-1 shrink-0"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
                         <span>Buka Sijil</span>
@@ -2640,13 +2640,13 @@ export default function MakmpAdminDashboardPage() {
       {tab === 'editions' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Urus edisi tahunan MAKMP — tukar tarikh tutup permohonan, tajuk, tahun, dan buka/tutup sesi.
             </p>
             {isJppOrAdmin && (
               <button
                 onClick={handleOpenCreateEdition}
-                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-2 transition"
+                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-sm transition"
               >
                 <Plus className="w-4 h-4" />
                 <span>Edisi Baharu</span>
@@ -2659,30 +2659,30 @@ export default function MakmpAdminDashboardPage() {
               <div
                 key={ed.id}
                 className={`p-4 rounded-2xl border ${
-                  ed.is_active ? 'border-amber-500/30 bg-amber-500/5' : 'border-slate-800 bg-slate-900/60 opacity-75'
-                } flex flex-col sm:flex-row sm:items-center justify-between gap-3`}
+                  ed.is_active ? 'border-amber-500/30 bg-amber-500/5' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 opacity-75'
+                } shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3`}
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="font-bold text-white text-sm">{ed.title}</h4>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm">{ed.title}</h4>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                       {ed.year}
                     </span>
                     {ed.is_active ? (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/20">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20">
                         Sesi Dibuka
                       </span>
                     ) : (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/20">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-500/20">
                         Sesi Ditutup
                       </span>
                     )}
                   </div>
                   {ed.description && (
-                    <p className="text-[11px] text-slate-400">{ed.description}</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{ed.description}</p>
                   )}
-                  <div className="flex items-center gap-1.5 text-[11px] text-slate-300">
-                    <CalendarClock className="w-3.5 h-3.5 text-amber-400" />
+                  <div className="flex items-center gap-1.5 text-[11px] text-slate-700 dark:text-slate-300">
+                    <CalendarClock className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                     <span>
                       Tarikh tutup:{' '}
                       {ed.submission_deadline
@@ -2700,22 +2700,22 @@ export default function MakmpAdminDashboardPage() {
                       onClick={() => handleToggleEditionActive(ed)}
                       className={`px-3 py-2 rounded-xl text-xs font-bold transition ${
                         ed.is_active
-                          ? 'bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 border border-rose-500/20'
-                          : 'bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 border border-emerald-500/20'
+                          ? 'bg-rose-500/15 text-rose-600 dark:text-rose-300 hover:bg-rose-500/25 border border-rose-500/20'
+                          : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-500/25 border border-emerald-500/20'
                       }`}
                     >
                       {ed.is_active ? 'Tutup Sesi' : 'Buka Sesi'}
                     </button>
                     <button
                       onClick={() => handleOpenEditEdition(ed)}
-                      className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+                      className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition"
                       title="Kemaskini edisi"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteEdition(ed)}
-                      className="p-2 rounded-xl bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 transition"
+                      className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-300 transition"
                       title="Padam edisi"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -2725,7 +2725,7 @@ export default function MakmpAdminDashboardPage() {
               </div>
             ))}
             {editions.length === 0 && (
-              <div className="p-6 text-center text-slate-500 text-xs">
+              <div className="p-6 text-center text-slate-400 dark:text-slate-500 text-xs">
                 Tiada edisi lagi. Klik "Edisi Baharu" untuk mula.
               </div>
             )}
@@ -2735,16 +2735,16 @@ export default function MakmpAdminDashboardPage() {
 
       {/* Modal Edisi (Create & Edit) */}
       {isEditionModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-              <h3 className="font-bold text-base text-white">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">
                 {editingEdition ? 'Kemaskini Edisi' : 'Edisi Baharu'}
               </h3>
               <button
                 type="button"
                 onClick={() => setIsEditionModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg"
               >
                 ✕
               </button>
@@ -2752,48 +2752,48 @@ export default function MakmpAdminDashboardPage() {
 
             <form onSubmit={handleSaveEdition} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Tajuk Edisi *</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Tajuk Edisi *</label>
                 <input
                   type="text"
                   required
                   value={editionTitle}
                   onChange={(e) => setEditionTitle(e.target.value)}
                   placeholder="cth: Majlis Anugerah Kecemerlangan POLISAS 2027"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Tahun *</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Tahun *</label>
                   <input
                     type="number"
                     min={2020}
                     max={2100}
                     value={editionYear}
                     onChange={(e) => setEditionYear(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Tarikh Tutup</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Tarikh Tutup</label>
                   <input
                     type="datetime-local"
                     value={editionDeadline}
                     onChange={(e) => setEditionDeadline(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Penerangan</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Penerangan</label>
                 <textarea
                   rows={2}
                   value={editionDesc}
                   onChange={(e) => setEditionDesc(e.target.value)}
                   placeholder="Penerangan ringkas edisi ini..."
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
                 />
               </div>
 
@@ -2803,17 +2803,17 @@ export default function MakmpAdminDashboardPage() {
                     type="checkbox"
                     checked={editionIsActive}
                     onChange={(e) => setEditionIsActive(e.target.checked)}
-                    className="w-4 h-4 rounded text-amber-500 bg-slate-950 border-slate-800 focus:ring-amber-500"
+                    className="w-4 h-4 rounded text-amber-500 bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-800 focus:ring-amber-500"
                   />
-                  <span className="text-white font-semibold text-xs">Sesi Dibuka (aktif)</span>
+                  <span className="text-slate-800 dark:text-white font-semibold text-xs">Sesi Dibuka (aktif)</span>
                 </label>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsEditionModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300"
+                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
                 >
                   Batal
                 </button>

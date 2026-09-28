@@ -67,8 +67,8 @@ export function KamsisKlkStatsWidget({ themeColor }: KamsisKlkStatsWidgetProps) 
 
   if (loading) {
     return (
-      <div className="h-32 rounded-[2rem] border border-white/[0.05] bg-white/[0.02] flex items-center justify-center animate-pulse">
-        <Loader2 className="w-6 h-6 text-white/20 animate-spin" />
+      <div className="h-32 rounded-[2rem] border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.02] flex items-center justify-center animate-pulse">
+        <Loader2 className="w-6 h-6 text-slate-400 dark:text-white/20 animate-spin" />
       </div>
     );
   }
@@ -77,19 +77,15 @@ export function KamsisKlkStatsWidget({ themeColor }: KamsisKlkStatsWidgetProps) 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* ── KAMSIS STATS ── */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-        className="rounded-[2rem] p-5 border flex flex-col justify-between space-y-4"
-        style={{
-          background: 'linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))',
-          borderColor: hexToRgba(themeColor, 0.15),
-        }}
+        className="rounded-[2rem] p-5 border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-sm flex flex-col justify-between space-y-4"
       >
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: hexToRgba(themeColor, 0.15) }}>
             <Building2 className="w-5 h-5" style={{ color: themeColor }} />
           </div>
           <div>
-            <h3 className="text-xs font-black uppercase tracking-widest text-white">Status i-KAMSIS</h3>
-            <p className="text-[10px] text-white/40 font-bold">Permohonan Sesi Semasa</p>
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Status i-KAMSIS</h3>
+            <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold">Permohonan Sesi Semasa</p>
           </div>
         </div>
 
@@ -103,19 +99,15 @@ export function KamsisKlkStatsWidget({ themeColor }: KamsisKlkStatsWidgetProps) 
 
       {/* ── KLK STATS ── */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        className="rounded-[2rem] p-5 border flex flex-col justify-between space-y-4"
-        style={{
-          background: 'linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))',
-          borderColor: hexToRgba('#60A5FA', 0.15),
-        }}
+        className="rounded-[2rem] p-5 border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-sm flex flex-col justify-between space-y-4"
       >
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: hexToRgba('#60A5FA', 0.15) }}>
             <Home className="w-5 h-5" style={{ color: '#60A5FA' }} />
           </div>
           <div>
-            <h3 className="text-xs font-black uppercase tracking-widest text-white">Taburan Kediaman</h3>
-            <p className="text-[10px] text-white/40 font-bold">Luar Kampus (KLK) vs Asrama</p>
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Taburan Kediaman</h3>
+            <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold">Luar Kampus (KLK) vs Asrama</p>
           </div>
         </div>
 
@@ -130,13 +122,13 @@ export function KamsisKlkStatsWidget({ themeColor }: KamsisKlkStatsWidgetProps) 
 
 function StatMini({ label, val, color, icon: Icon }: any) {
   return (
-    <div className="rounded-2xl p-3 border border-white/[0.05] bg-white/[0.02] flex flex-col items-center justify-center text-center gap-2 group hover:bg-white/[0.05] transition-colors">
+    <div className="rounded-2xl p-3 border border-slate-100 dark:border-white/[0.05] bg-slate-50 dark:bg-white/[0.02] flex flex-col items-center justify-center text-center gap-2 group hover:bg-slate-100/70 dark:hover:bg-white/[0.05] transition-colors">
       <div className="w-6 h-6 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110" style={{ background: hexToRgba(color, 0.1) }}>
         <Icon className="w-3.5 h-3.5" style={{ color }} />
       </div>
       <div>
-        <p className="text-lg font-black text-white leading-none">{val}</p>
-        <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mt-1">{label}</p>
+        <p className="text-lg font-black text-slate-900 dark:text-white leading-none">{val}</p>
+        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mt-1">{label}</p>
       </div>
     </div>
   );

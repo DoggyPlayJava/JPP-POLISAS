@@ -31,7 +31,7 @@ function StatCard({ label, value, icon: Icon, color, delay }: any) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-      className="flex-1 min-w-0 rounded-2xl p-4 border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.05] transition-all"
+      className="flex-1 min-w-0 rounded-2xl p-4 border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] hover:bg-slate-50 dark:hover:bg-white/[0.05] shadow-sm hover:shadow-md transition-all"
     >
       <div
         className="w-9 h-9 rounded-xl flex items-center justify-center mb-3"
@@ -39,8 +39,8 @@ function StatCard({ label, value, icon: Icon, color, delay }: any) {
       >
         <Icon className="w-4 h-4" style={{ color }} />
       </div>
-      <p className="text-2xl font-black text-white leading-none">{value}</p>
-      <p className="text-[10px] font-black uppercase tracking-[0.15em] text-white/35 mt-1">{label}</p>
+      <p className="text-2xl font-black text-slate-900 dark:text-white leading-none">{value}</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-white/35 mt-1">{label}</p>
     </motion.div>
   );
 }
@@ -86,13 +86,13 @@ function ComingSoonPlaceholder({ code, themeColor }: { code: string; themeColor:
       </div>
 
       <div className="space-y-2 max-w-sm">
-        <h1 className="text-2xl font-black text-white leading-tight">
+        <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
           {cfg?.shortLabel ?? code}
         </h1>
-        <p className="text-xs text-white/40 leading-relaxed">
+        <p className="text-xs text-slate-600 dark:text-white/40 leading-relaxed">
           {cfg?.fullLabel ?? JPP_UNIT_LABELS[code.toUpperCase()] ?? code}
         </p>
-        <p className="text-[11px] text-white/25 mt-4 leading-relaxed">
+        <p className="text-[11px] text-slate-500 dark:text-white/25 mt-4 leading-relaxed">
           Modul exco ini sedang dalam pembangunan. Pasukan JPP Digital sedang membangunkan ciri-ciri yang diperlukan untuk unit ini.
         </p>
       </div>
@@ -103,11 +103,11 @@ function ComingSoonPlaceholder({ code, themeColor }: { code: string; themeColor:
           <div key={step} className="flex items-center gap-3">
             <div className={cn(
               'w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-[9px] font-black',
-              i < 1 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/5 text-white/20 border border-white/10'
+              i < 1 ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-slate-200 dark:bg-white/5 text-slate-500 dark:text-white/20 border border-slate-300 dark:border-white/10'
             )}>
               {i < 1 ? '✓' : i + 1}
             </div>
-            <span className={cn('text-[11px] font-black', i < 1 ? 'text-emerald-400' : 'text-white/25')}>
+            <span className={cn('text-[11px] font-black', i < 1 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-white/25')}>
               {step}
             </span>
           </div>
@@ -116,7 +116,7 @@ function ComingSoonPlaceholder({ code, themeColor }: { code: string; themeColor:
 
       <button
         onClick={() => navigate('/jpp')}
-        className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-widest text-white/40 hover:text-white/70 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] transition-all"
+        className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70 bg-white dark:bg-white/[0.04] hover:bg-slate-100 dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.06] shadow-sm transition-all"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
         Kembali ke JPP HQ
@@ -172,8 +172,8 @@ export function JppUnitDashboard() {
   // Guard: still checking MT access
   if (checkingAccess) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-white/20" />
+      <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-slate-400 dark:text-white/20" />
       </div>
     );
   }
@@ -181,15 +181,15 @@ export function JppUnitDashboard() {
   // Guard: no access
   if (!hasAccess && !checkingAccess) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex flex-col items-center justify-center text-center px-6 space-y-4">
-        <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center">
-          <Lock className="w-7 h-7 text-white/20" />
+      <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] flex flex-col items-center justify-center text-center px-6 space-y-4 text-slate-900 dark:text-white">
+        <div className="w-16 h-16 rounded-2xl bg-slate-200 dark:bg-white/5 flex items-center justify-center">
+          <Lock className="w-7 h-7 text-slate-400 dark:text-white/20" />
         </div>
-        <h1 className="text-xl font-black text-white/40">Akses Terhad</h1>
-        <p className="text-xs text-white/20 max-w-xs">Anda tidak mempunyai akses ke unit ini.</p>
+        <h1 className="text-xl font-black text-slate-700 dark:text-white/40">Akses Terhad</h1>
+        <p className="text-xs text-slate-500 dark:text-white/20 max-w-xs">Anda tidak mempunyai akses ke unit ini.</p>
         <button
           onClick={() => navigate('/jpp')}
-          className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-white/30 hover:text-white/60 transition-all"
+          className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-white/30 hover:text-slate-900 dark:hover:text-white/60 transition-all"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Kembali
         </button>
@@ -198,7 +198,7 @@ export function JppUnitDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white transition-colors">
       {/* Background glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute -top-[10%] -right-[5%] w-[45vw] h-[45vw] rounded-full blur-3xl opacity-5"
@@ -213,7 +213,7 @@ export function JppUnitDashboard() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3 }}
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white/60 transition-all group"
+          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 hover:text-slate-900 dark:hover:text-white/60 transition-all group"
         >
           <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
           Kembali
@@ -231,7 +231,7 @@ export function JppUnitDashboard() {
               transition={{ duration: 0.5 }}
               className="space-y-3"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-white/[0.02] border border-white/[0.05] p-5 rounded-[2rem] shadow-xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] p-5 rounded-[2rem] shadow-sm dark:shadow-xl">
                 <div className="flex items-center gap-5">
                   <div
                     className="w-16 h-16 rounded-[1.5rem] flex items-center justify-center flex-shrink-0 shadow-inner"
@@ -258,8 +258,8 @@ export function JppUnitDashboard() {
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]" /> Aktif
                       </span>
                     </div>
-                    <h1 className="text-[28px] md:text-3xl font-black text-white leading-none tracking-tight">{cfg.shortLabel}</h1>
-                    <p className="text-xs text-white/40 mt-1.5 font-medium">{cfg.fullLabel}</p>
+                    <h1 className="text-[28px] md:text-3xl font-black text-slate-900 dark:text-white leading-none tracking-tight">{cfg.shortLabel}</h1>
+                    <p className="text-xs text-slate-600 dark:text-white/40 mt-1.5 font-medium">{cfg.fullLabel}</p>
                   </div>
                 </div>
 
@@ -288,7 +288,7 @@ export function JppUnitDashboard() {
 
             {/* ── Full Unit Dashboard (KPP / Keusahawanan / Akademik) ─── */}
             {FULL_DASHBOARD_UNITS.has(upperCode) ? (
-              <div className="bg-[#0f0f17]/80 backdrop-blur rounded-[2rem] border border-white/[0.05] p-6">
+              <div className="bg-white/80 dark:bg-[#0f0f17]/80 backdrop-blur rounded-[2rem] border border-slate-200 dark:border-white/[0.05] p-6 shadow-sm">
                 {upperCode === 'KPP'          && <KppUnitDashboard />}
                 {upperCode === 'KEUSAHAWANAN' && <KeusahawananUnitDashboard />}
                 {upperCode === 'AKADEMIK'     && <AkademikUnitDashboard />}
