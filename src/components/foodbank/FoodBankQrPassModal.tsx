@@ -88,7 +88,7 @@ export function FoodBankQrPassModal({
         return {
           label: 'Menunggu Semakan',
           subLabel: 'Permohonan diterima & menunggu giliran semakan.',
-          bg: 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/30',
+          bg: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30',
           dot: 'bg-amber-500',
           icon: Clock3,
           glow: 'shadow-amber-500/10',
@@ -97,34 +97,34 @@ export function FoodBankQrPassModal({
         return {
           label: 'Dalam Semakan',
           subLabel: 'Exco Kebajikan sedang menilai kuota & dokumen.',
-          bg: 'bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30',
-          dot: 'bg-blue-500 animate-pulse',
+          bg: 'bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/30',
+          dot: 'bg-sky-500 animate-pulse',
           icon: ShieldCheck,
-          glow: 'shadow-blue-500/10',
+          glow: 'shadow-sky-500/10',
         };
       case 'LULUS':
         return {
           label: 'Lulus • Sedia Diambil',
           subLabel: 'Sedia untuk diambil di kaunter agihan.',
-          bg: 'bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.35)]',
+          bg: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40',
           dot: 'bg-emerald-400 animate-ping',
           icon: CheckCircle2,
-          glow: 'shadow-emerald-500/20 ring-1 ring-emerald-500/50',
+          glow: 'shadow-[0_0_20px_rgba(16,185,129,0.35)] ring-1 ring-emerald-500/50',
         };
       case 'SELESAI':
         return {
           label: 'Selesai Ditebus',
           subLabel: 'Bantuan telah berjaya diagihkan sepenuhnya.',
-          bg: 'bg-purple-500/10 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30',
-          dot: 'bg-purple-500',
+          bg: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
+          dot: 'bg-emerald-600',
           icon: CheckCircle2,
-          glow: 'shadow-purple-500/10',
+          glow: 'shadow-emerald-500/10',
         };
       case 'DITOLAK':
         return {
           label: 'Permohonan Ditolak',
           subLabel: application.rejection_reason || 'Tidak memenuhi kriteria permohonan semasa.',
-          bg: 'bg-rose-500/10 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-500/30',
+          bg: 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30',
           dot: 'bg-rose-500',
           icon: AlertCircle,
           glow: 'shadow-rose-500/10',
@@ -134,8 +134,8 @@ export function FoodBankQrPassModal({
         return {
           label: 'Dibatalkan',
           subLabel: 'Permohonan telah dibatalkan oleh pelajar.',
-          bg: 'bg-slate-500/10 dark:bg-slate-500/20 text-slate-600 dark:text-slate-400 border-slate-500/30',
-          dot: 'bg-slate-500',
+          bg: 'bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/30',
+          dot: 'bg-slate-400',
           icon: AlertCircle,
           glow: 'shadow-slate-500/10',
         };
@@ -476,7 +476,7 @@ export function FoodBankQrPassModal({
                           <span className="font-medium text-slate-800 dark:text-slate-200">
                             {item.item_name}
                           </span>
-                          <span className="font-mono font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 text-[11px]">
+                          <span className="font-mono font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20 text-[11px]">
                             {item.quantity} {item.unit || 'unit'}
                           </span>
                         </div>
@@ -502,7 +502,7 @@ export function FoodBankQrPassModal({
 
               {/* ─── Boarding Pass QR Stub ─── */}
               <div className="p-5 sm:p-6 bg-slate-50 dark:bg-slate-950/50 flex flex-col items-center text-center">
-                <div className="p-3 bg-white rounded-2xl shadow-md border border-slate-200 dark:border-slate-700">
+                <div className="p-3 bg-white rounded-2xl shadow-md border border-slate-200">
                   <QRCodeSVG
                     value={qrCodeToken}
                     size={170}
