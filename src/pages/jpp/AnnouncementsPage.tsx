@@ -312,7 +312,7 @@ export default function AnnouncementsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
           <Badge variant="secondary" className="mb-4 bg-primary/10 text-primary border-none">JPP HQ / Hebahan Info</Badge>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-2">Makluman Global</h1>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-2 text-foreground">Makluman Global</h1>
           <p className="text-muted-foreground font-medium max-w-2xl text-lg">Pusat penyiaran notis seluruh portal. Bina pengumuman mandatori atau hebahan biasa menggunakan Modul *Popout* Bersepadu.</p>
         </div>
         {!showCreate && (
@@ -325,7 +325,7 @@ export default function AnnouncementsPage() {
       {showCreate ? (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-[2rem] border border-border/50 shadow-2xl overflow-hidden">
           <div className="p-8 border-b border-border/50 bg-muted/20">
-            <h2 className="text-2xl font-black tracking-tight">{editingId ? 'Sunting Hebahan' : 'Enjin Pencipta Hebahan'}</h2>
+            <h2 className="text-2xl font-black tracking-tight text-foreground">{editingId ? 'Sunting Hebahan' : 'Enjin Pencipta Hebahan'}</h2>
             <p className="text-sm text-muted-foreground">{editingId ? 'Kemaskini maklumat di bawah. Pertukaran imej dihadkan untuk elakkan isu storan.' : 'Parameter hebahan akan dibaca terus oleh sistem login pengguna.'}</p>
           </div>
           
@@ -510,7 +510,7 @@ export default function AnnouncementsPage() {
                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-current ${PriorityColor[a.priority]}`}>
                        <Icon size={12} className="inline mr-1" /> {a.priority} Priority
                      </span>
-                     <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-muted`}>
+                     <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-muted text-muted-foreground`}>
                        Sasaran: {a.target_audience}
                      </span>
                      {!a.is_active && (
@@ -520,7 +520,7 @@ export default function AnnouncementsPage() {
                      )}
                    </div>
                    
-                   <h3 className="text-2xl font-black tracking-tight">{a.title}</h3>
+                   <h3 className="text-2xl font-black tracking-tight text-foreground">{a.title}</h3>
                    <p className="text-muted-foreground whitespace-pre-wrap text-sm">{a.content_body}</p>
                    
                    {a.priority === 'HIGH' && a.form_schema && a.form_schema.length > 0 && (
@@ -563,8 +563,8 @@ export default function AnnouncementsPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-background/80 backdrop-blur-md" />
           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative bg-card rounded-[2rem] border border-border/50 shadow-2xl p-6 sm:p-8 w-full max-w-4xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between mb-6 pb-6 border-b border-border/50">
-               <div>
-                  <h2 className="text-2xl font-black tracking-tight" style={{wordBreak: "break-word"}}>{viewingResponsesFor.title}</h2>
+                <div>
+                  <h2 className="text-2xl font-black tracking-tight text-foreground" style={{wordBreak: "break-word"}}>{viewingResponsesFor.title}</h2>
                   <p className="text-muted-foreground text-sm">Respons Pelajar bagi makluman ini.</p>
                </div>
                <button onClick={() => setViewingResponsesFor(null)} className="p-2 bg-muted/50 rounded-full hover:bg-muted text-muted-foreground"><X size={20}/></button>
@@ -581,7 +581,7 @@ export default function AnnouncementsPage() {
                         <div key={i} className="bg-muted/30 border border-border/50 p-4 rounded-xl flex flex-col gap-2">
                            <div className="flex justify-between items-start">
                               <div>
-                                 <p className="font-bold">{r.profiles?.full_name}</p>
+                                 <p className="font-bold text-foreground">{r.profiles?.full_name}</p>
                                  <p className="text-xs text-muted-foreground">{r.profiles?.matric_no}</p>
                               </div>
                               <span className={`px-2 py-1 rounded text-[10px] font-black uppercase ${r.status === 'completed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'}`}>

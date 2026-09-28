@@ -192,7 +192,7 @@ export function JppTakwimPage() {
   };
 
   return (
-    <div className="min-h-screen text-white">
+    <div className="min-h-screen text-slate-900 dark:text-white">
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-8">
         {/* ── Header ── */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
@@ -201,8 +201,8 @@ export function JppTakwimPage() {
               <CalendarDays className="w-5 h-5 text-indigo-400" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight">Takwim POLISAS Berpusat</h1>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">{INSTITUSI_LABEL} · {sesi}</p>
+              <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">Takwim POLISAS Berpusat</h1>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{INSTITUSI_LABEL} · {sesi}</p>
             </div>
           </div>
         </motion.div>
@@ -228,18 +228,18 @@ export function JppTakwimPage() {
         {/* ── Controls ── */}
         <div className="flex flex-wrap items-center gap-3">
           <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white/5 border-white/10 text-xs font-bold text-white">
-              <Filter className="w-3 h-3 mr-2 text-white/40" /><SelectValue />
+            <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-900 dark:text-white shadow-sm">
+              <Filter className="w-3 h-3 mr-2 text-slate-400 dark:text-white/40" /><SelectValue />
             </SelectTrigger>
             <SelectContent>{TAKWIM_FILTER_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
           </Select>
           <Select value={sesi} onValueChange={setSesi}>
-            <SelectTrigger className="w-[150px] h-10 rounded-xl bg-white/5 border-white/10 text-xs font-bold text-white"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-[150px] h-10 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-900 dark:text-white shadow-sm"><SelectValue /></SelectTrigger>
             <SelectContent>{SESI_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
           </Select>
-          <div className="flex items-center gap-1 bg-white/5 rounded-xl p-1 border border-white/10">
-            <button onClick={() => setViewMode('table')} className={cn('p-2 rounded-lg transition-all', viewMode === 'table' ? 'bg-white/10 text-white' : 'text-white/40')}><Table className="w-4 h-4" /></button>
-            <button onClick={() => setViewMode('calendar')} className={cn('p-2 rounded-lg transition-all', viewMode === 'calendar' ? 'bg-white/10 text-white' : 'text-white/40')}><LayoutGrid className="w-4 h-4" /></button>
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 rounded-xl p-1 border border-slate-200 dark:border-white/10">
+            <button onClick={() => setViewMode('table')} className={cn('p-2 rounded-lg transition-all', viewMode === 'table' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-400 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/70')}><Table className="w-4 h-4" /></button>
+            <button onClick={() => setViewMode('calendar')} className={cn('p-2 rounded-lg transition-all', viewMode === 'calendar' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-400 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/70')}><LayoutGrid className="w-4 h-4" /></button>
           </div>
           <div className="ml-auto flex flex-wrap justify-end items-center gap-2">
             {rbac.isAkademik && (
@@ -301,7 +301,7 @@ export function JppTakwimPage() {
               </Badge>
             );
           })}
-          {stats.KESELURUHAN > 0 && <Badge className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 bg-white/5 text-white/50 border-none">Jumlah: {stats.KESELURUHAN}</Badge>}
+          {stats.KESELURUHAN > 0 && <Badge className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white/50 border border-slate-200 dark:border-white/10">Jumlah: {stats.KESELURUHAN}</Badge>}
         </div>
 
         {/* ── Bulk Actions Bar ── */}
@@ -314,7 +314,7 @@ export function JppTakwimPage() {
               {bulkDeleting ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Trash2 className="w-3 h-3 mr-1" />}
               Padam Semua
             </Button>
-            <button onClick={() => setBulkSelected(new Set())} className="text-[10px] font-bold text-white/30 hover:text-white/60 ml-auto">
+            <button onClick={() => setBulkSelected(new Set())} className="text-[10px] font-bold text-slate-400 dark:text-white/30 hover:text-slate-700 dark:hover:text-white/60 ml-auto">
               Nyahpilih
             </button>
           </div>
@@ -322,7 +322,7 @@ export function JppTakwimPage() {
 
         {/* ── Content ── */}
         {loading ? (
-          <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-white/30" /></div>
+          <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-slate-400 dark:text-white/30" /></div>
         ) : viewMode === 'table' ? (
           <TakwimTable items={items} rbac={rbac} onEdit={openEdit} onDelete={handleDelete} bulkSelected={bulkSelected} onBulkToggle={setBulkSelected} />
         ) : (
@@ -343,71 +343,71 @@ export function JppTakwimPage() {
 
       {/* ── CRUD Dialog ── */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[520px] rounded-[2rem] p-0 border-none bg-slate-900 overflow-hidden flex flex-col max-h-[90vh]">
+        <DialogContent className="sm:max-w-[520px] rounded-[2rem] p-0 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
           <div className="p-8 space-y-6 overflow-y-auto flex-1">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-black tracking-tight text-white">{editTarget ? 'Kemaskini' : 'Entri Baharu'}</DialogTitle>
+              <DialogTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">{editTarget ? 'Kemaskini' : 'Entri Baharu'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Jenis *</Label>
+                <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">Jenis *</Label>
                 <Select value={form.jenis} onValueChange={v => setForm({ ...form, jenis: v })} disabled={!!editTarget}>
-                  <SelectTrigger className="h-12 rounded-xl bg-white/5 border-white/10 text-white font-bold"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold"><SelectValue /></SelectTrigger>
                   <SelectContent>{rbac.allowedJenis.map(j => <SelectItem key={j} value={j}>{TAKWIM_JENIS[j]?.label || j}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Tajuk *</Label>
-                <Input value={form.tajuk} onChange={e => setForm({ ...form, tajuk: e.target.value })} className="h-12 rounded-xl bg-white/5 border-white/10 text-white font-bold" placeholder="Nama aktiviti / peristiwa..." />
+                <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">Tajuk *</Label>
+                <Input value={form.tajuk} onChange={e => setForm({ ...form, tajuk: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" placeholder="Nama aktiviti / peristiwa..." />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Tarikh Mula *</Label>
-                  <Input type="date" value={form.tarikh_mula} onChange={e => setForm({ ...form, tarikh_mula: e.target.value })} className="h-12 rounded-xl bg-white/5 border-white/10 text-white font-bold" />
+                  <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">Tarikh Mula *</Label>
+                  <Input type="date" value={form.tarikh_mula} onChange={e => setForm({ ...form, tarikh_mula: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Tarikh Tamat</Label>
-                  <Input type="date" value={form.tarikh_tamat} onChange={e => setForm({ ...form, tarikh_tamat: e.target.value })} className="h-12 rounded-xl bg-white/5 border-white/10 text-white font-bold" />
+                  <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">Tarikh Tamat</Label>
+                  <Input type="date" value={form.tarikh_tamat} onChange={e => setForm({ ...form, tarikh_tamat: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Catatan</Label>
-                <Textarea value={form.catatan} onChange={e => setForm({ ...form, catatan: e.target.value })} className="rounded-xl bg-white/5 border-white/10 text-white font-medium min-h-[60px] resize-none" />
+                <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">Catatan</Label>
+                <Textarea value={form.catatan} onChange={e => setForm({ ...form, catatan: e.target.value })} className="rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-medium min-h-[60px] resize-none" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Bil. Minggu</Label>
-                  <Input type="number" value={form.bil_minggu} onChange={e => setForm({ ...form, bil_minggu: e.target.value })} className="h-12 rounded-xl bg-white/5 border-white/10 text-white font-bold" placeholder="—" />
+                  <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">Bil. Minggu</Label>
+                  <Input type="number" value={form.bil_minggu} onChange={e => setForm({ ...form, bil_minggu: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" placeholder="—" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Aktiviti</Label>
-                  <Input value={form.aktiviti} onChange={e => setForm({ ...form, aktiviti: e.target.value })} className="h-12 rounded-xl bg-white/5 border-white/10 text-white font-bold" />
+                  <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">Aktiviti</Label>
+                  <Input value={form.aktiviti} onChange={e => setForm({ ...form, aktiviti: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
               </div>
               {/* Kelab Kediaman Label */}
               {form.jenis === 'KELAB_KEDIAMAN' && (
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Nama Kelab Kediaman</Label>
-                  <Input value={form.kelab_kediaman_label} onChange={e => setForm({ ...form, kelab_kediaman_label: e.target.value })} className="h-12 rounded-xl bg-white/5 border-white/10 text-white font-bold" placeholder="cth: JPPI, AG, IS..." />
+                  <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">Nama Kelab Kediaman</Label>
+                  <Input value={form.kelab_kediaman_label} onChange={e => setForm({ ...form, kelab_kediaman_label: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" placeholder="cth: JPPI, AG, IS..." />
                 </div>
               )}
               {/* Color Picker */}
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-white/50 tracking-widest">Warna Custom (Pilihan)</Label>
+                <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">Warna Custom (Pilihan)</Label>
                 <div className="flex items-center gap-3">
-                  <input type="color" value={form.warna_custom || TAKWIM_JENIS[form.jenis]?.color || '#94A3B8'} onChange={e => setForm({ ...form, warna_custom: e.target.value })} className="w-12 h-12 rounded-xl border-2 border-white/10 cursor-pointer bg-transparent" />
+                  <input type="color" value={form.warna_custom || TAKWIM_JENIS[form.jenis]?.color || '#94A3B8'} onChange={e => setForm({ ...form, warna_custom: e.target.value })} className="w-12 h-12 rounded-xl border-2 border-slate-200 dark:border-white/10 cursor-pointer bg-transparent" />
                   <div className="flex-1">
-                    <Input value={form.warna_custom} onChange={e => setForm({ ...form, warna_custom: e.target.value })} className="h-12 rounded-xl bg-white/5 border-white/10 text-white font-mono font-bold" placeholder={TAKWIM_JENIS[form.jenis]?.color || '#94A3B8'} />
+                    <Input value={form.warna_custom} onChange={e => setForm({ ...form, warna_custom: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-mono font-bold" placeholder={TAKWIM_JENIS[form.jenis]?.color || '#94A3B8'} />
                   </div>
                   {form.warna_custom && (
-                    <button onClick={() => setForm({ ...form, warna_custom: '' })} className="text-[10px] font-bold text-white/30 hover:text-white/60">Reset</button>
+                    <button onClick={() => setForm({ ...form, warna_custom: '' })} className="text-[10px] font-bold text-slate-400 dark:text-white/30 hover:text-slate-700 dark:hover:text-white/60">Reset</button>
                   )}
                 </div>
               </div>
             </div>
           </div>
-          <DialogFooter className="p-6 bg-white/[0.02] border-t border-white/5 gap-3">
-            <Button variant="ghost" onClick={() => setDialogOpen(false)} className="flex-1 h-12 rounded-xl text-white/50">Batal</Button>
+          <DialogFooter className="p-6 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-200 dark:border-white/5 gap-3">
+            <Button variant="ghost" onClick={() => setDialogOpen(false)} className="flex-1 h-12 rounded-xl text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5">Batal</Button>
             <Button onClick={handleSave} disabled={saving} className="flex-[2] h-12 rounded-xl bg-indigo-500 text-white font-black text-[10px] uppercase tracking-widest">
               {saving ? 'Menyimpan...' : editTarget ? 'Kemaskini' : 'Simpan'}
             </Button>
@@ -450,58 +450,58 @@ function TakwimTable({ items, rbac, onEdit, onDelete, bulkSelected, onBulkToggle
   };
 
   return (
-    <div className="rounded-2xl border border-white/10 overflow-hidden">
+    <div className="bg-white dark:bg-transparent rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
-            <tr className="bg-white/[0.04]">
+            <tr className="bg-slate-50 dark:bg-white/[0.04] border-b border-slate-200 dark:border-white/10">
               <th className="px-3 py-3 w-10">
                 {editableItems.length > 0 && (
                   <input type="checkbox" checked={allSelected} onChange={toggleAll}
-                    className="w-4 h-4 rounded border-white/20 bg-white/5 text-rose-500 focus:ring-rose-500/30" />
+                    className="w-4 h-4 rounded border-slate-300 dark:border-white/20 bg-white dark:bg-white/5 text-rose-500 focus:ring-rose-500/30" />
                 )}
               </th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/30">Jenis</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/30">Tajuk</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/30">Tarikh</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/30">Minggu</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/30">Catatan</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-white/30 w-20"></th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Jenis</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Tajuk</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Tarikh</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Minggu</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Catatan</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 w-20"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/[0.04]">
+          <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04]">
             {items.map(item => {
               const cfg = TAKWIM_JENIS[item.jenis];
               const color = item.warna_custom || cfg?.color || '#94A3B8';
               const canMod = rbac.canEdit(item);
               const isChecked = bulkSelected.has(item.id);
               return (
-                <tr key={`${item.type}-${item.id}`} className={cn('hover:bg-white/[0.02] transition-colors group', isChecked && 'bg-rose-500/[0.03]')}>
+                <tr key={`${item.type}-${item.id}`} className={cn('hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition-colors group', isChecked && 'bg-rose-500/[0.03]')}>
                   <td className="px-3 py-3">
                     {canMod && (
                       <input type="checkbox" checked={isChecked} onChange={() => toggleOne(item.id)}
-                        className="w-4 h-4 rounded border-white/20 bg-white/5 text-rose-500 focus:ring-rose-500/30" />
+                        className="w-4 h-4 rounded border-slate-300 dark:border-white/20 bg-white dark:bg-white/5 text-rose-500 focus:ring-rose-500/30" />
                     )}
                   </td>
                   <td className="px-4 py-3">
                     <Badge className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 border-none" style={{ background: hexToRgba(color, 0.15), color }}>{cfg?.shortLabel || item.jenis}</Badge>
-                    {item.status && <Badge className="ml-1 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 bg-amber-500/10 text-amber-400 border-none">{item.status}</Badge>}
+                    {item.status && <Badge className="ml-1 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 bg-amber-500/10 text-amber-500 dark:text-amber-400 border-none">{item.status}</Badge>}
                   </td>
                   <td className="px-4 py-3">
-                    <p className="text-xs font-black text-white/90 leading-tight">{item.tajuk}</p>
-                    {item.club_name && <p className="text-[10px] text-white/30 mt-0.5">{item.club_name}</p>}
-                    {item.kelab_kediaman_label && <p className="text-[10px] text-fuchsia-400/60 mt-0.5">🏠 {item.kelab_kediaman_label}</p>}
+                    <p className="text-xs font-black text-slate-900 dark:text-white/90 leading-tight">{item.tajuk}</p>
+                    {item.club_name && <p className="text-[10px] text-slate-500 dark:text-white/30 mt-0.5">{item.club_name}</p>}
+                    {item.kelab_kediaman_label && <p className="text-[10px] text-fuchsia-600 dark:text-fuchsia-400/60 mt-0.5">🏠 {item.kelab_kediaman_label}</p>}
                   </td>
-                  <td className="px-4 py-3 text-[11px] font-bold text-white/60 whitespace-nowrap">
+                  <td className="px-4 py-3 text-[11px] font-bold text-slate-600 dark:text-white/60 whitespace-nowrap">
                     {fmtDate(item.tarikh_mula)}{item.tarikh_tamat && item.tarikh_tamat !== item.tarikh_mula ? ` — ${fmtDate(item.tarikh_tamat)}` : ''}
                   </td>
-                  <td className="px-4 py-3 text-xs font-black text-white/40 text-center">{item.bil_minggu || '—'}</td>
-                  <td className="px-4 py-3 text-[10px] text-white/40 max-w-[200px] truncate">{item.catatan || '—'}</td>
+                  <td className="px-4 py-3 text-xs font-black text-slate-600 dark:text-white/40 text-center">{item.bil_minggu || '—'}</td>
+                  <td className="px-4 py-3 text-[10px] text-slate-500 dark:text-white/40 max-w-[200px] truncate">{item.catatan || '—'}</td>
                   <td className="px-4 py-3">
                     {canMod && (
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => onEdit(item)} className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-white/40 hover:text-indigo-400 hover:bg-indigo-500/10"><Pencil size={11} /></button>
-                        <button onClick={() => onDelete(item)} className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-white/40 hover:text-rose-400 hover:bg-rose-500/10"><Trash2 size={11} /></button>
+                        <button onClick={() => onEdit(item)} className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-500 dark:text-white/40 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10"><Pencil size={11} /></button>
+                        <button onClick={() => onDelete(item)} className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-500 dark:text-white/40 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10"><Trash2 size={11} /></button>
                       </div>
                     )}
                   </td>
@@ -522,17 +522,17 @@ function TakwimCalendar({ items, month, onPrev, onNext, onDayClick }: { items: T
   const getEvents = (day: Date) => items.filter(i => { const s = parseISO(i.tarikh_mula); const e = i.tarikh_tamat ? parseISO(i.tarikh_tamat) : s; return day >= s && day <= e; });
 
   return (
-    <div className="rounded-2xl border border-white/10 overflow-hidden">
-      <div className="flex items-center justify-between p-4 bg-white/[0.03]">
-        <button onClick={onPrev} className="p-2 rounded-lg hover:bg-white/10 text-white/50"><ChevronLeft className="w-4 h-4" /></button>
-        <h3 className="text-sm font-black text-white uppercase tracking-widest">{format(month, 'MMMM yyyy', { locale: ms })}</h3>
-        <button onClick={onNext} className="p-2 rounded-lg hover:bg-white/10 text-white/50"><ChevronRight className="w-4 h-4" /></button>
+    <div className="bg-white dark:bg-transparent rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-white/[0.03] border-b border-slate-100 dark:border-white/5">
+        <button onClick={onPrev} className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-white/10 text-slate-600 dark:text-white/50 transition-colors"><ChevronLeft className="w-4 h-4" /></button>
+        <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">{format(month, 'MMMM yyyy', { locale: ms })}</h3>
+        <button onClick={onNext} className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-white/10 text-slate-600 dark:text-white/50 transition-colors"><ChevronRight className="w-4 h-4" /></button>
       </div>
       <div className="grid grid-cols-7">
         {['Ahd', 'Isn', 'Sel', 'Rab', 'Kha', 'Jum', 'Sab'].map(d => (
-          <div key={d} className="p-2 text-center text-[9px] font-black uppercase tracking-widest text-white/25 border-b border-white/5">{d}</div>
+          <div key={d} className="p-2 text-center text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/25 border-b border-slate-100 dark:border-white/5">{d}</div>
         ))}
-        {Array.from({ length: startDay }).map((_, i) => <div key={`e-${i}`} className="p-2 min-h-[80px] border-b border-r border-white/[0.03]" />)}
+        {Array.from({ length: startDay }).map((_, i) => <div key={`e-${i}`} className="p-2 min-h-[80px] border-b border-r border-slate-100 dark:border-white/[0.03]" />)}
         {days.map(day => {
           const evts = getEvents(day);
           const isToday = isSameDay(day, new Date());
@@ -542,12 +542,12 @@ function TakwimCalendar({ items, month, onPrev, onNext, onDayClick }: { items: T
               key={day.toISOString()}
               onClick={() => onDayClick(day)}
               className={cn(
-                'p-1.5 min-h-[80px] border-b border-r border-white/[0.03] transition-colors cursor-pointer select-none overflow-hidden',
+                'p-1.5 min-h-[80px] border-b border-r border-slate-100 dark:border-white/[0.03] transition-colors cursor-pointer select-none overflow-hidden',
                 isToday && 'bg-indigo-500/5',
-                hasEvents ? 'hover:bg-white/[0.04] active:bg-white/[0.07]' : 'hover:bg-white/[0.02]'
+                hasEvents ? 'hover:bg-slate-50 dark:hover:bg-white/[0.04] active:bg-slate-100 dark:active:bg-white/[0.07]' : 'hover:bg-slate-50/50 dark:hover:bg-white/[0.02]'
               )}
             >
-              <span className={cn('text-[10px] font-black', isToday ? 'text-indigo-400 bg-indigo-500/20 w-6 h-6 rounded-full flex items-center justify-center' : 'text-white/40')}>
+              <span className={cn('text-[10px] font-black', isToday ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/20 w-6 h-6 rounded-full flex items-center justify-center' : 'text-slate-600 dark:text-white/40')}>
                 {format(day, 'd')}
               </span>
               <div className="mt-1 space-y-0.5">
@@ -556,7 +556,7 @@ function TakwimCalendar({ items, month, onPrev, onNext, onDayClick }: { items: T
                   return <div key={e.id} className="text-[8px] font-bold px-1.5 py-0.5 rounded truncate w-full" style={{ background: hexToRgba(c, 0.15), color: c }}>{e.tajuk}</div>;
                 })}
                 {evts.length > 3 && (
-                  <div className="text-[8px] font-black text-white/40 px-1.5 py-0.5 rounded truncate w-full" style={{ background: 'rgba(255,255,255,0.06)' }}>+{evts.length - 3} lagi</div>
+                  <div className="text-[8px] font-black text-slate-500 dark:text-white/40 px-1.5 py-0.5 rounded truncate w-full" style={{ background: 'rgba(148,163,184,0.15)' }}>+{evts.length - 3} lagi</div>
                 )}
               </div>
             </div>
@@ -570,9 +570,9 @@ function TakwimCalendar({ items, month, onPrev, onNext, onDayClick }: { items: T
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <CalendarDays className="w-10 h-10 text-white/10 mb-3" />
-      <p className="text-xs font-black text-white/20 uppercase tracking-widest">Tiada entri takwim</p>
-      <p className="text-[10px] text-white/15 mt-1">Gunakan butang "Tambah" untuk menambah entri baru</p>
+      <CalendarDays className="w-10 h-10 text-slate-300 dark:text-white/10 mb-3" />
+      <p className="text-xs font-black text-slate-600 dark:text-white/40 uppercase tracking-widest">Tiada entri takwim</p>
+      <p className="text-[10px] text-slate-400 dark:text-white/20 mt-1">Gunakan butang "Tambah" untuk menambah entri baru</p>
     </div>
   );
 }
