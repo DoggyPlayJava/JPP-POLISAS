@@ -2692,3 +2692,37 @@ Sistem beroperasi secara rasmi dengan **Light Theme sebagai mod lalai (*default 
   - Pelajar boleh menekan butang *"Lipat Kad"* pada bila-bila masa untuk mengecilkan kad kepada *pill bar* kompak (Gambar 2).
   - Apabila pelajar menekan *"Mula Pandu Arah"*, kad dilipat secara automatik kepada bar navigasi HUD ringkas supaya peta dan anak panah GPS tidak terlindung semasa berjalan, dan dibuka semula secara automatik sebaik sahaja tiba di destinasi (`dist <= 30m`).
 
+### 25.12 Sistem Warna Semantik Berpadu Modul Food Bank JPP ("Warm Citrus & Fresh Harvest")
+
+Bagi mengelakkan kekeliruan pengguna awal yang disebabkan oleh kepelbagaian warna rawak dan tidak konsisten, modul Food Bank JPP (merangkumi portal pelajar, pas digital QR, pusat kawalan pentadbir, dan hab kebajikan) telah diseragamkan dengan sistem warna berdisiplin:
+
+1. **Palet Identiti Utama ("Warm Citrus & Fresh Harvest"):**
+   - **Aksen Primer:** Kuning Amber / Tangerine Oren (`amber-500` / `amber-600`) sebagai warna khas ramah Food Bank JPP (simbol rezeki, kehangatan, dan keprihatinan).
+   - **Aksen Sekunder:** Hijau Pudina / Zamrud (`emerald-500` / `emerald-600`) untuk kelulusan, ketersediaan stok mencukupi, dan penunjuk kejayaan.
+   - **Latar Neutral:** Slate bersih (`slate-50` / `white` dalam Light Mode, `slate-900` / `slate-950` dalam Dark Mode) bagi memastikan keterbacaan teks berkontras tinggi (lulus WCAG AA).
+
+2. **4 Kategori Semantik Pastel (`FOODBANK_CATEGORY_CONFIG` dalam `src/lib/foodbankDefaults.ts`):**
+   - **Makanan Asas (`MAKANAN`):** Warm Amber (`bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/30`, Ikon: 🍚)
+   - **Minuman (`MINUMAN`):** Fresh Sky Blue (`bg-sky-500/10 text-sky-800 dark:text-sky-300 border-sky-500/30`, Ikon: ☕)
+   - **Kebersihan Diri (`KEBERSIHAN`):** Mint / Teal (`bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/30`, Ikon: 🧼)
+   - **Keperluan Lain / Asas (`LAIN_LAIN`, `KEPERLUAN_ASAS`):** Soft Lavender (`bg-purple-500/10 text-purple-800 dark:text-purple-300 border-purple-500/30`, Ikon: 📦)
+
+3. **Peraturan 3-Warna Lencana Stok (`getFoodBankStockBadge`):**
+   - **Stok > 10 unit:** Hijau Emerald (`bg-emerald-600 dark:bg-emerald-500 text-white font-bold`, label: `Baki: X unit`)
+   - **Stok 1 – 10 unit:** Kuning Amber (`bg-amber-500 text-slate-950 font-black`, label: `Terhad: X unit`)
+   - **Stok 0 unit:** Merah Rose (`bg-rose-500 text-white font-black`, label: `Stok Habis`)
+
+4. **Pas Pengambilan Digital Pas Boarding QR (`FoodBankQrPassModal.tsx`):**
+   - **Bekas Kod QR Putih Padu (Solid White High-Contrast):** Bekas QR dikekalkan berlatar belakang putih padu (`bg-white border-slate-200`) tanpa dipengaruhi oleh mod gelap, memastikan kadar imbasan kamera telefon pintar atau pengimbas kaunter 100% responsif.
+   - **Reben Status Berdisiplin:** Menunggu (Amber), Dalam Semakan (Sky Blue), Lulus (Emerald bersinar), Selesai (Emerald Mint), Ditolak (Rose), Batal (Slate).
+
+5. **Harmonisasi Pusat Kawalan Pentadbir (`/jpp/foodbank` - `JppFoodBankAdmin.tsx`):**
+   - Mengekalkan bingkai Maroon rasmi JPP HQ untuk susun atur luaran shell (`JppLayout` & `JppSidebar`).
+   - Menyeragamkan 4 kad metrik KPI (Peruntukan Bajet RM70k & Belanja dalam Amber/Gold, Permohonan Menunggu dalam Amber, Pas Sedia Diambil dalam Sky Blue, Agihan Selesai dalam Mint Emerald).
+   - Butang navigasi tab aktif menggunakan Amber Citrus (`bg-amber-600 text-white shadow-md`).
+   - Kotak carian dan butang pengesahan imbasan kaunter menggunakan fokus Amber.
+   - Kad inventori memaparkan lencana kategori pastel dan lencana stok 3-warna yang seragam.
+
+6. **Kad Hab Kebajikan (`/kebajikan` - `KebajikanHubPage.tsx`):**
+   - Kad tonggak Food Bank JPP diselaraskan dengan aksen Warm Amber pada butang utama, butang semak pas, dan ikon beg barangan, berdiri harmoni di sebelah kad Aduan Siswa (Teal) tanpa percanggahan visual.
+
