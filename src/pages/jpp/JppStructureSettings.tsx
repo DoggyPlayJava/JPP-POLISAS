@@ -99,10 +99,10 @@ export function JppStructureSettings() {
             <div className="flex justify-between items-end px-2">
                 <div className="flex items-center gap-3">
                     <Network className="w-5 h-5 text-indigo-500" />
-                    <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-white/40">Urus Struktur JPP/Exco</h3>
+                    <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Urus Struktur JPP/Exco</h3>
                 </div>
                 <div className="flex gap-2">
-                    <Button onClick={handleReset} variant="outline" size="sm" className="h-8 text-[10px] uppercase tracking-widest border-white/10 text-white/50 hover:bg-white/5 disabled:opacity-50">
+                    <Button onClick={handleReset} variant="outline" size="sm" className="h-8 text-[10px] uppercase tracking-widest border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 disabled:opacity-50">
                         <Undo className="w-3 h-3 mr-1.5" />
                         Reset
                     </Button>
@@ -114,25 +114,25 @@ export function JppStructureSettings() {
                 </div>
             </div>
 
-            <div className="p-6 rounded-[2rem] bg-gradient-to-br from-indigo-900/10 to-indigo-900/5 border border-indigo-500/20 space-y-8 group hover:from-indigo-900/15 transition-all">
+            <div className="p-6 rounded-[2rem] bg-white dark:bg-gradient-to-br dark:from-indigo-900/10 dark:to-indigo-900/5 border border-slate-200 dark:border-indigo-500/20 shadow-sm space-y-8 group hover:dark:from-indigo-900/15 transition-all">
                 
                 {/* Bahagian Jawatan (Majlis Tertinggi & Umum) */}
                 <div className="space-y-3">
-                    <h4 className="text-sm font-black text-white">Label Jawatan Majlis Tertinggi</h4>
-                    <p className="text-[11px] text-indigo-400/60 font-medium leading-relaxed mb-4">
+                    <h4 className="text-sm font-black text-slate-900 dark:text-white">Label Jawatan Majlis Tertinggi</h4>
+                    <p className="text-[11px] text-slate-500 dark:text-indigo-400/60 font-medium leading-relaxed mb-4">
                         Ubah suai nama jawatan. Nilai ini hanya mengubah paparan (visual override) di dalam sistem, manakala kod pangkalan data tidak diganggu.
                     </p>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                         {Object.entries(positionLabels).map(([key, label]) => (
-                            <div key={key} className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-1.5">
-                                <label className="text-[9px] font-black uppercase tracking-widest text-indigo-400/70 block w-full truncate">
+                            <div key={key} className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-3 space-y-1.5">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400/70 block w-full truncate">
                                     {key}
                                 </label>
                                 <Input
                                     value={label}
                                     onChange={(e) => handlePosChange(key, e.target.value)}
-                                    className="h-9 bg-black/30 border-white/5 text-xs text-white"
+                                    className="h-9 bg-white dark:bg-black/30 border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30"
                                     placeholder="Nama Jawatan..."
                                 />
                             </div>
@@ -140,12 +140,12 @@ export function JppStructureSettings() {
                     </div>
                 </div>
 
-                <div className="h-px bg-indigo-500/10 w-full" />
+                <div className="h-px bg-slate-200 dark:bg-indigo-500/10 w-full" />
 
                 {/* Bahagian Unit Exco */}
                 <div className="space-y-3">
-                    <h4 className="text-sm font-black text-white">Nama Exco/Unit</h4>
-                    <p className="text-[11px] text-indigo-400/60 font-medium leading-relaxed mb-4">
+                    <h4 className="text-sm font-black text-slate-900 dark:text-white">Nama Exco/Unit</h4>
+                    <p className="text-[11px] text-slate-500 dark:text-indigo-400/60 font-medium leading-relaxed mb-4">
                         Ubah suai nama kepimpinan Exco. Nilai pendek (Short Label) digunakan pada menu dan butang, manakala nilai penuh (Full Label) dipaparkan di Kad dan Laporan.
                     </p>
                     
@@ -153,28 +153,28 @@ export function JppStructureSettings() {
                         {UNIT_ORDER.map((code) => {
                             const currentCfg = unitConfig[code] || {};
                             return (
-                                <div key={code} className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col md:flex-row gap-4 items-end">
+                                <div key={code} className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-4 flex flex-col md:flex-row gap-4 items-end">
                                     <div className="w-full md:w-32 shrink-0">
-                                        <label className="text-[9px] font-black uppercase tracking-widest text-indigo-400/70 block mb-1">Kod Unit DB</label>
-                                        <div className="h-9 flex items-center px-3 bg-black/40 border border-white/5 rounded-xl text-xs font-mono text-white/50 truncate">
+                                        <label className="text-[9px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400/70 block mb-1">Kod Unit DB</label>
+                                        <div className="h-9 flex items-center px-3 bg-slate-200/60 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl text-xs font-mono text-slate-600 dark:text-white/50 truncate">
                                             {code}
                                         </div>
                                     </div>
                                     <div className="w-full">
-                                        <label className="text-[9px] font-black uppercase tracking-widest text-white/50 block mb-1">Nama Pendek (Singkatan)</label>
+                                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/50 block mb-1">Nama Pendek (Singkatan)</label>
                                         <Input
                                             value={currentCfg.shortLabel || ''}
                                             onChange={(e) => handleUnitChange(code, 'shortLabel', e.target.value)}
-                                            className="h-9 bg-black/30 border-white/5 text-xs text-white"
+                                            className="h-9 bg-white dark:bg-black/30 border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30"
                                             placeholder="Nama Pendek..."
                                         />
                                     </div>
                                     <div className="w-full md:w-[40%]">
-                                        <label className="text-[9px] font-black uppercase tracking-widest text-white/50 block mb-1">Nama Penuh (Rasmi)</label>
+                                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/50 block mb-1">Nama Penuh (Rasmi)</label>
                                         <Input
                                             value={currentCfg.fullLabel || ''}
                                             onChange={(e) => handleUnitChange(code, 'fullLabel', e.target.value)}
-                                            className="h-9 bg-black/30 border-white/5 text-xs text-white"
+                                            className="h-9 bg-white dark:bg-black/30 border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30"
                                             placeholder="Nama Penuh Exco..."
                                         />
                                     </div>

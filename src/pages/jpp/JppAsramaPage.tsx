@@ -517,9 +517,9 @@ export function JppAsramaPage() {
                   }}
                   className="bg-violet-500/10 border border-violet-500/20 rounded-lg px-2 py-0.5 text-[10px] font-black text-violet-600 dark:text-violet-300 cursor-pointer hover:bg-violet-500/20 transition-colors"
                 >
-                  <option value="1">Semester 1</option>
-                  <option value="2">Semester 2</option>
-                  <option value="3">Semester 3 (Pendek)</option>
+                  <option value="1" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Semester 1</option>
+                  <option value="2" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Semester 2</option>
+                  <option value="3" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Semester 3 (Pendek)</option>
                 </select>
               </p>
             </div>
@@ -607,12 +607,12 @@ export function JppAsramaPage() {
             <input type="text" placeholder="Cari nama..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-violet-500/30" />
           </div>
           <select value={filterTahap} onChange={e => setFilterTahap(e.target.value)} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-violet-500/30">
-            <option value="Semua">Semua Tahap</option>
-            <option value="Junior">Junior</option><option value="Senior">Senior</option><option value="Asasi">Asasi</option>
+            <option value="Semua" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Semua Tahap</option>
+            <option value="Junior" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Junior</option><option value="Senior" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Senior</option><option value="Asasi" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Asasi</option>
           </select>
           <select value={filterProg} onChange={e => setFilterProg(e.target.value)} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-violet-500/30">
-            <option value="Semua">Semua Program</option>
-            {availableProgs.map(code => <option key={code} value={code}>{code}</option>)}
+            <option value="Semua" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Semua Program</option>
+            {availableProgs.map(code => <option key={code} value={code} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{code}</option>)}
           </select>
         </motion.div>
 

@@ -157,11 +157,11 @@ export function JppNexusPage() {
     };
 
     if (loading) {
-        return <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center text-white/30 text-xs uppercase tracking-widest">Memuatkan Nexus Hub...</div>;
+        return <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] flex items-center justify-center text-slate-500 dark:text-white/30 text-xs uppercase tracking-widest transition-colors">Memuatkan Nexus Hub...</div>;
     }
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f] text-white overflow-x-hidden">
+        <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white overflow-x-hidden transition-colors">
             <div className="fixed inset-0 pointer-events-none z-0">
                 <div className="absolute -top-[10%] right-[10%] w-[40vw] h-[40vw] rounded-full blur-3xl opacity-5"
                     style={{ background: themeColor }} />
@@ -176,8 +176,8 @@ export function JppNexusPage() {
                             <Brain className="w-5 h-5" style={{ color: themeColor }} />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-black text-white leading-tight">Nexus Analytics & Master Switches</h1>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">Kawalan utama penggunaan AI & Token</p>
+                            <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Nexus Analytics & Master Switches</h1>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/30">Kawalan utama penggunaan AI & Token</p>
                         </div>
                     </div>
                 </motion.div>
@@ -187,7 +187,7 @@ export function JppNexusPage() {
                     {/* Metrics & Switches Row */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Main Metrics Card */}
-                        <div className="md:col-span-2 p-8 lg:p-10 rounded-[2.5rem] border border-white/[0.06] bg-gradient-to-br from-indigo-900/40 via-indigo-800/20 to-violet-900/40 relative overflow-hidden group">
+                        <div className="md:col-span-2 p-8 lg:p-10 rounded-[2.5rem] border border-indigo-200 dark:border-white/[0.06] bg-gradient-to-br from-indigo-900 via-indigo-950 to-violet-950 text-white shadow-md relative overflow-hidden group">
                             <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl opacity-50 group-hover:opacity-70 transition-opacity" />
                             
                             <div className="relative z-10 space-y-8 flex flex-col justify-between h-full">
@@ -246,33 +246,33 @@ export function JppNexusPage() {
                         </div>
 
                         {/* Kill Switches Card */}
-                        <div className="p-8 rounded-[2.5rem] border border-white/[0.06] bg-white/[0.02] flex flex-col justify-between">
+                        <div className="p-8 rounded-[2.5rem] border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] shadow-sm flex flex-col justify-between text-slate-900 dark:text-white">
                             <div className="space-y-6">
-                                <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20">
+                                <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20">
                                     <Lock className="w-5 h-5" />
                                 </div>
-                                <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-white/40">Master Controls</h4>
+                                <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Master Controls</h4>
                                 
                                 <div className="space-y-3 relative z-10 w-full sm:w-auto overflow-hidden">
-                                    <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 transition-colors">
-                                        <p className="text-xs font-black text-white">AI Chat Hub</p>
+                                    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] hover:bg-slate-100 dark:hover:bg-white/[0.04] border border-slate-200 dark:border-white/5 transition-colors">
+                                        <p className="text-xs font-black text-slate-900 dark:text-white">AI Chat Hub</p>
                                         <button onClick={() => toggleSetting('allow_ai_chat', settings.allow_ai_chat)}
                                             className={cn('rounded-full font-black text-[9px] w-12 h-7 uppercase tracking-widest transition-all',
-                                                settings.allow_ai_chat ? 'bg-indigo-500/20 border border-indigo-500/30 text-indigo-400' : 'bg-rose-500/20 border border-rose-500/30 text-rose-400')}>
+                                                settings.allow_ai_chat ? 'bg-indigo-500/20 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400' : 'bg-rose-500/20 border border-rose-500/30 text-rose-600 dark:text-rose-400')}>
                                             {settings.allow_ai_chat ? 'ON' : 'OFF'}
                                         </button>
                                     </div>
-                                    <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 transition-colors">
-                                        <p className="text-xs font-black text-white">Enjin Bajet AI</p>
+                                    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] hover:bg-slate-100 dark:hover:bg-white/[0.04] border border-slate-200 dark:border-white/5 transition-colors">
+                                        <p className="text-xs font-black text-slate-900 dark:text-white">Enjin Bajet AI</p>
                                         <button onClick={() => toggleSetting('allow_ai_budget', settings.allow_ai_budget)}
                                             className={cn('rounded-full font-black text-[9px] w-12 h-7 uppercase tracking-widest transition-all',
-                                                settings.allow_ai_budget ? 'bg-indigo-500/20 border border-indigo-500/30 text-indigo-400' : 'bg-rose-500/20 border border-rose-500/30 text-rose-400')}>
+                                                settings.allow_ai_budget ? 'bg-indigo-500/20 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400' : 'bg-rose-500/20 border border-rose-500/30 text-rose-600 dark:text-rose-400')}>
                                             {settings.allow_ai_budget ? 'ON' : 'OFF'}
                                         </button>
                                     </div>
                                 </div>
                             </div>
-                            <div className="pt-6 flex flex-col sm:flex-row sm:items-center gap-2 text-amber-500/60 w-full">
+                            <div className="pt-6 flex flex-col sm:flex-row sm:items-center gap-2 text-amber-600 dark:text-amber-500/60 w-full">
                                 <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                                 <span className="text-[9px] font-black uppercase tracking-wider leading-relaxed">Kekal Aktif Kecuali Kecemasan</span>
                             </div>
@@ -282,127 +282,127 @@ export function JppNexusPage() {
                     {/* Token Economics & Spam Limits */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Token Economics */}
-                        <div className="md:col-span-2 p-8 rounded-[2.5rem] border border-white/[0.06] bg-white/[0.02]">
+                        <div className="md:col-span-2 p-8 rounded-[2.5rem] border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] shadow-sm text-slate-900 dark:text-white">
                             <div className="flex items-center gap-2 mb-8">
-                                <Sparkles className="w-4 h-4 text-indigo-400" />
-                                <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-white/40">Ekonomi Token & Kos Perkhidmatan</h3>
+                                <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                                <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Ekonomi Token & Kos Perkhidmatan</h3>
                             </div>
                             
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
                                 <div className="space-y-4">
-                                    <h4 className="text-[9px] font-black uppercase text-indigo-400 tracking-[0.2em]">Pengagihan Pas Bulanan</h4>
+                                    <h4 className="text-[9px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-[0.2em]">Pengagihan Pas Bulanan</h4>
                                     <div className="space-y-3">
-                                        <div className="flex items-center justify-between p-4 rounded-2xl bg-indigo-500/5 hover:bg-indigo-500/10 border border-indigo-500/10 transition-colors">
-                                            <span className="text-xs font-black text-white">PRO Tier</span>
+                                        <div className="flex items-center justify-between p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-500/5 hover:bg-indigo-100 dark:hover:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/10 transition-colors">
+                                            <span className="text-xs font-black text-slate-900 dark:text-white">PRO Tier</span>
                                             <div className="flex items-center gap-3">
-                                                <span className="font-mono text-indigo-300">{settings.ai_token_settings?.pro_tier_tokens ?? 1000}</span>
-                                                <button onClick={() => updateAiTokenAllowance('pro_tier_tokens', 'PRO')} className="text-white/20 hover:text-indigo-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
+                                                <span className="font-mono text-indigo-600 dark:text-indigo-300 font-bold">{settings.ai_token_settings?.pro_tier_tokens ?? 1000}</span>
+                                                <button onClick={() => updateAiTokenAllowance('pro_tier_tokens', 'PRO')} className="text-slate-400 hover:text-indigo-600 dark:text-white/20 dark:hover:text-indigo-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
                                             </div>
                                         </div>
-                                        <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors">
-                                            <span className="text-xs font-black text-white/70">FREE Tier</span>
+                                        <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-200 dark:border-white/5 transition-colors">
+                                            <span className="text-xs font-black text-slate-700 dark:text-white/70">FREE Tier</span>
                                             <div className="flex items-center gap-3">
-                                                <span className="font-mono text-white/50">{settings.ai_token_settings?.free_tier_tokens ?? 200}</span>
-                                                <button onClick={() => updateAiTokenAllowance('free_tier_tokens', 'PERCUMA')} className="text-white/20 hover:text-white"><SettingsIcon className="w-3.5 h-3.5" /></button>
+                                                <span className="font-mono text-slate-600 dark:text-white/50 font-bold">{settings.ai_token_settings?.free_tier_tokens ?? 200}</span>
+                                                <button onClick={() => updateAiTokenAllowance('free_tier_tokens', 'PERCUMA')} className="text-slate-400 hover:text-slate-900 dark:text-white/20 dark:hover:text-white"><SettingsIcon className="w-3.5 h-3.5" /></button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="space-y-4">
-                                    <h4 className="text-[9px] font-black uppercase text-amber-400 tracking-[0.2em]">Kos Operasi AI</h4>
+                                    <h4 className="text-[9px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-[0.2em]">Kos Operasi AI</h4>
                                     <div className="space-y-3">
-                                        <div className="flex items-center justify-between p-4 rounded-2xl bg-amber-500/5 hover:bg-amber-500/10 border border-amber-500/10 transition-colors">
-                                            <span className="text-[11px] font-bold text-white">Kertas Kerja PRO</span>
+                                        <div className="flex items-center justify-between p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/5 hover:bg-amber-100 dark:hover:bg-amber-500/10 border border-amber-200 dark:border-amber-500/10 transition-colors">
+                                            <span className="text-[11px] font-bold text-slate-900 dark:text-white">Kertas Kerja PRO</span>
                                             <div className="flex items-center gap-3">
-                                                <span className="font-mono text-amber-400">{settings.ai_token_settings?.costs?.pro_kertas_kerja ?? 50} Tk</span>
-                                                <button onClick={() => updateAiTokenCost('pro_kertas_kerja', 'Janaan Kertas Kerja Pro')} className="text-white/20 hover:text-amber-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
+                                                <span className="font-mono text-amber-600 dark:text-amber-400 font-bold">{settings.ai_token_settings?.costs?.pro_kertas_kerja ?? 50} Tk</span>
+                                                <button onClick={() => updateAiTokenCost('pro_kertas_kerja', 'Janaan Kertas Kerja Pro')} className="text-slate-400 hover:text-amber-600 dark:text-white/20 dark:hover:text-amber-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
                                             </div>
                                         </div>
-                                        <div className="flex items-center justify-between p-4 rounded-2xl bg-cyan-500/5 hover:bg-cyan-500/10 border border-cyan-500/10 transition-colors">
-                                            <span className="text-[11px] font-bold text-white">Kertas Kerja FLASH</span>
+                                        <div className="flex items-center justify-between p-4 rounded-2xl bg-cyan-50 dark:bg-cyan-500/5 hover:bg-cyan-100 dark:hover:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/10 transition-colors">
+                                            <span className="text-[11px] font-bold text-slate-900 dark:text-white">Kertas Kerja FLASH</span>
                                             <div className="flex items-center gap-3">
-                                                <span className="font-mono text-cyan-400">{settings.ai_token_settings?.costs?.flash_kertas_kerja ?? 20} Tk</span>
-                                                <button onClick={() => updateAiTokenCost('flash_kertas_kerja', 'Janaan Kertas Kerja Flash')} className="text-white/20 hover:text-cyan-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
+                                                <span className="font-mono text-cyan-600 dark:text-cyan-400 font-bold">{settings.ai_token_settings?.costs?.flash_kertas_kerja ?? 20} Tk</span>
+                                                <button onClick={() => updateAiTokenCost('flash_kertas_kerja', 'Janaan Kertas Kerja Flash')} className="text-slate-400 hover:text-cyan-600 dark:text-white/20 dark:hover:text-cyan-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6 border-t border-white/[0.06]">
-                                <div className="flex items-center justify-between p-4 rounded-2xl bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/10 transition-colors">
-                                    <span className="text-[11px] font-bold text-white">Analisis Laporan Kelab</span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6 border-t border-slate-200 dark:border-white/[0.06]">
+                                <div className="flex items-center justify-between p-4 rounded-2xl bg-rose-50 dark:bg-rose-500/5 hover:bg-rose-100 dark:hover:bg-rose-500/10 border border-rose-200 dark:border-rose-500/10 transition-colors">
+                                    <span className="text-[11px] font-bold text-slate-900 dark:text-white">Analisis Laporan Kelab</span>
                                     <div className="flex items-center gap-3">
-                                        <span className="font-mono text-rose-400">{settings.ai_token_settings?.costs?.analisis ?? 5} Tk</span>
-                                        <button onClick={() => updateAiTokenCost('analisis', 'Analisis Laporan')} className="text-white/20 hover:text-rose-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
+                                        <span className="font-mono text-rose-600 dark:text-rose-400 font-bold">{settings.ai_token_settings?.costs?.analisis ?? 5} Tk</span>
+                                        <button onClick={() => updateAiTokenCost('analisis', 'Analisis Laporan')} className="text-slate-400 hover:text-rose-600 dark:text-white/20 dark:hover:text-rose-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/10 transition-colors">
-                                    <span className="text-[11px] font-bold text-white">Semakan Tatabahasa</span>
+                                <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-500/5 hover:bg-emerald-100 dark:hover:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/10 transition-colors">
+                                    <span className="text-[11px] font-bold text-slate-900 dark:text-white">Semakan Tatabahasa</span>
                                     <div className="flex items-center gap-3">
-                                        <span className="font-mono text-emerald-400">{settings.ai_token_settings?.costs?.semak_ejaan === 0 ? 'Percuma' : `${settings.ai_token_settings?.costs?.semak_ejaan} Tk`}</span>
-                                        <button onClick={() => updateAiTokenCost('semak_ejaan', 'Semakan Tatabahasa')} className="text-white/20 hover:text-emerald-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
+                                        <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">{settings.ai_token_settings?.costs?.semak_ejaan === 0 ? 'Percuma' : `${settings.ai_token_settings?.costs?.semak_ejaan} Tk`}</span>
+                                        <button onClick={() => updateAiTokenCost('semak_ejaan', 'Semakan Tatabahasa')} className="text-slate-400 hover:text-emerald-600 dark:text-white/20 dark:hover:text-emerald-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Anti-Spam limits */}
-                        <div className="p-8 rounded-[2.5rem] border border-white/[0.06] bg-white/[0.02] flex flex-col justify-between">
+                        <div className="p-8 rounded-[2.5rem] border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] shadow-sm flex flex-col justify-between text-slate-900 dark:text-white">
                             <div className="space-y-6">
                                 <div className="flex items-center gap-2">
                                     <ShieldCheck className="w-4 h-4 text-rose-500" />
-                                    <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-white/40">Had Anti-Spam</h3>
+                                    <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Had Anti-Spam</h3>
                                 </div>
-                                <div className="p-5 rounded-3xl bg-amber-500/5 border border-amber-500/10 hover:bg-amber-500/10 transition-all">
+                                <div className="p-5 rounded-3xl bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/10 transition-all">
                                     <div className="flex justify-between items-center mb-4">
-                                        <div className="flex items-center gap-2 text-amber-500">
+                                        <div className="flex items-center gap-2 text-amber-600 dark:text-amber-500">
                                             <AlertTriangle className="w-3.5 h-3.5" />
                                             <p className="text-[9px] font-black uppercase tracking-widest">Amaran Awal</p>
                                         </div>
-                                        <button onClick={() => updateSpamThreshold('warning')} className="text-[9px] font-black text-amber-500 hover:text-amber-400">LARAS</button>
+                                        <button onClick={() => updateSpamThreshold('warning')} className="text-[9px] font-black text-amber-600 dark:text-amber-500 hover:text-amber-500 dark:hover:text-amber-400">LARAS</button>
                                     </div>
-                                    <p className="text-3xl font-black text-amber-500 tabular-nums">{settings.ai_rate_limit?.warning_threshold || 50}</p>
+                                    <p className="text-3xl font-black text-amber-600 dark:text-amber-500 tabular-nums">{settings.ai_rate_limit?.warning_threshold || 50}</p>
                                 </div>
-                                <div className="p-5 rounded-3xl bg-rose-500/5 border border-rose-500/10 hover:bg-rose-500/10 transition-all">
+                                <div className="p-5 rounded-3xl bg-rose-50 dark:bg-rose-500/5 border border-rose-200 dark:border-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/10 transition-all">
                                     <div className="flex justify-between items-center mb-4">
-                                        <div className="flex items-center gap-2 text-rose-500">
+                                        <div className="flex items-center gap-2 text-rose-600 dark:text-rose-500">
                                             <Lock className="w-3.5 h-3.5" />
                                             <p className="text-[9px] font-black uppercase tracking-widest">Sekatan API</p>
                                         </div>
-                                        <button onClick={() => updateSpamThreshold('block')} className="text-[9px] font-black text-rose-500 hover:text-rose-400">LARAS</button>
+                                        <button onClick={() => updateSpamThreshold('block')} className="text-[9px] font-black text-rose-600 dark:text-rose-500 hover:text-rose-500 dark:hover:text-rose-400">LARAS</button>
                                     </div>
-                                    <p className="text-3xl font-black text-rose-500 tabular-nums">{settings.ai_rate_limit?.block_threshold || 65}</p>
+                                    <p className="text-3xl font-black text-rose-600 dark:text-rose-500 tabular-nums">{settings.ai_rate_limit?.block_threshold || 65}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Suspicious Users */}
-                    <div className="p-8 rounded-[2.5rem] border border-white/[0.06] bg-white/[0.02]">
+                    <div className="p-8 rounded-[2.5rem] border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] shadow-sm text-slate-900 dark:text-white">
                         <div className="flex items-center gap-3 mb-6">
-                            <Shield className="w-5 h-5 text-indigo-400" />
-                            <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-white/40">Pemantauan Akaun Suspicious</h3>
-                            <span className="px-2.5 py-1 text-[9px] font-black bg-white/10 rounded-full">{suspiciousUsers.length} dikesan</span>
+                            <Shield className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
+                            <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Pemantauan Akaun Suspicious</h3>
+                            <span className="px-2.5 py-1 text-[9px] font-black bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white rounded-full">{suspiciousUsers.length} dikesan</span>
                         </div>
                         {suspiciousUsers.length === 0 ? (
                             <div className="py-16 text-center">
-                                <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center mx-auto mb-4">
+                                <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-500 flex items-center justify-center mx-auto mb-4">
                                     <CheckCheck className="w-8 h-8" />
                                 </div>
-                                <p className="text-sm font-black text-white">Sistem Di Bawah Kawalan</p>
-                                <p className="text-[10px] uppercase tracking-widest text-white/30 mt-2">Tiada akaun dikesan menyalahgunakan Nexus AI setakat ini.</p>
+                                <p className="text-sm font-black text-slate-900 dark:text-white">Sistem Di Bawah Kawalan</p>
+                                <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-white/30 mt-2">Tiada akaun dikesan menyalahgunakan Nexus AI setakat ini.</p>
                             </div>
                         ) : (
                             <div className="space-y-3">
                                 {suspiciousUsers.map(u => (
-                                    <div key={u.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-white/[0.01] hover:bg-white/[0.03] border border-white/5 rounded-2xl transition-colors">
+                                    <div key={u.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-50 dark:bg-white/[0.01] hover:bg-slate-100 dark:hover:bg-white/[0.03] border border-slate-200 dark:border-white/5 rounded-2xl transition-colors">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center font-black text-white/50">
+                                            <div className="w-12 h-12 rounded-xl bg-slate-200 dark:bg-white/5 flex items-center justify-center font-black text-slate-600 dark:text-white/50">
                                                 {(u.full_name || u.email || '?')[0].toUpperCase()}
                                             </div>
                                             <div>
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <p className="text-sm font-bold text-white">{u.full_name || u.email}</p>
+                                                    <p className="text-sm font-bold text-slate-900 dark:text-white">{u.full_name || u.email}</p>
                                                     <span className={cn("px-2 py-0.5 text-[8px] font-black uppercase tracking-widest rounded-md",
                                                         u.ai_status === 'permanent_ban' ? 'bg-rose-500 text-white' : 
                                                         u.ai_status === 'flagged' ? 'bg-orange-500 text-white' : 'bg-amber-500 text-black'
@@ -410,17 +410,17 @@ export function JppNexusPage() {
                                                         {u.ai_status.replace('_', ' ')}
                                                     </span>
                                                 </div>
-                                                <p className="text-[10px] text-white/40">Kekerapan Harian: <span className="text-white font-bold">{u.ai_daily_usage} ping</span></p>
+                                                <p className="text-[10px] text-slate-500 dark:text-white/40">Kekerapan Harian: <span className="text-slate-900 dark:text-white font-bold">{u.ai_daily_usage} ping</span></p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {(u.ai_status === 'flagged' || u.ai_status === 'permanent_ban' || u.ai_status === 'warned') && (
-                                                <button onClick={() => handleActionSpamUser(u.id, 'unban')} className="px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-[9px] font-black uppercase tracking-widest transition-colors">
+                                                <button onClick={() => handleActionSpamUser(u.id, 'unban')} className="px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-[9px] font-black uppercase tracking-widest transition-colors">
                                                     Pulihkan Akses
                                                 </button>
                                             )}
                                             {u.ai_status !== 'permanent_ban' && (
-                                                <button onClick={() => handleActionSpamUser(u.id, 'permanent_ban')} className="px-4 py-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 text-[9px] font-black uppercase tracking-widest transition-colors">
+                                                <button onClick={() => handleActionSpamUser(u.id, 'permanent_ban')} className="px-4 py-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 text-[9px] font-black uppercase tracking-widest transition-colors">
                                                     Sekat Berterusan
                                                 </button>
                                             )}

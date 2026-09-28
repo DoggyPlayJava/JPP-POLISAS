@@ -53,16 +53,16 @@ function BentoCard({ label, value, sub, icon: Icon, color, delay = 0 }: {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-5 hover:bg-white/[0.05] transition-all"
+      className="rounded-[1.75rem] border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] p-5 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-white/10 dark:hover:bg-white/[0.05] transition-all"
     >
       <div className="flex items-start justify-between mb-3">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: hexToRgba(color, 0.15) }}>
           <Icon className="w-4 h-4" style={{ color }} />
         </div>
       </div>
-      <p className="text-2xl font-black text-white leading-none">{value}</p>
-      <p className="text-[10px] font-black uppercase tracking-widest text-white/35 mt-1.5">{label}</p>
-      {sub && <p className="text-[10px] text-white/20 mt-0.5">{sub}</p>}
+      <p className="text-2xl font-black text-slate-900 dark:text-white leading-none">{value}</p>
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/35 mt-1.5">{label}</p>
+      {sub && <p className="text-[10px] text-slate-400 dark:text-white/20 mt-0.5">{sub}</p>}
     </motion.div>
   );
 }
@@ -80,14 +80,14 @@ function ModuleCard({ name, icon: Icon, color, metrics, health, statusBar, delay
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-4 hover:bg-white/[0.05] transition-all flex flex-col"
+      className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.025] p-4 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-white/10 dark:hover:bg-white/[0.05] transition-all flex flex-col"
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: hexToRgba(color, 0.15) }}>
             <Icon className="w-3.5 h-3.5" style={{ color }} />
           </div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-white/50">{name}</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-white/50">{name}</span>
         </div>
         {health && <span className="text-sm" title="Health Score">{health}</span>}
       </div>
@@ -95,10 +95,10 @@ function ModuleCard({ name, icon: Icon, color, metrics, health, statusBar, delay
       <div className="space-y-1.5 flex-1">
         {metrics.map((m, i) => (
           <div key={i} className="flex items-center justify-between">
-            <span className="text-[10px] text-white/30 font-bold">{m.label}</span>
+            <span className="text-[10px] text-slate-500 dark:text-white/30 font-bold">{m.label}</span>
             <span className={cn("text-xs font-black tabular-nums", 
               // Hilight critical values if they contain warnings
-              m.value.toString().includes('⚠️') ? 'text-red-400' : 'text-white/80'
+              m.value.toString().includes('⚠️') ? 'text-red-500 dark:text-red-400' : 'text-slate-900 dark:text-white/80'
             )}>{m.value}</span>
           </div>
         ))}
@@ -106,7 +106,7 @@ function ModuleCard({ name, icon: Icon, color, metrics, health, statusBar, delay
 
       {statusBar && statusBar.total > 0 && (
         <div className="mt-4">
-          <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden flex">
+          <div className="h-1.5 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden flex">
             {statusBar.items.map((item, i) => (
               <div key={i} style={{ width: `${(item.count / statusBar.total) * 100}%`, backgroundColor: item.color }} className="h-full" />
             ))}
@@ -115,7 +115,7 @@ function ModuleCard({ name, icon: Icon, color, metrics, health, statusBar, delay
             {statusBar.items.map((item, i) => (
               <div key={i} className="flex items-center gap-1">
                 <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color }} />
-                <span className="text-[8px] font-bold text-white/30">{item.label} ({item.count})</span>
+                <span className="text-[8px] font-bold text-slate-500 dark:text-white/30">{item.label} ({item.count})</span>
               </div>
             ))}
           </div>
@@ -129,11 +129,11 @@ function ModuleCard({ name, icon: Icon, color, metrics, health, statusBar, delay
 function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#0a0a0f] border border-white/10 rounded-xl p-3 shadow-xl">
-      <p className="text-white/50 text-[10px] font-bold mb-1">{label}</p>
+    <div className="bg-white dark:bg-[#0a0a0f] border border-slate-200 dark:border-white/10 rounded-xl p-3 shadow-xl">
+      <p className="text-slate-500 dark:text-white/50 text-[10px] font-bold mb-1">{label}</p>
       {payload.map((p: any, i: number) => (
-        <p key={i} className="text-white font-black text-sm">
-          {p.value} <span className="text-[10px] text-white/40 font-medium">{p.name}</span>
+        <p key={i} className="text-slate-900 dark:text-white font-black text-sm">
+          {p.value} <span className="text-[10px] text-slate-400 dark:text-white/40 font-medium">{p.name}</span>
         </p>
       ))}
     </div>
@@ -219,7 +219,7 @@ export function JppTelemetryPage() {
   ] : [];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white transition-colors">
       {/* Background glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute -top-[10%] left-[20%] w-[35vw] h-[35vw] rounded-full blur-3xl opacity-[0.04]"
@@ -231,26 +231,26 @@ export function JppTelemetryPage() {
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-10 space-y-8">
 
         {/* ── Header ── */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white/[0.02] border border-white/5 p-8 rounded-[2.5rem]">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 p-8 rounded-[2.5rem] shadow-sm">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center border" style={{ background: hexToRgba(themeColor, 0.1), borderColor: hexToRgba(themeColor, 0.2) }}>
               <Activity className="w-6 h-6" style={{ color: themeColor }} />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-white leading-tight">Telemetri Sistem</h1>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mt-1">Pusat Kawalan Infrastruktur JPP-POLISAS</p>
+              <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Telemetri Sistem</h1>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40 mt-1">Pusat Kawalan Infrastruktur JPP-POLISAS</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             {lastRefresh && (
-              <span className="text-[10px] text-white/25 font-bold">
+              <span className="text-[10px] text-slate-400 dark:text-white/25 font-bold">
                 Dikemas kini: {lastRefresh.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </span>
             )}
             <button
               onClick={fetchTelemetry}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border border-white/10 text-white/50 hover:text-white hover:bg-white/5 transition-all disabled:opacity-30"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 bg-transparent transition-all disabled:opacity-30"
             >
               <RefreshCw className={cn('w-3.5 h-3.5', loading && 'animate-spin')} />
               Muat Semula
@@ -261,15 +261,15 @@ export function JppTelemetryPage() {
         {/* ── Error ── */}
         {error && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-red-500/10 border border-red-500/20 rounded-2xl p-5 flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
-            <p className="text-sm text-red-300 font-medium">{error}</p>
+            <AlertTriangle className="w-5 h-5 text-red-500 dark:text-red-400 shrink-0" />
+            <p className="text-sm text-red-600 dark:text-red-300 font-medium">{error}</p>
           </motion.div>
         )}
 
         {/* ── Loading ── */}
         {loading && !data && (
           <div className="flex items-center justify-center py-32">
-            <Loader2 className="w-8 h-8 animate-spin text-white/20" />
+            <Loader2 className="w-8 h-8 animate-spin text-slate-400 dark:text-white/20" />
           </div>
         )}
 
@@ -280,13 +280,13 @@ export function JppTelemetryPage() {
               <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="bg-red-500/10 border border-red-500/20 rounded-[1.75rem] p-6">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center">
-                    <AlertTriangle className="w-4 h-4 text-red-400" />
+                    <AlertTriangle className="w-4 h-4 text-red-500 dark:text-red-400" />
                   </div>
-                  <h2 className="text-sm font-black uppercase tracking-widest text-red-400">{allAlerts.length} Amaran Kritikal Dikesan</h2>
+                  <h2 className="text-sm font-black uppercase tracking-widest text-red-600 dark:text-red-400">{allAlerts.length} Amaran Kritikal Dikesan</h2>
                 </div>
                 <ul className="space-y-2">
                   {allAlerts.map((alert, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-red-200">
+                    <li key={i} className="flex items-start gap-2 text-sm text-red-700 dark:text-red-200">
                       <span className="text-red-500/50 mt-0.5">•</span>
                       {alert}
                     </li>
@@ -297,11 +297,11 @@ export function JppTelemetryPage() {
 
             {/* ═══ SECTION A: Teras Infrastruktur (Resilience) ═══ */}
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/25 mb-3 px-1">Teras Infrastruktur (Resilience)</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 dark:text-white/25 mb-3 px-1">Teras Infrastruktur (Resilience)</p>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 
                 {/* Node.js Server */}
-                <div className="rounded-[2rem] border border-[#60A5FA]/20 bg-[#60A5FA]/5 p-6 flex flex-col relative overflow-hidden">
+                <div className="rounded-[2rem] border border-blue-200 dark:border-[#60A5FA]/20 bg-white dark:bg-[#60A5FA]/5 p-6 flex flex-col relative overflow-hidden shadow-sm">
                   <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#60A5FA]/10 blur-3xl rounded-full" />
                   <div className="flex items-center justify-between mb-6 z-10">
                     <div className="flex items-center gap-3">
@@ -309,34 +309,34 @@ export function JppTelemetryPage() {
                         <Server className="w-5 h-5 text-[#60A5FA]" />
                       </div>
                       <div>
-                        <h3 className="text-white font-black text-lg leading-tight">Node.js Engine</h3>
-                        <p className="text-[10px] text-[#60A5FA]/60 font-black uppercase tracking-widest">Frontend API Server</p>
+                        <h3 className="text-slate-900 dark:text-white font-black text-lg leading-tight">Node.js Engine</h3>
+                        <p className="text-[10px] text-blue-600 dark:text-[#60A5FA]/60 font-black uppercase tracking-widest">Frontend API Server</p>
                       </div>
                     </div>
-                    <div className={cn("px-3 py-1 rounded-full text-[10px] font-black tracking-widest", heapPct > 80 ? "bg-red-500/20 text-red-400" : "bg-[#10B981]/20 text-[#10B981]")}>
+                    <div className={cn("px-3 py-1 rounded-full text-[10px] font-black tracking-widest", heapPct > 80 ? "bg-red-500/20 text-red-600 dark:text-red-400" : "bg-[#10B981]/20 text-[#10B981]")}>
                       {heapPct > 80 ? 'HEAP TINGGI' : 'OPTIMAL'}
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4 z-10 mb-6">
                     <div>
-                      <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">Memori Heap</p>
-                      <p className="text-2xl font-black text-white">{srv.memory.heap_used_mb} <span className="text-sm text-white/40 font-medium">/ {srv.memory.heap_total_mb} MB</span></p>
+                      <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold uppercase tracking-widest mb-1">Memori Heap</p>
+                      <p className="text-2xl font-black text-slate-900 dark:text-white">{srv.memory.heap_used_mb} <span className="text-sm text-slate-400 dark:text-white/40 font-medium">/ {srv.memory.heap_total_mb} MB</span></p>
                       {/* Progress bar */}
-                      <div className="h-1.5 w-full bg-white/10 rounded-full mt-2 overflow-hidden">
+                      <div className="h-1.5 w-full bg-slate-100 dark:bg-white/10 rounded-full mt-2 overflow-hidden">
                         <div className={cn("h-full rounded-full", heapPct > 80 ? "bg-red-500" : "bg-[#60A5FA]")} style={{ width: `${heapPct}%` }} />
                       </div>
                     </div>
                     <div>
-                      <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">Uptime</p>
-                      <p className="text-2xl font-black text-white">{formatUptime(srv.uptime_seconds)}</p>
-                      <p className="text-[10px] text-white/30 mt-1">v{srv.node_version} • PID {srv.pid}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold uppercase tracking-widest mb-1">Uptime</p>
+                      <p className="text-2xl font-black text-slate-900 dark:text-white">{formatUptime(srv.uptime_seconds)}</p>
+                      <p className="text-[10px] text-slate-400 dark:text-white/30 mt-1">v{srv.node_version} • PID {srv.pid}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* PostgreSQL Database */}
-                <div className="rounded-[2rem] border border-[#10B981]/20 bg-[#10B981]/5 p-6 flex flex-col relative overflow-hidden">
+                <div className="rounded-[2rem] border border-emerald-200 dark:border-[#10B981]/20 bg-white dark:bg-[#10B981]/5 p-6 flex flex-col relative overflow-hidden shadow-sm">
                   <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#10B981]/10 blur-3xl rounded-full" />
                   <div className="flex items-center justify-between mb-6 z-10">
                     <div className="flex items-center gap-3">
@@ -344,12 +344,12 @@ export function JppTelemetryPage() {
                         <Database className="w-5 h-5 text-[#10B981]" />
                       </div>
                       <div>
-                        <h3 className="text-white font-black text-lg leading-tight">PostgreSQL Cluster</h3>
-                        <p className="text-[10px] text-[#10B981]/60 font-black uppercase tracking-widest">Database Resilience</p>
+                        <h3 className="text-slate-900 dark:text-white font-black text-lg leading-tight">PostgreSQL Cluster</h3>
+                        <p className="text-[10px] text-emerald-600 dark:text-[#10B981]/60 font-black uppercase tracking-widest">Database Resilience</p>
                       </div>
                     </div>
                     <div className={cn("px-3 py-1 rounded-full text-[10px] font-black tracking-widest", 
-                      (d?.database?.active_connections > (d?.database?.max_connections || 100) * 0.8 || d?.database?.txid_age > 1000000000) ? "bg-red-500/20 text-red-400" : "bg-[#10B981]/20 text-[#10B981]"
+                      (d?.database?.active_connections > (d?.database?.max_connections || 100) * 0.8 || d?.database?.txid_age > 1000000000) ? "bg-red-500/20 text-red-600 dark:text-red-400" : "bg-[#10B981]/20 text-[#10B981]"
                     )}>
                       {(d?.database?.active_connections > (d?.database?.max_connections || 100) * 0.8 || d?.database?.txid_age > 1000000000) ? 'AMARAN' : 'STABIL'}
                     </div>
@@ -358,43 +358,43 @@ export function JppTelemetryPage() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 z-10 mb-4">
                     <div className="col-span-2">
                       <div className="flex justify-between items-end mb-1">
-                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Sambungan Aktif</p>
+                        <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold uppercase tracking-widest">Sambungan Aktif</p>
                         <span className="text-[10px] text-[#10B981] font-bold">{Math.round((d?.database?.active_connections / (d?.database?.max_connections || 100)) * 100)}%</span>
                       </div>
-                      <p className="text-2xl font-black text-white">{d?.database?.active_connections || 0} <span className="text-sm text-white/40 font-medium">/ {d?.database?.max_connections || 100}</span></p>
-                      <div className="h-1.5 w-full bg-white/10 rounded-full mt-2 overflow-hidden">
+                      <p className="text-2xl font-black text-slate-900 dark:text-white">{d?.database?.active_connections || 0} <span className="text-sm text-slate-400 dark:text-white/40 font-medium">/ {d?.database?.max_connections || 100}</span></p>
+                      <div className="h-1.5 w-full bg-slate-100 dark:bg-white/10 rounded-full mt-2 overflow-hidden">
                         <div className={cn("h-full rounded-full", d?.database?.active_connections > (d?.database?.max_connections || 100) * 0.8 ? "bg-red-500" : "bg-[#10B981]")} 
                              style={{ width: `${Math.min((d?.database?.active_connections / (d?.database?.max_connections || 100)) * 100, 100)}%` }} />
                       </div>
                     </div>
                     <div className="col-span-2">
                       <div className="flex justify-between items-end mb-1">
-                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Umur XID</p>
+                        <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold uppercase tracking-widest">Umur XID</p>
                         <span className="text-[10px] text-amber-500 font-bold">Max 2B</span>
                       </div>
-                      <p className="text-2xl font-black text-white">{((d?.database?.txid_age || 0) / 1000000).toFixed(1)}M</p>
-                      <div className="h-1.5 w-full bg-white/10 rounded-full mt-2 overflow-hidden">
+                      <p className="text-2xl font-black text-slate-900 dark:text-white">{((d?.database?.txid_age || 0) / 1000000).toFixed(1)}M</p>
+                      <div className="h-1.5 w-full bg-slate-100 dark:bg-white/10 rounded-full mt-2 overflow-hidden">
                         <div className={cn("h-full rounded-full", d?.database?.txid_age > 1500000000 ? "bg-red-500" : "bg-amber-500")} 
                              style={{ width: `${Math.min(((d?.database?.txid_age || 0) / 2000000000) * 100, 100)}%` }} />
                       </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-4 gap-2 z-10 border-t border-white/5 pt-4 mt-2">
+                  <div className="grid grid-cols-4 gap-2 z-10 border-t border-slate-100 dark:border-white/5 pt-4 mt-2">
                      <div>
-                       <p className="text-[9px] text-white/30 uppercase tracking-widest">Cache Hit</p>
-                       <p className={cn("text-sm font-black", d?.database?.cache_hit_rate_pct < 85 ? "text-red-400" : "text-white")}>{d?.database?.cache_hit_rate_pct || 0}%</p>
+                       <p className="text-[9px] text-slate-400 dark:text-white/30 uppercase tracking-widest">Cache Hit</p>
+                       <p className={cn("text-sm font-black", d?.database?.cache_hit_rate_pct < 85 ? "text-red-500 dark:text-red-400" : "text-slate-900 dark:text-white")}>{d?.database?.cache_hit_rate_pct || 0}%</p>
                      </div>
                      <div>
-                       <p className="text-[9px] text-white/30 uppercase tracking-widest">Dead Tup</p>
-                       <p className={cn("text-sm font-black", d?.database?.dead_tuples_pct > 20 ? "text-red-400" : "text-white")}>{d?.database?.dead_tuples_pct || 0}%</p>
+                       <p className="text-[9px] text-slate-400 dark:text-white/30 uppercase tracking-widest">Dead Tup</p>
+                       <p className={cn("text-sm font-black", d?.database?.dead_tuples_pct > 20 ? "text-red-500 dark:text-red-400" : "text-slate-900 dark:text-white")}>{d?.database?.dead_tuples_pct || 0}%</p>
                      </div>
                      <div>
-                       <p className="text-[9px] text-white/30 uppercase tracking-widest">Locks</p>
-                       <p className={cn("text-sm font-black", d?.database?.waiting_locks > 5 ? "text-red-400" : "text-white")}>{d?.database?.waiting_locks || 0}</p>
+                       <p className="text-[9px] text-slate-400 dark:text-white/30 uppercase tracking-widest">Locks</p>
+                       <p className={cn("text-sm font-black", d?.database?.waiting_locks > 5 ? "text-red-500 dark:text-red-400" : "text-slate-900 dark:text-white")}>{d?.database?.waiting_locks || 0}</p>
                      </div>
                      <div>
-                       <p className="text-[9px] text-white/30 uppercase tracking-widest">Saiz</p>
-                       <p className="text-sm font-black text-white">{d?.database?.db_size_mb || 0} <span className="text-[10px] text-white/40">MB</span></p>
+                       <p className="text-[9px] text-slate-400 dark:text-white/30 uppercase tracking-widest">Saiz</p>
+                       <p className="text-sm font-black text-slate-900 dark:text-white">{d?.database?.db_size_mb || 0} <span className="text-[10px] text-slate-400 dark:text-white/40">MB</span></p>
                      </div>
                   </div>
                 </div>
@@ -408,12 +408,12 @@ export function JppTelemetryPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                   className={cn(
-                    "rounded-[2rem] border p-6 relative overflow-hidden",
+                    "rounded-[2rem] border p-6 relative overflow-hidden shadow-sm mt-4",
                     d.database.wal_retained_mb > 1024
-                      ? "border-red-500/30 bg-red-500/5"
+                      ? "border-red-500/30 bg-white dark:bg-red-500/5"
                       : d.database.wal_retained_mb > 512
-                        ? "border-amber-500/30 bg-amber-500/5"
-                        : "border-[#A78BFA]/20 bg-[#A78BFA]/5"
+                        ? "border-amber-500/30 bg-white dark:bg-amber-500/5"
+                        : "border-violet-200 dark:border-[#A78BFA]/20 bg-white dark:bg-[#A78BFA]/5"
                   )}
                 >
                   <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#A78BFA]/10 blur-3xl rounded-full" />
@@ -423,13 +423,13 @@ export function JppTelemetryPage() {
                         <Zap className="w-5 h-5 text-[#A78BFA]" />
                       </div>
                       <div>
-                        <h3 className="text-white font-black text-lg leading-tight">WAL & Realtime Monitor</h3>
-                        <p className="text-[10px] text-[#A78BFA]/60 font-black uppercase tracking-widest">Pencegahan Crash Automatik</p>
+                        <h3 className="text-slate-900 dark:text-white font-black text-lg leading-tight">WAL & Realtime Monitor</h3>
+                        <p className="text-[10px] text-violet-600 dark:text-[#A78BFA]/60 font-black uppercase tracking-widest">Pencegahan Crash Automatik</p>
                       </div>
                     </div>
                     <div className={cn("px-3 py-1 rounded-full text-[10px] font-black tracking-widest",
-                      d.database.wal_retained_mb > 1024 ? "bg-red-500/20 text-red-400" :
-                      d.database.wal_retained_mb > 512 ? "bg-amber-500/20 text-amber-400" :
+                      d.database.wal_retained_mb > 1024 ? "bg-red-500/20 text-red-600 dark:text-red-400" :
+                      d.database.wal_retained_mb > 512 ? "bg-amber-500/20 text-amber-600 dark:text-amber-400" :
                       "bg-[#10B981]/20 text-[#10B981]"
                     )}>
                       {d.database.wal_retained_mb > 1024 ? '🚨 KRITIKAL' : d.database.wal_retained_mb > 512 ? '⚠️ AMARAN' : '✅ SELAMAT'}
@@ -440,56 +440,56 @@ export function JppTelemetryPage() {
                     {/* WAL Retained */}
                     <div className="col-span-2">
                       <div className="flex justify-between items-end mb-1">
-                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">WAL Retained</p>
+                        <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold uppercase tracking-widest">WAL Retained</p>
                         <span className={cn("text-[10px] font-bold",
-                          d.database.wal_retained_mb > 1024 ? "text-red-400" :
-                          d.database.wal_retained_mb > 512 ? "text-amber-400" :
-                          "text-[#A78BFA]"
+                          d.database.wal_retained_mb > 1024 ? "text-red-500 dark:text-red-400" :
+                          d.database.wal_retained_mb > 512 ? "text-amber-500 dark:text-amber-400" :
+                          "text-violet-600 dark:text-[#A78BFA]"
                         )}>{d.database.wal_retained_mb > 1024 ? '🚨 BAHAYA' : d.database.wal_retained_mb > 512 ? '⚠️ TINGGI' : 'Normal'}</span>
                       </div>
-                      <p className="text-2xl font-black text-white">
-                        {d.database.wal_retained_mb || 0} <span className="text-sm text-white/40 font-medium">/ 2,048 MB</span>
+                      <p className="text-2xl font-black text-slate-900 dark:text-white">
+                        {d.database.wal_retained_mb || 0} <span className="text-sm text-slate-400 dark:text-white/40 font-medium">/ 2,048 MB</span>
                       </p>
-                      <div className="h-1.5 w-full bg-white/10 rounded-full mt-2 overflow-hidden">
+                      <div className="h-1.5 w-full bg-slate-100 dark:bg-white/10 rounded-full mt-2 overflow-hidden">
                         <div className={cn("h-full rounded-full transition-all",
                           d.database.wal_retained_mb > 1024 ? "bg-red-500" :
                           d.database.wal_retained_mb > 512 ? "bg-amber-500" :
                           "bg-[#A78BFA]"
                         )} style={{ width: `${Math.min((d.database.wal_retained_mb / 2048) * 100, 100)}%` }} />
                       </div>
-                      <p className="text-[9px] text-white/20 mt-1">Had sistem: 2GB. Slot di-invalidate jika melebihi had.</p>
+                      <p className="text-[9px] text-slate-400 dark:text-white/20 mt-1">Had sistem: 2GB. Slot di-invalidate jika melebihi had.</p>
                     </div>
 
                     {/* Realtime Tables */}
                     <div>
-                      <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">Jadual Realtime</p>
-                      <p className={cn("text-2xl font-black", d.database.realtime_tables > 10 ? "text-amber-400" : "text-white")}>
+                      <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold uppercase tracking-widest mb-1">Jadual Realtime</p>
+                      <p className={cn("text-2xl font-black", d.database.realtime_tables > 10 ? "text-amber-500 dark:text-amber-400" : "text-slate-900 dark:text-white")}>
                         {d.database.realtime_tables || 0}
                       </p>
-                      <p className="text-[9px] text-white/20 mt-1">Optimal: ≤ 10 jadual</p>
+                      <p className="text-[9px] text-slate-400 dark:text-white/20 mt-1">Optimal: ≤ 10 jadual</p>
                     </div>
 
                     {/* DB Uptime */}
                     <div>
-                      <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-1">DB Uptime</p>
-                      <p className="text-2xl font-black text-white">{formatUptime(d.database.db_uptime_seconds || 0)}</p>
-                      <p className="text-[9px] text-white/20 mt-1">Sejak restart terakhir</p>
+                      <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold uppercase tracking-widest mb-1">DB Uptime</p>
+                      <p className="text-2xl font-black text-slate-900 dark:text-white">{formatUptime(d.database.db_uptime_seconds || 0)}</p>
+                      <p className="text-[9px] text-slate-400 dark:text-white/20 mt-1">Sejak restart terakhir</p>
                     </div>
                   </div>
 
                   {/* Bottom stats row */}
-                  <div className="grid grid-cols-3 gap-2 z-10 relative border-t border-white/5 pt-4 mt-2">
+                  <div className="grid grid-cols-3 gap-2 z-10 relative border-t border-slate-100 dark:border-white/5 pt-4 mt-2">
                     <div>
-                      <p className="text-[9px] text-white/30 uppercase tracking-widest">list_changes Calls</p>
-                      <p className="text-sm font-black text-white">{(d.database.realtime_list_changes_calls || 0).toLocaleString()}</p>
+                      <p className="text-[9px] text-slate-400 dark:text-white/30 uppercase tracking-widest">list_changes Calls</p>
+                      <p className="text-sm font-black text-slate-900 dark:text-white">{(d.database.realtime_list_changes_calls || 0).toLocaleString()}</p>
                     </div>
                     <div>
-                      <p className="text-[9px] text-white/30 uppercase tracking-widest">CPU Time (list_changes)</p>
-                      <p className="text-sm font-black text-white">{((d.database.realtime_list_changes_total_ms || 0) / 1000).toFixed(1)}s</p>
+                      <p className="text-[9px] text-slate-400 dark:text-white/30 uppercase tracking-widest">CPU Time (list_changes)</p>
+                      <p className="text-sm font-black text-slate-900 dark:text-white">{((d.database.realtime_list_changes_total_ms || 0) / 1000).toFixed(1)}s</p>
                     </div>
                     <div>
-                      <p className="text-[9px] text-white/30 uppercase tracking-widest">Replication Slot</p>
-                      <p className={cn("text-sm font-black", d.database.replication_slot_active ? "text-[#10B981]" : "text-red-400")}>
+                      <p className="text-[9px] text-slate-400 dark:text-white/30 uppercase tracking-widest">Replication Slot</p>
+                      <p className={cn("text-sm font-black", d.database.replication_slot_active ? "text-[#10B981]" : "text-red-500 dark:text-red-400")}>
                         {d.database.replication_slot_active ? '● Aktif' : '○ Tidak Aktif'}
                       </p>
                     </div>
@@ -502,7 +502,7 @@ export function JppTelemetryPage() {
 
             {/* Cluster: Akademik & Kelab */}
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/25 mb-3 px-1">📚 Akademik & Kelab</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 dark:text-white/25 mb-3 px-1">📚 Akademik & Kelab</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <ModuleCard name="e-Akademik" icon={GraduationCap} color="#8B5CF6" delay={0.05} metrics={[
                   { label: 'Rekod CGPA', value: m.akademik_cgpa },
@@ -529,7 +529,7 @@ export function JppTelemetryPage() {
 
             {/* Cluster: Komersial */}
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/25 mb-3 px-1">🛒 Komersial</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 dark:text-white/25 mb-3 px-1">🛒 Komersial</p>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <ModuleCard 
                   name="PolyMart" icon={ShoppingBag} color="#EC4899" delay={0.05} 
@@ -575,7 +575,7 @@ export function JppTelemetryPage() {
 
             {/* Cluster: Pentadbiran */}
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/25 mb-3 px-1">🏛️ Pentadbiran</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 dark:text-white/25 mb-3 px-1">🏛️ Pentadbiran</p>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <ModuleCard 
                   name="e-Kebajikan" icon={Heart} color="#EF4444" delay={0.05} 
@@ -607,7 +607,7 @@ export function JppTelemetryPage() {
 
             {/* Cluster: Infrastruktur */}
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/25 mb-3 px-1">⚙️ Infrastruktur</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 dark:text-white/25 mb-3 px-1">⚙️ Infrastruktur</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <ModuleCard name="Push Notifikasi" icon={Bell} color="#60A5FA" delay={0.05} metrics={[
                   { label: 'Langganan Aktif', value: m.push_subscriptions },
@@ -634,10 +634,10 @@ export function JppTelemetryPage() {
               {/* Trend Chart */}
               {snapshotChartData.length > 0 && (
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                  className="lg:col-span-2 rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-6">
+                  className="lg:col-span-2 rounded-[1.75rem] border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] p-6 shadow-sm">
                   <div className="mb-6">
-                    <h2 className="text-xs font-black uppercase tracking-[0.25em] text-white/40 mb-1">Trend Pertumbuhan Sistem</h2>
-                    <p className="text-[10px] text-white/25">Data harian dari snapshot telemetri (30 hari)</p>
+                    <h2 className="text-xs font-black uppercase tracking-[0.25em] text-slate-600 dark:text-white/40 mb-1">Trend Pertumbuhan Sistem</h2>
+                    <p className="text-[10px] text-slate-400 dark:text-white/25">Data harian dari snapshot telemetri (30 hari)</p>
                   </div>
                   <div className="h-56 w-full">
                     <ResponsiveContainer width="100%" height="100%">
@@ -652,7 +652,7 @@ export function JppTelemetryPage() {
                             <stop offset="95%" stopColor="#06B6D4" stopOpacity={0} />
                           </linearGradient>
                         </defs>
-                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.25)', fontSize: 9, fontWeight: 700 }} dy={8} minTickGap={30} />
+                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: 'currentColor', fontSize: 9, fontWeight: 700 }} className="text-slate-400 dark:text-white/25" dy={8} minTickGap={30} />
                         <YAxis hide />
                         <RechartsTooltip content={<ChartTooltip />} />
                         <Area type="monotone" dataKey="pelajar" name="Pelajar" stroke="#60A5FA" strokeWidth={2} fillOpacity={1} fill="url(#gradPelajar)" />
@@ -665,13 +665,13 @@ export function JppTelemetryPage() {
 
               {/* Kebajikan Donut */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-                className="rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-6 flex flex-col">
-                <h2 className="text-xs font-black uppercase tracking-[0.25em] text-white/40 mb-2">Status Tiket Kebajikan</h2>
+                className="rounded-[1.75rem] border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] p-6 shadow-sm flex flex-col">
+                <h2 className="text-xs font-black uppercase tracking-[0.25em] text-slate-600 dark:text-white/40 mb-2">Status Tiket Kebajikan</h2>
                 <div className="flex-1 min-h-[200px] w-full flex items-center justify-center">
                   {kebDonut.every(d => d.value === 0) ? (
                     <div className="text-center">
-                      <Heart className="w-8 h-8 text-white/10 mx-auto mb-2" />
-                      <p className="text-xs text-white/30">Tiada tiket</p>
+                      <Heart className="w-8 h-8 text-slate-300 dark:text-white/10 mx-auto mb-2" />
+                      <p className="text-xs text-slate-400 dark:text-white/30">Tiada tiket</p>
                     </div>
                   ) : (
                     <ResponsiveContainer width="100%" height={200}>
@@ -679,7 +679,7 @@ export function JppTelemetryPage() {
                         <Pie data={kebDonut} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={4} dataKey="value" stroke="none">
                           {kebDonut.map((e, i) => <Cell key={i} fill={e.color} />)}
                         </Pie>
-                        <RechartsTooltip contentStyle={{ backgroundColor: '#0a0a0f', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', color: 'white', fontWeight: 800 }} />
+                        <RechartsTooltip contentStyle={{ backgroundColor: 'var(--tooltip-bg, #0a0a0f)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', color: 'white', fontWeight: 800 }} />
                       </PieChart>
                     </ResponsiveContainer>
                   )}
@@ -688,7 +688,7 @@ export function JppTelemetryPage() {
                   {kebDonut.map(d => (
                     <div key={d.name} className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full" style={{ background: d.color }} />
-                      <span className="text-[10px] text-white/40 font-bold">{d.name} ({d.value})</span>
+                      <span className="text-[10px] text-slate-500 dark:text-white/40 font-bold">{d.name} ({d.value})</span>
                     </div>
                   ))}
                 </div>
@@ -697,22 +697,22 @@ export function JppTelemetryPage() {
               {/* No snapshot data — show hint */}
               {snapshotChartData.length === 0 && (
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                  className="lg:col-span-2 rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-6 flex flex-col items-center justify-center text-center py-16">
-                  <TrendingUp className="w-10 h-10 text-white/10 mb-3" />
-                  <p className="text-sm font-bold text-white/30">Belum ada data sejarah</p>
-                  <p className="text-[11px] text-white/20 mt-1 max-w-xs">Snapshot pertama akan diambil secara automatik pada pukul 3:00 pagi esok. Graf trend akan muncul selepas data terkumpul.</p>
+                  className="lg:col-span-2 rounded-[1.75rem] border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] p-6 shadow-sm flex flex-col items-center justify-center text-center py-16">
+                  <TrendingUp className="w-10 h-10 text-slate-300 dark:text-white/10 mb-3" />
+                  <p className="text-sm font-bold text-slate-500 dark:text-white/30">Belum ada data sejarah</p>
+                  <p className="text-[11px] text-slate-400 dark:text-white/20 mt-1 max-w-xs">Snapshot pertama akan diambil secara automatik pada pukul 3:00 pagi esok. Graf trend akan muncul selepas data terkumpul.</p>
                 </motion.div>
               )}
             </div>
 
             {/* ═══ SECTION D: Timestamp Footer ═══ */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-              className="flex items-center justify-between px-2 pt-4 border-t border-white/[0.04]">
-              <div className="flex items-center gap-2 text-white/20">
+              className="flex items-center justify-between px-2 pt-4 border-t border-slate-200 dark:border-white/[0.04]">
+              <div className="flex items-center gap-2 text-slate-400 dark:text-white/20">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 <span className="text-[10px] font-black uppercase tracking-widest">SUPER_ADMIN_JPP · Akses Terhad</span>
               </div>
-              <span className="text-[10px] text-white/15 font-mono">
+              <span className="text-[10px] text-slate-400 dark:text-white/15 font-mono">
                 {data.timestamp ? new Date(data.timestamp).toLocaleString('ms-MY') : '—'}
               </span>
             </motion.div>

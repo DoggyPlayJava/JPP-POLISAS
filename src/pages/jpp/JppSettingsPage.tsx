@@ -154,15 +154,15 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
       {/* Header seksyen */}
       <div className="flex items-center gap-3 px-2">
         <ClipboardList className="w-5 h-5" style={{ color: themeColor }} />
-        <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-white/40">Semakan Pindaan Profil Pelajar</h3>
+        <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Semakan Pindaan Profil Pelajar</h3>
         {pendingCount > 0 && (
-          <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-400">{pendingCount} PENDING</span>
+          <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-600 dark:text-amber-400">{pendingCount} PENDING</span>
         )}
       </div>
 
-      <div className="rounded-[2rem] overflow-hidden border" style={{ borderColor: hexToRgba(themeColor, 0.2), background: hexToRgba(themeColor, 0.03) }}>
+      <div className="rounded-[2rem] overflow-hidden border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-sm">
         {/* Filter tabs */}
-        <div className="flex border-b" style={{ borderColor: hexToRgba(themeColor, 0.15) }}>
+        <div className="flex border-b border-slate-200 dark:border-white/10">
           {filterTabs.map(tab => (
             <button
               key={tab.key}
@@ -170,13 +170,13 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
               className={cn(
                 'flex-1 py-3 text-[11px] font-black uppercase tracking-widest transition-all',
                 filter === tab.key
-                  ? 'text-white border-b-2'
-                  : 'text-white/30 hover:text-white/60'
+                  ? 'text-slate-900 dark:text-white border-b-2'
+                  : 'text-slate-500 dark:text-white/30 hover:text-slate-900 dark:hover:text-white/60'
               )}
               style={filter === tab.key ? { borderBottomColor: themeColor, color: themeColor } : {}}
             >
               {tab.label}
-              {tab.key === 'PENDING' && pendingCount > 0 && <span className="ml-1.5 bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full">{pendingCount}</span>}
+              {tab.key === 'PENDING' && pendingCount > 0 && <span className="ml-1.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-full">{pendingCount}</span>}
             </button>
           ))}
         </div>
@@ -184,21 +184,20 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
         {/* Content */}
         <div className="p-6">
           {loading ? (
-            <div className="flex items-center justify-center gap-2 py-8 text-white/30 text-xs">
+            <div className="flex items-center justify-center gap-2 py-8 text-slate-400 dark:text-white/30 text-xs">
               <Loader2 className="w-4 h-4 animate-spin" /> Memuatkan...
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-10">
-              <ClipboardList className="w-10 h-10 mx-auto mb-3 text-white/10" />
-              <p className="text-white/30 text-xs font-medium">Tiada rekod {filter === 'PENDING' ? 'menunggu semakan' : filter === 'APPROVED' ? 'yang telah diluluskan' : 'yang ditolak'}</p>
+              <ClipboardList className="w-10 h-10 mx-auto mb-3 text-slate-300 dark:text-white/10" />
+              <p className="text-slate-500 dark:text-white/30 text-xs font-medium">Tiada rekod {filter === 'PENDING' ? 'menunggu semakan' : filter === 'APPROVED' ? 'yang telah diluluskan' : 'yang ditolak'}</p>
             </div>
           ) : (
             <div className="space-y-3">
               {filtered.map(req => (
                 <div
                   key={req.id}
-                  className="p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center gap-4"
-                  style={{ background: hexToRgba(themeColor, 0.04), borderColor: hexToRgba(themeColor, 0.12) }}
+                  className="p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center gap-4 bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/5"
                 >
                   {/* Info pelajar & permintaan */}
                   <div className="flex-1 min-w-0 space-y-2">
@@ -206,22 +205,22 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
                       <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: hexToRgba(themeColor, 0.15) }}>
                         <User className="w-3.5 h-3.5" style={{ color: themeColor }} />
                       </div>
-                      <p className="text-sm font-black text-white truncate">{req.requester?.full_name ?? '—'}</p>
-                      {req.requester?.matric_no && <span className="text-[10px] font-mono text-white/40 bg-white/5 px-2 py-0.5 rounded-lg">{req.requester.matric_no}</span>}
+                      <p className="text-sm font-black text-slate-900 dark:text-white truncate">{req.requester?.full_name ?? '—'}</p>
+                      {req.requester?.matric_no && <span className="text-[10px] font-mono text-slate-600 dark:text-white/40 bg-slate-200/60 dark:bg-white/5 px-2 py-0.5 rounded-lg">{req.requester.matric_no}</span>}
                     </div>
 
                     <div className="ml-9">
-                      <p className="text-xs text-white/60 font-medium">
-                        <span className="text-white/30">Pindaan:</span>{' '}
-                        <span className="font-bold text-white/80">{req.field_type === 'matric_no' ? 'No. Matrik' : 'Semester'}</span>
+                      <p className="text-xs text-slate-600 dark:text-white/60 font-medium">
+                        <span className="text-slate-400 dark:text-white/30">Pindaan:</span>{' '}
+                        <span className="font-bold text-slate-800 dark:text-white/80">{req.field_type === 'matric_no' ? 'No. Matrik' : 'Semester'}</span>
                         {' '}—{' '}
-                        <span className="line-through text-white/30 font-mono text-[11px]">{req.current_value ?? '—'}</span>
+                        <span className="line-through text-slate-400 dark:text-white/30 font-mono text-[11px]">{req.current_value ?? '—'}</span>
                         {' → '}
-                        <span className="font-black text-white font-mono">{req.requested_value}</span>
+                        <span className="font-black text-slate-900 dark:text-white font-mono">{req.requested_value}</span>
                       </p>
-                      {req.reason && <p className="text-[11px] text-white/40 mt-1">Sebab: {req.reason}</p>}
-                      {req.review_note && <p className="text-[11px] text-amber-400/80 mt-1">Nota JPP: {req.review_note}</p>}
-                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-white/25">
+                      {req.reason && <p className="text-[11px] text-slate-500 dark:text-white/40 mt-1">Sebab: {req.reason}</p>}
+                      {req.review_note && <p className="text-[11px] text-amber-600 dark:text-amber-400/80 mt-1">Nota JPP: {req.review_note}</p>}
+                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-400 dark:text-white/25">
                         <span>Dihantar: {new Date(req.submitted_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                         {req.reviewed_at && <span>· Disemak: {new Date(req.reviewed_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' })}</span>}
                         {req.reviewer?.full_name && <span>· oleh {req.reviewer.full_name}</span>}
@@ -234,13 +233,13 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
                     <div className="flex gap-2 shrink-0">
                       <button
                         onClick={() => openModal(req, 'REJECTED')}
-                        className="px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all"
+                        className="px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-all"
                       >
                         <XCircle className="w-3.5 h-3.5 inline mr-1" />Tolak
                       </button>
                       <button
                         onClick={() => openModal(req, 'APPROVED')}
-                        className="px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all border border-emerald-500/30"
+                        className="px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/30 transition-all border border-emerald-500/30"
                       >
                         <CheckCircle2 className="w-3.5 h-3.5 inline mr-1" />Lulus
                       </button>
@@ -250,8 +249,8 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
                   {req.status !== 'PENDING' && (
                     <div className="shrink-0">
                       {req.status === 'APPROVED'
-                        ? <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"><CheckCircle2 className="w-3 h-3" />DILULUSKAN</span>
-                        : <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black bg-red-500/15 text-red-400 border border-red-500/20"><XCircle className="w-3 h-3" />DITOLAK</span>
+                        ? <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"><CheckCircle2 className="w-3 h-3" />DILULUSKAN</span>
+                        : <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/20"><XCircle className="w-3 h-3" />DITOLAK</span>
                       }
                     </div>
                   )}
@@ -268,37 +267,36 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm"
               onClick={() => !processing && setReviewModal({ open: false, req: null, action: null })}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-md rounded-[2rem] p-6 border bg-[#0f0f1a] z-10"
-              style={{ borderColor: hexToRgba(themeColor, 0.25) }}
+              className="relative w-full max-w-md rounded-[2rem] p-6 border bg-white dark:bg-[#0f0f1a] border-slate-200 dark:border-white/10 text-slate-900 dark:text-white shadow-xl z-10"
             >
               <div className="space-y-5">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${reviewModal.action === 'APPROVED' ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>
                     {reviewModal.action === 'APPROVED'
-                      ? <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                      : <XCircle className="w-5 h-5 text-red-400" />
+                      ? <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                      : <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
                     }
                   </div>
                   <div>
-                    <p className="font-black text-white text-sm">{reviewModal.action === 'APPROVED' ? 'Luluskan' : 'Tolak'} Permintaan Pindaan</p>
-                    <p className="text-[11px] text-white/40">
+                    <p className="font-black text-slate-900 dark:text-white text-sm">{reviewModal.action === 'APPROVED' ? 'Luluskan' : 'Tolak'} Permintaan Pindaan</p>
+                    <p className="text-[11px] text-slate-500 dark:text-white/40">
                       {reviewModal.req.field_type === 'matric_no' ? 'No. Matrik' : 'Semester'}:
-                      {' '}<span className="font-mono text-white/60 line-through">{reviewModal.req.current_value}</span>
-                      {' → '}<span className="font-mono text-white font-black">{reviewModal.req.requested_value}</span>
+                      {' '}<span className="font-mono text-slate-600 dark:text-white/60 line-through">{reviewModal.req.current_value}</span>
+                      {' → '}<span className="font-mono text-slate-900 dark:text-white font-black">{reviewModal.req.requested_value}</span>
                     </p>
-                    <p className="text-[10px] text-white/30 mt-0.5">Pelajar: {reviewModal.req.requester?.full_name}</p>
+                    <p className="text-[10px] text-slate-500 dark:text-white/30 mt-0.5">Pelajar: {reviewModal.req.requester?.full_name}</p>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-white/40">
+                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
                     {reviewModal.action === 'REJECTED' ? 'Sebab Penolakan *' : 'Nota Ulasan (Pilihan)'}
                   </label>
                   <textarea
@@ -306,16 +304,16 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
                     onChange={e => setReviewNote(e.target.value)}
                     rows={3}
                     placeholder={reviewModal.action === 'REJECTED' ? 'Nyatakan sebab penolakan...' : 'Nota tambahan (jika ada)...'}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/20 font-medium resize-none focus:outline-none focus:border-white/20"
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 font-medium resize-none focus:outline-none focus:border-slate-400 dark:focus:border-white/20 shadow-sm"
                   />
-                  <p className="text-[10px] text-white/25">⚙ Nota ini akan direkodkan dalam Audit Log dan dihantar kepada pelajar.</p>
+                  <p className="text-[10px] text-slate-400 dark:text-white/25">⚙ Nota ini akan direkodkan dalam Audit Log dan dihantar kepada pelajar.</p>
                 </div>
 
                 <div className="flex gap-3">
                   <button
                     onClick={() => setReviewModal({ open: false, req: null, action: null })}
                     disabled={processing}
-                    className="flex-1 h-11 rounded-xl font-bold text-xs uppercase tracking-wider border border-white/10 text-white/40 hover:bg-white/5 transition-all"
+                    className="flex-1 h-11 rounded-xl font-bold text-xs uppercase tracking-wider border border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/40 hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
                   >
                     Batal
                   </button>
@@ -471,11 +469,11 @@ export function JppSettingsPage() {
     };
 
     if (loading) {
-        return <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center text-white/30 text-xs uppercase tracking-widest">Memuatkan Tetapan Sistem...</div>;
+        return <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] flex items-center justify-center text-slate-500 dark:text-white/30 text-xs uppercase tracking-widest transition-colors">Memuatkan Tetapan Sistem...</div>;
     }
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f] text-white py-10 px-6 overflow-x-hidden">
+        <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white py-10 px-6 overflow-x-hidden transition-colors">
             <div className="fixed inset-0 pointer-events-none z-0">
                 <div className="absolute top-0 right-0 w-[40vw] h-[40vw] rounded-full blur-[100px] opacity-10"
                     style={{ background: themeColor }} />
@@ -489,8 +487,8 @@ export function JppSettingsPage() {
                             <SettingsIcon className="w-6 h-6" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-black text-white leading-tight">Tetapan Utama JPP</h1>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mt-1">Konfigurasi & parameter global portal</p>
+                            <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Tetapan Utama JPP</h1>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40 mt-1">Konfigurasi & parameter global portal</p>
                         </div>
                     </div>
                 </motion.div>
@@ -498,21 +496,21 @@ export function JppSettingsPage() {
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="space-y-6">
                     <div className="flex items-center gap-3 px-2">
                         <ShieldCheck className="w-5 h-5 text-violet-500" />
-                        <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-white/40">Ketetapan Sistem & Akses</h3>
+                        <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Ketetapan Sistem & Akses</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Tetapan KPP telah dipindahkan ke Dashboard KPP (Laporan PDF, Had Keahlian, Takwim) */}
 
                         {/* Traditional Registration Toggle */}
                         {isSuperAdmin && (
-                            <div className="p-6 rounded-[2rem] bg-gradient-to-br from-violet-900/10 to-violet-900/5 border border-violet-500/20 flex flex-col sm:flex-row items-center justify-between gap-6 md:col-span-2 group hover:from-violet-900/20 transition-all">
+                            <div className="p-6 rounded-[2rem] bg-white dark:bg-gradient-to-br dark:from-violet-900/10 dark:to-violet-900/5 border border-slate-200 dark:border-violet-500/20 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 md:col-span-2 group hover:border-slate-300 dark:hover:from-violet-900/20 transition-all">
                                 <div className="flex items-center gap-4 w-full sm:w-auto flex-col sm:flex-row text-center sm:text-left">
-                                    <div className="w-12 h-12 rounded-2xl bg-violet-500/20 text-violet-400 flex items-center justify-center border border-violet-500/30">
+                                    <div className="w-12 h-12 rounded-2xl bg-violet-500/20 text-violet-600 dark:text-violet-400 flex items-center justify-center border border-violet-500/30">
                                         <KeyRound className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <p className="text-base font-black text-white">Traditional Registration (Emel & Kata Laluan)</p>
-                                        <p className="text-xs text-violet-400/70 font-medium">Benarkan pendaftaran menggunakan emel dan kata laluan untuk pelajar. Tutup fungsi ini waktu orientasi untuk elak database overload.</p>
+                                        <p className="text-base font-black text-slate-900 dark:text-white">Traditional Registration (Emel & Kata Laluan)</p>
+                                        <p className="text-xs text-slate-500 dark:text-violet-400/70 font-medium">Benarkan pendaftaran menggunakan emel dan kata laluan untuk pelajar. Tutup fungsi ini waktu orientasi untuk elak database overload.</p>
                                     </div>
                                 </div>
                                 <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
@@ -520,7 +518,7 @@ export function JppSettingsPage() {
                                         onClick={() => toggleSetting('traditional_registration_enabled', settings.traditional_registration_enabled !== false)}
                                         className={cn(
                                             "relative inline-flex h-8 w-14 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
-                                            settings.traditional_registration_enabled !== false ? "bg-violet-600" : "bg-white/10"
+                                            settings.traditional_registration_enabled !== false ? "bg-violet-600" : "bg-slate-200 dark:bg-white/10"
                                         )}
                                     >
                                         <span className={cn(
@@ -534,18 +532,18 @@ export function JppSettingsPage() {
 
                         {/* Kod Pendaftaran Staf - Hanya untuk SUPER ADMIN */}
                         {isSuperAdmin && (
-                            <div className="p-6 rounded-[2rem] bg-gradient-to-br from-rose-900/10 to-rose-900/5 border border-rose-500/20 flex flex-col sm:flex-row items-center justify-between gap-6 md:col-span-2 group hover:from-rose-900/20 transition-all">
+                            <div className="p-6 rounded-[2rem] bg-white dark:bg-gradient-to-br dark:from-rose-900/10 dark:to-rose-900/5 border border-slate-200 dark:border-rose-500/20 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 md:col-span-2 group hover:border-slate-300 dark:hover:from-rose-900/20 transition-all">
                                 <div className="flex items-center gap-4 w-full sm:w-auto flex-col sm:flex-row text-center sm:text-left">
-                                    <div className="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/30">
+                                    <div className="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-500/30">
                                         <KeyRound className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <p className="text-base font-black text-white">Kod Pendaftaran Staf</p>
-                                        <p className="text-xs text-rose-400/70 font-medium">Kod rahsia yang digunakan semasa pendaftaran staf/pensyarah.</p>
+                                        <p className="text-base font-black text-slate-900 dark:text-white">Kod Pendaftaran Staf</p>
+                                        <p className="text-xs text-slate-500 dark:text-rose-400/70 font-medium">Kod rahsia yang digunakan semasa pendaftaran staf/pensyarah.</p>
                                     </div>
                                 </div>
                                 <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-                                    <div className="bg-black/40 px-4 py-3 rounded-xl font-mono text-sm font-bold text-rose-200 border border-rose-500/20">
+                                    <div className="bg-slate-100 dark:bg-black/40 px-4 py-3 rounded-xl font-mono text-sm font-bold text-rose-600 dark:text-rose-200 border border-slate-200 dark:border-rose-500/20">
                                         {settings.staff_registration_code || '••••••••'}
                                     </div>
                                     <button onClick={updateStaffCode} className="px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-900/50 transition-all w-full sm:w-auto">
@@ -562,31 +560,31 @@ export function JppSettingsPage() {
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="space-y-6">
                         <div className="flex items-center gap-3 px-2">
                             <Calendar className="w-5 h-5 text-amber-500" />
-                            <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-white/40">Konfigurasi Takwim Pengambilan</h3>
+                            <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Konfigurasi Takwim Pengambilan</h3>
                         </div>
-                        <div className="p-6 rounded-[2rem] bg-gradient-to-br from-amber-900/10 to-amber-900/5 border border-amber-500/20 space-y-6 md:col-span-2 group hover:from-amber-900/20 transition-all">
+                        <div className="p-6 rounded-[2rem] bg-white dark:bg-gradient-to-br dark:from-amber-900/10 dark:to-amber-900/5 border border-slate-200 dark:border-amber-500/20 shadow-sm space-y-6 md:col-span-2 group hover:border-slate-300 dark:hover:from-amber-900/20 transition-all">
                             <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30 shrink-0">
+                                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/30 shrink-0">
                                     <Calendar className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <p className="text-base font-black text-white">Bulan Permulaan Intake</p>
-                                    <p className="text-xs text-amber-400/70 font-medium mt-1">Tetapkan bulan mula setiap sesi pengambilan pelajar. Notifikasi semak sahaja akan dihantar kepada pentadbir sebulan sebelum tarikh ini.</p>
+                                    <p className="text-base font-black text-slate-900 dark:text-white">Bulan Permulaan Intake</p>
+                                    <p className="text-xs text-slate-500 dark:text-amber-400/70 font-medium mt-1">Tetapkan bulan mula setiap sesi pengambilan pelajar. Notifikasi semak sahaja akan dihantar kepada pentadbir sebulan sebelum tarikh ini.</p>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* Intake 1 */}
                                 <div className="space-y-2">
-                                    <p className="text-[11px] font-black uppercase tracking-widest text-white/50">Intake Pertama (Pertengahan Tahun)</p>
+                                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-white/50">Intake Pertama (Pertengahan Tahun)</p>
                                     <div className="flex items-center gap-3">
                                         <select
                                             value={intake1Month}
                                             onChange={e => setIntake1Month(Number(e.target.value))}
-                                            className="flex-1 h-11 bg-black/40 border border-amber-500/20 rounded-xl text-sm text-white/80 font-bold px-3 focus:outline-none focus:border-amber-500/50"
+                                            className="flex-1 h-11 bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-amber-500/20 rounded-xl text-sm text-slate-900 dark:text-white/80 font-bold px-3 focus:outline-none focus:border-amber-500/50"
                                         >
                                             {MONTH_NAMES.slice(1).map((m, i) => (
-                                                <option key={i + 1} value={i + 1}>{m} ({i + 1})</option>
+                                                <option key={i + 1} value={i + 1} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{m} ({i + 1})</option>
                                             ))}
                                         </select>
                                         <button
@@ -609,15 +607,15 @@ export function JppSettingsPage() {
 
                                 {/* Intake 2 */}
                                 <div className="space-y-2">
-                                    <p className="text-[11px] font-black uppercase tracking-widest text-white/50">Intake Kedua (Awal Tahun)</p>
+                                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-white/50">Intake Kedua (Awal Tahun)</p>
                                     <div className="flex items-center gap-3">
                                         <select
                                             value={intake2Month}
                                             onChange={e => setIntake2Month(Number(e.target.value))}
-                                            className="flex-1 h-11 bg-black/40 border border-amber-500/20 rounded-xl text-sm text-white/80 font-bold px-3 focus:outline-none focus:border-amber-500/50"
+                                            className="flex-1 h-11 bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-amber-500/20 rounded-xl text-sm text-slate-900 dark:text-white/80 font-bold px-3 focus:outline-none focus:border-amber-500/50"
                                         >
                                             {MONTH_NAMES.slice(1).map((m, i) => (
-                                                <option key={i + 1} value={i + 1}>{m} ({i + 1})</option>
+                                                <option key={i + 1} value={i + 1} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{m} ({i + 1})</option>
                                             ))}
                                         </select>
                                         <button
@@ -639,7 +637,7 @@ export function JppSettingsPage() {
                                 </div>
                             </div>
 
-                            <p className="text-[10px] text-amber-500/60 font-medium border-t border-amber-500/10 pt-4">
+                            <p className="text-[10px] text-amber-600 dark:text-amber-500/60 font-medium border-t border-slate-200 dark:border-amber-500/10 pt-4">
                                 ⚠ Ubah nilai ini SEBELUM pengambilan baharu bermula. Sistem akan menghantar notifikasi kepada pentadbir secara automatik sebulan sebelum tarikh yang ditetapkan.
                             </p>
                         </div>
@@ -651,9 +649,9 @@ export function JppSettingsPage() {
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="space-y-6">
                         <div className="flex items-center gap-3 px-2">
                             <QrCode className="w-5 h-5 text-emerald-500" />
-                            <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-white/40">Penjana QR Link</h3>
+                            <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Penjana QR Link</h3>
                         </div>
-                        <div className="p-6 rounded-[2rem] bg-gradient-to-br from-emerald-900/10 to-emerald-900/5 border border-emerald-500/20 hover:from-emerald-900/20 transition-all">
+                        <div className="p-6 rounded-[2rem] bg-white dark:bg-gradient-to-br dark:from-emerald-900/10 dark:to-emerald-900/5 border border-slate-200 dark:border-emerald-500/20 shadow-sm hover:border-slate-300 dark:hover:from-emerald-900/20 transition-all">
                             <QrLinkManager showHeader={false} />
                         </div>
                     </motion.div>

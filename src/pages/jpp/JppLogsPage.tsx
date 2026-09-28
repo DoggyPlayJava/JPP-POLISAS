@@ -197,17 +197,17 @@ export function JppLogsPage() {
     if (t.includes('polymaps') || t.includes('bangunan') || t.includes('lokasi')) return 'bg-sky-500/10 text-sky-400 border-sky-500/20';
     if (t.includes('takwim') || t.includes('akademik')) return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
     if (t.includes('jpp') || t.includes('admin')) return 'bg-violet-500/10 text-violet-400 border-violet-500/20';
-    if (t.includes('makmp')) return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20';
-    if (t.includes('sistem') || t.includes('keusahawanan')) return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
-    return 'bg-white/5 text-white/60 border-white/10';
+    if (t.includes('makmp')) return 'bg-cyan-500/10 text-cyan-500 dark:text-cyan-400 border-cyan-500/20';
+    if (t.includes('sistem') || t.includes('keusahawanan')) return 'bg-rose-500/10 text-rose-500 dark:text-rose-400 border-rose-500/20';
+    return 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white/60 border-slate-200 dark:border-white/10';
   };
 
   // ── Action badge colour ───────────────────────────────────────────────────────
   const actionColor = (action: string) => {
-    if (action?.includes('DELETE') || action?.includes('DISSOLVE') || action?.includes('REJECT') || action?.includes('KICK') || action?.includes('SUSPEND') || action?.includes('REMOVE') || action?.includes('DEACTIVATE')) return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
-    if (action?.includes('UPDATE') || action?.includes('APPROVE') || action?.includes('SETTINGS') || action?.includes('RESUME') || action?.includes('RESOLVE') || action?.includes('ACTIVATE')) return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-    if (action?.includes('CREATE') || action?.includes('ADD') || action?.includes('ASSIGN') || action?.includes('BULK')) return 'bg-sky-500/10 text-sky-400 border-sky-500/20';
-    return 'bg-white/5 text-white/50 border-white/10';
+    if (action?.includes('DELETE') || action?.includes('DISSOLVE') || action?.includes('REJECT') || action?.includes('KICK') || action?.includes('SUSPEND') || action?.includes('REMOVE') || action?.includes('DEACTIVATE')) return 'bg-rose-500/10 text-rose-500 dark:text-rose-400 border-rose-500/20';
+    if (action?.includes('UPDATE') || action?.includes('APPROVE') || action?.includes('SETTINGS') || action?.includes('RESUME') || action?.includes('RESOLVE') || action?.includes('ACTIVATE')) return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
+    if (action?.includes('CREATE') || action?.includes('ADD') || action?.includes('ASSIGN') || action?.includes('BULK')) return 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20';
+    return 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white/50 border-slate-200 dark:border-white/10';
   };
 
   const renderDetails = (log: LogEntry) => {
@@ -234,7 +234,7 @@ export function JppLogsPage() {
       };
       const fallbackText = fallbacks[log.action_type] || 'Tiada butiran tambahan';
       return (
-        <span className="italic text-white/30 flex items-center flex-wrap gap-1">
+        <span className="italic text-slate-400 dark:text-white/30 flex items-center flex-wrap gap-1">
           {fallbackText}{clubBadge && !fallbackText.includes('.') ? '.' : ''} {clubBadge}
         </span>
       );
@@ -256,13 +256,13 @@ export function JppLogsPage() {
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center text-white/30 text-xs uppercase tracking-widest">
+    <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] flex items-center justify-center text-slate-500 dark:text-white/30 text-xs uppercase tracking-widest transition-colors">
       Memuat Audit Trail...
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white py-10 px-6">
+    <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white py-10 px-6 transition-colors">
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-[20%] left-[10%] w-[40vw] h-[40vw] rounded-full blur-3xl opacity-5" style={{ background: themeColor }} />
       </div>
@@ -271,22 +271,22 @@ export function JppLogsPage() {
 
         {/* ── Header ── */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white/[0.02] border border-white/5 p-8 rounded-[2.5rem]">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 p-8 rounded-[2.5rem] shadow-sm">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center border" style={{ background: hexToRgba(themeColor, 0.1), borderColor: hexToRgba(themeColor, 0.2), color: themeColor }}>
                 <ShieldAlert className="w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-black text-white leading-tight">Audit & Pemantauan Sistem</h1>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mt-1">Jejak aktiviti pentadbiran dan keselamatan</p>
+                <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Audit & Pemantauan Sistem</h1>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40 mt-1">Jejak aktiviti pentadbiran dan keselamatan</p>
               </div>
             </div>
             <div className="flex gap-2 flex-wrap">
-              <Button variant="outline" size="sm" onClick={fetchData} className="rounded-xl border-white/10 text-white/50 hover:text-white bg-transparent text-xs">
+              <Button variant="outline" size="sm" onClick={fetchData} className="rounded-xl border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 bg-transparent text-xs">
                 <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Muat Semula
               </Button>
               <Button size="sm" onClick={handleAiSummary} disabled={aiLoading}
-                className="rounded-xl text-xs font-black uppercase tracking-widest"
+                className="rounded-xl text-xs font-black uppercase tracking-widest text-white"
                 style={{ background: hexToRgba(themeColor, 0.8) }}>
                 <Sparkles className="w-3.5 h-3.5 mr-1.5" />
                 {aiLoading ? 'Menjana...' : 'Ringkasan AI'}
@@ -298,11 +298,11 @@ export function JppLogsPage() {
         {/* ── AI Summary ── */}
         {aiSummary && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 text-sm text-white/70 leading-relaxed font-medium">
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-4 flex items-center gap-2">
+            className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-2xl p-6 text-sm text-slate-800 dark:text-white/70 leading-relaxed font-medium shadow-sm">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-4 flex items-center gap-2">
               <Sparkles className="w-3 h-3" /> Ringkasan Analitik AI
             </p>
-            <div className="space-y-3 prose-p:my-2 prose-ul:my-2 prose-li:ml-4 prose-li:list-disc marker:text-white/30 prose-strong:text-white prose-strong:font-bold">
+            <div className="space-y-3 prose-p:my-2 prose-ul:my-2 prose-li:ml-4 prose-li:list-disc marker:text-slate-400 dark:marker:text-white/30 prose-strong:text-slate-900 dark:prose-strong:text-white prose-strong:font-bold">
               <ReactMarkdown>{aiSummary}</ReactMarkdown>
             </div>
           </motion.div>
@@ -312,14 +312,14 @@ export function JppLogsPage() {
         {anomalyAlerts.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             className="bg-rose-500/5 border border-rose-500/20 rounded-2xl p-5 space-y-2">
-            <div className="flex items-center gap-2 text-rose-400">
+            <div className="flex items-center gap-2 text-rose-500 dark:text-rose-400">
               <AlertTriangle className="w-4 h-4" />
               <span className="text-xs font-black uppercase tracking-widest">{anomalyAlerts.length} Anomali Dikesan</span>
-              {emailSent && <span className="ml-auto text-[10px] text-rose-400/60">Emel amaran dihantar ✓</span>}
+              {emailSent && <span className="ml-auto text-[10px] text-rose-500/60 dark:text-rose-400/60">Emel amaran dihantar ✓</span>}
             </div>
             {anomalyAlerts.map((a, i) => (
-              <p key={i} className="text-[11px] text-rose-300/70 font-medium pl-6">
-                • <span className="font-bold text-rose-300">{a.user}</span> — {a.reason}
+              <p key={i} className="text-[11px] text-rose-600 dark:text-rose-300/70 font-medium pl-6">
+                • <span className="font-bold text-rose-700 dark:text-rose-300">{a.user}</span> — {a.reason}
               </p>
             ))}
           </motion.div>
@@ -329,14 +329,14 @@ export function JppLogsPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
           className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { icon: Activity, label: 'Aktiviti Hari Ini', value: todayCount, color: 'text-emerald-400' },
-            { icon: Trash2, label: 'Tindakan Padam', value: deleteCount, color: 'text-rose-400' },
-            { icon: User, label: 'Pengguna Paling Aktif', value: topUser, color: 'text-amber-400', small: true },
-            { icon: Clock, label: 'Log Terbaru', value: lastLog, color: 'text-sky-400', small: true },
+            { icon: Activity, label: 'Aktiviti Hari Ini', value: todayCount, color: 'text-emerald-600 dark:text-emerald-400' },
+            { icon: Trash2, label: 'Tindakan Padam', value: deleteCount, color: 'text-rose-600 dark:text-rose-400' },
+            { icon: User, label: 'Pengguna Paling Aktif', value: topUser, color: 'text-amber-600 dark:text-amber-400', small: true },
+            { icon: Clock, label: 'Log Terbaru', value: lastLog, color: 'text-sky-600 dark:text-sky-400', small: true },
           ].map(({ icon: Icon, label, value, color, small }) => (
-            <div key={label} className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 space-y-2">
+            <div key={label} className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-2xl p-5 space-y-2 shadow-sm">
               <Icon className={cn('w-4 h-4', color)} />
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/30">{label}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{label}</p>
               <p className={cn('font-black', small ? 'text-sm truncate' : 'text-2xl', color)}>{value}</p>
             </div>
           ))}
@@ -346,19 +346,19 @@ export function JppLogsPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
           className="flex flex-col md:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-white/30" />
             <Input placeholder="Cari log..." value={logSearch} onChange={e => setLogSearch(e.target.value)}
-              className="pl-11 h-11 bg-black/40 border-white/10 rounded-2xl text-sm font-medium" />
+              className="pl-11 h-11 bg-white dark:bg-black/40 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-2xl text-sm font-medium shadow-sm" />
           </div>
           <select value={filterAction} onChange={e => setFilterAction(e.target.value)}
-            className="h-11 px-4 bg-black/40 border border-white/10 rounded-2xl text-sm text-white/70 font-medium focus:outline-none">
-            <option value="">Semua Tindakan</option>
-            {uniqueActions.map(a => <option key={a} value={a}>{a}</option>)}
+            className="h-11 px-4 bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-2xl text-sm text-slate-900 dark:text-white font-medium focus:outline-none shadow-sm">
+            <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Semua Tindakan</option>
+            {uniqueActions.map(a => <option key={a} value={a} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{a}</option>)}
           </select>
           <select value={filterUser} onChange={e => setFilterUser(e.target.value)}
-            className="h-11 px-4 bg-black/40 border border-white/10 rounded-2xl text-sm text-white/70 font-medium focus:outline-none">
-            <option value="">Semua Pengguna</option>
-            {uniqueUsers.map(u => <option key={u} value={u!}>{u}</option>)}
+            className="h-11 px-4 bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-2xl text-sm text-slate-900 dark:text-white font-medium focus:outline-none shadow-sm">
+            <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Semua Pengguna</option>
+            {uniqueUsers.map(u => <option key={u} value={u!} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{u}</option>)}
           </select>
         </motion.div>
 
@@ -368,7 +368,7 @@ export function JppLogsPage() {
           {['Semua', 'Karnival/Kelab', 'Keusahawanan', 'Kebajikan', 'POS System', 'JPP Admin', 'PolyRider', 'PolyMaps', 'PolyMart', 'Takwim', 'Akademik', 'MAKMP'].map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={cn('px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border',
-                activeTab === tab ? 'bg-white/10 text-white border-white/20' : 'text-white/40 border-transparent hover:text-white/60 hover:bg-white/5')}
+                activeTab === tab ? 'bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-white border-slate-300 dark:border-white/20' : 'text-slate-500 dark:text-white/40 border-transparent hover:text-slate-900 dark:hover:text-white/60 hover:bg-slate-200/50 dark:hover:bg-white/5')}
               style={activeTab === tab ? { backgroundColor: hexToRgba(themeColor, 0.2), color: themeColor, borderColor: hexToRgba(themeColor, 0.5) } : {}}>
               {tab}
             </button>
@@ -377,10 +377,10 @@ export function JppLogsPage() {
 
         {/* ── Table ── */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
-          className="border border-white/5 bg-white/[0.01] rounded-[2rem] overflow-hidden">
+          className="border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.01] rounded-[2rem] overflow-hidden shadow-sm">
           <div className="overflow-x-auto max-h-[65vh] rounded-[2rem] custom-scrollbar">
             <table className="w-full text-sm text-left">
-              <thead className="text-[10px] font-black uppercase tracking-widest text-white/40 bg-black/40 sticky top-0 z-10">
+              <thead className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 bg-slate-50 dark:bg-black/40 sticky top-0 z-10 border-b border-slate-200 dark:border-white/5">
                 <tr>
                   <th className="px-5 py-4 whitespace-nowrap">Timestamp</th>
                   <th className="px-5 py-4">Tindakan</th>
@@ -389,9 +389,9 @@ export function JppLogsPage() {
                   <th className="px-5 py-4">Butiran</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                 {filteredLogs.length === 0 ? (
-                  <tr><td colSpan={5} className="px-6 py-12 text-center text-white/30">
+                  <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-400 dark:text-white/30">
                     <div className="flex flex-col items-center gap-3">
                       <ShieldCheck className="w-8 h-8 opacity-50" />
                       <p className="text-[10px] uppercase tracking-widest font-black">Tiada rekod dijumpai</p>
@@ -400,11 +400,11 @@ export function JppLogsPage() {
                 ) : filteredLogs.map(log => {
                   const isAnomaly = flaggedIds.has(log.id);
                   return (
-                    <tr key={log.id} className={cn('transition-colors group', isAnomaly ? 'bg-rose-500/5 hover:bg-rose-500/10' : 'hover:bg-white/[0.02]')}>
+                    <tr key={log.id} className={cn('transition-colors group', isAnomaly ? 'bg-rose-500/5 hover:bg-rose-500/10' : 'hover:bg-slate-50 dark:hover:bg-white/[0.02]')}>
                       <td className="px-5 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          {isAnomaly && <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />}
-                          <span className="text-white/50 text-[11px] font-mono">{new Date(log.created_at).toLocaleString('ms-MY')}</span>
+                          {isAnomaly && <AlertTriangle className="w-3 h-3 text-rose-500 dark:text-rose-400 shrink-0" />}
+                          <span className="text-slate-600 dark:text-white/50 text-[11px] font-mono">{new Date(log.created_at).toLocaleString('ms-MY')}</span>
                         </div>
                       </td>
                       <td className="px-5 py-4">
@@ -421,23 +421,23 @@ export function JppLogsPage() {
                         <div className="flex items-center gap-2">
                           <div className={cn(
                             'w-6 h-6 rounded flex items-center justify-center border shrink-0',
-                            log.full_name ? 'bg-indigo-500/20 border-indigo-500/30' : 'bg-white/5 border-white/10'
+                            log.full_name ? 'bg-indigo-500/20 border-indigo-500/30' : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10'
                           )}>
-                            <span className={cn('text-[9px] font-black', log.full_name ? 'text-indigo-400' : 'text-white/30')}>
+                            <span className={cn('text-[9px] font-black', log.full_name ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-white/30')}>
                               {(log.full_name || log.metadata?.actor_label || 'S')[0].toUpperCase()}
                             </span>
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-white/80">
+                            <p className="text-xs font-bold text-slate-900 dark:text-white/80">
                               {log.full_name || (log.metadata?.actor_label ? String(log.metadata.actor_label) : 'Sistem')}
                             </p>
-                            <p className="text-[9px] font-black uppercase tracking-widest text-white/30">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">
                               {log.role || (log.metadata?.backfill ? 'REKOD LAMA' : 'SYSTEM')}
                             </p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-xs text-white/60 font-medium break-words max-w-xs">
+                      <td className="px-5 py-4 text-xs text-slate-700 dark:text-white/60 font-medium break-words max-w-xs">
                         {renderDetails(log)}
                       </td>
                     </tr>
@@ -446,7 +446,7 @@ export function JppLogsPage() {
               </tbody>
             </table>
           </div>
-          <div className="px-6 py-3 border-t border-white/5 text-[10px] text-white/20 font-black uppercase tracking-widest">
+          <div className="px-6 py-3 border-t border-slate-200 dark:border-white/5 text-[10px] text-slate-400 dark:text-white/20 font-black uppercase tracking-widest">
             {filteredLogs.length} rekod dipaparkan · {logs.length} jumlah dimuatkan
           </div>
         </motion.div>
