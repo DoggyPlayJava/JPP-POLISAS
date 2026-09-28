@@ -2629,7 +2629,7 @@ Sistem beroperasi secara rasmi dengan **Light Theme sebagai mod lalai (*default 
 - **Fail Utama:** `src/pages/jpp/JppFoodBankAdmin.tsx`
 - **Laluan:** `/jpp/foodbank` (didaftarkan di bawah `JppLayout` dalam `src/App.tsx`)
 - **Akses & RBAC:** YDP, Super Admin, MT, Exco Kebajikan, KPP, KK, Akademik, HEP (`canAccessFoodBank`).
-- **Jadual Pangkalan Data:** `foodbank_settings`, `foodbank_items`, `foodbank_applications`, `foodbank_distribution_locations`, `foodbank_budget_transactions`, `imaps_buildings`.
+- **Jadual Pangkalan Data:** `foodbank_settings`, `foodbank_items`, `foodbank_applications`, `foodbank_distribution_locations`, `foodbank_budget_transactions`, `foodbank_location_stocks`, `foodbank_officers`, `foodbank_audit_logs`, `imaps_buildings`.
 - **Ciri-ciri Utama:**
   - **Header KPI & Kawalan Sesi:** Paparan peruntukan belanjawan RM70,000, jumlah belanja semasa (`current_spent`), dan baki dengan bar peratusan; metrik permohonan Menunggu/Lulus/Selesai; suis pantas buka/tutup permohonan (`is_application_open`).
   - **Tab 1: Pengurusan Permohonan & Imbasan Kaunter:** Kotak carian pantas imbasan kod QR (FB-...) / No. Matrik; tindakan meluluskan dan menolak dengan modal sebab; tindakan pengesahan pengambilan fizikal di kaunter memanggil fungsi atomik RPC `verify_and_complete_foodbank_pickup(p_application_id, p_verifier_id)` / `verify_and_complete_foodbank_pickup_by_qr(p_qr_code, p_verifier_id)` yang mengunci stok, menolak inventori secara atomik, menambah kos ke `current_spent` dan memasukkan log lejar `foodbank_budget_transactions`.
@@ -2725,4 +2725,46 @@ Bagi mengelakkan kekeliruan pengguna awal yang disebabkan oleh kepelbagaian warn
 
 6. **Kad Hab Kebajikan (`/kebajikan` - `KebajikanHubPage.tsx`):**
    - Kad tonggak Food Bank JPP diselaraskan dengan aksen Warm Amber pada butang utama, butang semak pas, dan ikon beg barangan, berdiri harmoni di sebelah kad Aduan Siswa (Teal) tanpa percanggahan visual.
+
+### 25.13 Sistem Inventori Multi-Lokasi, Pindahan Stok Atomik, Pelantikan Pegawai & Lejar Audit Dedikasi Food Bank JPP
+
+Bagi menyokong pengoperasian pusat edaran fizikal kampus yang berasingan (Pusat Edaran Utama Student Centre, Hab Edaran Kamsis Al-Biruni, dan Kaunter Kebajikan Blok Pentadbiran), modul Food Bank JPP telah dipertingkatkan dengan seni bina inventori berbilang lokasi dan pengauditan berwibawa:
+
+1. **Seni Bina Inventori Multi-Lokasi (`foodbank_location_stocks`):**
+   - **Pemisahan Katalog vs Baki Stok:** Katalog barangan induk kekal dalam `foodbank_items`, manakala kuantiti stok fizikal disimpan mengikut pusat edaran dalam `foodbank_location_stocks(item_id, location_id, current_stock, reorder_level)`.
+   - **Kekangan Komposit Unik Atomik:** `CONSTRAINT uq_foodbank_item_location UNIQUE (item_id, location_id)` menghalang duplikasi rekod stok di lokasi yang sama.
+   - **Pencegahan Stok Negatif:** `CHECK (current_stock >= 0)` memastikan baki stok tidak boleh menjadi negatif.
+   - **Indeks Lengkap:** Indeks FK dipasang pada `item_id` dan `location_id`.
+
+2. **Transaksi Atomik Pindahan Stok Antara Lokasi (`transfer_foodbank_stock` RPC):**
+   - Pindahan stok antara pusat edaran dijalankan melalui fungsi atomik PostgreSQL RPC `transfer_foodbank_stock(p_item_id, p_from_location_id, p_to_location_id, p_quantity, p_actor_id, p_actor_name, p_notes)`.
+   - **Integriti ACID & Row Locking:** Menggunakan kunci baris `FOR UPDATE` pada baki lokasi sumber untuk mengelakkan *race conditions* sekiranya dua petugas membuat pindahan serentak.
+   - **Semakan Baki & Upsert Destinasi:** Mengesahkan baki mencukupi sebelum memotong stok sumber dan melaksanakan `ON CONFLICT (item_id, location_id) DO UPDATE` pada lokasi destinasi.
+   - **Audit Automatik:** Menyuntik entri ke dalam `foodbank_audit_logs` (`action_type: 'STOCK_TRANSFER'`) dalam transaksi yang sama.
+
+3. **Sistem Pelantikan Pegawai Bertugas Kaunter & Kawalan Akses (RBAC Gating):**
+   - **Jadual `foodbank_officers`:** Merekodkan lantikan mahasiswa/staf bertugas (`user_id`, `location_id`, `role_title`, `is_active`, `assigned_by`). Lokasi `NULL` menandakan pegawai terapung (*Floating / Semua Lokasi*).
+   - **Pengurusan di Tab 4 Pentadbiran:** Borang carian calon mahasiswa masa nyata daripada `profiles` (No. Matrik / Nama), pemilihan lokasi jagaan, lencana status, suis toggle aktif/nyahaktif, dan pemadaman pegawai dengan audit logging (`OFFICER_ASSIGNED`, `OFFICER_REMOVED`).
+   - **RBAC Gating Antara Muka:**
+     - `isExecutiveAdmin` (Super Admin, YDP, Exco Kebajikan, Admin JPP): Akses penuh ke semua 5 tab dan kawalan suis sesi.
+     - `isAssignedOfficer` (Petugas Kaunter): Hanya boleh mengakses Tab 1 (Permohonan & Imbasan Kaunter), Tab 2 (Inventori), dan Tab 5 (Log Audit). Tab 3 (Bajet RM70k) dan Tab 4 (Tetapan) dikunci dan disembunyikan.
+     - Kunci Lokasi Inventori: Jika pegawai mempunyai `assignedLocationId`, paparan inventori dikunci secara automatik ke lokasi jagaan mereka.
+   - **Pelepasan Laluan Shell (`JppLayout.tsx` & `JppSidebar.tsx`):** Mahasiswa bukan JPP yang dilantik sebagai pegawai aktif Food Bank dibenarkan melepasi `JppLayout` untuk mengakses `/jpp/foodbank` tanpa dilencongkan ke `/portal`.
+
+4. **Pusat Lejar Log Audit Dedikasi Food Bank (Tab 5 `JppFoodBankAdmin.tsx`):**
+   - **Jadual `foodbank_audit_logs`:** Merekodkan aktiviti audit terperinci (`actor_id`, `actor_name`, `action_type`, `location_id`, `target_id`, `details JSONB`, `created_at`).
+   - **4 Metrik KPI Audit:** Jumlah Transaksi, Pindahan Stok, Penebusan QR Disahkan, dan Tindakan Pentadbiran.
+   - **Penapis Kategori & Carian:** Penapis tab `SEMUA`, `STOK`, `AGIHAN`, `PEGAWAI`, `TETAPAN`, penapis pusat edaran lokasi, dan bar carian teks masa nyata.
+   - **Kad Garis Masa Berkontras Tinggi:** Paparan kad dwi-tema dengan ikon tindakan berkonteks, cap masa terformat Bahasa Melayu, dan paparan ringkas atribut JSON.
+   - **Eksport CSV Rasmi JHEP:** Butang muat turun fail `Audit_FoodBank_POLISAS_[YYYYMMDD].csv` dengan aksara UTF-8 BOM untuk keserasian Microsoft Excel.
+
+5. **Aliran Permohonan Pelajar Berasaskan Lokasi Dahulu (*Location-First Student Flow*):**
+   - **Susunan Urutan Borang (`KebajikanFoodBankPage.tsx`):**
+     - Bahagian 1: Maklumat Pemohon & Status Kewangan
+     - Bahagian 2: Maklumat Kediaman & Kuota Rakan Serumah
+     - Bahagian 3: **Lokasi Agihan & Slot Waktu Pengambilan** (Dinaikkan sebelum katalog)
+     - Bahagian 4: **Katalog Pilihan Barangan Bebas** (Menilai stok lokasi yang dipilih)
+   - **Semakan Baki Masa Nyata & Lencana Alternatif:** Katalog memaparkan baki khusus di pusat edaran yang dipilih. Jika habis di pusat berkenaan tetapi berbaki di lokasi lain, petunjuk mesra dipaparkan: `"Berbaki di [Nama Lokasi] • Tukar lokasi di atas jika perlu"`.
+   - **Penyelarasan Automatik (*Reactive Clamping*):** Sekiranya pelajar menukar pusat edaran selepas memilih barangan, kuantiti barangan yang melebihi baki stok lokasi baharu diselaraskan secara automatik dengan notifikasi toast mesra.
+
 
