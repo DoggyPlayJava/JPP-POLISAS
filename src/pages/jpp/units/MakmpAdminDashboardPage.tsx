@@ -88,6 +88,7 @@ export default function MakmpAdminDashboardPage() {
   // Submissions filter
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
+  const [awardFilter, setAwardFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Modals / Actions
@@ -1030,6 +1031,7 @@ export default function MakmpAdminDashboardPage() {
   const filteredSubmissions = submissions.filter((s) => {
     if (statusFilter !== 'ALL' && s.status !== statusFilter) return false;
     if (categoryFilter !== 'ALL' && s.category_id !== categoryFilter) return false;
+    if (awardFilter !== 'ALL' && !(s.awards || []).some((a) => a.award_id === awardFilter)) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       return (
@@ -1227,6 +1229,20 @@ export default function MakmpAdminDashboardPage() {
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Filter Anugerah (sub-anugerah individu) */}
+              <select
+                value={awardFilter}
+                onChange={(e) => setAwardFilter(e.target.value)}
+                className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white max-w-[220px] shadow-sm"
+              >
+                <option value="ALL">Semua Anugerah</option>
+                {awards.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}
                   </option>
                 ))}
               </select>
