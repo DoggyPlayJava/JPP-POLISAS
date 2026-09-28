@@ -738,7 +738,7 @@ export function PolyMapsPage() {
   const [showFullscreenImage, setShowFullscreenImage] = useState<string | null>(null);
   const [fullscreen360Url, setFullscreen360Url] = useState<string | null>(null);
   const [fullscreen360Title, setFullscreen360Title] = useState<string>('');
-  const [cardExpanded, setCardExpanded] = useState(false);
+  const [cardExpanded, setCardExpanded] = useState(true);
   
   const [currentStep, setCurrentStep] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -928,7 +928,8 @@ export function PolyMapsPage() {
           setSelectedLocation(targetRoom);
           setActiveBuilding(targetRoom.building);
           const hasActive360 = isLocation360Active(targetRoom) || (targetRoom.building && isBuilding360Active(targetRoom.building));
-          setActiveImageTab(targetRoom.image_url ? 'room' : (hasActive360 ? '360' : (targetRoom.building?.entrance_image_url ? 'entrance' : 'floorplan')));
+          setActiveImageTab(hasActive360 ? '360' : (targetRoom.image_url ? 'room' : (targetRoom.building?.entrance_image_url ? 'entrance' : 'floorplan')));
+          setCardExpanded(true);
         }, 300);
       }
     } else if (bId && bData) {
@@ -944,13 +945,14 @@ export function PolyMapsPage() {
           setActiveBuilding(targetBuilding);
           const hasActive360 = isBuilding360Active(targetBuilding);
           setActiveImageTab(hasActive360 ? '360' : (targetBuilding.entrance_image_url ? 'entrance' : 'floorplan'));
+          setCardExpanded(true);
         }, 300);
       }
     } else if (queryParam && bData) {
       const qClean = queryParam.toLowerCase().trim();
       const targetBuilding = bData.find(b => 
         b.code?.toLowerCase() === qClean || 
-        b.name?.toLowerCase().includes(qClean) ||
+        b.name?.toLowerCase().includes(qClean) || 
         qClean.includes(b.name?.toLowerCase() || '')
       );
       if (targetBuilding) {
@@ -958,6 +960,7 @@ export function PolyMapsPage() {
           setActiveBuilding(targetBuilding);
           const hasActive360 = isBuilding360Active(targetBuilding);
           setActiveImageTab(hasActive360 ? '360' : (targetBuilding.entrance_image_url ? 'entrance' : 'floorplan'));
+          setCardExpanded(true);
         }, 300);
       }
     }
@@ -1096,12 +1099,13 @@ export function PolyMapsPage() {
     setSelectedLocation(loc);
     setActiveBuilding(loc.building);
     const has360 = isLocation360Active(loc) || (loc.building && isBuilding360Active(loc.building));
-    setActiveImageTab(loc.image_url ? 'room' : (has360 ? '360' : (loc.building?.entrance_image_url ? 'entrance' : 'floorplan')));
+    setActiveImageTab(has360 ? '360' : (loc.image_url ? 'room' : (loc.building?.entrance_image_url ? 'entrance' : 'floorplan')));
     setCurrentStep(0);
     setSearchQuery('');
     setSearchResults([]);
     setActiveFilter(null);
     setIsSidebarOpen(false);
+    setCardExpanded(true);
   };
 
   const handleSelectBuildingMapMarker = (b: Building) => {
@@ -1109,6 +1113,7 @@ export function PolyMapsPage() {
     setActiveBuilding(b);
     const has360 = isBuilding360Active(b);
     setActiveImageTab(has360 ? '360' : (b.entrance_image_url ? 'entrance' : 'floorplan'));
+    setCardExpanded(true);
   };
 
   const dismissCard = () => {
@@ -1128,6 +1133,7 @@ export function PolyMapsPage() {
     setHasArrivedManual(false);
     setHasZoomedToNavigation(false);
     setIsFollowingUser(false); // Will become true after MapFlyOnce completes
+    setCardExpanded(false); // Collapse to HUD mini bar during active navigation
     // NOTE: Do NOT call locateUser() here.
     // watchPosition (in useEffect below) handles first fix + continuous tracking.
     // Calling getCurrentPosition separately → double-trigger → white screen.
@@ -1213,7 +1219,7 @@ export function PolyMapsPage() {
     return navigationStats.eta;
   }, [navigationStats.eta]);
 
-  // Auto-expand nav card when user arrives within 30m + has indoor directions
+  // Auto-expand nav card when user arrives within 30m
   useEffect(() => {
     if (!isNavigating || !activeBuilding || !userLocation) return;
     const dist = calculateDistanceInMeters(
@@ -1221,8 +1227,7 @@ export function PolyMapsPage() {
       activeBuilding.center_lat, activeBuilding.center_lng
     );
     const arrived = hasArrivedManual || dist <= 30;
-    const hasIndoor = selectedLocation && selectedLocation.direction_text;
-    if (arrived && hasIndoor && !cardExpanded) {
+    if (arrived && !cardExpanded) {
       setCardExpanded(true);
       if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
     }
