@@ -122,7 +122,7 @@ function RankingViewContent({
     <div className="space-y-8">
       {Array.from(groups.entries()).map(([group, awards]) => (
         <div key={group}>
-          <h3 className="text-sm font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-extrabold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-3">
             {group}
           </h3>
           <div className="space-y-4">
