@@ -6,6 +6,7 @@ import {
   BookOpen, Radio, MapPin, Handshake, Moon,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { hexToRgba } from '@/lib/utils';
 
 export const JPP_THEME_DEFAULT_COLOR = '#7f1d1d';
 export const JPP_MODULE_ID = 'jpp';
@@ -118,13 +119,29 @@ export const UNIT_CFG: Record<string, UnitConfig> = {
 };
 
 /** Returns hex sidebar gradient background based on theme color */
-export function getJppSidebarBg(hex: string) {
+export function getJppSidebarBg(hex: string, isDark: boolean = true) {
+  if (!isDark) {
+    return {
+      top: '#fff8f8',
+      bottom: '#fee2e2',
+      border: 'rgba(153, 27, 27, 0.15)',
+      textPrimary: '#881337',
+      textSecondary: '#9f1239',
+      hoverBg: 'rgba(153, 27, 27, 0.08)',
+      activeBg: 'rgba(153, 27, 27, 0.14)',
+    };
+  }
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   return {
-    top:    `rgb(${Math.floor(r * 0.07)}, ${Math.floor(g * 0.03)}, ${Math.floor(b * 0.03)})`,
+    top: `rgb(${Math.floor(r * 0.07)}, ${Math.floor(g * 0.03)}, ${Math.floor(b * 0.03)})`,
     bottom: `rgb(${Math.floor(r * 0.13)}, ${Math.floor(g * 0.05)}, ${Math.floor(b * 0.05)})`,
+    border: hexToRgba(hex, 0.15),
+    textPrimary: '#ffffff',
+    textSecondary: 'rgba(255, 255, 255, 0.5)',
+    hoverBg: 'rgba(255, 255, 255, 0.06)',
+    activeBg: 'rgba(255, 255, 255, 0.12)',
   };
 }
 

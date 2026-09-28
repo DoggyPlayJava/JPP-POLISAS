@@ -117,9 +117,9 @@ export function AkademikMeritPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/25 mb-1">Rekod</p>
-        <h1 className="text-2xl font-black text-white">Merit & Demerit</h1>
-        <p className="text-xs text-white/40 font-medium mt-1">
+        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-1">Rekod</p>
+        <h1 className="text-2xl font-black text-slate-900 dark:text-white">Merit & Demerit</h1>
+        <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1">
           Pusat sehenti untuk pencapaian kelab, akademik dan rayuan demerit.
         </p>
       </div>
@@ -128,7 +128,7 @@ export function AkademikMeritPage() {
       <motion.div
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="relative overflow-hidden rounded-[2rem] p-6 border border-white/[0.06]"
+        className="relative overflow-hidden rounded-[2rem] p-6 border border-slate-200 dark:border-white/[0.06] shadow-sm bg-white dark:bg-transparent"
         style={{ background: `linear-gradient(135deg, ${hexToRgba(THEME, 0.14)}, ${hexToRgba('#60A5FA', 0.06)})` }}
       >
         <div className="absolute inset-0 opacity-5" style={{ background: `radial-gradient(circle at 10% 50%, ${THEME}, transparent 60%)` }} />
@@ -140,8 +140,8 @@ export function AkademikMeritPage() {
             <Star className="w-7 h-7 fill-current" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-0.5">Jumlah Merit (Semasa)</p>
-            <p className="text-4xl font-black text-white">{total}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-0.5">Jumlah Merit (Semasa)</p>
+            <p className="text-4xl font-black text-slate-900 dark:text-white">{total}</p>
           </div>
         </div>
       </motion.div>
@@ -157,13 +157,13 @@ export function AkademikMeritPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06 }}
-              className="rounded-[1.5rem] p-4 border border-white/[0.06] bg-white/[0.02] flex flex-col gap-2"
+              className="rounded-[1.5rem] p-4 border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] shadow-sm flex flex-col gap-2"
             >
               <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: hexToRgba(cfg.color, 0.15) }}>
                 <cfg.icon className="w-3.5 h-3.5" style={{ color: cfg.color }} />
               </div>
-              <p className="text-2xl font-black text-white">{key === 'DEMERIT' ? `-${val}` : val}</p>
-              <p className="text-[9px] font-black uppercase tracking-widest text-white/30">{cfg.label}</p>
+              <p className="text-2xl font-black text-slate-900 dark:text-white">{key === 'DEMERIT' ? `-${val}` : val}</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{cfg.label}</p>
             </motion.div>
           );
         })}
@@ -171,36 +171,36 @@ export function AkademikMeritPage() {
 
       {/* Archived Cohorts (If any) */}
       {cohorts.length > 0 && (
-        <div className="rounded-[2rem] bg-white/[0.02] border border-white/[0.05] p-5 space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-white/40 flex items-center gap-2">
+        <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] p-5 space-y-4 shadow-sm">
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 flex items-center gap-2">
             <Calendar className="w-3.5 h-3.5" />
             Sejarah Merit Sesi Lepas
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {cohorts.map((ch) => (
-              <div key={ch.id} className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+              <div key={ch.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] shadow-sm">
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <p className="text-sm font-black text-white">{ch.cohort_id}</p>
+                    <p className="text-sm font-black text-slate-900 dark:text-white">{ch.cohort_id}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-[10px] text-white/40">Disesarkan: {format(parseISO(ch.created_at), 'd MMM yyyy')}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-white/40">Disesarkan: {format(parseISO(ch.created_at), 'd MMM yyyy')}</p>
                       {ch.source && ch.source !== 'ALL' && (
-                        <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full bg-white/[0.06] text-white/50">
+                        <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full bg-slate-200/60 dark:bg-white/[0.06] text-slate-600 dark:text-white/50">
                           {ch.source === 'KELAB' ? 'Kelab' : ch.source === 'AKADEMIK' ? 'Akademik' : ch.source === 'QR_SCAN' ? 'Asrama' : ch.source}
                         </span>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 text-amber-400">
+                  <div className="flex items-center gap-1 text-amber-500 dark:text-amber-400">
                     <Star className="w-4 h-4 fill-current" />
                     <span className="text-lg font-black">{ch.total_merit}</span>
                   </div>
                 </div>
                 {(ch.merit_kelab > 0 || ch.merit_akademik > 0 || ch.merit_asrama > 0) && (
                   <div className="flex gap-2 mt-1 flex-wrap">
-                    {ch.merit_kelab > 0 && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-500/10 text-red-400">Kelab: {ch.merit_kelab}</span>}
-                    {ch.merit_akademik > 0 && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400">Akademik: {ch.merit_akademik}</span>}
-                    {ch.merit_asrama > 0 && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">Asrama: {ch.merit_asrama}</span>}
+                    {ch.merit_kelab > 0 && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400">Kelab: {ch.merit_kelab}</span>}
+                    {ch.merit_akademik > 0 && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">Akademik: {ch.merit_akademik}</span>}
+                    {ch.merit_asrama > 0 && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">Asrama: {ch.merit_asrama}</span>}
                   </div>
                 )}
               </div>
@@ -210,26 +210,26 @@ export function AkademikMeritPage() {
       )}
 
       {/* Timeline */}
-      <div className="rounded-[2rem] bg-white/[0.02] border border-white/[0.05] p-5 space-y-4">
-        <h3 className="text-[10px] font-black uppercase tracking-widest text-white/40">
+      <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] p-5 space-y-4 shadow-sm">
+        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
           Transaksi Sesi Semasa
         </h3>
 
         {loading ? (
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-14 rounded-2xl bg-white/[0.03] animate-pulse" />
+              <div key={i} className="h-14 rounded-2xl bg-slate-100 dark:bg-white/[0.03] animate-pulse" />
             ))}
           </div>
         ) : transactions.length === 0 ? (
           <div className="py-12 text-center">
-            <Star className="w-8 h-8 mx-auto text-white/10 mb-3" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/20">Tiada transaksi merit lagi</p>
+            <Star className="w-8 h-8 mx-auto text-slate-300 dark:text-white/10 mb-3" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">Tiada transaksi merit lagi</p>
           </div>
         ) : (
           <div className="relative">
             {/* vertical line */}
-            <div className="absolute left-[18px] top-2 bottom-2 w-px bg-white/[0.05]" />
+            <div className="absolute left-[18px] top-2 bottom-2 w-px bg-slate-200 dark:bg-white/[0.05]" />
             <div className="space-y-3 pl-10">
               {transactions.map((tx, i) => {
                 const pts = tx.points || 0;
@@ -252,14 +252,14 @@ export function AkademikMeritPage() {
                     >
                       <TxIcon className="w-2.5 h-2.5" style={{ color: cfg.color }} />
                     </div>
-                    <div className="flex-1 min-w-0 p-3 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-all">
+                    <div className="flex-1 min-w-0 p-3.5 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] hover:bg-slate-100/70 dark:hover:bg-white/[0.04] transition-all shadow-sm">
                       <div className="flex items-center justify-between gap-2">
-                        <p className={`text-xs font-black line-clamp-2 ${isDemerit ? 'text-rose-300' : 'text-white'}`}>
+                        <p className={`text-xs font-black line-clamp-2 ${isDemerit ? 'text-rose-600 dark:text-rose-300' : 'text-slate-900 dark:text-white'}`}>
                           {tx.reason || 'Merit diterima'}
                         </p>
                         <span
                           className="text-sm font-black shrink-0"
-                          style={{ color: isDemerit ? '#F87171' : '#34D399' }}
+                          style={{ color: isDemerit ? '#ef4444' : '#10b981' }}
                         >
                           {pts >= 0 ? '+' : ''}{pts}
                         </span>
@@ -269,21 +269,21 @@ export function AkademikMeritPage() {
                           {cfg.label}
                         </span>
                         {tx.actor_name && (
-                           <span className="text-[9px] text-white/30 font-bold border border-white/10 px-1.5 py-0.5 rounded">
+                           <span className="text-[9px] text-slate-500 dark:text-white/30 font-bold border border-slate-200 dark:border-white/10 px-1.5 py-0.5 rounded bg-white dark:bg-transparent">
                              Oleh: {tx.actor_name}
                            </span>
                         )}
-                        <span className="text-[9px] text-white/25 font-medium">{date}</span>
+                        <span className="text-[9px] text-slate-400 dark:text-white/25 font-medium">{date}</span>
                       </div>
                       
                       {/* Appeal Section for Demerits */}
                       {isDemerit && (
-                        <div className="mt-3 pt-3 border-t border-rose-500/10">
+                        <div className="mt-3 pt-3 border-t border-rose-200 dark:border-rose-500/10">
                           {existingAppeal ? (
                             <div className={`text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-xl flex items-center gap-2 inline-flex ${
-                              existingAppeal.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                              existingAppeal.status === 'REJECTED' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
-                              'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                              existingAppeal.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' :
+                              existingAppeal.status === 'REJECTED' ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20' :
+                              'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
                             }`}>
                               {existingAppeal.status === 'APPROVED' ? <CheckCircle className="w-3.5 h-3.5" /> :
                                existingAppeal.status === 'REJECTED' ? <XCircle className="w-3.5 h-3.5" /> :
@@ -293,7 +293,7 @@ export function AkademikMeritPage() {
                           ) : (
                             <button
                               onClick={() => { setSelectedTx(tx); setShowAppealModal(true); }}
-                              className="text-[10px] font-black uppercase tracking-widest bg-rose-500/15 text-rose-300 border border-rose-500/30 px-4 py-2 rounded-xl hover:bg-rose-500/25 transition-all"
+                              className="text-[10px] font-black uppercase tracking-widest bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30 px-4 py-2 rounded-xl hover:bg-rose-500/25 transition-all shadow-sm"
                             >
                               Buat Rayuan / Bantahan
                             </button>
@@ -320,45 +320,45 @@ export function AkademikMeritPage() {
             />
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-md bg-slate-900 border border-white/10 rounded-3xl p-6 shadow-2xl overflow-hidden"
+              className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-2xl overflow-hidden text-slate-900 dark:text-white"
             >
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-rose-500 to-amber-500" />
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-rose-500/15 flex items-center justify-center text-rose-400">
+                <div className="w-10 h-10 rounded-xl bg-rose-500/15 flex items-center justify-center text-rose-600 dark:text-rose-400">
                   <ShieldAlert className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-white">Rayuan Demerit</h3>
-                  <p className="text-[10px] text-white/40">Sila nyatakan alasan munasabah</p>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">Rayuan Demerit</h3>
+                  <p className="text-[10px] text-slate-500 dark:text-white/40">Sila nyatakan alasan munasabah</p>
                 </div>
               </div>
 
-              <div className="mb-4 p-3 rounded-xl bg-white/5 border border-white/10">
-                <p className="text-[10px] uppercase font-black text-white/30 mb-1">Kesalahan:</p>
-                <p className="text-xs font-bold text-rose-300">{selectedTx.reason}</p>
-                <p className="text-[10px] text-rose-400 mt-1">Potongan: {selectedTx.points} Merit</p>
+              <div className="mb-4 p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+                <p className="text-[10px] uppercase font-black text-slate-400 dark:text-white/30 mb-1">Kesalahan:</p>
+                <p className="text-xs font-bold text-rose-600 dark:text-rose-300">{selectedTx.reason}</p>
+                <p className="text-[10px] text-rose-600 dark:text-rose-400 mt-1">Potongan: {selectedTx.points} Merit</p>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-1.5">Alasan Rayuan</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-1.5">Alasan Rayuan</label>
                   <textarea
                     value={appealReason}
                     onChange={(e) => setAppealReason(e.target.value)}
                     placeholder="Kenapa demerit ini tidak wajar?"
                     rows={4}
-                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/20 outline-none focus:border-rose-500/50 resize-none"
+                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 outline-none focus:border-rose-500/50 resize-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-1.5 flex items-center gap-1.5">
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-1.5 flex items-center gap-1.5">
                     <FileText className="w-3.5 h-3.5" /> Pautan Bukti (Jika Ada)
                   </label>
                   <input
                     value={appealProof}
                     onChange={(e) => setAppealProof(e.target.value)}
                     placeholder="Link Google Drive / Imej"
-                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 outline-none focus:border-rose-500/50"
+                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 outline-none focus:border-rose-500/50"
                   />
                 </div>
               </div>
@@ -366,14 +366,14 @@ export function AkademikMeritPage() {
               <div className="flex gap-2 mt-6">
                 <button
                   onClick={() => setShowAppealModal(false)}
-                  className="flex-1 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest text-white/40 bg-white/5 hover:bg-white/10 transition-all"
+                  className="flex-1 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest text-slate-600 dark:text-white/40 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 transition-all"
                 >
                   Batal
                 </button>
                 <button
                   onClick={submitAppeal}
                   disabled={submitting}
-                  className="flex-1 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-50 transition-all"
+                  className="flex-1 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-50 transition-all shadow-sm"
                 >
                   {submitting ? 'Menghantar...' : 'Hantar Rayuan'}
                 </button>

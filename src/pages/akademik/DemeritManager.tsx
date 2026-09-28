@@ -246,10 +246,10 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
 
   if (!isExco) {
     return (
-      <div className="py-12 text-center text-white/50">
-        <ShieldAlert className="w-12 h-12 mx-auto mb-4 opacity-20" />
-        <h2 className="text-xl font-black">Akses Ditolak</h2>
-        <p className="text-sm">Hanya EXCO dibenarkan mengakses modul ini.</p>
+      <div className="py-12 text-center text-slate-500 dark:text-white/50">
+        <ShieldAlert className="w-12 h-12 mx-auto mb-4 opacity-20 text-slate-400 dark:text-white" />
+        <h2 className="text-xl font-black text-slate-900 dark:text-white">Akses Ditolak</h2>
+        <p className="text-sm text-slate-500 dark:text-white/50">Hanya EXCO dibenarkan mengakses modul ini.</p>
       </div>
     );
   }
@@ -258,19 +258,19 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-white flex items-center gap-2">
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
             <ShieldAlert className="w-6 h-6 text-rose-500" /> Pengurusan Demerit
           </h1>
-          <p className="text-xs text-white/40 font-medium mt-1">Urus potongan merit pelajar dan nilai rayuan</p>
+          <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1">Urus potongan merit pelajar dan nilai rayuan</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 bg-white/[0.02] border border-white/[0.05] p-1.5 rounded-2xl w-max">
+      <div className="flex gap-2 bg-slate-100 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] p-1.5 rounded-2xl w-max shadow-sm">
         <button
           onClick={() => setActiveTab('NEW_DEMERIT')}
           className={`px-5 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
-            activeTab === 'NEW_DEMERIT' ? 'bg-rose-500/20 text-rose-400' : 'text-white/40 hover:text-white/70'
+            activeTab === 'NEW_DEMERIT' ? 'bg-rose-500/15 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-black shadow-sm' : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70'
           }`}
         >
           Rekod Baru
@@ -278,7 +278,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
         <button
           onClick={() => setActiveTab('APPEALS')}
           className={`px-5 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
-            activeTab === 'APPEALS' ? 'bg-rose-500/20 text-rose-400' : 'text-white/40 hover:text-white/70'
+            activeTab === 'APPEALS' ? 'bg-rose-500/15 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-black shadow-sm' : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70'
           }`}
         >
           Rayuan Pelajar
@@ -287,7 +287,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
           <button
             onClick={() => setActiveTab('SETTINGS')}
             className={`px-5 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
-              activeTab === 'SETTINGS' ? 'bg-rose-500/20 text-rose-400' : 'text-white/40 hover:text-white/70'
+              activeTab === 'SETTINGS' ? 'bg-rose-500/15 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-black shadow-sm' : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70'
             }`}
           >
             Tetapan
@@ -297,7 +297,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
           <button
             onClick={() => setActiveTab('SETTINGS')}
             className={`px-5 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
-              activeTab === 'SETTINGS' ? 'bg-amber-500/20 text-amber-400' : 'text-white/40 hover:text-white/70'
+              activeTab === 'SETTINGS' ? 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-black shadow-sm' : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70'
             }`}
           >
             Tutup Kohort
@@ -314,27 +314,27 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
         {activeTab === 'NEW_DEMERIT' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Search Panel */}
-            <div className="bg-white/[0.02] border border-white/[0.05] p-5 rounded-[2rem] space-y-4">
-              <h3 className="text-sm font-black text-white">1. Pilih Pelajar</h3>
+            <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] p-5 rounded-[2rem] shadow-sm text-slate-900 dark:text-white space-y-4">
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">1. Pilih Pelajar</h3>
               
               <div className="relative">
-                <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
+                <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/30" />
                 <input
                   type="text"
                   placeholder="Cari nama atau matrik..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-rose-500/50"
+                  className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 outline-none focus:border-rose-500/50"
                 />
               </div>
 
               {selectedStudent ? (
-                <div className="p-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 flex items-center justify-between">
+                <div className="p-4 rounded-2xl border border-rose-300 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-black text-white">{selectedStudent.full_name}</p>
-                    <p className="text-[10px] text-white/50">{selectedStudent.matric_no}</p>
+                    <p className="text-sm font-black text-slate-900 dark:text-white">{selectedStudent.full_name}</p>
+                    <p className="text-[10px] text-slate-500 dark:text-white/50">{selectedStudent.matric_no}</p>
                   </div>
-                  <button onClick={() => setSelectedStudent(null)} className="text-rose-400 p-1 bg-rose-500/20 rounded-lg">
+                  <button onClick={() => setSelectedStudent(null)} className="text-rose-600 dark:text-rose-400 p-1 bg-rose-100 dark:bg-rose-500/20 hover:bg-rose-200 dark:hover:bg-rose-500/30 transition-colors rounded-lg">
                     <XCircle className="w-5 h-5" />
                   </button>
                 </div>
@@ -344,56 +344,56 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
                     <button
                       key={s.id}
                       onClick={() => setSelectedStudent(s)}
-                      className="w-full text-left p-3 rounded-xl border border-white/[0.05] hover:bg-white/[0.05] transition-all flex items-center gap-3"
+                      className="w-full text-left p-3 rounded-xl border border-slate-100 dark:border-white/[0.05] hover:bg-slate-50 dark:hover:bg-white/[0.05] transition-all flex items-center gap-3 text-slate-900 dark:text-white"
                     >
-                      <UserX className="w-4 h-4 text-white/30" />
+                      <UserX className="w-4 h-4 text-slate-400 dark:text-white/30" />
                       <div>
-                        <p className="text-xs font-black text-white">{s.full_name}</p>
-                        <p className="text-[10px] text-white/40">{s.matric_no}</p>
+                        <p className="text-xs font-black text-slate-900 dark:text-white">{s.full_name}</p>
+                        <p className="text-[10px] text-slate-500 dark:text-white/40">{s.matric_no}</p>
                       </div>
                     </button>
                   ))}
                   {searchQuery.length >= 3 && students.length === 0 && (
-                    <p className="text-xs text-white/30 text-center py-4">Tiada pelajar ditemui.</p>
+                    <p className="text-xs text-slate-400 dark:text-white/30 text-center py-4">Tiada pelajar ditemui.</p>
                   )}
                 </div>
               )}
             </div>
 
             {/* Demerit Form */}
-            <div className={`bg-white/[0.02] border border-white/[0.05] p-5 rounded-[2rem] space-y-4 transition-all ${!selectedStudent ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
-              <h3 className="text-sm font-black text-white">2. Butiran Kesalahan</h3>
+            <div className={`bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] p-5 rounded-[2rem] shadow-sm text-slate-900 dark:text-white space-y-4 transition-all ${!selectedStudent ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">2. Butiran Kesalahan</h3>
               
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-1.5">Kesalahan</label>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-1.5">Kesalahan</label>
                 <textarea
                   value={demeritForm.reason}
                   onChange={(e) => setDemeritForm(p => ({ ...p, reason: e.target.value }))}
                   placeholder="Cth: Tidak hadir mesyuarat, melanggar peraturan asrama..."
                   rows={3}
-                  className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-rose-500/50 resize-none"
+                  className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 outline-none focus:border-rose-500/50 resize-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-rose-400 mb-1.5">Jumlah Potongan</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400 mb-1.5">Jumlah Potongan</label>
                   <input
                     type="number"
                     min="1"
                     value={demeritForm.points}
                     onChange={(e) => setDemeritForm(p => ({ ...p, points: parseInt(e.target.value) || 0 }))}
-                    className="w-full bg-rose-500/10 border border-rose-500/20 text-rose-300 rounded-xl px-4 py-2 text-sm outline-none focus:border-rose-500/50"
+                    className="w-full bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-300 font-bold rounded-xl px-4 py-2 text-sm outline-none focus:border-rose-500/50"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-1.5">Pautan Bukti</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-1.5">Pautan Bukti</label>
                   <input
                     type="text"
                     placeholder="Link GDrive/Imej (Opsional)"
                     value={demeritForm.proof_url}
                     onChange={(e) => setDemeritForm(p => ({ ...p, proof_url: e.target.value }))}
-                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-white/30"
+                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 outline-none focus:border-slate-300 dark:focus:border-white/30"
                   />
                 </div>
               </div>
@@ -401,7 +401,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
               <button
                 onClick={handleDemerit}
                 disabled={submitting}
-                className="w-full mt-4 flex items-center justify-center gap-2 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest bg-rose-600 text-white hover:bg-rose-500 transition-all disabled:opacity-50"
+                className="w-full mt-4 flex items-center justify-center gap-2 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest bg-rose-600 text-white hover:bg-rose-500 transition-all disabled:opacity-50 shadow-sm"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldAlert className="w-4 h-4" />}
                 Rekod Demerit
@@ -409,39 +409,39 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
             </div>
           </div>
         ) : activeTab === 'APPEALS' ? (
-          <div className="bg-white/[0.02] border border-white/[0.05] p-5 rounded-[2rem]">
+          <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] p-5 rounded-[2rem] shadow-sm text-slate-900 dark:text-white">
             {loadingAppeals ? (
-              <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-white/30" /></div>
+              <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-slate-400 dark:text-white/30" /></div>
             ) : appeals.length === 0 ? (
-              <div className="py-12 text-center text-white/30">Tiada rayuan setakat ini.</div>
+              <div className="py-12 text-center text-slate-400 dark:text-white/30">Tiada rayuan setakat ini.</div>
             ) : (
               <div className="space-y-4">
                 {appeals.map(appeal => (
-                  <div key={appeal.id} className="p-4 rounded-2xl bg-black/20 border border-white/10 flex flex-col md:flex-row gap-4 justify-between items-start">
+                  <div key={appeal.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 flex flex-col md:flex-row gap-4 justify-between items-start shadow-sm">
                     <div className="space-y-2 flex-1">
                       <div className="flex items-center gap-2">
                         <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
-                          appeal.status === 'PENDING' ? 'bg-amber-500/20 text-amber-400' :
-                          appeal.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-400' :
-                          'bg-rose-500/20 text-rose-400'
+                          appeal.status === 'PENDING' ? 'bg-amber-500/20 text-amber-500 dark:text-amber-400' :
+                          appeal.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' :
+                          'bg-rose-500/20 text-rose-600 dark:text-rose-400'
                         }`}>
                           {appeal.status}
                         </span>
-                        <span className="text-[10px] text-white/30">
+                        <span className="text-[10px] text-slate-500 dark:text-white/30">
                           {format(parseISO(appeal.created_at), 'd MMM yyyy')}
                         </span>
                       </div>
                       
                       <div>
-                        <p className="text-sm font-black text-white">{appeal.student?.full_name}</p>
-                        <p className="text-[10px] text-white/50">{appeal.student?.matric_no}</p>
+                        <p className="text-sm font-black text-slate-900 dark:text-white">{appeal.student?.full_name}</p>
+                        <p className="text-[10px] text-slate-500 dark:text-white/50">{appeal.student?.matric_no}</p>
                       </div>
 
-                      <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                        <p className="text-[10px] uppercase font-black text-rose-400 mb-1">Kesalahan Asal: {appeal.transaction?.reason} ({appeal.transaction?.points} Merit)</p>
-                        <p className="text-xs text-white/80"><span className="text-white/40">Alasan Rayuan:</span> {appeal.appeal_reason}</p>
+                      <div className="bg-white dark:bg-white/5 p-3 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm">
+                        <p className="text-[10px] uppercase font-black text-rose-600 dark:text-rose-400 mb-1">Kesalahan Asal: {appeal.transaction?.reason} ({appeal.transaction?.points} Merit)</p>
+                        <p className="text-xs text-slate-700 dark:text-white/80"><span className="text-slate-500 dark:text-white/40">Alasan Rayuan:</span> {appeal.appeal_reason}</p>
                         {appeal.proof_url && (
-                          <a href={appeal.proof_url} target="_blank" rel="noreferrer" className="text-[10px] text-blue-400 hover:underline mt-2 inline-flex items-center gap-1">
+                          <a href={appeal.proof_url} target="_blank" rel="noreferrer" className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline mt-2 inline-flex items-center gap-1">
                             <FileText className="w-3 h-3" /> Lihat Bukti Dilampirkan
                           </a>
                         )}
@@ -452,13 +452,13 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
                       <div className="flex flex-row md:flex-col gap-2 shrink-0 w-full md:w-auto">
                         <button
                           onClick={() => updateAppealStatus(appeal.id, 'APPROVED')}
-                          className="flex-1 px-4 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-black uppercase tracking-widest transition-all"
+                          className="flex-1 px-4 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest transition-all"
                         >
                           Terima & Refund
                         </button>
                         <button
                           onClick={() => updateAppealStatus(appeal.id, 'REJECTED')}
-                          className="flex-1 px-4 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-[10px] font-black uppercase tracking-widest transition-all"
+                          className="flex-1 px-4 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-[10px] font-black uppercase tracking-widest transition-all"
                         >
                           Tolak
                         </button>
@@ -470,21 +470,21 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
             )}
           </div>
         ) : (
-          <div className="bg-white/[0.02] border border-white/[0.05] p-5 rounded-[2rem] max-w-xl">
+          <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] p-5 rounded-[2rem] max-w-xl shadow-sm text-slate-900 dark:text-white">
             <div className="space-y-4">
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-400">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-600 dark:text-amber-400">
                   <Calendar className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-white">Tutup Kohort Merit</h3>
-                  <p className="text-[10px] text-white/40">Arkib semua merit pelajar untuk sesi lepas</p>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">Tutup Kohort Merit</h3>
+                  <p className="text-[10px] text-slate-500 dark:text-white/40">Arkib semua merit pelajar untuk sesi lepas</p>
                 </div>
               </div>
               
-              <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20">
-                <p className="text-[10px] font-black text-rose-300 mb-2 uppercase tracking-widest">Awas: Operasi Kekal</p>
-                <ul className="text-[11px] text-rose-200/80 list-disc list-inside space-y-1">
+              <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20">
+                <p className="text-[10px] font-black text-rose-700 dark:text-rose-300 mb-2 uppercase tracking-widest">Awas: Operasi Kekal</p>
+                <ul className="text-[11px] text-rose-800 dark:text-rose-200/80 list-disc list-inside space-y-1">
                   {sourceOverride && sourceOverride !== 'MANUAL' ? (
                     <>
                       <li>Hanya <b>{sourceOverride === 'KELAB' ? 'Merit Kelab' : sourceOverride === 'AKADEMIK' ? 'Merit Akademik' : 'Merit Asrama'}</b> akan di-reset.</li>
@@ -502,35 +502,35 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-1.5">Pilih Sesi Akademik</label>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-1.5">Pilih Sesi Akademik</label>
                 <select
                   value={selectedSession}
                   onChange={(e) => { setSelectedSession(e.target.value); setCohortConfirm(''); }}
-                  className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-amber-500/50 appearance-none cursor-pointer"
+                  className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none focus:border-amber-500/50 appearance-none cursor-pointer"
                 >
-                  <option value="" disabled className="bg-neutral-900">— Pilih sesi —</option>
+                  <option value="" disabled className="bg-white dark:bg-neutral-900 text-slate-900 dark:text-white">— Pilih sesi —</option>
                   {sessionOptions.map(s => (
-                    <option key={s} value={s} className="bg-neutral-900">{s}{s === currentSession ? ' ★ Semasa' : ''}</option>
+                    <option key={s} value={s} className="bg-white dark:bg-neutral-900 text-slate-900 dark:text-white">{s}{s === currentSession ? ' ★ Semasa' : ''}</option>
                   ))}
                 </select>
               </div>
 
               {selectedSession && (
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 mb-1.5">
-                    Taip “<span className="text-amber-400">{selectedSession}</span>” untuk sahkan
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-1.5">
+                    Taip “<span className="text-amber-600 dark:text-amber-400 font-bold">{selectedSession}</span>” untuk sahkan
                   </label>
                   <input
                     type="text"
                     placeholder={selectedSession}
                     value={cohortConfirm}
                     onChange={(e) => setCohortConfirm(e.target.value)}
-                    className={`w-full bg-black/20 border rounded-xl px-4 py-3 text-sm text-white outline-none transition-all ${
-                      cohortConfirm && !confirmMatch ? 'border-rose-500/50' : 'border-white/10 focus:border-amber-500/50'
+                    className={`w-full bg-slate-50 dark:bg-black/20 border rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 outline-none transition-all ${
+                      cohortConfirm && !confirmMatch ? 'border-rose-500/50' : 'border-slate-200 dark:border-white/10 focus:border-amber-500/50'
                     }`}
                   />
                   {cohortConfirm && !confirmMatch && (
-                    <p className="text-[10px] text-rose-400 mt-1">Nama sesi tidak sepadan.</p>
+                    <p className="text-[10px] text-rose-500 dark:text-rose-400 mt-1">Nama sesi tidak sepadan.</p>
                   )}
                 </div>
               )}
@@ -538,7 +538,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
               <button
                 onClick={handleArchiveCohort}
                 disabled={archiving || !selectedSession || !confirmMatch}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest bg-amber-600 text-white hover:bg-amber-500 transition-all disabled:opacity-50 mt-4"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest bg-amber-600 text-white hover:bg-amber-500 transition-all disabled:opacity-50 mt-4 shadow-sm"
               >
                 {archiving ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertCircle className="w-4 h-4" />}
                 Sahkan Tutup Kohort
