@@ -24,6 +24,7 @@ import {
   Store,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { fetchEmsEventById, createEmsEvent, updateEmsEvent } from '@/lib/ems';
 import type { EmsEventMode, EmsEventType, EmsFormField, EmsRubricCriteria } from '@/types';
 import { IFAMB_SHOWCASE_PRESET, IFAMB_PITCHING_PRESET } from '@/config/emsRubricTemplates';
@@ -539,32 +540,36 @@ export function EmsEventFormPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-8">
-        <RefreshCw className="w-8 h-8 text-indigo-400 animate-spin mb-3" />
-        <p className="text-sm font-semibold text-slate-400">Memuatkan data acara...</p>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-8 transition-colors">
+        <RefreshCw className="w-8 h-8 text-purple-600 dark:text-purple-400 animate-spin mb-3" />
+        <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">Memuatkan data acara...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 pb-28 md:pb-8 max-w-5xl mx-auto space-y-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 md:p-8 pb-28 md:pb-8 max-w-5xl mx-auto space-y-8 transition-colors">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-6">
+      <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-6">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/ems/dashboard')}
-            className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white transition-all border border-slate-800"
+            className="p-2.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all border border-slate-200 dark:border-slate-800 shadow-sm"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               {isEditMode ? 'Sunting Acara Pertandingan' : 'Cipta Acara Pertandingan Baharu'}
             </h1>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               Isi maklumat asas acara, bina borang pendaftaran & tetapkan rubrik pemarkahan juri.
             </p>
           </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
         </div>
       </div>
 
@@ -573,17 +578,17 @@ export function EmsEventFormPage() {
         {/* ============================================================ */}
         {/* Section 1: Maklumat Asas Acara */}
         {/* ============================================================ */}
-        <section className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-xl">
-          <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-            <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
+        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
+          <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
+            <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border border-purple-200/50 dark:border-purple-800/50">
               <Layers className="w-5 h-5" />
             </div>
-            <h2 className="text-lg font-bold text-white">Seksyen 1: Maklumat Asas Acara</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Seksyen 1: Maklumat Asas Acara</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-slate-300 mb-2">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
                 Tajuk / Nama Acara <span className="text-rose-500">*</span>
               </label>
               <input
@@ -592,23 +597,23 @@ export function EmsEventFormPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Contoh: Pertandingan Inovasi & Pitches Keusahawanan 2026"
-                className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-white font-medium text-sm focus:outline-none focus:border-indigo-500"
+                className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-medium text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-slate-300 mb-2">Penerangan Acara</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Penerangan Acara</label>
               <textarea
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Penerangan ringkas objektif, syarat pertandigan dan maklumat lanjut..."
-                className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-white text-sm focus:outline-none focus:border-indigo-500 resize-none"
+                className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-none"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-slate-300 mb-2">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
                 Jenis Acara <span className="text-rose-500">*</span>
               </label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -617,13 +622,13 @@ export function EmsEventFormPage() {
                   onClick={() => setEventType('COMPETITION')}
                   className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between ${
                     eventType === 'COMPETITION'
-                      ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-lg shadow-indigo-600/10'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                      ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 text-purple-900 dark:text-white shadow-md shadow-purple-600/10'
+                      : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700'
                   }`}
                 >
                   <div>
-                    <div className="font-bold text-sm text-white mb-1">Pertandingan / Pameran</div>
-                    <div className="text-xs text-slate-400">Juri & Leaderboard pemarkahan</div>
+                    <div className="font-bold text-sm text-slate-900 dark:text-white mb-1">Pertandingan / Pameran</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Juri & Leaderboard pemarkahan</div>
                   </div>
                 </button>
 
@@ -632,13 +637,13 @@ export function EmsEventFormPage() {
                   onClick={() => setEventType('OPEN_AUDIENCE')}
                   className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between ${
                     eventType === 'OPEN_AUDIENCE'
-                      ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-lg shadow-indigo-600/10'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                      ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 text-purple-900 dark:text-white shadow-md shadow-purple-600/10'
+                      : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700'
                   }`}
                 >
                   <div>
-                    <div className="font-bold text-sm text-white mb-1">Program Terbuka / Ceramah</div>
-                    <div className="text-xs text-slate-400">Kehadiran & Cabutan Bertuah</div>
+                    <div className="font-bold text-sm text-slate-900 dark:text-white mb-1">Program Terbuka / Ceramah</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Kehadiran & Cabutan Bertuah</div>
                   </div>
                 </button>
 
@@ -647,24 +652,24 @@ export function EmsEventFormPage() {
                   onClick={() => setEventType('HYBRID')}
                   className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between ${
                     eventType === 'HYBRID'
-                      ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-lg shadow-indigo-600/10'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                      ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 text-purple-900 dark:text-white shadow-md shadow-purple-600/10'
+                      : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700'
                   }`}
                 >
                   <div>
-                    <div className="font-bold text-sm text-white mb-1">Kombinasi (Hybrid)</div>
-                    <div className="text-xs text-slate-400">Pertandingan & Kehadiran Awam</div>
+                    <div className="font-bold text-sm text-slate-900 dark:text-white mb-1">Kombinasi (Hybrid)</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Pertandingan & Kehadiran Awam</div>
                   </div>
                 </button>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-2">Kategori Acara</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Kategori Acara</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-white text-sm focus:outline-none focus:border-indigo-500"
+                className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-purple-500"
               >
                 <option value="Keusahawanan">Keusahawanan</option>
                 <option value="Inovasi">Inovasi & Teknologi</option>
@@ -676,15 +681,15 @@ export function EmsEventFormPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-2">Mod Penyertaan</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Mod Penyertaan</label>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => setEventMode('INDIVIDUAL')}
                   className={`py-3 px-4 rounded-2xl font-bold text-xs border transition-all ${
                     eventMode === 'INDIVIDUAL'
-                      ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-600/20'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                      ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-600/20'
+                      : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   Individu
@@ -694,8 +699,8 @@ export function EmsEventFormPage() {
                   onClick={() => setEventMode('TEAM')}
                   className={`py-3 px-4 rounded-2xl font-bold text-xs border transition-all ${
                     eventMode === 'TEAM'
-                      ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-600/20'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                      ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-600/20'
+                      : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   Pasukan / Booth
@@ -706,28 +711,28 @@ export function EmsEventFormPage() {
             {/* Siswapreneur Integration Card */}
             <div className={`md:col-span-2 p-5 rounded-2xl border transition-all duration-300 ${
               isSiswapreneur
-                ? 'bg-gradient-to-r from-emerald-950/50 via-teal-950/30 to-slate-900 border-emerald-500/50 shadow-lg shadow-emerald-950/20'
-                : 'bg-slate-950/80 border-slate-800 hover:border-slate-700'
+                ? 'bg-gradient-to-r from-emerald-50 via-teal-50 to-white dark:from-emerald-950/50 dark:via-teal-950/30 dark:to-slate-900 border-emerald-500/50 shadow-lg shadow-emerald-500/10'
+                : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
             }`}>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-start gap-3.5">
                   <div className={`p-3 rounded-xl transition-colors ${
-                    isSiswapreneur ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400'
+                    isSiswapreneur ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
                   }`}>
                     <ShoppingBag className="w-6 h-6" />
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                         <span>🛍️</span> Pautan E-Keusahawanan (Program Siswapreneur)
                       </h3>
                       {isSiswapreneur && (
-                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
                           Aktif
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl">
                       Apabila diaktifkan, pendaftaran peserta dalam acara ini akan mendaftarkan profil perniagaan Siswapreneur automatik di bawah e-Keusahawanan (No. Pendaftaran EMS-YYYY-XXXXX, Auto-Lulus tanpa temuduga PUSKEP).
                     </p>
                   </div>
@@ -738,8 +743,8 @@ export function EmsEventFormPage() {
                     role="switch"
                     aria-checked={isSiswapreneur}
                     onClick={() => setIsSiswapreneur(!isSiswapreneur)}
-                    className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
-                      isSiswapreneur ? 'bg-emerald-500' : 'bg-slate-800'
+                    className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900 ${
+                      isSiswapreneur ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-800'
                     }`}
                   >
                     <span
@@ -753,31 +758,31 @@ export function EmsEventFormPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-2">Tarikh & Masa Acara</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Tarikh & Masa Acara</label>
               <input
                 type="datetime-local"
                 value={eventDate}
                 onChange={(e) => setEventDate(e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-white text-sm focus:outline-none focus:border-indigo-500"
+                className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-purple-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-2">Lokasi Acara</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Lokasi Acara</label>
               <input
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="e.g. Dewan Gemilang POLISAS / Booth Lobi Utama"
-                className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-white text-sm focus:outline-none focus:border-indigo-500"
+                className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-purple-500"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-slate-300 mb-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 Tetapan Pemenang Milestone (Milestone Winner Config)
               </label>
-              <p className="text-[11px] text-slate-400 mb-2">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">
                 Masukkan nombor kedatangan pengunjung bertuah yang akan memenangi hadiah cabutan (dipisahkan dengan koma).
               </p>
               <input
@@ -785,7 +790,7 @@ export function EmsEventFormPage() {
                 value={milestoneConfig}
                 onChange={(e) => setMilestoneConfig(e.target.value)}
                 placeholder="e.g. 50, 100, 250, 500"
-                className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-white font-mono text-sm focus:outline-none focus:border-indigo-500"
+                className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono text-sm focus:outline-none focus:border-purple-500"
               />
             </div>
 
@@ -795,9 +800,9 @@ export function EmsEventFormPage() {
                   type="checkbox"
                   checked={isLeaderboardPublic}
                   onChange={(e) => setIsLeaderboardPublic(e.target.checked)}
-                  className="w-5 h-5 rounded border-slate-800 text-indigo-600 focus:ring-0 bg-slate-950 cursor-pointer"
+                  className="w-5 h-5 rounded border-slate-300 dark:border-slate-800 text-purple-600 focus:ring-0 bg-slate-100 dark:bg-slate-950 cursor-pointer"
                 />
-                <span className="text-xs font-semibold text-slate-300">
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   Benarkan Papan Kedudukan (Leaderboard) dilihat secara awam.
                 </span>
               </label>
@@ -808,17 +813,17 @@ export function EmsEventFormPage() {
         {/* ============================================================ */}
         {/* Section 2: Pembina Borang Pendaftaran (Registration Form Builder) */}
         {/* ============================================================ */}
-        <section className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-xl">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-teal-500/10 text-teal-400">
+              <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border border-purple-200/50 dark:border-purple-800/50">
                 <FileText className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                   Seksyen 2: Pembina Borang Pendaftaran
                 </h2>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Tambah medan maklumat tambahan yang perlu diisi oleh peserta semasa mendaftar.
                 </p>
               </div>
@@ -827,7 +832,7 @@ export function EmsEventFormPage() {
             <button
               type="button"
               onClick={addFormField}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs transition-all shadow-md"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-all shadow-md active:scale-95"
             >
               <Plus className="w-4 h-4" />
               <span>Tambah Medan</span>
@@ -838,11 +843,11 @@ export function EmsEventFormPage() {
             {formFields.map((field, index) => (
               <div
                 key={index}
-                className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3 relative group"
+                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3 relative group"
               >
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <span className="w-6 h-6 rounded-full bg-slate-800 text-slate-400 font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                    <span className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-400 font-mono font-bold text-xs flex items-center justify-center shrink-0">
                       {index + 1}
                     </span>
                     <input
@@ -855,7 +860,7 @@ export function EmsEventFormPage() {
                         updated[index].field_label = e.target.value;
                         setFormFields(updated);
                       }}
-                      className="w-full sm:w-72 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-semibold focus:outline-none focus:border-teal-500"
+                      className="w-full sm:w-72 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-purple-500"
                     />
                   </div>
 
@@ -865,7 +870,7 @@ export function EmsEventFormPage() {
                       type="button"
                       disabled={index === 0}
                       onClick={() => moveFormField(index, 'UP')}
-                      className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 disabled:opacity-30"
+                      className="p-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 disabled:opacity-30 transition-colors"
                     >
                       <MoveUp className="w-3.5 h-3.5" />
                     </button>
@@ -873,7 +878,7 @@ export function EmsEventFormPage() {
                       type="button"
                       disabled={index === formFields.length - 1}
                       onClick={() => moveFormField(index, 'DOWN')}
-                      className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 disabled:opacity-30"
+                      className="p-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 disabled:opacity-30 transition-colors"
                     >
                       <MoveDown className="w-3.5 h-3.5" />
                     </button>
@@ -882,7 +887,7 @@ export function EmsEventFormPage() {
                     <button
                       type="button"
                       onClick={() => removeFormField(index)}
-                      className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition-all"
+                      className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 transition-all border border-rose-200 dark:border-rose-900/30"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -891,7 +896,7 @@ export function EmsEventFormPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
                   <div>
-                    <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                    <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
                       Jenis Medan
                     </label>
                     <select
@@ -901,7 +906,7 @@ export function EmsEventFormPage() {
                         updated[index].field_type = e.target.value;
                         setFormFields(updated);
                       }}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs"
+                      className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-500"
                     >
                       <option value="text">Teks Ringkas (Text)</option>
                       <option value="textarea">Teks Panjang (Textarea)</option>
@@ -914,7 +919,7 @@ export function EmsEventFormPage() {
 
                   {field.field_type === 'select' && (
                     <div className="sm:col-span-2">
-                      <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                      <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
                         Pilihan (Asingkan dengan koma)
                       </label>
                       <input
@@ -926,7 +931,7 @@ export function EmsEventFormPage() {
                           updated[index].options = e.target.value;
                           setFormFields(updated);
                         }}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs"
+                        className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-500"
                       />
                     </div>
                   )}
@@ -941,9 +946,9 @@ export function EmsEventFormPage() {
                           updated[index].is_required = e.target.checked;
                           setFormFields(updated);
                         }}
-                        className="w-4 h-4 rounded border-slate-800 text-teal-600 focus:ring-0 bg-slate-900 cursor-pointer"
+                        className="w-4 h-4 rounded border-slate-300 dark:border-slate-800 text-purple-600 focus:ring-0 bg-white dark:bg-slate-900 cursor-pointer"
                       />
-                      <span className="text-xs text-slate-300">Wajib Diisi</span>
+                      <span className="text-xs text-slate-700 dark:text-slate-300">Wajib Diisi</span>
                     </label>
                   </div>
                 </div>
@@ -955,17 +960,17 @@ export function EmsEventFormPage() {
         {/* ============================================================ */}
         {/* Section 3: Rubrik Pemarkahan Juri (Scoring Rubric Builder) */}
         {/* ============================================================ */}
-        <section className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-xl">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-4 gap-4">
+        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
+              <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border border-purple-200/50 dark:border-purple-800/50">
                 <Award className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                   Seksyen 3: Rubrik Pemarkahan Juri & Hierarki
                 </h2>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Tetapkan kriteria pemarkahan, markah maksimum & pemberat (weightage) untuk juri.
                 </p>
               </div>
@@ -975,7 +980,7 @@ export function EmsEventFormPage() {
               <button
                 type="button"
                 onClick={handleAddCategory}
-                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all shadow-md active:scale-95"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-all shadow-md active:scale-95"
               >
                 <Plus className="w-4 h-4" />
                 <span>📂 + Tambah Kategori Baharu</span>
@@ -983,7 +988,7 @@ export function EmsEventFormPage() {
               <button
                 type="button"
                 onClick={() => addRubric()}
-                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-all shadow-md active:scale-95"
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-purple-50 dark:bg-purple-900/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700/50 font-bold text-xs transition-all shadow-sm active:scale-95"
               >
                 <Plus className="w-4 h-4" />
                 <span>+ Tambah Kriteria</span>
@@ -992,22 +997,22 @@ export function EmsEventFormPage() {
           </div>
 
           {/* 1-Click Preset Loaders */}
-          <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 space-y-3">
-            <div className="flex items-center gap-2 text-xs font-bold text-indigo-300 uppercase tracking-wider">
-              <Sparkles className="w-4 h-4 text-indigo-400" />
+          <div className="bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
+              <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               <span>Templat Rubrik Pantas (1-Click Preset Loader)</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={handleLoadShowcasePreset}
-                className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl bg-gradient-to-r from-indigo-950/70 to-slate-900 border border-indigo-500/30 hover:border-indigo-400 text-white font-bold text-xs transition-all shadow-md group active:scale-[0.98]"
+                className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-purple-50/50 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-500/40 text-slate-900 dark:text-white font-bold text-xs transition-all shadow-sm group active:scale-[0.98]"
               >
                 <div className="flex items-center gap-2.5 text-left">
-                  <Package className="w-5 h-5 text-indigo-400 group-hover:scale-110 transition-transform shrink-0" />
+                  <Package className="w-5 h-5 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform shrink-0" />
                   <div>
-                    <div className="text-white font-extrabold">📦 ➕ Tambah Templat iFAMB Best Showcase</div>
-                    <div className="text-[11px] font-normal text-slate-400">(4 Seksyen / 16 Rubrik)</div>
+                    <div className="text-slate-900 dark:text-white font-extrabold">📦 ➕ Tambah Templat iFAMB Best Showcase</div>
+                    <div className="text-[11px] font-normal text-slate-500 dark:text-slate-400">(4 Seksyen / 16 Rubrik)</div>
                   </div>
                 </div>
               </button>
@@ -1015,13 +1020,13 @@ export function EmsEventFormPage() {
               <button
                 type="button"
                 onClick={handleLoadPitchingPreset}
-                className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl bg-gradient-to-r from-emerald-950/70 to-slate-900 border border-emerald-500/30 hover:border-emerald-400 text-white font-bold text-xs transition-all shadow-md group active:scale-[0.98]"
+                className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-teal-50/50 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 hover:border-teal-300 dark:hover:border-teal-500/40 text-slate-900 dark:text-white font-bold text-xs transition-all shadow-sm group active:scale-[0.98]"
               >
                 <div className="flex items-center gap-2.5 text-left">
-                  <Mic className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform shrink-0" />
+                  <Mic className="w-5 h-5 text-teal-600 dark:text-teal-400 group-hover:scale-110 transition-transform shrink-0" />
                   <div>
-                    <div className="text-white font-extrabold">🎤 ➕ Tambah Templat iFAMB Best Pitching</div>
-                    <div className="text-[11px] font-normal text-slate-400">(10 Rubrik)</div>
+                    <div className="text-slate-900 dark:text-white font-extrabold">🎤 ➕ Tambah Templat iFAMB Best Pitching</div>
+                    <div className="text-[11px] font-normal text-slate-500 dark:text-slate-400">(10 Rubrik)</div>
                   </div>
                 </div>
               </button>
@@ -1046,19 +1051,19 @@ export function EmsEventFormPage() {
             const unbalancedCategories = categoriesSummary.filter((c) => !c.isCatBalanced);
 
             return (
-              <div className="bg-slate-950/90 border border-slate-800 p-5 rounded-2xl space-y-4">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+              <div className="bg-slate-50 dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800/80 pb-3">
                   <div>
-                    <span className="text-xs font-semibold text-slate-400">Ringkasan Pemberat Kriteria:</span>
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Ringkasan Pemberat Kriteria:</span>
                     <div className="flex items-center gap-3 mt-1">
-                      <span className="text-base font-bold text-white">Status Nisbah Kategori:</span>
+                      <span className="text-base font-bold text-slate-900 dark:text-white">Status Nisbah Kategori:</span>
                       {allCategoriesBalanced ? (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Semua Kategori 100% Seimbang ✅
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Semua Kategori 100% Seimbang ✅
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                          <AlertCircle className="w-4 h-4 text-amber-400" /> Kategori Tidak Seimbang ⚠️
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                          <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" /> Kategori Tidak Seimbang ⚠️
                         </span>
                       )}
                     </div>
@@ -1072,18 +1077,18 @@ export function EmsEventFormPage() {
                       key={cat.categoryName}
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold ${
                         cat.isCatBalanced
-                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                          : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                          ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+                          : 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300'
                       }`}
                     >
-                      <span className="text-slate-200">{cat.categoryName}:</span>
+                      <span className="text-slate-700 dark:text-slate-200">{cat.categoryName}:</span>
                       <span className="font-mono font-black">{cat.catTotalWeight}%</span>
                       {cat.isCatBalanced ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 bg-emerald-500/20 px-1.5 py-0.5 rounded-md">
+                        <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/20 px-1.5 py-0.5 rounded-md">
                           <CheckCircle2 className="w-3 h-3" /> 100% Seimbang
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[11px] text-amber-400 bg-amber-500/20 px-1.5 py-0.5 rounded-md">
+                        <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/20 px-1.5 py-0.5 rounded-md">
                           <AlertCircle className="w-3 h-3" /> Tidak Seimbang
                         </span>
                       )}
@@ -1097,9 +1102,9 @@ export function EmsEventFormPage() {
                     {unbalancedCategories.map((cat) => (
                       <div
                         key={cat.categoryName}
-                        className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-xl flex items-center gap-2"
+                        className="text-xs text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 p-2.5 rounded-xl flex items-center gap-2"
                       >
-                        <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
+                        <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
                         <span>
                           Amaran: Pemberat Kategori &quot;{cat.categoryName}&quot; ialah {cat.catTotalWeight}%. Disyorkan 100%.
                         </span>
@@ -1135,32 +1140,32 @@ export function EmsEventFormPage() {
                 {categoryGroups.map((group) => (
                   <div key={group.categoryName} className="space-y-4">
                     {/* Category Header Banner */}
-                    <div className="bg-gradient-to-r from-slate-900 via-amber-950/20 to-slate-900 border border-amber-500/30 rounded-2xl px-5 py-3.5 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+                    <div className="bg-gradient-to-r from-purple-50 via-purple-100/50 to-purple-50 dark:from-slate-900 dark:via-purple-950/20 dark:to-slate-900 border border-purple-200 dark:border-purple-500/30 rounded-2xl px-5 py-3.5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                        <div className="p-2 rounded-xl bg-purple-200/60 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400 border border-purple-300/60 dark:border-purple-500/30">
                           <Layers className="w-4 h-4" />
                         </div>
                         <div>
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-400">
                             Kategori Rubrik
                           </span>
-                          <h3 className="text-base font-black text-white tracking-tight">
+                          <h3 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
                             {group.categoryName}
                           </h3>
                         </div>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs font-semibold text-slate-400 mr-1">
+                        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 mr-1">
                           {group.items.length} Kriteria
                         </span>
-                        <div className="px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold font-mono mr-1">
-                          Jumlah Pemberat: <span className="text-white font-black">{group.totalWeight}%</span>
+                        <div className="px-3 py-1 rounded-xl bg-purple-100 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 text-purple-800 dark:text-purple-300 text-xs font-bold font-mono mr-1">
+                          Jumlah Pemberat: <span className="text-purple-950 dark:text-white font-black">{group.totalWeight}%</span>
                         </div>
                         <button
                           type="button"
                           onClick={() => handleAddSection(group.categoryName)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 text-xs font-bold transition-all border border-teal-500/30 active:scale-95"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-teal-50 dark:bg-teal-500/20 hover:bg-teal-100 dark:hover:bg-teal-500/30 text-teal-700 dark:text-teal-300 text-xs font-bold transition-all border border-teal-200 dark:border-teal-500/30 active:scale-95"
                           title={`Tambah Seksyen ke ${group.categoryName}`}
                         >
                           <Plus className="w-3.5 h-3.5" />
@@ -1169,7 +1174,7 @@ export function EmsEventFormPage() {
                         <button
                           type="button"
                           onClick={() => addRubric(group.categoryName === 'Tanpa Kategori' ? '' : group.categoryName)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold transition-all border border-amber-500/30 active:scale-95"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-100 dark:bg-purple-500/20 hover:bg-purple-200 dark:hover:bg-purple-500/30 text-purple-800 dark:text-purple-300 text-xs font-bold transition-all border border-purple-300 dark:border-purple-500/30 active:scale-95"
                           title={`Tambah Kriteria ke ${group.categoryName}`}
                         >
                           <Plus className="w-3.5 h-3.5" />
@@ -1188,12 +1193,12 @@ export function EmsEventFormPage() {
                         return (
                           <div
                             key={rubric.id || index}
-                            className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-4 relative group"
+                            className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-4 relative group shadow-sm"
                           >
                             {/* Card Header & Main Fields */}
-                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800/80 pb-3">
                               <div className="flex items-center gap-2 w-full md:w-auto">
-                                <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                                <span className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-500/30 font-mono font-bold text-xs flex items-center justify-center shrink-0">
                                   {index + 1}
                                 </span>
                                 <div className="flex-1 md:w-80">
@@ -1207,7 +1212,7 @@ export function EmsEventFormPage() {
                                       updated[index].criteria_name = e.target.value;
                                       setRubrics(updated);
                                     }}
-                                    className="w-full px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-semibold focus:outline-none focus:border-amber-500"
+                                    className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-purple-500"
                                   />
                                 </div>
                               </div>
@@ -1217,7 +1222,7 @@ export function EmsEventFormPage() {
                                   type="button"
                                   disabled={index === 0}
                                   onClick={() => moveRubric(index, 'UP')}
-                                  className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 disabled:opacity-30 transition-colors"
+                                  className="p-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 disabled:opacity-30 transition-colors"
                                   title="Alih ke atas"
                                 >
                                   <MoveUp className="w-3.5 h-3.5" />
@@ -1226,7 +1231,7 @@ export function EmsEventFormPage() {
                                   type="button"
                                   disabled={index === rubrics.length - 1}
                                   onClick={() => moveRubric(index, 'DOWN')}
-                                  className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 disabled:opacity-30 transition-colors"
+                                  className="p-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 disabled:opacity-30 transition-colors"
                                   title="Alih ke bawah"
                                 >
                                   <MoveDown className="w-3.5 h-3.5" />
@@ -1234,7 +1239,7 @@ export function EmsEventFormPage() {
                                 <button
                                   type="button"
                                   onClick={() => removeRubric(index)}
-                                  className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition-all"
+                                  className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 transition-all border border-rose-200 dark:border-rose-900/30"
                                   title="Padam Kriteria"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -1245,7 +1250,7 @@ export function EmsEventFormPage() {
                             {/* Hierarchical Fields & Numeric Inputs */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                               <div>
-                                <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                                <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
                                   Kategori (Category)
                                 </label>
                                 <input
@@ -1257,12 +1262,12 @@ export function EmsEventFormPage() {
                                     updated[index].category_name = e.target.value;
                                     setRubrics(updated);
                                   }}
-                                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs"
+                                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-500"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                                <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
                                   Seksyen / Sub-kategori (Section)
                                 </label>
                                 <input
@@ -1274,12 +1279,12 @@ export function EmsEventFormPage() {
                                     updated[index].section_name = e.target.value;
                                     setRubrics(updated);
                                   }}
-                                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs"
+                                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-500"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                                <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
                                   Pemberat % (Weight)
                                 </label>
                                 <input
@@ -1293,12 +1298,12 @@ export function EmsEventFormPage() {
                                     updated[index].weight = Number(e.target.value);
                                     setRubrics(updated);
                                   }}
-                                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-mono font-bold"
+                                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-mono font-bold focus:outline-none focus:border-purple-500"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                                <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
                                   Markah Maksimum (Max Score)
                                 </label>
                                 <input
@@ -1311,7 +1316,7 @@ export function EmsEventFormPage() {
                                     updated[index].max_score = Number(e.target.value);
                                     setRubrics(updated);
                                   }}
-                                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-mono font-bold"
+                                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-mono font-bold focus:outline-none focus:border-purple-500"
                                 />
                               </div>
                             </div>
@@ -1321,31 +1326,31 @@ export function EmsEventFormPage() {
                               <button
                                 type="button"
                                 onClick={() => toggleDescriptor(index)}
-                                className="flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-amber-400 transition-colors bg-slate-900/60 hover:bg-slate-900 px-3 py-2 rounded-xl border border-slate-800 w-full"
+                                className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-900 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 w-full shadow-sm"
                               >
                                 {isExpanded ? (
-                                  <ChevronUp className="w-4 h-4 text-amber-400 shrink-0" />
+                                  <ChevronUp className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
                                 ) : (
-                                  <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
+                                  <ChevronDown className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
                                 )}
                                 <span>Deskriptor Pemarkahan 5-Skala (Skor 1 - 5)</span>
-                                <span className="ml-auto text-[10px] text-slate-400">
+                                <span className="ml-auto text-[10px] text-slate-500 dark:text-slate-400">
                                   {isExpanded ? 'Tutup' : 'Buka & Sunting'}
                                 </span>
                               </button>
 
                               {isExpanded && (
-                                <div className="mt-3 p-4 bg-slate-900/80 border border-slate-800 rounded-xl space-y-3">
-                                  <div className="text-[11px] font-bold text-slate-400 mb-2 uppercase tracking-wide">
+                                <div className="mt-3 p-4 bg-slate-100/70 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl space-y-3">
+                                  <div className="text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-2 uppercase tracking-wide">
                                     Deskriptor Pemarkahan (5-Point Descriptors):
                                   </div>
                                   <div className="grid grid-cols-1 gap-2.5">
                                     {[
-                                      { key: '5', label: '5 - Cemerlang (Excellent)', badgeColor: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' },
-                                      { key: '4', label: '4 - Baik (Good)', badgeColor: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
-                                      { key: '3', label: '3 - Memuaskan (Satisfactory)', badgeColor: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
-                                      { key: '2', label: '2 - Sederhana (Fair)', badgeColor: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
-                                      { key: '1', label: '1 - Lemah (Poor)', badgeColor: 'bg-rose-500/20 text-rose-400 border-rose-500/30' },
+                                      { key: '5', label: '5 - Cemerlang (Excellent)', badgeColor: 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/30' },
+                                      { key: '4', label: '4 - Baik (Good)', badgeColor: 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30' },
+                                      { key: '3', label: '3 - Memuaskan (Satisfactory)', badgeColor: 'bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/30' },
+                                      { key: '2', label: '2 - Sederhana (Fair)', badgeColor: 'bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-500/30' },
+                                      { key: '1', label: '1 - Lemah (Poor)', badgeColor: 'bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-500/30' },
                                     ].map((level) => (
                                       <div key={level.key} className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                                         <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border shrink-0 sm:w-44 ${level.badgeColor}`}>
@@ -1356,7 +1361,7 @@ export function EmsEventFormPage() {
                                           placeholder={`Keterangan untuk skor ${level.key}...`}
                                           value={descriptors[level.key] || ''}
                                           onChange={(e) => updateDescriptor(index, level.key, e.target.value)}
-                                          className="w-full px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-amber-500"
+                                          className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-purple-500"
                                         />
                                       </div>
                                     ))}
@@ -1376,12 +1381,12 @@ export function EmsEventFormPage() {
         </section>
 
         {/* Action Controls */}
-        <div className="flex flex-col sm:flex-row items-center justify-end gap-4 pt-4 border-t border-slate-800">
+        <div className="flex flex-col sm:flex-row items-center justify-end gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
           <button
             type="button"
             disabled={submitting}
             onClick={() => handleSubmit('DRAFT')}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm transition-all disabled:opacity-50"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold text-sm transition-all shadow-sm disabled:opacity-50"
           >
             <Save className="w-4 h-4" />
             <span>Simpan Draf</span>
@@ -1391,7 +1396,7 @@ export function EmsEventFormPage() {
             type="button"
             disabled={submitting}
             onClick={() => handleSubmit('PENDING_APPROVAL')}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition-all shadow-xl shadow-indigo-600/20 disabled:opacity-50 active:scale-95"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition-all shadow-xl shadow-purple-600/20 disabled:opacity-50 active:scale-95"
           >
             <Send className="w-4 h-4" />
             <span>{submitting ? 'Menyimpan...' : 'Hantar Untuk Kelulusan JPP HQ'}</span>
