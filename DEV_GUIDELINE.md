@@ -1345,6 +1345,11 @@ E-Kebajikan adalah sistem pengurusan aduan dan kebajikan pelajar dengan aliran t
 | `kebajikan_staff_assignments` | Penugasan exco kepada tiket |
 | `kebajikan_tags` | Tag/label untuk mengkategorikan tiket |
 | `kebajikan_notifications` | Notifikasi khusus kebajikan |
+| `foodbank_settings` | Konfigurasi had bajet dan kelayakan permohonan Food Bank |
+| `foodbank_distribution_locations` | Lokasi pusat edaran agihan berintegrasi PolyMaps |
+| `foodbank_items` | Katalog dan baki stok inventori barangan Food Bank |
+| `foodbank_applications` | Rekod permohonan bantuan Food Bank pelajar bersama pas QR |
+| `foodbank_budget_transactions` | Lejar transaksi perbelanjaan dan penambahan bajet |
 
 ### 20.2 Routes
 

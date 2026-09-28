@@ -1271,5 +1271,156 @@ export interface AkademikImportCertItem {
   created_at: string;
 }
 
+// ============================================================
+// PolyMaps 360° Panorama Contracts
+// ============================================================
+
+export interface PolyMapsBuildingWith360 {
+  id: string;
+  name: string;
+  code: string;
+  description?: string | null;
+  center_lat?: number | null;
+  center_lng?: number | null;
+  zone_name?: string | null;
+  drone_image_url?: string | null;
+  panorama_360_url?: string | null;
+  is_facility?: boolean;
+  facility_type?: string | null;
+  op_start?: string | null;
+  op_end?: string | null;
+  floorplan_image_url?: string | null;
+  entrance_image_url?: string | null;
+  created_at?: string;
+}
+
+// ============================================================
+// Food Bank JPP Contracts & Types
+// ============================================================
+
+export type FoodBankApplicationStatus =
+  | 'MENUNGGU'
+  | 'DALAM_SEMAKAN'
+  | 'LULUS'
+  | 'DITOLAK'
+  | 'SELESAI'
+  | 'BATAL';
+
+export interface FoodBankSettings {
+  id: string;
+  is_application_open: boolean;
+  total_budget: number;
+  current_spent: number;
+  max_monthly_applications_per_student: number;
+  max_items_per_application: number;
+  application_instructions?: string | null;
+  eligibility_criteria?: string | null;
+  updated_by?: string | null;
+  updated_at?: string;
+  created_at?: string;
+}
+
+export interface FoodBankItem {
+  id: string;
+  name: string;
+  category: 'MAKANAN' | 'MINUMAN' | 'KEPERLUAN_ASAS' | 'KEBERSIHAN' | string;
+  description?: string | null;
+  image_url?: string | null;
+  current_stock: number;
+  unit: string;
+  estimated_cost: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface FoodBankDistributionLocation {
+  id: string;
+  name: string;
+  polymaps_building_id?: string | null;
+  room_detail?: string | null;
+  operating_hours?: string | null;
+  is_active: boolean;
+  contact_person?: string | null;
+  contact_phone?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  // Relation
+  building?: PolyMapsBuildingWith360 | null;
+}
+
+export interface FoodBankHousemate {
+  name: string;
+  ic_or_matric: string;
+  phone?: string;
+}
+
+export interface FoodBankSelectedItem {
+  item_id: string;
+  item_name: string;
+  quantity: number;
+  unit: string;
+  estimated_cost: number;
+}
+
+export interface FoodBankApplication {
+  id: string;
+  application_no: string;
+  applicant_id: string;
+  status: FoodBankApplicationStatus;
+  reason: string;
+  financial_category?: 'B40' | 'M40' | 'ASNAF' | 'KECEMASAN' | string | null;
+  household_income?: number | null;
+  housing_type?: 'KAMSIS' | 'RUMAH_SEWA' | 'SENDIRI' | string | null;
+  housemates?: FoodBankHousemate[];
+  selected_items: FoodBankSelectedItem[];
+  location_id?: string | null;
+  pickup_date?: string | null;
+  pickup_time_slot?: string | null;
+  pickup_qr_code?: string | null;
+  pickup_verified_at?: string | null;
+  pickup_verified_by?: string | null;
+  total_estimated_value: number;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  rejection_reason?: string | null;
+  admin_notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  // Relations
+  applicant?: {
+    id: string;
+    full_name: string;
+    email: string;
+    student_id?: string | null;
+    phone_number?: string | null;
+  } | null;
+  location?: FoodBankDistributionLocation | null;
+  verifier?: {
+    id: string;
+    full_name: string;
+  } | null;
+  reviewer?: {
+    id: string;
+    full_name: string;
+  } | null;
+}
+
+export interface FoodBankBudgetTransaction {
+  id: string;
+  application_id?: string | null;
+  transaction_type: 'DISTRIBUTION' | 'BUDGET_ADDITION' | 'ADJUSTMENT' | 'CANCELLATION_REFUND' | string;
+  amount: number;
+  description: string;
+  created_by?: string | null;
+  created_at?: string;
+  // Relations
+  application?: FoodBankApplication | null;
+  creator?: {
+    id: string;
+    full_name: string;
+  } | null;
+}
+
 
 
