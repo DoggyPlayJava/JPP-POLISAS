@@ -53,6 +53,7 @@ import {
   FoodBankApplication,
   FoodBankHousemate,
   FoodBankSelectedItem,
+  FoodBankLocationStock,
 } from '@/types';
 import { FoodBankQrPassModal } from '@/components/foodbank/FoodBankQrPassModal';
 import { Link } from 'react-router-dom';
@@ -64,6 +65,8 @@ import {
   loadLocalFoodBankSettings,
   FOODBANK_CATEGORY_CONFIG,
   getFoodBankStockBadge,
+  generateDefaultFoodBankLocationStocks,
+  DEFAULT_FOODBANK_LOCATION_STOCKS,
 } from '@/lib/foodbankDefaults';
 
 // Tab Kategori Barangan
@@ -89,6 +92,7 @@ export function KebajikanFoodBankPage() {
   const [settings, setSettings] = useState<FoodBankSettings | null>(null);
   const [locations, setLocations] = useState<FoodBankDistributionLocation[]>([]);
   const [items, setItems] = useState<FoodBankItem[]>([]);
+  const [locationStocks, setLocationStocks] = useState<FoodBankLocationStock[]>([]);
   const [activeApplication, setActiveApplication] = useState<FoodBankApplication | null>(null);
   const [pastApplications, setPastApplications] = useState<FoodBankApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -163,6 +167,7 @@ export function KebajikanFoodBankPage() {
         itemsRes,
         activeAppRes,
         pastAppsRes,
+        locationStocksRes,
       ] = await Promise.all([
         supabase
           .from('foodbank_settings')
@@ -195,12 +200,16 @@ export function KebajikanFoodBankPage() {
           .in('status', ['SELESAI', 'DITOLAK', 'BATAL'])
           .order('created_at', { ascending: false })
           .limit(10),
+        supabase
+          .from('foodbank_location_stocks')
+          .select('*'),
       ]);
 
       if (settingsRes.error) console.error('Error fetching settings:', settingsRes.error);
       if (locationsRes.error) console.error('Error fetching locations:', locationsRes.error);
       if (itemsRes.error) console.error('Error fetching items:', itemsRes.error);
       if (activeAppRes.error) console.error('Error fetching active app:', activeAppRes.error);
+      if (locationStocksRes.error) console.error('Error fetching location stocks:', locationStocksRes.error);
 
       const finalSettings = (settingsRes.data as FoodBankSettings) || loadLocalFoodBankSettings();
       setSettings(finalSettings);
@@ -229,6 +238,11 @@ export function KebajikanFoodBankPage() {
         ? (itemsRes.data as FoodBankItem[])
         : DEFAULT_FOODBANK_ITEMS;
       setItems(finalItems);
+
+      const finalLocationStocks = (locationStocksRes.data && locationStocksRes.data.length > 0)
+        ? (locationStocksRes.data as FoodBankLocationStock[])
+        : generateDefaultFoodBankLocationStocks(finalItems, enhancedLocations);
+      setLocationStocks(finalLocationStocks);
       if (activeAppRes.data) {
         setActiveApplication(activeAppRes.data as FoodBankApplication);
       } else {
@@ -363,15 +377,74 @@ export function KebajikanFoodBankPage() {
     toast.success('Rakan serumah dikeluarkan.');
   };
 
+  // Helper: Baki Stok di Lokasi Terpilih
+  const getItemStockAtSelectedLocation = (itemId: string): number => {
+    if (!selectedLocationId) return 0;
+    const locStock = locationStocks.find(
+      (ls) => ls.item_id === itemId && ls.location_id === selectedLocationId
+    );
+    return locStock ? locStock.current_stock : 0;
+  };
+
+  // Helper: Pusat Edaran Alternatif Yang Mempunyai Baki Stok
+  const getAlternativeLocationWithStock = (itemId: string): string | null => {
+    const alt = locationStocks.find(
+      (ls) => ls.item_id === itemId && ls.location_id !== selectedLocationId && ls.current_stock > 0
+    );
+    if (!alt) return null;
+    const loc = locations.find((l) => l.id === alt.location_id);
+    return loc ? loc.name : null;
+  };
+
+  // Nama Lokasi Yang Dipilih
+  const selectedLocationName = useMemo(() => {
+    const loc = locations.find((l) => l.id === selectedLocationId);
+    return loc ? loc.name : 'Pusat Edaran Terpilih';
+  }, [locations, selectedLocationId]);
+
+  // Penukaran Lokasi Agihan & Penyelarasan Kuantiti Barangan Terpilih
+  const handleLocationChange = (newLocationId: string) => {
+    if (newLocationId === selectedLocationId) return;
+    setSelectedLocationId(newLocationId);
+
+    // Semak dan selaras kuantiti barangan terpilih mengikut stok lokasi baharu
+    let hasAdjusted = false;
+    const updatedQuantities = { ...selectedItemQuantities };
+
+    for (const [itemId, qty] of Object.entries(selectedItemQuantities)) {
+      if (qty <= 0) continue;
+      const locStock = locationStocks.find(
+        (ls) => ls.item_id === itemId && ls.location_id === newLocationId
+      );
+      const available = locStock ? locStock.current_stock : 0;
+      if (qty > available) {
+        hasAdjusted = true;
+        if (available <= 0) {
+          delete updatedQuantities[itemId];
+        } else {
+          updatedQuantities[itemId] = available;
+        }
+      }
+    }
+
+    if (hasAdjusted) {
+      setSelectedItemQuantities(updatedQuantities);
+      toast('Kuantiti barangan diselaraskan mengikut stok lokasi yang dipilih.', {
+        icon: 'ℹ️',
+      });
+    }
+  };
+
   // Ubah Kuantiti Barangan (+ / -)
   const handleItemQuantityChange = (item: FoodBankItem, delta: number) => {
     const currentQty = selectedItemQuantities[item.id] || 0;
     const newQty = currentQty + delta;
+    const availableStock = getItemStockAtSelectedLocation(item.id);
 
     if (delta > 0) {
-      // Semak had stok inventori
-      if (newQty > item.current_stock) {
-        toast.error(`Baki stok bagi "${item.name}" hanya tinggal ${item.current_stock} unit.`);
+      // Semak had stok inventori mengikut lokasi dipilih
+      if (newQty > availableStock) {
+        toast.error(`Baki stok bagi "${item.name}" di pusat ini hanya tinggal ${availableStock} unit.`);
         return;
       }
       // Semak had kuota maksimum dibenarkan
@@ -508,6 +581,17 @@ export function KebajikanFoodBankPage() {
     if (!acknowledged) {
       toast.error('Sila sahkan perakuan permohonan terlebih dahulu.');
       return;
+    }
+
+    // Semak baki stok lokasi bagi setiap item sebelum hantar
+    for (const [itemId, qty] of Object.entries(selectedItemQuantities)) {
+      if (qty <= 0) continue;
+      const itm = items.find((i) => i.id === itemId);
+      const avail = getItemStockAtSelectedLocation(itemId);
+      if (qty > avail) {
+        toast.error(`Kuantiti bagi "${itm?.name || 'barangan'}" melebihi baki stok lokasi terkini (${avail} unit).`);
+        return;
+      }
     }
 
     // Bina manifest barangan terpilih
@@ -1246,190 +1330,18 @@ export function KebajikanFoodBankPage() {
             </div>
           </div>
 
-          {/* ── Bahagian 3: Katalog Pilihan Barangan Bebas ── */}
-          <div className="rounded-3xl p-6 sm:p-7 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-xs">
-                  3
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-                    Katalog Pilihan Barangan Bebas
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Pilih barangan mengikut keperluan sebenar anda sehingga had kuota kelayakan.
-                  </p>
-                </div>
-              </div>
-
-              {/* Bar Carian */}
-              <div className="relative w-full sm:w-64">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <Input
-                  placeholder="Cari barangan..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9 text-xs rounded-xl"
-                />
-              </div>
-            </div>
-
-            {/* Tab Kategori */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide text-xs">
-              {CATEGORY_TABS.map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveCategory(tab.id)}
-                  className={cn(
-                    'px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all',
-                    activeCategory === tab.id
-                      ? 'bg-amber-600 text-white shadow-sm'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  )}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Grid Katalog Barangan */}
-            {filteredItems.length === 0 ? (
-              <div className="py-12 text-center text-slate-400 text-xs space-y-2">
-                <Package className="w-8 h-8 mx-auto text-slate-300" />
-                <p>Tiada barangan dijumpai dalam kategori ini.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {filteredItems.map((item) => {
-                  const qty = selectedItemQuantities[item.id] || 0;
-                  const isOutOfStock = item.current_stock <= 0;
-                  const canAddMore =
-                    !isOutOfStock &&
-                    qty < item.current_stock &&
-                    totalSelectedCount < maxAllowedItems &&
-                    !isSessionClosed;
-
-                  return (
-                    <div
-                      key={item.id}
-                      className={cn(
-                        'rounded-2xl p-4 border transition-all duration-200 flex flex-col justify-between space-y-3 relative',
-                        qty > 0
-                          ? 'border-amber-500/40 bg-amber-500/[0.04] shadow-sm'
-                          : 'bg-slate-50/50 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 hover:border-slate-300',
-                        isOutOfStock && 'opacity-60'
-                      )}
-                    >
-                      {/* Image / Fallback Icon Container */}
-                      <div className="w-full h-28 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 flex items-center justify-center overflow-hidden relative">
-                        {item.image_url ? (
-                          <img
-                            src={item.image_url}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              // Fallback on broken image
-                              (e.target as HTMLElement).style.display = 'none';
-                            }}
-                          />
-                        ) : (
-                          <span className="text-4xl">{getItemIcon(item.category)}</span>
-                        )}
-
-                        {/* Stok Status Badge */}
-                        <div className="absolute top-2 right-2">
-                          {(() => {
-                            const stockBadge = getFoodBankStockBadge(item.current_stock, item.unit);
-                            return (
-                              <span className={cn('px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider shadow-sm', stockBadge.badgeClass)}>
-                                {stockBadge.label}
-                              </span>
-                            );
-                          })()}
-                        </div>
-                      </div>
-
-                      {/* Content */}
-                      <div className="space-y-1.5">
-                        {(() => {
-                          const catConfig = FOODBANK_CATEGORY_CONFIG[item.category] || {
-                            label: item.category,
-                            badge: 'bg-purple-500/10 text-purple-800 dark:text-purple-300 border-purple-500/30',
-                            icon: '📦',
-                          };
-                          return (
-                            <div className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[10px] font-bold tracking-wider', catConfig.badge)}>
-                              <span>{catConfig.icon}</span>
-                              <span>{catConfig.label}</span>
-                            </div>
-                          );
-                        })()}
-                        <h4 className="font-extrabold text-xs text-slate-900 dark:text-white line-clamp-2 leading-snug">
-                          {item.name}
-                        </h4>
-                        {item.description && (
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1">
-                            {item.description}
-                          </p>
-                        )}
-                        <p className="text-[10px] text-slate-400">
-                          Anggaran: RM {(Number(item.estimated_cost) || 0).toFixed(2)} / {item.unit}
-                        </p>
-                      </div>
-
-                      {/* Stepper Buttons */}
-                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                          {qty > 0 ? `${qty} ${item.unit}` : '0 unit'}
-                        </span>
-
-                        <div className="flex items-center gap-1.5">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={qty <= 0 || isSessionClosed}
-                            onClick={() => handleItemQuantityChange(item, -1)}
-                            className="w-7 h-7 p-0 rounded-lg text-xs font-bold"
-                          >
-                            -
-                          </Button>
-                          <span className="w-5 text-center font-mono font-bold text-xs">
-                            {qty}
-                          </span>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={!canAddMore}
-                            onClick={() => handleItemQuantityChange(item, 1)}
-                            className="w-7 h-7 p-0 rounded-lg text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30"
-                          >
-                            +
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* ── Bahagian 4: Lokasi Agihan & Slot Masa Temujanji ── */}
+          {/* ── Bahagian 3: Lokasi Agihan & Slot Waktu Pengambilan ── */}
           <div className="rounded-3xl p-6 sm:p-7 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6">
             <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-xs">
-                4
+                3
               </div>
               <div>
                 <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-                  Lokasi Agihan &amp; Slot Waktu Pengambilan
+                  3. Lokasi Agihan &amp; Slot Waktu Pengambilan
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Pilih pusat edaran dan waktu temujanji untuk menebus bekalan barangan anda.
+                  Pilih pusat edaran dan waktu temujanji terlebih dahulu supaya baki ketersediaan barangan dikemas kini dengan tepat.
                 </p>
               </div>
             </div>
@@ -1451,7 +1363,7 @@ export function KebajikanFoodBankPage() {
                   return (
                     <div
                       key={loc.id}
-                      onClick={() => !isSessionClosed && setSelectedLocationId(loc.id)}
+                      onClick={() => !isSessionClosed && handleLocationChange(loc.id)}
                       className={cn(
                         'p-4 rounded-2xl border cursor-pointer transition-all duration-200 flex flex-col justify-between space-y-3',
                         isSelected
@@ -1570,6 +1482,205 @@ export function KebajikanFoodBankPage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* ── Bahagian 4: Katalog Pilihan Barangan Bebas ── */}
+          <div className="rounded-3xl p-6 sm:p-7 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-xs">
+                  4
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+                    4. Katalog Pilihan Barangan Bebas
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Pilih barangan mengikut keperluan sebenar anda berpandukan baki stok di{' '}
+                    <span className="font-bold text-amber-600 dark:text-amber-400">
+                      {selectedLocationName}
+                    </span>.
+                  </p>
+                </div>
+              </div>
+
+              {/* Bar Carian */}
+              <div className="relative w-full sm:w-64">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Input
+                  placeholder="Cari barangan..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-9 text-xs rounded-xl"
+                />
+              </div>
+            </div>
+
+            {/* Tab Kategori */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide text-xs">
+              {CATEGORY_TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveCategory(tab.id)}
+                  className={cn(
+                    'px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all',
+                    activeCategory === tab.id
+                      ? 'bg-amber-600 text-white shadow-sm'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Grid Katalog Barangan */}
+            {filteredItems.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 text-xs space-y-2">
+                <Package className="w-8 h-8 mx-auto text-slate-300" />
+                <p>Tiada barangan dijumpai dalam kategori ini.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {filteredItems.map((item) => {
+                  const qty = selectedItemQuantities[item.id] || 0;
+                  const availableStock = getItemStockAtSelectedLocation(item.id);
+                  const isOutOfStock = availableStock <= 0;
+                  const altLocName = isOutOfStock ? getAlternativeLocationWithStock(item.id) : null;
+                  const canAddMore =
+                    !isOutOfStock &&
+                    qty < availableStock &&
+                    totalSelectedCount < maxAllowedItems &&
+                    !isSessionClosed;
+
+                  return (
+                    <div
+                      key={item.id}
+                      className={cn(
+                        'rounded-2xl p-4 border transition-all duration-200 flex flex-col justify-between space-y-3 relative',
+                        qty > 0
+                          ? 'border-amber-500/40 bg-amber-500/[0.04] shadow-sm'
+                          : 'bg-slate-50/50 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 hover:border-slate-300',
+                        isOutOfStock && 'opacity-75'
+                      )}
+                    >
+                      {/* Image / Fallback Icon Container */}
+                      <div className="w-full h-28 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 flex items-center justify-center overflow-hidden relative">
+                        {item.image_url ? (
+                          <img
+                            src={item.image_url}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback on broken image
+                              (e.target as HTMLElement).style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <span className="text-4xl">{getItemIcon(item.category)}</span>
+                        )}
+
+                        {/* Stok Status Badge */}
+                        <div className="absolute top-2 right-2">
+                          {(() => {
+                            if (isOutOfStock) {
+                              return (
+                                <span className="px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider shadow-sm bg-rose-500 text-white font-black">
+                                  Habis di pusat ini
+                                </span>
+                              );
+                            }
+                            const stockBadge = getFoodBankStockBadge(availableStock, item.unit);
+                            return (
+                              <span className={cn('px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider shadow-sm', stockBadge.badgeClass)}>
+                                {stockBadge.label}
+                              </span>
+                            );
+                          })()}
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="space-y-1.5">
+                        {(() => {
+                          const catConfig = FOODBANK_CATEGORY_CONFIG[item.category] || {
+                            label: item.category,
+                            badge: 'bg-purple-500/10 text-purple-800 dark:text-purple-300 border-purple-500/30',
+                            icon: '📦',
+                          };
+                          return (
+                            <div className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[10px] font-bold tracking-wider', catConfig.badge)}>
+                              <span>{catConfig.icon}</span>
+                              <span>{catConfig.label}</span>
+                            </div>
+                          );
+                        })()}
+                        <h4 className="font-extrabold text-xs text-slate-900 dark:text-white line-clamp-2 leading-snug">
+                          {item.name}
+                        </h4>
+                        {item.description && (
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1">
+                            {item.description}
+                          </p>
+                        )}
+                        <p className="text-[10px] text-slate-400">
+                          Anggaran: RM {(Number(item.estimated_cost) || 0).toFixed(2)} / {item.unit}
+                        </p>
+
+                        {/* Alternative location hint if out of stock */}
+                        {isOutOfStock && altLocName && (
+                          <div className="pt-1">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-500/10 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-[9px] font-semibold leading-tight">
+                              <Info className="w-3 h-3 shrink-0 text-amber-600 dark:text-amber-400" />
+                              <span>Berbaki di {altLocName} • Tukar lokasi di atas jika perlu</span>
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Stepper Buttons */}
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                          {qty > 0 ? `${qty} ${item.unit}` : '0 unit'}
+                        </span>
+
+                        <div className="flex items-center gap-1.5">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={qty <= 0 || isSessionClosed}
+                            onClick={() => handleItemQuantityChange(item, -1)}
+                            className="w-7 h-7 p-0 rounded-lg text-xs font-bold"
+                          >
+                            -
+                          </Button>
+                          <span className="w-5 text-center font-mono font-bold text-xs">
+                            {qty}
+                          </span>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={!canAddMore}
+                            onClick={() => handleItemQuantityChange(item, 1)}
+                            className={cn(
+                              "w-7 h-7 p-0 rounded-lg text-xs font-bold transition-all",
+                              canAddMore
+                                ? "bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                                : "opacity-40 cursor-not-allowed"
+                            )}
+                          >
+                            +
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* ── Bahagian 5: Perakuan & Butang Penyerahan ── */}
