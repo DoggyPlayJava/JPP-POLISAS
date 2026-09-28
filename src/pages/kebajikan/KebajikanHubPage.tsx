@@ -198,7 +198,7 @@ export function KebajikanHubPage() {
             <Link to="/kebajikan/foodbank" className="w-full block">
               <Button
                 variant="outline"
-                className="w-full h-10 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold rounded-xl text-xs gap-2"
+                className="w-full h-10 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-950/20 hover:border-amber-500/30 font-semibold rounded-xl text-xs gap-2 transition-colors"
               >
                 <QrCode className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span>Semak Pas Pengambilan QR Saya</span>
@@ -244,7 +244,7 @@ export function KebajikanHubPage() {
 
             <Link
               to="/jpp/foodbank"
-              className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-amber-400/40 transition-all flex items-center gap-2.5 text-xs font-semibold text-amber-200"
+              className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-amber-400/40 transition-all flex items-center gap-2.5 text-xs font-semibold text-slate-200 hover:text-amber-300"
             >
               <ShoppingBag className="w-4 h-4 text-amber-400 shrink-0" />
               <span className="truncate">Pusat Kawalan Food Bank</span>
