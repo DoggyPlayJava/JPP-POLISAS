@@ -10,6 +10,9 @@ import {
   FoodBankDistributionLocation,
   FoodBankItem,
   FoodBankApplicationStatus,
+  FoodBankLocationStock,
+  FoodBankOfficer,
+  FoodBankAuditLog,
 } from '@/types';
 
 // ============================================================
@@ -302,3 +305,187 @@ export const DEFAULT_FOODBANK_ITEMS: FoodBankItem[] = [
     created_at: new Date().toISOString(),
   },
 ];
+
+// ============================================================
+// Multi-Location Stocks, Officers & Audit Logs Mock Fallbacks
+// ============================================================
+
+/**
+ * Penjana Mock Baki Stok Mengikut Lokasi Fizikal
+ * Membahagikan stok mengikut nisbah kapasiti pusat edaran (Utama 60%, Kamsis 25%, Lain-lain 15%)
+ */
+export function generateDefaultFoodBankLocationStocks(
+  items: FoodBankItem[] = DEFAULT_FOODBANK_ITEMS,
+  locations: (FoodBankDistributionLocation & { polymaps_building_id?: string })[] = DEFAULT_FOODBANK_LOCATIONS
+): FoodBankLocationStock[] {
+  const stocks: FoodBankLocationStock[] = [];
+
+  items.forEach((item, itemIdx) => {
+    locations.forEach((loc, locIdx) => {
+      let allocated = 0;
+      if (loc.name.includes('Pusat Edaran Utama')) {
+        allocated = Math.ceil(item.current_stock * 0.6);
+      } else if (loc.name.includes('Kamsis')) {
+        allocated = Math.ceil(item.current_stock * 0.25);
+      } else {
+        allocated = Math.max(0, item.current_stock - Math.ceil(item.current_stock * 0.6) - Math.ceil(item.current_stock * 0.25));
+      }
+
+      stocks.push({
+        id: `00000000-0000-0000-0000-${String(2000 + (itemIdx + 1) * 10 + locIdx).padStart(12, '0')}`,
+        item_id: item.id,
+        location_id: loc.id,
+        current_stock: allocated,
+        reorder_level: 10,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        item,
+        location: loc,
+      });
+    });
+  });
+
+  return stocks;
+}
+
+export const DEFAULT_FOODBANK_LOCATION_STOCKS: FoodBankLocationStock[] =
+  generateDefaultFoodBankLocationStocks();
+
+export const DEFAULT_FOODBANK_OFFICERS: FoodBankOfficer[] = [
+  {
+    id: '00000000-0000-0000-0000-000000000201',
+    user_id: '88888888-8888-8888-8888-888888880001',
+    location_id: null, // Semua Lokasi (Floating / Penyelaras Utama)
+    role_title: 'Ketua Penyelaras Agihan Food Bank',
+    is_active: true,
+    assigned_by: '00000000-0000-0000-0000-000000000001',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    user: {
+      id: '88888888-8888-8888-8888-888888880001',
+      full_name: 'Muhammad Farhan bin Razali',
+      email: 'farhan.razali@siswa.polisas.edu.my',
+      student_id: '15DIT23F1001',
+      phone_number: '011-23456789',
+    },
+    location: null,
+  },
+  {
+    id: '00000000-0000-0000-0000-000000000202',
+    user_id: '88888888-8888-8888-8888-888888880002',
+    location_id: '00000000-0000-0000-0000-000000000010', // Pusat Edaran Utama SC
+    role_title: 'Petugas Kaunter Utama',
+    is_active: true,
+    assigned_by: '88888888-8888-8888-8888-888888880001',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    user: {
+      id: '88888888-8888-8888-8888-888888880002',
+      full_name: 'Nurul Ain binti Kamaruddin',
+      email: 'nurulain@siswa.polisas.edu.my',
+      student_id: '15DAT23F1042',
+      phone_number: '012-34567890',
+    },
+    location: DEFAULT_FOODBANK_LOCATIONS[0],
+  },
+  {
+    id: '00000000-0000-0000-0000-000000000203',
+    user_id: '88888888-8888-8888-8888-888888880003',
+    location_id: '00000000-0000-0000-0000-000000000012', // Hab Edaran Kamsis
+    role_title: 'Petugas Hab Kamsis',
+    is_active: true,
+    assigned_by: '88888888-8888-8888-8888-888888880001',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    user: {
+      id: '88888888-8888-8888-8888-888888880003',
+      full_name: 'Ahmad Daniel bin Rosli',
+      email: 'daniel.rosli@siswa.polisas.edu.my',
+      student_id: '15DKM23F1089',
+      phone_number: '013-45678901',
+    },
+    location: DEFAULT_FOODBANK_LOCATIONS[2],
+  },
+  {
+    id: '00000000-0000-0000-0000-000000000204',
+    user_id: '88888888-8888-8888-8888-888888880004',
+    location_id: '00000000-0000-0000-0000-000000000011', // Kaunter Pentadbiran
+    role_title: 'Pembantu Verifikasi & Stok',
+    is_active: true,
+    assigned_by: '88888888-8888-8888-8888-888888880001',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    user: {
+      id: '88888888-8888-8888-8888-888888880004',
+      full_name: 'Siti Nur Aisyah binti Zamri',
+      email: 'aisyah.zamri@siswa.polisas.edu.my',
+      student_id: '15DPR23F1015',
+      phone_number: '014-56789012',
+    },
+    location: DEFAULT_FOODBANK_LOCATIONS[1],
+  },
+];
+
+export const DEFAULT_FOODBANK_AUDIT_LOGS: FoodBankAuditLog[] = [
+  {
+    id: '00000000-0000-0000-0000-000000000301',
+    actor_id: '88888888-8888-8888-8888-888888880001',
+    actor_name: 'Muhammad Farhan (Ketua Penyelaras)',
+    action_type: 'STOCK_TRANSFER',
+    location_id: '00000000-0000-0000-0000-000000000012',
+    target_id: 'Beras Wangi Super Spesial (5kg)',
+    details: {
+      item_name: 'Beras Wangi Super Spesial (5kg)',
+      from_location_name: 'Pusat Edaran Utama JPP (Student Centre)',
+      to_location_name: 'Hab Edaran Kamsis (Kafe Al-Biruni)',
+      quantity: 15,
+      notes: 'Penambahan stok asrama menjelang minggu peperiksaan',
+    },
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+  },
+  {
+    id: '00000000-0000-0000-0000-000000000302',
+    actor_id: '88888888-8888-8888-8888-888888880002',
+    actor_name: 'Nurul Ain (Petugas Kaunter)',
+    action_type: 'PICKUP_VERIFIED',
+    location_id: '00000000-0000-0000-0000-000000000010',
+    target_id: 'FB-2026-0042',
+    details: {
+      application_no: 'FB-2026-0042',
+      student_name: 'Muhammad Alif bin Zulkifli',
+      matric_no: '15DEP23F2005',
+      items_claimed: 4,
+      notes: 'Penebusan pas digital QR disahkan di Kaunter SC',
+    },
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
+  },
+  {
+    id: '00000000-0000-0000-0000-000000000303',
+    actor_id: '88888888-8888-8888-8888-888888880001',
+    actor_name: 'Muhammad Farhan (Ketua Penyelaras)',
+    action_type: 'OFFICER_ASSIGNED',
+    location_id: '00000000-0000-0000-0000-000000000012',
+    target_id: 'Ahmad Daniel bin Rosli',
+    details: {
+      officer_name: 'Ahmad Daniel bin Rosli',
+      role_title: 'Petugas Hab Kamsis',
+      assigned_location: 'Hab Edaran Kamsis (Kafe Al-Biruni)',
+    },
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+  },
+  {
+    id: '00000000-0000-0000-0000-000000000304',
+    actor_id: '88888888-8888-8888-8888-888888880001',
+    actor_name: 'Muhammad Farhan (Ketua Penyelaras)',
+    action_type: 'STOCK_ADJUSTMENT',
+    location_id: '00000000-0000-0000-0000-000000000010',
+    target_id: 'Mi Segera Maggi Kari (5x79g)',
+    details: {
+      item_name: 'Mi Segera Maggi Kari (5x79g)',
+      adjustment: '+50 pek',
+      reason: 'Penerimaan sumbangan korporat sesi 2026',
+    },
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
+  },
+];
+

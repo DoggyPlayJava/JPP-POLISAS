@@ -1423,5 +1423,76 @@ export interface FoodBankBudgetTransaction {
   } | null;
 }
 
+export interface FoodBankLocationStock {
+  id: string;
+  item_id: string;
+  location_id: string;
+  current_stock: number;
+  reorder_level: number;
+  created_at?: string;
+  updated_at?: string;
+  // Relations
+  item?: FoodBankItem | null;
+  location?: FoodBankDistributionLocation | null;
+}
+
+export interface FoodBankOfficer {
+  id: string;
+  user_id: string;
+  location_id?: string | null;
+  role_title: string;
+  is_active: boolean;
+  assigned_by?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  // Relations
+  user?: {
+    id: string;
+    full_name: string;
+    email?: string;
+    student_id?: string | null;
+    phone_number?: string | null;
+    avatar_url?: string | null;
+  } | null;
+  location?: FoodBankDistributionLocation | null;
+  assigner?: {
+    id: string;
+    full_name: string;
+  } | null;
+}
+
+export type FoodBankAuditActionType =
+  | 'STOCK_ADJUSTMENT'
+  | 'STOCK_TRANSFER'
+  | 'APPLICATION_APPROVAL'
+  | 'APPLICATION_REJECTION'
+  | 'PICKUP_VERIFIED'
+  | 'OFFICER_ASSIGNED'
+  | 'OFFICER_REMOVED'
+  | 'SESSION_CONFIG_CHANGED'
+  | 'LOCATION_UPDATED'
+  | string;
+
+export interface FoodBankAuditLog {
+  id: string;
+  actor_id?: string | null;
+  actor_name: string;
+  action_type: FoodBankAuditActionType;
+  location_id?: string | null;
+  target_id?: string | null;
+  details?: Record<string, any>;
+  created_at: string;
+  // Relations
+  actor?: {
+    id: string;
+    full_name: string;
+    email?: string;
+    student_id?: string | null;
+    avatar_url?: string | null;
+  } | null;
+  location?: FoodBankDistributionLocation | null;
+}
+
+
 
 
