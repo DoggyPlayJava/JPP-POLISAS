@@ -46,6 +46,7 @@ export function JppSidebar() {
   const [saving, setSaving]         = useState(false);
   const [assignedUnits, setAssignedUnits] = useState<string[]>([]);
   const [pendingFoodBankCount, setPendingFoodBankCount] = useState<number>(0);
+  const [isFoodBankOfficer, setIsFoodBankOfficer] = useState<boolean>(false);
   // ── Collapsible sub-nav ───────────────────────────────────────────────────
   const [expandedUnits, setExpandedUnits] = useState<Set<string>>(new Set());
   const toggleUnit = (code: string) =>
@@ -63,7 +64,7 @@ export function JppSidebar() {
   const isMT       = !isYDP && JPP_MT_POSITIONS.includes(jppPosition as any);
   const canCustomize = isYDP;
   const canAccessDemerit = isYDP || isSuperAdmin || ['AKADEMIK', 'KPP', 'KK'].includes(profile?.jpp_unit || '');
-  const canAccessFoodBank = isYDP || isSuperAdmin || isMT || profile?.role === 'JPP' || ['KEBAJIKAN', 'KPP', 'KK', 'AKADEMIK', 'HEP'].includes(profile?.jpp_unit || '');
+  const canAccessFoodBank = isYDP || isSuperAdmin || isMT || profile?.role === 'JPP' || ['KEBAJIKAN', 'KPP', 'KK', 'AKADEMIK', 'HEP'].includes(profile?.jpp_unit || '') || isFoodBankOfficer;
 
   // ── Fetch portal theme color ───────────────────────────────────────────
   useEffect(() => {
@@ -102,6 +103,24 @@ export function JppSidebar() {
         if (!error && typeof count === 'number' && isMounted) {
           setPendingFoodBankCount(count);
         }
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id]);
+
+  // ── Semak status keahlian Pegawai Kaunter Food Bank ───────────────────
+  useEffect(() => {
+    if (!user?.id) return;
+    let isMounted = true;
+    supabase
+      .from('foodbank_officers')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data && isMounted) setIsFoodBankOfficer(true);
       });
     return () => {
       isMounted = false;

@@ -56,6 +56,9 @@ import {
   CheckCircle,
   Lock,
   ArrowLeftRight,
+  UserPlus,
+  ShieldAlert,
+  UserCheck,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import confetti from 'canvas-confetti';
@@ -71,6 +74,7 @@ import {
   FoodBankBudgetTransaction,
   PolyMapsBuildingWith360,
   FoodBankLocationStock,
+  FoodBankOfficer,
 } from '@/types';
 import { FoodBankQrPassModal } from '@/components/foodbank/FoodBankQrPassModal';
 import { Link } from 'react-router-dom';
@@ -85,6 +89,7 @@ import {
   getFoodBankStockBadge,
   generateDefaultFoodBankLocationStocks,
   DEFAULT_FOODBANK_LOCATION_STOCKS,
+  DEFAULT_FOODBANK_OFFICERS,
 } from '@/lib/foodbankDefaults';
 
 // Baseline rasmi peruntukan Tabung Food Bank JPP
@@ -102,6 +107,47 @@ export function JppFoodBankAdmin() {
   const [transactions, setTransactions] = useState<FoodBankBudgetTransaction[]>([]);
   const [locations, setLocations] = useState<FoodBankDistributionLocation[]>([]);
   const [buildings, setBuildings] = useState<PolyMapsBuildingWith360[]>([]);
+
+  // ── Pengurusan Pegawai Bertugas & RBAC ──────────────────────────────────────
+  const [officers, setOfficers] = useState<FoodBankOfficer[]>([]);
+  const [officerSearchQuery, setOfficerSearchQuery] = useState('');
+  const [candidateProfiles, setCandidateProfiles] = useState<any[]>([]);
+  const [isSearchingCandidate, setIsSearchingCandidate] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState<any | null>(null);
+  const [officerAssignLocationId, setOfficerAssignLocationId] = useState('');
+  const [officerRoleTitle, setOfficerRoleTitle] = useState('Petugas Kaunter Food Bank');
+  const [isAssigningOfficer, setIsAssigningOfficer] = useState(false);
+
+  // ── Kawalan Akses Berasaskan Peranan (RBAC Gating) ─────────────────────────
+  const isExecutiveAdmin = Boolean(
+    isSuperAdmin || 
+    profile?.role === 'SUPER_ADMIN_JPP' || 
+    profile?.role === 'ADMIN' || 
+    profile?.jpp_position === 'YDP' || 
+    profile?.jpp_unit === 'KEBAJIKAN'
+  );
+
+  const myOfficerRecord = useMemo(() => {
+    if (!user?.id) return null;
+    return officers.find(o => o.user_id === user.id && o.is_active);
+  }, [officers, user?.id]);
+
+  const isAssignedOfficer = Boolean(myOfficerRecord);
+  const assignedLocationId = myOfficerRecord?.location_id || null;
+
+  // Kunci tab untuk bukan pentadbir eksekutif (Tab 3 & 4 hanya untuk eksekutif)
+  useEffect(() => {
+    if (!isExecutiveAdmin && (activeTab === 'budget' || activeTab === 'settings')) {
+      setActiveTab('applications');
+    }
+  }, [isExecutiveAdmin, activeTab]);
+
+  // Kunci atau pilihkan secara lalai lokasi jagaan pegawai dalam Tab Inventori
+  useEffect(() => {
+    if (!isExecutiveAdmin && assignedLocationId) {
+      setSelectedInventoryLocationId(assignedLocationId);
+    }
+  }, [isExecutiveAdmin, assignedLocationId]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -257,6 +303,15 @@ export function JppFoodBankAdmin() {
         supabase
           .from('foodbank_location_stocks')
           .select('*'),
+        supabase
+          .from('foodbank_officers')
+          .select(`
+            *,
+            profile:profiles!user_id(id, full_name, email, student_id, phone_number, department, avatar_url),
+            location:foodbank_distribution_locations!location_id(id, name),
+            assigner:profiles!assigned_by(id, full_name)
+          `)
+          .order('created_at', { ascending: false }),
       ]);
 
       if (settingsRes.error) console.error('Error fetching settings:', settingsRes.error);
@@ -266,6 +321,7 @@ export function JppFoodBankAdmin() {
       if (locationsRes.error) console.error('Error fetching locations:', locationsRes.error);
       if (buildingsRes.error) console.error('Error fetching buildings:', buildingsRes.error);
       if (locStocksRes.error) console.warn('Note/Error fetching location stocks (fallback used):', locStocksRes.error);
+      if (officersRes.error) console.warn('Note/Error fetching foodbank officers (fallback used):', officersRes.error);
 
       const finalSettings = (settingsRes.data as FoodBankSettings) || loadLocalFoodBankSettings();
       setSettings(finalSettings);
@@ -313,6 +369,14 @@ export function JppFoodBankAdmin() {
         panorama_360_url: b.panorama_360_url || getBuilding360Url(b),
       })) as PolyMapsBuildingWith360[];
       setBuildings(enhancedBuildings);
+
+      const finalOfficers = (officersRes.data && officersRes.data.length > 0)
+        ? (officersRes.data as any[]).map((o: any) => ({
+            ...o,
+            user: o.user || o.profile || null,
+          })) as FoodBankOfficer[]
+        : DEFAULT_FOODBANK_OFFICERS;
+      setOfficers(finalOfficers);
     } catch (err: any) {
       console.error('Fatal load error:', err);
       toast.error('Ralat ketika memuat turun data Food Bank.');
@@ -1187,6 +1251,261 @@ export function JppFoodBankAdmin() {
     }
   };
 
+  // ── 10. Tindakan: Carian & Pelantikan Pegawai Bertugas Kaunter ──────────────────
+  useEffect(() => {
+    if (!officerSearchQuery || officerSearchQuery.trim().length < 2) {
+      setCandidateProfiles([]);
+      return;
+    }
+
+    if (selectedCandidate && officerSearchQuery.includes(selectedCandidate.full_name)) {
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearchingCandidate(true);
+      try {
+        const q = officerSearchQuery.trim();
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, full_name, email, student_id, phone_number, department, avatar_url')
+          .or(`student_id.ilike.%${q}%,full_name.ilike.%${q}%`)
+          .limit(8);
+
+        if (error) {
+          console.warn('Profiles search error:', error);
+        }
+        setCandidateProfiles(data || []);
+      } catch (err: any) {
+        console.warn('Candidate search error:', err);
+      } finally {
+        setIsSearchingCandidate(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [officerSearchQuery, selectedCandidate]);
+
+  const handleSelectCandidate = (candidate: any) => {
+    setSelectedCandidate(candidate);
+    setOfficerSearchQuery(`${candidate.full_name} (${candidate.student_id || candidate.email || 'POLISAS'})`);
+    setCandidateProfiles([]);
+  };
+
+  const handleClearCandidate = () => {
+    setSelectedCandidate(null);
+    setOfficerSearchQuery('');
+    setCandidateProfiles([]);
+  };
+
+  const handleAssignOfficer = async () => {
+    if (!selectedCandidate) {
+      toast.error('Sila pilih calon pegawai daripada carian No. Matrik / Nama.');
+      return;
+    }
+    if (!officerRoleTitle.trim()) {
+      toast.error('Sila nyatakan gelaran peranan pegawai.');
+      return;
+    }
+
+    const locId = officerAssignLocationId ? officerAssignLocationId : null;
+
+    // Semak jika calon sudah pun dilantik bagi lokasi tersebut
+    const alreadyAssigned = officers.some(
+      o => o.user_id === selectedCandidate.id && (o.location_id || null) === locId
+    );
+    if (alreadyAssigned) {
+      toast.error('Pegawai ini sudah pun dilantik bagi lokasi tersebut.');
+      return;
+    }
+
+    setIsAssigningOfficer(true);
+    const assignedLocName = locId
+      ? locations.find(l => l.id === locId)?.name || 'Pusat Edaran Khusus'
+      : 'Semua Pusat Edaran (Floating)';
+
+    try {
+      const { data, error } = await supabase
+        .from('foodbank_officers')
+        .insert({
+          user_id: selectedCandidate.id,
+          location_id: locId,
+          role_title: officerRoleTitle.trim(),
+          is_active: true,
+          assigned_by: user?.id || null,
+        })
+        .select(`
+          *,
+          profile:profiles!user_id(id, full_name, email, student_id, phone_number, department, avatar_url),
+          location:foodbank_distribution_locations!location_id(id, name),
+          assigner:profiles!assigned_by(id, full_name)
+        `)
+        .single();
+
+      if (error) throw error;
+
+      // Log audit action
+      try {
+        await supabase.from('foodbank_audit_logs').insert({
+          actor_id: user?.id,
+          actor_name: profile?.full_name || 'Pentadbir Eksekutif JPP',
+          action_type: 'OFFICER_ASSIGNED',
+          location_id: locId,
+          target_id: selectedCandidate.student_id || selectedCandidate.full_name,
+          details: {
+            officer_user_id: selectedCandidate.id,
+            officer_name: selectedCandidate.full_name,
+            matric_no: selectedCandidate.student_id,
+            role_title: officerRoleTitle.trim(),
+            assigned_location: assignedLocName,
+          },
+        });
+      } catch (auditErr) {
+        console.warn('Audit log insert note:', auditErr);
+      }
+
+      toast.success(`Berjaya melantik ${selectedCandidate.full_name} sebagai ${officerRoleTitle.trim()}! 🎉`);
+      handleClearCandidate();
+      setOfficerAssignLocationId('');
+      setOfficerRoleTitle('Petugas Kaunter Food Bank');
+      await fetchAllData(true);
+    } catch (err: any) {
+      console.error('Assign officer error, fallback local:', err);
+      const newOfficer: FoodBankOfficer = {
+        id: `off-${Date.now()}`,
+        user_id: selectedCandidate.id,
+        location_id: locId,
+        role_title: officerRoleTitle.trim(),
+        is_active: true,
+        assigned_by: user?.id,
+        created_at: new Date().toISOString(),
+        user: {
+          id: selectedCandidate.id,
+          full_name: selectedCandidate.full_name,
+          email: selectedCandidate.email,
+          student_id: selectedCandidate.student_id,
+          phone_number: selectedCandidate.phone_number,
+          avatar_url: selectedCandidate.avatar_url,
+        },
+        location: locations.find(l => l.id === locId) || null,
+      };
+      setOfficers(prev => [newOfficer, ...prev]);
+
+      try {
+        await supabase.from('foodbank_audit_logs').insert({
+          actor_id: user?.id,
+          actor_name: profile?.full_name || 'Pentadbir Eksekutif JPP',
+          action_type: 'OFFICER_ASSIGNED',
+          location_id: locId,
+          target_id: selectedCandidate.student_id || selectedCandidate.full_name,
+          details: {
+            officer_user_id: selectedCandidate.id,
+            officer_name: selectedCandidate.full_name,
+            matric_no: selectedCandidate.student_id,
+            role_title: officerRoleTitle.trim(),
+            assigned_location: assignedLocName,
+            is_offline: true,
+          },
+        });
+      } catch (e) {
+        // silent
+      }
+
+      toast.success(`(Mod Tempatan) Berjaya melantik ${selectedCandidate.full_name}! 🎉`);
+      handleClearCandidate();
+      setOfficerAssignLocationId('');
+      setOfficerRoleTitle('Petugas Kaunter Food Bank');
+    } finally {
+      setIsAssigningOfficer(false);
+    }
+  };
+
+  const handleToggleOfficerStatus = async (officer: FoodBankOfficer) => {
+    const newStatus = !officer.is_active;
+    try {
+      const { error } = await supabase
+        .from('foodbank_officers')
+        .update({
+          is_active: newStatus,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', officer.id);
+
+      if (error) throw error;
+
+      setOfficers(prev =>
+        prev.map(o => (o.id === officer.id ? { ...o, is_active: newStatus } : o))
+      );
+
+      try {
+        await supabase.from('foodbank_audit_logs').insert({
+          actor_id: user?.id,
+          actor_name: profile?.full_name || 'Pentadbir Eksekutif JPP',
+          action_type: newStatus ? 'OFFICER_ASSIGNED' : 'OFFICER_REMOVED',
+          location_id: officer.location_id,
+          target_id: officer.user?.student_id || officer.user?.full_name || officer.id,
+          details: {
+            officer_id: officer.id,
+            officer_name: officer.user?.full_name,
+            new_status: newStatus ? 'AKTIF' : 'TIDAK_AKTIF',
+            action: newStatus ? 'Mengaktifkan semula pegawai' : 'Menyahaktifkan status pegawai',
+          },
+        });
+      } catch (e) {
+        // silent
+      }
+
+      toast.success(`Status ${officer.user?.full_name || 'pegawai'} kini ${newStatus ? 'AKTIF' : 'TIDAK AKTIF'}.`);
+    } catch (err: any) {
+      console.error('Toggle officer error:', err);
+      setOfficers(prev =>
+        prev.map(o => (o.id === officer.id ? { ...o, is_active: newStatus } : o))
+      );
+      toast.success(`(Mod Tempatan) Status pegawai dikemaskini: ${newStatus ? 'AKTIF' : 'TIDAK AKTIF'}.`);
+    }
+  };
+
+  const handleRemoveOfficer = async (officer: FoodBankOfficer) => {
+    const officerName = officer.user?.full_name || 'Pegawai';
+    if (!window.confirm(`Adakah anda pasti ingin membatalkan lantikan pegawai "${officerName}"?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('foodbank_officers')
+        .delete()
+        .eq('id', officer.id);
+
+      if (error) throw error;
+
+      try {
+        await supabase.from('foodbank_audit_logs').insert({
+          actor_id: user?.id,
+          actor_name: profile?.full_name || 'Pentadbir Eksekutif JPP',
+          action_type: 'OFFICER_REMOVED',
+          location_id: officer.location_id,
+          target_id: officer.user?.student_id || officer.user?.full_name || officer.id,
+          details: {
+            officer_id: officer.id,
+            officer_name: officerName,
+            role_title: officer.role_title,
+            location_name: officer.location?.name || 'Semua Pusat Edaran (Floating)',
+          },
+        });
+      } catch (auditErr) {
+        console.warn('Audit log note:', auditErr);
+      }
+
+      setOfficers(prev => prev.filter(o => o.id !== officer.id));
+      toast.success(`Lantikan ${officerName} telah dibatalkan.`);
+    } catch (err: any) {
+      console.error('Delete officer error:', err);
+      setOfficers(prev => prev.filter(o => o.id !== officer.id));
+      toast.success(`(Mod Tempatan) Lantikan ${officerName} telah dibatalkan.`);
+    }
+  };
+
   // ── Penapis Senarai Permohonan (Tab 1) ─────────────────────────────────────
   const filteredApplications = useMemo(() => {
     return applications.filter(app => {
@@ -1259,11 +1578,17 @@ export function JppFoodBankAdmin() {
                 <HeartHandshake className="w-5 h-5" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
                   Food Bank JPP Command Center
                   <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/20">
-                    Admin
+                    {isExecutiveAdmin ? 'Admin Eksekutif' : (myOfficerRecord?.role_title || 'Petugas Kaunter')}
                   </span>
+                  {myOfficerRecord?.location && !isExecutiveAdmin && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                      <MapPin className="w-3 h-3 text-amber-600" />
+                      {myOfficerRecord.location.name}
+                    </span>
+                  )}
                 </h1>
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                   Pusat Kawalan Agihan Bantuan Makanan & Keperluan Asas Mahasiswa POLISAS
@@ -1275,33 +1600,45 @@ export function JppFoodBankAdmin() {
           {/* Kawalan Pantas Sesi & Butang Refresh */}
           <div className="flex items-center gap-3 flex-wrap">
             {/* Suis Status Sesi */}
-            <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-2xl bg-white dark:bg-white/5 border border-rose-200/80 dark:border-white/10 shadow-sm">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Sesi Pelajar:
-              </span>
-              <button
-                type="button"
-                onClick={handleToggleSession}
-                className={cn(
-                  'px-3 py-1 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-sm',
-                  settings?.is_application_open
-                    ? 'bg-emerald-500 text-white hover:bg-emerald-600'
-                    : 'bg-rose-500/20 text-rose-700 dark:text-rose-300 hover:bg-rose-500/30'
-                )}
-              >
-                {settings?.is_application_open ? (
-                  <>
-                    <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-                    Buka
-                  </>
-                ) : (
-                  <>
-                    <Lock className="w-3 h-3" />
-                    Tutup
-                  </>
-                )}
-              </button>
-            </div>
+            {isExecutiveAdmin ? (
+              <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-2xl bg-white dark:bg-white/5 border border-rose-200/80 dark:border-white/10 shadow-sm">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Sesi Pelajar:
+                </span>
+                <button
+                  type="button"
+                  onClick={handleToggleSession}
+                  className={cn(
+                    'px-3 py-1 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-sm',
+                    settings?.is_application_open
+                      ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                      : 'bg-rose-500/20 text-rose-700 dark:text-rose-300 hover:bg-rose-500/30'
+                  )}
+                >
+                  {settings?.is_application_open ? (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                      Buka
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-3 h-3" />
+                      Tutup
+                    </>
+                  )}
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm text-xs font-bold text-slate-600 dark:text-slate-400">
+                <span>Status Sesi:</span>
+                <span className={cn(
+                  "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase",
+                  settings?.is_application_open ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : "bg-rose-500/15 text-rose-700 dark:text-rose-300"
+                )}>
+                  {settings?.is_application_open ? 'Dibuka' : 'Ditutup'}
+                </span>
+              </div>
+            )}
 
             {/* Butang Refresh */}
             <button
@@ -1471,16 +1808,24 @@ export function JppFoodBankAdmin() {
               badge: items.filter(i => i.current_stock < 10).length > 0 ? 'Stok Rendah' : null,
               badgeColor: 'bg-rose-500 text-white',
             },
-            {
-              id: 'budget',
-              label: 'Bajet & Lejar Audit (RM70k)',
-              icon: Receipt,
-            },
-            {
-              id: 'settings',
-              label: 'Tetapan Sesi & Lokasi',
-              icon: Sliders,
-            },
+            ...(isExecutiveAdmin
+              ? [
+                  {
+                    id: 'budget',
+                    label: 'Bajet & Lejar Audit (RM70k)',
+                    icon: Receipt,
+                    badge: null,
+                    badgeColor: '',
+                  },
+                  {
+                    id: 'settings',
+                    label: 'Tetapan Sesi & Pegawai',
+                    icon: Sliders,
+                    badge: null,
+                    badgeColor: '',
+                  },
+                ]
+              : []),
           ].map(tab => (
             <button
               key={tab.id}
@@ -1874,18 +2219,24 @@ export function JppFoodBankAdmin() {
                     <select
                       value={selectedInventoryLocationId}
                       onChange={e => setSelectedInventoryLocationId(e.target.value)}
-                      className="w-full pl-9 pr-7 py-2 rounded-xl text-xs font-bold bg-amber-500/5 dark:bg-white/5 border border-amber-300/60 dark:border-white/10 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer appearance-none"
+                      disabled={!isExecutiveAdmin && !!assignedLocationId}
+                      className={cn(
+                        "w-full pl-9 pr-7 py-2 rounded-xl text-xs font-bold bg-amber-500/5 dark:bg-white/5 border border-amber-300/60 dark:border-white/10 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer appearance-none",
+                        !isExecutiveAdmin && !!assignedLocationId && "opacity-80 cursor-not-allowed bg-slate-100 dark:bg-white/5"
+                      )}
                     >
-                      <option value="SEMUA" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold">
-                        Semua Pusat Edaran (Agregat)
-                      </option>
+                      {isExecutiveAdmin && (
+                        <option value="SEMUA" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold">
+                          Semua Pusat Edaran (Agregat)
+                        </option>
+                      )}
                       {locations.map(loc => (
                         <option
                           key={loc.id}
                           value={loc.id}
                           className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium"
                         >
-                          {loc.name}
+                          {loc.name} {!isExecutiveAdmin && loc.id === assignedLocationId ? ' (Lokasi Jagaan Anda)' : ''}
                         </option>
                       ))}
                     </select>
@@ -2165,7 +2516,7 @@ export function JppFoodBankAdmin() {
           {/* ════════════════════════════════════════════════════════════════════
               TAB 3: PENJEJAKAN BAJET & LEJAR AUDIT (RM70,000)
              ════════════════════════════════════════════════════════════════════ */}
-          {activeTab === 'budget' && (
+          {activeTab === 'budget' && isExecutiveAdmin && (
             <motion.div
               key="tab-budget"
               initial={{ opacity: 0, y: 8 }}
@@ -2338,7 +2689,7 @@ export function JppFoodBankAdmin() {
           {/* ════════════════════════════════════════════════════════════════════
               TAB 4: TETAPAN SESI, FORMULA KUOTA & LOKASI PENGAGIHAN
              ════════════════════════════════════════════════════════════════════ */}
-          {activeTab === 'settings' && (
+          {activeTab === 'settings' && isExecutiveAdmin && (
             <motion.div
               key="tab-settings"
               initial={{ opacity: 0, y: 8 }}
@@ -2600,6 +2951,324 @@ export function JppFoodBankAdmin() {
                   <p className="text-[11px] text-rose-800/80 dark:text-rose-300/80 mt-1">
                     Setiap pusat agihan dihubungkan secara terus ke sistem peta 360° POLISAS untuk membolehkan mahasiswa mencari arah kaunter fizikal tanpa sesat.
                   </p>
+                </div>
+              </div>
+
+              {/* ── SEKSYEN BAHARU: Pengurusan & Pelantikan Pegawai Bertugas Kaunter ── */}
+              <div className="col-span-full p-6 rounded-3xl bg-white dark:bg-white/[0.03] border border-amber-200/80 dark:border-white/10 shadow-sm space-y-6">
+                {/* Header Seksyen */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-100 dark:border-white/10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-sm">
+                      <Users className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30">
+                          Akses Kaunter & RBAC
+                        </span>
+                        <span className="text-xs text-slate-400 font-bold">
+                          {officers.length} Pegawai Dilantik ({officers.filter(o => o.is_active).length} Aktif)
+                        </span>
+                      </div>
+                      <h2 className="text-xl font-black text-slate-900 dark:text-white mt-0.5">
+                        Pengurusan & Pelantikan Pegawai Bertugas Kaunter
+                      </h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Lantik staf atau mahasiswa POLISAS bertugas bagi menguruskan imbasan pas QR dan stok edaran.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  {/* ── Kolum Kiri / Borang Carian & Lantikan (5 Kolum) ── */}
+                  <div className="lg:col-span-5 space-y-4 bg-slate-50/70 dark:bg-white/[0.02] p-5 rounded-2xl border border-slate-200/60 dark:border-white/5">
+                    <div className="flex items-center gap-2">
+                      <UserPlus className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                      <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                        Borang Lantikan Pegawai Baharu
+                      </h3>
+                    </div>
+
+                    {/* Carian No. Matrik / Nama dari profiles */}
+                    <div className="space-y-1.5 relative">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Cari Calon Pegawai (No. Matrik / Nama) *
+                      </label>
+                      <div className="relative">
+                        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="text"
+                          value={officerSearchQuery}
+                          onChange={e => {
+                            setOfficerSearchQuery(e.target.value);
+                            if (selectedCandidate) setSelectedCandidate(null);
+                          }}
+                          placeholder="Cari '15DIT...' atau nama..."
+                          className="w-full pl-9 pr-9 py-2.5 rounded-xl text-xs font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"
+                        />
+                        {officerSearchQuery && (
+                          <button
+                            type="button"
+                            onClick={handleClearCandidate}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Loading Indicator */}
+                      {isSearchingCandidate && (
+                        <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1.5 mt-1">
+                          <RefreshCw className="w-3 h-3 animate-spin" />
+                          Mencari profil pelajar / staf POLISAS...
+                        </p>
+                      )}
+
+                      {/* Dropdown Hasil Carian Profiles */}
+                      {!selectedCandidate && candidateProfiles.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 z-20 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-slate-900 rounded-2xl border border-amber-200 dark:border-white/10 shadow-xl divide-y divide-slate-100 dark:divide-white/5">
+                          {candidateProfiles.map(candidate => (
+                            <button
+                              key={candidate.id}
+                              type="button"
+                              onClick={() => handleSelectCandidate(candidate)}
+                              className="w-full text-left p-2.5 hover:bg-amber-50 dark:hover:bg-white/10 transition-colors flex items-center gap-2.5 text-xs group"
+                            >
+                              <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 font-black flex items-center justify-center shrink-0 border border-amber-500/20">
+                                {candidate.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-bold text-slate-900 dark:text-white group-hover:text-amber-700 dark:group-hover:text-amber-300 truncate">
+                                  {candidate.full_name}
+                                </p>
+                                <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                                  {candidate.student_id ? `${candidate.student_id} • ` : ''}
+                                  {candidate.department || candidate.email || 'Pelajar POLISAS'}
+                                </p>
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-amber-600 shrink-0" />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Calon Terpilih Card Preview */}
+                      {selectedCandidate && (
+                        <div className="mt-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white font-black flex items-center justify-center shrink-0">
+                              <Check className="w-4 h-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-black text-slate-900 dark:text-white truncate">
+                                {selectedCandidate.full_name}
+                              </p>
+                              <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold truncate">
+                                {selectedCandidate.student_id || selectedCandidate.email}
+                                {selectedCandidate.department ? ` • ${selectedCandidate.department}` : ''}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleClearCandidate}
+                            className="text-[11px] font-bold text-rose-600 hover:underline shrink-0 ml-2"
+                          >
+                            Tukar
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Pilihan Lokasi Penugasan */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Pusat Pengagihan Bertugas *
+                      </label>
+                      <select
+                        value={officerAssignLocationId}
+                        onChange={e => setOfficerAssignLocationId(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm cursor-pointer"
+                      >
+                        <option value="">🌐 Semua Pusat Edaran (Floating / Merentas Lokasi)</option>
+                        {locations.map(loc => (
+                          <option key={loc.id} value={loc.id}>
+                            📍 {loc.name}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                        Pegawai terapung (Floating) boleh menguruskan imbasan di mana-mana kaunter aktif.
+                      </p>
+                    </div>
+
+                    {/* Gelaran Peranan */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Gelaran Peranan / Jawatan *
+                      </label>
+                      <input
+                        type="text"
+                        value={officerRoleTitle}
+                        onChange={e => setOfficerRoleTitle(e.target.value)}
+                        placeholder="cth: Petugas Kaunter Food Bank, Ketua Penyelaras"
+                        className="w-full px-3 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"
+                      />
+                    </div>
+
+                    {/* Butang Lantik Pegawai */}
+                    <button
+                      type="button"
+                      onClick={handleAssignOfficer}
+                      disabled={isAssigningOfficer || !selectedCandidate}
+                      className={cn(
+                        "w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm",
+                        selectedCandidate && !isAssigningOfficer
+                          ? "bg-amber-600 hover:bg-amber-500 text-white shadow-amber-600/20"
+                          : "bg-slate-200 dark:bg-white/10 text-slate-400 cursor-not-allowed"
+                      )}
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      {isAssigningOfficer ? 'Memproses Lantikan...' : 'Lantik Sebagai Pegawai Bertugas'}
+                    </button>
+                  </div>
+
+                  {/* ── Kolum Kanan / Senarai Pegawai Dilantik (7 Kolum) ── */}
+                  <div className="lg:col-span-7 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                        Senarai Pegawai Bertugas
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 font-bold">
+                          {officers.length}
+                        </span>
+                      </h3>
+                    </div>
+
+                    {officers.length === 0 ? (
+                      <div className="p-8 text-center rounded-2xl border border-dashed border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.01]">
+                        <Users className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                        <p className="text-xs font-bold text-slate-600 dark:text-slate-400">
+                          Tiada pegawai bertugas dilantik setakat ini.
+                        </p>
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                          Gunakan borang carian di sebelah untuk melantik petugas kaunter Food Bank.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2.5 max-h-[520px] overflow-y-auto pr-1">
+                        {officers.map(officer => {
+                          const officerUser = officer.user || (officer as any).profile;
+                          const assignedLoc = locations.find(l => l.id === officer.location_id) || officer.location;
+
+                          return (
+                            <div
+                              key={officer.id}
+                              className={cn(
+                                "p-3.5 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-sm",
+                                officer.is_active
+                                  ? "bg-white dark:bg-white/[0.02] border-slate-200/80 dark:border-white/10"
+                                  : "bg-slate-50 dark:bg-white/[0.01] border-slate-200/40 dark:border-white/5 opacity-60"
+                              )}
+                            >
+                              <div className="flex items-start gap-3 min-w-0">
+                                <div className={cn(
+                                  "w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 border relative",
+                                  officer.is_active
+                                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
+                                    : "bg-slate-200 dark:bg-white/10 text-slate-500 border-transparent"
+                                )}>
+                                  {officerUser?.full_name?.charAt(0)?.toUpperCase() || 'P'}
+                                  {officer.is_active && (
+                                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 absolute -bottom-0.5 -right-0.5" />
+                                  )}
+                                </div>
+                                <div className="min-w-0 space-y-0.5">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <h4 className="font-black text-slate-900 dark:text-white truncate">
+                                      {officerUser?.full_name || 'Pegawai Bertugas'}
+                                    </h4>
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300">
+                                      {officer.role_title}
+                                    </span>
+                                  </div>
+
+                                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                                    {officerUser?.student_id && <span className="font-mono font-bold text-slate-700 dark:text-slate-300 mr-2">{officerUser.student_id}</span>}
+                                    {officerUser?.email && <span>{officerUser.email}</span>}
+                                    {officerUser?.phone_number && <span className="ml-1.5">• {officerUser.phone_number}</span>}
+                                  </p>
+
+                                  <div className="flex items-center gap-2 pt-1 flex-wrap">
+                                    {assignedLoc ? (
+                                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20">
+                                        <MapPin className="w-3 h-3 text-amber-600 shrink-0" />
+                                        {assignedLoc.name}
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg bg-sky-500/10 text-sky-800 dark:text-sky-300 border border-sky-500/20">
+                                        <Sparkles className="w-3 h-3 text-sky-600 shrink-0" />
+                                        Semua Pusat Edaran (Floating)
+                                      </span>
+                                    )}
+
+                                    <span className={cn(
+                                      "text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded",
+                                      officer.is_active
+                                        ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                                        : "bg-rose-500/15 text-rose-700 dark:text-rose-300"
+                                    )}>
+                                      {officer.is_active ? 'Aktif' : 'Nyahaktif'}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Butang Tindakan Pegawai */}
+                              <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                                {/* Suis Toggle Status */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleOfficerStatus(officer)}
+                                  title={officer.is_active ? 'Nyahaktifkan pegawai' : 'Aktifkan semula pegawai'}
+                                  className={cn(
+                                    "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border flex items-center gap-1",
+                                    officer.is_active
+                                      ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-300 hover:bg-rose-500/10 hover:border-rose-500/20 hover:text-rose-700"
+                                      : "bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 hover:bg-emerald-500/10 hover:text-emerald-700"
+                                  )}
+                                >
+                                  {officer.is_active ? (
+                                    <>
+                                      <CheckCircle2 className="w-3 h-3" />
+                                      Aktif
+                                    </>
+                                  ) : (
+                                    <>
+                                      <XCircle className="w-3 h-3" />
+                                      Nyahaktif
+                                    </>
+                                  )}
+                                </button>
+
+                                {/* Butang Padam / Hapus Lantikan */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveOfficer(officer)}
+                                  title="Hapus lantikan pegawai"
+                                  className="p-1.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/20 transition-colors"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </motion.div>
