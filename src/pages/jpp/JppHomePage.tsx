@@ -26,7 +26,7 @@ function StatCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="flex-1 min-w-0 rounded-2xl p-4 border border-white/5 bg-white/[0.03] hover:bg-white/[0.06] transition-all"
+      className="flex-1 min-w-0 rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.03] hover:border-slate-300 dark:hover:bg-white/[0.06] shadow-sm dark:shadow-none transition-all"
     >
       <div
         className="w-9 h-9 rounded-xl flex items-center justify-center mb-3"
@@ -34,8 +34,8 @@ function StatCard({
       >
         <Icon className="w-4 h-4" style={{ color }} />
       </div>
-      <p className="text-2xl font-black text-white leading-none">{value}</p>
-      <p className="text-[10px] font-black uppercase tracking-[0.15em] text-white/40 mt-1">{label}</p>
+      <p className="text-2xl font-black text-slate-900 dark:text-white leading-none">{value}</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-white/40 mt-1">{label}</p>
     </motion.div>
   );
 }
@@ -58,10 +58,10 @@ function UnitCard({
       transition={{ delay, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
       onClick={() => canOpen && onNavigate(`/jpp/unit/${code.toLowerCase()}`)}
       className={cn(
-        'relative rounded-[1.75rem] border overflow-hidden transition-all duration-500 p-5',
+        'relative rounded-[1.75rem] border overflow-hidden transition-all duration-500 p-5 shadow-sm dark:shadow-none',
         canOpen
-          ? 'cursor-pointer hover:border-white/15 bg-white/[0.03] border-white/[0.06] group'
-          : 'cursor-default bg-white/[0.015] border-white/[0.03] opacity-60'
+          ? 'cursor-pointer border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] hover:border-slate-300 dark:hover:border-white/15 hover:shadow-md group'
+          : 'cursor-default bg-slate-50 dark:bg-white/[0.015] border-slate-200 dark:border-white/[0.03] opacity-60'
       )}
       style={{ minHeight: 140 }}
     >
@@ -81,7 +81,7 @@ function UnitCard({
             style={{ background: hexToRgba(cfg.color, 0.15), border: `1px solid ${hexToRgba(cfg.color, 0.2)}` }}
           >
             {isLocked
-              ? <Lock className="w-4 h-4 text-white/20" />
+              ? <Lock className="w-4 h-4 text-slate-400 dark:text-white/20" />
               : <cfg.icon className="w-5 h-5" style={{ color: cfg.color }} />
             }
           </div>
@@ -90,14 +90,14 @@ function UnitCard({
           <div className={cn(
             'px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border',
             cfg.isActive && !isLocked
-              ? 'bg-emerald-500/15 border-emerald-500/25 text-emerald-400'
+              ? 'bg-emerald-500/10 dark:bg-emerald-500/15 border-emerald-500/20 dark:border-emerald-500/25 text-emerald-600 dark:text-emerald-400'
               : cfg.isActive
-                ? 'bg-blue-500/10 border-blue-500/15 text-blue-400'
-                : 'bg-white/5 border-white/10 text-white/25'
+                ? 'bg-blue-500/10 border-blue-500/20 dark:border-blue-500/15 text-blue-600 dark:text-blue-400'
+                : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-400 dark:text-white/25'
           )}>
             {!cfg.isActive ? 'Akan Datang' : isLocked ? 'Pantau' : (
               <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                 Aktif
               </span>
             )}
@@ -107,11 +107,11 @@ function UnitCard({
         <div>
           <h3 className={cn(
             'font-black text-base leading-tight',
-            canOpen ? 'text-white' : 'text-white/40'
+            canOpen ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-white/40'
           )}>
             {cfg.shortLabel}
           </h3>
-          <p className="text-[11px] text-white/35 mt-0.5 leading-relaxed line-clamp-2">
+          <p className="text-[11px] text-slate-500 dark:text-white/35 mt-0.5 leading-relaxed line-clamp-2">
             {cfg.fullLabel}
           </p>
         </div>
@@ -138,15 +138,15 @@ function TakwimCard({ event, delay }: { event: any; delay: number }) {
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay, duration: 0.4 }}
-      className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.06] transition-all"
+      className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] hover:bg-slate-50 dark:hover:bg-white/[0.06] shadow-sm dark:shadow-none transition-all"
     >
       <div className={cn(
         'w-2 h-2 rounded-full flex-shrink-0',
-        isOngoing ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.7)]' : 'bg-white/20'
+        isOngoing ? 'bg-emerald-500 dark:bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.7)]' : 'bg-slate-300 dark:bg-white/20'
       )} />
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-black text-white/80 truncate">{event.title}</p>
-        <p className="text-[10px] text-white/35 font-bold mt-0.5">
+        <p className="text-xs font-black text-slate-800 dark:text-white/80 truncate">{event.title}</p>
+        <p className="text-[10px] text-slate-500 dark:text-white/35 font-bold mt-0.5">
           {event.start_date
             ? format(new Date(event.start_date), 'dd MMM yyyy', { locale: ms })
             : '—'
@@ -154,7 +154,7 @@ function TakwimCard({ event, delay }: { event: any; delay: number }) {
         </p>
       </div>
       {isOngoing && (
-        <span className="text-[8px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-full flex-shrink-0">
+        <span className="text-[8px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/15 px-2 py-0.5 rounded-full flex-shrink-0">
           Aktif
         </span>
       )}
@@ -243,7 +243,7 @@ export function JppHomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white overflow-x-hidden">
+    <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white overflow-x-hidden transition-colors">
 
       {/* Background glow */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
@@ -265,7 +265,7 @@ export function JppHomePage() {
           {/* Badge */}
           <div className="flex items-center gap-2">
             <div
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest shadow-sm dark:shadow-none"
               style={{
                 background: hexToRgba(themeColor, 0.12),
                 borderColor: hexToRgba(themeColor, 0.25),
@@ -284,7 +284,7 @@ export function JppHomePage() {
 
             {/* Git Hash Badge */}
             <div
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-widest bg-amber-500/10 border-amber-500/20 text-amber-500"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-widest bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-500 shadow-sm dark:shadow-none"
               title="Current Build Hash"
             >
               <div className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
@@ -293,14 +293,14 @@ export function JppHomePage() {
           </div>
 
           {/* Greeting */}
-          <h1 className="text-4xl md:text-5xl font-black leading-tight tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
             Selamat datang,{' '}
             <span className="text-transparent bg-clip-text"
               style={{ backgroundImage: `linear-gradient(135deg, ${themeColor}, #e11d48)` }}>
               {displayName}
             </span>
           </h1>
-          <p className="text-white/40 text-sm font-medium max-w-lg leading-relaxed">
+          <p className="text-slate-600 dark:text-white/40 text-sm font-medium max-w-lg leading-relaxed">
             Portal Ibu Pejabat JPP Politeknik Sultan Haji Ahmad Shah. Urus dan pantau semua unit exco dari sini.
           </p>
         </motion.div>
@@ -318,9 +318,9 @@ export function JppHomePage() {
         {/* ── Unit Exco Grid ───────────────────────────────────────────── */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-black uppercase tracking-[0.25em] text-white/40">Unit Exco</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">Unit Exco</h2>
             {(isYDP || isMT) && (
-              <span className="text-[9px] font-black uppercase tracking-widest text-white/20">
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">
                 {isYDP ? 'Akses Penuh' : `${assignedUnits.length} unit assigned`}
               </span>
             )}
@@ -328,8 +328,8 @@ export function JppHomePage() {
 
           {visibleUnits.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <Lock className="w-8 h-8 text-white/10 mb-3" />
-              <p className="text-xs font-black text-white/20 uppercase tracking-widest">
+              <Lock className="w-8 h-8 text-slate-300 dark:text-white/10 mb-3" />
+              <p className="text-xs font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">
                 Tiada unit yang di-assign
               </p>
             </div>
@@ -356,21 +356,21 @@ export function JppHomePage() {
         {/* ── Takwim Terkini ────────────────────────────────────────────── */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-black uppercase tracking-[0.25em] text-white/40">
+            <h2 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">
               Aktiviti Akan Datang
             </h2>
             <button
               onClick={() => navigate('/aktiviti')}
-              className="text-[10px] font-black uppercase tracking-widest text-white/25 hover:text-white/50 transition-colors flex items-center gap-1"
+              className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/25 hover:text-slate-800 dark:hover:text-white/50 transition-colors flex items-center gap-1"
             >
               Lihat Semua <ChevronRight className="w-3 h-3" />
             </button>
           </div>
 
           {takwim.length === 0 ? (
-            <div className="flex items-center gap-3 px-4 py-5 rounded-2xl bg-white/[0.02] border border-white/5">
-              <Clock className="w-4 h-4 text-white/15" />
-              <p className="text-xs font-black text-white/20 uppercase tracking-widest">Tiada aktiviti dijadualkan</p>
+            <div className="flex items-center gap-3 px-4 py-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none">
+              <Clock className="w-4 h-4 text-slate-400 dark:text-white/15" />
+              <p className="text-xs font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">Tiada aktiviti dijadualkan</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -384,7 +384,7 @@ export function JppHomePage() {
         {/* ── Quick Actions (YDP only) ────────────────────────────────── */}
         {(isYDP) && (
           <div className="space-y-4">
-            <h2 className="text-xs font-black uppercase tracking-[0.25em] text-white/40">Tindakan Pantas</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">Tindakan Pantas</h2>
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: 'Ahli JPP',       icon: Users,      href: '/jpp/members',    color: themeColor },
@@ -394,14 +394,14 @@ export function JppHomePage() {
                 <button
                   key={href}
                   onClick={() => navigate(href)}
-                  className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.07] hover:border-white/10 transition-all group text-left"
+                  className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] hover:bg-slate-50 dark:hover:bg-white/[0.07] hover:border-slate-300 dark:hover:border-white/10 shadow-sm dark:shadow-none transition-all group text-left"
                 >
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{ background: hexToRgba(color, 0.15) }}>
                     <Icon className="w-4 h-4" style={{ color }} />
                   </div>
-                  <span className="text-xs font-black text-white/60 group-hover:text-white/80 transition-colors">{label}</span>
-                  <ExternalLink className="w-3 h-3 text-white/20 ml-auto flex-shrink-0 group-hover:text-white/40 transition-colors" />
+                  <span className="text-xs font-black text-slate-700 dark:text-white/60 group-hover:text-slate-900 dark:group-hover:text-white/80 transition-colors">{label}</span>
+                  <ExternalLink className="w-3 h-3 text-slate-400 dark:text-white/20 ml-auto flex-shrink-0 group-hover:text-slate-600 dark:group-hover:text-white/40 transition-colors" />
                 </button>
               ))}
             </div>
