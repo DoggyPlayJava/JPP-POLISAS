@@ -2524,3 +2524,35 @@ Persembahan slaid eksekutif berasaskan web yang berasingan di dalam direktori `W
   - Konfigurasi `@page { size: 297mm 210mm landscape; margin: 0; }`.
   - Setiap `.slide` diformat sebagai satu mukasurat landskap tepat dengan `break-after: page;` dan `page-break-inside: avoid;`.
   - Elemen terapung `.no-print`, `#floating-nav`, `#progress-bar`, `#slide-drawer`, `#toast-container` disembunyikan secara automatik semasa cetakan PDF.
+
+---
+
+## 25. Senibina Tema Global (Default Light Theme & Dwi-Tema MAKMP / JPPHQ)
+
+Sistem kini beroperasi secara rasmi dengan **Light Theme sebagai mod lalai (*default mode*)** bagi seluruh ekosistem aplikasi, terutamanya modul awam MAKMP dan Hab Pengurusan JPPHQ.
+
+### 25.1 Konvensyen & Keutamaan Pilihan Pengguna
+- **Lalai Tanpa Tetapan (`localStorage === null`)**: Pengguna baharu yang mengakses portal akan dipaparkan dengan **Light Theme** secara automatik.
+- **Keutamaan Pilihan Pengguna**: Sekiranya pengguna menukar tema kepada **Dark Theme**, pilihan tersebut disimpan ke dalam `localStorage.getItem('theme')` dan dihormati secara berterusan merentas sesi.
+- **Pencegahan Flash Latar Belakang**: Skrip sebaris (*inline script*) dalam `<head>` pada `index.html` memeriksa `localStorage` sebelum pemasangan React untuk mengelakkan kelipan putih jika pengguna telah menetapkan tema gelap.
+
+### 25.2 Modul MAKMP (Dwi-Tema Bersih & Aksen Emas Rasmi)
+- **Fail Terlibat:**
+  - `src/components/makmp/MakmpJppChrome.tsx` (`MakmpJppHeader` kini menyertakan `ThemeToggle` di bar atas kanan).
+  - `src/pages/makmp/MakmpPublicFormPage.tsx` (Borang Pencalonan Pelajar & Wizard Multi-Langkah).
+  - `src/pages/makmp/MakmpStatusTrackingPage.tsx` (Semakan Resit Status & Maklumat Pemenang).
+  - `src/pages/makmp/MakmpJuryPortalPage.tsx` (Skrin PIN Juri, Meja Penilaian & Log Audit).
+- **Standard Visual**:
+  - Menggunakan `bg-slate-50 dark:bg-slate-950` sebagai latar belakang utama.
+  - Kad dan panel menggunakan `bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800`.
+  - Mengekalkan aksen emas diraja (*Royal Gold / Amber* `text-amber-600 dark:text-amber-400`, `bg-amber-500`) bagi mengekalkan prestij majlis anugerah.
+
+### 25.3 Hab Pengurusan JPPHQ (`/jpp`) (High Contrast Premium Dashboard)
+- **Fail Terlibat:**
+  - `src/pages/jpp/JppLayout.tsx` (Membuang kelas `dark` statik pada akar; menambah `ThemeToggle` pada header mobile).
+  - `src/pages/jpp/JppSidebar.tsx` (Menyertakan butang `ThemeToggle` di header sidebar bersebelahan butang palet).
+  - `src/pages/jpp/JppHomePage.tsx` (StatCard, UnitCard, TakwimCard, QuickActions dalam mod dwi-tema).
+- **Standard Visual**:
+  - Kawasan kandungan (*content area*) bertukar kepada mod cerah (`bg-slate-100 dark:bg-[#0a0a0f]`) dengan kad putih berbayang halus (`shadow-sm`) dan teks kontras tinggi.
+  - Sidebar JPP mengekalkan warna Maroon tandatangan POLISAS (`getJppSidebarBg(themeColor)`) untuk memastikan identiti korporat JPP kekal kukuh dalam kedua-dua mod.
+
