@@ -23,6 +23,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import {
   EmsCertData,
   EmsCertificateDocument,
@@ -194,19 +195,19 @@ export const EmsCertificatePage: React.FC = () => {
     switch (type) {
       case 'WINNER':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-500/10 text-amber-400 border border-amber-500/30">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30">
             <Award className="w-3.5 h-3.5" /> Sijil Anugerah Pemenang
           </span>
         );
       case 'JURY':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-purple-500/10 text-purple-400 border border-purple-500/30">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-purple-500/15 text-purple-600 dark:text-purple-300 border border-purple-500/30">
             <ShieldCheck className="w-3.5 h-3.5" /> Sijil Penghargaan Juri
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
             <CheckCircle2 className="w-3.5 h-3.5" /> Sijil Penyertaan Rasmi
           </span>
         );
@@ -214,29 +215,28 @@ export const EmsCertificatePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950 pb-28 md:pb-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col font-sans pb-28 md:pb-8 transition-colors">
       {/* ── Navbar Public Branding ── */}
-      <header className="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
+      <header className="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" /> Kembali
             </button>
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-black text-slate-950 shadow-lg shadow-emerald-500/20">
-              <ShieldCheck className="w-5 h-5 text-slate-950" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center font-black text-white shadow-lg shadow-purple-500/20">
+              <ShieldCheck className="w-5 h-5 text-white" />
             </div>
             <div>
-              <div className="font-black tracking-wider text-sm sm:text-base text-white flex items-center gap-1.5">
-                POLISAS <span className="text-emerald-400 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">E-Sijil</span>
+              <div className="font-black tracking-wider text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-1.5">
+                POLISAS <span className="text-purple-600 dark:text-purple-400 text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20">E-Sijil</span>
               </div>
-              <p className="text-[10px] text-slate-400 font-medium">Portal Pengesahan Digital JPP POLISAS</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Portal Pengesahan Digital JPP POLISAS</p>
             </div>
           </div>
-
 
           <div className="flex items-center gap-2">
             <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center gap-2">
@@ -247,16 +247,17 @@ export const EmsCertificatePage: React.FC = () => {
                   placeholder="Cari No. Siri Sijil..."
                   value={searchSerial}
                   onChange={(e) => setSearchSerial(e.target.value)}
-                  className="pl-9 pr-3 py-1.5 text-xs rounded-xl bg-slate-900 border border-slate-700/70 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors w-48"
+                  className="pl-9 pr-3 py-1.5 text-xs rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-purple-500 transition-colors w-48"
                 />
               </div>
               <button
                 type="submit"
-                className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-emerald-500 text-slate-950 hover:bg-emerald-400 transition-colors"
+                className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition-colors"
               >
                 Semak
               </button>
             </form>
+            <ThemeToggle />
           </div>
         </div>
       </header>
@@ -265,8 +266,8 @@ export const EmsCertificatePage: React.FC = () => {
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-            <div className="w-12 h-12 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin" />
-            <p className="text-sm text-slate-400 font-medium animate-pulse">
+            <div className="w-12 h-12 rounded-full border-4 border-purple-500/20 border-t-purple-600 animate-spin" />
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium animate-pulse">
               Memproses pengesahan e-sijil digital...
             </p>
           </div>
@@ -274,13 +275,13 @@ export const EmsCertificatePage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-xl mx-auto py-12 px-6 rounded-3xl bg-slate-900/80 border border-slate-800 text-center flex flex-col items-center"
+            className="max-w-xl mx-auto py-12 px-6 rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-center flex flex-col items-center shadow-xl text-slate-900 dark:text-white"
           >
-            <div className="w-16 h-16 rounded-2xl bg-rose-500/10 text-rose-400 flex items-center justify-center mb-4">
+            <div className="w-16 h-16 rounded-2xl bg-rose-500/10 text-rose-500 dark:text-rose-400 flex items-center justify-center mb-4">
               <AlertCircle className="w-8 h-8" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Sijil Tidak Dijumpai</h2>
-            <p className="text-sm text-slate-400 mb-6 max-w-md">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Sijil Tidak Dijumpai</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-md">
               {errorMsg || 'Nombor siri atau ID sijil yang anda masukkan tidak wujud dalam pangkalan data rasmi JPP POLISAS.'}
             </p>
 
@@ -290,11 +291,11 @@ export const EmsCertificatePage: React.FC = () => {
                 placeholder="Masukkan No. Siri Sijil (cth: CERT-EMS-2026-P1-12345)"
                 value={searchSerial}
                 onChange={(e) => setSearchSerial(e.target.value)}
-                className="flex-1 px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-700 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                className="flex-1 px-4 py-2.5 text-xs rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-purple-500"
               />
               <button
                 type="submit"
-                className="px-4 py-2.5 text-xs font-bold rounded-xl bg-emerald-500 text-slate-950 hover:bg-emerald-400 transition-colors"
+                className="px-4 py-2.5 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition-colors"
               >
                 Cari
               </button>
@@ -302,7 +303,7 @@ export const EmsCertificatePage: React.FC = () => {
 
             <Link
               to="/"
-              className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-emerald-400 transition-colors"
+              className="inline-flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" /> Kembali ke Utama
             </Link>
@@ -313,25 +314,25 @@ export const EmsCertificatePage: React.FC = () => {
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative overflow-hidden rounded-3xl bg-slate-900/90 border border-slate-800 p-6 sm:p-8 shadow-2xl shadow-emerald-950/20"
+              className="relative overflow-hidden rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xl text-slate-900 dark:text-white"
             >
               {/* Top Accent Line */}
-              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-400" />
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-purple-600 via-indigo-500 to-amber-400" />
 
-              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-slate-800">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 animate-pulse">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Sijil Sah & Berdaftar di Sistem JPP-POLISAS
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                      <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400" /> Sijil Sah & Berdaftar di Sistem JPP-POLISAS
                     </span>
                     {getCertTypeBadge(certData.cert_type)}
                   </div>
-                  <h1 className="text-2xl sm:text-3xl font-black text-white tracking-wide">
+                  <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-wide">
                     {certData.recipient_name}
                   </h1>
                   {certData.recipient_subtext && (
-                    <p className="text-xs sm:text-sm text-slate-400 flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-slate-500" /> {certData.recipient_subtext}
+                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-purple-500" /> {certData.recipient_subtext}
                     </p>
                   )}
                 </div>
@@ -341,7 +342,7 @@ export const EmsCertificatePage: React.FC = () => {
                   <EmsCertificateDownloadLink
                     certData={certData}
                     fileName={`Sijil_${certData.cert_serial}.pdf`}
-                    className="flex-1 lg:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 hover:brightness-110 transition-all cursor-pointer"
+                    className="flex-1 lg:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-600/25 hover:brightness-110 transition-all cursor-pointer"
                   >
                     {({ loading }) => (
                       <>
@@ -353,15 +354,15 @@ export const EmsCertificatePage: React.FC = () => {
 
                   <button
                     onClick={handleCopyLink}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 transition-colors"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs border border-slate-200 dark:border-slate-700 transition-colors"
                   >
-                    {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
+                    {copied ? <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400" /> : <Share2 className="w-4 h-4" />}
                     {copied ? 'Disalin!' : 'Kongsi Pautan'}
                   </button>
 
                   <button
                     onClick={() => setShowPreview(!showPreview)}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 transition-colors"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs border border-slate-200 dark:border-slate-700 transition-colors"
                   >
                     <Eye className="w-4 h-4" />
                     {showPreview ? 'Sembunyi PDF' : 'Papar PDF'}
@@ -371,54 +372,55 @@ export const EmsCertificatePage: React.FC = () => {
 
               {/* Metadata Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-6">
-                <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80">
-                  <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                    <FileText className="w-3.5 h-3.5 text-emerald-400" /> Acara / Program
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" /> Acara / Program
                   </p>
-                  <p className="text-xs sm:text-sm font-bold text-slate-200 line-clamp-2">
+                  <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 line-clamp-2">
                     {certData.event_title}
                   </p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80">
-                  <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" /> No. Siri Rasmi
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" /> No. Siri Rasmi
                   </p>
-                  <p className="text-xs sm:text-sm font-mono font-bold text-amber-400 flex items-center justify-between">
+                  <div className="text-xs sm:text-sm font-mono font-bold text-amber-600 dark:text-amber-400 flex items-center justify-between">
                     <span>{certData.cert_serial}</span>
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(certData.cert_serial);
                         toast.success('No. siri disalin!');
                       }}
-                      className="p-1 hover:bg-slate-800 rounded transition-colors text-slate-400 hover:text-slate-200"
+                      className="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded transition-colors text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                      title="Salin No. Siri"
                     >
                       <Copy className="w-3.5 h-3.5" />
                     </button>
-                  </p>
+                  </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80">
-                  <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-teal-400" /> Tarikh Sijil
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" /> Tarikh Sijil
                   </p>
-                  <p className="text-xs sm:text-sm font-bold text-slate-200">
+                  <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
                     {certData.event_date || 'Julai 2026'}
                   </p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between">
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between">
                   <div>
-                    <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider mb-1">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider mb-1">
                       Pengesahan QR
                     </p>
-                    <p className="text-[11px] text-emerald-400 font-semibold">Digital Verified</p>
+                    <p className="text-[11px] text-purple-600 dark:text-purple-400 font-semibold">Digital Verified</p>
                   </div>
                   {certData.qr_code_url && (
                     <img
                       src={certData.qr_code_url}
                       alt="QR Code"
-                      className="w-10 h-10 rounded-lg border border-slate-700 bg-white p-0.5"
+                      className="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white p-0.5 shadow-sm"
                     />
                   )}
                 </div>
@@ -432,22 +434,22 @@ export const EmsCertificatePage: React.FC = () => {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden shadow-2xl"
+                  className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xl"
                 >
-                  <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/80">
-                    <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-emerald-400" /> Pratinjau Sijil Digital (PDF)
+                  <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-900/80">
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-purple-600 dark:text-purple-400" /> Pratinjau Sijil Digital (PDF)
                     </h3>
                     <EmsCertificateDownloadLink
                       certData={certData}
                       fileName={`Sijil_${certData.cert_serial}.pdf`}
-                      className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1"
+                      className="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-semibold flex items-center gap-1"
                     >
                       {({ loading }) => (loading ? 'Menjana...' : 'Muat Turun PDF →')}
                     </EmsCertificateDownloadLink>
                   </div>
 
-                  <div className="w-full h-[600px] bg-slate-950 relative">
+                  <div className="w-full h-[600px] bg-slate-100 dark:bg-slate-950 relative">
                     <PDFViewer width="100%" height="100%" style={{ border: 'none' }}>
                       <EmsCertificateDocument certData={certData} />
                     </PDFViewer>
@@ -460,9 +462,9 @@ export const EmsCertificatePage: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800/80 py-6 bg-slate-950 text-center text-xs text-slate-500">
+      <footer className="border-t border-slate-200 dark:border-slate-800/80 py-6 bg-white dark:bg-slate-950 text-center text-xs text-slate-500 dark:text-slate-400">
         <p>© {new Date().getFullYear()} Jawatankuasa Perwakilan Pelajar POLISAS. Hak Cipta Terelihara.</p>
-        <p className="mt-1 text-[11px]">Sistem Pengurusan Acara (EMS) & Generator Sijil Digital @react-pdf/renderer</p>
+        <p className="mt-1 text-[11px]">Sistem Pengurusan Acara (EMS) & Generator Sijil Digital</p>
       </footer>
     </div>
   );
