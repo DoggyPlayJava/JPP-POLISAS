@@ -2686,4 +2686,9 @@ Sistem beroperasi secara rasmi dengan **Light Theme sebagai mod lalai (*default 
   - Pautan lokasi di Hab Kebajikan dan Food Bank kini menghantar parameter `?b=` yang memadankan kod, ID, atau nama bangunan secara *case-insensitive* untuk autofokus dan pemilihan terus di atas peta.
 - **Reka Bentuk Semula Hab Kebajikan (Linear/Apple Minimalist Executive):**
   - Muka surat `/kebajikan` (`KebajikanHubPage.tsx`) dirombak sepenuhnya daripada teks generik AI yang berselerak kepada reka bentuk eksekutif berimpak tinggi: 2 kad utama kontras tinggi (Aduan & Fasiliti dengan SLA < 24 Jam; Food Bank JPP dengan lencana status modul masa nyata), serta jalur ringkas akses pantas pentadbiran pegawai/exco di bahagian bawah.
+- **Aliran Kad Maklumat Penuh Serta-merta PolyMaps (Instant Expanded Card & 360 First):**
+  - Sebarang pemilihan lokasi (carian, klik pin peta, atau *deep link*) kini secara lalai terus membuka **kad maklumat penuh (Gambar 1)** serta-merta tanpa memerlukan pelajar menekan *pill bar* kecil terlebih dahulu.
+  - Jika lokasi memiliki 360° yang aktif, tab media di atas kad secara pintar mengutamakan **paparan 360° Street View** supaya pelajar dapat meneliti persekitaran destinasi secara langsung.
+  - Pelajar boleh menekan butang *"Lipat Kad"* pada bila-bila masa untuk mengecilkan kad kepada *pill bar* kompak (Gambar 2).
+  - Apabila pelajar menekan *"Mula Pandu Arah"*, kad dilipat secara automatik kepada bar navigasi HUD ringkas supaya peta dan anak panah GPS tidak terlindung semasa berjalan, dan dibuka semula secara automatik sebaik sahaja tiba di destinasi (`dist <= 30m`).
 
