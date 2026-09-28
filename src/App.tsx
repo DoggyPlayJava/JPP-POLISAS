@@ -128,6 +128,8 @@ const KarnivalAdminLayout = lazy(() => import('./pages/karnival/admin/KarnivalAd
 
 // ── E-Kebajikan ──
 const KebajikanLayout = lazy(() => import('./pages/kebajikan/KebajikanLayout').then(m => ({ default: m.KebajikanLayout })));
+const KebajikanHubPage = lazy(() => import('./pages/kebajikan/KebajikanHubPage').then(m => ({ default: m.KebajikanHubPage })));
+const FoodBankPage = lazy(() => import('./pages/kebajikan/KebajikanHubPage').then(m => ({ default: m.FoodBankPage })));
 const KebajikanStatsPage = lazy(() => import('./pages/kebajikan/KebajikanPublicStats').then(m => ({ default: m.KebajikanStatsPage })));
 const KebajikanSubmitPage = lazy(() => import('./pages/kebajikan/KebajikanSubmitPage').then(m => ({ default: m.KebajikanSubmitPage })));
 const KebajikanMyTickets = lazy(() => import('./pages/kebajikan/KebajikanMyTickets').then(m => ({ default: m.KebajikanMyTickets })));
@@ -481,13 +483,15 @@ function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<KebajikanLayout />}>
           {/* Public routes (Pelajar / Semua) */}
+          <Route path="/kebajikan"             element={<KebajikanHubPage />} />
           <Route path="/kebajikan/buat-aduan" element={<KebajikanSubmitPage />} />
           <Route path="/kebajikan/aduan-saya" element={<KebajikanMyTickets />} />
           <Route path="/kebajikan/aduan/:id"  element={<KebajikanStudentChat />} />
           <Route path="/kebajikan/statistik"  element={<KebajikanStatsPage />} />
+          <Route path="/kebajikan/foodbank"   element={<FoodBankPage />} />
 
           {/* Exco + Staff dashboard */}
-          <Route path="/kebajikan"             element={<KebajikanDashboard />} />
+          <Route path="/kebajikan/dashboard"   element={<KebajikanDashboard />} />
           <Route path="/kebajikan/tiket"       element={<KebajikanTicketsPage />} />
           <Route path="/kebajikan/tiket/:id"   element={<KebajikanTicketDetail />} />
           <Route path="/kebajikan/laporan"     element={<KebajikanReportPage />} />

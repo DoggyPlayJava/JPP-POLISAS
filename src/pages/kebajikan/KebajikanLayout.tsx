@@ -11,6 +11,8 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { SystemTour } from '@/components/ui/SystemTour';
 import { HelpCircle } from 'lucide-react';
 import { useTour } from '@/hooks/useTour';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const KEBAJIKAN_UNIT_LINKS = [
   { label: 'Hantar Aduan Kebajikan', path: '/kebajikan/buat-aduan' },
@@ -51,8 +53,11 @@ export function KebajikanLayout() {
     );
   }
 
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   // Redirect pelajar biasa jika cuba akses dashboard/laluan Exco
-  const isExcoRoute = location.pathname === '/kebajikan' || 
+  const isExcoRoute = location.pathname === '/kebajikan/dashboard' || 
                       location.pathname.startsWith('/kebajikan/tiket') || 
                       location.pathname.startsWith('/kebajikan/laporan') || 
                       location.pathname.startsWith('/kebajikan/staff') || 
@@ -111,23 +116,24 @@ export function KebajikanLayout() {
         <KebajikanSidebar />
       </div>
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-950 text-slate-50 relative min-w-0">
-        <div className="lg:hidden flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-white/5 bg-slate-950/80 backdrop-blur-xl relative z-30">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 relative min-w-0 transition-colors">
+        <div className="lg:hidden flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl relative z-30 transition-colors">
           <div className="flex items-center gap-2">
 
             <button 
               onClick={() => setSidebarOpen(true)} 
-              className="tour-mobile-hamburger p-2 -ml-2 text-white/50 hover:text-white transition-colors"
+              className="tour-mobile-hamburger p-2 -ml-2 text-slate-600 dark:text-white/50 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               <Menu className="w-5 h-5" />
             </button>
             <span className="font-black text-[10px] uppercase tracking-widest text-[#2DD4BF] ml-1">E-Kebajikan</span>
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={startTour} className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-all">
+          <div className="flex items-center gap-2">
+            <button onClick={startTour} className="p-2 text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-all">
               <HelpCircle className="w-4 h-4" />
             </button>
-            <NotificationBell variant="dark" />
+            <ThemeToggle />
+            <NotificationBell variant={isDark ? 'dark' : 'light'} />
           </div>
         </div>
 
