@@ -8,14 +8,14 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ChevronLeft, HeartHandshake, Send, CheckCircle2, Clock,
-  AlertTriangle, XCircle, Star, RefreshCw, Lock, Loader2,
-  Image as ImageIcon, ShieldCheck, MessageSquare,
+  AlertTriangle, XCircle, Star, RefreshCw, Loader2,
+  ShieldCheck, MessageSquare,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
-import { sendNotificationToKebajikanExco, sendNotificationToUser, sendNotificationToKKExco } from '@/lib/notifications';
+import { sendNotificationToKebajikanExco, sendNotificationToKKExco } from '@/lib/notifications';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   KebajikanTicket, KebajikanTicketComment,
@@ -24,8 +24,7 @@ import {
 } from '@/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { hexToRgba } from '@/lib/utils';
+import { cn, hexToRgba } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 
 const TEAL = KEBAJIKAN_THEME_COLOR;
@@ -117,8 +116,7 @@ export function KebajikanStudentChat() {
     }
   }, [comments]);
 
-  // Realtime — only fetch comments on INSERT (for Exco replies)
-  // ticket UPDATE triggers a full fetchAll (status change etc.)
+  // Realtime
   useEffect(() => {
     if (!id) return;
     const ch = supabase
@@ -128,12 +126,9 @@ export function KebajikanStudentChat() {
         table: 'kebajikan_ticket_comments',
         filter: `ticket_id=eq.${id}`,
       }, (payload) => {
-        // Only update from realtime if it's NOT from the current user
-        // (our own messages are already added optimistically)
         const incoming = payload.new as KebajikanTicketComment;
         if (incoming.author_id !== user?.id) {
           setComments(prev => {
-            // avoid duplicates
             if (prev.some(c => c.id === incoming.id)) return prev;
             return [...prev, incoming];
           });
@@ -148,37 +143,28 @@ export function KebajikanStudentChat() {
     return () => { supabase.removeChannel(ch); };
   }, [id, user?.id, fetchTicket]);
 
-  /* ─── send message (optimistic) ─── */
+  /* ─── actions ─── */
   const sendMessage = async () => {
-    if (!message.trim() || !ticket || !user || sending) return;
-    if (['CLOSED', 'CANCELLED', 'RESOLVED'].includes(ticket.status)) {
-      toast.error('Tiket ini sudah ditutup. Sila buka semula jika perlu.');
-      return;
-    }
-
+    if (!message.trim() || !user || !ticket || sending) return;
     const content = message.trim();
-    const tempId  = `temp_${Date.now()}`;
-    const now     = new Date().toISOString();
-
-    // 1. Optimistic: add to local state immediately
-    const optimistic: KebajikanTicketComment = {
-      id:              tempId as any,
-      ticket_id:       ticket.id,
-      author_id:       user.id,
-      author_name:     profile?.full_name || 'Pelajar',
-      author_role:     'PELAJAR',
-      is_internal:     false,
-      is_delegation_note: false,
-      content,
-      attachments:     [],
-      created_at:      now,
-    };
-    setComments(prev => [...prev, optimistic]);
     setMessage('');
     setSending(true);
 
-    // 2. Persist to DB
-    const { data: inserted, error } = await supabase
+    const tempId = `temp-${Date.now()}`;
+    const optimistic: KebajikanTicketComment = {
+      id:                 tempId,
+      ticket_id:          ticket.id,
+      author_id:          user.id,
+      author_name:        profile?.full_name || 'Pelajar',
+      author_role:        'PELAJAR',
+      is_internal:        false,
+      is_delegation_note: false,
+      content,
+      created_at:         new Date().toISOString(),
+    };
+    setComments(prev => [...prev, optimistic]);
+
+    const { data, error } = await supabase
       .from('kebajikan_ticket_comments')
       .insert({
         ticket_id:   ticket.id,
@@ -192,57 +178,50 @@ export function KebajikanStudentChat() {
       .single();
 
     if (error) {
-      // rollback
-      setComments(prev => prev.filter(c => c.id !== (tempId as any)));
+      toast.error('Gagal menghantar mesej.');
+      setComments(prev => prev.filter(c => c.id !== tempId));
       setMessage(content);
-      toast.error('Gagal hantar mesej. Cuba lagi.');
-    } else if (inserted) {
-      // replace temp with real record
-      setComments(prev => prev.map(c => c.id === (tempId as any) ? inserted as KebajikanTicketComment : c));
-      // reset SLA timer
-      await supabase.from('kebajikan_tickets')
-        .update({ updated_at: now })
-        .eq('id', ticket.id);
-        
-      // NOTIFY Exco berdasarkan unit yang menguruskan tiket ini
-      const msgPayload = {
-        title: `Mesej Baharu daripada Pelajar: ${ticket.ticket_no}`,
-        message: `${profile?.full_name || 'Pelajar'}: "${content.slice(0, 80)}${content.length > 80 ? '...' : ''}"`,
-        type: 'NEW_MESSAGE' as const,
-        module: 'KEBAJIKAN' as const,
-        link: `/kebajikan/aduan/${ticket.id}`,
-        reference_id: ticket.id,
-        actor_name: profile?.full_name || 'Pelajar',
+    } else if (data) {
+      setComments(prev => prev.map(c => c.id === tempId ? (data as KebajikanTicketComment) : c));
+      
+      const payload = {
+        title:       `Mesej Baru: ${ticket.ticket_no}`,
+        message:     `${profile?.full_name || 'Pelajar'}: "${content.slice(0, 60)}${content.length > 60 ? '...' : ''}"`,
+        type:        'STUDENT_MESSAGE',
+        module:      'KEBAJIKAN' as const,
+        link:        `/kebajikan/tiket/${ticket.id}`,
+        reference_id: ticket.ticket_no,
+        actor_name:  profile?.full_name || 'Pelajar',
       };
 
-      if (ticket.assigned_to) {
-        await sendNotificationToUser(ticket.assigned_to, msgPayload);
-      } else if (ticket.handled_by_unit === 'KK') {
-        await sendNotificationToKKExco(msgPayload);
+      if (ticket.handled_by_unit === 'KK') {
+        await sendNotificationToKKExco(payload);
       } else {
-        await sendNotificationToKebajikanExco(msgPayload);
+        await sendNotificationToKebajikanExco(payload);
       }
     }
     setSending(false);
   };
 
-  /* submit rating */
   const submitRating = async () => {
     if (!ticket || rating === 0) return;
     setRatingBusy(true);
     await supabase.from('kebajikan_tickets').update({
       rating,
-      rating_comment: ratingNote,
+      rating_comment: ratingNote.trim() || null,
       rating_at: new Date().toISOString(),
       status: 'CLOSED',
     }).eq('id', ticket.id);
-    await fetchAll();
+    await supabase.from('kebajikan_ticket_status_log').insert({
+      ticket_id: ticket.id, actor_id: user?.id, actor_role: 'PELAJAR',
+      old_status: ticket.status, new_status: 'CLOSED', note: `Rating: ${rating}⭐`,
+    });
     setRatingBusy(false);
     setShowRating(false);
-    toast.success('Terima kasih atas penilaian anda! ⭐');
+    toast.success('Terima kasih atas penilaian anda!');
+    await fetchAll();
   };
 
-  /* reopen request */
   const submitReopen = async () => {
     if (!ticket || !reopenNote.trim()) return;
     setReopenBusy(true);
@@ -274,8 +253,8 @@ export function KebajikanStudentChat() {
   /* ─── loading ─── */
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: TEAL }} />
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
       </div>
     );
   }
@@ -289,14 +268,14 @@ export function KebajikanStudentChat() {
   const canChat = !isTerminal && !isResolved;
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col" style={{ background: 'linear-gradient(135deg, #0a0f1e 0%, #0d1117 100%)' }}>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 flex flex-col transition-colors">
 
       {/* ── Sticky top bar ── */}
-      <div className="sticky top-0 z-40 flex-shrink-0 border-b border-white/[0.06] backdrop-blur-2xl bg-slate-950/80">
+      <div className="sticky top-0 z-40 flex-shrink-0 border-b border-slate-200 dark:border-white/[0.06] backdrop-blur-2xl bg-white/80 dark:bg-slate-950/80 transition-colors">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center gap-3">
           <button
             onClick={() => navigate('/kebajikan/aduan-saya')}
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-teal-400 hover:bg-white/5 transition-all"
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -307,14 +286,14 @@ export function KebajikanStudentChat() {
           </div>
 
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-black text-slate-100 truncate leading-tight">{ticket.title}</p>
-            <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: meta.color }}>
+            <p className="text-[13px] font-black text-slate-900 dark:text-slate-100 truncate leading-tight">{ticket.title}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-teal-700 dark:text-teal-400">
               {ticket.ticket_no} · {KEBAJIKAN_STATUS_LABELS[ticket.status]}
             </p>
           </div>
 
           <Link to="/kebajikan/buat-aduan">
-            <button className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border border-white/10 text-slate-400 hover:border-teal-500/30 hover:text-teal-400 transition-all">
+            <button className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-400 hover:border-teal-500/40 hover:text-teal-600 dark:hover:text-teal-400 bg-white dark:bg-transparent shadow-sm transition-all">
               + Baru
             </button>
           </Link>
@@ -327,48 +306,47 @@ export function KebajikanStudentChat() {
 
           {/* ── Ticket info card ── */}
           <div
-            className="rounded-3xl p-5 border shadow-2xl relative overflow-hidden"
-            style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}
+            className="rounded-3xl p-5 border border-slate-200 dark:border-white/[0.06] shadow-sm dark:shadow-2xl bg-white dark:bg-slate-900/80 relative overflow-hidden"
           >
             {/* glow strip */}
             <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: `linear-gradient(90deg, transparent, ${meta.color}, transparent)` }} />
 
             <div className="flex items-start gap-3 mb-4">
-              <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: hexToRgba(meta.color, 0.1), border: `1px solid ${hexToRgba(meta.color, 0.2)}` }}>
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-inner" style={{ background: hexToRgba(meta.color, 0.1), border: `1px solid ${hexToRgba(meta.color, 0.2)}` }}>
                 <Icon className="w-5 h-5" style={{ color: meta.color }} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-black text-slate-50 text-[15px] leading-tight mb-1">{ticket.title}</p>
+                <p className="font-black text-slate-900 dark:text-slate-50 text-[15px] leading-tight mb-1">{ticket.title}</p>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className={cn('text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest', KEBAJIKAN_STATUS_COLORS[ticket.status])}>
+                  <span className={cn('text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest shadow-sm', KEBAJIKAN_STATUS_COLORS[ticket.status])}>
                     {KEBAJIKAN_STATUS_LABELS[ticket.status]}
                   </span>
-                  <span className="text-[10px] text-slate-500">{KEBAJIKAN_CATEGORY_LABELS[ticket.category]}</span>
-                  <span className="text-[10px] text-slate-600">·</span>
-                  <span className="text-[10px] text-slate-500">{formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true, locale: ms })}</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{KEBAJIKAN_CATEGORY_LABELS[ticket.category]}</span>
+                  <span className="text-[10px] text-slate-400">·</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">{formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true, locale: ms })}</span>
                 </div>
               </div>
             </div>
 
-            <p className="text-xs text-slate-400 leading-relaxed mb-4">{ticket.description}</p>
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-4">{ticket.description}</p>
 
             {/* Resolution note */}
             {ticket.resolution_note && (
-              <div className="rounded-2xl p-4 mb-4" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-1.5 flex items-center gap-1.5">
+              <div className="rounded-2xl p-4 mb-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-500/20">
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400 mb-1.5 flex items-center gap-1.5">
                   <CheckCircle2 className="w-3 h-3" /> Nota Resolusi Exco
                 </p>
-                <p className="text-xs text-slate-300 leading-relaxed">{ticket.resolution_note}</p>
+                <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed">{ticket.resolution_note}</p>
               </div>
             )}
 
             {/* Star rating display */}
             {ticket.rating && (
               <div className="flex items-center gap-2 mt-1">
-                <p className="text-[10px] font-black uppercase tracking-widest text-amber-400">Penilaian Anda</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Penilaian Anda</p>
                 <div className="flex gap-1">
                   {[1,2,3,4,5].map(s => (
-                    <Star key={s} className="w-3.5 h-3.5" fill={s <= ticket.rating! ? '#F59E0B' : 'transparent'} style={{ color: s <= ticket.rating! ? '#F59E0B' : 'rgba(255,255,255,0.2)' }} />
+                    <Star key={s} className="w-3.5 h-3.5" fill={s <= ticket.rating! ? '#F59E0B' : 'transparent'} style={{ color: s <= ticket.rating! ? '#F59E0B' : 'rgba(156,163,175,0.4)' }} />
                   ))}
                 </div>
               </div>
@@ -376,12 +354,11 @@ export function KebajikanStudentChat() {
 
             {/* Action buttons */}
             {(isResolved || isTerminal) && (
-              <div className="flex gap-2 flex-wrap mt-4 pt-4 border-t border-white/[0.05]">
+              <div className="flex gap-2 flex-wrap mt-4 pt-4 border-t border-slate-100 dark:border-white/[0.05]">
                 {(isResolved || ticket.status === 'CLOSED') && !ticket.rating && (
                   <button
                     onClick={() => setShowRating(true)}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all"
-                    style={{ background: 'rgba(245,158,11,0.1)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.2)' }}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 shadow-sm"
                   >
                     <Star className="w-3 h-3" /> Beri Penilaian
                   </button>
@@ -389,14 +366,14 @@ export function KebajikanStudentChat() {
                 {isResolved && (
                   <button
                     onClick={() => setShowReopen(true)}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest border border-white/10 text-slate-400 hover:border-white/20 hover:text-white transition-all"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest border border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 bg-white dark:bg-transparent shadow-sm transition-all"
                   >
                     <RefreshCw className="w-3 h-3" /> Buka Semula
                   </button>
                 )}
                 {isTerminal && (
                   <Link to="/kebajikan/buat-aduan">
-                    <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all" style={{ background: hexToRgba(TEAL, 0.1), color: TEAL, border: `1px solid ${hexToRgba(TEAL, 0.2)}` }}>
+                    <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all bg-teal-50 dark:bg-teal-950/20 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/20 shadow-sm">
                       <HeartHandshake className="w-3 h-3" /> Aduan Baru
                     </button>
                   </Link>
@@ -407,19 +384,19 @@ export function KebajikanStudentChat() {
 
           {/* ── Chat divider ── */}
           <div className="flex items-center gap-3 px-1">
-            <div className="flex-1 h-px bg-white/[0.05]" />
-            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-600 flex items-center gap-1.5">
+            <div className="flex-1 h-px bg-slate-200 dark:bg-white/[0.05]" />
+            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
               <MessageSquare className="w-3 h-3" /> Thread Komunikasi
             </p>
-            <div className="flex-1 h-px bg-white/[0.05]" />
+            <div className="flex-1 h-px bg-slate-200 dark:bg-white/[0.05]" />
           </div>
 
           {/* ── Chat messages ── */}
           {comments.length === 0 ? (
-            <div className="text-center py-10">
-              <MessageSquare className="w-10 h-10 mx-auto mb-3 opacity-15" style={{ color: TEAL }} />
-              <p className="text-xs text-slate-600 font-medium">Belum ada mesej</p>
-              <p className="text-[11px] text-slate-700 mt-1">Hantar mesej di bawah untuk berkomunikasi dengan Exco Kebajikan</p>
+            <div className="text-center py-10 bg-white dark:bg-slate-900/40 rounded-3xl border border-slate-200 dark:border-white/5 p-6 shadow-sm">
+              <MessageSquare className="w-10 h-10 mx-auto mb-3 text-slate-300 dark:text-teal-500/30" />
+              <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Belum ada mesej</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-1">Hantar mesej di bawah untuk berkomunikasi dengan Exco Kebajikan</p>
             </div>
           ) : (
             <div className="space-y-3 pb-2">
@@ -433,18 +410,18 @@ export function KebajikanStudentChat() {
                     {/* Date separator */}
                     {showDate && (
                       <div className="flex items-center gap-2 py-1">
-                        <div className="flex-1 h-px bg-white/[0.04]" />
-                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-700 bg-slate-950 px-2">
+                        <div className="flex-1 h-px bg-slate-200 dark:bg-white/[0.04]" />
+                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-950 px-2">
                           {format(new Date(c.created_at), 'dd MMMM yyyy', { locale: ms })}
                         </p>
-                        <div className="flex-1 h-px bg-white/[0.04]" />
+                        <div className="flex-1 h-px bg-slate-200 dark:bg-white/[0.04]" />
                       </div>
                     )}
 
                     {/* System message — centered */}
                     {isSystem ? (
                       <div className="flex justify-center">
-                        <div className="px-4 py-2 rounded-full text-[10px] text-slate-500 border border-white/[0.04] bg-white/[0.02]">
+                        <div className="px-4 py-2 rounded-full text-[10px] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/[0.04] bg-white dark:bg-white/[0.02] shadow-sm">
                           {c.content}
                         </div>
                       </div>
@@ -457,7 +434,7 @@ export function KebajikanStudentChat() {
                         {/* Avatar */}
                         {!isMe && (
                           <div
-                            className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 mb-1"
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 mb-1 shadow-sm"
                             style={{ background: hexToRgba(TEAL, 0.15), color: TEAL }}
                           >
                             {c.author_name[0]?.toUpperCase()}
@@ -467,18 +444,18 @@ export function KebajikanStudentChat() {
                         {/* Bubble */}
                         <div className={cn('max-w-[78%] space-y-1', isMe && 'items-end flex flex-col')}>
                           {!isMe && (
-                            <p className="text-[10px] font-black text-slate-500 px-1">{c.author_name}</p>
+                            <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 px-1">{c.author_name}</p>
                           )}
                           <div
-                            className={cn('px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-lg', isMe ? 'rounded-br-sm' : 'rounded-bl-sm')}
+                            className={cn('px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm', isMe ? 'rounded-br-sm' : 'rounded-bl-sm')}
                             style={isMe
-                              ? { background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.2)', color: '#E2E8F0' }
-                              : { background: hexToRgba(TEAL, 0.08), border: `1px solid ${hexToRgba(TEAL, 0.15)}`, color: '#E2E8F0' }
+                              ? { background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)', color: 'inherit' }
+                              : { background: hexToRgba(TEAL, 0.1), border: `1px solid ${hexToRgba(TEAL, 0.25)}`, color: 'inherit' }
                             }
                           >
                             <p className="whitespace-pre-wrap">{c.content}</p>
                           </div>
-                          <p className={cn('text-[10px] text-slate-600 px-1', isMe && 'text-right')}>
+                          <p className={cn('text-[10px] text-slate-400 dark:text-slate-500 px-1', isMe && 'text-right')}>
                             {format(new Date(c.created_at), 'HH:mm')}
                           </p>
                         </div>
@@ -493,8 +470,8 @@ export function KebajikanStudentChat() {
 
           {/* ── Terminal state notice ── */}
           {(isTerminal || isResolved) && (
-            <div className="rounded-2xl p-4 text-center border border-white/[0.05] bg-white/[0.01]">
-              <p className="text-[11px] text-slate-600">
+            <div className="rounded-2xl p-4 text-center border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.01] shadow-sm">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {isResolved
                   ? 'Aduan ini telah diselesaikan. Gunakan butang "Buka Semula" jika masalah masih berterusan.'
                   : 'Aduan ini telah ditutup. Sila kemukakan aduan baru jika memerlukan bantuan lanjut.'
@@ -503,14 +480,13 @@ export function KebajikanStudentChat() {
             </div>
           )}
 
-          {/* bottom padding for input bar */}
           <div className="h-24" />
         </div>
       </div>
 
       {/* ── Sticky input bar (only when can chat) ── */}
       {canChat && (
-        <div className="flex-shrink-0 sticky bottom-0 z-40 border-t border-white/[0.06] backdrop-blur-2xl bg-slate-950/90">
+        <div className="flex-shrink-0 sticky bottom-0 z-40 border-t border-slate-200 dark:border-white/[0.06] backdrop-blur-2xl bg-white/90 dark:bg-slate-950/90 transition-colors">
           <div className="max-w-2xl mx-auto px-4 py-3 flex items-end gap-3">
             <div className="flex-1 relative">
               <Textarea
@@ -524,15 +500,14 @@ export function KebajikanStudentChat() {
                 }}
                 placeholder="Tulis mesej kepada Exco Kebajikan..."
                 rows={1}
-                className="w-full resize-none rounded-2xl text-sm border border-white/[0.08] bg-white/[0.03] text-slate-200 placeholder:text-slate-600 focus:border-teal-500/40 focus:ring-0 focus:outline-none transition-colors p-3 pr-4 leading-relaxed"
+                className="w-full resize-none rounded-2xl text-sm border border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-white/[0.03] text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-teal-500 focus:ring-0 focus:outline-none transition-colors p-3 pr-4 leading-relaxed shadow-inner"
                 style={{ minHeight: '44px', maxHeight: '120px' }}
               />
             </div>
             <button
               onClick={sendMessage}
               disabled={!message.trim() || sending}
-              className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 shadow-lg"
-              style={{ background: TEAL }}
+              className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 shadow-md bg-teal-400 hover:bg-teal-300 text-slate-950"
             >
               {sending
                 ? <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
@@ -540,7 +515,7 @@ export function KebajikanStudentChat() {
               }
             </button>
           </div>
-          <p className="text-center text-[9px] text-slate-700 pb-2">Enter untuk hantar · Shift+Enter untuk baris baru</p>
+          <p className="text-center text-[9px] text-slate-400 dark:text-slate-600 pb-2">Enter untuk hantar · Shift+Enter untuk baris baru</p>
         </div>
       )}
 
@@ -558,18 +533,18 @@ export function KebajikanStudentChat() {
               initial={{ y: 40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 40, opacity: 0 }}
-              className="w-full max-w-sm rounded-3xl p-7 border border-white/10 bg-slate-900 shadow-2xl relative overflow-hidden"
+              className="w-full max-w-sm rounded-3xl p-6 sm:p-7 border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-2xl relative overflow-hidden"
               onClick={e => e.stopPropagation()}
             >
-              <div className="absolute top-0 inset-x-0 h-24 opacity-30 rounded-full -translate-y-1/2" style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.4) 0%, transparent 70%)' }} />
+              <div className="absolute top-0 inset-x-0 h-24 opacity-30 rounded-full -translate-y-1/2 bg-amber-500/20" />
               <div className="relative z-10">
-                <p className="font-black text-white text-base mb-0.5">Beri Penilaian</p>
-                <p className="text-[11px] text-slate-500 mb-6">{ticket.ticket_no} · Bagaimana layanan Exco Kebajikan?</p>
+                <p className="font-black text-slate-900 dark:text-white text-base mb-0.5">Beri Penilaian</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-6">{ticket.ticket_no} · Bagaimana layanan Exco Kebajikan?</p>
 
                 <div className="flex gap-2 justify-center mb-6">
                   {[1,2,3,4,5].map(s => (
-                    <button key={s} onClick={() => setRating(s)} className="transition-transform hover:scale-110">
-                      <Star className="w-10 h-10 transition-all duration-200" fill={s <= rating ? '#F59E0B' : 'transparent'} style={{ color: s <= rating ? '#F59E0B' : 'rgba(255,255,255,0.15)', filter: s <= rating ? 'drop-shadow(0 0 8px rgba(245,158,11,0.5))' : 'none' }} />
+                    <button key={s} onClick={() => setRating(s)} className="transition-transform hover:scale-110 p-1">
+                      <Star className="w-9 h-9 sm:w-10 sm:h-10 transition-all duration-200" fill={s <= rating ? '#F59E0B' : 'transparent'} style={{ color: s <= rating ? '#F59E0B' : '#cbd5e1' }} />
                     </button>
                   ))}
                 </div>
@@ -579,18 +554,17 @@ export function KebajikanStudentChat() {
                   onChange={e => setRatingNote(e.target.value)}
                   placeholder="Ulasan anda kepada Exco (opsional)..."
                   rows={3}
-                  className="bg-white/[0.03] border-white/10 text-white placeholder:text-white/25 rounded-2xl resize-none mb-5 text-sm"
+                  className="bg-slate-50 dark:bg-white/[0.03] border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-2xl resize-none mb-5 text-sm"
                 />
 
                 <div className="flex gap-3">
-                  <Button variant="outline" onClick={() => setShowRating(false)} className="flex-1 h-11 rounded-2xl text-xs font-black border-white/10 text-white/50">
+                  <Button variant="outline" onClick={() => setShowRating(false)} className="flex-1 h-11 rounded-2xl text-xs font-black border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/50">
                     Batal
                   </Button>
                   <Button
                     disabled={rating === 0 || ratingBusy}
                     onClick={submitRating}
-                    className="flex-1 h-11 rounded-2xl text-xs font-black text-slate-900 shadow-lg"
-                    style={{ background: '#F59E0B' }}
+                    className="flex-1 h-11 rounded-2xl text-xs font-black text-slate-950 shadow-md bg-amber-400 hover:bg-amber-300"
                   >
                     {ratingBusy ? 'Menghantar...' : '⭐ Hantar Rating'}
                   </Button>
@@ -615,27 +589,26 @@ export function KebajikanStudentChat() {
               initial={{ y: 40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 40, opacity: 0 }}
-              className="w-full max-w-sm rounded-3xl p-7 border border-white/10 bg-slate-900 shadow-2xl"
+              className="w-full max-w-sm rounded-3xl p-6 sm:p-7 border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-2xl"
               onClick={e => e.stopPropagation()}
             >
-              <p className="font-black text-white text-base mb-0.5">Buka Semula Aduan</p>
-              <p className="text-[11px] text-slate-500 mb-5">Nyatakan sebab anda memerlukan aduan ini dibuka semula. Exco akan menilai permintaan anda.</p>
+              <p className="font-black text-slate-900 dark:text-white text-base mb-0.5">Buka Semula Aduan</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-5">Nyatakan sebab anda memerlukan aduan ini dibuka semula. Exco akan menilai permintaan anda.</p>
               <Textarea
                 value={reopenNote}
                 onChange={e => setReopenNote(e.target.value)}
                 placeholder="Contoh: Masalah ini berlaku lagi selepas 2 hari..."
                 rows={4}
-                className="bg-white/[0.03] border-white/10 text-white placeholder:text-white/25 rounded-2xl resize-none mb-5 text-sm"
+                className="bg-slate-50 dark:bg-white/[0.03] border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-2xl resize-none mb-5 text-sm"
               />
               <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setShowReopen(false)} className="flex-1 h-11 rounded-2xl text-xs font-black border-white/10 text-white/50">
+                <Button variant="outline" onClick={() => setShowReopen(false)} className="flex-1 h-11 rounded-2xl text-xs font-black border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/50">
                   Batal
                 </Button>
                 <Button
                   disabled={!reopenNote.trim() || reopenBusy}
                   onClick={submitReopen}
-                  className="flex-1 h-11 rounded-2xl text-xs font-black text-slate-900"
-                  style={{ background: TEAL }}
+                  className="flex-1 h-11 rounded-2xl text-xs font-black text-slate-950 bg-teal-400 hover:bg-teal-300 shadow-md"
                 >
                   {reopenBusy ? 'Menghantar...' : 'Hantar Permintaan'}
                 </Button>

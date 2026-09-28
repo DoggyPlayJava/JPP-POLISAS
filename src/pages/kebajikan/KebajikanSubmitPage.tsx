@@ -1,9 +1,9 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   HeartHandshake, ChevronRight, ChevronLeft, Building2,
   Dumbbell, Coffee, Wifi, MoreHorizontal, Check, CheckCircle2, Clock,
-  TrendingUp, ListChecks, ArrowUpRight, Star, HelpCircle,
+  TrendingUp, ListChecks, ArrowUpRight, HelpCircle,
   Upload, AlertCircle, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,8 +19,7 @@ import {
   KEBAJIKAN_CATEGORY_LABELS, KEBAJIKAN_CATEGORY_DESCRIPTIONS,
   KebajikanPublicStats,
 } from '@/types';
-import { cn } from '@/lib/utils';
-import { hexToRgba } from '@/lib/utils';
+import { cn, hexToRgba } from '@/lib/utils';
 import { SystemTour } from '@/components/ui/SystemTour';
 import { useTour } from '@/hooks/useTour';
 
@@ -139,9 +138,6 @@ export function KebajikanSubmitPage() {
   const uploadImages = async (): Promise<string[]> => {
     if (!images.length) return [];
     
-    // Import dynamically to avoid top-level await issues if any, or just import at top. 
-    // Actually, I should just import it at the top of the file, but since I'm doing a block replacement, 
-    // I can just import it here to be safe and avoid multiple replaces.
     const { compressImage } = await import('@/lib/imageCompression');
     
     const urls: string[] = [];
@@ -322,51 +318,50 @@ export function KebajikanSubmitPage() {
 
   // ── RENDER ──────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-slate-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950 text-slate-50 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 relative overflow-hidden transition-colors">
       {/* Background Glow */}
-      <div className="absolute top-0 inset-x-0 h-[500px] bg-teal-500/10 blur-[120px] rounded-full pointer-events-none -translate-y-1/2" />
+      <div className="absolute top-0 inset-x-0 h-[500px] bg-teal-500/10 dark:bg-teal-500/15 blur-[120px] rounded-full pointer-events-none -translate-y-1/2" />
       
       {/* Top Nav */}
       <div
-        className="relative z-10 flex items-center justify-between px-6 h-16 border-b border-white/5 bg-slate-950/50 backdrop-blur-xl"
+        className="relative z-10 flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/50 backdrop-blur-xl transition-colors"
       >
-        <Link to="/portal" className="flex items-center gap-2 text-white/40 hover:text-white/80 transition-colors text-xs font-black uppercase tracking-widest">
+        <Link to="/portal" className="flex items-center gap-2 text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/80 transition-colors text-xs font-black uppercase tracking-widest">
           <ChevronLeft className="w-3.5 h-3.5" />Portal JPP
         </Link>
         <div className="flex items-center gap-2">
           <button
             onClick={startTour}
-            className="w-8 h-8 rounded-full bg-white/5 text-white/40 hover:text-white/80 flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-transform"
+            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/80 flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-all"
           >
             <HelpCircle className="w-4 h-4" />
           </button>
-          <HeartHandshake className="w-4 h-4" style={{ color: TEAL }} />
-          <span className="font-black text-xs uppercase tracking-widest text-white/80">E-Kebajikan</span>
+          <HeartHandshake className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+          <span className="font-black text-xs uppercase tracking-widest text-slate-800 dark:text-white/80">E-Kebajikan</span>
         </div>
       </div>
 
       <AnimatePresence mode="wait">
         {/* ── STEP: STATS HERO ───────────────────────────────────────────────── */}
         {step === 'STATS' && (
-          <motion.div key="stats" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-3xl mx-auto px-6 py-10">
+          <motion.div key="stats" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
             {/* Header */}
-            <div className="text-center mb-10">
+            <div className="text-center mb-8 sm:mb-10">
               <div
-                className="inline-flex items-center justify-center w-16 h-16 rounded-3xl mb-4"
-                style={{ background: hexToRgba(TEAL, 0.12), border: `2px solid ${hexToRgba(TEAL, 0.25)}` }}
+                className="inline-flex items-center justify-center w-16 h-16 rounded-3xl mb-4 bg-teal-500/10 dark:bg-teal-500/20 border-2 border-teal-500/30 text-teal-600 dark:text-teal-400 shadow-sm"
               >
-                <HeartHandshake className="w-8 h-8" style={{ color: TEAL }} />
+                <HeartHandshake className="w-8 h-8" />
               </div>
-              <h1 className="text-2xl font-black text-white mb-2">Sistem Aduan Pelajar</h1>
-              <p className="text-sm text-white/50">Aduan anda akan diproses oleh Exco Kebajikan JPP POLISAS</p>
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">Sistem Aduan Pelajar</h1>
+              <p className="text-sm text-slate-600 dark:text-slate-300">Aduan anda akan diproses oleh Exco Kebajikan JPP POLISAS</p>
             </div>
 
             {/* Stats Grid */}
             {publicStats && (
-              <div className="relative rounded-3xl p-8 mb-8 border border-white/10 bg-white/[0.02] backdrop-blur-md shadow-2xl overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-transparent opacity-50 pointer-events-none" />
-                <p className="relative z-10 text-[11px] font-black uppercase tracking-[0.3em] mb-6 text-teal-400/90 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" /> Prestasi Exco Kebajikan
+              <div className="relative rounded-3xl p-6 sm:p-8 mb-8 border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/80 shadow-sm dark:shadow-2xl overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-transparent pointer-events-none" />
+                <p className="relative z-10 text-[11px] font-black uppercase tracking-[0.3em] mb-6 text-teal-700 dark:text-teal-400 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" /> Prestasi Exco Kebajikan
                 </p>
                 <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
@@ -375,17 +370,16 @@ export function KebajikanSubmitPage() {
                     { icon: Clock,        val: `~${publicStats.avg_resolution_hours ?? 0}j`, label: 'Purata Masa', col: '#F59E0B' },
                     { icon: ListChecks,   val: publicStats.total_active,     label: 'Kes Aktif', col: '#6366F1' },
                   ].map(s => (
-                    <div key={s.label} className="text-center">
+                    <div key={s.label} className="text-center p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-transparent">
                       <s.icon className="w-5 h-5 mx-auto mb-1.5" style={{ color: s.col }} />
-                      <p className="font-black text-lg text-white leading-tight">{String(s.val)}</p>
-                      <p className="text-[9px] font-black uppercase tracking-wider text-white/40">{s.label}</p>
+                      <p className="font-black text-lg text-slate-900 dark:text-white leading-tight">{String(s.val)}</p>
+                      <p className="text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{s.label}</p>
                     </div>
                   ))}
                 </div>
                 <Link
                   to="/kebajikan/statistik"
-                  className="relative z-10 mt-6 flex items-center justify-center gap-1.5 text-[10px] font-black uppercase tracking-widest hover:opacity-80 transition-opacity w-fit mx-auto"
-                  style={{ color: hexToRgba(TEAL, 0.7) }}
+                  className="relative z-10 mt-6 flex items-center justify-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-teal-700 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 transition-colors w-fit mx-auto"
                 >
                   Lihat statistik penuh <ArrowUpRight className="w-3 h-3" />
                 </Link>
@@ -394,33 +388,32 @@ export function KebajikanSubmitPage() {
 
             <Button
               onClick={() => setStep('CATEGORY')}
-              className="relative w-full h-14 text-sm font-black uppercase tracking-widest rounded-2xl text-slate-950 transition-all hover:scale-[1.02] active:scale-[0.98] mt-4"
-              style={{ background: TEAL, boxShadow: `0 0 40px ${hexToRgba(TEAL, 0.4)}` }}
+              className="relative w-full h-14 text-sm font-black uppercase tracking-widest rounded-2xl text-slate-950 bg-teal-400 hover:bg-teal-300 transition-all hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-teal-500/20"
             >
               Buat Aduan Baru <ChevronRight className="w-5 h-5 ml-1.5" />
             </Button>
             
             <Link to="/kebajikan/aduan-saya" className="block w-full mt-3">
               <button
-                className="relative w-full h-14 text-sm font-black uppercase tracking-widest rounded-2xl border border-white/20 text-white hover:bg-white/5 transition-all flex items-center justify-center outline-none"
+                className="relative w-full h-14 text-sm font-black uppercase tracking-widest rounded-2xl border border-slate-300 dark:border-white/20 text-slate-800 dark:text-white bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-white/5 transition-all flex items-center justify-center shadow-sm"
               >
                 Semak Status Aduan Saya <ArrowUpRight className="w-4 h-4 ml-1.5" />
               </button>
             </Link>
 
-            <p className="text-center text-[10px] text-white/20 mt-4">Log masuk diperlukan untuk kemukakan aduan</p>
+            <p className="text-center text-[10px] text-slate-500 dark:text-white/30 mt-4">Log masuk diperlukan untuk kemukakan aduan</p>
           </motion.div>
         )}
 
         {/* ── STEP: CATEGORY ─────────────────────────────────────────────────── */}
         {step === 'CATEGORY' && (
-          <motion.div key="cat" initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -40, opacity: 0 }} className="max-w-3xl mx-auto px-6 py-10">
+          <motion.div key="cat" initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -40, opacity: 0 }} className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
             <div className="mb-8">
-              <button onClick={() => setStep('STATS')} className="flex items-center gap-2 text-xs text-white/40 hover:text-white/70 mb-4 transition-colors">
+              <button onClick={() => setStep('STATS')} className="flex items-center gap-2 text-xs text-slate-500 dark:text-white/40 hover:text-slate-800 dark:hover:text-white/70 mb-4 transition-colors">
                 <ChevronLeft className="w-4 h-4" /> Kembali
               </button>
-              <h2 className="text-xl font-black text-white mb-1">Pilih Kategori Aduan</h2>
-              <p className="text-xs text-white/40">Pilih kategori yang paling sesuai dengan aduan anda</p>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">Pilih Kategori Aduan</h2>
+              <p className="text-xs text-slate-600 dark:text-white/40">Pilih kategori yang paling sesuai dengan aduan anda</p>
             </div>
 
             <div className="tour-aduan-kategori grid grid-cols-1 gap-3">
@@ -431,11 +424,13 @@ export function KebajikanSubmitPage() {
                     key={cat.key}
                     onClick={() => { upd('category', cat.key); }}
                     className={cn('relative flex items-center gap-4 p-5 rounded-2xl text-left border transition-all duration-300 group overflow-hidden',
-                      isSelected ? 'border-transparent shadow-lg transform scale-[1.02]' : 'border-white/5 hover:border-white/20 bg-white/[0.02] hover:bg-white/[0.04]'
+                      isSelected 
+                        ? 'border-teal-500/80 bg-teal-50/60 dark:bg-slate-900 shadow-md transform scale-[1.01]' 
+                        : 'border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-white/20 hover:bg-slate-50 dark:hover:bg-white/[0.04] shadow-sm'
                     )}
                   >
                     {isSelected && (
-                      <motion.div layoutId="active-cat-bg" className="absolute inset-0 opacity-20" style={{ background: `linear-gradient(135deg, ${cat.color}, transparent)` }} />
+                      <motion.div layoutId="active-cat-bg" className="absolute inset-0 opacity-15" style={{ background: `linear-gradient(135deg, ${cat.color}, transparent)` }} />
                     )}
                     {isSelected && (
                       <div className="absolute inset-0 border-2 rounded-2xl pointer-events-none" style={{ borderColor: cat.color }} />
@@ -444,8 +439,8 @@ export function KebajikanSubmitPage() {
                       <cat.icon className="w-6 h-6" style={{ color: isSelected ? '#0f172a' : cat.color }} />
                     </div>
                     <div className="relative z-10 flex-1">
-                      <p className="font-black text-base text-white">{KEBAJIKAN_CATEGORY_LABELS[cat.key]}</p>
-                      <p className="text-xs text-white/50 mt-1 leading-relaxed">{KEBAJIKAN_CATEGORY_DESCRIPTIONS[cat.key]}</p>
+                      <p className="font-black text-base text-slate-900 dark:text-white">{KEBAJIKAN_CATEGORY_LABELS[cat.key]}</p>
+                      <p className="text-xs text-slate-600 dark:text-white/50 mt-1 leading-relaxed">{KEBAJIKAN_CATEGORY_DESCRIPTIONS[cat.key]}</p>
                     </div>
                     {isSelected && <Check className="relative z-10 w-6 h-6 flex-shrink-0 animate-in zoom-in" style={{ color: cat.color }} />}
                   </button>
@@ -456,8 +451,7 @@ export function KebajikanSubmitPage() {
             <Button
               onClick={() => setStep('FORM')}
               disabled={!form.category}
-              className="w-full h-14 text-sm font-black uppercase tracking-widest rounded-2xl mt-8 text-slate-950 disabled:opacity-30 transition-all hover:scale-[1.02] active:scale-[0.98]"
-              style={{ background: form.category ? TEAL : '#334155', boxShadow: form.category ? `0 0 32px ${hexToRgba(TEAL, 0.3)}` : 'none' }}
+              className="w-full h-14 text-sm font-black uppercase tracking-widest rounded-2xl mt-8 text-slate-950 disabled:opacity-30 transition-all hover:scale-[1.01] active:scale-[0.99] bg-teal-400 hover:bg-teal-300 shadow-lg shadow-teal-500/20"
             >
               Seterusnya <ChevronRight className="w-5 h-5 ml-1.5" />
             </Button>
@@ -466,15 +460,15 @@ export function KebajikanSubmitPage() {
 
         {/* ── STEP: FORM ─────────────────────────────────────────────────────── */}
         {step === 'FORM' && (
-          <motion.div key="form" initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -40, opacity: 0 }} className="max-w-3xl mx-auto px-6 py-10">
+          <motion.div key="form" initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -40, opacity: 0 }} className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
             <div className="mb-8">
-              <button onClick={() => setStep('CATEGORY')} className="flex items-center gap-2 text-xs text-white/40 hover:text-white/70 mb-4 transition-colors">
+              <button onClick={() => setStep('CATEGORY')} className="flex items-center gap-2 text-xs text-slate-500 dark:text-white/40 hover:text-slate-800 dark:hover:text-white/70 mb-4 transition-colors">
                 <ChevronLeft className="w-4 h-4" /> Kategori
               </button>
-              <h2 className="text-xl font-black text-white mb-1">Maklumat Pengadu & Aduan</h2>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider text-white/30">Kategori:</span>
-                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full" style={{ background: hexToRgba(TEAL, 0.15), color: TEAL }}>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">Maklumat Pengadu & Aduan</h2>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40">Kategori:</span>
+                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-teal-50 dark:bg-teal-500/15 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-500/20">
                   {form.category ? KEBAJIKAN_CATEGORY_LABELS[form.category] : ''}
                 </span>
               </div>
@@ -482,34 +476,33 @@ export function KebajikanSubmitPage() {
 
             <div className="space-y-6">
               {/* Maklumat Pengadu */}
-              <fieldset className="rounded-2xl border border-white/[0.08] p-5 space-y-4" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 px-2">Maklumat Pengadu</legend>
-                <div className="grid grid-cols-2 gap-4">
+              <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
+                <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">Maklumat Pengadu</legend>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-1.5 block">Nama Penuh *</label>
-                    <Input value={form.full_name} onChange={e => upd('full_name', e.target.value)} placeholder="Nama seperti dalam rekod" className="bg-white/5 border-white/10 text-white placeholder:text-white/25 rounded-xl" />
+                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Nama Penuh *</label>
+                    <Input value={form.full_name} onChange={e => upd('full_name', e.target.value)} placeholder="Nama seperti dalam rekod" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-1.5 block">No. Matrik</label>
-                    <Input value={form.matric_no} onChange={e => upd('matric_no', e.target.value)} placeholder="23DAD00111" className="bg-white/5 border-white/10 text-white placeholder:text-white/25 rounded-xl" />
+                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">No. Matrik</label>
+                    <Input value={form.matric_no} onChange={e => upd('matric_no', e.target.value)} placeholder="23DAD00111" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-1.5 block">No. Telefon</label>
-                    <Input value={form.phone} onChange={e => upd('phone', e.target.value)} placeholder="010-1234567" className="bg-white/5 border-white/10 text-white placeholder:text-white/25 rounded-xl" />
+                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">No. Telefon</label>
+                    <Input value={form.phone} onChange={e => upd('phone', e.target.value)} placeholder="010-1234567" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-1.5 block">Kelas / Program</label>
-                    <Input value={form.class} onChange={e => upd('class', e.target.value)} placeholder="DAD3A" className="bg-white/5 border-white/10 text-white placeholder:text-white/25 rounded-xl" />
+                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Kelas / Program</label>
+                    <Input value={form.class} onChange={e => upd('class', e.target.value)} placeholder="DAD3A" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-1.5 block">Jantina</label>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Jantina</label>
                   <div className="flex gap-3">
                     {['Lelaki', 'Perempuan'].map(g => (
                       <button
                         key={g} onClick={() => upd('gender', g)}
-                        className={cn('flex-1 py-2.5 rounded-xl text-xs font-black border transition-all', form.gender === g ? 'text-white border-transparent' : 'text-white/40 border-white/10 hover:border-white/20 bg-white/[0.03]')}
-                        style={form.gender === g ? { background: TEAL, borderColor: TEAL, color: '#0f172a' } : {}}
+                        className={cn('flex-1 py-2.5 rounded-xl text-xs font-black border transition-all', form.gender === g ? 'bg-teal-400 border-teal-400 text-slate-950 shadow-sm' : 'text-slate-700 dark:text-white/50 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 bg-slate-50 dark:bg-white/[0.03]')}
                       >{g}</button>
                     ))}
                   </div>
@@ -530,52 +523,52 @@ export function KebajikanSubmitPage() {
                 <CategoryWifi form={form} upd={upd} toggleArr={toggleArr} />
               )}
               {form.category === 'LAIN_LAIN' && (
-                <div className="space-y-4">
+                <div className="space-y-4 p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-slate-900/80 shadow-sm">
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-1.5 block">Tajuk Aduan *</label>
-                    <Input value={form.title} onChange={e => upd('title', e.target.value)} placeholder="Ringkasan aduan anda" className="bg-white/5 border-white/10 text-white placeholder:text-white/25 rounded-xl" />
+                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Tajuk Aduan *</label>
+                    <Input value={form.title} onChange={e => upd('title', e.target.value)} placeholder="Ringkasan aduan anda" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
                   </div>
                 </div>
               )}
 
               {/* Description (common) */}
-              <fieldset className="rounded-2xl border border-white/[0.08] p-5 space-y-4" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 px-2">Penerangan Aduan</legend>
+              <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
+                <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">Penerangan Aduan</legend>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-1.5 block">Huraikan Aduan Anda dengan Terperinci *</label>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Huraikan Aduan Anda dengan Terperinci *</label>
                   <Textarea
                     value={form.description}
                     onChange={e => upd('description', e.target.value)}
                     placeholder="Terangkan masalah yang anda hadapi dengan lebih lanjut. Sertakan butiran seperti tarikh, masa, dan tempat kejadian..."
                     rows={4}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/25 rounded-xl resize-none"
+                    className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl resize-none"
                   />
                 </div>
 
                 {/* Image Upload */}
                 <div className="tour-aduan-gambar">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-2 block">Gambar Sokongan (Wajib - min. 1, maks. 3) *</label>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-2 block">Gambar Sokongan (Wajib - min. 1, maks. 3) *</label>
                   {images.length === 0 && (
-                    <p className="text-red-400 text-[10px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <p className="text-red-500 dark:text-red-400 text-[10px] font-bold uppercase tracking-wider mb-2 flex items-center gap-1">
                       <AlertCircle className="w-3.5 h-3.5" /> Sila muat naik sekurang-kurangnya 1 gambar/bukti aduan
                     </p>
                   )}
                   <div className="flex gap-3 flex-wrap">
                     {images.map((img, i) => (
-                      <div key={i} className="relative w-24 h-24 rounded-2xl overflow-hidden border border-white/10 shadow-lg group">
+                      <div key={i} className="relative w-24 h-24 rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 shadow-sm group">
                         <img src={URL.createObjectURL(img)} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                         <button
                           onClick={() => setImages(prev => prev.filter((_, j) => j !== i))}
-                          className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           <X className="w-3.5 h-3.5 text-white" />
                         </button>
                       </div>
                     ))}
                     {images.length < 3 && (
-                      <label className="w-24 h-24 rounded-2xl border-2 border-dashed border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/30 flex flex-col items-center justify-center cursor-pointer transition-all">
-                        <Upload className="w-6 h-6 text-white/30 mb-1.5" />
-                        <span className="text-[9px] font-black tracking-widest uppercase text-white/40">Tambah</span>
+                      <label className="w-24 h-24 rounded-2xl border-2 border-dashed border-slate-300 dark:border-white/15 bg-slate-50 dark:bg-white/[0.02] hover:bg-slate-100 dark:hover:bg-white/[0.05] hover:border-teal-500/50 flex flex-col items-center justify-center cursor-pointer transition-all">
+                        <Upload className="w-6 h-6 text-slate-400 dark:text-white/30 mb-1.5" />
+                        <span className="text-[9px] font-black tracking-widest uppercase text-slate-500 dark:text-white/40">Tambah</span>
                         <input type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files?.[0]) setImages(prev => [...prev, e.target.files![0]]); }} />
                       </label>
                     )}
@@ -587,8 +580,7 @@ export function KebajikanSubmitPage() {
             <Button
               onClick={() => setStep('PREVIEW')}
               disabled={!form.full_name || !form.description || images.length === 0}
-              className="w-full h-14 text-sm font-black uppercase tracking-widest rounded-2xl mt-8 text-slate-950 disabled:opacity-30 transition-all hover:scale-[1.02] active:scale-[0.98]"
-              style={{ background: form.full_name && form.description && images.length > 0 ? TEAL : '#334155', boxShadow: form.full_name && form.description && images.length > 0 ? `0 0 32px ${hexToRgba(TEAL, 0.3)}` : 'none' }}
+              className="w-full h-14 text-sm font-black uppercase tracking-widest rounded-2xl mt-8 text-slate-950 disabled:opacity-30 transition-all hover:scale-[1.01] active:scale-[0.99] bg-teal-400 hover:bg-teal-300 shadow-lg shadow-teal-500/20"
             >
               Semak Sebelum Hantar <ChevronRight className="w-5 h-5 ml-1.5" />
             </Button>
@@ -597,61 +589,61 @@ export function KebajikanSubmitPage() {
 
         {/* ── STEP: PREVIEW ──────────────────────────────────────────────────── */}
         {step === 'PREVIEW' && (
-          <motion.div key="preview" initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -40, opacity: 0 }} className="max-w-3xl mx-auto px-6 py-10">
+          <motion.div key="preview" initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -40, opacity: 0 }} className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
             <div className="mb-8">
-              <button onClick={() => setStep('FORM')} className="flex items-center gap-2 text-xs text-white/40 hover:text-white/70 mb-4 transition-colors">
+              <button onClick={() => setStep('FORM')} className="flex items-center gap-2 text-xs text-slate-500 dark:text-white/40 hover:text-slate-800 dark:hover:text-white/70 mb-4 transition-colors">
                 <ChevronLeft className="w-4 h-4" /> Edit Aduan
               </button>
-              <h2 className="text-xl font-black text-white mb-1">Semak & Hantar</h2>
-              <p className="text-xs text-white/40">Sila semak maklumat sebelum menghantar aduan anda</p>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-1">Semak & Hantar</h2>
+              <p className="text-xs text-slate-600 dark:text-white/40">Sila semak maklumat sebelum menghantar aduan anda</p>
             </div>
 
-            <div className="rounded-2xl border border-white/[0.1] p-6 space-y-5" style={{ background: 'rgba(255,255,255,0.025)' }}>
+            <div className="rounded-2xl border border-slate-200 dark:border-white/[0.1] p-6 space-y-5 bg-white dark:bg-slate-900/80 shadow-sm">
               <Row label="Nama" value={form.full_name} />
               <Row label="No. Matrik" value={form.matric_no || '-'} />
               <Row label="Telefon" value={form.phone || '-'} />
               <Row label="Kelas" value={form.class || '-'} />
-              <hr className="border-white/[0.08]" />
+              <hr className="border-slate-200 dark:border-white/[0.08]" />
               <Row label="Kategori" value={form.category ? KEBAJIKAN_CATEGORY_LABELS[form.category] : '-'} highlight />
               <Row label="Tajuk Aduan" value={buildTitle()} />
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-white/40 mb-1.5">Penerangan</p>
-                <p className="text-xs text-white/70 leading-relaxed">{form.description}</p>
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1.5">Penerangan</p>
+                <p className="text-xs text-slate-700 dark:text-white/70 leading-relaxed">{form.description}</p>
               </div>
               {images.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-white/40 mb-2">Gambar ({images.length})</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-2">Gambar ({images.length})</p>
                   <div className="flex gap-2">
                     {images.map((img, i) => (
-                      <img key={i} src={URL.createObjectURL(img)} className="w-16 h-16 rounded-xl object-cover border border-white/10" />
+                      <img key={i} src={URL.createObjectURL(img)} className="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-white/10 shadow-sm" />
                     ))}
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="mt-4 p-4 rounded-2xl flex items-start gap-3" style={{ background: hexToRgba(TEAL, 0.06), border: `1px solid ${hexToRgba(TEAL, 0.15)}` }}>
-              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TEAL }} />
-              <p className="text-xs text-white/60">Dengan menghantar aduan ini, anda bersetuju maklumat anda dikongsi dengan pihak Exco Kebajikan JPP POLISAS untuk tindakan lanjut.</p>
+            <div className="mt-4 p-4 rounded-2xl flex items-start gap-3 bg-teal-50 dark:bg-teal-500/[0.06] border border-teal-200 dark:border-teal-500/15">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-teal-600 dark:text-teal-400" />
+              <p className="text-xs text-slate-700 dark:text-white/70">Dengan menghantar aduan ini, anda bersetuju maklumat anda dikongsi dengan pihak Exco Kebajikan JPP POLISAS untuk tindakan lanjut.</p>
             </div>
 
             {/* ── Duplicate Warning ── */}
             {duplicateWarning && (
-              <div className="mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-4 space-y-3">
+              <div className="mt-4 rounded-2xl border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/[0.06] p-4 space-y-3">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-black text-amber-400 uppercase tracking-widest mb-1">Aduan Serupa Sedang Diproses</p>
-                    <p className="text-xs text-white/60 leading-relaxed">
+                    <p className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-1">Aduan Serupa Sedang Diproses</p>
+                    <p className="text-xs text-slate-700 dark:text-white/60 leading-relaxed">
                       Anda mempunyai aduan dalam kategori yang sama yang masih dalam proses:{' '}
-                      <span className="font-bold text-white/80">{duplicateWarning.ticket_no}</span> — {duplicateWarning.title}
+                      <span className="font-bold text-slate-900 dark:text-white/80">{duplicateWarning.ticket_no}</span> — {duplicateWarning.title}
                     </p>
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <a
                     href={`/kebajikan/aduan/${duplicateWarning.id}`}
-                    className="flex-1 h-9 flex items-center justify-center rounded-xl text-xs font-black uppercase tracking-wider border border-teal-500/30 text-teal-400 hover:bg-teal-500/10 transition-colors"
+                    className="flex-1 h-9 flex items-center justify-center rounded-xl text-xs font-black uppercase tracking-wider border border-teal-500/30 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-500/10 transition-colors"
                   >
                     Lihat Tiket Sedia Ada
                   </a>
@@ -660,7 +652,7 @@ export function KebajikanSubmitPage() {
                       setBypassDuplicate(true);
                       setDuplicateWarning(null);
                     }}
-                    className="flex-1 h-9 rounded-xl text-xs font-black uppercase tracking-wider bg-red-500/80 hover:bg-red-500 text-white transition-colors"
+                    className="flex-1 h-9 rounded-xl text-xs font-black uppercase tracking-wider bg-red-600 hover:bg-red-700 text-white transition-colors"
                   >
                     Hantar Aduan Tetap
                   </button>
@@ -671,8 +663,7 @@ export function KebajikanSubmitPage() {
             <Button
               onClick={handleSubmit}
               disabled={submitting || images.length === 0}
-              className="w-full h-12 text-sm font-black uppercase tracking-widest rounded-2xl mt-5 text-slate-900 transition-all"
-              style={{ background: TEAL, boxShadow: `0 0 24px ${hexToRgba(TEAL, 0.3)}` }}
+              className="w-full h-12 text-sm font-black uppercase tracking-widest rounded-2xl mt-5 text-slate-950 bg-teal-400 hover:bg-teal-300 transition-all shadow-lg shadow-teal-500/20"
             >
               {submitting ? 'Menghantar...' : 'Hantar Aduan ✓'}
             </Button>
@@ -681,31 +672,30 @@ export function KebajikanSubmitPage() {
 
         {/* ── STEP: SUCCESS ──────────────────────────────────────────────────── */}
         {step === 'SUCCESS' && (
-          <motion.div key="success" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="max-w-lg mx-auto px-6 py-20 text-center">
+          <motion.div key="success" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="max-w-lg mx-auto px-6 py-16 sm:py-20 text-center">
             <motion.div
               initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.2 }}
-              className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
-              style={{ background: hexToRgba('#10B981', 0.15), border: `2px solid ${hexToRgba('#10B981', 0.4)}` }}
+              className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-emerald-100 dark:bg-emerald-500/15 border-2 border-emerald-500/30"
             >
-              <CheckCircle2 className="w-10 h-10 text-emerald-400" />
+              <CheckCircle2 className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
             </motion.div>
-            <h2 className="text-2xl font-black text-white mb-3">Aduan Berjaya Dikemukakan!</h2>
-            <p className="text-sm text-white/50 mb-6">Aduan anda telah diterima oleh sistem. No. aduan anda ialah:</p>
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-3">Aduan Berjaya Dikemukakan!</h2>
+            <p className="text-sm text-slate-600 dark:text-white/50 mb-6">Aduan anda telah diterima oleh sistem. No. aduan anda ialah:</p>
             <div
-              className="inline-block px-8 py-4 rounded-2xl text-2xl font-black tracking-widest mb-8"
-              style={{ background: hexToRgba(TEAL, 0.12), border: `2px solid ${hexToRgba(TEAL, 0.3)}`, color: TEAL }}
+              className="inline-block px-8 py-4 rounded-2xl text-2xl font-black tracking-widest mb-8 bg-teal-50 dark:bg-teal-500/10 border-2 border-teal-400 dark:border-teal-500/30 text-teal-800 dark:text-teal-300 shadow-sm"
             >
               {submittedNo}
             </div>
-            <p className="text-xs text-white/30 mb-8">Exco Kebajikan akan menguruskan aduan anda dalam masa yang singkat. Anda akan dimaklumkan melalui notifikasi dalam portal.</p>
-            <div className="flex gap-3">
+            <p className="text-xs text-slate-500 dark:text-white/40 mb-8">Exco Kebajikan akan menguruskan aduan anda dalam masa yang singkat. Anda akan dimaklumkan melalui notifikasi dalam portal.</p>
+
+            <div className="flex flex-col sm:flex-row gap-3">
               <Link to="/kebajikan/aduan-saya" className="flex-1">
-                <Button className="w-full h-11 text-xs font-black uppercase tracking-widest rounded-xl text-slate-900" style={{ background: TEAL }}>
+                <Button className="w-full h-11 text-xs font-black uppercase tracking-widest rounded-xl text-slate-950 bg-teal-400 hover:bg-teal-300 shadow-md">
                   Semak Status Aduan
                 </Button>
               </Link>
               <Link to="/portal" className="flex-1">
-                <Button variant="outline" className="w-full h-11 text-xs font-black uppercase tracking-widest rounded-xl border-white/15 text-white/60 hover:text-white">
+                <Button variant="outline" className="w-full h-11 text-xs font-black uppercase tracking-widest rounded-xl border-slate-300 dark:border-white/15 text-slate-700 dark:text-white/70 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-transparent">
                   Kembali ke Portal
                 </Button>
               </Link>
@@ -723,22 +713,22 @@ export function KebajikanSubmitPage() {
 
 function CategoryJabatan({ form, upd }: { form: FormData; upd: Function }) {
   return (
-    <fieldset className="rounded-2xl border border-white/[0.08] p-5 space-y-4" style={{ background: 'rgba(255,255,255,0.02)' }}>
-      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 px-2">Fasiliti Jabatan</legend>
+    <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
+      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">Fasiliti Jabatan</legend>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-1.5 block">Jabatan *</label>
-        <div className="grid grid-cols-2 gap-2">
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Jabatan *</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {JABATAN_LIST.map(j => (
-            <button key={j} onClick={() => upd('jabatan', j)} className={cn('text-left px-3 py-2 rounded-xl text-xs border transition-all', form.jabatan === j ? 'text-white border-indigo-500/60 bg-indigo-500/10' : 'text-white/50 border-white/[0.07] hover:border-white/15')}>
+            <button key={j} onClick={() => upd('jabatan', j)} className={cn('text-left px-3.5 py-2.5 rounded-xl text-xs border transition-all', form.jabatan === j ? 'text-indigo-900 dark:text-white border-indigo-500 bg-indigo-50 dark:bg-indigo-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}>
               {j}
             </button>
           ))}
         </div>
-        {form.jabatan === 'Lain-Lain' && <Input value={form.jabatan_custom || ''} onChange={e => upd('jabatan_custom', e.target.value)} placeholder="Nama jabatan..." className="mt-2 bg-white/5 border-white/10 text-white placeholder:text-white/25 rounded-xl" />}
+        {form.jabatan === 'Lain-Lain' && <Input value={form.jabatan_custom || ''} onChange={e => upd('jabatan_custom', e.target.value)} placeholder="Nama jabatan..." className="mt-2 bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />}
       </div>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-1.5 block">Lokasi Spesifik</label>
-        <Input value={form.lokasi || ''} onChange={e => upd('lokasi', e.target.value)} placeholder="Bilik Kuliah JKE-02, dsb." className="bg-white/5 border-white/10 text-white placeholder:text-white/25 rounded-xl" />
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Lokasi Spesifik</label>
+        <Input value={form.lokasi || ''} onChange={e => upd('lokasi', e.target.value)} placeholder="Bilik Kuliah JKE-02, dsb." className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
       </div>
     </fieldset>
   );
@@ -746,43 +736,43 @@ function CategoryJabatan({ form, upd }: { form: FormData; upd: Function }) {
 
 function CategorySukan({ form, upd }: { form: FormData; upd: Function }) {
   return (
-    <fieldset className="rounded-2xl border border-white/[0.08] p-5 space-y-4" style={{ background: 'rgba(255,255,255,0.02)' }}>
-      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 px-2">Fasiliti Sukan</legend>
-      <div className="grid grid-cols-2 gap-2">
+    <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
+      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">Fasiliti Sukan</legend>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {SUKAN_LIST.map(s => (
-          <button key={s} onClick={() => upd('sukan', s)} className={cn('text-left px-3 py-2 rounded-xl text-xs border transition-all', form.sukan === s ? 'text-white border-amber-500/60 bg-amber-500/10' : 'text-white/50 border-white/[0.07] hover:border-white/15')}>
+          <button key={s} onClick={() => upd('sukan', s)} className={cn('text-left px-3.5 py-2.5 rounded-xl text-xs border transition-all', form.sukan === s ? 'text-amber-900 dark:text-white border-amber-500 bg-amber-50 dark:bg-amber-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}>
             {s}
           </button>
         ))}
       </div>
-      {form.sukan === 'Lain-Lain' && <Input value={form.sukan_custom || ''} onChange={e => upd('sukan_custom', e.target.value)} placeholder="Nama fasiliti..." className="bg-white/5 border-white/10 text-white placeholder:text-white/25 rounded-xl" />}
+      {form.sukan === 'Lain-Lain' && <Input value={form.sukan_custom || ''} onChange={e => upd('sukan_custom', e.target.value)} placeholder="Nama fasiliti..." className="mt-2 bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />}
     </fieldset>
   );
 }
 
 function CategoryKafeteria({ form, upd, toggleArr }: { form: FormData; upd: Function; toggleArr: Function }) {
   return (
-    <fieldset className="rounded-2xl border border-white/[0.08] p-5 space-y-4" style={{ background: 'rgba(255,255,255,0.02)' }}>
-      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 px-2">Kafeteria</legend>
+    <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
+      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">Kafeteria</legend>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-1.5 block">Pilih Kafeteria *</label>
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Pilih Kafeteria *</label>
         <div className="flex gap-2 flex-wrap">
           {KAFETERIA_LIST.map(k => (
-            <button key={k} onClick={() => upd('kafeteria', k)} className={cn('px-4 py-2 rounded-xl text-xs font-black border transition-all', form.kafeteria === k ? 'text-white border-red-500/60 bg-red-500/10' : 'text-white/50 border-white/[0.07] hover:border-white/15')}>
+            <button key={k} onClick={() => upd('kafeteria', k)} className={cn('px-4 py-2 rounded-xl text-xs font-black border transition-all', form.kafeteria === k ? 'text-red-900 dark:text-white border-red-500 bg-red-50 dark:bg-red-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}>
               {k}
             </button>
           ))}
         </div>
-        {form.kafeteria === 'Lain-Lain' && <Input value={form.kafeteria_custom || ''} onChange={e => upd('kafeteria_custom', e.target.value)} placeholder="Nama kafeteria..." className="mt-2 bg-white/5 border-white/10 text-white placeholder:text-white/25 rounded-xl" />}
+        {form.kafeteria === 'Lain-Lain' && <Input value={form.kafeteria_custom || ''} onChange={e => upd('kafeteria_custom', e.target.value)} placeholder="Nama kafeteria..." className="mt-2 bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />}
       </div>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-1.5 block">Jenis Aduan (boleh pilih lebih 1)</label>
-        <div className="grid grid-cols-2 gap-2">
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Jenis Aduan (boleh pilih lebih 1)</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {KAFETERIA_TYPES.map(t => {
             const checked = (form.kafeteria_types as string[] || []).includes(t);
             return (
-              <button key={t} onClick={() => toggleArr('kafeteria_types', t)} className={cn('flex items-center gap-2 px-3 py-2 rounded-xl text-xs border transition-all text-left', checked ? 'text-white border-red-500/60 bg-red-500/10' : 'text-white/50 border-white/[0.07] hover:border-white/15')}>
-                <Check className={cn('w-3 h-3 flex-shrink-0', checked ? 'text-red-400' : 'text-white/20')} />{t}
+              <button key={t} onClick={() => toggleArr('kafeteria_types', t)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs border transition-all text-left', checked ? 'text-red-900 dark:text-white border-red-500 bg-red-50 dark:bg-red-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}>
+                <Check className={cn('w-3 h-3 flex-shrink-0', checked ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-white/20')} />{t}
               </button>
             );
           })}
@@ -799,35 +789,35 @@ function CategoryWifi({ form, upd, toggleArr }: { form: FormData; upd: Function;
   const acts   = ['Google Classroom/Teams', 'Zoom/Video Call', 'Download/Upload tugasan', 'Streaming', 'Media Sosial', 'Gaming', 'Lain-Lain'];
 
   return (
-    <fieldset className="rounded-2xl border border-white/[0.08] p-5 space-y-4" style={{ background: 'rgba(255,255,255,0.02)' }}>
-      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40 px-2">WiFi Kamsis</legend>
-      <div className="grid grid-cols-2 gap-4">
+    <fieldset className="rounded-2xl border border-slate-200 dark:border-white/[0.08] p-5 sm:p-6 space-y-4 bg-white dark:bg-slate-900/80 shadow-sm">
+      <legend className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 px-2">WiFi Kamsis</legend>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-1.5 block">Blok Asrama *</label>
-          <Input value={form.wifi_blok || ''} onChange={e => upd('wifi_blok', e.target.value)} placeholder="Blok A, B, dsb." className="bg-white/5 border-white/10 text-white placeholder:text-white/25 rounded-xl" />
+          <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Blok Asrama *</label>
+          <Input value={form.wifi_blok || ''} onChange={e => upd('wifi_blok', e.target.value)} placeholder="Blok A, B, dsb." className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
         </div>
         <div>
-          <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-1.5 block">Bilik (Opsional)</label>
-          <Input value={form.wifi_bilik || ''} onChange={e => upd('wifi_bilik', e.target.value)} placeholder="A-214" className="bg-white/5 border-white/10 text-white placeholder:text-white/25 rounded-xl" />
+          <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Bilik (Opsional)</label>
+          <Input value={form.wifi_bilik || ''} onChange={e => upd('wifi_bilik', e.target.value)} placeholder="A-214" className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl" />
         </div>
       </div>
       <OptionGrid label="Tahap Kelajuan" options={speeds} value={form.wifi_speed} onSelect={v => upd('wifi_speed', v)} color={TEAL} />
       <OptionGrid label="Kekerapan Gangguan" options={freqs} value={form.wifi_frequency} onSelect={v => upd('wifi_frequency', v)} color={TEAL} />
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-1.5 block">Masa Gangguan (boleh pilih lebih 1)</label>
-        <div className="grid grid-cols-2 gap-2">
-          {times.map(t => { const c = (form.wifi_times as string[] || []).includes(t); return (<button key={t} onClick={() => toggleArr('wifi_times', t)} className={cn('flex items-center gap-2 px-3 py-2 rounded-xl text-xs border transition-all text-left', c ? 'text-white border-teal-500/60 bg-teal-500/10' : 'text-white/50 border-white/[0.07]')}><Check className={cn('w-3 h-3', c ? 'text-teal-400' : 'text-white/20')} />{t}</button>); })}
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Masa Gangguan (boleh pilih lebih 1)</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {times.map(t => { const c = (form.wifi_times as string[] || []).includes(t); return (<button key={t} onClick={() => toggleArr('wifi_times', t)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs border transition-all text-left', c ? 'text-teal-900 dark:text-white border-teal-500 bg-teal-50 dark:bg-teal-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}><Check className={cn('w-3 h-3', c ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-white/20')} />{t}</button>); })}
         </div>
       </div>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-1.5 block">Aktiviti Terganggu (boleh pilih lebih 1)</label>
-        <div className="grid grid-cols-2 gap-2">
-          {acts.map(a => { const c = (form.wifi_activities as string[] || []).includes(a); return (<button key={a} onClick={() => toggleArr('wifi_activities', a)} className={cn('flex items-center gap-2 px-3 py-2 rounded-xl text-xs border transition-all text-left', c ? 'text-white border-teal-500/60 bg-teal-500/10' : 'text-white/50 border-white/[0.07]')}><Check className={cn('w-3 h-3', c ? 'text-teal-400' : 'text-white/20')} />{a}</button>); })}
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Aktiviti Terganggu (boleh pilih lebih 1)</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {acts.map(a => { const c = (form.wifi_activities as string[] || []).includes(a); return (<button key={a} onClick={() => toggleArr('wifi_activities', a)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs border transition-all text-left', c ? 'text-teal-900 dark:text-white border-teal-500 bg-teal-50 dark:bg-teal-500/20 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')}><Check className={cn('w-3 h-3', c ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-white/20')} />{a}</button>); })}
         </div>
       </div>
       <div>
-        <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-1.5 block">Cadangan / Harapan Anda</label>
-        <Textarea value={form.wifi_suggestion || ''} onChange={e => upd('wifi_suggestion', e.target.value)} placeholder="Cadangan penambahbaikan..." rows={2} className="bg-white/5 border-white/10 text-white placeholder:text-white/25 rounded-xl resize-none" />
+        <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">Cadangan / Harapan Anda</label>
+        <Textarea value={form.wifi_suggestion || ''} onChange={e => upd('wifi_suggestion', e.target.value)} placeholder="Cadangan penambahbaikan..." rows={2} className="bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl resize-none" />
       </div>
     </fieldset>
   );
@@ -836,11 +826,10 @@ function CategoryWifi({ form, upd, toggleArr }: { form: FormData; upd: Function;
 function OptionGrid({ label, options, value, onSelect, color }: { label: string; options: string[]; value?: string; onSelect: (v: string) => void; color: string }) {
   return (
     <div>
-      <label className="text-[10px] font-black uppercase tracking-wider text-white/50 mb-1.5 block">{label}</label>
-      <div className="grid grid-cols-2 gap-2">
+      <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60 mb-1.5 block">{label}</label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {options.map(o => (
-          <button key={o} onClick={() => onSelect(o)} className={cn('px-3 py-2 rounded-xl text-xs border transition-all text-left', value === o ? 'text-white' : 'text-white/50 border-white/[0.07] hover:border-white/15')}
-            style={value === o ? { borderColor: color, background: `rgba(45,212,191,0.1)`, color } : {}} >
+          <button key={o} onClick={() => onSelect(o)} className={cn('px-3 py-2.5 rounded-xl text-xs border transition-all text-left', value === o ? 'border-teal-500 bg-teal-50 dark:bg-teal-500/20 text-teal-900 dark:text-teal-300 font-bold shadow-sm' : 'text-slate-700 dark:text-white/60 border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-transparent hover:border-slate-300 dark:hover:border-white/15')} >
             {o}
           </button>
         ))}
@@ -852,8 +841,8 @@ function OptionGrid({ label, options, value, onSelect, color }: { label: string;
 function Row({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div className="flex justify-between items-start gap-4">
-      <p className="text-[10px] font-black uppercase tracking-wider text-white/30 flex-shrink-0 mt-0.5">{label}</p>
-      <p className={cn('text-xs font-bold text-right', highlight ? 'text-teal-400 font-black' : 'text-white/70')}>{value}</p>
+      <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 flex-shrink-0 mt-0.5">{label}</p>
+      <p className={cn('text-xs font-bold text-right', highlight ? 'text-teal-600 dark:text-teal-400 font-black' : 'text-slate-800 dark:text-white/80')}>{value}</p>
     </div>
   );
 }

@@ -1,16 +1,17 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Plus, ChevronRight, Clock, CheckCircle2, XCircle, RefreshCw,
+  Plus, Clock, CheckCircle2, XCircle, RefreshCw,
   AlertTriangle, HeartHandshake, Star, MessageSquare, ChevronDown,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { supabase } from '@/lib/supabase';
 import { sendNotificationToKebajikanExco } from '@/lib/notifications';
 import { sendEmail } from '@/lib/email';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import {
   KebajikanTicket, KEBAJIKAN_STATUS_LABELS, KEBAJIKAN_STATUS_COLORS,
   KEBAJIKAN_CATEGORY_LABELS, KEBAJIKAN_THEME_COLOR,
@@ -18,14 +19,15 @@ import {
 } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
-import { hexToRgba } from '@/lib/utils';
+import { cn, hexToRgba } from '@/lib/utils';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 
 const TEAL = KEBAJIKAN_THEME_COLOR;
 
 export function KebajikanMyTickets() {
   const { user } = useAuth();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const navigate = useNavigate();
   const [tickets, setTickets] = useState<KebajikanTicket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,7 +100,6 @@ export function KebajikanMyTickets() {
         .single();
 
       if (settingsData?.email_reopen) {
-        // If ticket was assigned, notify that specific Exco. Otherwise, notify all.
         let emails: string[] = [];
         if (reopenTicket.assigned_to) {
           const { data: exco } = await supabase
@@ -156,49 +157,49 @@ export function KebajikanMyTickets() {
   };
 
   const statusIcon = (s: KebajikanTicketStatus) => {
-    if (s === 'RESOLVED' || s === 'CLOSED') return <CheckCircle2 className="w-4 h-4 text-emerald-400" />;
-    if (s === 'ESCALATED') return <AlertTriangle className="w-4 h-4 text-red-400" />;
+    if (s === 'RESOLVED' || s === 'CLOSED') return <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />;
+    if (s === 'ESCALATED') return <AlertTriangle className="w-4 h-4 text-red-500 dark:text-red-400" />;
     if (s === 'CANCELLED') return <XCircle className="w-4 h-4 text-slate-400" />;
-    return <Clock className="w-4 h-4" style={{ color: TEAL }} />;
+    return <Clock className="w-4 h-4 text-teal-600 dark:text-teal-400" />;
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950 text-slate-50 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 relative overflow-hidden transition-colors">
       {/* Background Glow */}
       <div className="absolute top-0 inset-x-0 h-[400px] bg-teal-500/10 blur-[100px] rounded-full pointer-events-none -translate-y-1/2" />
       
       {/* Header */}
-      <div className="sticky top-0 z-40 px-6 h-16 flex items-center justify-between border-b border-white/5 bg-slate-950/60 backdrop-blur-2xl">
+      <div className="sticky top-0 z-40 px-4 sm:px-6 h-16 flex items-center justify-between border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/60 backdrop-blur-2xl transition-colors">
         <div className="flex items-center gap-3">
-          <HeartHandshake className="w-6 h-6" style={{ color: TEAL }} />
+          <HeartHandshake className="w-6 h-6 text-teal-600 dark:text-teal-400" />
           <div>
-            <p className="font-black text-white text-[15px] tracking-tight">Aduan Saya</p>
-            <p className="text-[9px] text-teal-400/70 font-black uppercase tracking-[0.2em] mt-0.5">E-Kebajikan</p>
+            <p className="font-black text-slate-900 dark:text-white text-[15px] tracking-tight">Aduan Saya</p>
+            <p className="text-[9px] text-teal-700 dark:text-teal-400/90 font-black uppercase tracking-[0.2em] mt-0.5">E-Kebajikan</p>
           </div>
         </div>
         <div className="flex items-center gap-2 relative">
-          <NotificationBell variant="dark" />
+          <NotificationBell variant={isDark ? 'dark' : 'light'} />
 
           <Link to="/kebajikan/buat-aduan">
-            <Button className="h-10 px-5 text-xs font-black uppercase tracking-widest rounded-xl text-slate-950 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(45,212,191,0.2)] transition-all" style={{ background: TEAL }}>
+            <Button className="h-10 px-4 sm:px-5 text-xs font-black uppercase tracking-widest rounded-xl text-slate-950 bg-teal-400 hover:bg-teal-300 shadow-md shadow-teal-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
               <Plus className="w-4 h-4 mr-1.5" /> Aduan Baru
             </Button>
           </Link>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-6 py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {loading ? (
           <div className="space-y-4">
-            {[1, 2, 3].map(i => <div key={i} className="h-24 rounded-2xl bg-white/[0.03] animate-pulse" />)}
+            {[1, 2, 3].map(i => <div key={i} className="h-24 rounded-2xl bg-slate-200/60 dark:bg-white/[0.03] animate-pulse" />)}
           </div>
         ) : tickets.length === 0 ? (
-          <div className="text-center py-20">
-            <HeartHandshake className="w-14 h-14 mx-auto mb-4 opacity-20" style={{ color: TEAL }} />
-            <p className="font-black text-white/30 text-sm mb-2">Tiada Aduan Dikemukakan</p>
-            <p className="text-xs text-white/20 mb-6">Aduan yang anda kemukakan akan dipaparkan di sini</p>
+          <div className="text-center py-20 bg-white dark:bg-slate-900/60 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm p-8">
+            <HeartHandshake className="w-14 h-14 mx-auto mb-4 text-slate-300 dark:text-white/20" />
+            <p className="font-black text-slate-800 dark:text-white/40 text-base mb-2">Tiada Aduan Dikemukakan</p>
+            <p className="text-xs text-slate-500 dark:text-white/30 mb-6">Aduan yang anda kemukakan akan dipaparkan di sini</p>
             <Link to="/kebajikan/buat-aduan">
-              <Button className="h-10 px-6 text-xs font-black uppercase tracking-widest rounded-xl text-slate-900" style={{ background: TEAL }}>
+              <Button className="h-10 px-6 text-xs font-black uppercase tracking-widest rounded-xl text-slate-950 bg-teal-400 hover:bg-teal-300 shadow-md">
                 Buat Aduan Pertama
               </Button>
             </Link>
@@ -209,33 +210,33 @@ export function KebajikanMyTickets() {
               <motion.div
                 key={t.id}
                 layout
-                className="relative rounded-3xl border border-white/5 overflow-hidden shadow-2xl bg-white/[0.02] backdrop-blur-xl group hover:border-white/10 transition-colors"
+                className="relative rounded-3xl border border-slate-200 dark:border-white/5 overflow-hidden shadow-sm dark:shadow-2xl bg-white dark:bg-slate-900/80 backdrop-blur-xl group hover:border-slate-300 dark:hover:border-white/10 transition-colors"
               >
                 {/* Status Indicator Bar */}
-                <div className="absolute left-0 top-0 bottom-0 w-1" style={{ background: KEBAJIKAN_STATUS_COLORS[t.status].replace(/text-/g, 'bg-').split(' ')[0] || TEAL }} />
+                <div className="absolute left-0 top-0 bottom-0 w-1.5" style={{ background: KEBAJIKAN_STATUS_COLORS[t.status].replace(/text-/g, 'bg-').split(' ')[0] || TEAL }} />
                 
                 {/* Ticket header */}
                 <button
-                  className="w-full flex items-start gap-4 p-6 pl-8 text-left hover:bg-white/[0.02] transition-colors"
+                  className="w-full flex items-start gap-4 p-5 sm:p-6 pl-7 sm:pl-8 text-left hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors"
                   onClick={() => setExpanded(expanded === t.id ? null : t.id)}
                 >
                   <div className="flex-shrink-0 mt-1">{statusIcon(t.status)}</div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start gap-3 mb-2">
-                      <span className="text-base font-black text-white/90 truncate flex-1">{t.title}</span>
-                      <span className={cn('text-[9px] font-black px-2.5 py-1 rounded-full flex-shrink-0 uppercase tracking-widest', KEBAJIKAN_STATUS_COLORS[t.status])}>
+                      <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white/90 truncate flex-1">{t.title}</span>
+                      <span className={cn('text-[9px] font-black px-2.5 py-1 rounded-full flex-shrink-0 uppercase tracking-widest shadow-sm', KEBAJIKAN_STATUS_COLORS[t.status])}>
                         {KEBAJIKAN_STATUS_LABELS[t.status]}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 text-[10px] text-white/30">
-                      <span className="font-black text-white/50">{t.ticket_no}</span>
+                    <div className="flex items-center gap-2.5 text-[10px] text-slate-500 dark:text-white/40">
+                      <span className="font-black text-slate-700 dark:text-white/60">{t.ticket_no}</span>
                       <span>·</span>
                       <span>{KEBAJIKAN_CATEGORY_LABELS[t.category]}</span>
                       <span>·</span>
                       <span>{formatDistanceToNow(new Date(t.created_at), { addSuffix: true, locale: ms })}</span>
                     </div>
                   </div>
-                  <ChevronDown className={cn('w-4 h-4 text-white/20 flex-shrink-0 transition-transform mt-0.5', expanded === t.id && 'rotate-180')} />
+                  <ChevronDown className={cn('w-4 h-4 text-slate-400 dark:text-white/30 flex-shrink-0 transition-transform mt-0.5', expanded === t.id && 'rotate-180')} />
                 </button>
 
                 {/* Expanded detail */}
@@ -247,14 +248,14 @@ export function KebajikanMyTickets() {
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="px-5 pb-5 border-t border-white/[0.06] pt-4 space-y-4">
-                        <p className="text-xs text-white/50 leading-relaxed">{t.description}</p>
+                      <div className="px-5 sm:px-6 pb-5 sm:pb-6 border-t border-slate-100 dark:border-white/[0.06] pt-4 space-y-4">
+                        <p className="text-xs sm:text-sm text-slate-600 dark:text-white/60 leading-relaxed">{t.description}</p>
 
                         {/* Resolution note */}
                         {t.resolution_note && (
-                          <div className="p-3 rounded-xl" style={{ background: hexToRgba('#10B981', 0.08), border: `1px solid ${hexToRgba('#10B981', 0.2)}` }}>
-                            <p className="text-[9px] font-black uppercase tracking-widest text-emerald-400 mb-1">Nota Resolusi</p>
-                            <p className="text-xs text-white/70">{t.resolution_note}</p>
+                          <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-500/20">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400 mb-1">Nota Resolusi</p>
+                            <p className="text-xs text-slate-800 dark:text-white/80">{t.resolution_note}</p>
                           </div>
                         )}
 
@@ -262,33 +263,33 @@ export function KebajikanMyTickets() {
                         <div className="flex gap-2 flex-wrap">
                           {/* Cancel — only if NEW */}
                           {t.status === 'NEW' && (
-                            <Button size="sm" variant="outline" onClick={() => handleCancel(t)} className="h-8 px-3 text-[10px] font-black uppercase tracking-widest border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-xl">
+                            <Button size="sm" variant="outline" onClick={() => handleCancel(t)} className="h-8 px-3 text-[10px] font-black uppercase tracking-widest border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl">
                               <XCircle className="w-3 h-3 mr-1" /> Batal Aduan
                             </Button>
                           )}
                           {/* Rate — if RESOLVED */}
                           {t.status === 'RESOLVED' && !t.rating && (
-                            <Button size="sm" onClick={() => setRatingTicket(t)} className="h-8 px-3 text-[10px] font-black uppercase tracking-widest rounded-xl text-slate-900" style={{ background: '#F59E0B' }}>
+                            <Button size="sm" onClick={() => setRatingTicket(t)} className="h-8 px-3 text-[10px] font-black uppercase tracking-widest rounded-xl text-slate-950 bg-amber-400 hover:bg-amber-300 shadow-sm">
                               <Star className="w-3 h-3 mr-1" /> Beri Rating
                             </Button>
                           )}
                           {/* Reopen — if RESOLVED */}
                           {t.status === 'RESOLVED' && (
-                            <Button size="sm" variant="outline" onClick={() => setReopenTicket(t)} className="h-8 px-3 text-[10px] font-black uppercase tracking-widest border-white/15 text-white/50 hover:text-white rounded-xl">
+                            <Button size="sm" variant="outline" onClick={() => setReopenTicket(t)} className="h-8 px-3 text-[10px] font-black uppercase tracking-widest border-slate-300 dark:border-white/15 text-slate-700 dark:text-white/60 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl">
                               <RefreshCw className="w-3 h-3 mr-1" /> Buka Semula
                             </Button>
                           )}
                           {/* View comments / chat */}
-                          <Button size="sm" variant="outline" onClick={() => navigate(`/kebajikan/aduan/${t.id}`)} className="h-8 px-3 text-[10px] font-black uppercase tracking-widest border-white/[0.07] text-white/40 hover:text-white rounded-xl">
+                          <Button size="sm" variant="outline" onClick={() => navigate(`/kebajikan/aduan/${t.id}`)} className="h-8 px-3 text-[10px] font-black uppercase tracking-widest border-slate-200 dark:border-white/[0.07] text-slate-700 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl">
                             <MessageSquare className="w-3 h-3 mr-1" /> Chat
                           </Button>
                         </div>
 
                         {/* Existing rating */}
                         {t.rating && (
-                          <div className="flex items-center gap-1.5">
-                            {[1,2,3,4,5].map(s => <Star key={s} className="w-3.5 h-3.5" fill={s <= t.rating! ? '#F59E0B' : 'transparent'} style={{ color: s <= t.rating! ? '#F59E0B' : 'rgba(255,255,255,0.2)' }} />)}
-                            {t.rating_comment && <span className="text-[10px] text-white/30 ml-1">"{t.rating_comment}"</span>}
+                          <div className="flex items-center gap-1.5 pt-1">
+                            {[1,2,3,4,5].map(s => <Star key={s} className="w-3.5 h-3.5" fill={s <= t.rating! ? '#F59E0B' : 'transparent'} style={{ color: s <= t.rating! ? '#F59E0B' : 'rgba(156,163,175,0.4)' }} />)}
+                            {t.rating_comment && <span className="text-[10px] text-slate-500 dark:text-white/40 ml-1">"{t.rating_comment}"</span>}
                           </div>
                         )}
                       </div>
@@ -305,19 +306,19 @@ export function KebajikanMyTickets() {
       <AnimatePresence>
         {ratingTicket && (
           <Modal onClose={() => setRatingTicket(null)}>
-            <p className="font-black text-white text-sm mb-1">Beri Penilaian</p>
-            <p className="text-[10px] text-white/40 mb-5">{ratingTicket.ticket_no} · {ratingTicket.title}</p>
+            <p className="font-black text-slate-900 dark:text-white text-base mb-1">Beri Penilaian</p>
+            <p className="text-[10px] text-slate-500 dark:text-white/40 mb-5">{ratingTicket.ticket_no} · {ratingTicket.title}</p>
             <div className="flex gap-2 justify-center mb-4">
               {[1,2,3,4,5].map(s => (
-                <button key={s} onClick={() => setRating(s)}>
-                  <Star className="w-8 h-8 transition-all" fill={s <= rating ? '#F59E0B' : 'transparent'} style={{ color: s <= rating ? '#F59E0B' : 'rgba(255,255,255,0.2)' }} />
+                <button key={s} onClick={() => setRating(s)} className="p-1 hover:scale-110 transition-transform">
+                  <Star className="w-8 h-8 transition-all" fill={s <= rating ? '#F59E0B' : 'transparent'} style={{ color: s <= rating ? '#F59E0B' : '#cbd5e1' }} />
                 </button>
               ))}
             </div>
-            <Textarea value={ratingComment} onChange={e => setRatingComment(e.target.value)} placeholder="Ulasan anda (opsional)..." rows={3} className="bg-white/5 border-white/10 text-white placeholder:text-white/25 rounded-xl resize-none mb-4" />
+            <Textarea value={ratingComment} onChange={e => setRatingComment(e.target.value)} placeholder="Ulasan anda (opsional)..." rows={3} className="bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl resize-none mb-4" />
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setRatingTicket(null)} className="flex-1 h-10 rounded-xl text-xs font-black border-white/10 text-white/50">Batal</Button>
-              <Button disabled={rating === 0 || ratingLoading} onClick={handleRating} className="flex-1 h-10 rounded-xl text-xs font-black text-slate-900" style={{ background: '#F59E0B' }}>
+              <Button variant="outline" onClick={() => setRatingTicket(null)} className="flex-1 h-10 rounded-xl text-xs font-black border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/60">Batal</Button>
+              <Button disabled={rating === 0 || ratingLoading} onClick={handleRating} className="flex-1 h-10 rounded-xl text-xs font-black text-slate-950 bg-amber-400 hover:bg-amber-300 shadow-sm">
                 {ratingLoading ? 'Menyimpan...' : 'Hantar Rating'}
               </Button>
             </div>
@@ -329,13 +330,13 @@ export function KebajikanMyTickets() {
       <AnimatePresence>
         {reopenTicket && (
           <Modal onClose={() => setReopenTicket(null)}>
-            <p className="font-black text-white text-sm mb-1">Permintaan Buka Semula</p>
-            <p className="text-[10px] text-white/40 mb-5">{reopenTicket.ticket_no}</p>
-            <Textarea value={reopenReason} onChange={e => setReopenReason(e.target.value)} placeholder="Nyatakan sebab anda ingin membuka semula aduan ini..." rows={4} className="bg-white/5 border-white/10 text-white placeholder:text-white/25 rounded-xl resize-none mb-4" />
-            <p className="text-[10px] text-white/30 mb-4">Permintaan ini akan dihantar kepada Exco Kebajikan untuk kelulusan.</p>
+            <p className="font-black text-slate-900 dark:text-white text-base mb-1">Permintaan Buka Semula</p>
+            <p className="text-[10px] text-slate-500 dark:text-white/40 mb-5">{reopenTicket.ticket_no}</p>
+            <Textarea value={reopenReason} onChange={e => setReopenReason(e.target.value)} placeholder="Nyatakan sebab anda ingin membuka semula aduan ini..." rows={4} className="bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-xl resize-none mb-4" />
+            <p className="text-[10px] text-slate-500 dark:text-white/30 mb-4">Permintaan ini akan dihantar kepada Exco Kebajikan untuk kelulusan.</p>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setReopenTicket(null)} className="flex-1 h-10 rounded-xl text-xs font-black border-white/10 text-white/50">Batal</Button>
-              <Button disabled={!reopenReason.trim() || reopenLoading} onClick={handleReopenRequest} className="flex-1 h-10 rounded-xl text-xs font-black text-slate-900" style={{ background: TEAL }}>
+              <Button variant="outline" onClick={() => setReopenTicket(null)} className="flex-1 h-10 rounded-xl text-xs font-black border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/60">Batal</Button>
+              <Button disabled={!reopenReason.trim() || reopenLoading} onClick={handleReopenRequest} className="flex-1 h-10 rounded-xl text-xs font-black text-slate-950 bg-teal-400 hover:bg-teal-300 shadow-sm">
                 {reopenLoading ? 'Menghantar...' : 'Hantar Permintaan'}
               </Button>
             </div>
@@ -348,8 +349,8 @@ export function KebajikanMyTickets() {
 
 function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm" onClick={onClose}>
-      <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-sm rounded-3xl p-8 border border-white/10 shadow-2xl relative overflow-hidden bg-slate-900" onClick={e => e.stopPropagation()}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/70 backdrop-blur-sm" onClick={onClose}>
+      <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-sm rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-white/10 shadow-2xl relative overflow-hidden bg-white dark:bg-slate-900" onClick={e => e.stopPropagation()}>
         <div className="absolute top-0 inset-x-0 h-32 bg-teal-500/10 blur-[50px] rounded-full pointer-events-none -translate-y-1/2" />
         <div className="relative z-10">
           {children}
