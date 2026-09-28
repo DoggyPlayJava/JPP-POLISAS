@@ -6,6 +6,7 @@ import {
   Briefcase, CalendarDays, FileWarning, Sparkles,
   Zap, FileText, ClipboardCheck, ChevronDown, ExternalLink, Store,
   ChevronLeft, LayoutGrid, Building2, QrCode, Activity, Map, Award,
+  HeartHandshake,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -44,6 +45,7 @@ export function JppSidebar() {
   const [showPicker, setShowPicker] = useState(false);
   const [saving, setSaving]         = useState(false);
   const [assignedUnits, setAssignedUnits] = useState<string[]>([]);
+  const [pendingFoodBankCount, setPendingFoodBankCount] = useState<number>(0);
   // ── Collapsible sub-nav ───────────────────────────────────────────────────
   const [expandedUnits, setExpandedUnits] = useState<Set<string>>(new Set());
   const toggleUnit = (code: string) =>
@@ -60,6 +62,8 @@ export function JppSidebar() {
   const isYDP      = jppPosition === 'YDP' || jppPosition === 'YANG_DIPERTUA' || isSuperAdmin;
   const isMT       = !isYDP && JPP_MT_POSITIONS.includes(jppPosition as any);
   const canCustomize = isYDP;
+  const canAccessDemerit = isYDP || isSuperAdmin || ['AKADEMIK', 'KPP', 'KK'].includes(profile?.jpp_unit || '');
+  const canAccessFoodBank = isYDP || isSuperAdmin || isMT || profile?.role === 'JPP' || ['KEBAJIKAN', 'KPP', 'KK', 'AKADEMIK', 'HEP'].includes(profile?.jpp_unit || '');
 
   // ── Fetch portal theme color ───────────────────────────────────────────
   useEffect(() => {
@@ -85,6 +89,24 @@ export function JppSidebar() {
         if (data) setAssignedUnits(data.map((d: any) => d.unit as string));
       });
   }, [user?.id, isMT]);
+
+  // ── Fetch pending Food Bank applications count ────────────────────────
+  useEffect(() => {
+    if (!user?.id) return;
+    let isMounted = true;
+    supabase
+      .from('foodbank_applications')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'MENUNGGU')
+      .then(({ count, error }) => {
+        if (!error && typeof count === 'number' && isMounted) {
+          setPendingFoodBankCount(count);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id]);
 
   // Unit Asrama staff — bukan JPP Exco, tapi ada hasKediamanAccess
   const isUnitAsramaOnly = hasKediamanAccess && !isYDP && !isMT && !jppUnit;
@@ -319,28 +341,51 @@ export function JppSidebar() {
           </NavLink>
         ))}
 
-        {/* ── Pengurusan Merit & Disiplin ─── */}
-        {(isYDP || isSuperAdmin || ['AKADEMIK', 'KPP', 'KK'].includes(profile?.jpp_unit || '')) && (
+        {/* ── Pengurusan Pelajar ─── */}
+        {(canAccessDemerit || canAccessFoodBank) && (
           <>
             <div className="pt-4 pb-1.5">
               <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-rose-900/40 dark:text-white/20">
                 Pengurusan Pelajar
               </p>
             </div>
-            <NavLink
-              to="/jpp/demerit"
-              className={({ isActive }) => cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
-                isActive
-                  ? 'text-rose-950 font-black bg-rose-500/15 dark:bg-rose-500/20 dark:text-rose-300 shadow-sm'
-                  : 'text-rose-900/75 hover:text-rose-950 hover:bg-rose-500/10 dark:text-rose-400/60 dark:hover:text-rose-400/90 dark:hover:bg-rose-500/10'
-              )}
-            >
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-rose-500/20 text-rose-700 dark:text-rose-400">
-                <ShieldCheck className="w-3.5 h-3.5" />
-              </div>
-              <span className="text-xs font-bold tracking-tight flex-1">Pengurusan Demerit</span>
-            </NavLink>
+            {canAccessFoodBank && (
+              <NavLink
+                to="/jpp/foodbank"
+                className={({ isActive }) => cn(
+                  'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
+                  isActive
+                    ? 'text-rose-950 font-black bg-rose-500/15 dark:bg-rose-500/20 dark:text-rose-300 shadow-sm'
+                    : 'text-rose-900/75 hover:text-rose-950 hover:bg-rose-500/10 dark:text-rose-400/60 dark:hover:text-rose-400/90 dark:hover:bg-rose-500/10'
+                )}
+              >
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-rose-500/20 text-rose-700 dark:text-rose-400 flex-shrink-0">
+                  <HeartHandshake className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs font-bold tracking-tight flex-1">Food Bank JPP</span>
+                {pendingFoodBankCount > 0 && (
+                  <span className="px-1.5 py-0.5 text-[9px] font-black rounded-full bg-amber-500 text-white shadow-sm flex items-center justify-center min-w-[18px] animate-pulse">
+                    {pendingFoodBankCount}
+                  </span>
+                )}
+              </NavLink>
+            )}
+            {canAccessDemerit && (
+              <NavLink
+                to="/jpp/demerit"
+                className={({ isActive }) => cn(
+                  'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
+                  isActive
+                    ? 'text-rose-950 font-black bg-rose-500/15 dark:bg-rose-500/20 dark:text-rose-300 shadow-sm'
+                    : 'text-rose-900/75 hover:text-rose-950 hover:bg-rose-500/10 dark:text-rose-400/60 dark:hover:text-rose-400/90 dark:hover:bg-rose-500/10'
+                )}
+              >
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-rose-500/20 text-rose-700 dark:text-rose-400 flex-shrink-0">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs font-bold tracking-tight flex-1">Pengurusan Demerit</span>
+              </NavLink>
+            )}
           </>
         )}
 

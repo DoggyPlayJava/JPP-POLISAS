@@ -159,6 +159,7 @@ const JppSettingsPage = lazy(() => import('./pages/jpp/JppSettingsPage').then(m 
 const JppNexusPage = lazy(() => import('./pages/jpp/JppNexusPage').then(m => ({ default: m.JppNexusPage })));
 const JppAsramaPage = lazy(() => import('./pages/jpp/JppAsramaPage').then(m => ({ default: m.JppAsramaPage })));
 const JppTelemetryPage = lazy(() => import('./pages/jpp/JppTelemetryPage').then(m => ({ default: m.JppTelemetryPage })));
+const JppFoodBankAdmin = lazy(() => import('./pages/jpp/JppFoodBankAdmin').then(m => ({ default: m.JppFoodBankAdmin })));
 
 // ── PolyRider ──
 const PolyRiderLayout = lazy(() => import('./pages/polyrider/PolyRiderLayout').then(m => ({ default: m.PolyRiderLayout })));
@@ -360,6 +361,7 @@ function AppRoutes() {
           <Route path="/jpp/users"            element={<JppUsersPage />} />
           <Route path="/jpp/takwim"           element={<JppTakwimPage />} />
           <Route path="/jpp/polymaps"            element={<JppPolyMapsAdmin />} />
+          <Route path="/jpp/foodbank"         element={<JppFoodBankAdmin />} />
           <Route path="/jpp/demerit"          element={<DemeritManager sourceOverride="MANUAL" />} />
           <Route path="/jpp/makmp"            element={<Navigate to="/jpp/unit/akademik?tab=makmp" replace />} />
           <Route path="/jpp/logs"             element={<JppLogsPage />} />

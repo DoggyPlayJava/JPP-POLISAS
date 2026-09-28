@@ -87,6 +87,7 @@ src/
 │   │   ├── JppLogsPage.tsx    ← Audit log
 │   │   ├── JppSidebar.tsx     ← Sidebar navigasi JPP
 │   │   ├── JppLayout.tsx      ← Layout shell JPP
+│   │   ├── JppFoodBankAdmin.tsx ← Pusat Kawalan Pentadbir Food Bank JPP (/jpp/foodbank)
 │   │   ├── jppConfig.ts       ← UNIT_CFG (semua unit exco + isActive flag)
 │   │   └── ExcoWrappers.tsx   ← Thin wrappers untuk route exco universal
 │   ├── AktivitiFull.tsx       ← Pengurusan aktiviti e-KPP
@@ -2622,8 +2623,18 @@ Sistem beroperasi secara rasmi dengan **Light Theme sebagai mod lalai (*default 
   - `src/pages/ems/EmsEventFormPage.tsx`: Borang cipta/kemaskini acara dan pembina kriteria rubrik juri.
   - `src/pages/ems/EmsApprovalPage.tsx`: Meja kelulusan kertas kerja acara.
   - `src/pages/ems/EmsCheckinSelectorPage.tsx` & `src/pages/ems/EmsCheckinPage.tsx`: Hab pengimbas kamera QR kehadiran peserta/pengunjung.
-  - `src/components/ems/EmsJuryAuditMatrix.tsx`: Matriks audit perbandingan skor antara juri.
-  - `src/components/ems/EmsLuckyDrawModal.tsx`: Roda cabutan bertuah dan animasi pusingan pemenang.
+### 25.8 Pusat Kawalan Food Bank JPP (`/jpp/foodbank`)
+- **Fail Utama:** `src/pages/jpp/JppFoodBankAdmin.tsx`
+- **Laluan:** `/jpp/foodbank` (didaftarkan di bawah `JppLayout` dalam `src/App.tsx`)
+- **Akses & RBAC:** YDP, Super Admin, MT, Exco Kebajikan, KPP, KK, Akademik, HEP (`canAccessFoodBank`).
+- **Jadual Pangkalan Data:** `foodbank_settings`, `foodbank_items`, `foodbank_applications`, `foodbank_distribution_locations`, `foodbank_budget_transactions`, `imaps_buildings`.
+- **Ciri-ciri Utama:**
+  - **Header KPI & Kawalan Sesi:** Paparan peruntukan belanjawan RM70,000, jumlah belanja semasa (`current_spent`), dan baki dengan bar peratusan; metrik permohonan Menunggu/Lulus/Selesai; suis pantas buka/tutup permohonan (`is_application_open`).
+  - **Tab 1: Pengurusan Permohonan & Imbasan Kaunter:** Kotak carian pantas imbasan kod QR (FB-...) / No. Matrik; tindakan meluluskan dan menolak dengan modal sebab; tindakan pengesahan pengambilan fizikal di kaunter memanggil fungsi atomik RPC `verify_and_complete_foodbank_pickup(p_application_id, p_verifier_id)` / `verify_and_complete_foodbank_pickup_by_qr(p_qr_code, p_verifier_id)` yang mengunci stok, menolak inventori secara atomik, menambah kos ke `current_spent` dan memasukkan log lejar `foodbank_budget_transactions`.
+  - **Tab 2: Pengurusan Inventori & Stok:** Katalog barangan berbilang kategori (`MAKANAN`, `MINUMAN`, `KEBERSIHAN`, `KEPERLUAN_ASAS`), pengubah stok pantas (`+10`, `+50`, `-10`), toggle aktif, muat naik gambar ke storage dengan kompresi automatik melalui `uploadFileToDrive`.
+  - **Tab 3: Penjejakan Bajet & Lejar Audit (RM70,000):** Analitik penggunaan bajet peruntukan siling RM70k, jadual transaksi lejar audit lengkap dengan nama pegawai, permohonan dan amaun; modal pelarasan/suntikan bajet.
+  - **Tab 4: Tetapan Sesi & Formula Kuota:** Formula kuota had permohonan bulanan dan barangan asas, teks hebahan arahan & syarat kelayakan, serta CRUD lokasi pengagihan berintegrasi PolyMaps 360° (`imaps_buildings`).
+
 
 
 
