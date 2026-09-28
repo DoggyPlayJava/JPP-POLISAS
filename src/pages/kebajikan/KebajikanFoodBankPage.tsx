@@ -1,0 +1,1484 @@
+/**
+ * KebajikanFoodBankPage.tsx
+ * Portal Permohonan Food Bank JPP untuk Mahasiswa POLISAS
+ * Ciri-ciri:
+ * - Semakan 1 Permohonan Aktif (Active Application Gating)
+ * - Kiraan Kuota Dinamik Rakan Serumah
+ * - Katalog Pilihan Barangan Bebas dengan Semakan Stok Masa Nyata
+ * - Pemilihan Lokasi Agihan Berintegrasi PolyMaps & Slot Masa Temujanji
+ * - Penjanaan Pas Pengambilan Digital (QR Boarding Pass)
+ */
+
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  ShoppingBag,
+  Sparkles,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  MapPin,
+  Calendar,
+  Users,
+  Plus,
+  Trash2,
+  ExternalLink,
+  QrCode,
+  Search,
+  Filter,
+  Package,
+  Layers,
+  Info,
+  ChevronRight,
+  ChevronLeft,
+  ArrowRight,
+  ShieldCheck,
+  Building,
+  RefreshCw,
+  Home,
+  Check,
+  AlertTriangle,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'react-hot-toast';
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
+import {
+  FoodBankSettings,
+  FoodBankItem,
+  FoodBankDistributionLocation,
+  FoodBankApplication,
+  FoodBankHousemate,
+  FoodBankSelectedItem,
+} from '@/types';
+import { FoodBankQrPassModal } from '@/components/foodbank/FoodBankQrPassModal';
+import { Link } from 'react-router-dom';
+
+// Tab Kategori Barangan
+const CATEGORY_TABS = [
+  { id: 'SEMUA', label: 'Semua Barangan' },
+  { id: 'MAKANAN', label: 'Makanan Asas' },
+  { id: 'MINUMAN', label: 'Minuman' },
+  { id: 'KEBERSIHAN', label: 'Kebersihan Diri' },
+  { id: 'LAIN_LAIN', label: 'Lain-lain' },
+];
+
+// Masa Slot Pilihan Standard
+const TIME_SLOTS = [
+  '10:00 AM - 11:30 AM',
+  '11:30 AM - 01:00 PM',
+  '02:30 PM - 04:00 PM',
+];
+
+export function KebajikanFoodBankPage() {
+  const { user, profile } = useAuth();
+
+  // State data utama
+  const [settings, setSettings] = useState<FoodBankSettings | null>(null);
+  const [locations, setLocations] = useState<FoodBankDistributionLocation[]>([]);
+  const [items, setItems] = useState<FoodBankItem[]>([]);
+  const [activeApplication, setActiveApplication] = useState<FoodBankApplication | null>(null);
+  const [pastApplications, setPastApplications] = useState<FoodBankApplication[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  // Modal QR Pass
+  const [passModalOpen, setPassModalOpen] = useState(false);
+  const [selectedPassApp, setSelectedPassApp] = useState<FoodBankApplication | null>(null);
+
+  // Form State
+  const [reason, setReason] = useState('');
+  const [financialCategory, setFinancialCategory] = useState<'B40' | 'M40' | 'ASNAF' | 'KECEMASAN'>('B40');
+  const [householdIncome, setHouseholdIncome] = useState('');
+  const [housingType, setHousingType] = useState<'KAMSIS' | 'RUMAH_SEWA' | 'SENDIRI'>('KAMSIS');
+  const [roomNumber, setRoomNumber] = useState('');
+
+  // Senarai Rakan Serumah
+  const [housemates, setHousemates] = useState<FoodBankHousemate[]>([]);
+  const [hmName, setHmName] = useState('');
+  const [hmMatric, setHmMatric] = useState('');
+
+  // Barangan Dipilih (item_id -> quantity)
+  const [selectedItemQuantities, setSelectedItemQuantities] = useState<Record<string, number>>({});
+  const [activeCategory, setActiveCategory] = useState('SEMUA');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Lokasi & Slot Masa
+  const [selectedLocationId, setSelectedLocationId] = useState<string>('');
+  const [pickupDate, setPickupDate] = useState<string>('');
+  const [pickupTimeSlot, setPickupTimeSlot] = useState<string>(TIME_SLOTS[0]);
+
+  // Pengakuan
+  const [acknowledged, setAcknowledged] = useState(false);
+
+  // Jana Senarai Hari Bekerja (Mon-Fri)
+  const workingDays = useMemo(() => {
+    const days: { dateStr: string; label: string }[] = [];
+    const current = new Date();
+    let offset = 1;
+    while (days.length < 5) {
+      const d = new Date(current);
+      d.setDate(current.getDate() + offset);
+      const day = d.getDay();
+      // 0 = Ahad, 6 = Sabtu
+      if (day !== 0 && day !== 6) {
+        const dateStr = d.toISOString().split('T')[0];
+        const label = d.toLocaleDateString('ms-MY', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+        });
+        days.push({ dateStr, label });
+      }
+      offset++;
+    }
+    return days;
+  }, []);
+
+  // Fetch initial data (MANDATORY RULE: Use Promise.all)
+  const fetchInitialData = async () => {
+    if (!user) return;
+    setIsLoading(true);
+    try {
+      const [
+        settingsRes,
+        locationsRes,
+        itemsRes,
+        activeAppRes,
+        pastAppsRes,
+      ] = await Promise.all([
+        supabase
+          .from('foodbank_settings')
+          .select('*')
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from('foodbank_distribution_locations')
+          .select('*, building:imaps_buildings(*)')
+          .eq('is_active', true)
+          .order('name', { ascending: true }),
+        supabase
+          .from('foodbank_items')
+          .select('*')
+          .eq('is_active', true)
+          .order('name', { ascending: true }),
+        supabase
+          .from('foodbank_applications')
+          .select('*, location:foodbank_distribution_locations(*)')
+          .eq('applicant_id', user.id)
+          .in('status', ['MENUNGGU', 'DALAM_SEMAKAN', 'LULUS'])
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from('foodbank_applications')
+          .select('*, location:foodbank_distribution_locations(*)')
+          .eq('applicant_id', user.id)
+          .in('status', ['SELESAI', 'DITOLAK', 'BATAL'])
+          .order('created_at', { ascending: false })
+          .limit(10),
+      ]);
+
+      if (settingsRes.error) console.error('Error fetching settings:', settingsRes.error);
+      if (locationsRes.error) console.error('Error fetching locations:', locationsRes.error);
+      if (itemsRes.error) console.error('Error fetching items:', itemsRes.error);
+      if (activeAppRes.error) console.error('Error fetching active app:', activeAppRes.error);
+
+      if (settingsRes.data) {
+        setSettings(settingsRes.data as FoodBankSettings);
+      }
+      if (locationsRes.data) {
+        setLocations(locationsRes.data as FoodBankDistributionLocation[]);
+        if (locationsRes.data.length > 0 && !selectedLocationId) {
+          setSelectedLocationId(locationsRes.data[0].id);
+        }
+      }
+      if (itemsRes.data) {
+        setItems(itemsRes.data as FoodBankItem[]);
+      }
+      if (activeAppRes.data) {
+        setActiveApplication(activeAppRes.data as FoodBankApplication);
+      } else {
+        setActiveApplication(null);
+      }
+      if (pastAppsRes.data) {
+        setPastApplications(pastAppsRes.data as FoodBankApplication[]);
+      }
+
+      // Default pickup date to first working day
+      if (workingDays.length > 0 && !pickupDate) {
+        setPickupDate(workingDays[0].dateStr);
+      }
+    } catch (err) {
+      console.error('Failed to load foodbank data:', err);
+      toast.error('Ralat semasa memuatkan data Food Bank.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInitialData();
+  }, [user]);
+
+  // Kiraan Kuota Dinamik:
+  // Math.min(items_per_person * (1 + housemates.length), max_items_limit)
+  const itemsPerPerson = settings?.max_items_per_application || 5;
+  const maxItemsLimit = itemsPerPerson * 3; // Had siling permohonan bersama rakan
+  const maxAllowedItems = Math.min(
+    itemsPerPerson * (1 + housemates.length),
+    maxItemsLimit
+  );
+
+  // Jumlah item yang sedang dipilih
+  const totalSelectedCount = useMemo(() => {
+    return Object.values(selectedItemQuantities).reduce((acc, q) => acc + q, 0);
+  }, [selectedItemQuantities]);
+
+  // Nilai Anggaran Keseluruhan Barangan Dipilih
+  const totalEstimatedCost = useMemo(() => {
+    let cost = 0;
+    for (const [itemId, qty] of Object.entries(selectedItemQuantities)) {
+      const item = items.find((i) => i.id === itemId);
+      if (item && qty > 0) {
+        cost += (Number(item.estimated_cost) || 0) * qty;
+      }
+    }
+    return cost;
+  }, [selectedItemQuantities, items]);
+
+  // Tambah Rakan Serumah
+  const handleAddHousemate = () => {
+    const trimmedName = hmName.trim();
+    const trimmedMatric = hmMatric.trim().toUpperCase();
+
+    if (!trimmedName || !trimmedMatric) {
+      toast.error('Sila masukkan nama dan nombor matrik rakan serumah.');
+      return;
+    }
+
+    if (housemates.some((h) => h.ic_or_matric.toUpperCase() === trimmedMatric)) {
+      toast.error('Rakan serumah dengan nombor matrik ini telah dimasukkan.');
+      return;
+    }
+
+    setHousemates([...housemates, { name: trimmedName, ic_or_matric: trimmedMatric }]);
+    setHmName('');
+    setHmMatric('');
+    toast.success(`Rakan serumah ditambah! Kuota anda meningkat.`);
+  };
+
+  // Padam Rakan Serumah
+  const handleRemoveHousemate = (index: number) => {
+    const updated = [...housemates];
+    updated.splice(index, 1);
+    setHousemates(updated);
+    toast.success('Rakan serumah dikeluarkan.');
+  };
+
+  // Ubah Kuantiti Barangan (+ / -)
+  const handleItemQuantityChange = (item: FoodBankItem, delta: number) => {
+    const currentQty = selectedItemQuantities[item.id] || 0;
+    const newQty = currentQty + delta;
+
+    if (delta > 0) {
+      // Semak had stok inventori
+      if (newQty > item.current_stock) {
+        toast.error(`Baki stok bagi "${item.name}" hanya tinggal ${item.current_stock} unit.`);
+        return;
+      }
+      // Semak had kuota maksimum dibenarkan
+      if (totalSelectedCount >= maxAllowedItems) {
+        toast.error(
+          `Had kuota kelayakan (${maxAllowedItems} unit barangan) telah dicapai.`
+        );
+        return;
+      }
+    }
+
+    if (newQty <= 0) {
+      const updated = { ...selectedItemQuantities };
+      delete updated[item.id];
+      setSelectedItemQuantities(updated);
+    } else {
+      setSelectedItemQuantities({
+        ...selectedItemQuantities,
+        [item.id]: newQty,
+      });
+    }
+  };
+
+  // Filter Katalog Barangan
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      // Penapis Kategori
+      if (activeCategory !== 'SEMUA') {
+        const itemCat = (item.category || '').toUpperCase();
+        if (activeCategory === 'MAKANAN' && !itemCat.includes('MAKANAN')) return false;
+        if (activeCategory === 'MINUMAN' && !itemCat.includes('MINUMAN')) return false;
+        if (activeCategory === 'KEBERSIHAN' && !itemCat.includes('KEBERSIHAN')) return false;
+        if (
+          activeCategory === 'LAIN_LAIN' &&
+          (itemCat.includes('MAKANAN') ||
+            itemCat.includes('MINUMAN') ||
+            itemCat.includes('KEBERSIHAN'))
+        ) {
+          return false;
+        }
+      }
+
+      // Penapis Carian
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        return (
+          item.name.toLowerCase().includes(q) ||
+          (item.description && item.description.toLowerCase().includes(q))
+        );
+      }
+
+      return true;
+    });
+  }, [items, activeCategory, searchQuery]);
+
+  // Batalkan Permohonan Aktif
+  const handleCancelActiveApp = async (appId: string) => {
+    if (!user) return;
+    const confirmed = window.confirm(
+      'Adakah anda pasti ingin membatalkan permohonan Food Bank ini? Tindakan ini tidak boleh diundur.'
+    );
+    if (!confirmed) return;
+
+    setIsCancelling(true);
+    try {
+      const { error } = await supabase
+        .from('foodbank_applications')
+        .update({
+          status: 'BATAL',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', appId)
+        .eq('applicant_id', user.id);
+
+      if (error) throw error;
+      toast.success('Permohonan Food Bank telah dibatalkan.');
+      await fetchInitialData();
+    } catch (err: any) {
+      console.error('Error cancelling application:', err);
+      toast.error('Gagal membatalkan permohonan: ' + (err.message || 'Sila cuba lagi.'));
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  // Hantar Permohonan Baru
+  const handleSubmitApplication = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error('Sila log masuk terlebih dahulu.');
+      return;
+    }
+
+    if (settings?.is_application_open === false) {
+      toast.error('Permohonan Food Bank ditutup buat masa ini.');
+      return;
+    }
+
+    if (activeApplication) {
+      toast.error('Anda sudah mempunyai permohonan aktif yang sedang diproses.');
+      return;
+    }
+
+    if (!reason.trim()) {
+      toast.error('Sila nyatakan sebab permohonan bantuan.');
+      return;
+    }
+
+    if (!roomNumber.trim()) {
+      toast.error('Sila nyatakan nombor bilik atau nama rumah kediaman.');
+      return;
+    }
+
+    if (totalSelectedCount === 0) {
+      toast.error('Sila pilih sekurang-kurangnya 1 item daripada katalog barangan.');
+      return;
+    }
+
+    if (totalSelectedCount > maxAllowedItems) {
+      toast.error(`Pilihan melebihi had kuota maksimum (${maxAllowedItems} item).`);
+      return;
+    }
+
+    if (!selectedLocationId) {
+      toast.error('Sila pilih pusat agihan / lokasi pengambilan.');
+      return;
+    }
+
+    if (!pickupDate) {
+      toast.error('Sila pilih tarikh pengambilan.');
+      return;
+    }
+
+    if (!acknowledged) {
+      toast.error('Sila sahkan perakuan permohonan terlebih dahulu.');
+      return;
+    }
+
+    // Bina manifest barangan terpilih
+    const selectedItemsList: FoodBankSelectedItem[] = [];
+    for (const [itemId, qty] of Object.entries(selectedItemQuantities)) {
+      const itm = items.find((i) => i.id === itemId);
+      if (itm && qty > 0) {
+        selectedItemsList.push({
+          item_id: itm.id,
+          item_name: itm.name,
+          quantity: qty,
+          unit: itm.unit || 'unit',
+          estimated_cost: Number(itm.estimated_cost) || 0,
+        });
+      }
+    }
+
+    // Jana Kod Token QR Unik & No Permohonan
+    const pickupToken = `FB-POLISAS-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    const appNo = `APP-FB-${Date.now().toString(36).toUpperCase()}`;
+
+    setIsSubmitting(true);
+    try {
+      const { data: insertedApp, error: insertError } = await supabase
+        .from('foodbank_applications')
+        .insert([
+          {
+            application_no: appNo,
+            applicant_id: user.id,
+            status: 'MENUNGGU',
+            reason: reason.trim(),
+            financial_category: financialCategory,
+            household_income: householdIncome ? parseFloat(householdIncome) : null,
+            housing_type: housingType,
+            housemates: housemates,
+            selected_items: selectedItemsList,
+            location_id: selectedLocationId,
+            pickup_date: pickupDate,
+            pickup_time_slot: pickupTimeSlot,
+            pickup_qr_code: pickupToken,
+            total_estimated_value: totalEstimatedCost,
+          },
+        ])
+        .select('*, location:foodbank_distribution_locations(*)')
+        .single();
+
+      if (insertError) throw insertError;
+
+      toast.success('Permohonan Food Bank berjaya dihantar!');
+
+      // Set permohonan baru sebagai active & buka pas QR serta merta
+      const newApp = insertedApp as FoodBankApplication;
+      setActiveApplication(newApp);
+      setSelectedPassApp(newApp);
+      setPassModalOpen(true);
+
+      // Reset borang
+      setReason('');
+      setHouseholdIncome('');
+      setRoomNumber('');
+      setHousemates([]);
+      setSelectedItemQuantities({});
+      setAcknowledged(false);
+
+      // Refresh data
+      await fetchInitialData();
+    } catch (err: any) {
+      console.error('Failed to submit foodbank application:', err);
+      toast.error('Gagal menghantar permohonan: ' + (err.message || 'Sila cuba lagi.'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Fallback image helper
+  const getItemIcon = (category: string) => {
+    const cat = (category || '').toUpperCase();
+    if (cat.includes('MAKANAN')) return '🍚';
+    if (cat.includes('MINUMAN')) return '☕';
+    if (cat.includes('KEBERSIHAN')) return '🧼';
+    return '📦';
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-4">
+        <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center animate-spin text-amber-500">
+          <RefreshCw className="w-6 h-6" />
+        </div>
+        <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 animate-pulse">
+          Memuatkan Portal Food Bank...
+        </p>
+      </div>
+    );
+  }
+
+  const isSessionClosed = settings?.is_application_open === false;
+
+  return (
+    <div className="w-full max-w-6xl mx-auto px-4 py-6 sm:py-8 space-y-8 select-none">
+      {/* ── Top Breadcrumb & Header ── */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+          <Link
+            to="/kebajikan"
+            className="hover:text-teal-600 dark:hover:text-teal-400 flex items-center gap-1 transition-colors"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            <span>Hab E-Kebajikan</span>
+          </Link>
+          <span>/</span>
+          <span className="text-amber-600 dark:text-amber-400">Food Bank JPP</span>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-xs font-black uppercase tracking-wider mb-2">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              Inisiatif Prihatin Siswa POLISAS
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              Bantuan Food Bank JPP
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 max-w-2xl font-normal">
+              Program agihan pakej makanan asas dan keperluan diri bagi meringankan beban mahasiswa
+              POLISAS yang memerlukan melalui verifikasi Pas Pengambilan Digital (QR).
+            </p>
+          </div>
+
+          {/* Quick Action: Buka Pas QR Jika Ada Permohonan Aktif */}
+          {activeApplication && (
+            <Button
+              onClick={() => {
+                setSelectedPassApp(activeApplication);
+                setPassModalOpen(true);
+              }}
+              className="h-11 px-4 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-slate-950 font-bold rounded-2xl gap-2 shadow-lg shadow-emerald-500/20 flex-shrink-0 animate-pulse"
+            >
+              <QrCode className="w-4 h-4" />
+              <span>Buka Pas Pengambilan QR</span>
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Status Sesi Ditutup (Jika Is Open === false) ── */}
+      {isSessionClosed && (
+        <div className="rounded-2xl p-4 sm:p-5 bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 flex items-start gap-3.5">
+          <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h4 className="text-sm font-extrabold">Sesi Permohonan Food Bank Ditutup Buat Masa Ini</h4>
+            <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed font-normal">
+              Pengurusan Food Bank JPP sedang menyelaraskan stok bekalan inventori bersama pihak
+              kaunter pengurusan JHEP. Mahasiswa yang mempunyai permohonan aktif masih boleh menebus
+              bantuan mengikut slot temujanji yang telah dijadualkan.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Kad Permohonan Aktif (1 Active Application Limit Gating) ── */}
+      {activeApplication ? (
+        <div className="rounded-3xl p-6 sm:p-7 bg-white dark:bg-slate-900 border border-amber-500/40 shadow-xl relative overflow-hidden">
+          {/* Subtle Glow */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                  <ShoppingBag className="w-6 h-6" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                    Permohonan Aktif Sedang Diproses
+                  </span>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                    No. Permohonan: {activeApplication.application_no}
+                  </h3>
+                </div>
+              </div>
+
+              {/* Status Badge */}
+              <div className="flex items-center gap-2">
+                <span
+                  className={cn(
+                    'px-3 py-1 rounded-xl text-xs font-black uppercase tracking-wider border flex items-center gap-1.5',
+                    activeApplication.status === 'LULUS'
+                      ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                      : activeApplication.status === 'DALAM_SEMAKAN'
+                      ? 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/40'
+                      : 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40'
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'w-2 h-2 rounded-full',
+                      activeApplication.status === 'LULUS'
+                        ? 'bg-emerald-500 animate-ping'
+                        : activeApplication.status === 'DALAM_SEMAKAN'
+                        ? 'bg-blue-500'
+                        : 'bg-amber-500'
+                    )}
+                  />
+                  <span>
+                    {activeApplication.status === 'LULUS'
+                      ? 'LULUS • SEDIA DIAMBIL'
+                      : activeApplication.status === 'DALAM_SEMAKAN'
+                      ? 'DALAM SEMAKAN EXCO'
+                      : 'MENUNGGU SEMAKAN'}
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            {/* Grid Butiran Temujanji */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
+                <span className="block text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 mb-1">
+                  Pusat Agihan
+                </span>
+                <p className="font-extrabold text-sm text-slate-900 dark:text-white">
+                  {activeApplication.location?.name || 'Pusat Edaran Kaunter JHEP'}
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  {activeApplication.location?.room_detail || 'Bangunan Pentadbiran Utama'}
+                </p>
+
+                {activeApplication.location?.polymaps_building_id && (
+                  <Link
+                    to={`/polymaps?b=${activeApplication.location.polymaps_building_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-teal-600 dark:text-teal-400 mt-2 hover:underline"
+                  >
+                    <span>Buka Peta PolyMaps</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </Link>
+                )}
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
+                <span className="block text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 mb-1">
+                  Slot Temujanji Pengambilan
+                </span>
+                <p className="font-extrabold text-sm text-slate-900 dark:text-white">
+                  {activeApplication.pickup_date
+                    ? new Date(activeApplication.pickup_date).toLocaleDateString('ms-MY', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })
+                    : 'Akan Diselaraskan'}
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Slot Waktu: {activeApplication.pickup_time_slot || '10:00 AM - 04:00 PM'}
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
+                <span className="block text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 mb-1">
+                  Manifest Barangan
+                </span>
+                <p className="font-extrabold text-sm text-slate-900 dark:text-white">
+                  {activeApplication.selected_items?.length || 0} Jenis Barangan
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Nilai Anggaran: RM{' '}
+                  {(Number(activeApplication.total_estimated_value) || 0).toFixed(2)}
+                </p>
+              </div>
+            </div>
+
+            {/* Notice & Action Buttons */}
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <Info className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                <span>
+                  Had Dasar: 1 permohonan aktif pada satu masa. Permohonan baharu boleh dibuat setelah
+                  permohonan semasa selesai ditebus atau dibatalkan.
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {activeApplication.status === 'MENUNGGU' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isCancelling}
+                    onClick={() => handleCancelActiveApp(activeApplication.id)}
+                    className="h-10 text-xs font-bold text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 mr-1" />
+                    <span>{isCancelling ? 'Membatalkan...' : 'Batalkan Permohonan'}</span>
+                  </Button>
+                )}
+
+                <Button
+                  onClick={() => {
+                    setSelectedPassApp(activeApplication);
+                    setPassModalOpen(true);
+                  }}
+                  className="h-10 px-4 bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 font-bold rounded-xl gap-2 shadow-sm"
+                >
+                  <QrCode className="w-4 h-4" />
+                  <span>Buka Pas Pengambilan QR</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* ── Borang Permohonan Baru (Apabila Tiada Permohonan Aktif) ── */
+        <form onSubmit={handleSubmitApplication} className="space-y-8">
+          {/* Arahan & Syarat Kelayakan */}
+          <div className="rounded-3xl p-6 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-4">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-white font-extrabold text-sm">
+              <ShieldCheck className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+              <span>Syarat Kelayakan &amp; Arahan Permohonan</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-600 dark:text-slate-300">
+              <div className="space-y-1.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800">
+                <span className="font-bold text-slate-800 dark:text-slate-200 block">
+                  Kriteria Kelayakan:
+                </span>
+                <p className="leading-relaxed font-normal">
+                  {settings?.eligibility_criteria ||
+                    'Terbuka kepada semua mahasiswa POLISAS yang memerlukan bantuan makanan/keperluan asas (keutamaan kepada kategori B40, asnaf, atau kecemasan).'}
+                </p>
+              </div>
+              <div className="space-y-1.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800">
+                <span className="font-bold text-slate-800 dark:text-slate-200 block">
+                  Panduan Penebusan:
+                </span>
+                <p className="leading-relaxed font-normal">
+                  {settings?.application_instructions ||
+                    'Sila bawa Pas Pengambilan Digital (QR) ke lokasi agihan pada tarikh & slot masa yang dipilih untuk diimbas oleh petugas kaunter.'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Bahagian 1: Maklumat Pemohon & Sebab Permohonan ── */}
+          <div className="rounded-3xl p-6 sm:p-7 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
+            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-xs">
+                1
+              </div>
+              <div>
+                <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+                  Maklumat Pemohon &amp; Status Kewangan
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Data pemohon diambil secara automatik daripada profil kampus anda.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Nama Penuh
+                </label>
+                <Input
+                  disabled
+                  value={profile?.full_name || user?.email || ''}
+                  className="bg-slate-50 dark:bg-slate-800/60 font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  No. Matrik Pelajar
+                </label>
+                <Input
+                  disabled
+                  value={profile?.matric_no || profile?.matrix_no || 'Tiada No. Matrik'}
+                  className="bg-slate-50 dark:bg-slate-800/60 font-mono font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Kategori Kewangan
+                </label>
+                <select
+                  value={financialCategory}
+                  onChange={(e) => setFinancialCategory(e.target.value as any)}
+                  disabled={isSessionClosed}
+                  className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="B40">B40 (Pendapatan &lt; RM4,850)</option>
+                  <option value="M40">M40 (Pendapatan RM4,850 - RM10,959)</option>
+                  <option value="ASNAF">Asnaf / Bantuan Zakat</option>
+                  <option value="KECEMASAN">Kecemasan / Ketiadaan Wang Saku</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Anggaran Pendapatan Isi Rumah Sebulan (RM)
+                </label>
+                <Input
+                  type="number"
+                  placeholder="Contoh: 1800"
+                  value={householdIncome}
+                  onChange={(e) => setHouseholdIncome(e.target.value)}
+                  disabled={isSessionClosed}
+                  className="rounded-xl text-xs font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Sebab Memerlukan Bantuan Makanan <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  placeholder="Contoh: Baki perbelanjaan terhad sebelum elaun/ptptn diterima"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  disabled={isSessionClosed}
+                  required
+                  className="rounded-xl text-xs"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* ── Bahagian 2: Penginapan & Kuota Dinamik Rakan Serumah ── */}
+          <div className="rounded-3xl p-6 sm:p-7 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
+            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-xs">
+                2
+              </div>
+              <div>
+                <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+                  Maklumat Kediaman &amp; Kuota Rakan Serumah
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Tambah rakan sebilik/serumah untuk meningkatkan kuota barangan pek makanan secara automatik.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Jenis Kediaman
+                </label>
+                <select
+                  value={housingType}
+                  onChange={(e) => setHousingType(e.target.value as any)}
+                  disabled={isSessionClosed}
+                  className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="KAMSIS">Kolej Kediaman Siswa (Kamsis Dalam Kampus)</option>
+                  <option value="RUMAH_SEWA">Rumah Sewa Luar Kampus</option>
+                  <option value="SENDIRI">Kediaman Sendiri / Ulang-Alik</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  No. Bilik / Blok / Alamat Rumah <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  placeholder="Contoh: Blok B3-12 (Kamsis) atau No 14, Lorong Semambu"
+                  value={roomNumber}
+                  onChange={(e) => setRoomNumber(e.target.value)}
+                  disabled={isSessionClosed}
+                  required
+                  className="rounded-xl text-xs"
+                />
+              </div>
+            </div>
+
+            {/* Input Tambah Rakan Serumah */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-3">
+              <span className="block text-xs font-extrabold text-slate-900 dark:text-white">
+                Senarai Rakan Serumah yang Ditanggung Bersama (Pilihan)
+              </span>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <Input
+                  placeholder="Nama Penuh Rakan"
+                  value={hmName}
+                  onChange={(e) => setHmName(e.target.value)}
+                  disabled={isSessionClosed}
+                  className="text-xs rounded-xl"
+                />
+                <Input
+                  placeholder="No. Matrik (Cth: 06DKM23F1001)"
+                  value={hmMatric}
+                  onChange={(e) => setHmMatric(e.target.value)}
+                  disabled={isSessionClosed}
+                  className="text-xs font-mono rounded-xl"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleAddHousemate}
+                  disabled={isSessionClosed}
+                  className="h-10 text-xs font-bold border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 rounded-xl gap-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Tambah Rakan</span>
+                </Button>
+              </div>
+
+              {/* Senarai Rakan Yang Telah Ditambah */}
+              {housemates.length > 0 && (
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
+                  {housemates.map((hm, idx) => (
+                    <div
+                      key={idx}
+                      className="px-4 py-2.5 flex items-center justify-between text-xs bg-slate-50/60 dark:bg-slate-800/40"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Users className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                        <span className="font-bold text-slate-900 dark:text-white">
+                          {hm.name}
+                        </span>
+                        <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                          ({hm.ic_or_matric})
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveHousemate(idx)}
+                        className="text-rose-500 hover:text-rose-700 p-1"
+                        title="Padam"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* ── Widget Kiraan Kuota Dinamik Langsung ── */}
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-950 dark:text-amber-200 space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">
+                  <div>
+                    <span className="font-black uppercase tracking-wider text-[11px]">
+                      Formula Kelayakan Kuota:
+                    </span>
+                    <p className="text-[11px] text-amber-800 dark:text-amber-300 font-medium">
+                      {itemsPerPerson} unit asas + {itemsPerPerson} unit per rakan serumah (Had
+                      maksimum: {maxItemsLimit} unit)
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-bold">Kelayakan Maksimum:</span>
+                    <span className="ml-1.5 px-2.5 py-0.5 rounded-lg bg-amber-600 text-white font-black font-mono text-xs">
+                      {maxAllowedItems} Barangan
+                    </span>
+                  </div>
+                </div>
+
+                {/* Visual Progress Bar */}
+                <div className="space-y-1 pt-1">
+                  <div className="flex items-center justify-between text-[11px] font-bold">
+                    <span>
+                      Jumlah Barangan Dipilih:{' '}
+                      <span className="font-mono text-amber-600 dark:text-amber-400">
+                        {totalSelectedCount}
+                      </span>{' '}
+                      / {maxAllowedItems} unit
+                    </span>
+                    <span
+                      className={cn(
+                        totalSelectedCount > maxAllowedItems
+                          ? 'text-rose-600 font-black'
+                          : totalSelectedCount === maxAllowedItems
+                          ? 'text-emerald-600 font-black'
+                          : 'text-amber-700 dark:text-amber-300'
+                      )}
+                    >
+                      {totalSelectedCount > maxAllowedItems
+                        ? 'Melebihi Kuota!'
+                        : totalSelectedCount === maxAllowedItems
+                        ? 'Kuota Penuh'
+                        : `${maxAllowedItems - totalSelectedCount} baki kuota`}
+                    </span>
+                  </div>
+                  <div className="w-full h-2.5 bg-amber-200/60 dark:bg-amber-950/60 rounded-full overflow-hidden">
+                    <div
+                      className={cn(
+                        'h-full transition-all duration-300 rounded-full',
+                        totalSelectedCount > maxAllowedItems
+                          ? 'bg-rose-500'
+                          : totalSelectedCount === maxAllowedItems
+                          ? 'bg-emerald-500'
+                          : 'bg-amber-500'
+                      )}
+                      style={{
+                        width: `${Math.min(
+                          (totalSelectedCount / maxAllowedItems) * 100,
+                          100
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Bahagian 3: Katalog Pilihan Barangan Bebas ── */}
+          <div className="rounded-3xl p-6 sm:p-7 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-xs">
+                  3
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+                    Katalog Pilihan Barangan Bebas
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Pilih barangan mengikut keperluan sebenar anda sehingga had kuota kelayakan.
+                  </p>
+                </div>
+              </div>
+
+              {/* Bar Carian */}
+              <div className="relative w-full sm:w-64">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Input
+                  placeholder="Cari barangan..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-9 text-xs rounded-xl"
+                />
+              </div>
+            </div>
+
+            {/* Tab Kategori */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide text-xs">
+              {CATEGORY_TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveCategory(tab.id)}
+                  className={cn(
+                    'px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all',
+                    activeCategory === tab.id
+                      ? 'bg-amber-600 text-white shadow-sm'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Grid Katalog Barangan */}
+            {filteredItems.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 text-xs space-y-2">
+                <Package className="w-8 h-8 mx-auto text-slate-300" />
+                <p>Tiada barangan dijumpai dalam kategori ini.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {filteredItems.map((item) => {
+                  const qty = selectedItemQuantities[item.id] || 0;
+                  const isOutOfStock = item.current_stock <= 0;
+                  const canAddMore =
+                    !isOutOfStock &&
+                    qty < item.current_stock &&
+                    totalSelectedCount < maxAllowedItems &&
+                    !isSessionClosed;
+
+                  return (
+                    <div
+                      key={item.id}
+                      className={cn(
+                        'rounded-2xl p-4 border transition-all duration-200 flex flex-col justify-between space-y-3 relative',
+                        qty > 0
+                          ? 'bg-amber-500/5 border-amber-500/40 shadow-sm'
+                          : 'bg-slate-50/50 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 hover:border-slate-300',
+                        isOutOfStock && 'opacity-60'
+                      )}
+                    >
+                      {/* Image / Fallback Icon Container */}
+                      <div className="w-full h-28 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 flex items-center justify-center overflow-hidden relative">
+                        {item.image_url ? (
+                          <img
+                            src={item.image_url}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback on broken image
+                              (e.target as HTMLElement).style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <span className="text-4xl">{getItemIcon(item.category)}</span>
+                        )}
+
+                        {/* Stok Status Badge */}
+                        <div className="absolute top-2 right-2">
+                          {isOutOfStock ? (
+                            <span className="px-2 py-0.5 rounded-md bg-rose-500 text-white font-black text-[9px] uppercase tracking-wider">
+                              Stok Habis
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-md bg-black/50 backdrop-blur-sm text-white font-bold text-[9px]">
+                              Baki: {item.current_stock} {item.unit}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                          {item.category}
+                        </span>
+                        <h4 className="font-extrabold text-xs text-slate-900 dark:text-white line-clamp-2 leading-snug">
+                          {item.name}
+                        </h4>
+                        {item.description && (
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1">
+                            {item.description}
+                          </p>
+                        )}
+                        <p className="text-[10px] text-slate-400">
+                          Anggaran: RM {(Number(item.estimated_cost) || 0).toFixed(2)} / {item.unit}
+                        </p>
+                      </div>
+
+                      {/* Stepper Buttons */}
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                          {qty > 0 ? `${qty} ${item.unit}` : '0 unit'}
+                        </span>
+
+                        <div className="flex items-center gap-1.5">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={qty <= 0 || isSessionClosed}
+                            onClick={() => handleItemQuantityChange(item, -1)}
+                            className="w-7 h-7 p-0 rounded-lg text-xs font-bold"
+                          >
+                            -
+                          </Button>
+                          <span className="w-5 text-center font-mono font-bold text-xs">
+                            {qty}
+                          </span>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={!canAddMore}
+                            onClick={() => handleItemQuantityChange(item, 1)}
+                            className="w-7 h-7 p-0 rounded-lg text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                          >
+                            +
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* ── Bahagian 4: Lokasi Agihan & Slot Masa Temujanji ── */}
+          <div className="rounded-3xl p-6 sm:p-7 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6">
+            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-xs">
+                4
+              </div>
+              <div>
+                <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+                  Lokasi Agihan &amp; Slot Waktu Pengambilan
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Pilih pusat edaran dan waktu temujanji untuk menebus bekalan barangan anda.
+                </p>
+              </div>
+            </div>
+
+            {/* Pilihan Lokasi */}
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                Pilih Pusat Edaran Food Bank:
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {locations.map((loc) => {
+                  const isSelected = selectedLocationId === loc.id;
+                  const polymapsUrl = loc.polymaps_building_id
+                    ? `/polymaps?b=${loc.polymaps_building_id}`
+                    : '/polymaps';
+
+                  return (
+                    <div
+                      key={loc.id}
+                      onClick={() => !isSessionClosed && setSelectedLocationId(loc.id)}
+                      className={cn(
+                        'p-4 rounded-2xl border cursor-pointer transition-all duration-200 flex flex-col justify-between space-y-3',
+                        isSelected
+                          ? 'bg-amber-500/10 border-amber-500/60 shadow-md ring-1 ring-amber-500/40'
+                          : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 hover:border-slate-300'
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={cn(
+                              'w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5',
+                              isSelected
+                                ? 'bg-amber-600 text-white'
+                                : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                            )}
+                          >
+                            <MapPin className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-xs text-slate-900 dark:text-white">
+                              {loc.name}
+                            </h4>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                              {loc.room_detail || 'Kaunter Hal Ehwal Pelajar'}
+                            </p>
+                            <p className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold mt-1">
+                              Waktu Operasi: {loc.operating_hours || 'Isnin - Khamis: 10AM - 4PM'}
+                            </p>
+                          </div>
+                        </div>
+
+                        {isSelected && (
+                          <div className="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center">
+                            <Check className="w-3 h-3" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Direct PolyMaps Link */}
+                      <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between">
+                        <span className="text-[10px] text-slate-400">
+                          {loc.contact_person || 'Exco Kebajikan JPP'}
+                        </span>
+                        <Link
+                          to={polymapsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:underline"
+                        >
+                          <span>Lihat di PolyMaps</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Pilihan Tarikh & Slot Masa */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-2">
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                  <span>Tarikh Pengambilan (Hari Bekerja Sahaja)</span>
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {workingDays.map((d) => (
+                    <button
+                      key={d.dateStr}
+                      type="button"
+                      disabled={isSessionClosed}
+                      onClick={() => setPickupDate(d.dateStr)}
+                      className={cn(
+                        'py-2 px-2.5 rounded-xl border text-center font-bold text-xs transition-all',
+                        pickupDate === d.dateStr
+                          ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                          : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-amber-500/40'
+                      )}
+                    >
+                      {d.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                  <span>Slot Masa Pengambilan</span>
+                </label>
+                <div className="space-y-2">
+                  {TIME_SLOTS.map((slot) => (
+                    <button
+                      key={slot}
+                      type="button"
+                      disabled={isSessionClosed}
+                      onClick={() => setPickupTimeSlot(slot)}
+                      className={cn(
+                        'w-full py-2 px-3 rounded-xl border text-left font-bold text-xs flex items-center justify-between transition-all',
+                        pickupTimeSlot === slot
+                          ? 'bg-amber-500/10 border-amber-500 text-amber-900 dark:text-amber-200'
+                          : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-amber-500/40'
+                      )}
+                    >
+                      <span>{slot}</span>
+                      {pickupTimeSlot === slot && (
+                        <div className="w-4 h-4 rounded-full bg-amber-600 text-white flex items-center justify-center">
+                          <Check className="w-2.5 h-2.5" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Bahagian 5: Perakuan & Butang Penyerahan ── */}
+          <div className="rounded-3xl p-6 sm:p-7 bg-slate-900 text-white border border-amber-500/30 space-y-5">
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="foodbank-acknowledge"
+                checked={acknowledged}
+                onChange={(e) => setAcknowledged(e.target.checked)}
+                disabled={isSessionClosed}
+                className="mt-1 w-4 h-4 rounded text-amber-600 focus:ring-amber-500 cursor-pointer"
+              />
+              <label
+                htmlFor="foodbank-acknowledge"
+                className="text-xs text-slate-300 leading-relaxed cursor-pointer"
+              >
+                Saya dengan ini mengesahkan bahawa segala maklumat yang dinyatakan di atas adalah benar
+                dan permohonan ini dibuat atas dasar keperluan sebenar. Saya bersetuju untuk hadir
+                mengikut tarikh serta waktu yang ditetapkan dan menunjukkan Pas Pengambilan Digital (QR)
+                kepada petugas kaunter agihan.
+              </label>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-slate-800">
+              <div className="text-xs text-slate-400">
+                <span>Nilai Anggaran Pakej: </span>
+                <span className="font-extrabold text-amber-400 text-sm">
+                  RM {totalEstimatedCost.toFixed(2)}
+                </span>
+                <span className="ml-2 font-mono">({totalSelectedCount} unit barangan dipilih)</span>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={
+                  isSubmitting ||
+                  isSessionClosed ||
+                  !acknowledged ||
+                  totalSelectedCount === 0 ||
+                  totalSelectedCount > maxAllowedItems
+                }
+                className="h-12 px-6 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm rounded-2xl gap-2 shadow-xl shadow-amber-500/20"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>
+                  {isSubmitting ? 'Memproses Permohonan...' : 'Hantar Permohonan & Jana Pas QR'}
+                </span>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </form>
+      )}
+
+      {/* ── Sejarah Permohonan Lepas (Arkib) ── */}
+      {pastApplications.length > 0 && (
+        <div className="rounded-3xl p-6 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-4">
+          <div className="flex items-center gap-2 text-slate-900 dark:text-white font-extrabold text-sm">
+            <Layers className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <span>Rekod Sejarah Permohonan Lalu</span>
+          </div>
+
+          <div className="divide-y divide-slate-200/80 dark:divide-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900">
+            {pastApplications.map((app) => (
+              <div
+                key={app.id}
+                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+              >
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-extrabold font-mono text-slate-900 dark:text-white">
+                      {app.application_no}
+                    </span>
+                    <span
+                      className={cn(
+                        'px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider',
+                        app.status === 'SELESAI'
+                          ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
+                          : app.status === 'DITOLAK'
+                          ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                          : 'bg-slate-500/10 text-slate-500'
+                      )}
+                    >
+                      {app.status}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                    Dihantar pada:{' '}
+                    {app.created_at
+                      ? new Date(app.created_at).toLocaleDateString('ms-MY')
+                      : '-'}
+                    {' • '}
+                    {app.selected_items?.length || 0} unit barangan (RM{' '}
+                    {(Number(app.total_estimated_value) || 0).toFixed(2)})
+                  </p>
+                </div>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedPassApp(app);
+                    setPassModalOpen(true);
+                  }}
+                  className="h-8 px-3 text-xs font-bold rounded-xl gap-1 text-slate-700 dark:text-slate-300"
+                >
+                  <QrCode className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Lihat Pas</span>
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal Pas Pengambilan Digital (QR Boarding Pass) ── */}
+      <FoodBankQrPassModal
+        open={passModalOpen}
+        onClose={() => setPassModalOpen(false)}
+        application={selectedPassApp}
+        studentName={profile?.full_name || undefined}
+        studentMatric={profile?.matric_no || profile?.matrix_no || undefined}
+        studentProgramme={profile?.department || undefined}
+        roomOrResidence={roomNumber || undefined}
+      />
+    </div>
+  );
+}
+
+export default KebajikanFoodBankPage;

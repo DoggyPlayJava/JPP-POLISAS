@@ -1357,7 +1357,7 @@ E-Kebajikan adalah sistem pengurusan aduan dan kebajikan pelajar dengan aliran t
 |---|---|---|
 | `/kebajikan` | `KebajikanHubPage` | Semua pengguna (Hab Pendaratan Moden E-Kebajikan & Food Bank) |
 | `/kebajikan/dashboard` | `KebajikanDashboard` | Exco Kebajikan / Super Admin (Papan Pemuka Tiket Aduan) |
-| `/kebajikan/foodbank` | `FoodBankPage` | Pelajar / Semua pengguna (Permohonan & Pas QR Food Bank) |
+| `/kebajikan/foodbank` | `KebajikanFoodBankPage` | Pelajar / Semua pengguna (Permohonan & Pas QR Food Bank) |
 | `/kebajikan/buat-aduan` | `KebajikanSubmitPage` | Pelajar (buat tiket baru) |
 | `/kebajikan/aduan-saya` | `KebajikanMyTickets` | Pelajar (lihat tiket sendiri) |
 | `/kebajikan/aduan/:id` | `KebajikanStudentChat` | Pelajar (chat dalam tiket) |

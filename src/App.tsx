@@ -129,7 +129,7 @@ const KarnivalAdminLayout = lazy(() => import('./pages/karnival/admin/KarnivalAd
 // ── E-Kebajikan ──
 const KebajikanLayout = lazy(() => import('./pages/kebajikan/KebajikanLayout').then(m => ({ default: m.KebajikanLayout })));
 const KebajikanHubPage = lazy(() => import('./pages/kebajikan/KebajikanHubPage').then(m => ({ default: m.KebajikanHubPage })));
-const FoodBankPage = lazy(() => import('./pages/kebajikan/KebajikanHubPage').then(m => ({ default: m.FoodBankPage })));
+const KebajikanFoodBankPage = lazy(() => import('./pages/kebajikan/KebajikanFoodBankPage').then(m => ({ default: m.KebajikanFoodBankPage })));
 const KebajikanStatsPage = lazy(() => import('./pages/kebajikan/KebajikanPublicStats').then(m => ({ default: m.KebajikanStatsPage })));
 const KebajikanSubmitPage = lazy(() => import('./pages/kebajikan/KebajikanSubmitPage').then(m => ({ default: m.KebajikanSubmitPage })));
 const KebajikanMyTickets = lazy(() => import('./pages/kebajikan/KebajikanMyTickets').then(m => ({ default: m.KebajikanMyTickets })));
@@ -488,7 +488,7 @@ function AppRoutes() {
           <Route path="/kebajikan/aduan-saya" element={<KebajikanMyTickets />} />
           <Route path="/kebajikan/aduan/:id"  element={<KebajikanStudentChat />} />
           <Route path="/kebajikan/statistik"  element={<KebajikanStatsPage />} />
-          <Route path="/kebajikan/foodbank"   element={<FoodBankPage />} />
+          <Route path="/kebajikan/foodbank"   element={<KebajikanFoodBankPage />} />
 
           {/* Exco + Staff dashboard */}
           <Route path="/kebajikan/dashboard"   element={<KebajikanDashboard />} />
