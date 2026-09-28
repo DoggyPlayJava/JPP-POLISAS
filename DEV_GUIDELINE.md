@@ -135,6 +135,8 @@ src/
 │   ├── notifications.ts      ← Helper: sendNotificationToUser(), sendNotificationToRole()
 │   ├── utils.ts              ← cn(), helper functions
 │   ├── generateLaporanDocx.ts← Penjana dokumen DOCX laporan
+│   ├── polymaps360Data.ts    ← Pangkalan data 28 bangunan & 200+ bilik 360° terverifikasi (Norman POLISAS)
+│   ├── foodbankDefaults.ts   ← Fallback data dan barangan lalai Food Bank JPP
 │   ├── email.ts              ← Email dispatch via Express server
 │   └── report-utils.ts       ← Utility untuk laporan
 │
@@ -2635,6 +2637,33 @@ Sistem beroperasi secara rasmi dengan **Light Theme sebagai mod lalai (*default 
   - **Tab 3: Penjejakan Bajet & Lejar Audit (RM70,000):** Analitik penggunaan bajet peruntukan siling RM70k, jadual transaksi lejar audit lengkap dengan nama pegawai, permohonan dan amaun; modal pelarasan/suntikan bajet.
   - **Tab 4: Tetapan Sesi & Formula Kuota:** Formula kuota had permohonan bulanan dan barangan asas, teks hebahan arahan & syarat kelayakan, serta CRUD lokasi pengagihan berintegrasi PolyMaps 360° (`imaps_buildings`).
 
+### 25.9 Modul Pelajar Food Bank JPP (`/kebajikan/foodbank`) & Autocomplete Rakan Serumah
+- **Fail Utama:** `src/pages/kebajikan/KebajikanFoodBankPage.tsx`, `src/components/foodbank/FoodBankQrPassModal.tsx`, `src/lib/foodbankDefaults.ts`
+- **Laluan:** `/kebajikan/foodbank` (didaftarkan di bawah `KebajikanLayout` dalam `src/App.tsx`)
+- **Akses & Syarat Kelayakan:** Terbuka kepada semua pelajar POLISAS yang log masuk (`isAuthenticated`). Sistem mengehadkan kepada **1 permohonan aktif pada satu masa** (Permohonan baru hanya dibenarkan selepas permohonan terdahulu berstatus `COMPLETED` atau `REJECTED`).
+- **Formula Kuota Rakan Serumah:**
+  - Formula: `Math.min(items_per_person * (1 + housemates.length), max_items_limit)`
+  - Asas 5 barangan untuk pemohon, tambahan +5 barangan bagi setiap rakan serumah yang sah, tertakluk kepada had siling maksimum sesi (contoh: 20 barangan).
+- **Carian Pintas & Autocomplete Rakan Serumah Masa Nyata:**
+  - Pemohon boleh menaip nama penuh atau nombor matrik rakan serumah dalam input carian `housemateQuery`.
+  - Carian mengkuiri jadual `profiles` secara masa nyata (`or(full_name.ilike.%${q}%,matric_no.ilike.%${q}%)`) dengan pencegahan penduaan rakan serumah sedia ada dan pengecualian akaun pemohon sendiri.
+  - Memaparkan kad cadangan lengkap dengan inisial avatar, nama penuh, nombor matrik, dan jabatan akademik berserta butang "Tambah" 1-klik pantas.
+  - Menyediakan borang manual sandaran (*fallback form*) sekiranya rakan serumah belum mendaftar akaun portal.
+- **Katalog Barangan & Pemilihan Slot Pengambilan:**
+  - Barangan dikategorikan (`MAKANAN`, `MINUMAN`, `KEBERSIHAN`, `KEPERLUAN_ASAS`) dengan kawalan kuota barangan secara interaktif.
+  - Pilihan lokasi pengagihan kampus berintegrasi dengan pautan terus ke lokasi blok PolyMaps.
+- **Pas Pengambilan Digital Kod QR (`FoodBankQrPassModal`):**
+  - Menjana kod QR unik (`FB-YYYYMMDD-XXXX`) dan pas digital rasmi untuk diimbas oleh petugas JPP semasa serahan barangan di kaunter.
 
-
-
+### 25.10 Integrasi 3D PolyMaps 360° Panoramik & Petunjuk Hijau Pentadbir
+- **Fail Utama:** `src/lib/polymaps360Data.ts`, `src/components/polymaps/Pannellum360Viewer.tsx`, `src/pages/polymaps/PolyMapsPage.tsx`, `src/pages/jpp/JppPolyMapsAdmin.tsx`
+- **Migrasi Pangkalan Data:** `supabase/migrations/88_foodbank_and_polymaps_360.sql` & `supabase/migrations/89_polymaps_360_verified_seed.sql`
+- **Pangkalan Data 360 Terverifikasi (`polymaps360Data.ts`):**
+  - Mengandungi pemetaan URL imej equirectangular 360° resolusi tinggi dari repositori rasmi `normane176680.github.io/my-map-polisas/` untuk 28 bangunan utama kampus POLISAS (Blok Kejuruteraan Elektrik A, Awam B, Mekanikal C, Perdagangan D, Dewan Sri Mahkota, Pentadbiran Pusat, Kamsis Ibnu Sina, Mahkota Square, Kafe, dll.) dan lebih 200 ruang bilik/makmal.
+  - Kesemua 28 pautan imej disahkan secara langsung berstatus HTTP 200 OK.
+  - Menyediakan fallback pintar di peringkat frontend supaya paparan 360° berfungsi secara serta-merta tanpa bergantung sepenuhnya kepada ketersediaan kolum pangkalan data `panorama_360_url`.
+- **Petunjuk Hijau Pengawasan Pentadbir (`JppPolyMapsAdmin.tsx`):**
+  - Semua kad bangunan dan lokasi yang memiliki liputan 3D panorama dipaparkan dengan sempadan hijau menyerlah (`border-2 border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/25`) berserta lencana beranimasi `360° AKTIF` bagi memudahkan pengawasan dan pemantauan menyeluruh pentadbir JPP.
+- **Pengalaman Interaktif Pelajar (`PolyMapsPage.tsx` & `Pannellum360Viewer.tsx`):**
+  - Kad perincian bangunan memaparkan butang terapung beranimasi `🧭 360° Street View` supaya pelajar dapat melihat pandangan 360° dengan serta-merta tanpa perlu menekan tab manual.
+  - Paparan skrin penuh interaktif dikuasakan oleh enjin WebGL Pannellum 2.5.6 dengan sokongan sentuhan mudah alih, kawalan seretan tetikus (*mouse drag*), putaran auto (*auto-rotate*), dan kompas orientasi.

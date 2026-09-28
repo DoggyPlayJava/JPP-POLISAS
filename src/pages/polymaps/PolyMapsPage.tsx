@@ -21,6 +21,7 @@ import { SystemTour } from '@/components/ui/SystemTour';
 import { useTour } from '@/hooks/useTour';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { Pannellum360Viewer } from '@/components/polymaps/Pannellum360Viewer';
+import { getBuilding360Url, getLocation360Url } from '@/lib/polymaps360Data';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -863,16 +864,30 @@ export function PolyMapsPage() {
       console.error('PolyMaps: Failed to load buildings:', bRes.error.message);
     }
     const bData = bRes.data;
-    if (bData) setAllBuildings(bData);
+    if (bData) {
+      const enhancedBuildings = bData.map((b: any) => ({
+        ...b,
+        panorama_360_url: b.panorama_360_url || getBuilding360Url(b)
+      }));
+      setAllBuildings(enhancedBuildings);
+    }
     
     if (lRes.error) {
       console.error('PolyMaps: Failed to load locations:', lRes.error.message);
     }
     const lData = lRes.data;
-    const formatted = (lData || []).map((item: any) => ({
-      ...item,
-      building: Array.isArray(item.building) ? item.building[0] : item.building
-    }));
+    const formatted = (lData || []).map((item: any) => {
+      const building = Array.isArray(item.building) ? item.building[0] : item.building;
+      const enhancedBuilding = building ? {
+        ...building,
+        panorama_360_url: building.panorama_360_url || getBuilding360Url(building)
+      } : building;
+      return {
+        ...item,
+        building: enhancedBuilding,
+        panorama_360_url: item.panorama_360_url || getLocation360Url({ ...item, building: enhancedBuilding })
+      };
+    });
     if (formatted.length > 0) {
       setAllLocations(formatted);
     }
@@ -939,9 +954,9 @@ export function PolyMapsPage() {
       const { data, error } = await supabase
         .from('imaps_locations')
         .select(`
-          id, room_code, floor_level, direction_text, search_tags, image_url, panorama_360_url,
+          id, room_code, floor_level, direction_text, search_tags, image_url,
           building:building_id (
-            id, name, code, center_lat, center_lng, entrance_image_url, floorplan_image_url, panorama_360_url, zone_name
+            id, name, code, center_lat, center_lng, entrance_image_url, floorplan_image_url, zone_name
           )
         `)
         .or(`room_code.ilike.%${query}%,search_tags.ilike.%${query}%`)
@@ -949,10 +964,18 @@ export function PolyMapsPage() {
 
       if (error) throw error;
       
-      const formattedData = (data || []).map(item => ({
-        ...item,
-        building: Array.isArray(item.building) ? item.building[0] : item.building
-      })) as Location[];
+      const formattedData = (data || []).map((item: any) => {
+        const rawBuilding = Array.isArray(item.building) ? item.building[0] : item.building;
+        const enhancedBuilding = rawBuilding ? {
+          ...rawBuilding,
+          panorama_360_url: rawBuilding.panorama_360_url || getBuilding360Url(rawBuilding)
+        } : rawBuilding;
+        return {
+          ...item,
+          building: enhancedBuilding,
+          panorama_360_url: item.panorama_360_url || getLocation360Url({ ...item, building: enhancedBuilding })
+        };
+      }) as Location[];
 
       setSearchResults([...buildingResults, ...formattedData]);
     } catch (error) {

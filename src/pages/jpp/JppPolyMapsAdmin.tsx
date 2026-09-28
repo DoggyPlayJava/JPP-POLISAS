@@ -13,6 +13,7 @@ import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { logAuditAction } from '@/lib/auditLogger';
+import { getBuilding360Url, getLocation360Url } from '@/lib/polymaps360Data';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -448,8 +449,17 @@ export function JppPolyMapsAdmin() {
       if (reportsRes.error) throw reportsRes.error;
       if (walkwaysRes.error) throw walkwaysRes.error;
 
-      setBuildings(buildingsRes.data || []);
-      setLocations(locationsRes.data || []);
+      const enhancedBuildings = (buildingsRes.data || []).map((b: any) => ({
+        ...b,
+        panorama_360_url: b.panorama_360_url || getBuilding360Url(b),
+      }));
+      const enhancedLocations = (locationsRes.data || []).map((l: any) => ({
+        ...l,
+        panorama_360_url: l.panorama_360_url || getLocation360Url(l),
+      }));
+
+      setBuildings(enhancedBuildings);
+      setLocations(enhancedLocations);
       setReports(reportsRes.data || []);
       
       const parsedWalkways = (walkwaysRes.data || []).map((w: any) => ({

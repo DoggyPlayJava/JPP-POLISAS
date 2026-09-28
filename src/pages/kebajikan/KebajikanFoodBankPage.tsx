@@ -56,6 +56,12 @@ import {
 } from '@/types';
 import { FoodBankQrPassModal } from '@/components/foodbank/FoodBankQrPassModal';
 import { Link } from 'react-router-dom';
+import { getBuilding360Url } from '@/lib/polymaps360Data';
+import {
+  DEFAULT_FOODBANK_SETTINGS,
+  DEFAULT_FOODBANK_ITEMS,
+  DEFAULT_FOODBANK_LOCATIONS,
+} from '@/lib/foodbankDefaults';
 
 // Tab Kategori Barangan
 const CATEGORY_TABS = [
@@ -101,6 +107,10 @@ export function KebajikanFoodBankPage() {
   const [housemates, setHousemates] = useState<FoodBankHousemate[]>([]);
   const [hmName, setHmName] = useState('');
   const [hmMatric, setHmMatric] = useState('');
+  const [hmSearchQuery, setHmSearchQuery] = useState('');
+  const [hmSuggestions, setHmSuggestions] = useState<any[]>([]);
+  const [isSearchingHm, setIsSearchingHm] = useState(false);
+  const [showManualHmForm, setShowManualHmForm] = useState(false);
 
   // Barangan Dipilih (item_id -> quantity)
   const [selectedItemQuantities, setSelectedItemQuantities] = useState<Record<string, number>>({});
@@ -189,18 +199,33 @@ export function KebajikanFoodBankPage() {
       if (itemsRes.error) console.error('Error fetching items:', itemsRes.error);
       if (activeAppRes.error) console.error('Error fetching active app:', activeAppRes.error);
 
-      if (settingsRes.data) {
-        setSettings(settingsRes.data as FoodBankSettings);
+      const finalSettings = (settingsRes.data as FoodBankSettings) || DEFAULT_FOODBANK_SETTINGS;
+      setSettings(finalSettings);
+
+      const rawLocations = (locationsRes.data && locationsRes.data.length > 0)
+        ? (locationsRes.data as FoodBankDistributionLocation[])
+        : DEFAULT_FOODBANK_LOCATIONS;
+      const enhancedLocations = rawLocations.map((loc) => {
+        const rawB = loc.building as any;
+        return {
+          ...loc,
+          building: rawB
+            ? {
+                ...rawB,
+                panorama_360_url: rawB.panorama_360_url || getBuilding360Url(rawB),
+              }
+            : rawB,
+        };
+      });
+      setLocations(enhancedLocations);
+      if (enhancedLocations.length > 0 && !selectedLocationId) {
+        setSelectedLocationId(enhancedLocations[0].id);
       }
-      if (locationsRes.data) {
-        setLocations(locationsRes.data as FoodBankDistributionLocation[]);
-        if (locationsRes.data.length > 0 && !selectedLocationId) {
-          setSelectedLocationId(locationsRes.data[0].id);
-        }
-      }
-      if (itemsRes.data) {
-        setItems(itemsRes.data as FoodBankItem[]);
-      }
+
+      const finalItems = (itemsRes.data && itemsRes.data.length > 0)
+        ? (itemsRes.data as FoodBankItem[])
+        : DEFAULT_FOODBANK_ITEMS;
+      setItems(finalItems);
       if (activeAppRes.data) {
         setActiveApplication(activeAppRes.data as FoodBankApplication);
       } else {
@@ -252,7 +277,61 @@ export function KebajikanFoodBankPage() {
     return cost;
   }, [selectedItemQuantities, items]);
 
-  // Tambah Rakan Serumah
+  // Carian Pelajar POLISAS untuk Autocomplete Rakan Serumah
+  const handleSearchStudent = async (query: string) => {
+    setHmSearchQuery(query);
+    const q = query.trim();
+    if (q.length < 2) {
+      setHmSuggestions([]);
+      return;
+    }
+    setIsSearchingHm(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, matric_no, email, department')
+        .or(`full_name.ilike.%${q}%,matric_no.ilike.%${q}%`)
+        .limit(8);
+
+      if (!error && data) {
+        const existingMatrics = new Set(housemates.map((h) => h.ic_or_matric.toUpperCase()));
+        if (profile?.matric_no) existingMatrics.add(profile.matric_no.toUpperCase());
+
+        const filtered = data.filter((s: any) => {
+          const m = (s.matric_no || s.email || '').toUpperCase();
+          return !existingMatrics.has(m) && s.id !== user?.id;
+        });
+        setHmSuggestions(filtered);
+      } else {
+        setHmSuggestions([]);
+      }
+    } catch (err) {
+      console.error('Error searching students for housemate:', err);
+      setHmSuggestions([]);
+    } finally {
+      setIsSearchingHm(false);
+    }
+  };
+
+  // Pilih Pelajar dari Autocomplete Dropdown
+  const handleSelectStudent = (student: any) => {
+    const matric = (student.matric_no || student.email || '').toUpperCase().trim();
+    const name = (student.full_name || 'Pelajar POLISAS').trim();
+
+    if (housemates.some((h) => h.ic_or_matric.toUpperCase() === matric)) {
+      toast.error('Rakan serumah dengan nombor matrik ini telah dimasukkan.');
+      return;
+    }
+
+    setHousemates([...housemates, { name, ic_or_matric: matric }]);
+    setHmSearchQuery('');
+    setHmSuggestions([]);
+    setHmName('');
+    setHmMatric('');
+    toast.success(`${name} berjaya ditambah! Kuota anda meningkat.`);
+  };
+
+  // Tambah Rakan Serumah Secara Manual
   const handleAddHousemate = () => {
     const trimmedName = hmName.trim();
     const trimmedMatric = hmMatric.trim().toUpperCase();
@@ -907,36 +986,138 @@ export function KebajikanFoodBankPage() {
 
             {/* Input Tambah Rakan Serumah */}
             <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-3">
-              <span className="block text-xs font-extrabold text-slate-900 dark:text-white">
-                Senarai Rakan Serumah yang Ditanggung Bersama (Pilihan)
-              </span>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <Input
-                  placeholder="Nama Penuh Rakan"
-                  value={hmName}
-                  onChange={(e) => setHmName(e.target.value)}
-                  disabled={isSessionClosed}
-                  className="text-xs rounded-xl"
-                />
-                <Input
-                  placeholder="No. Matrik (Cth: 06DKM23F1001)"
-                  value={hmMatric}
-                  onChange={(e) => setHmMatric(e.target.value)}
-                  disabled={isSessionClosed}
-                  className="text-xs font-mono rounded-xl"
-                />
-                <Button
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="block text-xs font-extrabold text-slate-900 dark:text-white">
+                    Maklumat Kediaman & Kuota Rakan Serumah
+                  </span>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Setiap rakan serumah yang ditambah akan meningkatkan had kuota barangan anda (+5 barangan).
+                  </p>
+                </div>
+                <button
                   type="button"
-                  variant="outline"
-                  onClick={handleAddHousemate}
-                  disabled={isSessionClosed}
-                  className="h-10 text-xs font-bold border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 rounded-xl gap-1.5"
+                  onClick={() => setShowManualHmForm(!showManualHmForm)}
+                  className="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline"
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Tambah Rakan</span>
-                </Button>
+                  {showManualHmForm ? 'Tutup Manual' : 'Input Manual'}
+                </button>
               </div>
+
+              {/* Kotak Carian Autocomplete */}
+              <div className="relative">
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    placeholder="Ketik Nama atau No. Matrik kawan (Cth: 06DKM... atau Ali)..."
+                    value={hmSearchQuery}
+                    onChange={(e) => handleSearchStudent(e.target.value)}
+                    disabled={isSessionClosed}
+                    className="pl-10 pr-10 text-xs rounded-xl h-10 bg-amber-50/40 dark:bg-amber-950/20 border-amber-200/80 dark:border-amber-800/40 focus:ring-amber-500 font-medium placeholder:text-slate-400"
+                  />
+                  {isSearchingHm && (
+                    <RefreshCw className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-amber-600 animate-spin" />
+                  )}
+                </div>
+
+                {/* Floating Autocomplete Dropdown */}
+                <AnimatePresence>
+                  {hmSuggestions.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className="absolute z-30 left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-800/80"
+                    >
+                      <div className="px-3.5 py-1.5 bg-slate-50 dark:bg-slate-800/50 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                        Pilih Pelajar ({hmSuggestions.length} dijumpai)
+                      </div>
+                      {hmSuggestions.map((st) => (
+                        <button
+                          key={st.id}
+                          type="button"
+                          onClick={() => handleSelectStudent(st)}
+                          className="w-full px-3.5 py-2.5 flex items-center justify-between text-left hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors group"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs uppercase shrink-0">
+                              {st.full_name?.charAt(0) || 'P'}
+                            </div>
+                            <div className="truncate">
+                              <p className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors truncate">
+                                {st.full_name}
+                              </p>
+                              <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400">
+                                <span className="font-mono font-semibold">{st.matric_no || st.email}</span>
+                                {st.department && <span>• {st.department}</span>}
+                              </div>
+                            </div>
+                          </div>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-100/60 dark:bg-amber-900/40 px-2 py-0.5 rounded-lg group-hover:bg-amber-500 group-hover:text-white transition-all shrink-0">
+                            <Plus className="w-3 h-3" /> Tambah
+                          </span>
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {hmSearchQuery.trim().length >= 2 && !isSearchingHm && hmSuggestions.length === 0 && (
+                  <div className="text-[11px] text-slate-400 mt-1 pl-1">
+                    Tiada pelajar sepadan ditemui dalam sistem. Anda boleh guna{' '}
+                    <button
+                      type="button"
+                      onClick={() => setShowManualHmForm(true)}
+                      className="font-bold text-amber-600 underline"
+                    >
+                      borang manual
+                    </button>
+                    .
+                  </div>
+                )}
+              </div>
+
+              {/* Borang Input Tambah Rakan Manual (Boleh dibuka jika perlu) */}
+              <AnimatePresence>
+                {showManualHmForm && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="p-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl space-y-2.5 overflow-hidden"
+                  >
+                    <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                      Borang Manual Rakan Serumah:
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <Input
+                        placeholder="Nama Penuh Rakan"
+                        value={hmName}
+                        onChange={(e) => setHmName(e.target.value)}
+                        disabled={isSessionClosed}
+                        className="text-xs rounded-xl"
+                      />
+                      <Input
+                        placeholder="No. Matrik (Cth: 06DKM23F1001)"
+                        value={hmMatric}
+                        onChange={(e) => setHmMatric(e.target.value)}
+                        disabled={isSessionClosed}
+                        className="text-xs font-mono rounded-xl"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleAddHousemate}
+                        disabled={isSessionClosed}
+                        className="h-10 text-xs font-bold border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 rounded-xl gap-1.5"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Tambah Manual</span>
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Senarai Rakan Yang Telah Ditambah */}
               {housemates.length > 0 && (

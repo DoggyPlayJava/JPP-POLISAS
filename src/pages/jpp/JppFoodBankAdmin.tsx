@@ -54,6 +54,7 @@ import {
   CreditCard,
   ArrowUpRight,
   CheckCircle,
+  Lock,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import confetti from 'canvas-confetti';
@@ -71,6 +72,12 @@ import {
 } from '@/types';
 import { FoodBankQrPassModal } from '@/components/foodbank/FoodBankQrPassModal';
 import { Link } from 'react-router-dom';
+import { getBuilding360Url } from '@/lib/polymaps360Data';
+import {
+  DEFAULT_FOODBANK_SETTINGS,
+  DEFAULT_FOODBANK_ITEMS,
+  DEFAULT_FOODBANK_LOCATIONS,
+} from '@/lib/foodbankDefaults';
 
 // Baseline rasmi peruntukan Tabung Food Bank JPP
 const OFFICIAL_BASELINE_BUDGET = 70000.0;
@@ -218,12 +225,12 @@ export function JppFoodBankAdmin() {
           .from('foodbank_distribution_locations')
           .select(`
             *,
-            building:imaps_buildings(id, name, code, panorama_360_url)
+            building:imaps_buildings(id, name, code)
           `)
           .order('name', { ascending: true }),
         supabase
           .from('imaps_buildings')
-          .select('id, name, code, description, panorama_360_url')
+          .select('id, name, code, description')
           .order('name', { ascending: true }),
       ]);
 
@@ -234,29 +241,47 @@ export function JppFoodBankAdmin() {
       if (locationsRes.error) console.error('Error fetching locations:', locationsRes.error);
       if (buildingsRes.error) console.error('Error fetching buildings:', buildingsRes.error);
 
-      if (settingsRes.data) {
-        const s = settingsRes.data as FoodBankSettings;
-        setSettings(s);
-        setSessionFormData({
-          max_monthly_applications_per_student: s.max_monthly_applications_per_student || 1,
-          max_items_per_application: s.max_items_per_application || 5,
-          application_instructions: s.application_instructions || '',
-          eligibility_criteria: s.eligibility_criteria || '',
-          total_budget: s.total_budget || OFFICIAL_BASELINE_BUDGET,
-        });
-      } else {
-        // Fallback default jika rekod settings belum wujud
-        setSessionFormData(prev => ({
-          ...prev,
-          total_budget: OFFICIAL_BASELINE_BUDGET,
-        }));
-      }
+      const finalSettings = (settingsRes.data as FoodBankSettings) || DEFAULT_FOODBANK_SETTINGS;
+      setSettings(finalSettings);
+      setSessionFormData({
+        max_monthly_applications_per_student: finalSettings.max_monthly_applications_per_student || 1,
+        max_items_per_application: finalSettings.max_items_per_application || 5,
+        application_instructions: finalSettings.application_instructions || '',
+        eligibility_criteria: finalSettings.eligibility_criteria || '',
+        total_budget: finalSettings.total_budget || OFFICIAL_BASELINE_BUDGET,
+      });
 
       if (appsRes.data) setApplications(appsRes.data as FoodBankApplication[]);
-      if (itemsRes.data) setItems(itemsRes.data as FoodBankItem[]);
+      
+      const finalItems = (itemsRes.data && itemsRes.data.length > 0)
+        ? (itemsRes.data as FoodBankItem[])
+        : DEFAULT_FOODBANK_ITEMS;
+      setItems(finalItems);
+
       if (txRes.data) setTransactions(txRes.data as FoodBankBudgetTransaction[]);
-      if (locationsRes.data) setLocations(locationsRes.data as FoodBankDistributionLocation[]);
-      if (buildingsRes.data) setBuildings(buildingsRes.data as PolyMapsBuildingWith360[]);
+
+      const rawLocations = (locationsRes.data && locationsRes.data.length > 0)
+        ? locationsRes.data
+        : DEFAULT_FOODBANK_LOCATIONS;
+      const enhancedLocations = (rawLocations as FoodBankDistributionLocation[]).map((loc) => {
+        const rawB = loc.building as any;
+        return {
+          ...loc,
+          building: rawB
+            ? {
+                ...rawB,
+                panorama_360_url: rawB.panorama_360_url || getBuilding360Url(rawB),
+              }
+            : rawB,
+        };
+      });
+      setLocations(enhancedLocations);
+
+      const enhancedBuildings = ((buildingsRes.data || []) as any[]).map((b) => ({
+        ...b,
+        panorama_360_url: b.panorama_360_url || getBuilding360Url(b),
+      })) as PolyMapsBuildingWith360[];
+      setBuildings(enhancedBuildings);
     } catch (err: any) {
       console.error('Fatal load error:', err);
       toast.error('Ralat ketika memuat turun data Food Bank.');
