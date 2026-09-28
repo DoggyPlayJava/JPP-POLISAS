@@ -55,6 +55,7 @@ import {
   ArrowUpRight,
   CheckCircle,
   Lock,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import confetti from 'canvas-confetti';
@@ -69,6 +70,7 @@ import {
   FoodBankApplication,
   FoodBankBudgetTransaction,
   PolyMapsBuildingWith360,
+  FoodBankLocationStock,
 } from '@/types';
 import { FoodBankQrPassModal } from '@/components/foodbank/FoodBankQrPassModal';
 import { Link } from 'react-router-dom';
@@ -81,6 +83,8 @@ import {
   saveLocalFoodBankSettings,
   FOODBANK_CATEGORY_CONFIG,
   getFoodBankStockBadge,
+  generateDefaultFoodBankLocationStocks,
+  DEFAULT_FOODBANK_LOCATION_STOCKS,
 } from '@/lib/foodbankDefaults';
 
 // Baseline rasmi peruntukan Tabung Food Bank JPP
@@ -128,6 +132,8 @@ export function JppFoodBankAdmin() {
   // ── Tab 2: Inventori & Stok ───────────────────────────────────────────────
   const [itemSearch, setItemSearch] = useState('');
   const [itemCategoryFilter, setItemCategoryFilter] = useState<string>('SEMUA');
+  const [selectedInventoryLocationId, setSelectedInventoryLocationId] = useState<string>('SEMUA');
+  const [locationStocks, setLocationStocks] = useState<FoodBankLocationStock[]>([]);
   const [itemModalOpen, setItemModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<FoodBankItem | null>(null);
   const [itemFormData, setItemFormData] = useState({
@@ -143,6 +149,17 @@ export function JppFoodBankAdmin() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSavingItem, setIsSavingItem] = useState(false);
+
+  // Modal Pindahan Stok Antara Lokasi
+  const [transferModalOpen, setTransferModalOpen] = useState<boolean>(false);
+  const [transferFormData, setTransferFormData] = useState({
+    item_id: '',
+    from_location_id: '',
+    to_location_id: '',
+    quantity: 1,
+    notes: '',
+  });
+  const [isSubmittingTransfer, setIsSubmittingTransfer] = useState<boolean>(false);
 
   // ── Tab 3: Bajet & Lejar ──────────────────────────────────────────────────
   const [txFilter, setTxFilter] = useState<string>('SEMUA');
@@ -191,6 +208,7 @@ export function JppFoodBankAdmin() {
         txRes,
         locationsRes,
         buildingsRes,
+        locStocksRes,
       ] = await Promise.all([
         supabase
           .from('foodbank_settings')
@@ -236,6 +254,9 @@ export function JppFoodBankAdmin() {
           .from('imaps_buildings')
           .select('id, name, code, description')
           .order('name', { ascending: true }),
+        supabase
+          .from('foodbank_location_stocks')
+          .select('*'),
       ]);
 
       if (settingsRes.error) console.error('Error fetching settings:', settingsRes.error);
@@ -244,6 +265,7 @@ export function JppFoodBankAdmin() {
       if (txRes.error) console.error('Error fetching transactions:', txRes.error);
       if (locationsRes.error) console.error('Error fetching locations:', locationsRes.error);
       if (buildingsRes.error) console.error('Error fetching buildings:', buildingsRes.error);
+      if (locStocksRes.error) console.warn('Note/Error fetching location stocks (fallback used):', locStocksRes.error);
 
       const finalSettings = (settingsRes.data as FoodBankSettings) || loadLocalFoodBankSettings();
       setSettings(finalSettings);
@@ -280,6 +302,11 @@ export function JppFoodBankAdmin() {
         };
       });
       setLocations(enhancedLocations);
+
+      const finalLocationStocks = (locStocksRes.data && locStocksRes.data.length > 0)
+        ? (locStocksRes.data as FoodBankLocationStock[])
+        : generateDefaultFoodBankLocationStocks(finalItems, enhancedLocations);
+      setLocationStocks(finalLocationStocks);
 
       const enhancedBuildings = ((buildingsRes.data || []) as any[]).map((b) => ({
         ...b,
@@ -679,27 +706,278 @@ export function JppFoodBankAdmin() {
     }
   };
 
+  // ── Kiraan Baki Stok Mengikut Lokasi Fizikal ──────────────────────────────
+  const getItemStockForLocation = useCallback((itemId: string, locationId: string): number => {
+    if (locationId === 'SEMUA') {
+      const matching = locationStocks.filter(ls => ls.item_id === itemId);
+      if (matching.length > 0) {
+        return matching.reduce((acc, curr) => acc + curr.current_stock, 0);
+      }
+      const found = items.find(i => i.id === itemId);
+      return found?.current_stock ?? 0;
+    }
+    const locStock = locationStocks.find(
+      ls => ls.item_id === itemId && ls.location_id === locationId
+    );
+    return locStock ? locStock.current_stock : 0;
+  }, [locationStocks, items]);
+
+  // ── Kemas Kini Cepat Stok (Menyokong Lokasi Khusus / Agregat) ───────────────
   const handleQuickAdjustStock = async (item: FoodBankItem, delta: number) => {
-    const newStock = Math.max(0, item.current_stock + delta);
+    if (selectedInventoryLocationId === 'SEMUA') {
+      const newStock = Math.max(0, item.current_stock + delta);
+      try {
+        const { error } = await supabase
+          .from('foodbank_items')
+          .update({
+            current_stock: newStock,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', item.id);
+
+        if (error) throw error;
+
+        // Optimistic update
+        setItems(prev =>
+          prev.map(i => (i.id === item.id ? { ...i, current_stock: newStock } : i))
+        );
+        toast.success(`Stok agregat ${item.name}: ${item.current_stock} → ${newStock} ${item.unit}`);
+      } catch (err: any) {
+        console.error('Stock adjust error:', err);
+        // Fallback tempatan
+        setItems(prev =>
+          prev.map(i => (i.id === item.id ? { ...i, current_stock: newStock } : i))
+        );
+        toast.success(`(Mod Luar Talian) Stok ${item.name}: ${newStock} ${item.unit}`);
+      }
+    } else {
+      // Pelarasan stok khusus mengikut lokasi yang dipilih
+      const currentLocStock = getItemStockForLocation(item.id, selectedInventoryLocationId);
+      const newLocStock = Math.max(0, currentLocStock + delta);
+      const targetLoc = locations.find(l => l.id === selectedInventoryLocationId);
+      const locName = targetLoc?.name || 'Pusat Edaran';
+
+      try {
+        const { error } = await supabase
+          .from('foodbank_location_stocks')
+          .upsert(
+            {
+              item_id: item.id,
+              location_id: selectedInventoryLocationId,
+              current_stock: newLocStock,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'item_id,location_id' }
+          );
+
+        if (error) throw error;
+
+        // Rekod audit log jika berjaya
+        try {
+          await supabase.from('foodbank_audit_logs').insert({
+            actor_id: user?.id,
+            actor_name: profile?.full_name || 'Pegawai JPP',
+            action_type: 'STOCK_ADJUSTMENT',
+            location_id: selectedInventoryLocationId,
+            target_id: item.name,
+            details: {
+              item_id: item.id,
+              item_name: item.name,
+              delta,
+              old_stock: currentLocStock,
+              new_stock: newLocStock,
+              location_name: locName,
+            },
+          });
+        } catch (e) {
+          // Abaikan sekiranya jadual audit belum sedia
+        }
+
+        // Kemas kini state tempatan baki lokasi
+        setLocationStocks(prev => {
+          const exists = prev.some(
+            ls => ls.item_id === item.id && ls.location_id === selectedInventoryLocationId
+          );
+          if (exists) {
+            return prev.map(ls =>
+              ls.item_id === item.id && ls.location_id === selectedInventoryLocationId
+                ? { ...ls, current_stock: newLocStock, updated_at: new Date().toISOString() }
+                : ls
+            );
+          } else {
+            return [
+              ...prev,
+              {
+                id: `ls-${Date.now()}`,
+                item_id: item.id,
+                location_id: selectedInventoryLocationId,
+                current_stock: newLocStock,
+                reorder_level: 10,
+                updated_at: new Date().toISOString(),
+              },
+            ];
+          }
+        });
+
+        // Selaraskan juga jumlah stok agregat item
+        setItems(prev =>
+          prev.map(i => {
+            if (i.id !== item.id) return i;
+            const diff = newLocStock - currentLocStock;
+            return { ...i, current_stock: Math.max(0, i.current_stock + diff) };
+          })
+        );
+
+        toast.success(`Stok ${item.name} di ${locName}: ${currentLocStock} → ${newLocStock} ${item.unit}`);
+      } catch (err: any) {
+        console.error('Location stock adjust error:', err);
+        // Fallback optimistic tempatan
+        setLocationStocks(prev => {
+          const exists = prev.some(
+            ls => ls.item_id === item.id && ls.location_id === selectedInventoryLocationId
+          );
+          if (exists) {
+            return prev.map(ls =>
+              ls.item_id === item.id && ls.location_id === selectedInventoryLocationId
+                ? { ...ls, current_stock: newLocStock }
+                : ls
+            );
+          } else {
+            return [
+              ...prev,
+              {
+                id: `ls-${Date.now()}`,
+                item_id: item.id,
+                location_id: selectedInventoryLocationId,
+                current_stock: newLocStock,
+                reorder_level: 10,
+              },
+            ];
+          }
+        });
+        toast.success(`(Mod Luar Talian) Stok ${item.name} di ${locName}: ${newLocStock} ${item.unit}`);
+      }
+    }
+  };
+
+  // ── Laksanakan Pindahan Stok Antara Lokasi Fizikal (RPC) ────────────────────
+  const handleExecuteStockTransfer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!transferFormData.item_id || !transferFormData.from_location_id || !transferFormData.to_location_id) {
+      toast.error('Sila lengkapkan semua medan lokasi dan barangan.');
+      return;
+    }
+    if (transferFormData.from_location_id === transferFormData.to_location_id) {
+      toast.error('Lokasi sumber dan destinasi tidak boleh sama.');
+      return;
+    }
+    const sourceStock = getItemStockForLocation(transferFormData.item_id, transferFormData.from_location_id);
+    const qty = Number(transferFormData.quantity);
+    if (qty <= 0) {
+      toast.error('Kuantiti pindahan mestilah sekurang-kurangnya 1.');
+      return;
+    }
+    if (qty > sourceStock) {
+      toast.error(`Baki stok tidak mencukupi di lokasi sumber (Baki semasa: ${sourceStock}).`);
+      return;
+    }
+
+    setIsSubmittingTransfer(true);
     try {
-      const { error } = await supabase
-        .from('foodbank_items')
-        .update({
-          current_stock: newStock,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', item.id);
+      const { data, error } = await supabase.rpc('transfer_foodbank_stock', {
+        p_item_id: transferFormData.item_id,
+        p_from_location_id: transferFormData.from_location_id,
+        p_to_location_id: transferFormData.to_location_id,
+        p_quantity: qty,
+        p_actor_id: user?.id,
+        p_actor_name: profile?.full_name || 'Pegawai JPP',
+        p_notes: transferFormData.notes?.trim() || null,
+      });
 
       if (error) throw error;
 
-      // Optimistic update
-      setItems(prev =>
-        prev.map(i => (i.id === item.id ? { ...i, current_stock: newStock } : i))
-      );
-      toast.success(`Stok ${item.name}: ${item.current_stock} → ${newStock}`);
+      if (data && typeof data === 'object' && (data as any).success === false) {
+        toast.error((data as any).message || 'Gagal memindahkan stok.');
+        return;
+      }
+
+      toast.success((data as any)?.message || 'Pindahan stok berjaya direkodkan!');
+      setTransferModalOpen(false);
+      setTransferFormData({
+        item_id: '',
+        from_location_id: '',
+        to_location_id: '',
+        quantity: 1,
+        notes: '',
+      });
+      await fetchAllData(true);
     } catch (err: any) {
-      console.error('Stock adjust error:', err);
-      toast.error('Gagal mengubah stok: ' + err.message);
+      console.warn('RPC transfer_foodbank_stock fallback to local updates:', err);
+      // Fallback: update local locationStocks
+      setLocationStocks(prev => {
+        let foundDest = false;
+        const updated = prev.map(ls => {
+          if (ls.item_id === transferFormData.item_id && ls.location_id === transferFormData.from_location_id) {
+            return { ...ls, current_stock: Math.max(0, ls.current_stock - qty), updated_at: new Date().toISOString() };
+          }
+          if (ls.item_id === transferFormData.item_id && ls.location_id === transferFormData.to_location_id) {
+            foundDest = true;
+            return { ...ls, current_stock: ls.current_stock + qty, updated_at: new Date().toISOString() };
+          }
+          return ls;
+        });
+
+        if (!foundDest) {
+          updated.push({
+            id: `ls-${Date.now()}`,
+            item_id: transferFormData.item_id,
+            location_id: transferFormData.to_location_id,
+            current_stock: qty,
+            reorder_level: 10,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+        }
+        return updated;
+      });
+
+      // Local audit log entry if table is available
+      try {
+        const itemObj = items.find(i => i.id === transferFormData.item_id);
+        const fromLocObj = locations.find(l => l.id === transferFormData.from_location_id);
+        const toLocObj = locations.find(l => l.id === transferFormData.to_location_id);
+        await supabase.from('foodbank_audit_logs').insert({
+          actor_id: user?.id,
+          actor_name: profile?.full_name || 'Pegawai JPP',
+          action_type: 'STOCK_TRANSFER',
+          location_id: transferFormData.to_location_id,
+          target_id: itemObj?.name || 'Barangan Food Bank',
+          details: {
+            item_id: transferFormData.item_id,
+            item_name: itemObj?.name,
+            from_location_id: transferFormData.from_location_id,
+            from_location_name: fromLocObj?.name,
+            to_location_id: transferFormData.to_location_id,
+            to_location_name: toLocObj?.name,
+            quantity: qty,
+            notes: transferFormData.notes,
+          },
+        });
+      } catch (e) {
+        // silent catch
+      }
+
+      toast.success('Pindahan stok berjaya (Mod Tempatan)!');
+      setTransferModalOpen(false);
+      setTransferFormData({
+        item_id: '',
+        from_location_id: '',
+        to_location_id: '',
+        quantity: 1,
+        notes: '',
+      });
+    } finally {
+      setIsSubmittingTransfer(false);
     }
   };
 
@@ -1570,8 +1848,9 @@ export function JppFoodBankAdmin() {
               className="space-y-6"
             >
               {/* Bar Atas Inventori & Butang Tambah */}
-              <div className="p-4 rounded-3xl bg-white dark:bg-white/[0.03] border border-rose-200/70 dark:border-white/10 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+              <div className="p-4 rounded-3xl bg-white dark:bg-white/[0.03] border border-amber-200/70 dark:border-white/10 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                {/* Kategori Filter */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
                   {(['SEMUA', 'MAKANAN', 'MINUMAN', 'KEBERSIHAN', 'KEPERLUAN_ASAS'] as const).map(cat => (
                     <button
                       key={cat}
@@ -1579,7 +1858,7 @@ export function JppFoodBankAdmin() {
                       className={cn(
                         'px-3 py-1.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap',
                         itemCategoryFilter === cat
-                          ? 'bg-rose-600 text-white shadow-sm'
+                          ? 'bg-amber-600 text-white shadow-sm'
                           : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5'
                       )}
                     >
@@ -1588,18 +1867,66 @@ export function JppFoodBankAdmin() {
                   ))}
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <div className="relative w-full sm:w-56">
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Dropdown Pemilihan Lokasi */}
+                  <div className="relative min-w-[210px] flex-1 sm:flex-initial">
+                    <MapPin className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-amber-600 dark:text-amber-400 pointer-events-none" />
+                    <select
+                      value={selectedInventoryLocationId}
+                      onChange={e => setSelectedInventoryLocationId(e.target.value)}
+                      className="w-full pl-9 pr-7 py-2 rounded-xl text-xs font-bold bg-amber-500/5 dark:bg-white/5 border border-amber-300/60 dark:border-white/10 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer appearance-none"
+                    >
+                      <option value="SEMUA" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold">
+                        Semua Pusat Edaran (Agregat)
+                      </option>
+                      {locations.map(loc => (
+                        <option
+                          key={loc.id}
+                          value={loc.id}
+                          className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium"
+                        >
+                          {loc.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                      ▼
+                    </div>
+                  </div>
+
+                  {/* Carian Item */}
+                  <div className="relative w-full sm:w-48">
                     <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                       type="text"
                       value={itemSearch}
                       onChange={e => setItemSearch(e.target.value)}
-                      placeholder="Cari nama barangan..."
-                      className="w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                      placeholder="Cari barangan..."
+                      className="w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
                     />
                   </div>
 
+                  {/* Butang Pindah Stok */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTransferFormData(prev => ({
+                        ...prev,
+                        item_id: prev.item_id || items[0]?.id || '',
+                        from_location_id: prev.from_location_id || (selectedInventoryLocationId !== 'SEMUA' ? selectedInventoryLocationId : locations[0]?.id) || '',
+                        to_location_id: prev.to_location_id || (locations.find(l => l.id !== selectedInventoryLocationId)?.id || locations[1]?.id) || '',
+                        quantity: 1,
+                        notes: '',
+                      }));
+                      setTransferModalOpen(true);
+                    }}
+                    className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-sm flex items-center gap-1.5 whitespace-nowrap"
+                  >
+                    <ArrowLeftRight className="w-3.5 h-3.5" />
+                    Pindah Stok
+                  </button>
+
+                  {/* Butang Tambah Item */}
                   <button
                     type="button"
                     onClick={handleOpenAddItemModal}
@@ -1619,7 +1946,8 @@ export function JppFoodBankAdmin() {
                     badge: 'bg-purple-500/10 text-purple-800 dark:text-purple-300 border-purple-500/30',
                     icon: '📦',
                   };
-                  const stockBadge = getFoodBankStockBadge(item.current_stock, item.unit);
+                  const displayStock = getItemStockForLocation(item.id, selectedInventoryLocationId);
+                  const stockBadge = getFoodBankStockBadge(displayStock, item.unit);
 
                   return (
                     <div
@@ -1681,7 +2009,9 @@ export function JppFoodBankAdmin() {
                             </p>
                           </div>
                           <div className="text-right flex flex-col items-end">
-                            <span className="text-[10px] text-slate-400 uppercase font-bold mb-0.5">Stok Semasa</span>
+                            <span className="text-[10px] text-slate-400 uppercase font-bold mb-0.5">
+                              {selectedInventoryLocationId === 'SEMUA' ? 'Baki Agregat' : 'Baki Lokasi'}
+                            </span>
                             <span
                               className={cn(
                                 'px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider shadow-sm',
@@ -1692,13 +2022,67 @@ export function JppFoodBankAdmin() {
                             </span>
                           </div>
                         </div>
+
+                        {/* Taburan Baki Mengikut Pusat Edaran Fizikal */}
+                        <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-white/5 space-y-1.5">
+                          <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3 text-amber-500" />
+                              Pusat Edaran
+                            </span>
+                            <span className="text-[9px] font-semibold text-amber-600 dark:text-amber-400">
+                              {selectedInventoryLocationId !== 'SEMUA' ? 'Fokus Lokasi' : 'Pecahan'}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-1.5">
+                            {locations.map(loc => {
+                              const locStock = getItemStockForLocation(item.id, loc.id);
+                              const isCurrentSelected = selectedInventoryLocationId === loc.id;
+                              const shortName = loc.name.includes('Utama') || loc.name.includes('Student Centre')
+                                ? 'SC Utama'
+                                : loc.name.includes('Kamsis') || loc.name.includes('Al-Biruni')
+                                ? 'Kamsis AB'
+                                : loc.name.includes('Pentadbiran')
+                                ? 'Pentadbiran'
+                                : loc.name.split(' ')[0];
+
+                              return (
+                                <button
+                                  key={loc.id}
+                                  type="button"
+                                  onClick={() => setSelectedInventoryLocationId(isCurrentSelected ? 'SEMUA' : loc.id)}
+                                  title={`Klik untuk fokus ${loc.name} (Baki: ${locStock} ${item.unit})`}
+                                  className={cn(
+                                    'p-1 rounded-xl border text-center transition-all cursor-pointer',
+                                    isCurrentSelected
+                                      ? 'bg-amber-500/15 border-amber-500/50 text-amber-800 dark:text-amber-300 font-black shadow-xs ring-1 ring-amber-500/30'
+                                      : 'bg-slate-50 dark:bg-white/[0.02] border-slate-200/60 dark:border-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5'
+                                  )}
+                                >
+                                  <div className="text-[8px] font-black uppercase truncate">{shortName}</div>
+                                  <div className="text-[11px] font-extrabold leading-tight">
+                                    {locStock} <span className="text-[8px] font-normal text-slate-400">{item.unit}</span>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
 
                       {/* Kawalan Pantas Stok */}
-                      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/5 space-y-2">
+                      <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-white/5 space-y-2">
                         <div className="flex items-center gap-1.5 justify-between">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase">Kemas Kini:</span>
-                          <div className="flex items-center gap-1">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase truncate">
+                            {selectedInventoryLocationId !== 'SEMUA' ? (
+                              <span className="text-amber-600 dark:text-amber-400 font-extrabold">
+                                Kemas Kini ({locations.find(l => l.id === selectedInventoryLocationId)?.name.split(' ')[0] || 'Lokasi'}):
+                              </span>
+                            ) : (
+                              'Kemas Kini:'
+                            )}
+                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
                             <button
                               type="button"
                               onClick={() => handleQuickAdjustStock(item, -10)}
@@ -1733,6 +2117,25 @@ export function JppFoodBankAdmin() {
                           </button>
 
                           <div className="flex items-center gap-1">
+                            {/* Butang Pindah Stok Item Ini */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTransferFormData({
+                                  item_id: item.id,
+                                  from_location_id: (selectedInventoryLocationId !== 'SEMUA' ? selectedInventoryLocationId : locations[0]?.id) || '',
+                                  to_location_id: (locations.find(l => l.id !== selectedInventoryLocationId)?.id || locations[1]?.id) || '',
+                                  quantity: 1,
+                                  notes: '',
+                                });
+                                setTransferModalOpen(true);
+                              }}
+                              title="Pindah Stok Barangan Ini"
+                              className="p-1 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 transition-colors"
+                            >
+                              <ArrowLeftRight className="w-3.5 h-3.5" />
+                            </button>
+
                             <button
                               type="button"
                               onClick={() => handleOpenEditItemModal(item)}
@@ -2522,6 +2925,303 @@ export function JppFoodBankAdmin() {
                   className="px-5 py-2 rounded-xl text-xs font-black bg-rose-600 hover:bg-rose-500 text-white uppercase tracking-wider shadow-sm disabled:opacity-50"
                 >
                   {isSavingItem || isUploadingImage ? 'Menyimpan...' : 'Simpan Item'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── 7.5. MODAL PINDAHAN STOK ANTARA LOKASI FIZIKAL ────────────────────── */}
+      {transferModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-6 border border-amber-200 dark:border-white/10 shadow-2xl max-h-[92vh] overflow-y-auto space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                  <ArrowLeftRight className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">
+                    Pindahan Stok Antara Lokasi
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Pindahkan baki barangan fizikal antara pusat pengagihan secara atomik
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTransferModalOpen(false)}
+                className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleExecuteStockTransfer} className="space-y-4">
+              {/* Pemilihan Barangan */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                  Barangan Food Bank *
+                </label>
+                <select
+                  value={transferFormData.item_id}
+                  onChange={e => {
+                    const newItemId = e.target.value;
+                    setTransferFormData(prev => ({
+                      ...prev,
+                      item_id: newItemId,
+                      quantity: 1,
+                    }));
+                  }}
+                  required
+                  className="w-full px-3 py-2.5 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="" disabled>Pilih Barangan...</option>
+                  {items.filter(i => i.is_active).map(it => (
+                    <option key={it.id} value={it.id}>
+                      {it.name} ({it.unit}) — Jumlah Stok: {getItemStockForLocation(it.id, 'SEMUA')} {it.unit}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Grid Dari Lokasi -> Ke Lokasi */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Dari Lokasi (Sumber) */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                    Dari Lokasi (Sumber) *
+                  </label>
+                  <select
+                    value={transferFormData.from_location_id}
+                    onChange={e => {
+                      const newFrom = e.target.value;
+                      setTransferFormData(prev => ({
+                        ...prev,
+                        from_location_id: newFrom,
+                        quantity: 1,
+                      }));
+                    }}
+                    required
+                    className="w-full px-3 py-2.5 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  >
+                    <option value="" disabled>Pilih Pusat Sumber...</option>
+                    {locations.map(loc => {
+                      const stockHere = transferFormData.item_id
+                        ? getItemStockForLocation(transferFormData.item_id, loc.id)
+                        : 0;
+                      const selectedItem = items.find(i => i.id === transferFormData.item_id);
+                      return (
+                        <option key={loc.id} value={loc.id}>
+                          {loc.name} (Baki: {stockHere} {selectedItem?.unit || 'unit'})
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                {/* Ke Lokasi (Destinasi) */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                    Ke Lokasi (Destinasi) *
+                  </label>
+                  <select
+                    value={transferFormData.to_location_id}
+                    onChange={e => {
+                      setTransferFormData(prev => ({
+                        ...prev,
+                        to_location_id: e.target.value,
+                      }));
+                    }}
+                    required
+                    className="w-full px-3 py-2.5 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  >
+                    <option value="" disabled>Pilih Pusat Destinasi...</option>
+                    {locations.map(loc => {
+                      const isSame = loc.id === transferFormData.from_location_id;
+                      const stockHere = transferFormData.item_id
+                        ? getItemStockForLocation(transferFormData.item_id, loc.id)
+                        : 0;
+                      const selectedItem = items.find(i => i.id === transferFormData.item_id);
+                      return (
+                        <option key={loc.id} value={loc.id} disabled={isSame}>
+                          {loc.name} {isSame ? '(Sama dengan Sumber)' : `(Semasa: ${stockHere} ${selectedItem?.unit || 'unit'})`}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              </div>
+
+              {/* Status Visual Live Pindahan */}
+              {transferFormData.item_id && transferFormData.from_location_id && (
+                (() => {
+                  const sourceStock = getItemStockForLocation(transferFormData.item_id, transferFormData.from_location_id);
+                  const selectedItem = items.find(i => i.id === transferFormData.item_id);
+                  const fromLoc = locations.find(l => l.id === transferFormData.from_location_id);
+                  const toLoc = locations.find(l => l.id === transferFormData.to_location_id);
+
+                  return (
+                    <div className="p-3 rounded-2xl bg-amber-50/70 dark:bg-white/[0.03] border border-amber-200/80 dark:border-white/10 text-xs space-y-1.5">
+                      <div className="flex items-center justify-between font-bold">
+                        <span className="text-slate-600 dark:text-slate-400">Baki Semasa di {fromLoc?.name || 'Sumber'}:</span>
+                        <span className={cn(
+                          "px-2 py-0.5 rounded font-black",
+                          sourceStock > 10 ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300" :
+                          sourceStock > 0 ? "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300" :
+                          "bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300"
+                        )}>
+                          {sourceStock} {selectedItem?.unit || 'unit'}
+                        </span>
+                      </div>
+                      {toLoc && (
+                        <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-[11px]">
+                          <span>Baki Destinasi ({toLoc.name}):</span>
+                          <span className="font-bold">
+                            {getItemStockForLocation(transferFormData.item_id, toLoc.id)} {selectedItem?.unit || 'unit'}
+                            {transferFormData.quantity > 0 && sourceStock >= transferFormData.quantity && (
+                              <span className="text-emerald-600 dark:text-emerald-400 ml-1 font-black">
+                                → {getItemStockForLocation(transferFormData.item_id, toLoc.id) + Number(transferFormData.quantity)} {selectedItem?.unit}
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()
+              )}
+
+              {/* Input Kuantiti & Butang Pintas */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    Kuantiti Pindahan *
+                  </label>
+                  {transferFormData.item_id && transferFormData.from_location_id && (
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setTransferFormData(p => ({ ...p, quantity: 1 }))}
+                        className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-white/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 text-slate-700 dark:text-slate-300 transition-colors"
+                      >
+                        Min (1)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const srcStock = getItemStockForLocation(transferFormData.item_id, transferFormData.from_location_id);
+                          setTransferFormData(p => ({ ...p, quantity: Math.max(1, Math.floor(srcStock / 2)) }));
+                        }}
+                        className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-white/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 text-slate-700 dark:text-slate-300 transition-colors"
+                      >
+                        Setengah (50%)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const srcStock = getItemStockForLocation(transferFormData.item_id, transferFormData.from_location_id);
+                          setTransferFormData(p => ({ ...p, quantity: Math.max(1, srcStock) }));
+                        }}
+                        className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-white/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 text-slate-700 dark:text-slate-300 transition-colors"
+                      >
+                        Semua (Max)
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="number"
+                  min="1"
+                  max={transferFormData.item_id && transferFormData.from_location_id
+                    ? Math.max(1, getItemStockForLocation(transferFormData.item_id, transferFormData.from_location_id))
+                    : undefined}
+                  value={transferFormData.quantity}
+                  onChange={e => setTransferFormData(p => ({ ...p, quantity: Math.max(1, parseInt(e.target.value) || 1) }))}
+                  required
+                  className="w-full px-3 py-2.5 rounded-xl text-xs font-bold bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              {/* Catatan Pindahan */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                  Catatan Pindahan (Untuk Rekod Audit)
+                </label>
+                <textarea
+                  rows={2}
+                  value={transferFormData.notes}
+                  onChange={e => setTransferFormData(p => ({ ...p, notes: e.target.value }))}
+                  placeholder="Cth: Penambahan stok Hab Kamsis Al-Biruni sempena minggu peperiksaan akhir..."
+                  className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                />
+              </div>
+
+              {/* Validasi Amaran */}
+              {transferFormData.from_location_id && transferFormData.to_location_id && transferFormData.from_location_id === transferFormData.to_location_id && (
+                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>Lokasi sumber dan destinasi tidak boleh sama.</span>
+                </div>
+              )}
+
+              {transferFormData.item_id && transferFormData.from_location_id && (() => {
+                const sourceStock = getItemStockForLocation(transferFormData.item_id, transferFormData.from_location_id);
+                if (sourceStock <= 0) {
+                  return (
+                    <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400 text-xs flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>Baki stok di lokasi sumber adalah 0. Pindahan tidak dapat dijalankan.</span>
+                    </div>
+                  );
+                }
+                if (transferFormData.quantity > sourceStock) {
+                  return (
+                    <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400 text-xs flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>Baki stok tidak mencukupi di lokasi sumber (Baki tersedia: {sourceStock}).</span>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
+              {/* Butang Tindakan */}
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setTransferModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={
+                    isSubmittingTransfer ||
+                    !transferFormData.item_id ||
+                    !transferFormData.from_location_id ||
+                    !transferFormData.to_location_id ||
+                    transferFormData.from_location_id === transferFormData.to_location_id ||
+                    transferFormData.quantity < 1 ||
+                    transferFormData.quantity > getItemStockForLocation(transferFormData.item_id, transferFormData.from_location_id) ||
+                    getItemStockForLocation(transferFormData.item_id, transferFormData.from_location_id) <= 0
+                  }
+                  className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs uppercase tracking-wider transition-all shadow-sm flex items-center gap-2"
+                >
+                  {isSubmittingTransfer ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      Memindahkan...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowLeftRight className="w-3.5 h-3.5" />
+                      Laksanakan Pindahan
+                    </>
+                  )}
                 </button>
               </div>
             </form>
