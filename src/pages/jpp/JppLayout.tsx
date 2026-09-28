@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import { JppSidebar } from './JppSidebar';
 import { Menu, X } from 'lucide-react';
 import { NotificationBell } from '@/components/ui/NotificationBell';
@@ -27,9 +28,11 @@ const JPP_UNIT_LINKS = [
 ];
 
 export function JppLayout() {
-  const { isJppMember, isSuperAdmin, isLoading, hasKediamanAccess } = useAuth();
+  const { user, isJppMember, isSuperAdmin, isLoading, hasKediamanAccess } = useAuth();
   const location = useLocation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isFbOfficer, setIsFbOfficer] = useState(false);
+  const [checkingFbOfficer, setCheckingFbOfficer] = useState(true);
 
   // Close sidebar on route change (mobile)
   React.useEffect(() => {
@@ -48,7 +51,34 @@ export function JppLayout() {
     };
   }, [isMobileOpen]);
 
-  if (isLoading) {
+  // Semak jika pengguna memegang status pegawai Food Bank aktif
+  useEffect(() => {
+    if (!user?.id) {
+      setCheckingFbOfficer(false);
+      return;
+    }
+    let isMounted = true;
+    supabase
+      .from('foodbank_officers')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (isMounted) {
+          if (data) setIsFbOfficer(true);
+          setCheckingFbOfficer(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) setCheckingFbOfficer(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id]);
+
+  if (isLoading || (checkingFbOfficer && !isJppMember && !isSuperAdmin && !hasKediamanAccess && location.pathname.startsWith('/jpp/foodbank'))) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-background">
         <div className="relative w-10 h-10">
@@ -59,8 +89,9 @@ export function JppLayout() {
     );
   }
 
-  // Access guard: JPP + SuperAdmin + Unit Pengurusan Asrama staff
-  if (!isJppMember && !isSuperAdmin && !hasKediamanAccess) {
+  // Access guard: JPP + SuperAdmin + Unit Pengurusan Asrama staff + Active Food Bank Officers accessing /jpp/foodbank
+  const isAllowedPath = isFbOfficer && location.pathname.startsWith('/jpp/foodbank');
+  if (!isJppMember && !isSuperAdmin && !hasKediamanAccess && !isAllowedPath) {
     return <Navigate to="/portal" replace />;
   }
 

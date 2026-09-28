@@ -59,6 +59,10 @@ import {
   UserPlus,
   ShieldAlert,
   UserCheck,
+  Download,
+  History,
+  FileSpreadsheet,
+  Activity,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import confetti from 'canvas-confetti';
@@ -75,6 +79,8 @@ import {
   PolyMapsBuildingWith360,
   FoodBankLocationStock,
   FoodBankOfficer,
+  FoodBankAuditLog,
+  FoodBankAuditActionType,
 } from '@/types';
 import { FoodBankQrPassModal } from '@/components/foodbank/FoodBankQrPassModal';
 import { Link } from 'react-router-dom';
@@ -90,12 +96,13 @@ import {
   generateDefaultFoodBankLocationStocks,
   DEFAULT_FOODBANK_LOCATION_STOCKS,
   DEFAULT_FOODBANK_OFFICERS,
+  DEFAULT_FOODBANK_AUDIT_LOGS,
 } from '@/lib/foodbankDefaults';
 
 // Baseline rasmi peruntukan Tabung Food Bank JPP
 const OFFICIAL_BASELINE_BUDGET = 70000.0;
 
-type AdminTab = 'applications' | 'inventory' | 'budget' | 'settings';
+type AdminTab = 'applications' | 'inventory' | 'budget' | 'settings' | 'audit';
 
 export function JppFoodBankAdmin() {
   const { user, profile, isSuperAdmin } = useAuth();
@@ -241,6 +248,12 @@ export function JppFoodBankAdmin() {
   });
   const [isSavingLocation, setIsSavingLocation] = useState(false);
 
+  // ── Tab 5: Log Audit States ──────────────────────────────────────────────
+  const [auditLogs, setAuditLogs] = useState<FoodBankAuditLog[]>([]);
+  const [auditCategoryFilter, setAuditCategoryFilter] = useState<'SEMUA' | 'STOK' | 'AGIHAN' | 'PEGAWAI' | 'TETAPAN'>('SEMUA');
+  const [auditLocationFilter, setAuditLocationFilter] = useState<string>('SEMUA');
+  const [auditSearchQuery, setAuditSearchQuery] = useState('');
+
   // ── 1. Muat Turun Semua Data (Promise.all - Non-Negotiable) ───────────────
   const fetchAllData = useCallback(async (isSilent = false) => {
     if (!isSilent) setIsLoading(true);
@@ -255,6 +268,8 @@ export function JppFoodBankAdmin() {
         locationsRes,
         buildingsRes,
         locStocksRes,
+        officersRes,
+        auditLogsRes,
       ] = await Promise.all([
         supabase
           .from('foodbank_settings')
@@ -312,6 +327,11 @@ export function JppFoodBankAdmin() {
             assigner:profiles!assigned_by(id, full_name)
           `)
           .order('created_at', { ascending: false }),
+        supabase
+          .from('foodbank_audit_logs')
+          .select('*, location:foodbank_distribution_locations!location_id(id, name)')
+          .order('created_at', { ascending: false })
+          .limit(200),
       ]);
 
       if (settingsRes.error) console.error('Error fetching settings:', settingsRes.error);
@@ -322,6 +342,7 @@ export function JppFoodBankAdmin() {
       if (buildingsRes.error) console.error('Error fetching buildings:', buildingsRes.error);
       if (locStocksRes.error) console.warn('Note/Error fetching location stocks (fallback used):', locStocksRes.error);
       if (officersRes.error) console.warn('Note/Error fetching foodbank officers (fallback used):', officersRes.error);
+      if (auditLogsRes.error) console.warn('Note/Error fetching foodbank audit logs (fallback used):', auditLogsRes.error);
 
       const finalSettings = (settingsRes.data as FoodBankSettings) || loadLocalFoodBankSettings();
       setSettings(finalSettings);
@@ -377,6 +398,14 @@ export function JppFoodBankAdmin() {
           })) as FoodBankOfficer[]
         : DEFAULT_FOODBANK_OFFICERS;
       setOfficers(finalOfficers);
+
+      const finalAuditLogs = (auditLogsRes.data && auditLogsRes.data.length > 0)
+        ? (auditLogsRes.data as any[]).map((log: any) => ({
+            ...log,
+            location: log.location || enhancedLocations.find(l => l.id === log.location_id) || null,
+          })) as FoodBankAuditLog[]
+        : DEFAULT_FOODBANK_AUDIT_LOGS;
+      setAuditLogs(finalAuditLogs);
     } catch (err: any) {
       console.error('Fatal load error:', err);
       toast.error('Ralat ketika memuat turun data Food Bank.');
@@ -1557,6 +1586,237 @@ export function JppFoodBankAdmin() {
     });
   }, [transactions, txFilter, txSearch]);
 
+  // ── Penapis Log Audit Dedikasi (Tab 5) ────────────────────────────────────
+  const getActionCategory = (actionType: string): 'STOK' | 'AGIHAN' | 'PEGAWAI' | 'TETAPAN' | 'LAIN' => {
+    if (actionType === 'STOCK_ADJUSTMENT' || actionType === 'STOCK_TRANSFER') return 'STOK';
+    if (['APPLICATION_APPROVAL', 'APPLICATION_REJECTION', 'PICKUP_VERIFIED'].includes(actionType)) return 'AGIHAN';
+    if (['OFFICER_ASSIGNED', 'OFFICER_REMOVED'].includes(actionType)) return 'PEGAWAI';
+    if (['SESSION_CONFIG_CHANGED', 'LOCATION_UPDATED', 'BUDGET_ADDITION'].includes(actionType)) return 'TETAPAN';
+    return 'LAIN';
+  };
+
+  const getAuditActionConfig = (actionType: string) => {
+    switch (actionType) {
+      case 'STOCK_TRANSFER':
+        return {
+          label: 'Pindahan Stok Lokasi',
+          category: 'STOK',
+          badgeBg: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',
+          iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+          icon: ArrowLeftRight,
+        };
+      case 'STOCK_ADJUSTMENT':
+        return {
+          label: 'Pelarasan Inventori',
+          category: 'STOK',
+          badgeBg: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',
+          iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+          icon: Package,
+        };
+      case 'PICKUP_VERIFIED':
+        return {
+          label: 'Penebusan QR Disahkan',
+          category: 'AGIHAN',
+          badgeBg: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
+          iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+          icon: CheckCircle2,
+        };
+      case 'APPLICATION_APPROVAL':
+        return {
+          label: 'Permohonan Diluluskan',
+          category: 'AGIHAN',
+          badgeBg: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
+          iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+          icon: CheckCircle,
+        };
+      case 'APPLICATION_REJECTION':
+        return {
+          label: 'Permohonan Ditolak',
+          category: 'AGIHAN',
+          badgeBg: 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30',
+          iconBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
+          icon: XCircle,
+        };
+      case 'OFFICER_ASSIGNED':
+        return {
+          label: 'Pelantikan Pegawai Kaunter',
+          category: 'PEGAWAI',
+          badgeBg: 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30',
+          iconBg: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
+          icon: UserCheck,
+        };
+      case 'OFFICER_REMOVED':
+        return {
+          label: 'Penamatan Pegawai Kaunter',
+          category: 'PEGAWAI',
+          badgeBg: 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30',
+          iconBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
+          icon: Trash2,
+        };
+      case 'SESSION_CONFIG_CHANGED':
+        return {
+          label: 'Perubahan Tetapan Sesi',
+          category: 'TETAPAN',
+          badgeBg: 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30',
+          iconBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+          icon: Sliders,
+        };
+      case 'LOCATION_UPDATED':
+        return {
+          label: 'Kemas Kini Hab Edaran',
+          category: 'TETAPAN',
+          badgeBg: 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30',
+          iconBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+          icon: MapPin,
+        };
+      case 'BUDGET_ADDITION':
+        return {
+          label: 'Penambahan / Pelarasan Bajet',
+          category: 'TETAPAN',
+          badgeBg: 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30',
+          iconBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+          icon: Receipt,
+        };
+      default:
+        return {
+          label: actionType,
+          category: 'LAIN',
+          badgeBg: 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30',
+          iconBg: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',
+          icon: Activity,
+        };
+    }
+  };
+
+  const formatAuditDateTime = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      const day = String(d.getDate()).padStart(2, '0');
+      const months = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogo', 'Sep', 'Okt', 'Nov', 'Dis'];
+      const month = months[d.getMonth()];
+      const year = d.getFullYear();
+      let hours = d.getHours();
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      const strHours = String(hours).padStart(2, '0');
+      return `${day} ${month} ${year}, ${strHours}:${minutes} ${ampm}`;
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const filteredAuditLogs = useMemo(() => {
+    return auditLogs.filter(log => {
+      // 1. Kategori Tindakan
+      if (auditCategoryFilter !== 'SEMUA') {
+        const cat = getActionCategory(log.action_type);
+        if (cat !== auditCategoryFilter) return false;
+      }
+
+      // 2. Lokasi Pusat Edaran
+      if (auditLocationFilter !== 'SEMUA') {
+        if (log.location_id !== auditLocationFilter) return false;
+      }
+
+      // 3. Carian Teks
+      if (auditSearchQuery.trim()) {
+        const q = auditSearchQuery.toLowerCase();
+        const matchActor = log.actor_name?.toLowerCase().includes(q);
+        const matchTarget = log.target_id?.toLowerCase().includes(q);
+        const matchAction = log.action_type?.toLowerCase().includes(q);
+        const matchDetails = log.details ? JSON.stringify(log.details).toLowerCase().includes(q) : false;
+        if (!matchActor && !matchTarget && !matchAction && !matchDetails) return false;
+      }
+
+      return true;
+    });
+  }, [auditLogs, auditCategoryFilter, auditLocationFilter, auditSearchQuery]);
+
+  const auditMetrics = useMemo(() => {
+    const total = filteredAuditLogs.length;
+    const transfers = filteredAuditLogs.filter(l => l.action_type === 'STOCK_TRANSFER').length;
+    const pickups = filteredAuditLogs.filter(l => l.action_type === 'PICKUP_VERIFIED').length;
+    const adminOfficerActions = filteredAuditLogs.filter(l =>
+      ['OFFICER_ASSIGNED', 'OFFICER_REMOVED', 'SESSION_CONFIG_CHANGED', 'LOCATION_UPDATED', 'BUDGET_ADDITION'].includes(l.action_type)
+    ).length;
+
+    return {
+      total,
+      transfers,
+      pickups,
+      adminOfficerActions,
+    };
+  }, [filteredAuditLogs]);
+
+  const handleExportCsv = (logsToExport: FoodBankAuditLog[]) => {
+    if (logsToExport.length === 0) {
+      toast.error('Tiada rekod audit untuk dieksport.');
+      return;
+    }
+
+    const headers = [
+      'ID',
+      'Tarikh & Masa',
+      'Pegawai Bertugas',
+      'Jenis Tindakan',
+      'Lokasi Pusat Edaran',
+      'Sasaran / Dokumen',
+      'Butiran Ringkas',
+    ];
+
+    const escapeCsv = (str: string | number | undefined | null) => {
+      if (str === null || str === undefined) return '""';
+      const s = String(str).replace(/"/g, '""');
+      return `"${s}"`;
+    };
+
+    const rows = logsToExport.map(log => {
+      const locName = locations.find(l => l.id === log.location_id)?.name || log.location?.name || 'Semua Lokasi';
+      const actionConfig = getAuditActionConfig(log.action_type);
+
+      let detailsSummary = '';
+      if (log.details && typeof log.details === 'object') {
+        detailsSummary = Object.entries(log.details)
+          .filter(([k]) => k !== 'is_offline')
+          .map(([k, v]) => `${k}: ${v}`)
+          .join('; ');
+      }
+
+      return [
+        escapeCsv(log.id),
+        escapeCsv(formatAuditDateTime(log.created_at)),
+        escapeCsv(log.actor_name),
+        escapeCsv(actionConfig.label),
+        escapeCsv(locName),
+        escapeCsv(log.target_id || '-'),
+        escapeCsv(detailsSummary || '-'),
+      ].join(',');
+    });
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const filename = `Audit_FoodBank_POLISAS_${yyyy}${mm}${dd}.csv`;
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Berjaya mengeksport ${logsToExport.length} rekod audit JHEP! 📄`);
+  };
+
   return (
     <div className="min-h-screen bg-[#faf6f6] dark:bg-[#0b0c10] text-slate-900 dark:text-slate-100 pb-16 transition-colors">
       
@@ -1826,12 +2086,20 @@ export function JppFoodBankAdmin() {
                   },
                 ]
               : []),
+            {
+              id: 'audit',
+              label: 'Log Audit',
+              icon: FileText,
+              badge: auditLogs.length > 0 ? `${auditLogs.length}` : null,
+              badgeColor: 'bg-amber-500/20 text-amber-800 dark:text-amber-300',
+            },
           ].map(tab => (
             <button
               key={tab.id}
+              type="button"
               onClick={() => setActiveTab(tab.id as AdminTab)}
               className={cn(
-                'flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all duration-200',
+                'px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 whitespace-nowrap',
                 activeTab === tab.id
                   ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-amber-500/10'
@@ -3271,6 +3539,359 @@ export function JppFoodBankAdmin() {
                   </div>
                 </div>
               </div>
+            </motion.div>
+          )}
+
+          {/* ════════════════════════════════════════════════════════════════════
+              TAB 5: LOG AUDIT KHAS FOOD BANK
+             ════════════════════════════════════════════════════════════════════ */}
+          {activeTab === 'audit' && (
+            <motion.div
+              key="tab-audit"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="space-y-6"
+            >
+              {/* 1. Header Banner & Butang Eksport */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl bg-gradient-to-r from-slate-900 via-amber-950/40 to-slate-900 text-white shadow-lg border border-amber-600/30 relative overflow-hidden">
+                <div className="relative z-10 space-y-1">
+                  <div className="flex items-center gap-2 text-amber-400 text-xs font-black uppercase tracking-wider">
+                    <History className="w-4 h-4 text-amber-400" />
+                    Lejar Rasmi Pengauditan JHEP & JPP
+                  </div>
+                  <h2 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
+                    Log Audit Dedikasi Food Bank
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">
+                      {filteredAuditLogs.length} Rekod Ditapis
+                    </span>
+                  </h2>
+                  <p className="text-xs text-slate-300 max-w-xl">
+                    Jejak telus setiap pergerakan stok antara lokasi, imbasan pas QR kaunter, perlantikan pegawai bertugas, dan pengubahsuaian sesi permohonan.
+                  </p>
+                </div>
+
+                <div className="relative z-10 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleExportCsv(filteredAuditLogs)}
+                    className="px-4 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-amber-600/25 flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Eksport CSV JHEP</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. 4 Kad Ringkasan Metrik Audit */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Kad 1: Jumlah Transaksi Rekod */}
+                <div className="p-4 rounded-3xl bg-white dark:bg-white/[0.03] border border-amber-200/80 dark:border-white/10 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                        Jumlah Transaksi Rekod
+                      </p>
+                      <div className="flex items-baseline gap-2 mt-1">
+                        <h3 className="text-3xl font-black text-slate-900 dark:text-white">
+                          {auditMetrics.total}
+                        </h3>
+                        <span className="text-xs text-slate-500 font-semibold">entri audit</span>
+                      </div>
+                    </div>
+                    <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                      <FileSpreadsheet className="w-5 h-5" />
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500">
+                    <span>Keseluruhan rekod aktif</span>
+                    <span className="font-bold text-amber-600 dark:text-amber-400">100% Tercatat</span>
+                  </div>
+                </div>
+
+                {/* Kad 2: Pindahan Stok Antara Lokasi */}
+                <div className="p-4 rounded-3xl bg-white dark:bg-white/[0.03] border border-amber-200/80 dark:border-white/10 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                        Pindahan Stok Lokasi
+                      </p>
+                      <div className="flex items-baseline gap-2 mt-1">
+                        <h3 className="text-3xl font-black text-slate-900 dark:text-white">
+                          {auditMetrics.transfers}
+                        </h3>
+                        <span className="text-xs text-slate-500 font-semibold">perpindahan</span>
+                      </div>
+                    </div>
+                    <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                      <ArrowLeftRight className="w-5 h-5" />
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500">
+                    <span>Pusat Edaran JPP ⇄ Hab Kamsis</span>
+                    <span className="font-bold text-slate-700 dark:text-slate-300">Antara Hab</span>
+                  </div>
+                </div>
+
+                {/* Kad 3: Penebusan / Imbasan Selesai */}
+                <div className="p-4 rounded-3xl bg-white dark:bg-white/[0.03] border border-emerald-200/80 dark:border-white/10 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                        Penebusan QR Disahkan
+                      </p>
+                      <div className="flex items-baseline gap-2 mt-1">
+                        <h3 className="text-3xl font-black text-slate-900 dark:text-white">
+                          {auditMetrics.pickups}
+                        </h3>
+                        <span className="text-xs text-slate-500 font-semibold">agihan fizikal</span>
+                      </div>
+                    </div>
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                      <CheckCircle2 className="w-5 h-5" />
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500">
+                    <span>Imbasan QR kaunter sah</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">Diserahkan</span>
+                  </div>
+                </div>
+
+                {/* Kad 4: Tindakan Pentadbir & Pegawai */}
+                <div className="p-4 rounded-3xl bg-white dark:bg-white/[0.03] border border-sky-200/80 dark:border-white/10 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-wider text-sky-700 dark:text-sky-400">
+                        Tindakan Pegawai & Admin
+                      </p>
+                      <div className="flex items-baseline gap-2 mt-1">
+                        <h3 className="text-3xl font-black text-slate-900 dark:text-white">
+                          {auditMetrics.adminOfficerActions}
+                        </h3>
+                        <span className="text-xs text-slate-500 font-semibold">pengurusan</span>
+                      </div>
+                    </div>
+                    <div className="w-10 h-10 rounded-2xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500">
+                    <span>Lantikan, kuota & tetapan</span>
+                    <span className="font-bold text-sky-600 dark:text-sky-400">Tadbir Urus</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Bar Alat & Penapis Log Audit */}
+              <div className="p-4 rounded-3xl bg-white dark:bg-white/[0.03] border border-amber-200/80 dark:border-white/10 shadow-sm space-y-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                  {/* Penapis Kategori Tindakan (Pills) */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-hide">
+                    {[
+                      { id: 'SEMUA', label: 'SEMUA' },
+                      { id: 'STOK', label: 'STOK' },
+                      { id: 'AGIHAN', label: 'AGIHAN' },
+                      { id: 'PEGAWAI', label: 'PEGAWAI' },
+                      { id: 'TETAPAN', label: 'TETAPAN' },
+                    ].map(cat => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setAuditCategoryFilter(cat.id as any)}
+                        className={cn(
+                          'px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap',
+                          auditCategoryFilter === cat.id
+                            ? 'bg-amber-600 text-white shadow-sm'
+                            : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'
+                        )}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Dropdown Penapis Lokasi & Kotak Carian */}
+                  <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    {/* Dropdown Lokasi */}
+                    <div className="relative min-w-[180px] w-full sm:w-auto">
+                      <select
+                        value={auditLocationFilter}
+                        onChange={e => setAuditLocationFilter(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl text-xs font-bold bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      >
+                        <option value="SEMUA">Semua Lokasi Pengagihan</option>
+                        {locations.map(loc => (
+                          <option key={loc.id} value={loc.id}>
+                            {loc.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Carian Teks */}
+                    <div className="relative flex-1 sm:w-64">
+                      <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        value={auditSearchQuery}
+                        onChange={e => setAuditSearchQuery(e.target.value)}
+                        placeholder="Cari pegawai, sasaran, butiran..."
+                        className="w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      />
+                      {auditSearchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setAuditSearchQuery('')}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. Senarai Rekod Garis Masa Audit (Timeline Cards) */}
+              {filteredAuditLogs.length === 0 ? (
+                <div className="p-12 text-center rounded-3xl bg-white dark:bg-white/[0.03] border border-amber-200/80 dark:border-white/10 space-y-3">
+                  <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                    <FileText className="w-6 h-6" />
+                  </div>
+                  <h4 className="text-base font-black text-slate-900 dark:text-white">
+                    Tiada Rekod Audit Ditemui
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                    Tiada aktiviti transaksi sepadan dengan kriteria carian atau penapis kategori dan lokasi semasa.
+                  </p>
+                  {(auditCategoryFilter !== 'SEMUA' || auditLocationFilter !== 'SEMUA' || auditSearchQuery.trim()) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuditCategoryFilter('SEMUA');
+                        setAuditLocationFilter('SEMUA');
+                        setAuditSearchQuery('');
+                      }}
+                      className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 transition-colors"
+                    >
+                      Set Semula Semua Penapis
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredAuditLogs.map(log => {
+                    const actionCfg = getAuditActionConfig(log.action_type);
+                    const ActionIcon = actionCfg.icon;
+                    const loc = locations.find(l => l.id === log.location_id) || log.location;
+
+                    return (
+                      <div
+                        key={log.id}
+                        className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#13151b] border border-amber-200/70 dark:border-white/10 shadow-sm hover:border-amber-400/70 dark:hover:border-amber-500/30 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                      >
+                        {/* Bahagian Kiri: Ikon, Tajuk, Pegawai, Cap Masa */}
+                        <div className="flex items-start gap-3.5 flex-1 min-w-0">
+                          {/* Ikon Kategori Bulatan Berwarna */}
+                          <div
+                            className={cn(
+                              'w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-black/5 dark:border-white/5',
+                              actionCfg.iconBg
+                            )}
+                          >
+                            <ActionIcon className="w-5 h-5" />
+                          </div>
+
+                          <div className="space-y-1.5 flex-1 min-w-0">
+                            {/* Baris Lencana & Tajuk */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="text-sm font-black text-slate-900 dark:text-white">
+                                {actionCfg.label}
+                              </h4>
+
+                              {/* Lencana Kategori */}
+                              <span
+                                className={cn(
+                                  'text-[9px] font-black uppercase px-2 py-0.5 rounded-full border',
+                                  actionCfg.badgeBg
+                                )}
+                              >
+                                {actionCfg.category}
+                              </span>
+
+                              {/* Lencana Lokasi */}
+                              {loc ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20">
+                                  <MapPin className="w-3 h-3 text-amber-600 shrink-0" />
+                                  {loc.name}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400">
+                                  <Sparkles className="w-3 h-3 text-slate-400 shrink-0" />
+                                  Peringkat Sistem JPP
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Info Pegawai & Sasaran */}
+                            <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 flex-wrap">
+                              <span className="font-bold flex items-center gap-1 text-slate-800 dark:text-slate-200">
+                                <User className="w-3.5 h-3.5 text-slate-400" />
+                                {log.actor_name || 'Pentadbir Sistem'}
+                              </span>
+
+                              {log.target_id && (
+                                <>
+                                  <span className="text-slate-300 dark:text-white/20">•</span>
+                                  <span className="font-semibold text-slate-500 dark:text-slate-400">
+                                    Sasaran: <strong className="text-slate-700 dark:text-slate-200 font-mono text-[11px]">{log.target_id}</strong>
+                                  </span>
+                                </>
+                              )}
+                            </div>
+
+                            {/* Paparan Butiran Transaksi (JSON Details) */}
+                            {log.details && Object.keys(log.details).length > 0 && (
+                              <div className="mt-2 p-2.5 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/5 text-xs grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                {Object.entries(log.details).map(([key, val]) => {
+                                  if (val === null || val === undefined || key === 'is_offline') return null;
+                                  const formattedKey = key
+                                    .replace(/_/g, ' ')
+                                    .replace(/\b\w/g, c => c.toUpperCase());
+                                  return (
+                                    <div key={key} className="flex flex-col min-w-0">
+                                      <span className="text-[9px] uppercase font-black text-slate-400 dark:text-slate-500 tracking-wider">
+                                        {formattedKey}
+                                      </span>
+                                      <span
+                                        className="font-bold text-[11px] text-slate-700 dark:text-slate-200 truncate"
+                                        title={typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                                      >
+                                        {typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Bahagian Kanan: Cap Masa & ID Transaksi */}
+                        <div className="flex md:flex-col items-center md:items-end justify-between md:justify-center border-t md:border-t-0 pt-2 md:pt-0 border-slate-100 dark:border-white/5 shrink-0 text-right">
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-amber-600" />
+                            {formatAuditDateTime(log.created_at)}
+                          </span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5">
+                            ID: #{log.id.slice(0, 8)}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </motion.div>
           )}
 
