@@ -114,6 +114,9 @@ export function JppFoodBankAdmin() {
   const [transactions, setTransactions] = useState<FoodBankBudgetTransaction[]>([]);
   const [locations, setLocations] = useState<FoodBankDistributionLocation[]>([]);
   const [buildings, setBuildings] = useState<PolyMapsBuildingWith360[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState<AdminTab>('applications');
 
   // ── Pengurusan Pegawai Bertugas & RBAC ──────────────────────────────────────
   const [officers, setOfficers] = useState<FoodBankOfficer[]>([]);
@@ -124,41 +127,6 @@ export function JppFoodBankAdmin() {
   const [officerAssignLocationId, setOfficerAssignLocationId] = useState('');
   const [officerRoleTitle, setOfficerRoleTitle] = useState('Petugas Kaunter Food Bank');
   const [isAssigningOfficer, setIsAssigningOfficer] = useState(false);
-
-  // ── Kawalan Akses Berasaskan Peranan (RBAC Gating) ─────────────────────────
-  const isExecutiveAdmin = Boolean(
-    isSuperAdmin || 
-    profile?.role === 'SUPER_ADMIN_JPP' || 
-    profile?.role === 'ADMIN' || 
-    profile?.jpp_position === 'YDP' || 
-    profile?.jpp_unit === 'KEBAJIKAN'
-  );
-
-  const myOfficerRecord = useMemo(() => {
-    if (!user?.id) return null;
-    return officers.find(o => o.user_id === user.id && o.is_active);
-  }, [officers, user?.id]);
-
-  const isAssignedOfficer = Boolean(myOfficerRecord);
-  const assignedLocationId = myOfficerRecord?.location_id || null;
-
-  // Kunci tab untuk bukan pentadbir eksekutif (Tab 3 & 4 hanya untuk eksekutif)
-  useEffect(() => {
-    if (!isExecutiveAdmin && (activeTab === 'budget' || activeTab === 'settings')) {
-      setActiveTab('applications');
-    }
-  }, [isExecutiveAdmin, activeTab]);
-
-  // Kunci atau pilihkan secara lalai lokasi jagaan pegawai dalam Tab Inventori
-  useEffect(() => {
-    if (!isExecutiveAdmin && assignedLocationId) {
-      setSelectedInventoryLocationId(assignedLocationId);
-    }
-  }, [isExecutiveAdmin, assignedLocationId]);
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<AdminTab>('applications');
 
   // ── Tab 1: Permohonan & Kaunter ───────────────────────────────────────────
   const [appSearch, setAppSearch] = useState('');
@@ -253,6 +221,37 @@ export function JppFoodBankAdmin() {
   const [auditCategoryFilter, setAuditCategoryFilter] = useState<'SEMUA' | 'STOK' | 'AGIHAN' | 'PEGAWAI' | 'TETAPAN'>('SEMUA');
   const [auditLocationFilter, setAuditLocationFilter] = useState<string>('SEMUA');
   const [auditSearchQuery, setAuditSearchQuery] = useState('');
+
+  // ── Kawalan Akses Berasaskan Peranan (RBAC Gating) ─────────────────────────
+  const isExecutiveAdmin = Boolean(
+    isSuperAdmin || 
+    profile?.role === 'SUPER_ADMIN_JPP' || 
+    profile?.role === 'ADMIN' || 
+    profile?.jpp_position === 'YDP' || 
+    profile?.jpp_unit === 'KEBAJIKAN'
+  );
+
+  const myOfficerRecord = useMemo(() => {
+    if (!user?.id) return null;
+    return officers.find(o => o.user_id === user.id && o.is_active);
+  }, [officers, user?.id]);
+
+  const isAssignedOfficer = Boolean(myOfficerRecord);
+  const assignedLocationId = myOfficerRecord?.location_id || null;
+
+  // Kunci tab untuk bukan pentadbir eksekutif (Tab 3 & 4 hanya untuk eksekutif)
+  useEffect(() => {
+    if (!isExecutiveAdmin && (activeTab === 'budget' || activeTab === 'settings')) {
+      setActiveTab('applications');
+    }
+  }, [isExecutiveAdmin, activeTab]);
+
+  // Kunci atau pilihkan secara lalai lokasi jagaan pegawai dalam Tab Inventori
+  useEffect(() => {
+    if (!isExecutiveAdmin && assignedLocationId) {
+      setSelectedInventoryLocationId(assignedLocationId);
+    }
+  }, [isExecutiveAdmin, assignedLocationId]);
 
   // ── 1. Muat Turun Semua Data (Promise.all - Non-Negotiable) ───────────────
   const fetchAllData = useCallback(async (isSilent = false) => {
