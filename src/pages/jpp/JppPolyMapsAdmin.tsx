@@ -5,7 +5,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { 
   Map, MapPin, Building2, Plus, Edit2, Trash2, 
-  Search, RefreshCw, AlertCircle, Save, X, Navigation, UploadCloud, Image as ImageIcon
+  Search, RefreshCw, AlertCircle, Save, X, Navigation, UploadCloud, Image as ImageIcon,
+  Compass, LayoutGrid, List
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
@@ -239,6 +240,7 @@ interface Building {
   center_lng: number;
   zone_name?: string | null;
   drone_image_url?: string;
+  panorama_360_url?: string | null;
   is_facility?: boolean;
   facility_type?: string;
   op_start?: string;
@@ -255,6 +257,7 @@ interface Location {
   direction_text: string;
   search_tags: string;
   image_url?: string;
+  panorama_360_url?: string | null;
   op_start?: string | null;
   op_end?: string | null;
 }
@@ -290,6 +293,7 @@ export function JppPolyMapsAdmin() {
   
   const [showBuildingModal, setShowBuildingModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [locationViewMode, setLocationViewMode] = useState<'cards' | 'table'>('cards');
   
   // Form states
   const [currentBuilding, setCurrentBuilding] = useState<Partial<Building>>({});
@@ -343,7 +347,7 @@ export function JppPolyMapsAdmin() {
     setShowLocationModal(true);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: 'entrance_image_url' | 'floorplan_image_url' | 'image_url', isLocation = false) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: 'entrance_image_url' | 'floorplan_image_url' | 'image_url' | 'panorama_360_url', isLocation = false) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -367,8 +371,8 @@ export function JppPolyMapsAdmin() {
         fileToUpload = new File([blobArray], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg' });
       }
 
-      // Handle compression using the shared helper
-      if (fileToUpload.type.startsWith('image/')) {
+      // Handle compression using the shared helper (skip 1080px compression for 360 panorama to preserve equirectangular resolution)
+      if (fieldName !== 'panorama_360_url' && fileToUpload.type.startsWith('image/')) {
         toast.loading('Mengompres imej...', { id: toastId });
         const { compressImage } = await import('@/lib/imageCompression');
         const compressedFile = await compressImage(fileToUpload);
@@ -654,6 +658,7 @@ export function JppPolyMapsAdmin() {
           direction_text: currentLocation.direction_text,
           search_tags: currentLocation.search_tags,
           image_url: currentLocation.image_url,
+          panorama_360_url: currentLocation.panorama_360_url || null,
           op_start: currentLocation.op_start || null,
           op_end: currentLocation.op_end || null
         };
@@ -680,6 +685,7 @@ export function JppPolyMapsAdmin() {
           direction_text: currentLocation.direction_text,
           search_tags: currentLocation.search_tags,
           image_url: currentLocation.image_url,
+          panorama_360_url: currentLocation.panorama_360_url || null,
           op_start: currentLocation.op_start || null,
           op_end: currentLocation.op_end || null
         }));
@@ -769,6 +775,15 @@ export function JppPolyMapsAdmin() {
             <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Pentadbiran PolyMaps</h1>
           </div>
           <p className="text-sm font-medium text-slate-600 dark:text-white/50">Urus koordinat bangunan dan panduan laluan dalaman kampus POLISAS</p>
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
+              <Compass className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Liputan 360° Bangunan: {buildings.filter(b => b.panorama_360_url && b.panorama_360_url.trim() !== '').length}/{buildings.length}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/70 text-xs font-bold">
+              <span>{locations.filter(l => l.panorama_360_url && l.panorama_360_url.trim() !== '').length} Bilik 360°</span>
+            </span>
+          </div>
         </div>
         
         <div className="flex items-center gap-2 w-full md:w-auto">
@@ -977,90 +992,235 @@ export function JppPolyMapsAdmin() {
               Tiada rekod bangunan dijumpai.
             </div>
           ) : (
-            filteredBuildings.map(b => (
-              <div key={b.id} className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-5 hover:bg-slate-50/80 dark:hover:bg-white/[0.07] transition-all group relative overflow-hidden shadow-sm">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="font-bold text-slate-900 dark:text-white text-lg">{b.name}</h3>
-                    <span className="inline-block px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-600 dark:text-sky-400 text-[10px] font-black uppercase tracking-wider mt-1">
-                      {b.code}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => { setCurrentBuilding(b); setShowBuildingModal(true); }} className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white/70">
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button onClick={() => deleteBuilding(b.id)} className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:bg-rose-500/20 dark:hover:bg-rose-500/40 dark:text-rose-400">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="space-y-2 mt-4 text-xs font-medium text-slate-500 dark:text-white/50">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-3.5 h-3.5" />
-                    {b.center_lat ? `${b.center_lat}, ${b.center_lng}` : 'Tiada Koordinat GPS'}
-                  </div>
-                  {b.description && (
-                    <p className="line-clamp-2 text-slate-500 dark:text-white/40 text-[11px] leading-relaxed">{b.description}</p>
+            filteredBuildings.map(b => {
+              const has360 = Boolean(b.panorama_360_url && b.panorama_360_url.trim() !== '');
+              return (
+                <div 
+                  key={b.id} 
+                  className={cn(
+                    "rounded-2xl p-5 transition-all group relative overflow-hidden",
+                    has360 
+                      ? "border-2 border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/25 shadow-md shadow-emerald-500/10" 
+                      : "bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50/80 dark:hover:bg-white/[0.07] shadow-sm"
                   )}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <h3 className="font-bold text-slate-900 dark:text-white text-lg">{b.name}</h3>
+                        {has360 ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
+                            <Compass className="w-3.5 h-3.5" /> 360° AKTIF
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-500 bg-slate-100 dark:bg-white/5">
+                            Tiada 3D
+                          </span>
+                        )}
+                      </div>
+                      <span className="inline-block px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-600 dark:text-sky-400 text-[10px] font-black uppercase tracking-wider">
+                        {b.code}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => { setCurrentBuilding(b); setShowBuildingModal(true); }} className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white/70">
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => deleteBuilding(b.id)} className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:bg-rose-500/20 dark:hover:bg-rose-500/40 dark:text-rose-400">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 mt-4 text-xs font-medium text-slate-500 dark:text-white/50">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-3.5 h-3.5" />
+                      {b.center_lat ? `${b.center_lat}, ${b.center_lng}` : 'Tiada Koordinat GPS'}
+                    </div>
+                    {b.description && (
+                      <p className="line-clamp-2 text-slate-500 dark:text-white/40 text-[11px] leading-relaxed">{b.description}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       ) : activeTab === 'locations' ? (
-        <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/20 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
-                  <th className="p-4">Kod Kelas</th>
-                  <th className="p-4">Bangunan</th>
-                  <th className="p-4">Aras</th>
-                  <th className="p-4">Panduan Arah</th>
-                  <th className="p-4 text-right">Tindakan</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm font-medium text-slate-700 dark:text-white/70">
-                {filteredLocations.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="p-8 text-center text-slate-400 dark:text-white/40 italic">Tiada rekod lokasi dijumpai.</td>
-                  </tr>
-                ) : (
-                  filteredLocations.map(l => (
-                    <tr key={l.id} className="border-b border-slate-100 dark:border-white/[0.05] hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition-colors group">
-                      <td className="p-4">
-                        <span className="font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-white/10 px-2 py-1 rounded-md">{l.room_code}</span>
-                      </td>
-                      <td className="p-4 text-slate-800 dark:text-white/80">
-                        {buildings.find(b => b.id === l.building_id)?.name || 'Unknown'}
-                      </td>
-                      <td className="p-4">{l.floor_level || 'G'}</td>
-                      <td className="p-4 max-w-xs truncate text-slate-500 dark:text-white/50" title={l.direction_text}>
-                        {l.direction_text || '-'}
-                      </td>
-                      <td className="p-4 text-right">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => {
-                            setCurrentLocation(l);
-                            const matchedBuilding = buildings.find(b => b.id === l.building_id);
-                            setBuildingSearchText(matchedBuilding ? matchedBuilding.code : '');
-                            setShowLocationModal(true);
-                          }} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 dark:hover:bg-white/10 dark:text-white/50 dark:hover:text-white transition-colors">
-                            <Edit2 className="w-4 h-4" />
+        <div className="space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <p className="text-xs font-bold text-slate-500 dark:text-white/50">
+              Menunjukkan {filteredLocations.length} lokasi bilik / ruang
+            </p>
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/10 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setLocationViewMode('cards')}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                  locationViewMode === 'cards' ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-white/60 hover:text-slate-900"
+                )}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" /> Kad
+              </button>
+              <button
+                type="button"
+                onClick={() => setLocationViewMode('table')}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                  locationViewMode === 'table' ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-white/60 hover:text-slate-900"
+                )}
+              >
+                <List className="w-3.5 h-3.5" /> Jadual
+              </button>
+            </div>
+          </div>
+
+          {locationViewMode === 'cards' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredLocations.length === 0 ? (
+                <div className="col-span-full py-12 text-center text-slate-400 dark:text-white/40 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/10 border-dashed">
+                  Tiada rekod lokasi dijumpai.
+                </div>
+              ) : (
+                filteredLocations.map(l => {
+                  const has360 = Boolean(l.panorama_360_url && l.panorama_360_url.trim() !== '');
+                  const matchedBuilding = buildings.find(b => b.id === l.building_id);
+                  return (
+                    <div
+                      key={l.id}
+                      className={cn(
+                        "rounded-2xl p-5 transition-all group relative overflow-hidden",
+                        has360
+                          ? "border-2 border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/25 shadow-md shadow-emerald-500/10"
+                          : "bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50/80 dark:hover:bg-white/[0.07] shadow-sm"
+                      )}
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <h3 className="font-bold text-slate-900 dark:text-white text-lg">{l.room_code}</h3>
+                            {has360 ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
+                                <Compass className="w-3.5 h-3.5" /> 360° AKTIF
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-500 bg-slate-100 dark:bg-white/5">
+                                Tiada 3D
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs font-semibold text-slate-600 dark:text-white/70">
+                            {matchedBuilding?.name || 'Bangunan tidak diketahui'} · Aras {l.floor_level || 'G'}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => {
+                              setCurrentLocation(l);
+                              setBuildingSearchText(matchedBuilding ? matchedBuilding.code : '');
+                              setShowLocationModal(true);
+                            }}
+                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white/70"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
                           </button>
-                          <button onClick={() => deleteLocation(l.id)} className="p-1.5 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-600 dark:hover:bg-rose-500/20 dark:text-white/50 dark:hover:text-rose-400 transition-colors">
-                            <Trash2 className="w-4 h-4" />
+                          <button
+                            onClick={() => deleteLocation(l.id)}
+                            className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:bg-rose-500/20 dark:hover:bg-rose-500/40 dark:text-rose-400"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                      </td>
+                      </div>
+
+                      {l.direction_text && (
+                        <p className="line-clamp-2 text-slate-500 dark:text-white/50 text-[11px] leading-relaxed mt-2">
+                          {l.direction_text}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/20 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                      <th className="p-4">Kod Kelas</th>
+                      <th className="p-4">Status 360°</th>
+                      <th className="p-4">Bangunan</th>
+                      <th className="p-4">Aras</th>
+                      <th className="p-4">Panduan Arah</th>
+                      <th className="p-4 text-right">Tindakan</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody className="text-sm font-medium text-slate-700 dark:text-white/70">
+                    {filteredLocations.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="p-8 text-center text-slate-400 dark:text-white/40 italic">Tiada rekod lokasi dijumpai.</td>
+                      </tr>
+                    ) : (
+                      filteredLocations.map(l => {
+                        const has360 = Boolean(l.panorama_360_url && l.panorama_360_url.trim() !== '');
+                        return (
+                          <tr 
+                            key={l.id} 
+                            className={cn(
+                              "border-b transition-colors group",
+                              has360 
+                                ? "border-emerald-200/50 dark:border-emerald-900/30 bg-emerald-50/40 dark:bg-emerald-950/15 hover:bg-emerald-50/80 dark:hover:bg-emerald-950/30" 
+                                : "border-slate-100 dark:border-white/[0.05] hover:bg-slate-50/80 dark:hover:bg-white/[0.02]"
+                            )}
+                          >
+                            <td className="p-4">
+                              <span className="font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-white/10 px-2 py-1 rounded-md">{l.room_code}</span>
+                            </td>
+                            <td className="p-4">
+                              {has360 ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
+                                  <Compass className="w-3.5 h-3.5" /> 360° AKTIF
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-500 bg-slate-100 dark:bg-white/5">
+                                  Tiada 3D
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-4 text-slate-800 dark:text-white/80">
+                              {buildings.find(b => b.id === l.building_id)?.name || 'Unknown'}
+                            </td>
+                            <td className="p-4">{l.floor_level || 'G'}</td>
+                            <td className="p-4 max-w-xs truncate text-slate-500 dark:text-white/50" title={l.direction_text}>
+                              {l.direction_text || '-'}
+                            </td>
+                            <td className="p-4 text-right">
+                              <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => {
+                                  setCurrentLocation(l);
+                                  const matchedBuilding = buildings.find(b => b.id === l.building_id);
+                                  setBuildingSearchText(matchedBuilding ? matchedBuilding.code : '');
+                                  setShowLocationModal(true);
+                                }} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 dark:hover:bg-white/10 dark:text-white/50 dark:hover:text-white transition-colors">
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                                <button onClick={() => deleteLocation(l.id)} className="p-1.5 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-600 dark:hover:bg-rose-500/20 dark:text-white/50 dark:hover:text-rose-400 transition-colors">
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       ) : activeTab === 'reports' ? (
         <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm">
@@ -1415,7 +1575,7 @@ export function JppPolyMapsAdmin() {
                             <span className="text-[10px] font-bold text-slate-500 dark:text-white/50">{isUploading[field] ? 'Memuat naik...' : 'Pilih Gambar'}</span>
                             <input 
                               type="file" 
-                              accept="image/*"
+                              accept="image/*" 
                               className="hidden" 
                               onChange={(e) => handleImageUpload(e, field, false)}
                               disabled={isUploading[field]}
@@ -1426,6 +1586,76 @@ export function JppPolyMapsAdmin() {
                       </div>
                     );
                   })}
+                </div>
+
+                {/* 360 Panorama Section */}
+                <div className="bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-white flex items-center gap-1.5">
+                      <Compass className="w-4 h-4 text-emerald-500" />
+                      Imej Panorama 360° (Equirectangular)
+                    </label>
+                    {currentBuilding.panorama_360_url ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
+                        <Compass className="w-3.5 h-3.5" /> 360° AKTIF
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-500 bg-slate-200 dark:bg-white/10">
+                        Tiada 3D
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-white/40 mb-3">
+                    Muat naik fail imej 360° (Equirectangular 2:1) atau tampal pautan URL langsung imej 360.
+                  </p>
+
+                  {currentBuilding.panorama_360_url ? (
+                    <div className="relative w-full h-32 rounded-xl overflow-hidden border border-emerald-500/40 mb-2 group bg-black/40">
+                      <img 
+                        src={currentBuilding.panorama_360_url} 
+                        alt="360 Panorama" 
+                        className="w-full h-full object-cover" 
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button 
+                          type="button"
+                          onClick={() => setCurrentBuilding({...currentBuilding, panorama_360_url: ''})}
+                          className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-lg"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Padam 360°
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className={cn(
+                      "flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-emerald-500/30 hover:border-emerald-500 rounded-xl cursor-pointer bg-emerald-50/30 dark:bg-emerald-950/10 hover:bg-emerald-50/60 dark:hover:bg-emerald-950/20 transition-all mb-2",
+                      isUploading['panorama_360_url'] && "opacity-50 pointer-events-none"
+                    )}>
+                      {isUploading['panorama_360_url'] ? (
+                        <RefreshCw className="w-5 h-5 text-emerald-500 animate-spin mb-1" />
+                      ) : (
+                        <UploadCloud className="w-5 h-5 text-emerald-500 mb-1" />
+                      )}
+                      <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200">
+                        {isUploading['panorama_360_url'] ? 'Memuat naik 360°...' : 'Pilih Gambar Panorama 360°'}
+                      </span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={(e) => handleImageUpload(e, 'panorama_360_url', false)}
+                        disabled={isUploading['panorama_360_url']}
+                      />
+                    </label>
+                  )}
+
+                  <input 
+                    type="url" 
+                    value={currentBuilding.panorama_360_url || ''} 
+                    onChange={e => setCurrentBuilding({...currentBuilding, panorama_360_url: e.target.value})} 
+                    className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-emerald-500 transition-all" 
+                    placeholder="Atau tampal URL langsung 360..." 
+                  />
                 </div>
 
                 <div className="p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 space-y-4">
@@ -1632,6 +1862,76 @@ export function JppPolyMapsAdmin() {
                     </label>
                   )}
                   <input type="url" value={currentLocation.image_url || ''} onChange={e => setCurrentLocation({...currentLocation, image_url: e.target.value})} className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-indigo-500/50 transition-all" placeholder="Atau paste URL..." />
+                </div>
+
+                {/* 360 Panorama Section for Location */}
+                <div className="bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-white flex items-center gap-1.5">
+                      <Compass className="w-4 h-4 text-emerald-500" />
+                      Imej Panorama 360° Bilik / Ruang Ini (Pilihan)
+                    </label>
+                    {currentLocation.panorama_360_url ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
+                        <Compass className="w-3.5 h-3.5" /> 360° AKTIF
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-500 bg-slate-200 dark:bg-white/10">
+                        Tiada 3D
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-white/40 mb-3">
+                    Jika bilik ini mempunyai sudut pandangan 360° khas, muat naik imej atau tampal pautan di sini.
+                  </p>
+
+                  {currentLocation.panorama_360_url ? (
+                    <div className="relative w-full h-32 rounded-xl overflow-hidden border border-emerald-500/40 mb-2 group bg-black/40">
+                      <img 
+                        src={currentLocation.panorama_360_url} 
+                        alt="360 Location Preview" 
+                        className="w-full h-full object-cover" 
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button 
+                          type="button"
+                          onClick={() => setCurrentLocation({...currentLocation, panorama_360_url: ''})}
+                          className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-lg"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Padam 360°
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className={cn(
+                      "flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-emerald-500/30 hover:border-emerald-500 rounded-xl cursor-pointer bg-emerald-50/30 dark:bg-emerald-950/10 hover:bg-emerald-50/60 dark:hover:bg-emerald-950/20 transition-all mb-2",
+                      isUploading['panorama_360_url'] && "opacity-50 pointer-events-none"
+                    )}>
+                      {isUploading['panorama_360_url'] ? (
+                        <RefreshCw className="w-5 h-5 text-emerald-500 animate-spin mb-1" />
+                      ) : (
+                        <UploadCloud className="w-5 h-5 text-emerald-500 mb-1" />
+                      )}
+                      <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200">
+                        {isUploading['panorama_360_url'] ? 'Memuat naik 360°...' : 'Pilih Gambar Panorama 360° Bilik'}
+                      </span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={(e) => handleImageUpload(e, 'panorama_360_url', true)}
+                        disabled={isUploading['panorama_360_url']}
+                      />
+                    </label>
+                  )}
+
+                  <input 
+                    type="url" 
+                    value={currentLocation.panorama_360_url || ''} 
+                    onChange={e => setCurrentLocation({...currentLocation, panorama_360_url: e.target.value})} 
+                    className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-emerald-500 transition-all" 
+                    placeholder="Atau paste URL 360..." 
+                  />
                 </div>
               </div>
 

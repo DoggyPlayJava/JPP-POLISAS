@@ -20,6 +20,7 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { SystemTour } from '@/components/ui/SystemTour';
 import { useTour } from '@/hooks/useTour';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
+import { Pannellum360Viewer } from '@/components/polymaps/Pannellum360Viewer';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -191,6 +192,8 @@ interface Building {
   op_end?: string;
   floorplan_image_url?: string;
   entrance_image_url?: string;
+  drone_image_url?: string | null;
+  panorama_360_url?: string | null;
 }
 
 interface GraphNode {
@@ -376,6 +379,7 @@ interface Location {
   floor_level: number;
   direction_text: string;
   image_url?: string;
+  panorama_360_url?: string | null;
   building: Building;
   building_id: string;
   op_start?: string;
@@ -724,8 +728,10 @@ export function PolyMapsPage() {
   const [mapZoom, setMapZoom] = useState(16);
   const [zones, setZones] = useState<ZoneMarkerInfo[]>([]);
 
-  const [activeImageTab, setActiveImageTab] = useState<'entrance' | 'floorplan' | 'room'>('entrance');
+  const [activeImageTab, setActiveImageTab] = useState<'entrance' | 'floorplan' | 'room' | '360'>('entrance');
   const [showFullscreenImage, setShowFullscreenImage] = useState<string | null>(null);
+  const [fullscreen360Url, setFullscreen360Url] = useState<string | null>(null);
+  const [fullscreen360Title, setFullscreen360Title] = useState<string>('');
   const [cardExpanded, setCardExpanded] = useState(false);
   
   const [currentStep, setCurrentStep] = useState(0);
@@ -933,9 +939,9 @@ export function PolyMapsPage() {
       const { data, error } = await supabase
         .from('imaps_locations')
         .select(`
-          id, room_code, floor_level, direction_text, search_tags, image_url,
+          id, room_code, floor_level, direction_text, search_tags, image_url, panorama_360_url,
           building:building_id (
-            id, name, code, center_lat, center_lng, entrance_image_url, floorplan_image_url, zone_name
+            id, name, code, center_lat, center_lng, entrance_image_url, floorplan_image_url, panorama_360_url, zone_name
           )
         `)
         .or(`room_code.ilike.%${query}%,search_tags.ilike.%${query}%`)
@@ -1033,7 +1039,8 @@ export function PolyMapsPage() {
   const handleSelectLocation = (loc: Location) => {
     setSelectedLocation(loc);
     setActiveBuilding(loc.building);
-    setActiveImageTab(loc.image_url ? 'room' : (loc.building?.entrance_image_url ? 'entrance' : 'floorplan'));
+    const has360 = Boolean(loc.panorama_360_url || loc.building?.panorama_360_url);
+    setActiveImageTab(loc.image_url ? 'room' : (has360 ? '360' : (loc.building?.entrance_image_url ? 'entrance' : 'floorplan')));
     setCurrentStep(0);
     setSearchQuery('');
     setSearchResults([]);
@@ -1044,7 +1051,7 @@ export function PolyMapsPage() {
   const handleSelectBuildingMapMarker = (b: Building) => {
     setSelectedLocation(null);
     setActiveBuilding(b);
-    setActiveImageTab(b.entrance_image_url ? 'entrance' : 'floorplan');
+    setActiveImageTab(b.panorama_360_url ? '360' : (b.entrance_image_url ? 'entrance' : 'floorplan'));
   };
 
   const dismissCard = () => {
@@ -1288,6 +1295,11 @@ export function PolyMapsPage() {
                         {loc.building?.zone_name && (
                           <span className="text-[10px] bg-sky-500/10 text-sky-600 dark:text-sky-400 px-1.5 py-0.5 rounded-md font-bold tracking-wider uppercase">
                             Zon {loc.building.zone_name}
+                          </span>
+                        )}
+                        {(loc.panorama_360_url || loc.building?.panorama_360_url) && (
+                          <span className="inline-flex items-center gap-1 text-[9px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded font-black tracking-wider uppercase">
+                            <Compass className="w-2.5 h-2.5" /> 360°
                           </span>
                         )}
                         {loc.op_start && loc.op_end && (
@@ -2073,6 +2085,24 @@ export function PolyMapsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0 ml-3">
+                      {(selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url) && (
+                        <button
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            const pano = selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url;
+                            if (pano) {
+                              setFullscreen360Url(pano);
+                              setFullscreen360Title(selectedLocation ? `${selectedLocation.room_code} (${activeBuilding.name})` : activeBuilding.name);
+                            }
+                          }}
+                          className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-3 py-2 rounded-xl font-black text-xs transition-all shadow-lg shadow-emerald-500/25 active:scale-95 animate-pulse"
+                          title="Buka 360° Street View"
+                        >
+                          <Compass className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">360° Street View</span>
+                          <span className="sm:hidden">360°</span>
+                        </button>
+                      )}
                       <button
                         onClick={(e) => { e.stopPropagation(); startNavigation(); }}
                         className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-black text-xs transition-colors shadow-lg shadow-blue-500/30 active:scale-95"
@@ -2102,59 +2132,101 @@ export function PolyMapsPage() {
                     </button>
 
                     {/* Media Area */}
-                    <div className="w-full h-32 sm:h-48 bg-slate-100 dark:bg-slate-800 relative">
-                      {/* Media Content */}
-                      {activeImageTab === 'entrance' && activeBuilding.entrance_image_url && (
-                        <img src={activeBuilding.entrance_image_url} alt="Entrance View" loading="lazy" decoding="async" className="w-full h-full object-cover" />
-                      )}
-                      {activeImageTab === 'floorplan' && activeBuilding.floorplan_image_url && (
-                        <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowFullscreenImage(activeBuilding.floorplan_image_url!)}>
-                          <img src={activeBuilding.floorplan_image_url} alt="Floorplan View" loading="lazy" decoding="async" className="w-full h-full object-contain bg-white dark:bg-slate-900 p-2" />
-                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">Tekan untuk Zoom</span>
-                          </div>
-                        </div>
-                      )}
-                      {activeImageTab === 'room' && selectedLocation?.image_url && (
-                        <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowFullscreenImage(selectedLocation.image_url!)}>
-                          <img src={selectedLocation.image_url} alt="Room View" loading="lazy" decoding="async" className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">Tekan untuk Zoom</span>
-                          </div>
-                        </div>
-                      )}
+                    {(() => {
+                      const activePanoUrl = selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url;
+                      const hasMultipleMedia = ((activeBuilding.entrance_image_url ? 1 : 0) + (activeBuilding.floorplan_image_url ? 1 : 0) + ((selectedLocation && selectedLocation.image_url) ? 1 : 0) + (activePanoUrl ? 1 : 0)) > 1;
 
-                      {/* Empty state fallback */}
-                      {((activeImageTab === 'entrance' && !activeBuilding.entrance_image_url) || 
-                        (activeImageTab === 'floorplan' && !activeBuilding.floorplan_image_url) ||
-                        (activeImageTab === 'room' && !selectedLocation?.image_url)) && (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
-                          {activeImageTab === 'floorplan' ? <MapIcon className="w-10 h-10 mb-2 opacity-50" /> : <ImageIcon className="w-10 h-10 mb-2 opacity-50" />}
-                          <span className="text-[10px] font-black uppercase tracking-widest">Tiada Imej {activeImageTab === 'entrance' ? 'Pintu Masuk' : activeImageTab === 'floorplan' ? 'Pelan Lantai' : 'Bilik'}</span>
-                        </div>
-                      )}
-                      
-                      {selectedLocation && (
-                        <div className={`absolute top-3 left-3 bg-emerald-500/90 text-white px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${!isLowEnd && 'backdrop-blur-md'}`}>
-                          LOKASI JUMPA
-                        </div>
-                      )}
+                      return (
+                        <div className="w-full h-36 sm:h-52 bg-slate-100 dark:bg-slate-800 relative overflow-hidden">
+                          {/* Media Content */}
+                          {activeImageTab === '360' && activePanoUrl && (
+                            <div className="w-full h-full relative">
+                              <Pannellum360Viewer
+                                imageUrl={activePanoUrl}
+                                title={selectedLocation ? selectedLocation.room_code : activeBuilding.name}
+                                height="100%"
+                                className="w-full h-full"
+                                onToggleFullscreen={() => {
+                                  setFullscreen360Url(activePanoUrl);
+                                  setFullscreen360Title(selectedLocation ? `${selectedLocation.room_code} (${activeBuilding.name})` : activeBuilding.name);
+                                }}
+                              />
+                            </div>
+                          )}
+                          {activeImageTab === 'entrance' && activeBuilding.entrance_image_url && (
+                            <img src={activeBuilding.entrance_image_url} alt="Entrance View" loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                          )}
+                          {activeImageTab === 'floorplan' && activeBuilding.floorplan_image_url && (
+                            <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowFullscreenImage(activeBuilding.floorplan_image_url!)}>
+                              <img src={activeBuilding.floorplan_image_url} alt="Floorplan View" loading="lazy" decoding="async" className="w-full h-full object-contain bg-white dark:bg-slate-900 p-2" />
+                              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">Tekan untuk Zoom</span>
+                              </div>
+                            </div>
+                          )}
+                          {activeImageTab === 'room' && selectedLocation?.image_url && (
+                            <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowFullscreenImage(selectedLocation.image_url!)}>
+                              <img src={selectedLocation.image_url} alt="Room View" loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                <span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">Tekan untuk Zoom</span>
+                              </div>
+                            </div>
+                          )}
 
-                      {/* Media Tabs */}
-                      {((activeBuilding.entrance_image_url ? 1 : 0) + (activeBuilding.floorplan_image_url ? 1 : 0) + ((selectedLocation && selectedLocation.image_url) ? 1 : 0)) > 1 && (
-                        <div className={`absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 bg-black/40 p-1 rounded-full border border-white/10 ${!isLowEnd && 'backdrop-blur-md'}`}>
-                          {activeBuilding.entrance_image_url && (
-                            <button onClick={() => setActiveImageTab('entrance')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'entrance' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Depan</button>
+                          {/* Empty state fallback */}
+                          {((activeImageTab === 'entrance' && !activeBuilding.entrance_image_url) || 
+                            (activeImageTab === 'floorplan' && !activeBuilding.floorplan_image_url) ||
+                            (activeImageTab === 'room' && !selectedLocation?.image_url) ||
+                            (activeImageTab === '360' && !activePanoUrl)) && (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                              {activeImageTab === 'floorplan' ? (
+                                <MapIcon className="w-10 h-10 mb-2 opacity-50" />
+                              ) : activeImageTab === '360' ? (
+                                <Compass className="w-10 h-10 mb-2 opacity-50 text-emerald-400" />
+                              ) : (
+                                <ImageIcon className="w-10 h-10 mb-2 opacity-50" />
+                              )}
+                              <span className="text-[10px] font-black uppercase tracking-widest">
+                                Tiada Imej {activeImageTab === 'entrance' ? 'Pintu Masuk' : activeImageTab === 'floorplan' ? 'Pelan Lantai' : activeImageTab === '360' ? 'Panorama 360°' : 'Bilik'}
+                              </span>
+                            </div>
                           )}
-                          {activeBuilding.floorplan_image_url && (
-                            <button onClick={() => setActiveImageTab('floorplan')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'floorplan' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Lantai</button>
+                          
+                          {selectedLocation && (
+                            <div className={`absolute top-3 left-3 bg-emerald-500/90 text-white px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${!isLowEnd && 'backdrop-blur-md'} z-10`}>
+                              LOKASI JUMPA
+                            </div>
                           )}
-                          {selectedLocation && selectedLocation.image_url && (
-                            <button onClick={() => setActiveImageTab('room')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'room' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Bilik</button>
+
+                          {/* Media Tabs */}
+                          {hasMultipleMedia && (
+                            <div className={`absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 bg-black/50 p-1 rounded-full border border-white/10 ${!isLowEnd && 'backdrop-blur-md'} z-10`}>
+                              {activePanoUrl && (
+                                <button 
+                                  onClick={() => setActiveImageTab('360')} 
+                                  className={cn(
+                                    "flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", 
+                                    activeImageTab === '360' ? "bg-emerald-500 text-white shadow-sm" : "text-white hover:bg-white/20"
+                                  )}
+                                >
+                                  <Compass className="w-3 h-3" />
+                                  360° View
+                                </button>
+                              )}
+                              {activeBuilding.entrance_image_url && (
+                                <button onClick={() => setActiveImageTab('entrance')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'entrance' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Depan</button>
+                              )}
+                              {activeBuilding.floorplan_image_url && (
+                                <button onClick={() => setActiveImageTab('floorplan')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'floorplan' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Lantai</button>
+                              )}
+                              {selectedLocation && selectedLocation.image_url && (
+                                <button onClick={() => setActiveImageTab('room')} className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-colors whitespace-nowrap", activeImageTab === 'room' ? "bg-white text-black" : "text-white hover:bg-white/20")}>Bilik</button>
+                              )}
+                            </div>
                           )}
                         </div>
-                      )}
-                    </div>
+                      );
+                    })()}
 
                     {/* Details Area */}
                     <div className="p-5">
@@ -2220,6 +2292,20 @@ export function PolyMapsPage() {
 
                       {/* Action Buttons */}
                       <div className="flex flex-col gap-2">
+                        {(selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url) && (
+                          <button
+                            onClick={() => {
+                              const pano = selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url;
+                              if (pano) {
+                                setFullscreen360Url(pano);
+                                setFullscreen360Title(selectedLocation ? `${selectedLocation.room_code} (${activeBuilding.name})` : activeBuilding.name);
+                              }
+                            }}
+                            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white py-3.5 rounded-2xl font-black text-sm transition-all shadow-lg shadow-emerald-500/25 active:scale-[0.98]"
+                          >
+                            <Compass className="w-4 h-4" /> Buka 360° Street View Penuh
+                          </button>
+                        )}
                         <button
                           onClick={(e) => { e.stopPropagation(); startNavigation(); }}
                           className="tour-polymaps-navigate w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-2xl font-black text-sm transition-colors shadow-lg shadow-blue-500/30 active:scale-[0.98]"
@@ -2268,6 +2354,28 @@ export function PolyMapsPage() {
               src={showFullscreenImage} 
               alt="Fullscreen View" 
               className="max-w-full max-h-[85vh] object-contain rounded-lg"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── LIGHTBOX FOR FULLSCREEN 360 PANORAMA ── */}
+      <AnimatePresence>
+        {fullscreen360Url && (
+          <motion.div
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[3500] bg-black flex flex-col"
+          >
+            <Pannellum360Viewer
+              imageUrl={fullscreen360Url}
+              title={fullscreen360Title || activeBuilding?.name || 'POLISAS 360°'}
+              height="100%"
+              className="w-full h-full"
+              isFullscreen={true}
+              onClose={() => setFullscreen360Url(null)}
+              onToggleFullscreen={() => setFullscreen360Url(null)}
             />
           </motion.div>
         )}
