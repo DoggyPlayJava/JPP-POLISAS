@@ -2157,6 +2157,20 @@ Bagi memastikan kelancaran logik pengelompokan (grouping) dan klasifikasi fasili
 - **Penunjuk Cahaya Biru (Flashlight Cone):** Penanda GPS pelajar memaparkan pancaran cahaya biru yang berputar dinamik mengikut orientasi fizikal telefon pintar (compass heading).
 - **Kebenaran iOS Safari:** Menguruskan protokol `DeviceOrientationEvent.requestPermission()` secara lancar di mana permintaan dialog kebenaran kompas iOS dipicu oleh tindakan interaksi pengguna semasa butang "Mula Pandu Arah" ditekan.
 
+### 18.6 Penonton 360° Panorama Kampus & Penyerlah Kotak Hijau Admin
+- **Komponen (`src/components/polymaps/Pannellum360Viewer.tsx`):**
+  - Mengintegrasikan enjin WebGL Pannellum secara dinamik melalui pemuatan skrip & gaya CDN tanpa membebankan saiz bundle asas.
+  - Menyokong rendering imej equirectangular 360° berserta kawalan gestur sentuhan (touch drag/pinch) untuk telefon pintar dan tetikus PC.
+  - Dilengkapi ciri putaran auto (auto-rotate -1.5), togol mod skrin penuh, dan butang penetapan semula (reset view).
+- **Integrasi PolyMaps (`src/pages/polymaps/PolyMapsPage.tsx`):**
+  - Medan `panorama_360_url` pada jadual `imaps_buildings` dan `imaps_locations`.
+  - Tab `360° View` aktif secara automatik pada kad bangunan/ruangan yang mempunyai panorama 360°.
+  - Butang pantas terapung **"360° Street View"** pada kad ringkasan bangunan (collapsed card) membolehkan pelajar melompat terus ke mod paparan skrin penuh 360°.
+- **Penyerlah Kotak Hijau Admin (`src/pages/jpp/JppPolyMapsAdmin.tsx`):**
+  - Kad bangunan dan lokasi yang memiliki pautan `panorama_360_url` diserlahkan dengan kotak hijau terang (`border-2 border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/25`) berserta lencana `360° AKTIF`.
+  - Kad tanpa 360 kekal dengan sempadan neutral dan lencana `Tiada 3D` untuk memudahkan pemantauan liputan 3D kampus oleh pihak pentadbir.
+  - Suis togol format paparan lokasi (**Kad** vs **Jadual**) disediakan bagi pentadbiran yang fleksibel.
+
 ---
 
 ## 19. Senibina Modul PolySuara Social Commenting Platform (e-Kebajikan) 💬
