@@ -62,6 +62,8 @@ import {
   DEFAULT_FOODBANK_ITEMS,
   DEFAULT_FOODBANK_LOCATIONS,
   loadLocalFoodBankSettings,
+  FOODBANK_CATEGORY_CONFIG,
+  getFoodBankStockBadge,
 } from '@/lib/foodbankDefaults';
 
 // Tab Kategori Barangan
@@ -70,7 +72,7 @@ const CATEGORY_TABS = [
   { id: 'MAKANAN', label: 'Makanan Asas' },
   { id: 'MINUMAN', label: 'Minuman' },
   { id: 'KEBERSIHAN', label: 'Kebersihan Diri' },
-  { id: 'LAIN_LAIN', label: 'Lain-lain' },
+  { id: 'LAIN_LAIN', label: 'Keperluan Lain' },
 ];
 
 // Masa Slot Pilihan Standard
@@ -582,6 +584,9 @@ export function KebajikanFoodBankPage() {
 
   // Fallback image helper
   const getItemIcon = (category: string) => {
+    if (FOODBANK_CATEGORY_CONFIG[category]?.icon) {
+      return FOODBANK_CATEGORY_CONFIG[category].icon;
+    }
     const cat = (category || '').toUpperCase();
     if (cat.includes('MAKANAN')) return '🍚';
     if (cat.includes('MINUMAN')) return '☕';
@@ -1312,7 +1317,7 @@ export function KebajikanFoodBankPage() {
                       className={cn(
                         'rounded-2xl p-4 border transition-all duration-200 flex flex-col justify-between space-y-3 relative',
                         qty > 0
-                          ? 'bg-amber-500/5 border-amber-500/40 shadow-sm'
+                          ? 'border-amber-500/40 bg-amber-500/[0.04] shadow-sm'
                           : 'bg-slate-50/50 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 hover:border-slate-300',
                         isOutOfStock && 'opacity-60'
                       )}
@@ -1335,23 +1340,32 @@ export function KebajikanFoodBankPage() {
 
                         {/* Stok Status Badge */}
                         <div className="absolute top-2 right-2">
-                          {isOutOfStock ? (
-                            <span className="px-2 py-0.5 rounded-md bg-rose-500 text-white font-black text-[9px] uppercase tracking-wider">
-                              Stok Habis
-                            </span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded-md bg-black/50 backdrop-blur-sm text-white font-bold text-[9px]">
-                              Baki: {item.current_stock} {item.unit}
-                            </span>
-                          )}
+                          {(() => {
+                            const stockBadge = getFoodBankStockBadge(item.current_stock, item.unit);
+                            return (
+                              <span className={cn('px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider shadow-sm', stockBadge.badgeClass)}>
+                                {stockBadge.label}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
 
                       {/* Content */}
-                      <div className="space-y-1">
-                        <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
-                          {item.category}
-                        </span>
+                      <div className="space-y-1.5">
+                        {(() => {
+                          const catConfig = FOODBANK_CATEGORY_CONFIG[item.category] || {
+                            label: item.category,
+                            badge: 'bg-purple-500/10 text-purple-800 dark:text-purple-300 border-purple-500/30',
+                            icon: '📦',
+                          };
+                          return (
+                            <div className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[10px] font-bold tracking-wider', catConfig.badge)}>
+                              <span>{catConfig.icon}</span>
+                              <span>{catConfig.label}</span>
+                            </div>
+                          );
+                        })()}
                         <h4 className="font-extrabold text-xs text-slate-900 dark:text-white line-clamp-2 leading-snug">
                           {item.name}
                         </h4>
