@@ -47,24 +47,24 @@ function BigStatCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: isLowPerf ? 0 : delay, duration: isLowPerf ? 0 : 0.5, ease: [0.16, 1, 0.3, 1] }}
       onClick={onClick}
-      className={`rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-5 transition-all ${
-        onClick ? 'cursor-pointer hover:bg-white/[0.08] hover:scale-[1.02] active:scale-[0.98]' : 'hover:bg-white/[0.05]'
+      className={`rounded-[1.75rem] border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] p-5 shadow-sm dark:shadow-none transition-all ${
+        onClick ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-white/[0.08] hover:scale-[1.02] active:scale-[0.98]' : 'hover:bg-slate-50/50 dark:hover:bg-white/[0.05]'
       }`}
     >
       <div className="flex items-start justify-between mb-4">
         <div
-          className="w-10 h-10 rounded-2xl flex items-center justify-center"
+          className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-sm"
           style={{ background: hexToRgba(color, 0.15) }}
         >
           <Icon className="w-5 h-5" style={{ color }} />
         </div>
-        <span className="text-[9px] font-black uppercase tracking-widest text-white/20">
+        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">
           Sistem
         </span>
       </div>
-      <p className="text-3xl font-black text-white leading-none">{value}</p>
-      <p className="text-xs font-black uppercase tracking-widest text-white/35 mt-1">{label}</p>
-      {sub && <p className="text-[10px] text-white/20 mt-1">{sub}</p>}
+      <p className="text-3xl font-black text-slate-900 dark:text-white leading-none">{value}</p>
+      <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-white/35 mt-1">{label}</p>
+      {sub && <p className="text-[10px] text-slate-400 dark:text-white/20 mt-1">{sub}</p>}
     </motion.div>
   );
 }
@@ -122,25 +122,25 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm" onClick={onClose} />
       <motion.div
         initial={{ opacity: 0, scale: isLowPerf ? 1 : 0.95, y: isLowPerf ? 0 : 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: isLowPerf ? 1 : 0.95, y: isLowPerf ? 0 : 20 }}
         transition={isLowPerf ? { duration: 0 } : undefined}
-        className="relative w-full max-w-2xl max-h-[85vh] bg-[#0a0a0f] border border-white/10 rounded-3xl overflow-hidden flex flex-col shadow-2xl"
+        className="relative w-full max-w-2xl max-h-[85vh] bg-white dark:bg-[#0a0a0f] border border-slate-200 dark:border-white/10 rounded-3xl overflow-hidden flex flex-col shadow-2xl text-slate-900 dark:text-white"
       >
-        <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+        <div className="p-6 border-b border-slate-200 dark:border-white/5 flex items-center justify-between bg-slate-50 dark:bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-              <BellRing className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center shadow-sm">
+              <BellRing className="w-5 h-5 text-slate-900 dark:text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-white leading-tight">Senarai Langganan Notifikasi</h2>
-              <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">{subs.length} peranti aktif</p>
+              <h2 className="text-lg font-black text-slate-900 dark:text-white leading-tight">Senarai Langganan Notifikasi</h2>
+              <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold uppercase tracking-widest">{subs.length} peranti aktif</p>
             </div>
           </div>
-          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors">
+          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 dark:text-white/50 hover:text-slate-700 dark:hover:text-white transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -148,11 +148,11 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-6 h-6 animate-spin text-white/20" />
+              <Loader2 className="w-6 h-6 animate-spin text-slate-400 dark:text-white/20" />
             </div>
           ) : subs.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-white/30 text-sm">Tiada langganan buat masa ini.</p>
+              <p className="text-slate-400 dark:text-white/30 text-sm">Tiada langganan buat masa ini.</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -162,29 +162,29 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                 const DeviceIcon = isMobile ? Smartphone : Monitor;
                 
                 return (
-                  <div key={s.id} className="p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center gap-4 hover:bg-white/[0.08] transition-colors">
-                    <div className="w-12 h-12 shrink-0 rounded-2xl bg-black/30 border border-white/10 flex items-center justify-center relative">
-                      <DeviceIcon className="w-5 h-5 text-white/50" />
+                  <div key={s.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex items-center gap-4 hover:bg-slate-100/70 dark:hover:bg-white/[0.08] transition-colors shadow-sm dark:shadow-none">
+                    <div className="w-12 h-12 shrink-0 rounded-2xl bg-slate-100 dark:bg-black/30 border border-slate-200 dark:border-white/10 flex items-center justify-center relative">
+                      <DeviceIcon className="w-5 h-5 text-slate-600 dark:text-white/50" />
                       {s.device_hint && (
-                        <div className="absolute -bottom-1 text-[8px] font-black px-1.5 py-0.5 rounded-md bg-[#0a0a0f] border border-white/20 text-white uppercase truncate max-w-[40px]">
+                        <div className="absolute -bottom-1 text-[8px] font-black px-1.5 py-0.5 rounded-md bg-white dark:bg-[#0a0a0f] border border-slate-200 dark:border-white/20 text-slate-800 dark:text-white uppercase truncate max-w-[40px] shadow-sm">
                           {s.device_hint}
                         </div>
                       )}
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-white truncate">{p?.full_name || 'Pengguna Tidak Diketahui'}</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{p?.full_name || 'Pengguna Tidak Diketahui'}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] text-white/40">{p?.matric_no}</span>
-                        <span className="w-1 h-1 rounded-full bg-white/20" />
-                        <span className="text-[10px] text-emerald-400 font-bold">{p?.role}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-white/40">{p?.matric_no}</span>
+                        <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-white/20" />
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">{p?.role}</span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-4 shrink-0">
                       <div className="text-right hidden sm:block">
-                        <p className="text-[10px] text-white/30">Dilanggan pada</p>
-                        <p className="text-xs text-white/60 font-medium">
+                        <p className="text-[10px] text-slate-400 dark:text-white/30">Dilanggan pada</p>
+                        <p className="text-xs text-slate-600 dark:text-white/60 font-medium">
                           {new Date(s.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </p>
                       </div>
@@ -192,7 +192,7 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                       {isSuperAdmin && (
                         <button 
                           onClick={() => handleRevoke(s.id)}
-                          className="w-10 h-10 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 flex items-center justify-center transition-colors border border-rose-500/20"
+                          className="w-10 h-10 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-500 flex items-center justify-center transition-colors border border-rose-500/20"
                           title="Buang langganan ini"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -348,70 +348,70 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
   return (
     <motion.div initial={{ opacity: 0, y: isLowPerf ? 0 : 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: isLowPerf ? 0 : 0.5, delay: isLowPerf ? 0 : 0.55 }} className="space-y-4">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: hexToRgba(themeColor, 0.15), border: `1px solid ${hexToRgba(themeColor, 0.25)}` }}>
+        <div className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-sm" style={{ background: hexToRgba(themeColor, 0.15), border: `1px solid ${hexToRgba(themeColor, 0.25)}` }}>
           <ClipboardList className="w-5 h-5" style={{ color: themeColor }} />
         </div>
         <div>
-          <h2 className="text-2xl font-black text-white leading-tight">Semakan Pindaan Profil</h2>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">Kelulusan pindaan no. matrik &amp; semester pelajar</p>
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Semakan Pindaan Profil</h2>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">Kelulusan pindaan no. matrik &amp; semester pelajar</p>
         </div>
         {pendingCount > 0 && (
-          <span className="ml-auto px-3 py-1.5 rounded-full text-xs font-black bg-amber-500/20 text-amber-400 border border-amber-500/20">{pendingCount} PENDING</span>
+          <span className="ml-auto px-3 py-1.5 rounded-full text-xs font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">{pendingCount} PENDING</span>
         )}
       </div>
 
-      <div className="rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] overflow-hidden">
-        <div className="flex border-b border-white/[0.06]">
+      <div className="rounded-[1.75rem] border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] overflow-hidden shadow-sm dark:shadow-none">
+        <div className="flex border-b border-slate-200 dark:border-white/[0.06] bg-slate-50/50 dark:bg-transparent">
           {filterTabs.map(tab => (
             <button
               key={tab.key}
               onClick={() => setFilter(tab.key)}
               className={cn(
                 'flex-1 py-3 text-[11px] font-black uppercase tracking-widest transition-all',
-                filter === tab.key ? 'text-white border-b-2' : 'text-white/30 hover:text-white/60'
+                filter === tab.key ? 'text-slate-900 dark:text-white border-b-2' : 'text-slate-400 dark:text-white/30 hover:text-slate-700 dark:hover:text-white/60'
               )}
               style={filter === tab.key ? { borderBottomColor: themeColor, color: themeColor } : {}}
             >
               {tab.label}
-              {tab.key === 'PENDING' && pendingCount > 0 && <span className="ml-1.5 bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full">{pendingCount}</span>}
+              {tab.key === 'PENDING' && pendingCount > 0 && <span className="ml-1.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-full">{pendingCount}</span>}
             </button>
           ))}
         </div>
 
         <div className="p-6">
           {loading ? (
-            <div className="flex items-center justify-center gap-2 py-10 text-white/30 text-xs">
+            <div className="flex items-center justify-center gap-2 py-10 text-slate-400 dark:text-white/30 text-xs">
               <Loader2 className="w-4 h-4 animate-spin" /> Memuatkan...
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-12">
-              <ClipboardList className="w-10 h-10 mx-auto mb-3 text-white/10" />
-              <p className="text-white/30 text-xs font-medium">Tiada rekod {filter === 'PENDING' ? 'menunggu semakan' : filter === 'APPROVED' ? 'yang telah diluluskan' : 'yang ditolak'}</p>
+              <ClipboardList className="w-10 h-10 mx-auto mb-3 text-slate-300 dark:text-white/10" />
+              <p className="text-slate-400 dark:text-white/30 text-xs font-medium">Tiada rekod {filter === 'PENDING' ? 'menunggu semakan' : filter === 'APPROVED' ? 'yang telah diluluskan' : 'yang ditolak'}</p>
             </div>
           ) : (
             <div className="space-y-3">
               {filtered.map(req => (
-                <div key={req.id} className="p-5 rounded-2xl border border-white/[0.06] bg-white/[0.02] flex flex-col sm:flex-row sm:items-center gap-4">
+                <div key={req.id} className="p-5 rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-slate-50/50 dark:bg-white/[0.02] flex flex-col sm:flex-row sm:items-center gap-4 shadow-sm dark:shadow-none">
                   <div className="flex-1 min-w-0 space-y-2">
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: hexToRgba(themeColor, 0.15) }}>
                         <User className="w-3.5 h-3.5" style={{ color: themeColor }} />
                       </div>
-                      <p className="text-sm font-black text-white truncate">{req.requester?.full_name ?? '—'}</p>
-                      {req.requester?.matric_no && <span className="text-[10px] font-mono text-white/40 bg-white/5 px-2 py-0.5 rounded-lg">{req.requester.matric_no}</span>}
+                      <p className="text-sm font-black text-slate-900 dark:text-white truncate">{req.requester?.full_name ?? '—'}</p>
+                      {req.requester?.matric_no && <span className="text-[10px] font-mono text-slate-600 dark:text-white/40 bg-slate-200/60 dark:bg-white/5 px-2 py-0.5 rounded-lg">{req.requester.matric_no}</span>}
                     </div>
                     <div className="ml-9">
-                      <p className="text-xs text-white/60 font-medium">
-                        <span className="text-white/30">Pindaan:</span>{' '}
-                        <span className="font-bold text-white/80">{req.field_type === 'matric_no' ? 'No. Matrik' : 'Semester'}</span>
+                      <p className="text-xs text-slate-600 dark:text-white/60 font-medium">
+                        <span className="text-slate-400 dark:text-white/30">Pindaan:</span>{' '}
+                        <span className="font-bold text-slate-800 dark:text-white/80">{req.field_type === 'matric_no' ? 'No. Matrik' : 'Semester'}</span>
                         {' — '}
-                        <span className="line-through text-white/30 font-mono text-[11px]">{req.current_value ?? '—'}</span>
+                        <span className="line-through text-slate-400 dark:text-white/30 font-mono text-[11px]">{req.current_value ?? '—'}</span>
                         {' → '}
-                        <span className="font-black text-white font-mono">{req.requested_value}</span>
+                        <span className="font-black text-slate-900 dark:text-white font-mono">{req.requested_value}</span>
                       </p>
-                      {req.reason && <p className="text-[11px] text-white/40 mt-1">Sebab: {req.reason}</p>}
-                      {req.review_note && <p className="text-[11px] text-amber-400/80 mt-1">Nota JPP: {req.review_note}</p>}
-                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-white/25">
+                      {req.reason && <p className="text-[11px] text-slate-500 dark:text-white/40 mt-1">Sebab: {req.reason}</p>}
+                      {req.review_note && <p className="text-[11px] text-amber-600 dark:text-amber-400/80 mt-1">Nota JPP: {req.review_note}</p>}
+                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-400 dark:text-white/25">
                         <span>Dihantar: {new Date(req.submitted_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                         {req.reviewed_at && <span>· Disemak: {new Date(req.reviewed_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' })}</span>}
                         {req.reviewer?.full_name && <span>· oleh {req.reviewer.full_name}</span>}
@@ -421,10 +421,10 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
 
                   {req.status === 'PENDING' && (
                     <div className="flex gap-2 shrink-0">
-                      <button onClick={() => openModal(req, 'REJECTED')} className="px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all">
+                      <button onClick={() => openModal(req, 'REJECTED')} className="px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-all">
                         <XCircle className="w-3.5 h-3.5 inline mr-1" />Tolak
                       </button>
-                      <button onClick={() => openModal(req, 'APPROVED')} className="px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all border border-emerald-500/30">
+                      <button onClick={() => openModal(req, 'APPROVED')} className="px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 transition-all border border-emerald-500/30">
                         <CheckCircle2 className="w-3.5 h-3.5 inline mr-1" />Lulus
                       </button>
                     </div>
@@ -432,8 +432,8 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
                   {req.status !== 'PENDING' && (
                     <div className="shrink-0">
                       {req.status === 'APPROVED'
-                        ? <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"><CheckCircle2 className="w-3 h-3" />DILULUSKAN</span>
-                        : <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black bg-red-500/15 text-red-400 border border-red-500/20"><XCircle className="w-3 h-3" />DITOLAK</span>
+                        ? <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"><CheckCircle2 className="w-3 h-3" />DILULUSKAN</span>
+                        : <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/20"><XCircle className="w-3 h-3" />DITOLAK</span>
                       }
                     </div>
                   )}
@@ -448,42 +448,42 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
         {reviewModal.open && reviewModal.req && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={isLowPerf ? { duration: 0 } : undefined}
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              className="absolute inset-0 bg-slate-900/60 dark:bg-black/70 backdrop-blur-sm"
               onClick={() => !processing && setReviewModal({ open: false, req: null, action: null })}
             />
             <motion.div
               initial={{ opacity: 0, scale: isLowPerf ? 1 : 0.95, y: isLowPerf ? 0 : 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: isLowPerf ? 1 : 0.95, y: isLowPerf ? 0 : 10 }} transition={isLowPerf ? { duration: 0 } : undefined}
-              className="relative w-full max-w-md rounded-[2rem] p-6 border border-white/10 bg-[#0f0f1a] z-10"
+              className="relative w-full max-w-md rounded-[2rem] p-6 border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f0f1a] text-slate-900 dark:text-white z-10 shadow-2xl"
             >
               <div className="space-y-5">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${reviewModal.action === 'APPROVED' ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>
-                    {reviewModal.action === 'APPROVED' ? <CheckCircle2 className="w-5 h-5 text-emerald-400" /> : <XCircle className="w-5 h-5 text-red-400" />}
+                    {reviewModal.action === 'APPROVED' ? <CheckCircle2 className="w-5 h-5 text-emerald-500 dark:text-emerald-400" /> : <XCircle className="w-5 h-5 text-red-500 dark:text-red-400" />}
                   </div>
                   <div>
-                    <p className="font-black text-white text-sm">{reviewModal.action === 'APPROVED' ? 'Luluskan' : 'Tolak'} Permintaan Pindaan</p>
-                    <p className="text-[11px] text-white/40">
+                    <p className="font-black text-slate-900 dark:text-white text-sm">{reviewModal.action === 'APPROVED' ? 'Luluskan' : 'Tolak'} Permintaan Pindaan</p>
+                    <p className="text-[11px] text-slate-500 dark:text-white/40">
                       {reviewModal.req.field_type === 'matric_no' ? 'No. Matrik' : 'Semester'}:{' '}
-                      <span className="font-mono text-white/60 line-through">{reviewModal.req.current_value}</span>
-                      {' → '}<span className="font-mono text-white font-black">{reviewModal.req.requested_value}</span>
+                      <span className="font-mono text-slate-400 dark:text-white/60 line-through">{reviewModal.req.current_value}</span>
+                      {' → '}<span className="font-mono text-slate-900 dark:text-white font-black">{reviewModal.req.requested_value}</span>
                     </p>
-                    <p className="text-[10px] text-white/30 mt-0.5">Pelajar: {reviewModal.req.requester?.full_name}</p>
+                    <p className="text-[10px] text-slate-500 dark:text-white/30 mt-0.5">Pelajar: {reviewModal.req.requester?.full_name}</p>
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-white/40">
+                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
                     {reviewModal.action === 'REJECTED' ? 'Sebab Penolakan *' : 'Nota Ulasan (Pilihan)'}
                   </label>
                   <textarea
                     value={reviewNote} onChange={e => setReviewNote(e.target.value)} rows={3}
                     placeholder={reviewModal.action === 'REJECTED' ? 'Nyatakan sebab penolakan...' : 'Nota tambahan (jika ada)...'}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/20 font-medium resize-none focus:outline-none focus:border-white/20"
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 font-medium resize-none focus:outline-none focus:border-slate-400 dark:focus:border-white/20"
                   />
-                  <p className="text-[10px] text-white/25">⚙ Nota ini akan direkodkan dalam Audit Log dan dihantar kepada pelajar.</p>
+                  <p className="text-[10px] text-slate-400 dark:text-white/25">⚙ Nota ini akan direkodkan dalam Audit Log dan dihantar kepada pelajar.</p>
                 </div>
                 <div className="flex gap-3">
                   <button onClick={() => setReviewModal({ open: false, req: null, action: null })} disabled={processing}
-                    className="flex-1 h-11 rounded-xl font-bold text-xs uppercase tracking-wider border border-white/10 text-white/40 hover:bg-white/5 transition-all">
+                    className="flex-1 h-11 rounded-xl font-bold text-xs uppercase tracking-wider border border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/40 hover:bg-slate-100 dark:hover:bg-white/5 transition-all">
                     Batal
                   </button>
                   <button onClick={handleReview} disabled={processing || (reviewModal.action === 'REJECTED' && !reviewNote.trim())}
@@ -614,10 +614,10 @@ export function JppOverviewPage() {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#0a0a0f] border border-white/10 rounded-xl p-3 shadow-xl backdrop-blur-md">
-          <p className="text-white/60 text-xs font-bold mb-1">{label}</p>
-          <p className="text-white font-black text-lg">
-            {payload[0].value} <span className="text-xs font-medium text-white/50">pelajar</span>
+        <div className="bg-white dark:bg-[#0a0a0f] border border-slate-200 dark:border-white/10 rounded-xl p-3 shadow-xl backdrop-blur-md">
+          <p className="text-slate-500 dark:text-white/60 text-xs font-bold mb-1">{label}</p>
+          <p className="text-slate-900 dark:text-white font-black text-lg">
+            {payload[0].value} <span className="text-xs font-medium text-slate-400 dark:text-white/50">pelajar</span>
           </p>
         </div>
       );
@@ -626,10 +626,10 @@ export function JppOverviewPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white transition-colors">
       {/* Background glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute -top-[10%] right-[10%] w-[40vw] h-[40vw] rounded-full blur-3xl opacity-5"
+        <div className="absolute -top-[10%] right-[10%] w-[40vw] h-[40vw] rounded-full blur-3xl opacity-5 dark:opacity-8"
           style={{ background: themeColor }} />
       </div>
 
@@ -644,14 +644,14 @@ export function JppOverviewPage() {
         >
           <div className="flex items-center gap-3">
             <div
-              className="w-10 h-10 rounded-2xl flex items-center justify-center"
+              className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-sm"
               style={{ background: hexToRgba(themeColor, 0.15), border: `1px solid ${hexToRgba(themeColor, 0.25)}` }}
             >
               <BarChart3 className="w-5 h-5" style={{ color: themeColor }} />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-white leading-tight">Gambaran Sistem</h1>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">
+              <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Gambaran Sistem</h1>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">
                 Data keseluruhan portal JPP
               </p>
             </div>
@@ -660,7 +660,7 @@ export function JppOverviewPage() {
 
         {loading ? (
           <div className="flex items-center justify-center py-24">
-            <Loader2 className="w-8 h-8 animate-spin text-white/20" />
+            <Loader2 className="w-8 h-8 animate-spin text-slate-400 dark:text-white/20" />
           </div>
         ) : (
           <>
@@ -692,25 +692,25 @@ export function JppOverviewPage() {
                 initial={{ opacity: 0, y: isLowPerf ? 0 : 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: isLowPerf ? 0 : 0.45 }}
-                className="lg:col-span-2 rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-6 flex flex-col"
+                className="lg:col-span-2 rounded-[1.75rem] border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] p-6 flex flex-col shadow-sm dark:shadow-none"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
                   <div>
-                    <h2 className="text-xs font-black uppercase tracking-[0.25em] text-white/40 mb-1">
+                    <h2 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 mb-1">
                       Trend Pendaftaran Pelajar
                     </h2>
-                    <p className="text-2xl font-black text-white">
-                      {stats?.totalStudents ?? 0} <span className="text-xs text-white/30 font-medium">jumlah pelajar</span>
+                    <p className="text-2xl font-black text-slate-900 dark:text-white">
+                      {stats?.totalStudents ?? 0} <span className="text-xs text-slate-500 dark:text-white/30 font-medium">jumlah pelajar</span>
                     </p>
-                    <p className="text-[11px] text-white/25 font-medium mt-0.5">
+                    <p className="text-[11px] text-slate-400 dark:text-white/25 font-medium mt-0.5">
                       {chartData.reduce((acc, curr) => acc + curr.count, 0)} baru mendaftar dalam {timeRange === '7d' ? '7' : '30'} hari
                     </p>
                   </div>
-                  <div className="flex items-center bg-white/5 rounded-xl p-1 shrink-0">
+                  <div className="flex items-center bg-slate-100 dark:bg-white/5 rounded-xl p-1 shrink-0">
                     <button
                       onClick={() => setTimeRange('7d')}
                       className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${
-                        timeRange === '7d' ? 'bg-white/10 text-white' : 'text-white/30 hover:text-white/60'
+                        timeRange === '7d' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm dark:shadow-none' : 'text-slate-500 dark:text-white/30 hover:text-slate-800 dark:hover:text-white/60'
                       }`}
                     >
                       7 Hari
@@ -718,7 +718,7 @@ export function JppOverviewPage() {
                     <button
                       onClick={() => setTimeRange('30d')}
                       className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${
-                        timeRange === '30d' ? 'bg-white/10 text-white' : 'text-white/30 hover:text-white/60'
+                        timeRange === '30d' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm dark:shadow-none' : 'text-slate-500 dark:text-white/30 hover:text-slate-800 dark:hover:text-white/60'
                       }`}
                     >
                       30 Hari
@@ -739,7 +739,7 @@ export function JppOverviewPage() {
                         dataKey="date" 
                         axisLine={false} 
                         tickLine={false} 
-                        tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 700 }}
+                        tick={{ fill: 'currentColor', opacity: 0.4, fontSize: 10, fontWeight: 700 }}
                         dy={10}
                         minTickGap={20}
                       />
@@ -767,17 +767,17 @@ export function JppOverviewPage() {
                 initial={{ opacity: 0, y: isLowPerf ? 0 : 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: isLowPerf ? 0 : 0.5 }}
-                className="rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-6 flex flex-col"
+                className="rounded-[1.75rem] border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] p-6 flex flex-col shadow-sm dark:shadow-none"
               >
-                <h2 className="text-xs font-black uppercase tracking-[0.25em] text-white/40 mb-2">
+                <h2 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40 mb-2">
                   Status Tiket Kebajikan
                 </h2>
                 
                 <div className="flex-1 min-h-[200px] w-full flex items-center justify-center relative mt-4">
                   {ticketStats.every(t => t.value === 0) ? (
                     <div className="text-center">
-                      <Heart className="w-8 h-8 text-white/10 mx-auto mb-2" />
-                      <p className="text-xs text-white/30 font-medium">Tiada tiket kebajikan</p>
+                      <Heart className="w-8 h-8 text-slate-300 dark:text-white/10 mx-auto mb-2" />
+                      <p className="text-xs text-slate-400 dark:text-white/30 font-medium">Tiada tiket kebajikan</p>
                     </div>
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
@@ -798,7 +798,7 @@ export function JppOverviewPage() {
                           ))}
                         </Pie>
                         <RechartsTooltip 
-                          contentStyle={{ backgroundColor: '#0a0a0f', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', color: 'white', fontWeight: 800 }}
+                          contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', color: 'white', fontWeight: 800 }}
                           itemStyle={{ color: 'white' }}
                         />
                       </PieChart>
@@ -807,10 +807,10 @@ export function JppOverviewPage() {
                   {/* Center Text for Donut */}
                   {!ticketStats.every(t => t.value === 0) && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <span className="text-3xl font-black text-white leading-none">
+                      <span className="text-3xl font-black text-slate-900 dark:text-white leading-none">
                         {stats?.totalTickets ?? 0}
                       </span>
-                      <span className="text-[9px] uppercase tracking-widest font-black text-white/30 mt-1">
+                      <span className="text-[9px] uppercase tracking-widest font-black text-slate-500 dark:text-white/30 mt-1">
                         Tiket
                       </span>
                     </div>
@@ -823,7 +823,7 @@ export function JppOverviewPage() {
                     {ticketStats.map(stat => (
                       <div key={stat.name} className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: stat.color }} />
-                        <span className="text-xs font-black text-white/50">{stat.name}</span>
+                        <span className="text-xs font-black text-slate-600 dark:text-white/50">{stat.name}</span>
                       </div>
                     ))}
                   </div>

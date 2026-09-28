@@ -125,7 +125,7 @@ function MemberCard({
   return (
     <motion.div
       layout
-      className="relative flex flex-col p-4 rounded-[1.5rem] bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.1] hover:bg-white/[0.04] transition-all group overflow-hidden"
+      className="relative flex flex-col p-4 rounded-[1.5rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] hover:border-slate-300 dark:hover:border-white/[0.1] hover:bg-slate-50/50 dark:hover:bg-white/[0.04] shadow-sm dark:shadow-none transition-all group overflow-hidden"
     >
       {/* Background Glow based on unit/MT */}
       <div 
@@ -134,10 +134,10 @@ function MemberCard({
       />
 
       <div className="flex items-start justify-between mb-3 z-10 relative">
-        <Avatar className="h-12 w-12 rounded-xl ring-1 ring-white/10 shadow-lg">
+        <Avatar className="h-12 w-12 rounded-xl ring-1 ring-slate-200 dark:ring-white/10 shadow-lg">
           <AvatarFallback
             className="font-black text-sm rounded-xl"
-            style={{ background: hexToRgba(themeColor, 0.2), color: 'white' }}
+            style={{ background: hexToRgba(themeColor, 0.2), color: themeColor }}
           >
             {initials}
           </AvatarFallback>
@@ -147,7 +147,7 @@ function MemberCard({
         {(!editing && canEdit) && (
           <button
             onClick={handleOpenEdit}
-            className="opacity-50 md:opacity-0 md:group-hover:opacity-100 p-2 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-all focus:opacity-100 bg-white/[0.05] md:bg-transparent"
+            className="opacity-50 md:opacity-0 md:group-hover:opacity-100 p-2 rounded-xl text-slate-400 dark:text-white/50 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all focus:opacity-100 bg-slate-100 dark:bg-white/[0.05] md:bg-transparent"
           >
             <Pencil className="w-4 h-4" />
           </button>
@@ -155,24 +155,24 @@ function MemberCard({
       </div>
 
       <div className="mb-4 z-10 relative">
-        <p className="text-sm font-bold text-white/90 leading-tight line-clamp-1" title={member.full_name ?? ''}>
+        <p className="text-sm font-bold text-slate-900 dark:text-white/90 leading-tight line-clamp-1" title={member.full_name ?? ''}>
           {member.full_name ?? '—'}
         </p>
-        <p className="text-[10px] text-white/40 truncate mt-0.5">{member.email ?? '—'}</p>
+        <p className="text-[10px] text-slate-500 dark:text-white/40 truncate mt-0.5">{member.email ?? '—'}</p>
       </div>
 
-      <div className="mt-auto pt-3 border-t border-white/[0.05] flex flex-col gap-2 z-10 relative">
+      <div className="mt-auto pt-3 border-t border-slate-200 dark:border-white/[0.05] flex flex-col gap-2 z-10 relative">
         {!editing ? (
           <div className="flex flex-wrap items-center gap-1.5 min-h-[48px] content-start">
             {member.jpp_position ? (
               <span
                 className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg"
-                style={{ background: hexToRgba(themeColor, isMTPosition ? 0.2 : 0.1), color: isMTPosition ? themeColor : 'rgba(255,255,255,0.6)' }}
+                style={{ background: hexToRgba(themeColor, isMTPosition ? 0.2 : 0.1), color: isMTPosition ? themeColor : 'inherit' }}
               >
                 {positionLabels[member.jpp_position as string] ?? member.jpp_position}
               </span>
             ) : (
-              <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg bg-white/5 text-white/30">
+              <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-white/30">
                 Tiada Jawatan
               </span>
             )}
@@ -196,11 +196,11 @@ function MemberCard({
                 // Reset oversee list bila tukar jawatan
                 if (!JPP_MT_POSITIONS.includes(e.target.value as any)) setOverseeUnits([]);
               }}
-              className="text-xs font-semibold bg-black/40 border border-white/10 text-white rounded-xl px-2 py-1.5 outline-none custom-scrollbar"
+              className="text-xs font-semibold bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-xl px-2 py-1.5 outline-none custom-scrollbar"
             >
-              <option value="" className="bg-[#0f0f13] text-white">— Pilih Jawatan —</option>
+              <option value="" className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">— Pilih Jawatan —</option>
               {Object.entries(positionLabels).map(([k, v]) => (
-                <option key={k} value={k} className="bg-[#0f0f13] text-white">{v}</option>
+                <option key={k} value={k} className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">{v}</option>
               ))}
             </select>
 
@@ -209,23 +209,23 @@ function MemberCard({
               <select
                 value={unit}
                 onChange={e => setUnit(e.target.value)}
-                className="text-xs font-semibold bg-black/40 border border-white/10 text-white rounded-xl px-2 py-1.5 outline-none custom-scrollbar"
+                className="text-xs font-semibold bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-xl px-2 py-1.5 outline-none custom-scrollbar"
               >
-                <option value="" className="bg-[#0f0f13] text-white">— Pilih Unit Exco —</option>
+                <option value="" className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">— Pilih Unit Exco —</option>
                 {Object.keys(unitLabels).map(u => (
-                  <option key={u} value={u} className="bg-[#0f0f13] text-white">{unitLabels[u] ?? u}</option>
+                  <option key={u} value={u} className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">{unitLabels[u] ?? u}</option>
                 ))}
               </select>
             )}
 
             {/* MT Oversees — Multi-Checkbox (hanya untuk jawatan MT) */}
             {willBeMT && (
-              <div className="rounded-xl border border-white/10 bg-black/30 p-2.5 space-y-1.5">
-                <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-2">
+              <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/30 p-2.5 space-y-1.5">
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">
                   🎯 Unit Diawasi (boleh pilih banyak)
                 </p>
                 {loadingOversee ? (
-                  <div className="flex items-center gap-2 text-white/30 text-[10px]">
+                  <div className="flex items-center gap-2 text-slate-400 dark:text-white/30 text-[10px]">
                     <Loader2 className="w-3 h-3 animate-spin" /> Memuatkan...
                   </div>
                 ) : (
@@ -240,12 +240,12 @@ function MemberCard({
                         onClick={() => toggleOverseeUnit(code)}
                         className={cn(
                           'w-full flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all text-left',
-                          checked ? 'bg-white/10 text-white' : 'text-white/40 hover:bg-white/5 hover:text-white/70'
+                          checked ? 'bg-slate-200/70 dark:bg-white/10 text-slate-900 dark:text-white' : 'text-slate-500 dark:text-white/40 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-800 dark:hover:text-white/70'
                         )}
                       >
                         {checked
                           ? <CheckSquare className="w-3.5 h-3.5 flex-shrink-0" style={{ color: cfg.color }} />
-                          : <Square className="w-3.5 h-3.5 flex-shrink-0 text-white/20" />
+                          : <Square className="w-3.5 h-3.5 flex-shrink-0 text-slate-300 dark:text-white/20" />
                         }
                         <span className="text-[10px] font-bold truncate">{cfg.shortLabel}</span>
                       </button>
@@ -260,7 +260,7 @@ function MemberCard({
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex-1 flex items-center justify-center py-1.5 rounded-xl bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all text-xs font-bold"
+                className="flex-1 flex items-center justify-center py-1.5 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/30 transition-all text-xs font-bold"
               >
                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Simpan'}
               </button>
@@ -271,14 +271,14 @@ function MemberCard({
                   }
                 }}
                 disabled={saving}
-                className="flex-shrink-0 flex items-center justify-center px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-all text-xs font-bold"
+                className="flex-shrink-0 flex items-center justify-center px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-all text-xs font-bold"
                 title="Buang Ahli"
               >
                 <Trash className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setEditing(false)}
-                className="flex-1 flex items-center justify-center py-1.5 rounded-xl bg-white/10 text-white/50 hover:bg-white/15 hover:text-white transition-all text-xs font-bold"
+                className="flex-1 flex items-center justify-center py-1.5 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/50 hover:bg-slate-200 dark:hover:bg-white/15 hover:text-slate-900 dark:hover:text-white transition-all text-xs font-bold"
               >
                 Batal
               </button>
@@ -304,9 +304,9 @@ function GroupSection({
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <h2 className="text-sm font-black text-white/80 uppercase tracking-widest">{title}</h2>
-        <div className="h-px flex-1 bg-white/[0.06]" />
-        <span className="text-[10px] font-black text-white/30 uppercase tracking-widest bg-white/[0.05] px-2 py-0.5 rounded-full">
+        <h2 className="text-sm font-black text-slate-700 dark:text-white/80 uppercase tracking-widest">{title}</h2>
+        <div className="h-px flex-1 bg-slate-200 dark:bg-white/[0.06]" />
+        <span className="text-[10px] font-black text-slate-500 dark:text-white/30 uppercase tracking-widest bg-slate-200/60 dark:bg-white/[0.05] px-2 py-0.5 rounded-full">
           {members.length} Ahli
         </span>
       </div>
@@ -428,65 +428,65 @@ function AddMemberModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md bg-[#0a0a0f] border border-white/[0.08] shadow-2xl rounded-[2rem] p-6 relative flex flex-col max-h-[85vh] overflow-y-auto custom-scrollbar"
+        className="w-full max-w-md bg-white dark:bg-[#0a0a0f] border border-slate-200 dark:border-white/[0.08] shadow-2xl rounded-[2rem] p-6 relative flex flex-col max-h-[85vh] overflow-y-auto custom-scrollbar text-slate-900 dark:text-white"
       >
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/50 transition-colors"
+          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 dark:text-white/50 hover:text-slate-700 dark:hover:text-white transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
 
         <div className="flex items-center gap-3 mb-1">
           <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-500/10">
-            <Plus className="w-4 h-4 text-emerald-400" />
+            <Plus className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
           </div>
-          <h3 className="text-lg font-black text-white">Tambah Ahli JPP</h3>
+          <h3 className="text-lg font-black text-slate-900 dark:text-white">Tambah Ahli JPP</h3>
         </div>
-        <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold mb-6 ml-11">
+        <p className="text-[10px] text-slate-500 dark:text-white/40 uppercase tracking-widest font-bold mb-6 ml-11">
           Cari pelajar dan tetapkan jawatan
         </p>
 
         {!selectedUser ? (
           <div className="space-y-4">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-white/30" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Cari nama penuh pelajar..."
-                className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-sm text-white placeholder-white/30 focus:outline-none focus:border-emerald-500/30 focus:bg-white/[0.05] hover:border-white/[0.1] transition-all font-medium"
+                className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-white/30 focus:outline-none focus:border-emerald-500/50 dark:focus:border-emerald-500/30 focus:bg-white dark:focus:bg-white/[0.05] hover:border-slate-300 dark:hover:border-white/[0.1] transition-all font-medium"
               />
             </div>
             
             <div className="space-y-2 min-h-[150px]">
               {searching ? (
-                <div className="flex justify-center py-6 text-white/30 text-xs gap-2 font-medium bg-white/[0.02] rounded-xl border border-white/[0.03]"><Loader2 className="w-4 h-4 animate-spin text-emerald-400"/>Mencari rekod...</div>
+                <div className="flex justify-center py-6 text-slate-500 dark:text-white/30 text-xs gap-2 font-medium bg-slate-50 dark:bg-white/[0.02] rounded-xl border border-slate-200 dark:border-white/[0.03]"><Loader2 className="w-4 h-4 animate-spin text-emerald-500 dark:text-emerald-400"/>Mencari rekod...</div>
               ) : searchQuery.length > 0 && searchQuery.length < 3 ? (
-                <div className="text-center py-6 text-white/30 text-[10px] uppercase tracking-widest font-bold bg-white/[0.02] rounded-xl border border-white/[0.03]">Taip 3 aksara untuk carian</div>
+                <div className="text-center py-6 text-slate-400 dark:text-white/30 text-[10px] uppercase tracking-widest font-bold bg-slate-50 dark:bg-white/[0.02] rounded-xl border border-slate-200 dark:border-white/[0.03]">Taip 3 aksara untuk carian</div>
               ) : searchResults.length === 0 && searchQuery.length >= 3 ? (
-                <div className="text-center py-6 text-white/30 text-[10px] uppercase tracking-widest font-bold bg-white/[0.02] rounded-xl border border-white/[0.03]">Tiada pelajar dijumpai</div>
+                <div className="text-center py-6 text-slate-400 dark:text-white/30 text-[10px] uppercase tracking-widest font-bold bg-slate-50 dark:bg-white/[0.02] rounded-xl border border-slate-200 dark:border-white/[0.03]">Tiada pelajar dijumpai</div>
               ) : (
                 searchResults.map(u => (
                   <button
                     key={u.id}
                     onClick={() => setSelectedUser(u)}
-                    className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 text-left border border-white/[0.03] hover:border-white/10 transition-all group bg-white/[0.01]"
+                    className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 text-left border border-slate-100 dark:border-white/[0.03] hover:border-slate-200 dark:hover:border-white/10 transition-all group bg-slate-50/50 dark:bg-white/[0.01]"
                   >
-                    <Avatar className="w-10 h-10 rounded-xl shadow-lg border border-white/[0.05]">
-                      <AvatarFallback className="bg-white/10 text-xs text-white/80 font-black">{u.full_name?.substring(0,2).toUpperCase()}</AvatarFallback>
+                    <Avatar className="w-10 h-10 rounded-xl shadow-sm border border-slate-200 dark:border-white/[0.05]">
+                      <AvatarFallback className="bg-slate-200 dark:bg-white/10 text-xs text-slate-700 dark:text-white/80 font-black">{u.full_name?.substring(0,2).toUpperCase()}</AvatarFallback>
                       <AvatarImage src={u.avatar_url || ''} className="object-cover" />
                     </Avatar>
                     <div className="flex-1 overflow-hidden">
-                      <p className="text-sm font-bold text-white/90 truncate group-hover:text-white transition-colors">{u.full_name}</p>
-                      <p className="text-[10px] text-white/30 truncate mt-0.5">{u.email}</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white/90 truncate group-hover:text-slate-950 dark:group-hover:text-white transition-colors">{u.full_name}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-white/30 truncate mt-0.5">{u.email}</p>
                     </div>
-                    {u.role === 'JPP' && <Crown className="w-4 h-4 text-amber-500/50" />}
+                    {u.role === 'JPP' && <Crown className="w-4 h-4 text-amber-500" />}
                   </button>
                 ))
               )}
@@ -495,18 +495,18 @@ function AddMemberModal({
         ) : (
           <div className="space-y-5">
             {/* User Info header */}
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 shadow-inner">
-              <Avatar className="w-10 h-10 rounded-xl shadow-lg border border-emerald-500/20">
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 shadow-inner">
+              <Avatar className="w-10 h-10 rounded-xl shadow-sm border border-emerald-500/20">
                 <AvatarImage src={selectedUser.avatar_url || ''} className="object-cover" />
-                <AvatarFallback className="bg-white/10 text-xs font-black">{selectedUser.full_name?.substring(0,2).toUpperCase()}</AvatarFallback>
+                <AvatarFallback className="bg-emerald-500/20 text-xs font-black text-emerald-700 dark:text-emerald-300">{selectedUser.full_name?.substring(0,2).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="flex-1 overflow-hidden">
-                <p className="text-sm font-black text-white truncate">{selectedUser.full_name}</p>
-                <p className="text-[10px] text-white/40 truncate mt-0.5">{selectedUser.email}</p>
+                <p className="text-sm font-black text-slate-900 dark:text-white truncate">{selectedUser.full_name}</p>
+                <p className="text-[10px] text-slate-600 dark:text-white/40 truncate mt-0.5">{selectedUser.email}</p>
               </div>
               <button 
                 onClick={() => setSelectedUser(null)}
-                className="text-[9px] uppercase tracking-widest font-black text-rose-400 hover:text-rose-300 hover:bg-rose-400/10 px-2 py-1.5 rounded-lg transition-colors"
+                className="text-[9px] uppercase tracking-widest font-black text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 px-2 py-1.5 rounded-lg transition-colors"
               >
                 Tukar
               </button>
@@ -514,33 +514,33 @@ function AddMemberModal({
 
             <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-white/50 block mb-2">Jawatan JPP</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/50 block mb-2">Jawatan JPP</label>
                 <select
                   value={position}
                   onChange={e => {
                     setPosition(e.target.value);
                     if (!JPP_MT_POSITIONS.includes(e.target.value as any)) setOverseeUnits([]);
                   }}
-                  className="w-full text-xs font-semibold bg-black/40 border border-white/[0.08] text-white rounded-xl px-3 py-3 outline-none custom-scrollbar focus:border-emerald-500/30 focus:bg-white/[0.02] transition-colors"
+                  className="w-full text-xs font-semibold bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white rounded-xl px-3 py-3 outline-none custom-scrollbar focus:border-emerald-500/50 dark:focus:border-emerald-500/30 transition-colors"
                 >
-                  <option value="" className="bg-[#0f0f13] text-white">— Pilih Jawatan —</option>
+                  <option value="" className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">— Pilih Jawatan —</option>
                   {Object.entries(positionLabels).map(([k, v]) => (
-                    <option key={k} value={k} className="bg-[#0f0f13] text-white">{v}</option>
+                    <option key={k} value={k} className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">{v}</option>
                   ))}
                 </select>
               </div>
 
               {!willBeMT && (
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-white/50 block mb-2">Unit Exco (Pilihan)</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/50 block mb-2">Unit Exco (Pilihan)</label>
                   <select
                     value={unit}
                     onChange={e => setUnit(e.target.value)}
-                    className="w-full text-xs font-semibold bg-black/40 border border-white/[0.08] text-white rounded-xl px-3 py-3 outline-none custom-scrollbar focus:border-emerald-500/30 focus:bg-white/[0.02] transition-colors"
+                    className="w-full text-xs font-semibold bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white rounded-xl px-3 py-3 outline-none custom-scrollbar focus:border-emerald-500/50 dark:focus:border-emerald-500/30 transition-colors"
                   >
-                    <option value="" className="bg-[#0f0f13] text-white">— Pilih Unit Exco —</option>
+                    <option value="" className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">— Pilih Unit Exco —</option>
                     {Object.keys(unitLabels).map(u => (
-                      <option key={u} value={u} className="bg-[#0f0f13] text-white">{unitLabels[u] ?? u}</option>
+                      <option key={u} value={u} className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">{unitLabels[u] ?? u}</option>
                     ))}
                   </select>
                 </div>
@@ -548,8 +548,8 @@ function AddMemberModal({
 
               {willBeMT && (
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-white/50 block mb-2 flex items-center gap-2">Penyeliaan Unit (MT) <span className="bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-md text-[8px]">PILIHAN RAWAK</span></label>
-                  <div className="rounded-xl border border-white/[0.08] bg-black/30 p-2 max-h-48 overflow-y-auto custom-scrollbar space-y-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/50 block mb-2 flex items-center gap-2">Penyeliaan Unit (MT) <span className="bg-amber-500/20 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md text-[8px]">PILIHAN RAWAK</span></label>
+                  <div className="rounded-xl border border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-black/30 p-2 max-h-48 overflow-y-auto custom-scrollbar space-y-1">
                     {unitOrder.map(code => {
                       const cfg = unitConfig[code];
                       if (!cfg) return null;
@@ -562,13 +562,13 @@ function AddMemberModal({
                             prev.includes(code) ? prev.filter(u => u !== code) : [...prev, code]
                           )}
                           className={cn(
-                            'w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-left bg-white/[0.01] hover:bg-white/[0.03]',
-                            checked ? 'bg-white/[0.06] border border-white/10 text-white' : 'text-white/40 border border-transparent'
+                            'w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-left',
+                            checked ? 'bg-white dark:bg-white/[0.06] border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-white/40 border border-transparent hover:bg-slate-100 dark:hover:bg-white/[0.03]'
                           )}
                         >
                           {checked
                             ? <CheckSquare className="w-4 h-4 flex-shrink-0" style={{ color: cfg.color }} />
-                            : <Square className="w-4 h-4 flex-shrink-0 text-white/20" />
+                            : <Square className="w-4 h-4 flex-shrink-0 text-slate-300 dark:text-white/20" />
                           }
                           <span className="text-[11px] font-bold truncate">{cfg.shortLabel}</span>
                         </button>
@@ -583,7 +583,7 @@ function AddMemberModal({
                 disabled={saving || !position}
                 className={cn(
                   "w-full py-3.5 rounded-[1rem] text-[11px] font-black uppercase tracking-widest transition-all shadow-xl",
-                  saving || !position ? "bg-white/5 text-white/20 border border-white/5 cursor-not-allowed" : "bg-emerald-500 text-white hover:bg-emerald-400 shadow-emerald-500/20 hover:scale-[1.02]"
+                  saving || !position ? "bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-white/20 border border-slate-200 dark:border-white/5 cursor-not-allowed" : "bg-emerald-500 text-white hover:bg-emerald-400 shadow-emerald-500/20 hover:scale-[1.02]"
                 )}
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Simpan Ahli JPP'}
@@ -625,44 +625,44 @@ function ResetKohortModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-sm bg-[#0a0a0f] border border-rose-500/30 shadow-2xl shadow-rose-500/10 rounded-[2rem] p-6 relative flex flex-col"
+        className="w-full max-w-sm bg-white dark:bg-[#0a0a0f] border border-rose-500/30 shadow-2xl shadow-rose-500/10 rounded-[2rem] p-6 relative flex flex-col text-slate-900 dark:text-white"
       >
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/50 transition-colors"
+          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 dark:text-white/50 hover:text-slate-700 dark:hover:text-white transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
 
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-rose-500/10 border border-rose-500/20">
-            <AlertTriangle className="w-5 h-5 text-rose-400" />
+            <AlertTriangle className="w-5 h-5 text-rose-500 dark:text-rose-400" />
           </div>
           <div>
-            <h3 className="text-lg font-black text-white">Reset Kohort JPP</h3>
-            <p className="text-[10px] text-rose-400/80 uppercase tracking-widest font-bold">Tindakan tidak boleh dipulihkan</p>
+            <h3 className="text-lg font-black text-slate-900 dark:text-white">Reset Kohort JPP</h3>
+            <p className="text-[10px] text-rose-600 dark:text-rose-400/80 uppercase tracking-widest font-bold">Tindakan tidak boleh dipulihkan</p>
           </div>
         </div>
 
-        <p className="text-sm text-white/70 mb-4 leading-relaxed">
+        <p className="text-sm text-slate-600 dark:text-white/70 mb-4 leading-relaxed">
           Tindakan ini akan <b>melucutkan peranan JPP</b> daripada kesemua ahli sedia ada dan mengosongkan semua jawatan serta unit. 
           Lakukan ini hanya jika anda ingin melantik kohort/barisan ahli yang baharu.
         </p>
 
         <div className="space-y-3 mb-6">
-          <label className="text-[10px] font-black uppercase tracking-widest text-white/50 block">
-            Sila taip <span className="text-rose-400 bg-rose-400/10 px-1 rounded">RESET KOHORT</span> untuk mengesahkan:
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/50 block">
+            Sila taip <span className="text-rose-600 dark:text-rose-400 bg-rose-500/10 px-1 rounded">RESET KOHORT</span> untuk mengesahkan:
           </label>
           <input
             type="text"
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
             placeholder="RESET KOHORT"
-            className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 text-white placeholder-white/20 focus:outline-none focus:border-rose-500/50 font-mono text-center tracking-widest uppercase transition-all"
+            className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-white/20 focus:outline-none focus:border-rose-500/50 font-mono text-center tracking-widest uppercase transition-all"
           />
         </div>
 
@@ -672,7 +672,7 @@ function ResetKohortModal({
           className={cn(
             "w-full py-3.5 rounded-[1rem] text-[11px] font-black uppercase tracking-widest transition-all shadow-xl",
             confirmText !== 'RESET KOHORT' || isSubmitting
-              ? "bg-white/5 text-white/20 border border-white/5 cursor-not-allowed"
+              ? "bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-white/20 border border-slate-200 dark:border-white/5 cursor-not-allowed"
               : "bg-rose-500 text-white hover:bg-rose-400 shadow-rose-500/20 hover:scale-[1.02]"
           )}
         >
@@ -768,10 +768,10 @@ export function JppMembersPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen bg-slate-100 dark:bg-[#0a0a0f] text-slate-900 dark:text-white transition-colors">
       {/* Background glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute -top-[10%] -left-[5%] w-[40vw] h-[40vw] rounded-full blur-3xl opacity-8"
+        <div className="absolute -top-[10%] -left-[5%] w-[40vw] h-[40vw] rounded-full blur-3xl opacity-5 dark:opacity-8"
           style={{ background: themeColor }} />
       </div>
 
@@ -786,57 +786,57 @@ export function JppMembersPage() {
         >
           <div className="flex items-center gap-3">
             <div
-              className="w-10 h-10 rounded-2xl flex items-center justify-center"
+              className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-sm"
               style={{ background: hexToRgba(themeColor, 0.15), border: `1px solid ${hexToRgba(themeColor, 0.25)}` }}
             >
               <Users className="w-5 h-5" style={{ color: themeColor }} />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-white leading-tight">Ahli JPP</h1>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">
+              <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Ahli JPP</h1>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">
                 {members.length} ahli didaftarkan
               </p>
             </div>
           </div>
           {canEdit && (
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 w-fit">
-                <Crown className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 w-fit shadow-sm dark:shadow-none">
+                <Crown className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
                   Mod Edit Aktif — Anda boleh ubah jawatan & unit ahli
                 </span>
               </div>
               <button
                 onClick={() => setShowResetModal(true)}
-                className="flex flex-shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 transition-all w-fit group"
+                className="flex flex-shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 transition-all w-fit group shadow-sm dark:shadow-none"
               >
-                <AlertTriangle className="w-3.5 h-3.5 text-rose-400 group-hover:scale-110 transition-transform" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-rose-400">
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 group-hover:scale-110 transition-transform" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400">
                   Reset Kohort
                 </span>
               </button>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="flex flex-shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all w-fit group"
+                className="flex flex-shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all w-fit group shadow-sm dark:shadow-none"
               >
-                <Plus className="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-transform" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                <Plus className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
                   Tambah Ahli
                 </span>
               </button>
               <Link 
                 to="/jpp/users"
-                className="flex flex-shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all w-fit group"
+                className="flex flex-shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-sm dark:shadow-none transition-all w-fit group"
               >
-                <span className="text-[10px] font-black uppercase tracking-widest text-white/50 group-hover:text-white/80 transition-colors">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-white/50 group-hover:text-slate-900 dark:group-hover:text-white/80 transition-colors">
                   Pangkalan Data Pelajar
                 </span>
               </Link>
               <Link 
                 to="/jpp/settings"
-                className="flex flex-shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all w-fit group"
+                className="flex flex-shrink-0 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 shadow-sm dark:shadow-none transition-all w-fit group"
               >
-                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400 group-hover:text-indigo-300 transition-colors">
+                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">
                   Urus Struktur JPP
                 </span>
               </Link>
@@ -846,45 +846,45 @@ export function JppMembersPage() {
 
         {/* Top Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-5 rounded-[1.5rem] bg-white/[0.02] border border-white/[0.05] flex flex-col justify-center relative overflow-hidden">
-            <Crown className="absolute -right-4 -bottom-4 w-20 h-20 text-white/5 pointer-events-none" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-1">MT JPP</p>
-            <p className="text-3xl font-black text-white">{mtMembers.length}</p>
+          <div className="p-5 rounded-[1.5rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] shadow-sm dark:shadow-none flex flex-col justify-center relative overflow-hidden">
+            <Crown className="absolute -right-4 -bottom-4 w-20 h-20 text-slate-100 dark:text-white/5 pointer-events-none" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-1">MT JPP</p>
+            <p className="text-3xl font-black text-slate-900 dark:text-white">{mtMembers.length}</p>
           </div>
-          <div className="p-5 rounded-[1.5rem] bg-white/[0.02] border border-white/[0.05] flex flex-col justify-center relative overflow-hidden">
-            <Users className="absolute -right-4 -bottom-4 w-20 h-20 text-white/5 pointer-events-none" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-1">Exco & Unit</p>
-            <p className="text-3xl font-black text-white">{filtered.length - unassigned.length - mtMembers.length}</p>
+          <div className="p-5 rounded-[1.5rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] shadow-sm dark:shadow-none flex flex-col justify-center relative overflow-hidden">
+            <Users className="absolute -right-4 -bottom-4 w-20 h-20 text-slate-100 dark:text-white/5 pointer-events-none" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1">Exco & Unit</p>
+            <p className="text-3xl font-black text-slate-900 dark:text-white">{filtered.length - unassigned.length - mtMembers.length}</p>
           </div>
-          <div className="p-5 rounded-[1.5rem] bg-white/[0.02] border border-white/[0.05] flex flex-col justify-center relative overflow-hidden">
-            <Shield className="absolute -right-4 -bottom-4 w-20 h-20 text-white/5 pointer-events-none" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-rose-400 mb-1">Belum Set</p>
-            <p className="text-3xl font-black text-white">{unassigned.length}</p>
+          <div className="p-5 rounded-[1.5rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] shadow-sm dark:shadow-none flex flex-col justify-center relative overflow-hidden">
+            <Shield className="absolute -right-4 -bottom-4 w-20 h-20 text-slate-100 dark:text-white/5 pointer-events-none" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400 mb-1">Belum Set</p>
+            <p className="text-3xl font-black text-slate-900 dark:text-white">{unassigned.length}</p>
           </div>
         </div>
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-white/25" />
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Cari nama atau emel ahli..."
-            className="w-full pl-11 pr-4 py-4 rounded-2xl bg-white/[0.04] border border-transparent hover:border-white/[0.07] focus:bg-white/[0.06] text-sm text-white/80 placeholder-white/20 outline-none focus:border-white/15 transition-all font-medium"
+            className="w-full pl-11 pr-4 py-4 rounded-2xl bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-transparent hover:border-slate-300 dark:hover:border-white/[0.07] focus:bg-white dark:focus:bg-white/[0.06] text-sm text-slate-900 dark:text-white/80 placeholder:text-slate-400 dark:placeholder:text-white/20 outline-none focus:border-slate-400 dark:focus:border-white/15 shadow-sm dark:shadow-none transition-all font-medium"
           />
         </div>
 
         {/* Content */}
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-8 h-8 animate-spin text-white/30" />
+            <Loader2 className="w-8 h-8 animate-spin text-slate-400 dark:text-white/30" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-white/[0.02] rounded-[2rem] border border-white/[0.05]">
-            <UserCheck className="w-10 h-10 text-white/10 mb-4" />
-            <p className="text-sm font-black text-white/30 uppercase tracking-widest">Tiada ahli ditemui</p>
-            <p className="text-xs text-white/20 mt-2 font-medium">Sila cuba carian yang lain.</p>
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-white dark:bg-white/[0.02] rounded-[2rem] border border-slate-200 dark:border-white/[0.05] shadow-sm dark:shadow-none">
+            <UserCheck className="w-10 h-10 text-slate-300 dark:text-white/10 mb-4" />
+            <p className="text-sm font-black text-slate-600 dark:text-white/30 uppercase tracking-widest">Tiada ahli ditemui</p>
+            <p className="text-xs text-slate-400 dark:text-white/20 mt-2 font-medium">Sila cuba carian yang lain.</p>
           </div>
         ) : (
           <div className="space-y-10">
