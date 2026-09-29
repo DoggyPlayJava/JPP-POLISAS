@@ -4641,7 +4641,7 @@ export function JppFoodBankAdmin() {
       {/* ── 9. MODAL LOKASI PUSAT PENGAGIHAN (TAB 4) ─────────────────────────── */}
       {locationModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-6 border border-rose-200 dark:border-white/10 shadow-2xl">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-6 border border-rose-200 dark:border-white/10 shadow-2xl max-h-[88vh] overflow-y-auto overscroll-contain">
             <h3 className="text-lg font-black text-slate-900 dark:text-white mb-4">
               {editingLocation ? 'Sunting Lokasi Pengagihan' : 'Tambah Pusat Pengagihan Baharu'}
             </h3>
