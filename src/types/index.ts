@@ -1343,6 +1343,7 @@ export interface FoodBankDistributionLocation {
   polymaps_building_id?: string | null;
   room_detail?: string | null;
   operating_hours?: string | null;
+  time_slots?: string[] | null;
   is_active: boolean;
   contact_person?: string | null;
   contact_phone?: string | null;

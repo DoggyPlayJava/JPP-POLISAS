@@ -175,7 +175,7 @@ export function JppFoodBankAdmin() {
   const [transferModalOpen, setTransferModalOpen] = useState<boolean>(false);
   const [transferFormData, setTransferFormData] = useState({
     item_id: '',
-    from_location_id: '',
+    from_location_id: 'AGREGAT',
     to_location_id: '',
     quantity: 1,
     notes: '',
@@ -210,6 +210,7 @@ export function JppFoodBankAdmin() {
     polymaps_building_id: '',
     room_detail: '',
     operating_hours: 'Isnin - Khamis: 10:00 AM - 4:00 PM',
+    time_slots: '10:00 AM - 11:30 AM, 11:30 AM - 01:00 PM, 02:30 PM - 04:00 PM',
     contact_person: 'Exco Kebajikan JPP',
     contact_phone: '',
     is_active: true,
@@ -799,12 +800,11 @@ export function JppFoodBankAdmin() {
   };
 
   // ── Kiraan Baki Stok Mengikut Lokasi Fizikal ──────────────────────────────
+  // MODEL: foodbank_items.current_stock = "Stok Belum Agih" (agregat induk).
+  //        foodbank_location_stocks = stok yang sudah diagih ke setiap pusat.
+  //        'SEMUA' / 'AGREGAT' = baki agregat (belum agih), BUKAN jumlah baris lokasi.
   const getItemStockForLocation = useCallback((itemId: string, locationId: string): number => {
-    if (locationId === 'SEMUA') {
-      const matching = locationStocks.filter(ls => ls.item_id === itemId);
-      if (matching.length > 0) {
-        return matching.reduce((acc, curr) => acc + curr.current_stock, 0);
-      }
+    if (locationId === 'SEMUA' || locationId === 'AGREGAT') {
       const found = items.find(i => i.id === itemId);
       return found?.current_stock ?? 0;
     }
@@ -812,7 +812,7 @@ export function JppFoodBankAdmin() {
       ls => ls.item_id === itemId && ls.location_id === locationId
     );
     return locStock ? locStock.current_stock : 0;
-  }, [locationStocks, items]);
+  }, [items]);
 
   // ── Kemas Kini Cepat Stok (Menyokong Lokasi Khusus / Agregat) ───────────────
   const handleQuickAdjustStock = async (item: FoodBankItem, delta: number) => {
@@ -976,15 +976,26 @@ export function JppFoodBankAdmin() {
 
     setIsSubmittingTransfer(true);
     try {
-      const { data, error } = await supabase.rpc('transfer_foodbank_stock', {
-        p_item_id: transferFormData.item_id,
-        p_from_location_id: transferFormData.from_location_id,
-        p_to_location_id: transferFormData.to_location_id,
-        p_quantity: qty,
-        p_actor_id: user?.id,
-        p_actor_name: profile?.full_name || 'Pegawai JPP',
-        p_notes: transferFormData.notes?.trim() || null,
-      });
+      // Sumber "AGREGAT (Belum Agih)": guna RPC khas yang tolak dari foodbank_items.current_stock
+      const fromAgregat = transferFormData.from_location_id === 'AGREGAT';
+      const { data, error } = fromAgregat
+        ? await supabase.rpc('allocate_foodbank_stock_from_aggregate', {
+            p_item_id: transferFormData.item_id,
+            p_to_location_id: transferFormData.to_location_id,
+            p_quantity: qty,
+            p_actor_id: user?.id,
+            p_actor_name: profile?.full_name || 'Pegawai JPP',
+            p_notes: transferFormData.notes?.trim() || null,
+          })
+        : await supabase.rpc('transfer_foodbank_stock', {
+            p_item_id: transferFormData.item_id,
+            p_from_location_id: transferFormData.from_location_id,
+            p_to_location_id: transferFormData.to_location_id,
+            p_quantity: qty,
+            p_actor_id: user?.id,
+            p_actor_name: profile?.full_name || 'Pegawai JPP',
+            p_notes: transferFormData.notes?.trim() || null,
+          });
 
       if (error) throw error;
 
@@ -997,7 +1008,7 @@ export function JppFoodBankAdmin() {
       setTransferModalOpen(false);
       setTransferFormData({
         item_id: '',
-        from_location_id: '',
+        from_location_id: 'AGREGAT',
         to_location_id: '',
         quantity: 1,
         notes: '',
@@ -1005,6 +1016,16 @@ export function JppFoodBankAdmin() {
       await fetchAllData(true);
     } catch (err: any) {
       console.warn('RPC transfer_foodbank_stock fallback to local updates:', err);
+      // Fallback (AGREGAT source): tolak dari stok agregat (belum agih) + tambah ke destinasi
+      if (transferFormData.from_location_id === 'AGREGAT') {
+        setItems(prev =>
+          prev.map(i =>
+            i.id === transferFormData.item_id
+              ? { ...i, current_stock: Math.max(0, i.current_stock - qty) }
+              : i
+          )
+        );
+      }
       // Fallback: update local locationStocks
       setLocationStocks(prev => {
         let foundDest = false;
@@ -1063,7 +1084,7 @@ export function JppFoodBankAdmin() {
       setTransferModalOpen(false);
       setTransferFormData({
         item_id: '',
-        from_location_id: '',
+        from_location_id: 'AGREGAT',
         to_location_id: '',
         quantity: 1,
         notes: '',
@@ -1213,6 +1234,7 @@ export function JppFoodBankAdmin() {
       polymaps_building_id: buildings[0]?.id || '',
       room_detail: '',
       operating_hours: 'Isnin - Khamis: 10:00 AM - 4:00 PM',
+      time_slots: '10:00 AM - 11:30 AM, 11:30 AM - 01:00 PM, 02:30 PM - 04:00 PM',
       contact_person: 'Exco Kebajikan JPP',
       contact_phone: '',
       is_active: true,
@@ -1227,6 +1249,9 @@ export function JppFoodBankAdmin() {
       polymaps_building_id: loc.polymaps_building_id || '',
       room_detail: loc.room_detail || '',
       operating_hours: loc.operating_hours || 'Isnin - Khamis: 10:00 AM - 4:00 PM',
+      time_slots: (loc.time_slots && loc.time_slots.length > 0)
+        ? loc.time_slots.join(', ')
+        : '10:00 AM - 11:30 AM, 11:30 AM - 01:00 PM, 02:30 PM - 04:00 PM',
       contact_person: loc.contact_person || 'Exco Kebajikan JPP',
       contact_phone: loc.contact_phone || '',
       is_active: loc.is_active,
@@ -1248,6 +1273,10 @@ export function JppFoodBankAdmin() {
         polymaps_building_id: locationFormData.polymaps_building_id || null,
         room_detail: locationFormData.room_detail.trim() || null,
         operating_hours: locationFormData.operating_hours.trim(),
+        time_slots: locationFormData.time_slots
+          .split(',')
+          .map(t => t.trim())
+          .filter(t => t.length > 0),
         contact_person: locationFormData.contact_person.trim() || 'Exco Kebajikan JPP',
         contact_phone: locationFormData.contact_phone.trim() || null,
         is_active: locationFormData.is_active,
@@ -2531,7 +2560,7 @@ export function JppFoodBankAdmin() {
                       setTransferFormData(prev => ({
                         ...prev,
                         item_id: prev.item_id || items[0]?.id || '',
-                        from_location_id: prev.from_location_id || (selectedInventoryLocationId !== 'SEMUA' ? selectedInventoryLocationId : locations[0]?.id) || '',
+                        from_location_id: prev.from_location_id || (selectedInventoryLocationId !== 'SEMUA' ? selectedInventoryLocationId : 'AGREGAT'),
                         to_location_id: prev.to_location_id || (locations.find(l => l.id !== selectedInventoryLocationId)?.id || locations[1]?.id) || '',
                         quantity: 1,
                         notes: '',
@@ -4296,7 +4325,10 @@ export function JppFoodBankAdmin() {
                     required
                     className="w-full px-3 py-2.5 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                   >
-                    <option value="" disabled>Pilih Pusat Sumber...</option>
+                    <option value="AGREGAT">
+                      Agregat (Stok Belum Agih) — Baki: {transferFormData.item_id ? getItemStockForLocation(transferFormData.item_id, 'AGREGAT') : 0}
+                    </option>
+                    <option value="" disabled>─────────────</option>
                     {locations.map(loc => {
                       const stockHere = transferFormData.item_id
                         ? getItemStockForLocation(transferFormData.item_id, loc.id)
@@ -4668,6 +4700,24 @@ export function JppFoodBankAdmin() {
                   placeholder="cth: Isnin - Khamis: 10:00 AM - 4:00 PM"
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white"
                 />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 dark:text-slate-300 mb-1">
+                  Slot Masa Pengambilan <span className="text-slate-400 font-normal">(pisahkan dengan koma)</span>
+                </label>
+                <input
+                  type="text"
+                  value={locationFormData.time_slots}
+                  onChange={e =>
+                    setLocationFormData({ ...locationFormData, time_slots: e.target.value })
+                  }
+                  placeholder="cth: 10:00 AM - 11:30 AM, 11:30 AM - 01:00 PM"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Slot ini akan dipaparkan kepada pelajar apabila mereka memilih pusat ini.
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

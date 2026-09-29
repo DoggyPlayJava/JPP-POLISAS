@@ -232,6 +232,10 @@ export function KebajikanFoodBankPage() {
       setLocations(enhancedLocations);
       if (enhancedLocations.length > 0 && !selectedLocationId) {
         setSelectedLocationId(enhancedLocations[0].id);
+        const firstSlots = enhancedLocations[0].time_slots && enhancedLocations[0].time_slots.length > 0
+          ? enhancedLocations[0].time_slots
+          : TIME_SLOTS;
+        setPickupTimeSlot(firstSlots[0] || '');
       }
 
       const finalItems = (itemsRes.data && itemsRes.data.length > 0)
@@ -402,10 +406,27 @@ export function KebajikanFoodBankPage() {
     return loc ? loc.name : 'Pusat Edaran Terpilih';
   }, [locations, selectedLocationId]);
 
+  // Slot masa pengambilan: ikut pusat yang dipilih (time_slots),
+  // fallback kepada slot lalai sekiranya pusat tiada tetapan.
+  const activeTimeSlots = useMemo(() => {
+    const loc = locations.find((l) => l.id === selectedLocationId);
+    if (loc && loc.time_slots && loc.time_slots.length > 0) {
+      return loc.time_slots;
+    }
+    return TIME_SLOTS;
+  }, [locations, selectedLocationId]);
+
   // Penukaran Lokasi Agihan & Penyelarasan Kuantiti Barangan Terpilih
   const handleLocationChange = (newLocationId: string) => {
     if (newLocationId === selectedLocationId) return;
     setSelectedLocationId(newLocationId);
+
+    // Reset slot masa kepada slot pertama pusat yang baharu
+    const newLoc = locations.find((l) => l.id === newLocationId);
+    const slots = newLoc && newLoc.time_slots && newLoc.time_slots.length > 0
+      ? newLoc.time_slots
+      : TIME_SLOTS;
+    setPickupTimeSlot(slots[0] || '');
 
     // Semak dan selaras kuantiti barangan terpilih mengikut stok lokasi baharu
     let hasAdjusted = false;
@@ -1458,7 +1479,7 @@ export function KebajikanFoodBankPage() {
                   <span>Slot Masa Pengambilan</span>
                 </label>
                 <div className="space-y-2">
-                  {TIME_SLOTS.map((slot) => (
+                  {activeTimeSlots.map((slot) => (
                     <button
                       key={slot}
                       type="button"
