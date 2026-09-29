@@ -532,58 +532,77 @@ export function JppFoodBankAdmin() {
   };
 
   // ── 3b. Imbasan Kamera Langsung (html5-qrcode) ─────────────────────────────
-  const startCameraScan = async () => {
-    if (scannerRef.current) {
-      try { await scannerRef.current.stop(); } catch { /* noop */ }
-    }
+  // Togol buka kamera (efek di bawah akan mula scanner SELEPAS div <reader>
+  // benar-benar dirender — elak race condition html5-qrcode gagal dapat elemen).
+  const startCameraScan = () => {
     setIsCameraScanning(true);
-    try {
-      const scanner = new Html5Qrcode('foodbank-counter-qr-reader');
-      scannerRef.current = scanner;
-      await scanner.start(
-        { facingMode: 'environment' },
-        { fps: 15, qrbox: (w: number, h: number) => {
-            const size = Math.min(w, h) * 0.7;
-            return { width: size, height: size };
-          } },
-        (decodedText) => {
-          // Auto-detect: terus sahkan tanpa perlu tekan butang lain.
-          const raw = (decodedText || '').trim();
-          if (!raw) return;
-          let token = raw;
-          try {
-            const u = new URL(raw);
-            const v = u.searchParams.get('verify');
-            if (v) token = v;
-          } catch { /* bukan URL, anggap token mentah */ }
-          stopCameraScan();
-          setCounterInput(token);
-          handleVerifyCounterPickup(token);
-        },
-        () => { /* abaikan ralat bingkai biasa */ }
-      );
-    } catch (err: any) {
-      console.error('Camera scan failed:', err);
-      setIsCameraScanning(false);
-      scannerRef.current = null;
-      toast.error(
-        err?.name === 'NotAllowedError' || String(err?.message || '').includes('NotAllowed')
-          ? 'Akses kamera ditolak. Sila benarkan kamera pada pelayar.'
-          : 'Gagal memulakan kamera. Pastikan guna HTTPS & peranti ada kamera.'
-      );
-    }
   };
 
-  const stopCameraScan = async () => {
+  const stopCameraScan = () => {
     try {
       if (scannerRef.current) {
-        await scannerRef.current.stop();
-        scannerRef.current.clear();
+        scannerRef.current.stop().catch(() => {}).finally(() => {
+          scannerRef.current?.clear();
+        });
       }
     } catch { /* noop */ }
     scannerRef.current = null;
     setIsCameraScanning(false);
   };
+
+  // Mulakan scanner hanya selepas kontena #foodbank-counter-qr-reader wujud.
+  useEffect(() => {
+    if (!isCameraScanning) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const el = document.getElementById('foodbank-counter-qr-reader');
+      if (!el) return;
+      try {
+        const scanner = new Html5Qrcode('foodbank-counter-qr-reader');
+        scannerRef.current = scanner;
+        await scanner.start(
+          { facingMode: 'environment' },
+          {
+            fps: 15,
+            qrbox: (w: number, h: number) => {
+              const size = Math.min(w, h) * 0.7;
+              return { width: size, height: size };
+            },
+          },
+          (decodedText) => {
+            if (cancelled) return;
+            const raw = (decodedText || '').trim();
+            if (!raw) return;
+            let token = raw;
+            try {
+              const u = new URL(raw);
+              const v = u.searchParams.get('verify');
+              if (v) token = v;
+            } catch { /* bukan URL, anggap token mentah */ }
+            stopCameraScan();
+            setCounterInput(token);
+            handleVerifyCounterPickup(token);
+          },
+          () => { /* abaikan ralat bingkai biasa */ }
+        );
+      } catch (err: any) {
+        if (cancelled) return;
+        console.error('Camera scan failed:', err);
+        setIsCameraScanning(false);
+        scannerRef.current = null;
+        toast.error(
+          err?.name === 'NotAllowedError' || String(err?.message || '').includes('NotAllowed')
+            ? 'Akses kamera ditolak. Sila benarkan kamera pada pelayar (HTTPS).'
+            : 'Gagal memulakan kamera. Peranti mungkin tiada kamera atau disekat.'
+        );
+      }
+    }, 150);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCameraScanning]);
 
   // Auto-verify jika tiba melalui deep-link ?verify=<token> (imbasan pas pelajar)
   useEffect(() => {

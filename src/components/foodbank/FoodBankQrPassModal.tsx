@@ -7,7 +7,9 @@
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
-import html2canvas from 'html2canvas';
+import QRCode from 'qrcode';
+import { pdf } from '@react-pdf/renderer';
+import { FoodBankPassPDF } from './FoodBankPassPDF';
 import {
   X,
   Printer,
@@ -159,32 +161,41 @@ export function FoodBankQrPassModal({
     window.print();
   };
 
-  const handleDownloadPng = async () => {
-    if (!passRef.current) return;
+  // Simpan pas sebagai PDF bersaiz A4 (elak glitch/cut imej PNG).
+  const handleDownloadPdf = async () => {
     setIsDownloading(true);
     try {
-      const canvas = await html2canvas(passRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
+      // Jana kod QR sebagai imej data URL untuk dibenam dalam PDF.
+      const qrDataUrl = await QRCode.toDataURL(verifyUrl, {
+        errorCorrectionLevel: 'H',
+        width: 400,
+        margin: 2,
+        color: { dark: '#0f172a', light: '#ffffff' },
       });
-      const fileName = `Pas_FoodBank_${appNo}.png`;
-      const blob: Blob | null = await new Promise((resolve) =>
-        canvas.toBlob(resolve, 'image/png')
-      );
-      if (!blob) throw new Error('Gagal menjana imej pas.');
 
-      // Cuba Web Share API dengan fail (simpan terus ke galeri pada iOS/Android).
-      const file = new File([blob], fileName, { type: 'image/png' });
+      const blob = await pdf(
+        <FoodBankPassPDF
+          application={application}
+          qrDataUrl={qrDataUrl}
+          studentName={displayName}
+          studentMatric={displayMatric}
+          studentProgramme={displayProgramme}
+          residence={displayResidence}
+          statusLabel={statusInfo.label}
+        />
+      ).toBlob();
+
+      const fileName = `Pas_FoodBank_${appNo}.pdf`;
+      const file = new File([blob], fileName, { type: 'application/pdf' });
       const nav = navigator as any;
+
+      // Cuba Web Share API (simpan terus ke galeri/Files pada iOS/Android).
       if (nav.canShare && nav.canShare({ files: [file] })) {
         try {
           await nav.share({ files: [file], title: `Pas Food Bank ${appNo}` });
-          toast.success('Pas digital berjaya disimpan!');
+          toast.success('Pas PDF berjaya disimpan!');
           return;
         } catch (shareErr: any) {
-          // AbortError = pengguna batalkan; teruskan ke fallback download
           if (shareErr?.name !== 'AbortError') {
             console.warn('Web Share failed, fallback download:', shareErr);
           }
@@ -200,10 +211,10 @@ export function FoodBankQrPassModal({
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 4000);
-      toast.success('Pas digital berjaya dimuat turun!');
+      toast.success('Pas PDF berjaya dimuat turun!');
     } catch (err) {
-      console.error('Error generating pass image:', err);
-      toast.error('Gagal memuat turun imej pas.');
+      console.error('Error generating pass PDF:', err);
+      toast.error('Gagal menjana PDF pas.');
     } finally {
       setIsDownloading(false);
     }
@@ -294,13 +305,13 @@ export function FoodBankQrPassModal({
                   size="sm"
                   variant="outline"
                   disabled={isDownloading}
-                  onClick={handleDownloadPng}
+                  onClick={handleDownloadPdf}
                   className="h-8 px-2.5 text-xs font-semibold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/30 rounded-lg gap-1.5"
-                  title="Simpan Imej PNG"
+                  title="Simpan Pas PDF (A4)"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">
-                    {isDownloading ? 'Menjana...' : 'Simpan'}
+                    {isDownloading ? 'Menjana...' : 'PDF'}
                   </span>
                 </Button>
                 <button
