@@ -211,6 +211,7 @@ export function JppFoodBankAdmin() {
     room_detail: '',
     operating_hours: 'Isnin - Khamis: 10:00 AM - 4:00 PM',
     time_slots: '10:00 AM - 11:30 AM, 11:30 AM - 01:00 PM, 02:30 PM - 04:00 PM',
+    operating_days: [] as string[],
     contact_person: 'Exco Kebajikan JPP',
     contact_phone: '',
     is_active: true,
@@ -1235,6 +1236,7 @@ export function JppFoodBankAdmin() {
       room_detail: '',
       operating_hours: 'Isnin - Khamis: 10:00 AM - 4:00 PM',
       time_slots: '10:00 AM - 11:30 AM, 11:30 AM - 01:00 PM, 02:30 PM - 04:00 PM',
+      operating_days: [],
       contact_person: 'Exco Kebajikan JPP',
       contact_phone: '',
       is_active: true,
@@ -1252,6 +1254,9 @@ export function JppFoodBankAdmin() {
       time_slots: (loc.time_slots && loc.time_slots.length > 0)
         ? loc.time_slots.join(', ')
         : '10:00 AM - 11:30 AM, 11:30 AM - 01:00 PM, 02:30 PM - 04:00 PM',
+      operating_days: (loc.operating_days && loc.operating_days.length > 0)
+        ? [...loc.operating_days]
+        : [],
       contact_person: loc.contact_person || 'Exco Kebajikan JPP',
       contact_phone: loc.contact_phone || '',
       is_active: loc.is_active,
@@ -1277,6 +1282,7 @@ export function JppFoodBankAdmin() {
           .split(',')
           .map(t => t.trim())
           .filter(t => t.length > 0),
+        operating_days: locationFormData.operating_days,
         contact_person: locationFormData.contact_person.trim() || 'Exco Kebajikan JPP',
         contact_phone: locationFormData.contact_phone.trim() || null,
         is_active: locationFormData.is_active,
@@ -4717,6 +4723,40 @@ export function JppFoodBankAdmin() {
                 />
                 <p className="text-[10px] text-slate-400 mt-1">
                   Slot ini akan dipaparkan kepada pelajar apabila mereka memilih pusat ini.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 dark:text-slate-300 mb-1">
+                  Hari Beroperasi (Tarikh Pengambilan)
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {['Isnin', 'Selasa', 'Rabu', 'Khamis', 'Jumaat'].map((day) => {
+                    const checked = locationFormData.operating_days.includes(day);
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => {
+                          const next = checked
+                            ? locationFormData.operating_days.filter((d) => d !== day)
+                            : [...locationFormData.operating_days, day];
+                          setLocationFormData({ ...locationFormData, operating_days: next });
+                        }}
+                        className={cn(
+                          'px-3 py-1.5 rounded-lg border text-xs font-bold transition-all',
+                          checked
+                            ? 'bg-amber-500/15 border-amber-500 text-amber-800 dark:text-amber-300'
+                            : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400'
+                        )}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Kosongkan = guna lalai (Isnin - Jumaat). Tarikh pengambilan pelajar akan dijana ikut hari ini.
                 </p>
               </div>
 

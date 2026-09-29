@@ -133,16 +133,36 @@ export function KebajikanFoodBankPage() {
   const [acknowledged, setAcknowledged] = useState(false);
 
   // Jana Senarai Hari Bekerja (Mon-Fri)
+  // Peta nama hari (Bahasa Malaysia) -> JS getDay()
+  const DAY_NAME_TO_NUM: Record<string, number> = {
+    Isnin: 1,
+    Selasa: 2,
+    Rabu: 3,
+    Khamis: 4,
+    Jumaat: 5,
+  };
+
+  // Tarikh pengambilan: jana ikut hari beroperasi pusat yang dipilih.
+  // operating_days kosong/null = lalai Isnin-Jumaat.
   const workingDays = useMemo(() => {
     const days: { dateStr: string; label: string }[] = [];
+    const loc = locations.find((l) => l.id === selectedLocationId);
+    const allowedDays = loc && loc.operating_days && loc.operating_days.length > 0
+      ? loc.operating_days
+          .map((d) => DAY_NAME_TO_NUM[d])
+          .filter((n): n is number => typeof n === 'number')
+      : [1, 2, 3, 4, 5]; // lalai Isnin - Jumaat
+
+    if (allowedDays.length === 0) return days;
+
     const current = new Date();
     let offset = 1;
-    while (days.length < 5) {
+    // Jana sehingga 10 hari ke hadapan untuk cari 5 tarikh yang sah
+    while (days.length < 5 && offset <= 30) {
       const d = new Date(current);
       d.setDate(current.getDate() + offset);
       const day = d.getDay();
-      // 0 = Ahad, 6 = Sabtu
-      if (day !== 0 && day !== 6) {
+      if (allowedDays.includes(day)) {
         const dateStr = d.toISOString().split('T')[0];
         const label = d.toLocaleDateString('ms-MY', {
           weekday: 'short',
@@ -154,7 +174,7 @@ export function KebajikanFoodBankPage() {
       offset++;
     }
     return days;
-  }, []);
+  }, [locations, selectedLocationId]);
 
   // Fetch initial data (MANDATORY RULE: Use Promise.all)
   const fetchInitialData = async () => {
@@ -271,6 +291,15 @@ export function KebajikanFoodBankPage() {
   useEffect(() => {
     fetchInitialData();
   }, [user]);
+
+  // Bila senarai tarikh (workingDays) berubah (cth: tukar pusat), pastikan
+  // pickupDate masih sah. Jika tidak, reset ke tarikh pertama yang tersedia.
+  useEffect(() => {
+    if (workingDays.length === 0) return;
+    if (!pickupDate || !workingDays.some((d) => d.dateStr === pickupDate)) {
+      setPickupDate(workingDays[0].dateStr);
+    }
+  }, [workingDays]);
 
   // Kiraan Kuota Dinamik:
   // Math.min(items_per_person * (1 + housemates.length), max_items_limit)

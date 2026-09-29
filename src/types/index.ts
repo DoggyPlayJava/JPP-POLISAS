@@ -1344,6 +1344,7 @@ export interface FoodBankDistributionLocation {
   room_detail?: string | null;
   operating_hours?: string | null;
   time_slots?: string[] | null;
+  operating_days?: string[] | null;
   is_active: boolean;
   contact_person?: string | null;
   contact_phone?: string | null;
