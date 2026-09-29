@@ -193,7 +193,7 @@ export function AkademikLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-6xl mx-auto w-full after:content-[''] after:block after:h-32 after:shrink-0">
+        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-6xl mx-auto w-full after:content-[''] after:block after:h-40 after:shrink-0">
           <Outlet />
         </main>
         

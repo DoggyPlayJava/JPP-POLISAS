@@ -134,7 +134,7 @@ export function AppLayout() {
         {/* Header Asal (Carian, Profile dll) */}
         <Header onOpenSearch={() => setIsSearchOpen(true)} />
 
-        <main id="main-scroll-container" className="flex-1 overflow-y-auto bg-background scrollbar-hide after:content-[''] after:block after:h-32 after:shrink-0">
+        <main id="main-scroll-container" className="flex-1 overflow-y-auto bg-background scrollbar-hide after:content-[''] after:block after:h-40 after:shrink-0">
           <motion.div
               key={location.pathname}
               initial={{ opacity: 0 }}
@@ -164,4 +164,4 @@ export function AppLayout() {
       </div>
     </div>
   );
-}
+}

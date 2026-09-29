@@ -1410,7 +1410,7 @@ export function PolyMapsPage() {
       </div>
 
       {/* ── MAP CONTAINER ── */}
-      <div className="flex-1 w-full relative z-0 after:content-[''] after:block after:h-32 after:shrink-0">
+      <div className="flex-1 w-full relative z-0 after:content-[''] after:block after:h-40 after:shrink-0">
         <MapContainer 
           center={polisasCenter} 
           zoom={16} 
