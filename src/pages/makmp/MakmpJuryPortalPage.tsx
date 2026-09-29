@@ -311,17 +311,19 @@ export default function MakmpJuryPortalPage() {
         if (item.id !== id) return item;
         const updated = { ...item, [field]: value };
         if (field === 'merit_awarded') {
-          // OVERRIDE LANGSUNG: juri/pegawai set merit sendiri (0-50), tidak
-          // bergantung pada nilai yang disyorkan sistem.
-          updated.merit_awarded = Math.max(0, Math.min(50, Math.round(Number(value) || 0)));
+          // OVERRIDE LANGSUNG: juri/pegawai set merit sendiri (0-10 per sijil),
+          // tidak bergantung pada nilai yang disyorkan sistem.
+          updated.merit_awarded = Math.max(0, Math.min(10, Math.round(Number(value) || 0)));
         } else if (field === 'report_score') {
           // Markah 0-100 -> merit = round(score/10)
           const score = Math.max(0, Math.min(100, Number(value) || 0));
           updated.report_score = score;
           updated.merit_awarded = Math.round(score / 10);
-        } else if (field === 'pencapaian_type' && isKepimpinanJppAward(activeAward?.award?.name)) {
-          // Anugerah Kepimpinan JPP — merit tetap ikut peranan kepimpinan.
-          updated.merit_awarded = getKepimpinanJppMerit(value);
+        } else if (isKepimpinanJppAward(activeAward?.award?.name) && (field === 'peringkat' || field === 'pencapaian_type')) {
+          // Anugerah Kepimpinan JPP — merit = Peringkat Sah + Peranan Kepimpinan.
+          const peringkat = field === 'peringkat' ? value : item.peringkat;
+          const role = field === 'pencapaian_type' ? value : item.pencapaian_type;
+          updated.merit_awarded = getKepimpinanJppMerit(peringkat, role);
         } else if (field === 'peringkat' || field === 'pencapaian_type') {
           updated.merit_awarded = calculateSuggestedMerit(
             field === 'peringkat' ? value : item.peringkat,
@@ -1117,32 +1119,58 @@ export default function MakmpJuryPortalPage() {
                               </div>
                             </div>
                           ) : isKepimpinan ? (
-                            /* ANUGERAH KEPIMPINAN JPP — Tahap Sah = peranan kepimpinan */
+                            /* ANUGERAH KEPIMPINAN JPP — Peringkat Sah + Peranan Kepimpinan */
                             <div className="space-y-2 text-xs pt-1">
-                              <div>
-                                <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-1">
-                                  Peranan Kepimpinan JPP
-                                </label>
-                                <select
-                                  value={rItem.pencapaian_type}
-                                  onChange={(e) =>
-                                    handleUpdateItemReview(
-                                      item.id,
-                                      'pencapaian_type',
-                                      e.target.value as MakmpPencapaianType
-                                    )
-                                  }
-                                  className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white"
-                                >
-                                  {KEPIMPINAN_JPP_OPTIONS.map((o) => (
-                                    <option key={o.value} value={o.value}>
-                                      {o.label} ({o.merit} Merit)
-                                    </option>
-                                  ))}
-                                </select>
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-1">
+                                    Peringkat Sah
+                                  </label>
+                                  <select
+                                    value={rItem.peringkat}
+                                    onChange={(e) =>
+                                      handleUpdateItemReview(
+                                        item.id,
+                                        'peringkat',
+                                        e.target.value as MakmpPeringkat
+                                      )
+                                    }
+                                    className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white"
+                                  >
+                                    {PERINGKAT_OPTIONS.map((p) => (
+                                      <option key={p.value} value={p.value}>
+                                        {p.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+
+                                <div>
+                                  <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-1">
+                                    Peranan Kepimpinan
+                                  </label>
+                                  <select
+                                    value={rItem.pencapaian_type}
+                                    onChange={(e) =>
+                                      handleUpdateItemReview(
+                                        item.id,
+                                        'pencapaian_type',
+                                        e.target.value as MakmpPencapaianType
+                                      )
+                                    }
+                                    className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white"
+                                  >
+                                    {KEPIMPINAN_JPP_OPTIONS.map((o) => (
+                                      <option key={o.value} value={o.value}>
+                                        {o.label} ({o.merit} Merit)
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
                               </div>
                               <div className="text-[11px] text-amber-700 dark:text-amber-200/70 pt-1 border-t border-amber-200 dark:border-amber-500/20">
-                                Merit peranan: <span className="font-bold text-amber-800 dark:text-amber-300">+{getKepimpinanJppMerit(rItem.pencapaian_type)} merit</span>
+                                Merit = Peringkat + Peranan: <span className="font-bold text-amber-800 dark:text-amber-300">+{getKepimpinanJppMerit(rItem.peringkat, rItem.pencapaian_type)} merit</span>{' '}
+                                (maks 10)
                               </div>
                             </div>
                           ) : (
@@ -1217,7 +1245,7 @@ export default function MakmpJuryPortalPage() {
                               <input
                                 type="number"
                                 min={0}
-                                max={50}
+                                max={10}
                                 step={1}
                                 value={rItem.merit_awarded}
                                 onChange={(e) =>
@@ -1228,9 +1256,9 @@ export default function MakmpJuryPortalPage() {
                                   )
                                 }
                                 className="w-16 px-2 py-1 rounded-lg bg-white dark:bg-slate-950 border border-amber-300 dark:border-amber-500/50 text-center font-extrabold text-amber-700 dark:text-amber-300 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-                                title="Override merit secara manual (0-50)"
+                                title="Override merit secara manual (0-10 per sijil)"
                               />
-                              <span className="text-[10px] text-slate-400 dark:text-slate-500">/ 50</span>
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500">/ 10</span>
                             </div>
                           </div>
                         </div>

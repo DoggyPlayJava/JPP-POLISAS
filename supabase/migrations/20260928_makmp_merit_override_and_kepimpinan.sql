@@ -70,8 +70,8 @@ BEGIN
         WHERE id = v_item.id;
       ELSE
         -- Sijil: merit = merit_awarded terus (override manual dibenarkan).
-        -- Juri boleh set merit 0-50 sendiri, tidak semestinya ikut matriks.
-        v_merit := GREATEST(0, LEAST(50, COALESCE(v_item.merit_awarded, 0)));
+        -- Merit per sijil = max 10 (Peringkat 5 + Tahap 5).
+        v_merit := GREATEST(0, LEAST(10, COALESCE(v_item.merit_awarded, 0)));
         v_total := v_total + v_merit;
         UPDATE public.makmp_submission_items
         SET merit_awarded = v_merit,

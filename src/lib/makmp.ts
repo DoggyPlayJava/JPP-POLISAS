@@ -352,8 +352,8 @@ export const PENCAPAIAN_TYPE_OPTIONS: { value: MakmpPencapaianType; label: strin
 ];
 
 // ============================================================================
-// ANUGERAH KEPIMPINAN JPP — Tahap Sah = peranan kepimpinan (bukan Johan/Pingat)
-// Merit tetap mengikut peranan yang disandang dalam organisasi JPP.
+// ANUGERAH KEPIMPINAN JPP — Tahap Pencapaian = peranan kepimpinan (bukan Johan/Pingat)
+// Merit per sijil = Peringkat Sah + Peranan Kepimpinan (max 5 + 5 = 10).
 // ============================================================================
 export const KEPIMPINAN_JPP_OPTIONS: { value: MakmpKepimpinanRole; label: string; merit: number }[] = [
   { value: 'PENGARAH', label: 'Pengarah / Pengerusi atau setaraf', merit: 5 },
@@ -363,8 +363,25 @@ export const KEPIMPINAN_JPP_OPTIONS: { value: MakmpKepimpinanRole; label: string
   { value: 'PENYERTAAN', label: 'Penyertaan', merit: 1 },
 ];
 
-export function getKepimpinanJppMerit(role: MakmpKepimpinanRole | string): number {
+// Nilai Peringkat Sah (merit berasingan) untuk pengiraan Kepimpinan JPP.
+// Bukan matriks gabungan biasa — di sini Peringkat = 1..5 secara terus.
+export const KEPIMPINAN_JPP_PERINGKAT_MERIT: Record<MakmpPeringkat, number> = {
+  ANTARABANGSA: 5,
+  KEBANGSAAN: 4,
+  NEGERI: 3,
+  DAERAH: 2,
+  POLITEKNIK: 1,
+};
+
+export function getKepimpinanJppRoleMerit(role: MakmpKepimpinanRole | string): number {
   return KEPIMPINAN_JPP_OPTIONS.find((o) => o.value === role)?.merit ?? 0;
+}
+
+// Merit per sijil = Peringkat Sah + Peranan Kepimpinan.
+export function getKepimpinanJppMerit(peringkat: MakmpPeringkat | string, role: MakmpKepimpinanRole | string): number {
+  const p = KEPIMPINAN_JPP_PERINGKAT_MERIT[peringkat as MakmpPeringkat] ?? 0;
+  const r = getKepimpinanJppRoleMerit(role);
+  return p + r;
 }
 
 // Nama anugerah yang menggunakan matriks peranan kepimpinan JPP (bukan Johan/Pingat).
