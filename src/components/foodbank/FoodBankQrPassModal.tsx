@@ -63,12 +63,15 @@ export function FoodBankQrPassModal({
 
   const appNo = application.application_no || 'FB-000000';
   const qrCodeToken = application.pickup_qr_code || appNo;
+  // Deep-link URL supaya imbasan QR oleh pegawai terus membuka portal pengesahan
+  // (auto-verify tanpa perlu taip semula token).
+  const verifyUrl = `${window.location.origin}/jpp/foodbank?verify=${encodeURIComponent(qrCodeToken)}`;
   const status: FoodBankApplicationStatus = application.status;
 
   const displayName =
     application.applicant?.full_name || studentName || 'Mahasiswa POLISAS';
   const displayMatric =
-    application.applicant?.student_id || studentMatric || 'Matrik Tidak Dinyatakan';
+    application.applicant?.matric_no || studentMatric || 'Matrik Tidak Dinyatakan';
   const displayProgramme = studentProgramme || 'POLISAS';
   const displayResidence =
     roomOrResidence ||
@@ -166,11 +169,37 @@ export function FoodBankQrPassModal({
         backgroundColor: '#ffffff',
         logging: false,
       });
-      const dataUrl = canvas.toDataURL('image/png');
+      const fileName = `Pas_FoodBank_${appNo}.png`;
+      const blob: Blob | null = await new Promise((resolve) =>
+        canvas.toBlob(resolve, 'image/png')
+      );
+      if (!blob) throw new Error('Gagal menjana imej pas.');
+
+      // Cuba Web Share API dengan fail (simpan terus ke galeri pada iOS/Android).
+      const file = new File([blob], fileName, { type: 'image/png' });
+      const nav = navigator as any;
+      if (nav.canShare && nav.canShare({ files: [file] })) {
+        try {
+          await nav.share({ files: [file], title: `Pas Food Bank ${appNo}` });
+          toast.success('Pas digital berjaya disimpan!');
+          return;
+        } catch (shareErr: any) {
+          // AbortError = pengguna batalkan; teruskan ke fallback download
+          if (shareErr?.name !== 'AbortError') {
+            console.warn('Web Share failed, fallback download:', shareErr);
+          }
+        }
+      }
+
+      // Fallback: muat turun terus (desktop / pelayar tanpa Web Share).
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = `Pas_FoodBank_${appNo}.png`;
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
       toast.success('Pas digital berjaya dimuat turun!');
     } catch (err) {
       console.error('Error generating pass image:', err);
@@ -504,7 +533,7 @@ export function FoodBankQrPassModal({
               <div className="p-5 sm:p-6 bg-slate-50 dark:bg-slate-950/50 flex flex-col items-center text-center">
                 <div className="p-3 bg-white rounded-2xl shadow-md border border-slate-200">
                   <QRCodeSVG
-                    value={qrCodeToken}
+                    value={verifyUrl}
                     size={170}
                     level="H"
                     includeMargin={false}

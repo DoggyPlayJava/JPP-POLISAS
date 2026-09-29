@@ -1312,6 +1312,7 @@ export interface FoodBankSettings {
   id: string;
   is_module_active?: boolean; // Master togol: Kawal paparan & status aktif modul Food Bank untuk pelajar
   is_application_open: boolean;
+  specific_pickup_date?: string | null; // Tarikh pengambilan khas (cth: hari pelancaran) — override hari beroperasi
   total_budget: number;
   current_spent: number;
   max_monthly_applications_per_student: number;
@@ -1397,8 +1398,8 @@ export interface FoodBankApplication {
     id: string;
     full_name: string;
     email: string;
-    student_id?: string | null;
-    phone_number?: string | null;
+    matric_no?: string | null;
+    phone?: string | null;
   } | null;
   location?: FoodBankDistributionLocation | null;
   verifier?: {
@@ -1454,8 +1455,8 @@ export interface FoodBankOfficer {
     id: string;
     full_name: string;
     email?: string;
-    student_id?: string | null;
-    phone_number?: string | null;
+    matric_no?: string | null;
+    phone?: string | null;
     avatar_url?: string | null;
   } | null;
   location?: FoodBankDistributionLocation | null;
@@ -1491,7 +1492,7 @@ export interface FoodBankAuditLog {
     id: string;
     full_name: string;
     email?: string;
-    student_id?: string | null;
+    matric_no?: string | null;
     avatar_url?: string | null;
   } | null;
   location?: FoodBankDistributionLocation | null;

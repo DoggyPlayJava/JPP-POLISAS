@@ -10,8 +10,9 @@
  * 5. Tab 4: Tetapan Sesi & Lokasi Pengagihan (Formula kuota, hebahan, lokasi berintegrasi PolyMaps 360).
  */
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Html5Qrcode } from 'html5-qrcode';
 import {
   HeartHandshake,
   ShoppingBag,
@@ -63,6 +64,8 @@ import {
   History,
   FileSpreadsheet,
   Activity,
+  Camera,
+  ScanLine,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import confetti from 'canvas-confetti';
@@ -141,6 +144,8 @@ export function JppFoodBankAdmin() {
   // Kaunter Imbasan Segera (QR / No Matrik)
   const [counterInput, setCounterInput] = useState('');
   const [isVerifyingCounter, setIsVerifyingCounter] = useState(false);
+  const [isCameraScanning, setIsCameraScanning] = useState(false);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
   const [recentVerifiedRecord, setRecentVerifiedRecord] = useState<{
     appNo: string;
     studentName: string;
@@ -200,6 +205,7 @@ export function JppFoodBankAdmin() {
     application_instructions: '',
     eligibility_criteria: '',
     total_budget: OFFICIAL_BASELINE_BUDGET,
+    specific_pickup_date: '',
   });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
@@ -282,7 +288,7 @@ export function JppFoodBankAdmin() {
           .from('foodbank_applications')
           .select(`
             *,
-            applicant:profiles!applicant_id(id, full_name, email, student_id, phone_number),
+            applicant:profiles!applicant_id(id, full_name, email, matric_no, phone),
             location:foodbank_distribution_locations!location_id(
               id, name, room_detail, operating_hours, polymaps_building_id,
               building:imaps_buildings(id, name, code, panorama_360_url)
@@ -323,7 +329,7 @@ export function JppFoodBankAdmin() {
           .from('foodbank_officers')
           .select(`
             *,
-            profile:profiles!user_id(id, full_name, email, student_id, phone_number, department, avatar_url),
+            profile:profiles!user_id(id, full_name, email, matric_no, phone, department, avatar_url),
             location:foodbank_distribution_locations!location_id(id, name),
             assigner:profiles!assigned_by(id, full_name)
           `)
@@ -353,6 +359,7 @@ export function JppFoodBankAdmin() {
         application_instructions: finalSettings.application_instructions || '',
         eligibility_criteria: finalSettings.eligibility_criteria || '',
         total_budget: finalSettings.total_budget || OFFICIAL_BASELINE_BUDGET,
+        specific_pickup_date: finalSettings.specific_pickup_date || '',
       });
 
       if (appsRes.data) setApplications(appsRes.data as FoodBankApplication[]);
@@ -524,6 +531,86 @@ export function JppFoodBankAdmin() {
     }
   };
 
+  // ── 3b. Imbasan Kamera Langsung (html5-qrcode) ─────────────────────────────
+  const startCameraScan = async () => {
+    if (scannerRef.current) {
+      try { await scannerRef.current.stop(); } catch { /* noop */ }
+    }
+    setIsCameraScanning(true);
+    try {
+      const scanner = new Html5Qrcode('foodbank-counter-qr-reader');
+      scannerRef.current = scanner;
+      await scanner.start(
+        { facingMode: 'environment' },
+        { fps: 15, qrbox: (w: number, h: number) => {
+            const size = Math.min(w, h) * 0.7;
+            return { width: size, height: size };
+          } },
+        (decodedText) => {
+          // Auto-detect: terus sahkan tanpa perlu tekan butang lain.
+          const raw = (decodedText || '').trim();
+          if (!raw) return;
+          let token = raw;
+          try {
+            const u = new URL(raw);
+            const v = u.searchParams.get('verify');
+            if (v) token = v;
+          } catch { /* bukan URL, anggap token mentah */ }
+          stopCameraScan();
+          setCounterInput(token);
+          handleVerifyCounterPickup(token);
+        },
+        () => { /* abaikan ralat bingkai biasa */ }
+      );
+    } catch (err: any) {
+      console.error('Camera scan failed:', err);
+      setIsCameraScanning(false);
+      scannerRef.current = null;
+      toast.error(
+        err?.name === 'NotAllowedError' || String(err?.message || '').includes('NotAllowed')
+          ? 'Akses kamera ditolak. Sila benarkan kamera pada pelayar.'
+          : 'Gagal memulakan kamera. Pastikan guna HTTPS & peranti ada kamera.'
+      );
+    }
+  };
+
+  const stopCameraScan = async () => {
+    try {
+      if (scannerRef.current) {
+        await scannerRef.current.stop();
+        scannerRef.current.clear();
+      }
+    } catch { /* noop */ }
+    scannerRef.current = null;
+    setIsCameraScanning(false);
+  };
+
+  // Auto-verify jika tiba melalui deep-link ?verify=<token> (imbasan pas pelajar)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('verify');
+    if (token && user?.id && applications.length > 0) {
+      setCounterInput(token);
+      handleVerifyCounterPickup(token);
+      // Bersihkan param supaya refresh tidak auto-verify semula
+      const url = new URL(window.location.href);
+      url.searchParams.delete('verify');
+      window.history.replaceState({}, '', url.toString());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, applications.length]);
+
+  // Bersihkan kamera bila komponen unmount
+  useEffect(() => {
+    return () => {
+      if (scannerRef.current) {
+        scannerRef.current.stop().catch(() => {}).finally(() => {
+          scannerRef.current?.clear();
+        });
+      }
+    };
+  }, []);
+
   // ── 4. Imbasan Kaunter & Pengesahan Atomik (verify_and_complete_foodbank_pickup) ──
   const triggerCelebration = () => {
     try {
@@ -561,7 +648,7 @@ export function JppFoodBankAdmin() {
         targetApp = applications.find(
           a =>
             a.application_no?.toLowerCase() === query.toLowerCase() ||
-            a.applicant?.student_id?.toLowerCase() === query.toLowerCase() ||
+            a.applicant?.matric_no?.toLowerCase() === query.toLowerCase() ||
             a.applicant?.full_name?.toLowerCase().includes(query.toLowerCase())
         );
       }
@@ -613,7 +700,7 @@ export function JppFoodBankAdmin() {
         setRecentVerifiedRecord({
           appNo: rpcResult.application_no || matched?.application_no || query,
           studentName: matched?.applicant?.full_name || 'Mahasiswa POLISAS',
-          matricNo: matched?.applicant?.student_id || undefined,
+          matricNo: matched?.applicant?.matric_no || undefined,
           itemsCount: matched?.selected_items?.length || 0,
           totalValue: Number(rpcResult.total_value || matched?.total_estimated_value || 0),
           timestamp: new Date().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }),
@@ -1200,6 +1287,7 @@ export function JppFoodBankAdmin() {
       application_instructions: sessionFormData.application_instructions.trim(),
       eligibility_criteria: sessionFormData.eligibility_criteria.trim(),
       total_budget: Math.max(100, sessionFormData.total_budget),
+      specific_pickup_date: sessionFormData.specific_pickup_date.trim() || null,
     };
 
     try {
@@ -1331,8 +1419,8 @@ export function JppFoodBankAdmin() {
         const q = officerSearchQuery.trim();
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, email, student_id, phone_number, department, avatar_url')
-          .or(`student_id.ilike.%${q}%,full_name.ilike.%${q}%`)
+          .select('id, full_name, email, matric_no, phone, department, avatar_url')
+          .or(`matric_no.ilike.%${q}%,full_name.ilike.%${q}%`)
           .limit(8);
 
         if (error) {
@@ -1351,7 +1439,7 @@ export function JppFoodBankAdmin() {
 
   const handleSelectCandidate = (candidate: any) => {
     setSelectedCandidate(candidate);
-    setOfficerSearchQuery(`${candidate.full_name} (${candidate.student_id || candidate.email || 'POLISAS'})`);
+    setOfficerSearchQuery(`${candidate.full_name} (${candidate.matric_no || candidate.email || 'POLISAS'})`);
     setCandidateProfiles([]);
   };
 
@@ -1399,7 +1487,7 @@ export function JppFoodBankAdmin() {
         })
         .select(`
           *,
-          profile:profiles!user_id(id, full_name, email, student_id, phone_number, department, avatar_url),
+          profile:profiles!user_id(id, full_name, email, matric_no, phone, department, avatar_url),
           location:foodbank_distribution_locations!location_id(id, name),
           assigner:profiles!assigned_by(id, full_name)
         `)
@@ -1414,11 +1502,11 @@ export function JppFoodBankAdmin() {
           actor_name: profile?.full_name || 'Pentadbir Eksekutif JPP',
           action_type: 'OFFICER_ASSIGNED',
           location_id: locId,
-          target_id: selectedCandidate.student_id || selectedCandidate.full_name,
+          target_id: selectedCandidate.matric_no || selectedCandidate.full_name,
           details: {
             officer_user_id: selectedCandidate.id,
             officer_name: selectedCandidate.full_name,
-            matric_no: selectedCandidate.student_id,
+            matric_no: selectedCandidate.matric_no,
             role_title: officerRoleTitle.trim(),
             assigned_location: assignedLocName,
           },
@@ -1446,8 +1534,8 @@ export function JppFoodBankAdmin() {
           id: selectedCandidate.id,
           full_name: selectedCandidate.full_name,
           email: selectedCandidate.email,
-          student_id: selectedCandidate.student_id,
-          phone_number: selectedCandidate.phone_number,
+          matric_no: selectedCandidate.matric_no,
+          phone: selectedCandidate.phone,
           avatar_url: selectedCandidate.avatar_url,
         },
         location: locations.find(l => l.id === locId) || null,
@@ -1460,11 +1548,11 @@ export function JppFoodBankAdmin() {
           actor_name: profile?.full_name || 'Pentadbir Eksekutif JPP',
           action_type: 'OFFICER_ASSIGNED',
           location_id: locId,
-          target_id: selectedCandidate.student_id || selectedCandidate.full_name,
+          target_id: selectedCandidate.matric_no || selectedCandidate.full_name,
           details: {
             officer_user_id: selectedCandidate.id,
             officer_name: selectedCandidate.full_name,
-            matric_no: selectedCandidate.student_id,
+            matric_no: selectedCandidate.matric_no,
             role_title: officerRoleTitle.trim(),
             assigned_location: assignedLocName,
             is_offline: true,
@@ -1506,7 +1594,7 @@ export function JppFoodBankAdmin() {
           actor_name: profile?.full_name || 'Pentadbir Eksekutif JPP',
           action_type: newStatus ? 'OFFICER_ASSIGNED' : 'OFFICER_REMOVED',
           location_id: officer.location_id,
-          target_id: officer.user?.student_id || officer.user?.full_name || officer.id,
+          target_id: officer.user?.matric_no || officer.user?.full_name || officer.id,
           details: {
             officer_id: officer.id,
             officer_name: officer.user?.full_name,
@@ -1548,7 +1636,7 @@ export function JppFoodBankAdmin() {
           actor_name: profile?.full_name || 'Pentadbir Eksekutif JPP',
           action_type: 'OFFICER_REMOVED',
           location_id: officer.location_id,
-          target_id: officer.user?.student_id || officer.user?.full_name || officer.id,
+          target_id: officer.user?.matric_no || officer.user?.full_name || officer.id,
           details: {
             officer_id: officer.id,
             officer_name: officerName,
@@ -1582,7 +1670,7 @@ export function JppFoodBankAdmin() {
         const q = appSearch.toLowerCase();
         const noMatch = app.application_no.toLowerCase().includes(q);
         const nameMatch = app.applicant?.full_name?.toLowerCase().includes(q);
-        const idMatch = app.applicant?.student_id?.toLowerCase().includes(q);
+        const idMatch = app.applicant?.matric_no?.toLowerCase().includes(q);
         const reasonMatch = app.reason?.toLowerCase().includes(q);
         const qrMatch = app.pickup_qr_code?.toLowerCase().includes(q);
         if (!noMatch && !nameMatch && !idMatch && !reasonMatch && !qrMatch) return false;
@@ -2202,6 +2290,25 @@ export function JppFoodBankAdmin() {
                     </div>
                     <button
                       type="button"
+                      onClick={() => (isCameraScanning ? stopCameraScan() : startCameraScan())}
+                      disabled={isVerifyingCounter}
+                      className="px-3.5 py-2.5 rounded-2xl bg-white/10 border border-white/20 hover:bg-white/20 text-white font-black text-xs uppercase tracking-wider transition-all disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap"
+                      title="Imbas QR pas pelajar menggunakan kamera"
+                    >
+                      {isCameraScanning ? (
+                        <>
+                          <ScanLine className="w-4 h-4 animate-pulse text-rose-300" />
+                          Berhenti
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="w-4 h-4" />
+                          Imbas
+                        </>
+                      )}
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => handleVerifyCounterPickup()}
                       disabled={isVerifyingCounter || !counterInput.trim()}
                       className="px-4 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs uppercase tracking-wider transition-all disabled:opacity-50 shadow-md flex items-center gap-1.5 whitespace-nowrap"
@@ -2220,6 +2327,16 @@ export function JppFoodBankAdmin() {
                     </button>
                   </div>
                 </div>
+
+                {/* Paparan Kamera Imbasan QR (hidden bila tidak aktif) */}
+                {isCameraScanning && (
+                  <div className="mt-3 overflow-hidden rounded-2xl border border-white/20 bg-black/40">
+                    <div id="foodbank-counter-qr-reader" className="w-full [&_video]:w-full [&_video]:rounded-2xl" />
+                    <p className="px-3 py-2 text-[11px] text-rose-100/80 font-semibold text-center">
+                      Halakan kamera ke kod QR pas pengambilan pelajar — pengesahan akan berlaku secara automatik.
+                    </p>
+                  </div>
+                )}
 
                 {/* Banner Pengesahan Terkini Berjaya */}
                 {recentVerifiedRecord && (
@@ -2344,11 +2461,11 @@ export function JppFoodBankAdmin() {
                                 {app.applicant?.full_name || 'Pelajar'}
                               </div>
                               <div className="text-[11px] text-slate-500 font-medium flex items-center gap-1.5">
-                                <span>{app.applicant?.student_id || '-'}</span>
-                                {app.applicant?.phone_number && (
+                                <span>{app.applicant?.matric_no || '-'}</span>
+                                {app.applicant?.phone && (
                                   <>
                                     <span>•</span>
-                                    <span>{app.applicant.phone_number}</span>
+                                    <span>{app.applicant.phone}</span>
                                   </>
                                 )}
                               </div>
@@ -3130,6 +3247,26 @@ export function JppFoodBankAdmin() {
 
                   <div>
                     <label className="block text-slate-700 dark:text-slate-300 mb-1">
+                      Tarikh Pengambilan Khas (Hari Pelancaran — Opsyenal)
+                    </label>
+                    <input
+                      type="date"
+                      value={sessionFormData.specific_pickup_date}
+                      onChange={e =>
+                        setSessionFormData({
+                          ...sessionFormData,
+                          specific_pickup_date: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      Jika diisi, tarikh pengambilan pelajar dihadkan kepada tarikh ini sahaja (cth: hari pelancaran Jumaat ini). Kosongkan untuk guna hari beroperasi biasa.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 dark:text-slate-300 mb-1">
                       Teks Arahan & Panduan Permohonan
                     </label>
                     <textarea
@@ -3347,7 +3484,7 @@ export function JppFoodBankAdmin() {
                                   {candidate.full_name}
                                 </p>
                                 <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                                  {candidate.student_id ? `${candidate.student_id} • ` : ''}
+                                  {candidate.matric_no ? `${candidate.matric_no} • ` : ''}
                                   {candidate.department || candidate.email || 'Pelajar POLISAS'}
                                 </p>
                               </div>
@@ -3369,7 +3506,7 @@ export function JppFoodBankAdmin() {
                                 {selectedCandidate.full_name}
                               </p>
                               <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold truncate">
-                                {selectedCandidate.student_id || selectedCandidate.email}
+                                {selectedCandidate.matric_no || selectedCandidate.email}
                                 {selectedCandidate.department ? ` • ${selectedCandidate.department}` : ''}
                               </p>
                             </div>
@@ -3498,9 +3635,9 @@ export function JppFoodBankAdmin() {
                                   </div>
 
                                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                                    {officerUser?.student_id && <span className="font-mono font-bold text-slate-700 dark:text-slate-300 mr-2">{officerUser.student_id}</span>}
+                                    {officerUser?.matric_no && <span className="font-mono font-bold text-slate-700 dark:text-slate-300 mr-2">{officerUser.matric_no}</span>}
                                     {officerUser?.email && <span>{officerUser.email}</span>}
-                                    {officerUser?.phone_number && <span className="ml-1.5">• {officerUser.phone_number}</span>}
+                                    {officerUser?.phone && <span className="ml-1.5">• {officerUser.phone}</span>}
                                   </p>
 
                                   <div className="flex items-center gap-2 pt-1 flex-wrap">
@@ -3936,7 +4073,7 @@ export function JppFoodBankAdmin() {
       {/* ── 5. MODAL PENOLAKAN PERMOHONAN ───────────────────────────────────── */}
       {rejectionModalApp && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-6 border border-rose-200 dark:border-white/10 shadow-2xl">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-6 border border-rose-200 dark:border-white/10 shadow-2xl max-h-[88vh] overflow-y-auto overscroll-contain">
             <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-rose-600" />
               Tolak Permohonan Food Bank
@@ -4009,11 +4146,11 @@ export function JppFoodBankAdmin() {
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 uppercase font-bold">No. Matrik</span>
-                <p className="font-bold text-slate-800 dark:text-white">{selectedAppForDetail.applicant?.student_id || '-'}</p>
+                <p className="font-bold text-slate-800 dark:text-white">{selectedAppForDetail.applicant?.matric_no || '-'}</p>
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 uppercase font-bold">No. Telefon</span>
-                <p className="font-bold text-slate-800 dark:text-white">{selectedAppForDetail.applicant?.phone_number || '-'}</p>
+                <p className="font-bold text-slate-800 dark:text-white">{selectedAppForDetail.applicant?.phone || '-'}</p>
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 uppercase font-bold">Kategori Kewangan</span>
@@ -4559,7 +4696,7 @@ export function JppFoodBankAdmin() {
       {/* ── 8. MODAL PELARASAN BAJET (TAB 3) ─────────────────────────────────── */}
       {budgetModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-6 border border-rose-200 dark:border-white/10 shadow-2xl">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-6 border border-rose-200 dark:border-white/10 shadow-2xl max-h-[88vh] overflow-y-auto overscroll-contain">
             <h3 className="text-lg font-black text-slate-900 dark:text-white mb-3">
               Pelarasan / Suntikan Bajet Food Bank
             </h3>
@@ -4828,7 +4965,7 @@ export function JppFoodBankAdmin() {
         onClose={() => setSelectedAppForPass(null)}
         application={selectedAppForPass}
         studentName={selectedAppForPass?.applicant?.full_name}
-        studentMatric={selectedAppForPass?.applicant?.student_id || undefined}
+        studentMatric={selectedAppForPass?.applicant?.matric_no || undefined}
         roomOrResidence={
           selectedAppForDetail?.housing_type === 'KAMSIS' ? 'KAMSIS POLISAS' : 'Kediaman Luar'
         }

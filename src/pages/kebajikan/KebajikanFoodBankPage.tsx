@@ -144,8 +144,26 @@ export function KebajikanFoodBankPage() {
 
   // Tarikh pengambilan: jana ikut hari beroperasi pusat yang dipilih.
   // operating_days kosong/null = lalai Isnin-Jumaat.
+  // Jika admin set "Tarikh Pengambilan Khas" (cth: hari pelancaran), guna tarikh itu SAHAJA.
   const workingDays = useMemo(() => {
     const days: { dateStr: string; label: string }[] = [];
+
+    // Keutamaan: tarikh pengambilan khas (satu tarikh sahaja)
+    const special = settings?.specific_pickup_date;
+    if (special) {
+      const d = new Date(`${special}T00:00:00`);
+      if (!isNaN(d.getTime())) {
+        const dateStr = d.toISOString().split('T')[0];
+        const label = d.toLocaleDateString('ms-MY', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+        });
+        days.push({ dateStr, label });
+        return days;
+      }
+    }
+
     const loc = locations.find((l) => l.id === selectedLocationId);
     const allowedDays = loc && loc.operating_days && loc.operating_days.length > 0
       ? loc.operating_days
@@ -174,7 +192,7 @@ export function KebajikanFoodBankPage() {
       offset++;
     }
     return days;
-  }, [locations, selectedLocationId]);
+  }, [locations, selectedLocationId, settings?.specific_pickup_date]);
 
   // Fetch initial data (MANDATORY RULE: Use Promise.all)
   const fetchInitialData = async () => {
