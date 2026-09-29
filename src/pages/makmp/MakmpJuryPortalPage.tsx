@@ -40,6 +40,9 @@ import {
   calculateSuggestedMerit,
   PERINGKAT_OPTIONS,
   PENCAPAIAN_TYPE_OPTIONS,
+  KEPIMPINAN_JPP_OPTIONS,
+  getKepimpinanJppMerit,
+  isKepimpinanJppAward,
 } from '@/lib/makmp';
 import type {
   MakmpJuryPin,
@@ -49,6 +52,7 @@ import type {
   MakmpSubmissionStatus,
   MakmpPeringkat,
   MakmpPencapaianType,
+  MakmpKepimpinanRole,
 } from '@/types';
 import { MakmpJppChrome, MakmpJppHeader } from '@/components/makmp/MakmpJppChrome';
 import MakmpRankingPanel from '@/components/makmp/MakmpRankingView';
@@ -306,11 +310,18 @@ export default function MakmpJuryPortalPage() {
       prev.map((item) => {
         if (item.id !== id) return item;
         const updated = { ...item, [field]: value };
-        if (field === 'report_score') {
+        if (field === 'merit_awarded') {
+          // OVERRIDE LANGSUNG: juri/pegawai set merit sendiri (0-50), tidak
+          // bergantung pada nilai yang disyorkan sistem.
+          updated.merit_awarded = Math.max(0, Math.min(50, Math.round(Number(value) || 0)));
+        } else if (field === 'report_score') {
           // Markah 0-100 -> merit = round(score/10)
           const score = Math.max(0, Math.min(100, Number(value) || 0));
           updated.report_score = score;
           updated.merit_awarded = Math.round(score / 10);
+        } else if (field === 'pencapaian_type' && isKepimpinanJppAward(activeAward?.award?.name)) {
+          // Anugerah Kepimpinan JPP — merit tetap ikut peranan kepimpinan.
+          updated.merit_awarded = getKepimpinanJppMerit(value);
         } else if (field === 'peringkat' || field === 'pencapaian_type') {
           updated.merit_awarded = calculateSuggestedMerit(
             field === 'peringkat' ? value : item.peringkat,
@@ -359,6 +370,8 @@ export default function MakmpJuryPortalPage() {
           merit_awarded: r.merit_awarded,
           report_score: r.report_score,
           is_verified: r.is_verified,
+          peringkat: r.peringkat,
+          pencapaian_type: r.pencapaian_type,
         })),
       });
 
@@ -1020,6 +1033,7 @@ export default function MakmpJuryPortalPage() {
                       };
 
                       const isReportDoc = item.document_type === 'LAPORAN';
+                      const isKepimpinan = isKepimpinanJppAward(activeAward.award?.name) && !isReportDoc;
 
                       return (
                         <div
@@ -1102,6 +1116,35 @@ export default function MakmpJuryPortalPage() {
                                 (markah ÷ 10, dibundarkan)
                               </div>
                             </div>
+                          ) : isKepimpinan ? (
+                            /* ANUGERAH KEPIMPINAN JPP — Tahap Sah = peranan kepimpinan */
+                            <div className="space-y-2 text-xs pt-1">
+                              <div>
+                                <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-1">
+                                  Peranan Kepimpinan JPP
+                                </label>
+                                <select
+                                  value={rItem.pencapaian_type}
+                                  onChange={(e) =>
+                                    handleUpdateItemReview(
+                                      item.id,
+                                      'pencapaian_type',
+                                      e.target.value as MakmpPencapaianType
+                                    )
+                                  }
+                                  className="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white"
+                                >
+                                  {KEPIMPINAN_JPP_OPTIONS.map((o) => (
+                                    <option key={o.value} value={o.value}>
+                                      {o.label} ({o.merit} Merit)
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="text-[11px] text-amber-700 dark:text-amber-200/70 pt-1 border-t border-amber-200 dark:border-amber-500/20">
+                                Merit peranan: <span className="font-bold text-amber-800 dark:text-amber-300">+{getKepimpinanJppMerit(rItem.pencapaian_type)} merit</span>
+                              </div>
+                            </div>
                           ) : (
                             /* Matriks Sijil Standard (Peringkat & Tahap) */
                             <div className="grid grid-cols-2 gap-2 text-xs pt-1">
@@ -1169,8 +1212,25 @@ export default function MakmpJuryPortalPage() {
                               </span>
                             </label>
 
-                            <div className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                              +{rItem.is_verified ? rItem.merit_awarded : 0} Merit
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Merit</span>
+                              <input
+                                type="number"
+                                min={0}
+                                max={50}
+                                step={1}
+                                value={rItem.merit_awarded}
+                                onChange={(e) =>
+                                  handleUpdateItemReview(
+                                    item.id,
+                                    'merit_awarded',
+                                    Number(e.target.value) || 0
+                                  )
+                                }
+                                className="w-16 px-2 py-1 rounded-lg bg-white dark:bg-slate-950 border border-amber-300 dark:border-amber-500/50 text-center font-extrabold text-amber-700 dark:text-amber-300 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                title="Override merit secara manual (0-50)"
+                              />
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500">/ 50</span>
                             </div>
                           </div>
                         </div>

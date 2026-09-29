@@ -13,6 +13,7 @@ import type {
   MakmpDocumentType,
   MakmpPeringkat,
   MakmpPencapaianType,
+  MakmpKepimpinanRole,
   MakmpSubmissionStatus,
   AkademikImportCertItem,
 } from '@/types';
@@ -349,6 +350,31 @@ export const PENCAPAIAN_TYPE_OPTIONS: { value: MakmpPencapaianType; label: strin
   { value: 'PESERTA', label: 'Penyertaan Sahaja' },
   { value: 'LAIN', label: 'Lain-lain Pencapaian' },
 ];
+
+// ============================================================================
+// ANUGERAH KEPIMPINAN JPP — Tahap Sah = peranan kepimpinan (bukan Johan/Pingat)
+// Merit tetap mengikut peranan yang disandang dalam organisasi JPP.
+// ============================================================================
+export const KEPIMPINAN_JPP_OPTIONS: { value: MakmpKepimpinanRole; label: string; merit: number }[] = [
+  { value: 'PENGARAH', label: 'Pengarah / Pengerusi atau setaraf', merit: 5 },
+  { value: 'TIMBALAN', label: 'Timbalan Pengarah / Pengerusi', merit: 4 },
+  { value: 'SETIAUSAHA', label: 'Setiausaha / Bendahari', merit: 3 },
+  { value: 'AJK', label: 'Ahli Jawatankuasa (AJK)', merit: 2 },
+  { value: 'PENYERTAAN', label: 'Penyertaan', merit: 1 },
+];
+
+export function getKepimpinanJppMerit(role: MakmpKepimpinanRole | string): number {
+  return KEPIMPINAN_JPP_OPTIONS.find((o) => o.value === role)?.merit ?? 0;
+}
+
+// Nama anugerah yang menggunakan matriks peranan kepimpinan JPP (bukan Johan/Pingat).
+export const KEPIMPINAN_JPP_AWARD_NAMES = [
+  'Anugerah Kepimpinan JPP Terbaik',
+];
+
+export function isKepimpinanJppAward(awardName?: string | null): boolean {
+  return !!awardName && KEPIMPINAN_JPP_AWARD_NAMES.some((n) => n.toLowerCase() === awardName.toLowerCase());
+}
 
 export const JABATAN_OPTIONS = [
   { value: 'perdagangan', label: 'Jabatan Perdagangan (JP)' },
@@ -1164,7 +1190,7 @@ export async function saveJuryAwardReview(params: {
   status: MakmpSubmissionStatus;
   reviewNotes?: string;
   rejectionReason?: string;
-  items: { id: string; merit_awarded: number; is_verified: boolean; report_score?: number }[];
+  items: { id: string; merit_awarded: number; is_verified: boolean; report_score?: number; peringkat?: string; pencapaian_type?: string }[];
 }): Promise<{ success: boolean; message?: string }> {
   // Seluruh semakan dilakukan dalam RPC SECURITY DEFINER (verify PIN di DB).
   const { data, error } = await supabase.rpc('save_jury_award_review', {
@@ -1196,7 +1222,7 @@ export async function saveJuryReview(params: {
   status: MakmpSubmissionStatus;
   reviewNotes?: string;
   rejectionReason?: string;
-  items: { id: string; merit_awarded: number; is_verified: boolean; report_score?: number }[];
+  items: { id: string; merit_awarded: number; is_verified: boolean; report_score?: number; peringkat?: string; pencapaian_type?: string }[];
 }): Promise<{ success: boolean; message?: string }> {
   let totalMerit = 0;
   for (const item of params.items) {

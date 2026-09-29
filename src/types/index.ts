@@ -1111,6 +1111,8 @@ export type MakmpPeringkat = 'ANTARABANGSA' | 'KEBANGSAAN' | 'NEGERI' | 'DAERAH'
 
 export type MakmpPencapaianType = 'JOHAN' | 'NAIB_JOHAN' | 'KETIGA' | 'EMAS' | 'PERAK' | 'GANGSA' | 'PESERTA' | 'LAIN';
 
+export type MakmpKepimpinanRole = 'PENGARAH' | 'TIMBALAN' | 'SETIAUSAHA' | 'AJK' | 'PENYERTAAN';
+
 export interface MakmpEdition {
   id: string;
   year: number;
