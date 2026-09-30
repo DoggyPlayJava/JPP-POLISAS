@@ -32,6 +32,7 @@ import {
   ChevronDown,
   ChevronUp,
   CalendarClock,
+  IdCard,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -56,6 +57,7 @@ import type {
   MakmpPencapaianType,
 } from '@/types';
 import MakmpRankingPanel from '@/components/makmp/MakmpRankingView';
+import MakmpWinnerDocsPanel from '@/components/makmp/MakmpWinnerDocsPanel';
 
 export const PRESET_CATEGORY_GROUPS = [
   'ANUGERAH UTAMA',
@@ -74,7 +76,7 @@ export default function MakmpAdminDashboardPage() {
   const isJppOrAdmin = profile?.role === 'SUPER_ADMIN_JPP' || profile?.role === 'JPP';
 
   // Active Tab: 'submissions' | 'categories' | 'pins' | 'editions' | 'ranking'
-  const [tab, setTab] = useState<'submissions' | 'categories' | 'pins' | 'editions' | 'ranking'>('submissions');
+  const [tab, setTab] = useState<'submissions' | 'categories' | 'pins' | 'editions' | 'ranking' | 'winners'>('submissions');
 
   // Loading & State
   const [loading, setLoading] = useState(true);
@@ -1198,6 +1200,18 @@ export default function MakmpAdminDashboardPage() {
           <Trophy className="w-3.5 h-3.5" />
           <span>Keputusan & Ranking</span>
         </button>
+
+        <button
+          onClick={() => setTab('winners')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
+            tab === 'winners'
+              ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+          }`}
+        >
+          <IdCard className="w-3.5 h-3.5" />
+          <span>Dokumen Pemenang</span>
+        </button>
       </div>
 
       {/* ==================================================================== */}
@@ -1438,6 +1452,13 @@ export default function MakmpAdminDashboardPage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* ==================================================================== */}
+      {/* TAB: DOKUMEN PEMENANG (IC + gambar passport + muat turun)            */}
+      {/* ==================================================================== */}
+      {tab === 'winners' && (
+        <MakmpWinnerDocsPanel submissions={submissions} />
       )}
 
       {/* ==================================================================== */}
