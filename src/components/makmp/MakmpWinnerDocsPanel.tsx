@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Download, FileImage, IdCard, ImageDown, Loader2, CheckCircle2, AlertCircle, FolderArchive, FileSpreadsheet, Mail, Trophy, Phone } from 'lucide-react';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import { exportXlsx } from '@/lib/exportXlsx';
+import type ExcelJS from 'exceljs';
 import type { MakmpSubmission } from '@/types';
 
 interface MakmpWinnerDocsPanelProps {
@@ -24,17 +24,6 @@ function getWinnerAwards(sub: MakmpSubmission): string[] {
     } else {
       names.push(label);
     }
-  }
-  return names;
-}
-
-// ── Helper: nama anugerah TANPA rank (untuk CSV rawak) ─────────────────────
-function getWinnerAwardNames(sub: MakmpSubmission): string[] {
-  const names: string[] = [];
-  const awards = sub.awards || [];
-  for (const sa of awards) {
-    if (!sa.is_finalized) continue;
-    names.push(sa.award?.name || 'Anugerah');
   }
   return names;
 }
@@ -109,65 +98,167 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
     }
   };
 
-  // ── Export XLSX (2 sheet: Senarai Penuh + Rawak untuk Pendaftaran) ────────
-  // - IC & matrik & telefon diset sebagai TEXT (elak scientific notation).
-  // - Embed gambar passport terus dalam sheet.
-  // - Bila shuffleCsv aktif: sheet "Rawak" buang rank (#n) + shuffle susunan.
+  // ── Export XLSX: group mengikut anugerah ───────────────────────────────────
+  // - Sheet "Senarai Penuh": anugerah → 1) 2) 3) (numbering = rank sebenar).
+  // - Sheet "Rawak (Pendaftaran)": anugerah → i) ii) iii) (nama di-shuffle,
+  //   numbering TIDAK mewakili rank supaya pendaftaran tak tahu pemenang).
+  // - No. IC / matrik / telefon diset TEXT (elak scientific notation).
+  // - Gambar passport diwakili LINK Storage Supabase (bukan embed).
   const [exportingXlsx, setExportingXlsx] = useState(false);
+
+  // Bina senarai pemenang dikumpulkan mengikut anugerah.
+  // Setiap pemenang = submission (winner_status DIJEMPUT) dengan salah satu
+  // application award yang menang (final_rank <= 3 atau is_finalized && menang).
+  // Urutan dalam group: final_rank ASC, fallback total_merit_granted DESC.
+  const buildAwardGroups = () => {
+    // Map award name -> list of {sub, final_rank, merit}
+    const byAward = new Map<string, { sub: MakmpSubmission; rank: number; merit: number }[]>();
+
+    for (const sub of winners) {
+      const awards = sub.awards || [];
+      for (const sa of awards) {
+        if (!sa.is_finalized) continue;
+        const rank = typeof sa.final_rank === 'number' && sa.final_rank >= 1 ? sa.final_rank : 0;
+        const merit = sa.total_merit_granted || 0;
+        // Hanya masukkan jika pelajar ini MENANG anugerah ini (rank <= 3) ATAU
+        // winner_status DIJEMPUT (tidak ada final_rank kerana finalized lama).
+        // Untuk finalized lama, semua DIJEMPUT adalah pemenang.
+        const isWinner = rank > 0 ? rank <= 3 : sub.winner_status === 'DIJEMPUT';
+        if (!isWinner) continue;
+        const name = sa.award?.name || 'Anugerah';
+        if (!byAward.has(name)) byAward.set(name, []);
+        byAward.get(name)!.push({ sub, rank, merit });
+      }
+    }
+
+    // Urutkan setiap group ikut rank (fallback merit DESC)
+    const groups: { name: string; members: { sub: MakmpSubmission; rank: number; merit: number }[] }[] = [];
+    for (const [name, members] of byAward) {
+      members.sort((a, b) => {
+        if (a.rank > 0 && b.rank > 0) return a.rank - b.rank;
+        if (a.rank > 0) return -1;
+        if (b.rank > 0) return 1;
+        return b.merit - a.merit;
+      });
+      groups.push({ name, members });
+    }
+    // Urutkan group ikut nama anugerah (stabil)
+    groups.sort((a, b) => a.name.localeCompare(b.name));
+    return groups;
+  };
+
   const exportXlsxFile = async () => {
     if (exportingXlsx) return;
     setExportingXlsx(true);
     try {
-      const cols = [
-        { header: 'Nama', width: 28 },
-        { header: 'No. Matrik', width: 16, asText: true },
-        { header: 'No. Telefon', width: 16, asText: true },
-        { header: 'No. IC', width: 16, asText: true },
-        { header: 'Emel', width: 26 },
-        { header: 'Jabatan', width: 20 },
-        { header: 'Anugerah', width: 34 },
-      ];
+      const ExcelJS = (await import('exceljs')).default;
+      const wb = new ExcelJS.Workbook();
+      wb.creator = 'JPP POLISAS';
+      wb.created = new Date();
 
-      // Senarai penuh (dengan rank)
-      const fullRows = winners.map((s) => [
-        s.full_name,
-        s.matric_no,
-        s.phone || '',
-        s.winner_ic_no || '',
-        s.email || '',
-        s.department || '',
-        getWinnerAwards(s).join('; ') || '-',
-      ]);
+      const groups = buildAwardGroups();
 
-      // Rawak: buang rank + shuffle susunan nama
-      let shuffled = [...winners];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-      const shuffledRows = shuffled.map((s) => [
-        s.full_name,
-        s.matric_no,
-        s.phone || '',
-        s.winner_ic_no || '',
-        s.email || '',
-        s.department || '',
-        getWinnerAwardNames(s).join('; ') || '-',
-      ]);
+      // Kolum tetap: No. | Nama | No. Matrik | No. Telefon | No. IC | Emel | Jabatan | Gambar
+      const HEADERS = ['No.', 'Nama', 'No. Matrik', 'No. Telefon', 'No. IC', 'Emel', 'Jabatan', 'Gambar (Link)'];
+      const WIDTHS = [8, 30, 16, 16, 16, 26, 22, 40];
+      const TEXT_COLS = [2, 3, 4, 7]; // 0-indexed: No. Matrik, No. Telefon, No. IC, Gambar(link)
 
-      // Kolum gambar (embed dalam sheet penuh sahaja)
-      const images = winners
-        .map((s, idx) => (s.winner_photo_url ? { row: idx, col: 7, src: s.winner_photo_url, width: 64, height: 64 } : null))
-        .filter(Boolean) as { row: number; col: number; src: string; width: number; height: number }[];
+      const roman = (n: number) => {
+        const map = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x'];
+        return map[n - 1] || String(n);
+      };
 
-      await exportXlsx(
-        `MAKMP_Dokumen_Pemenang_${Date.now()}.xlsx`,
-        [
-          { name: 'Senarai Penuh', columns: cols, rows: fullRows },
-          { name: 'Rawak (Pendaftaran)', columns: cols, rows: shuffledRows },
-        ],
-        images
-      );
+      // Helper: isi satu sheet mengikut sama ada penuh (rank) atau rawak (shuffle)
+      const fillSheet = (ws: ExcelJS.Worksheet, randomize: boolean) => {
+        // Header row
+        const hdr = ws.addRow(HEADERS);
+        hdr.eachCell((cell) => {
+          cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+          cell.alignment = { vertical: 'middle', horizontal: 'left' };
+        });
+        hdr.height = 22;
+        HEADERS.forEach((_, i) => {
+          ws.getColumn(i + 1).width = WIDTHS[i];
+        });
+
+        for (const group of groups) {
+          // Baris header anugerah (bold, berwarna, merge)
+          const awardRow = ws.addRow([group.name]);
+          awardRow.getCell(1).font = { bold: true, size: 12, color: { argb: 'FF0D9488' } };
+          awardRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEAF6F5' } };
+          ws.mergeCells(awardRow.number, 1, awardRow.number, HEADERS.length);
+          awardRow.height = 20;
+
+          // Susunan ahli: rank sebenar ATAU shuffle (Fisher-Yates)
+          let members = [...group.members];
+          if (randomize) {
+            for (let i = members.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [members[i], members[j]] = [members[j], members[i]];
+            }
+          }
+
+          members.forEach((m, idx) => {
+            const no = randomize ? `${roman(idx + 1)})` : `${idx + 1})`;
+            const s = m.sub;
+            const row = ws.addRow([
+              no,
+              s.full_name,
+              s.matric_no || '',
+              s.phone || '',
+              s.winner_ic_no || '',
+              s.email || '',
+              s.department || '',
+              s.winner_photo_url || '',
+            ]);
+            // Tebalkan No. & Nama
+            row.getCell(1).font = { bold: true };
+            row.getCell(2).font = { bold: true };
+            // Zebra
+            if (idx % 2 === 0) {
+              row.eachCell((cell) => {
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+              });
+            }
+          });
+
+          // Baris kosong pemisah antara group
+          ws.addRow([]);
+        }
+
+        // Paksa kolum sensitif (No. Matrik, Telefon, IC, Gambar link) sebagai TEXT
+        TEXT_COLS.forEach((colIdx) => {
+          const col = ws.getColumn(colIdx + 1);
+          col.eachCell((cell, rowNumber) => {
+            if (rowNumber > 1 && cell.value !== null && cell.value !== undefined && cell.value !== '') {
+              cell.numFmt = '@';
+              cell.value = String(cell.value);
+            }
+          });
+        });
+
+        // Gambar link → hyperlink (klik buka terus)
+        const linkCol = 8;
+        ws.getColumn(linkCol).eachCell((cell, rowNumber) => {
+          if (rowNumber > 1 && typeof cell.value === 'string' && cell.value.startsWith('http')) {
+            const url = cell.value as string;
+            cell.value = { text: 'Buka Gambar', hyperlink: url };
+            cell.font = { color: { argb: 'FF2563EB' }, underline: true };
+          }
+        });
+
+        ws.views = [{ state: 'frozen', ySplit: 1 }];
+      };
+
+      const wsFull = wb.addWorksheet('Senarai Penuh');
+      fillSheet(wsFull, false);
+
+      const wsRawak = wb.addWorksheet('Rawak (Pendaftaran)');
+      fillSheet(wsRawak, true);
+
+      const buf = await wb.xlsx.writeBuffer();
+      saveAs(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `MAKMP_Dokumen_Pemenang_${Date.now()}.xlsx`);
     } catch (err: any) {
       alert('Ralat: ' + (err.message || 'Gagal menghasilkan XLSX'));
     } finally {
