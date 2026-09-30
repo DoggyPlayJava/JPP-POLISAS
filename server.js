@@ -562,6 +562,149 @@ app.post('/api/kebajikan-new-ticket-notify', requireWebhookSecret, async (req, r
 });
 
 // ==========================================
+// MAKMP Status Change Notification (webhook dari DB trigger)
+// Dibangkitkan oleh trigger trg_makmp_status_change_notify.
+// Hantar in-app notification + push + EMAIL (Resend) untuk DISAHKAN/DITOLAK.
+// ==========================================
+app.post('/api/makmp-notify', requireWebhookSecret, async (req, res) => {
+    try {
+        if (!supabaseAdmin) throw new Error('Supabase Admin Client not initialized.');
+
+        const { recipientId, title, message, type, link, referenceId } = req.body || {};
+        if (!recipientId || !title || !message) {
+            return res.status(400).json({ error: 'recipientId, title, and message are required.' });
+        }
+
+        // 1. In-app notification
+        const { error: notifErr } = await supabaseAdmin
+            .from('notifications')
+            .insert({
+                user_id: recipientId,
+                title,
+                message,
+                type: type || 'MAKMP',
+                module: 'MAKMP',
+                link: link || '/makmp/status',
+                reference_id: referenceId || null,
+                is_read: false
+            });
+        if (notifErr) console.error('[makmp-notify] In-app insert error:', notifErr.message);
+
+        // 2. Push notification
+        const { data: subs, error: subsError } = await supabaseAdmin
+            .from('push_subscriptions')
+            .select('id, user_id, endpoint, p256dh, auth')
+            .eq('user_id', recipientId);
+        if (subsError) throw subsError;
+
+        let sent = 0;
+        let failed = 0;
+        const staleIds = [];
+        if (subs && subs.length > 0) {
+            const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
+            const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+            if (vapidPublicKey && vapidPrivateKey) {
+                webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:jpp@cipher-node.org', vapidPublicKey, vapidPrivateKey);
+                const pushPayload = JSON.stringify({
+                    title,
+                    body: message,
+                    icon: '/icon-192-maskable.png',
+                    badge: '/icon-192-maskable.png',
+                    tag: 'makmp-status',
+                    renotify: true,
+                    data: { url: link || '/makmp/status', module: 'MAKMP', type: type || 'MAKMP' }
+                });
+                const BATCH_SIZE = 20;
+                for (let i = 0; i < subs.length; i += BATCH_SIZE) {
+                    const batch = subs.slice(i, i + BATCH_SIZE);
+                    await Promise.allSettled(
+                        batch.map(async (sub) => {
+                            try {
+                                await webpush.sendNotification(
+                                    { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+                                    pushPayload
+                                );
+                                sent++;
+                            } catch (e) {
+                                failed++;
+                                if (e.statusCode === 410) staleIds.push(sub.id);
+                            }
+                        })
+                    );
+                }
+                if (staleIds.length > 0) {
+                    await supabaseAdmin.from('push_subscriptions').delete().in('id', staleIds);
+                    console.log(`[makmp-notify] Removed ${staleIds.length} stale subscription(s).`);
+                }
+            }
+        }
+
+        // 3. Email (Resend) — hanya untuk DISAHKAN / DITOLAK
+        try {
+            const isApproved = (title || '').toLowerCase().includes('disahkan') || (title || '').toLowerCase().includes('tahniah');
+            const isRejected = (title || '').toLowerCase().includes('ditolak');
+            if ((isApproved || isRejected) && referenceId) {
+                const { data: prof } = await supabaseAdmin
+                    .from('profiles')
+                    .select('email, full_name, matric_no')
+                    .eq('id', recipientId)
+                    .maybeSingle();
+                const email = prof?.email;
+                if (email) {
+                    // Dapatkan anugerah + sebab penolakan + merit
+                    const { data: awards } = await supabaseAdmin
+                        .from('makmp_submission_awards')
+                        .select('entity_name, rejection_reason, total_merit_granted, makmp_award_definitions(name)')
+                        .eq('submission_id', referenceId)
+                        .not('status', 'in', '(MENUNGGU,DALAM_SEMAKAN)');
+                    const awardNames = (awards || [])
+                        .map((a) => a.makmp_award_definitions?.name || a.entity_name)
+                        .filter(Boolean);
+                    const awardLabel = awardNames.length > 0 ? awardNames.join(', ') : 'MAKMP';
+                    const rejectionReason = (awards || []).map((a) => a.rejection_reason).filter(Boolean).join('; ') || null;
+                    const totalMerit = (awards || []).reduce((s, a) => s + (Number(a.total_merit_granted) || 0), 0);
+
+                    const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const studentName = prof?.full_name || 'Pelajar';
+                    const matricNo = prof?.matric_no || '';
+                    const portalUrl = 'https://jpp.cipher-node.org/makmp/status';
+
+                    const badgeLabel = isApproved ? 'DISAHKAN' : 'DITOLAK';
+                    const badgeIcon = isApproved ? '✓' : '✕';
+                    const badgeBg = isApproved ? '#FFF3D6' : '#FDE8E8';
+                    const badgeColor = isApproved ? '#9A6A00' : '#B91C1C';
+                    const subject = isApproved
+                        ? `✅ Permohonan MAKMP "${awardLabel}" Telah Disahkan`
+                        : `ℹ️ Kemaskini Permohonan MAKMP "${awardLabel}"`;
+
+                    const meritRow = isApproved
+                        ? `<tr><td style="padding:10px 16px;color:#8A6D6D;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border-bottom:1px solid #EFE3D8;">Jumlah Merit</td><td style="padding:10px 16px;color:#2A1515;font-size:14px;font-weight:600;border-bottom:1px solid #EFE3D8;">+${totalMerit} merit</td></tr>`
+                        : '';
+                    const reasonBlock = !isApproved && rejectionReason
+                        ? `<div style="margin-top:16px;padding:14px 16px;background:${badgeBg};border-left:4px solid ${badgeColor};border-radius:10px;"><p style="margin:0;color:${badgeColor};font-size:13px;font-weight:700;">Sebab penolakan:</p><p style="margin:4px 0 0;color:#2A1515;font-size:14px;">${esc(rejectionReason)}</p></div>`
+                        : '';
+
+                    const html = `<!DOCTYPE html><html lang="ms"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head><body style="margin:0;padding:0;background:#F4EDE6;"><div style="background:#F4EDE6;padding:32px 16px;font-family:'Manrope','Segoe UI','Helvetica Neue',Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;background:#FFFFFF;border-radius:20px;overflow:hidden;box-shadow:0 12px 40px rgba(55,16,16,0.12);"><div style="background:linear-gradient(135deg,#871A1A 0%,#4A1111 55%,#371010 100%);padding:36px 32px 28px;text-align:center;"><div style="display:inline-block;background:linear-gradient(135deg,#D19D1A 0%,#EEA02B 100%);color:#371010;font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;padding:6px 16px;border-radius:999px;">JPP Polisas · MAKMP</div><h1 style="margin:18px 0 4px;color:#FFFFFF;font-size:24px;font-weight:800;line-height:1.3;">${badgeLabel}</h1><p style="margin:0;color:rgba(255,255,255,0.78);font-size:13px;font-weight:500;">Majlis Anugerah Kecemerlangan Mahasiswa POLISAS</p></div><div style="padding:32px;"><div style="text-align:center;margin-bottom:24px;"><div style="display:inline-flex;align-items:center;gap:10px;background:${badgeBg};color:${badgeColor};font-size:13px;font-weight:800;padding:10px 20px;border-radius:999px;"><span style="font-size:16px;">${badgeIcon}</span> ${badgeLabel}</div></div><p style="margin:0 0 20px;color:#2A1515;font-size:15px;font-weight:600;line-height:1.6;">Salam sejahtera, <strong>${esc(studentName)}</strong>.</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #EFE3D8;border-radius:12px;overflow:hidden;"><tr><td style="padding:10px 16px;color:#8A6D6D;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border-bottom:1px solid #EFE3D8;">Anugerah</td><td style="padding:10px 16px;color:#2A1515;font-size:14px;font-weight:600;border-bottom:1px solid #EFE3D8;">${esc(awardLabel)}</td></tr>${matricNo ? `<tr><td style="padding:10px 16px;color:#8A6D6D;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border-bottom:1px solid #EFE3D8;">No. Matrik</td><td style="padding:10px 16px;color:#2A1515;font-size:14px;font-weight:600;border-bottom:1px solid #EFE3D8;">${esc(matricNo)}</td></tr>` : ''}${meritRow}</table>${reasonBlock}<div style="margin-top:24px;text-align:center;"><a href="${portalUrl}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#D19D1A 0%,#EEA02B 100%);color:#371010;font-size:14px;font-weight:800;letter-spacing:0.04em;text-decoration:none;border-radius:999px;">Lihat Status Permohonan</a></div><div style="margin-top:28px;padding-top:20px;border-top:1px solid #EFE3D8;text-align:center;"><p style="margin:0;color:#8A6D6D;font-size:11px;line-height:1.6;">Emel ini dihantar secara automatik oleh sistem MAKMP JPP Polisas.<br/>Sebarang pertanyaan, sila hubungi urus setia MAKMP.</p></div></div><div style="background:#371010;padding:20px 32px;text-align:center;"><p style="margin:0;color:#D19D1A;font-size:12px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;">JPP Polisas</p><p style="margin:4px 0 0;color:rgba(255,255,255,0.55);font-size:11px;">Bersama Membina Kesejahteraan Mahasiswa</p></div></div></div></body></html>`;
+
+                    await sendEmailInternal(email, subject, html)
+                        .then(() => console.log(`[makmp-notify] Email sent to ${email} (${badgeLabel})`))
+                        .catch((e) => console.error('[makmp-notify] Email error:', e.message));
+                }
+            }
+        } catch (emailErr) {
+            console.error('[makmp-notify] Email block error:', emailErr.message);
+        }
+
+        console.log(`[makmp-notify] Notified user:${recipientId} -> Push:${sent} Failed:${failed}`);
+        return res.status(200).json({ success: true, sent, failed });
+    } catch (error) {
+        console.error('[makmp-notify] Error:', error.message);
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+
+// ==========================================
 // 5. Upload to Google Drive Endpoint
 // ==========================================
 function extractFolderId(input) {
