@@ -71,6 +71,7 @@ import { toast } from 'react-hot-toast';
 import confetti from 'canvas-confetti';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
+import { exportXlsx } from '@/lib/exportXlsx';
 import { useAuth } from '@/contexts/AuthContext';
 import { uploadFileToDrive } from '@/lib/driveUpload';
 import {
@@ -1950,8 +1951,8 @@ export function JppFoodBankAdmin() {
     };
   }, [filteredAuditLogs]);
 
-  // ── Eksport CSV Senarai Nama Pemohon (Bil., Nama, No Pendaftaran) ────────
-  const handleExportNamesCsv = () => {
+  // ── Eksport XLSX Senarai Nama Pemohon (Bil., Nama, No Pendaftaran) ────────
+  const handleExportNamesCsv = async () => {
     // Gunakan senarai yang telah ditapis (status + kediaman + carian)
     const source = filteredApplications;
 
@@ -1974,58 +1975,44 @@ export function JppFoodBankAdmin() {
       return;
     }
 
-    const escapeCsv = (str: string) => {
-      const s = String(str ?? '').replace(/"/g, '""');
-      return `"${s}"`;
-    };
-
-    const header = 'Bil.,Nama,No Pendaftaran';
-    const body = rows
-      .map((r, i) => `${i + 1},${escapeCsv(r.name)},${escapeCsv(r.matric)}`)
-      .join('\r\n');
-
-    const csvContent = '\uFEFF' + [header, body].join('\r\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-
     const now = new Date();
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, '0');
     const dd = String(now.getDate()).padStart(2, '0');
-    const filename = `Senarai_Nama_FoodBank_${yyyy}${mm}${dd}.csv`;
+    const filename = `Senarai_Nama_FoodBank_${yyyy}${mm}${dd}.xlsx`;
 
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const dataRows = rows.map((r, i) => [i + 1, r.name, r.matric]);
+
+    await exportXlsx(filename, [
+      {
+        name: 'Senarai Nama',
+        columns: [
+          { header: 'Bil.', width: 8 },
+          { header: 'Nama', width: 32 },
+          { header: 'No Pendaftaran', width: 18, asText: true },
+        ],
+        rows: dataRows,
+      },
+    ]);
 
     toast.success(`Berjaya mengeksport ${rows.length} nama. 📄`);
   };
 
-  const handleExportCsv = (logsToExport: FoodBankAuditLog[]) => {
+  const handleExportCsv = async (logsToExport: FoodBankAuditLog[]) => {
     if (logsToExport.length === 0) {
       toast.error('Tiada rekod audit untuk dieksport.');
       return;
     }
 
-    const headers = [
-      'ID',
-      'Tarikh & Masa',
-      'Pegawai Bertugas',
-      'Jenis Tindakan',
-      'Lokasi Pusat Edaran',
-      'Sasaran / Dokumen',
-      'Butiran Ringkas',
+    const columns = [
+      { header: 'ID', width: 34 },
+      { header: 'Tarikh & Masa', width: 20 },
+      { header: 'Pegawai Bertugas', width: 24 },
+      { header: 'Jenis Tindakan', width: 20 },
+      { header: 'Lokasi Pusat Edaran', width: 24 },
+      { header: 'Sasaran / Dokumen', width: 22 },
+      { header: 'Butiran Ringkas', width: 40 },
     ];
-
-    const escapeCsv = (str: string | number | undefined | null) => {
-      if (str === null || str === undefined) return '""';
-      const s = String(str).replace(/"/g, '""');
-      return `"${s}"`;
-    };
 
     const rows = logsToExport.map(log => {
       const locName = locations.find(l => l.id === log.location_id)?.name || log.location?.name || 'Semua Lokasi';
@@ -2040,33 +2027,25 @@ export function JppFoodBankAdmin() {
       }
 
       return [
-        escapeCsv(log.id),
-        escapeCsv(formatAuditDateTime(log.created_at)),
-        escapeCsv(log.actor_name),
-        escapeCsv(actionConfig.label),
-        escapeCsv(locName),
-        escapeCsv(log.target_id || '-'),
-        escapeCsv(detailsSummary || '-'),
-      ].join(',');
+        log.id,
+        formatAuditDateTime(log.created_at),
+        log.actor_name,
+        actionConfig.label,
+        locName,
+        log.target_id || '-',
+        detailsSummary || '-',
+      ];
     });
-
-    const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
 
     const now = new Date();
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, '0');
     const dd = String(now.getDate()).padStart(2, '0');
-    const filename = `Audit_FoodBank_POLISAS_${yyyy}${mm}${dd}.csv`;
+    const filename = `Audit_FoodBank_POLISAS_${yyyy}${mm}${dd}.xlsx`;
 
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    await exportXlsx(filename, [
+      { name: 'Audit Log', columns, rows },
+    ]);
 
     toast.success(`Berjaya mengeksport ${logsToExport.length} rekod audit JHEP! 📄`);
   };
@@ -2521,7 +2500,7 @@ export function JppFoodBankAdmin() {
                     className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-sm flex items-center gap-2 whitespace-nowrap"
                   >
                     <Download className="w-4 h-4" />
-                    <span>Eksport CSV Nama</span>
+                    <span>Eksport XLSX Nama</span>
                   </button>
 
                   <label className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer whitespace-nowrap">
@@ -3904,7 +3883,7 @@ export function JppFoodBankAdmin() {
                     className="px-4 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-amber-600/25 flex items-center gap-2 whitespace-nowrap"
                   >
                     <Download className="w-4 h-4" />
-                    <span>Eksport CSV JHEP</span>
+                    <span>Eksport XLSX JHEP</span>
                   </button>
                 </div>
               </div>

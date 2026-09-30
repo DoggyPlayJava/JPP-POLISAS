@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { exportXlsx } from '@/lib/exportXlsx';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   saveJuryReview,
@@ -947,29 +948,29 @@ export default function MakmpAdminDashboardPage() {
     setAwards((prev) => prev.map((a) => (a.id === aw.id ? { ...a, is_active: newStatus } : a)));
   };
 
-  // Export CSV Lengkap dengan Pecahan Berbilang Anugerah
-  const handleExportCSV = () => {
+  // Export XLSX Lengkap dengan Pecahan Berbilang Anugerah
+  const handleExportCSV = async () => {
     if (submissions.length === 0) {
       alert('Tiada data untuk dieksport.');
       return;
     }
 
-    const headers = [
-      'Kod Rujukan',
-      'Nama Penuh',
-      'No Matrik',
-      'Telefon',
-      'Emel',
-      'Jabatan',
-      'Program',
-      'Semester',
-      'Anugerah Dipohon',
-      'Entiti / Kelab / Peranan',
-      'Status Keseluruhan',
-      'Jumlah Merit Diluluskan',
-      'Pecahan Keputusan Anugerah',
-      'Bil Dokumen',
-      'Tarikh Hantar',
+    const columns = [
+      { header: 'Kod Rujukan', width: 16 },
+      { header: 'Nama Penuh', width: 26 },
+      { header: 'No Matrik', width: 16, asText: true },
+      { header: 'Telefon', width: 15, asText: true },
+      { header: 'Emel', width: 24 },
+      { header: 'Jabatan', width: 20 },
+      { header: 'Program', width: 12 },
+      { header: 'Semester', width: 10 },
+      { header: 'Anugerah Dipohon', width: 28 },
+      { header: 'Entiti / Kelab / Peranan', width: 28 },
+      { header: 'Status Keseluruhan', width: 18 },
+      { header: 'Jumlah Merit Diluluskan', width: 20 },
+      { header: 'Pecahan Keputusan Anugerah', width: 34 },
+      { header: 'Bil Dokumen', width: 12 },
+      { header: 'Tarikh Hantar', width: 14 },
     ];
 
     const rows = submissions.map((s) => {
@@ -994,32 +995,31 @@ export default function MakmpAdminDashboardPage() {
       const docCount = s.items?.length || 0;
 
       return [
-        `"${s.tracking_code}"`,
-        `"${s.full_name}"`,
-        `"${s.matric_no}"`,
-        `"${s.phone}"`,
-        `"${s.email || ''}"`,
-        `"${getJabatanLabel(s.department)}"`,
-        `"${s.programme_code || ''}"`,
-        `"${s.semester || ''}"`,
-        `"${awardNames}"`,
-        `"${entityInfo}"`,
-        `"${s.status}"`,
-        `"${s.total_merit_awarded}"`,
-        `"${decisionBreakdown}"`,
-        `"${docCount}"`,
-        `"${new Date(s.created_at).toLocaleDateString('ms-MY')}"`,
+        s.tracking_code,
+        s.full_name,
+        s.matric_no,
+        s.phone,
+        s.email || '',
+        getJabatanLabel(s.department),
+        s.programme_code || '',
+        s.semester || '',
+        awardNames,
+        entityInfo,
+        s.status,
+        s.total_merit_awarded,
+        decisionBreakdown,
+        docCount,
+        new Date(s.created_at).toLocaleDateString('ms-MY'),
       ];
     });
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `MAKMP_Submissions_${selectedEditionId}_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      await exportXlsx(`MAKMP_Submissions_${selectedEditionId}_${Date.now()}.xlsx`, [
+        { name: 'Senarai Permohonan', columns, rows },
+      ]);
+    } catch (err: any) {
+      alert('Ralat: ' + (err.message || 'Gagal menghasilkan XLSX'));
+    }
   };
 
   // KPI Calculations
@@ -1279,7 +1279,7 @@ export default function MakmpAdminDashboardPage() {
                 className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white text-xs font-semibold flex items-center gap-1.5 transition shrink-0 shadow-sm"
               >
                 <Download className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-                <span>Eksport CSV</span>
+                <span>Eksport XLSX</span>
               </button>
             </div>
           </div>

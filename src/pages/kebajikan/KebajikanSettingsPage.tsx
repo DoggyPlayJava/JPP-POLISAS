@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { exportXlsx } from '@/lib/exportXlsx';
 import { useAuth } from '@/contexts/AuthContext';
 import { Settings, Save, Clock, Mail, MessageSquare, Trash2, Database, ShieldAlert, Users, Plus, ToggleLeft, ToggleRight } from 'lucide-react';
 import { KEBAJIKAN_THEME_COLOR, KebajikanPic } from '@/types';
@@ -490,30 +491,35 @@ export function KebajikanSettingsPage() {
                 </div>
               )}
 
-              {/* Export CSV */}
+              {/* Export XLSX */}
               <div className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/60 dark:bg-white/[0.01]">
                 <div>
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-300">Eksport Semua Data</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Muat turun semua tiket sebagai CSV</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Muat turun semua tiket sebagai XLSX</p>
                 </div>
                 <button
                   onClick={async () => {
-                    const { data } = await supabase.from('kebajikan_tickets').select('*').csv();
-                    if (data) {
-                      const blob = new Blob([data], { type: 'text/csv' });
-                      const url  = URL.createObjectURL(blob);
-                      const a    = document.createElement('a');
-                      a.href     = url;
-                      a.download = `kebajikan_tiket_${new Date().toISOString().slice(0,10)}.csv`;
-                      a.click();
-                      URL.revokeObjectURL(url);
-                      toast.success('CSV berjaya dimuat turun!');
+                    const { data } = await supabase.from('kebajikan_tickets').select('*');
+                    if (data && data.length) {
+                      const cols = Object.keys(data[0]);
+                      const columns = cols.map((c) => ({
+                        header: c,
+                        width: 18,
+                        asText: /matric|ic|phone|no_|_no\b/i.test(c),
+                      }));
+                      const rows = data.map((r: any) => cols.map((c) => (r[c] === null || r[c] === undefined ? '' : r[c])));
+                      await exportXlsx(`kebajikan_tiket_${new Date().toISOString().slice(0,10)}.xlsx`, [
+                        { name: 'Tiket Kebajikan', columns, rows },
+                      ]);
+                      toast.success('XLSX berjaya dimuat turun!');
+                    } else {
+                      toast.error('Tiada data untuk dieksport.');
                     }
                   }}
                   disabled={!isAllowed}
                   className="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-400 hover:border-teal-500/40 hover:text-teal-600 dark:hover:text-teal-400 transition-colors disabled:opacity-30 bg-white dark:bg-transparent shadow-sm"
                 >
-                  Eksport CSV
+                  Eksport XLSX
                 </button>
               </div>
             </div>

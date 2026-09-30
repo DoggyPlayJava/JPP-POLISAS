@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { Download, FileImage, IdCard, ImageDown, Loader2, CheckCircle2, AlertCircle, FolderArchive, FileSpreadsheet, Mail, Trophy, Phone, Shuffle } from 'lucide-react';
+import { Download, FileImage, IdCard, ImageDown, Loader2, CheckCircle2, AlertCircle, FolderArchive, FileSpreadsheet, Mail, Trophy, Phone } from 'lucide-react';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { exportXlsx } from '@/lib/exportXlsx';
 import type { MakmpSubmission } from '@/types';
 
 interface MakmpWinnerDocsPanelProps {
@@ -42,7 +43,6 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
   const [downloading, setDownloading] = useState(false);
   const [downloadIdx, setDownloadIdx] = useState<string | null>(null);
   const [zipProgress, setZipProgress] = useState<string>('');
-  const [shuffleCsv, setShuffleCsv] = useState(false);
 
   // Senarai pemenang (DIJEMPUT) sahaja
   const winners = useMemo(() => {
@@ -109,39 +109,70 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
     }
   };
 
-  // ── Export CSV (nama, matrik, telefon, no IC, email, anugerah, URL gambar) ─
-  // Bila shuffleCsv = true: buang rank (#n) + shuffle susunan nama, kekal anugerah.
-  const exportCsv = () => {
-    // Susunan: rawak (Fisher-Yates) bila shuffleCsv, else ikut urutan asal.
-    let list = [...winners];
-    if (shuffleCsv) {
-      for (let i = list.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [list[i], list[j]] = [list[j], list[i]];
-      }
-    }
+  // ── Export XLSX (2 sheet: Senarai Penuh + Rawak untuk Pendaftaran) ────────
+  // - IC & matrik & telefon diset sebagai TEXT (elak scientific notation).
+  // - Embed gambar passport terus dalam sheet.
+  // - Bila shuffleCsv aktif: sheet "Rawak" buang rank (#n) + shuffle susunan.
+  const [exportingXlsx, setExportingXlsx] = useState(false);
+  const exportXlsxFile = async () => {
+    if (exportingXlsx) return;
+    setExportingXlsx(true);
+    try {
+      const cols = [
+        { header: 'Nama', width: 28 },
+        { header: 'No. Matrik', width: 16, asText: true },
+        { header: 'No. Telefon', width: 16, asText: true },
+        { header: 'No. IC', width: 16, asText: true },
+        { header: 'Emel', width: 26 },
+        { header: 'Jabatan', width: 20 },
+        { header: 'Anugerah', width: 34 },
+      ];
 
-    const rows = list.map((s) => {
-      const awardLabel = shuffleCsv
-        ? getWinnerAwardNames(s).join('; ') || '-'
-        : getWinnerAwards(s).join('; ') || '-';
-      return [
+      // Senarai penuh (dengan rank)
+      const fullRows = winners.map((s) => [
         s.full_name,
         s.matric_no,
         s.phone || '',
         s.winner_ic_no || '',
         s.email || '',
         s.department || '',
-        awardLabel,
-        s.winner_photo_url || '',
-      ];
-    });
-    const header = ['Nama', 'No. Matrik', 'No. Telefon', 'No. IC', 'Emel', 'Jabatan', 'Anugerah', 'URL Gambar'];
-    const esc = (v: string) => `"${(v || '').replace(/"/g, '""')}"`;
-    const csv = [header, ...rows].map((r) => r.map(esc).join(',')).join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const suffix = shuffleCsv ? 'Rawak' : 'Senarai_IC_Pemenang';
-    saveAs(blob, `MAKMP_${suffix}_${Date.now()}.csv`);
+        getWinnerAwards(s).join('; ') || '-',
+      ]);
+
+      // Rawak: buang rank + shuffle susunan nama
+      let shuffled = [...winners];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      const shuffledRows = shuffled.map((s) => [
+        s.full_name,
+        s.matric_no,
+        s.phone || '',
+        s.winner_ic_no || '',
+        s.email || '',
+        s.department || '',
+        getWinnerAwardNames(s).join('; ') || '-',
+      ]);
+
+      // Kolum gambar (embed dalam sheet penuh sahaja)
+      const images = winners
+        .map((s, idx) => (s.winner_photo_url ? { row: idx, col: 7, src: s.winner_photo_url, width: 64, height: 64 } : null))
+        .filter(Boolean) as { row: number; col: number; src: string; width: number; height: number }[];
+
+      await exportXlsx(
+        `MAKMP_Dokumen_Pemenang_${Date.now()}.xlsx`,
+        [
+          { name: 'Senarai Penuh', columns: cols, rows: fullRows },
+          { name: 'Rawak (Pendaftaran)', columns: cols, rows: shuffledRows },
+        ],
+        images
+      );
+    } catch (err: any) {
+      alert('Ralat: ' + (err.message || 'Gagal menghasilkan XLSX'));
+    } finally {
+      setExportingXlsx(false);
+    }
   };
 
   return (
@@ -186,26 +217,12 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
           Muat Turun Semua Gambar (ZIP)
         </button>
         <button
-          onClick={exportCsv}
-          disabled={stats.total === 0}
+          onClick={exportXlsxFile}
+          disabled={stats.total === 0 || exportingXlsx}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-xs font-bold hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
         >
-          <FileSpreadsheet className="w-4 h-4" />
-          Export Senarai IC (CSV)
-        </button>
-
-        {/* Toggle rawakkan kedudukan (untuk Jawatankuasa Pendaftaran) */}
-        <button
-          onClick={() => setShuffleCsv((v) => !v)}
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm border ${
-            shuffleCsv
-              ? 'bg-rose-500 text-white border-rose-600 hover:bg-rose-400'
-              : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
-          }`}
-          title="Bila aktif, CSV akan buang kedudukan (#1/#2/#3) & rawakkan susunan nama — supaya Jawatankuasa Pendaftaran tidak tahu siapa pemenang."
-        >
-          <Shuffle className="w-4 h-4" />
-          Rawakkan Kedudukan {shuffleCsv ? '(AKTIF)' : ''}
+          {exportingXlsx ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
+          Export Dokumen Pemenang (XLSX)
         </button>
       </div>
 

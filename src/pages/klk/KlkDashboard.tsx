@@ -12,6 +12,7 @@ import {
 import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { supabase } from '@/lib/supabase';
+import { exportXlsx } from '@/lib/exportXlsx';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -394,7 +395,7 @@ export function KlkDashboard() {
     return () => document.removeEventListener('visibilitychange', handleVis);
   }, [fetchAll]);
 
-  // ── Export CSV ─────────────────────────────────────────────
+  // ── Export XLSX ─────────────────────────────────────────────
   const handleExport = async () => {
     if (!dbReady) { toast.error('Database belum sedia.'); return; }
     try {
@@ -405,18 +406,26 @@ export function KlkDashboard() {
         .eq('tinggal_luar', true);
 
       if (!data?.length) { toast.error('Tiada data untuk export.'); return; }
-      const headers = ['Nama', 'No Matrik', 'No Telefon', 'Jabatan', 'Kawasan', 'Alamat', 'Cadangan', 'Sumber', 'Tarikh'];
+      const columns = [
+        { header: 'Nama', width: 26 },
+        { header: 'No Matrik', width: 16, asText: true },
+        { header: 'No Telefon', width: 16, asText: true },
+        { header: 'Jabatan', width: 18 },
+        { header: 'Kawasan', width: 22 },
+        { header: 'Alamat', width: 32 },
+        { header: 'Cadangan', width: 28 },
+        { header: 'Sumber', width: 14 },
+        { header: 'Tarikh', width: 14 },
+      ];
       const rows = data.map((d: any) => [
         d.nama_pelajar, d.no_matrik, d.no_telefon ?? '',
         d.jabatan ?? '', d.kawasan_kediaman === 'LAIN_LAIN' ? d.kawasan_custom : d.kawasan_kediaman,
         d.alamat_kediaman ?? '', d.cadangan ?? '', d.source,
         new Date(d.created_at).toLocaleDateString('ms-MY'),
       ]);
-      const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = `KLK_${academicYear.replace('/', '-')}.csv`;
-      a.click(); URL.revokeObjectURL(url);
+      await exportXlsx(`KLK_${academicYear.replace('/', '-')}.xlsx`, [
+        { name: 'Senarai KLK', columns, rows },
+      ]);
       toast.success('Export berjaya!');
     } catch { toast.error('Gagal export.'); }
   };
@@ -681,7 +690,7 @@ export function KlkDashboard() {
             </button>
             <button onClick={handleExport}
               className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-slate-300">
-              <Download className="w-3.5 h-3.5" /> Export CSV
+              <Download className="w-3.5 h-3.5" /> Export XLSX
             </button>
             <Link to="/klk/tetapan"
               className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-xl transition-colors"

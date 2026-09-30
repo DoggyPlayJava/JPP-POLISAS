@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useKarnival } from '@/contexts/KarnivalContext';
 import { supabase } from '@/lib/supabase';
+import { exportXlsx } from '@/lib/exportXlsx';
 import { Trophy, Loader2, Download, RefreshCw } from 'lucide-react';
 
 interface BoothResult {
@@ -37,20 +38,18 @@ export function KarnivalAdminResults() {
 
   useEffect(() => { fetchResults(); }, [fetchResults, lastUpdated]);
 
-  // ── Export CSV ──────────────────────────────────────────────
-  const exportCsv = () => {
-    const header = ['Kedudukan', 'Booth', 'No. Booth', 'Jumlah Undi'];
-    const rows   = results.map((b, i) => [i + 1, b.booth_name, b.booth_number ?? '', b.total_votes]);
-    const csv    = [header, ...rows]
-      .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
-      .join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href     = url;
-    a.download = `Keputusan-${selectedCat?.name ?? 'Karnival'}-${edition?.edition_year ?? ''}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  // ── Export XLSX ──────────────────────────────────────────────
+  const exportCsv = async () => {
+    const columns = [
+      { header: 'Kedudukan', width: 12 },
+      { header: 'Booth', width: 28 },
+      { header: 'No. Booth', width: 14, asText: true },
+      { header: 'Jumlah Undi', width: 14 },
+    ];
+    const rows = results.map((b, i) => [i + 1, b.booth_name, b.booth_number ?? '', b.total_votes]);
+    await exportXlsx(`Keputusan-${selectedCat?.name ?? 'Karnival'}-${edition?.edition_year ?? ''}.xlsx`, [
+      { name: 'Keputusan', columns, rows },
+    ]);
   };
 
   if (!edition) {
@@ -106,7 +105,7 @@ export function KarnivalAdminResults() {
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 text-xs font-bold text-emerald-400 border border-emerald-500/20 transition-all"
             >
               <Download className="w-3.5 h-3.5" />
-              Export CSV
+              Export XLSX
             </button>
           )}
         </div>
