@@ -1607,6 +1607,112 @@ app.post('/api/polymart-chat-notify', requireWebhookSecret, async (req, res) => 
 // ==========================================
 
 // ==========================================
+// MAKMP Winner Notification (webhook dari DB trigger)
+// Bila finalize_makmp_award menetapkan winner_status='DIJEMPUT',
+// hantar in-app + push + EMAIL "Tahniah pemenang" kepada top 3.
+// ==========================================
+app.post('/api/makmp-winner-notify', requireWebhookSecret, async (req, res) => {
+    try {
+        if (!supabaseAdmin) throw new Error('Supabase Admin Client not initialized.');
+
+        const { recipientId, submissionId, fullName, email, matricNo, trackingCode, awardName } = req.body || {};
+        if (!submissionId) {
+            return res.status(400).json({ error: 'submissionId is required.' });
+        }
+
+        const title = '🏆 Tahniah! Anda dipilih sebagai pemenang MAKMP';
+        const message = `Anda telah dipilih sebagai pemenang bagi anugerah "${awardName || 'MAKMP'}" (${trackingCode || ''}). Sila lengkapkan maklumat diri untuk pengambilan hadiah.`;
+
+        // 1. In-app notification (hanya jika ada user_id)
+        if (recipientId) {
+            const { error: notifErr } = await supabaseAdmin
+                .from('notifications')
+                .insert({
+                    user_id: recipientId,
+                    title,
+                    message,
+                    type: 'MAKMP',
+                    module: 'MAKMP',
+                    link: '/makmp/status?code=' + (trackingCode || ''),
+                    reference_id: submissionId,
+                    is_read: false
+                });
+            if (notifErr) console.error('[makmp-winner-notify] In-app insert error:', notifErr.message);
+        }
+
+        // 2. Push notification
+        let sent = 0;
+        let failed = 0;
+        const staleIds = [];
+        if (recipientId) {
+            const { data: subs, error: subsError } = await supabaseAdmin
+                .from('push_subscriptions')
+                .select('id, user_id, endpoint, p256dh, auth')
+                .eq('user_id', recipientId);
+            if (!subsError && subs && subs.length > 0) {
+                const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
+                const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+                if (vapidPublicKey && vapidPrivateKey) {
+                    webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:jpp@cipher-node.org', vapidPublicKey, vapidPrivateKey);
+                    const pushPayload = JSON.stringify({
+                        title,
+                        body: message,
+                        icon: '/icon-192-maskable.png',
+                        badge: '/icon-192-maskable.png',
+                        tag: 'makmp-winner',
+                        renotify: true,
+                        data: { url: '/makmp/status?code=' + (trackingCode || ''), module: 'MAKMP', type: 'MAKMP' }
+                    });
+                    await Promise.allSettled(
+                        subs.map(async (sub) => {
+                            try {
+                                await webpush.sendNotification(
+                                    { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+                                    pushPayload
+                                );
+                                sent++;
+                            } catch (e) {
+                                failed++;
+                                if (e.statusCode === 410) staleIds.push(sub.id);
+                            }
+                        })
+                    );
+                    if (staleIds.length > 0) {
+                        await supabaseAdmin.from('push_subscriptions').delete().in('id', staleIds);
+                    }
+                }
+            }
+        }
+
+        // 3. Email — guna email terus dari submission (wujud walau tanpa akaun portal)
+        try {
+            if (email) {
+                const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const studentName = fullName || 'Pelajar';
+                const awardLabel = awardName || 'MAKMP';
+                const portalUrl = 'https://jpp.cipher-node.org/makmp/status?code=' + (trackingCode || '');
+                const subject = `🏆 Tahniah! Anda Dipilih Sebagai Pemenang "${awardLabel}"`;
+
+                const html = `<!DOCTYPE html><html lang="ms"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head><body style="margin:0;padding:0;background:#F4EDE6;"><div style="background:#F4EDE6;padding:32px 16px;font-family:'Manrope','Segoe UI','Helvetica Neue',Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;background:#FFFFFF;border-radius:20px;overflow:hidden;box-shadow:0 12px 40px rgba(55,16,16,0.12);"><div style="background:linear-gradient(135deg,#871A1A 0%,#4A1111 55%,#371010 100%);padding:36px 32px 28px;text-align:center;"><div style="display:inline-block;background:linear-gradient(135deg,#D19D1A 0%,#EEA02B 100%);color:#371010;font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;padding:6px 16px;border-radius:999px;">JPP Polisas · MAKMP</div><h1 style="margin:18px 0 4px;color:#FFFFFF;font-size:24px;font-weight:800;line-height:1.3;">🏆 Tahniah!</h1><p style="margin:0;color:rgba(255,255,255,0.78);font-size:13px;font-weight:500;">Majlis Anugerah Kecemerlangan Mahasiswa POLISAS</p></div><div style="padding:32px;"><div style="text-align:center;margin-bottom:24px;"><div style="display:inline-flex;align-items:center;gap:10px;background:#FFF3D6;color:#9A6A00;font-size:13px;font-weight:800;padding:10px 20px;border-radius:999px;"><span style="font-size:16px;">🏆</span> PEMENANG</div></div><p style="margin:0 0 20px;color:#2A1515;font-size:15px;font-weight:600;line-height:1.6;">Salam sejahtera, <strong>${esc(studentName)}</strong>.</p><p style="margin:0 0 20px;color:#2A1515;font-size:14px;line-height:1.6;">Tahniah! Anda telah dipilih sebagai <strong>pemenang</strong> bagi anugerah berikut:</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #EFE3D8;border-radius:12px;overflow:hidden;"><tr><td style="padding:10px 16px;color:#8A6D6D;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border-bottom:1px solid #EFE3D8;">Anugerah</td><td style="padding:10px 16px;color:#2A1515;font-size:14px;font-weight:600;border-bottom:1px solid #EFE3D8;">${esc(awardLabel)}</td></tr>${matricNo ? `<tr><td style="padding:10px 16px;color:#8A6D6D;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border-bottom:1px solid #EFE3D8;">No. Matrik</td><td style="padding:10px 16px;color:#2A1515;font-size:14px;font-weight:600;border-bottom:1px solid #EFE3D8;">${esc(matricNo)}</td></tr>` : ''}</table><div style="margin-top:16px;padding:14px 16px;background:#FFF3D6;border-left:4px solid #D19D1A;border-radius:10px;"><p style="margin:0;color:#9A6A00;font-size:13px;font-weight:700;">Sila lengkapkan maklumat diri anda di portal untuk pengambilan hadiah.</p></div><div style="margin-top:24px;text-align:center;"><a href="${portalUrl}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#D19D1A 0%,#EEA02B 100%);color:#371010;font-size:14px;font-weight:800;letter-spacing:0.04em;text-decoration:none;border-radius:999px;">Lengkapkan Maklumat Diri</a></div><div style="margin-top:28px;padding-top:20px;border-top:1px solid #EFE3D8;text-align:center;"><p style="margin:0;color:#8A6D6D;font-size:11px;line-height:1.6;">Emel ini dihantar secara automatik oleh sistem MAKMP JPP Polisas.<br/>Sebarang pertanyaan, sila hubungi urus setia MAKMP.</p></div></div><div style="background:#371010;padding:20px 32px;text-align:center;"><p style="margin:0;color:#D19D1A;font-size:12px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;">JPP Polisas</p><p style="margin:4px 0 0;color:rgba(255,255,255,0.55);font-size:11px;">Bersama Membina Kesejahteraan Mahasiswa</p></div></div></div></body></html>`;
+
+                await sendEmailInternal(email, subject, html)
+                    .then(() => console.log(`[makmp-winner-notify] Email sent to ${email} (${studentName})`))
+                    .catch((e) => console.error('[makmp-winner-notify] Email error:', e.message));
+            }
+        } catch (emailErr) {
+            console.error('[makmp-winner-notify] Email block error:', emailErr.message);
+        }
+
+        console.log(`[makmp-winner-notify] Winner ${fullName || submissionId} -> Push:${sent} Failed:${failed}`);
+        return res.status(200).json({ success: true, sent, failed });
+    } catch (error) {
+        console.error('[makmp-winner-notify] Error:', error.message);
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+
+// ==========================================
 // 7. PolyRider SOS Alert Endpoint
 // Prioriti KRITIKAL: Dihantar kepada semua KLK & SUPER_ADMIN_JPP
 
