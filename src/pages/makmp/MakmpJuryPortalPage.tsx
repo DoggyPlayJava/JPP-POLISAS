@@ -37,7 +37,7 @@ import {
   markAwardInReview,
   unlockAwardReview,
   fetchReviewLog,
-  calculateSuggestedMerit,
+
   PERINGKAT_OPTIONS,
   PENCAPAIAN_TYPE_OPTIONS,
   KEPIMPINAN_JPP_OPTIONS,
@@ -283,13 +283,9 @@ export default function MakmpJuryPortalPage() {
             ? item.report_score
             : Math.round((item.merit_awarded > 0 ? item.merit_awarded : (item.merit_suggested || 0)) * 10)
           : 0,
-      // Untuk award yang BELUM selesai disemak, default tick = true (mudahkan juri).
-      // Untuk award yang dah DISAHKAN/DITOLAK, hormati is_verified sebenar dari DB
-      // supaya refresh tak auto-accept semula dokumen yang di-untick.
-      is_verified:
-        awApp.status === 'DISAHKAN' || awApp.status === 'DITOLAK'
-          ? item.is_verified === true
-          : true,
+      // Hormati nilai is_verified sebenar dari DB — jangan auto-tick.
+      // (Bug lama: dokumen yang juri/pegawai untick jadi auto-accept bila refresh.)
+      is_verified: item.is_verified === true,
       peringkat: item.peringkat,
       pencapaian_type: item.pencapaian_type,
     }));
@@ -324,16 +320,11 @@ export default function MakmpJuryPortalPage() {
           const score = Math.max(0, Math.min(100, Number(value) || 0));
           updated.report_score = score;
           updated.merit_awarded = Math.round(score / 10);
-        } else if (isKepimpinanJppAward(activeAward?.award?.name) && (field === 'peringkat' || field === 'pencapaian_type')) {
-          // Anugerah Kepimpinan JPP — merit = Peringkat Sah + Peranan Kepimpinan.
-          const peringkat = field === 'peringkat' ? value : item.peringkat;
-          const role = field === 'pencapaian_type' ? value : item.pencapaian_type;
-          updated.merit_awarded = getKepimpinanJppMerit(peringkat, role);
         } else if (field === 'peringkat' || field === 'pencapaian_type') {
-          updated.merit_awarded = calculateSuggestedMerit(
-            field === 'peringkat' ? value : item.peringkat,
-            field === 'pencapaian_type' ? value : item.pencapaian_type
-          );
+          // JANGAN auto-overwrite merit manual. Nilai merit kekal seperti yang
+          // juri/pegawai key-in. (Bug lama: tukar dropdown Peringkat/Tahap akan
+          // reset merit ke nilai cadangan additive, membatalkan override manual.)
+          // merit_awarded dikekalkan — juri boleh ubah terus melalui field merit.
         }
         return updated;
       })
