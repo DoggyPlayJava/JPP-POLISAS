@@ -20,95 +20,10 @@ dotenv.config();
 // ==========================================
 // BACKGROUND CRON JOBS
 // ==========================================
-// Storage audit runs daily at 02:00 AM — DRY-RUN ONLY (no auto-delete).
-//
-// On 2026-09-24 an older version of storage-cleanup.js auto-deleted 38+
-// student MAKMP certificates because `makmp_submission_items` was missing
-// from its reference list. To prevent any recurrence, the daily job now
-// only SCANS for orphaned files and EMAILS a report to the admin. Actual
-// deletion requires a manual `node scripts/storage-cleanup.js --confirm`.
-cron.schedule('0 2 * * *', async () => {
-    console.log('[CRON] Starting daily storage audit (dry-run)...');
-    try {
-        const result = await runCleanup();
-
-        // Only email when there's something to review.
-        if (result && result.orphanedFiles && result.orphanedFiles.length > 0) {
-            await sendStorageCleanupAlert(result);
-        } else if (result && result.aborted) {
-            console.error('[CRON] Storage audit aborted — see logs above.');
-        } else {
-            console.log('[CRON] Storage audit complete — no orphaned files found.');
-        }
-    } catch (err) {
-        console.error('[CRON] Storage audit failed:', err.message);
-    }
-});
-
-/**
- * Email a storage-cleanup report to the admin (Resend), so orphaned files
- * are reviewed by a human BEFORE anything is deleted.
- */
-async function sendStorageCleanupAlert(result) {
-    const RESEND_API_KEY = process.env.RESEND_API_KEY;
-    const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'jpp@cipher-node.org';
-
-    if (!RESEND_API_KEY) {
-        console.error('[CRON] Cannot send storage cleanup alert: RESEND_API_KEY not set.');
-        return;
-    }
-
-    const MAX_LISTED = 200;
-    const orphaned = result.orphanedFiles || [];
-    const listed = orphaned.slice(0, MAX_LISTED);
-    const remaining = orphaned.length - listed.length;
-
-    const rows = listed
-        .map((p) => `<tr><td style="padding:4px 8px;border:1px solid #e2e8f0;font-family:monospace;font-size:12px;">${String(p).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td></tr>`)
-        .join('');
-
-    const html = `
-        <div style="font-family:sans-serif;padding:20px;">
-            <h2 style="color:#e11d48;">🗑️ Laporan Audit Storage JPP-POLISAS</h2>
-            <p>Audit harian (dry-run) menjumpai <strong>${orphaned.length}</strong> fail "orphaned" (tiada rujukan DB).</p>
-            <p><strong>Tidak ada sebarang fail dipadam secara automatik.</strong></p>
-            <table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;">
-                <tr style="background:#f87171;color:#fff;">
-                    <th style="padding:8px;text-align:left;">Fail (bucket/path)</th>
-                </tr>
-                ${rows}
-            </table>
-            ${remaining > 0 ? `<p style="color:#b45309;">… dan ${remaining} lagi fail (dipotong).</p>` : ''}
-            <p style="margin-top:20px;">Untuk memadam fail yang disahkan tidak diperlukan, jalankan:</p>
-            <pre style="background:#f1f5f9;padding:12px;border-radius:8px;font-size:12px;">node scripts/storage-cleanup.js --confirm</pre>
-            <p style="color:#64748b;font-size:12px;">Sila semak senarai ini dengan teliti sebelum memadam — pastikan tiada sijil pelajar (makmp_sijil) tersenarai.</p>
-        </div>
-    `;
-
-    try {
-        const response = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${RESEND_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                from: 'JPP Polisas <jpp@cipher-node.org>',
-                to: ADMIN_EMAIL,
-                subject: `🗑️ [Storage Audit] ${orphaned.length} fail orphaned dikesan`,
-                html,
-            }),
-        });
-
-        const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.message || 'Gagal menghantar email audit storage');
-        }
-        console.log(`[CRON] Storage cleanup alert emailed to ${ADMIN_EMAIL} (${orphaned.length} files).`);
-    } catch (err) {
-        console.error('[CRON] Failed to send storage cleanup alert:', err.message);
-    }
-}
+// NOTE: The daily storage-audit cron (and its Resend email) has been REMOVED
+// to stop the daily email spam. Storage audit is now triggered on-demand via
+// GET /api/storage-audit from the JPP "Log Audit" page ("Semak Storage").
+// runCleanup() (imported above) is still used by that endpoint.
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -422,6 +337,31 @@ app.post('/api/send-email', requireAuth, emailSendLimiter, async (req, res) => {
         const msg = error instanceof Error ? error.message : "Ralat dalam penghantaran emel.";
         console.error("[send-email] Error:", msg);
         return res.status(500).json({ error: msg });
+    }
+});
+
+// ==========================================
+// 2B. Storage Audit (on-demand scan, NO auto-email, NO deletion)
+//     Triggered by "Semak Storage" button on the JPP Log Audit page.
+// ==========================================
+app.get('/api/storage-audit', requireAuth, async (req, res) => {
+    try {
+        if (!supabaseAdmin) throw new Error("Supabase Admin Client not initialized.");
+
+        // RBAC: only SUPER_ADMIN_JPP / ADMIN may run a storage scan.
+        const { data: callerProfile } = await supabaseAdmin
+            .from('profiles').select('role').eq('id', req.user.id).single();
+        const allowed = ['SUPER_ADMIN_JPP', 'ADMIN', 'super_admin', 'SUPER_ADMIN'];
+        if (!callerProfile || !allowed.includes(callerProfile.role)) {
+            return res.status(403).json({ error: 'Akses ditolak. Hanya pentadbir dibenarkan.' });
+        }
+
+        // runCleanup() is dry-run by default (DRY_RUN true unless --confirm in argv).
+        const result = await runCleanup();
+        return res.status(200).json(result);
+    } catch (err) {
+        console.error("[storage-audit] Error:", err.message);
+        return res.status(500).json({ error: err.message });
     }
 });
 

@@ -58,6 +58,9 @@ import {
 import { FoodBankQrPassModal } from '@/components/foodbank/FoodBankQrPassModal';
 import { Link } from 'react-router-dom';
 import { getBuilding360Url } from '@/lib/polymaps360Data';
+import { sendNotificationToKebajikanExco } from '@/lib/notifications';
+import { sendEmail } from '@/lib/email';
+import { buildFoodBankEmail } from '@/lib/foodbankEmail';
 import {
   DEFAULT_FOODBANK_SETTINGS,
   DEFAULT_FOODBANK_ITEMS,
@@ -87,6 +90,16 @@ const TIME_SLOTS = [
 
 export function KebajikanFoodBankPage() {
   const { user, profile } = useAuth();
+
+  // Helper hantar emel Food Bank (fire-and-forget)
+  const buildEmailAndSend = async (status: any, data: any, to: string) => {
+    try {
+      const { subject, html } = buildFoodBankEmail({ ...data, status });
+      await sendEmail({ to, subject, html });
+    } catch (e) {
+      console.error('FoodBank email error:', e);
+    }
+  };
 
   // State data utama
   const [settings, setSettings] = useState<FoodBankSettings | null>(null);
@@ -710,8 +723,36 @@ export function KebajikanFoodBankPage() {
 
       toast.success('Permohonan Food Bank berjaya dihantar!');
 
-      // Set permohonan baru sebagai active & buka pas QR serta merta
+      // ── Notifikasi + Emel ─────────────────────────────────────────────
+      const studentEmail = profile?.email || user?.email;
       const newApp = insertedApp as FoodBankApplication;
+
+      // (a) In-app + push ke Exco Kebajikan
+      sendNotificationToKebajikanExco({
+        title: 'Permohonan Food Bank Baru',
+        message: `${profile?.full_name || 'Mahasiswa'} menghantar permohonan ${appNo}.`,
+        type: 'FOODBANK_SUBMISSION',
+        module: 'KEBAJIKAN',
+        link: '/jpp/foodbank',
+        reference_id: newApp?.id,
+        actor_name: profile?.full_name || undefined,
+      }).catch(() => {});
+
+      // (b) Emel pengesahan kepada pelajar
+      if (studentEmail) {
+        buildEmailAndSend('MENUNGGU', {
+          studentName: profile?.full_name || user?.email || 'Mahasiswa',
+          matricNo: profile?.matric_no,
+          applicationNo: appNo,
+          programme: profile?.programme_code,
+          items: selectedItemsList,
+          pickupDate: pickupDate,
+          pickupTime: pickupTimeSlot,
+          location: selectedLocationName,
+        }, studentEmail).catch(() => {});
+      }
+
+      // Set permohonan baru sebagai active & buka pas QR serta merta
       setActiveApplication(newApp);
       setSelectedPassApp(newApp);
       setPassModalOpen(true);

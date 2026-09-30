@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { ShieldAlert, Search, ShieldCheck, AlertTriangle, Activity, Trash2, User, Clock, Sparkles, RefreshCw } from 'lucide-react';
+import { ShieldAlert, Search, ShieldCheck, AlertTriangle, Activity, Trash2, User, Clock, Sparkles, RefreshCw, HardDrive } from 'lucide-react';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { hexToRgba, cn, API_BASE_URL } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
@@ -86,6 +86,9 @@ export function JppLogsPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
+  const [storageLoading, setStorageLoading] = useState(false);
+  const [storageResult, setStorageResult] = useState<any>(null);
+
   useEffect(() => {
     supabase.from('portal_settings').select('color').eq('exco_module', JPP_MODULE_ID).maybeSingle()
       .then(({ data }) => { if (data?.color) setThemeColor(data.color); });
@@ -158,6 +161,28 @@ export function JppLogsPage() {
       setAiSummary('Gagal jana ringkasan AI.');
     }
     setAiLoading(false);
+  };
+
+  const handleStorageAudit = async () => {
+    setStorageLoading(true);
+    setStorageResult(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('Sesi tamat — sila log masuk semula.');
+      const response = await fetch(`${API_BASE_URL}/api/storage-audit`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Gagal menjalankan audit storage.');
+      setStorageResult(data);
+      const n = data?.orphanedFiles?.length ?? 0;
+      toast.success(n > 0 ? `Audit selesai: ${n} fail orphaned dikesan.` : 'Audit selesai: tiada fail orphaned.', { duration: 5000 });
+    } catch (e: any) {
+      toast.error(e.message || 'Gagal menjalankan audit storage.');
+    } finally {
+      setStorageLoading(false);
+    }
   };
 
   // ── Stats ────────────────────────────────────────────────────────────────────
@@ -282,6 +307,9 @@ export function JppLogsPage() {
               </div>
             </div>
             <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" size="sm" onClick={handleStorageAudit} disabled={storageLoading} className="rounded-xl border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 bg-transparent text-xs">
+                <HardDrive className="w-3.5 h-3.5 mr-1.5" /> {storageLoading ? 'Mengimbas...' : 'Semak Storage'}
+              </Button>
               <Button variant="outline" size="sm" onClick={fetchData} className="rounded-xl border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 bg-transparent text-xs">
                 <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Muat Semula
               </Button>
@@ -305,6 +333,56 @@ export function JppLogsPage() {
             <div className="space-y-3 prose-p:my-2 prose-ul:my-2 prose-li:ml-4 prose-li:list-disc marker:text-slate-400 dark:marker:text-white/30 prose-strong:text-slate-900 dark:prose-strong:text-white prose-strong:font-bold">
               <ReactMarkdown>{aiSummary}</ReactMarkdown>
             </div>
+          </motion.div>
+        )}
+
+        {/* ── Storage Audit Result ── */}
+        {storageResult && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-2xl p-6 space-y-4 shadow-sm">
+            <div className="flex items-center gap-2 text-slate-800 dark:text-white/80">
+              <HardDrive className="w-4 h-4" />
+              <span className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Hasil Audit Storage (Dry-Run)</span>
+            </div>
+            {storageResult.aborted ? (
+              <p className="text-sm text-rose-600 dark:text-rose-400 font-medium">
+                Audit gagal dijalankan{storageResult.error ? `: ${storageResult.error}` : ''}. Sila semak log pelayan.
+              </p>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { label: 'Fail Diimbas', value: storageResult.totalScanned ?? 0, color: 'text-sky-600 dark:text-sky-400' },
+                    { label: 'Fail Dikekalkan', value: storageResult.totalKept ?? 0, color: 'text-emerald-600 dark:text-emerald-400' },
+                    { label: 'Fail Orphaned', value: (storageResult.orphanedFiles?.length ?? 0), color: 'text-rose-600 dark:text-rose-400' },
+                    { label: 'Mod', value: storageResult.dryRun ? 'Dry-Run' : 'LIVE', color: 'text-amber-600 dark:text-amber-400' },
+                  ].map(s => (
+                    <div key={s.label} className="bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-xl p-4">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{s.label}</p>
+                      <p className={`font-black text-xl mt-1 ${s.color}`}>{s.value}</p>
+                    </div>
+                  ))}
+                </div>
+                {(storageResult.orphanedFiles?.length ?? 0) > 0 ? (
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-slate-700 dark:text-white/60">Senarai fail orphaned (tiada rujukan DB):</p>
+                    <div className="max-h-64 overflow-y-auto rounded-xl border border-slate-200 dark:border-white/10 divide-y divide-slate-100 dark:divide-white/5">
+                      {storageResult.orphanedFiles.slice(0, 200).map((p: string, i: number) => (
+                        <div key={i} className="px-3 py-1.5 font-mono text-[11px] text-slate-600 dark:text-white/50 truncate">{p}</div>
+                      ))}
+                    </div>
+                    {storageResult.orphanedFiles.length > 200 && (
+                      <p className="text-[11px] text-amber-600 dark:text-amber-400">… dan {storageResult.orphanedFiles.length - 200} lagi fail (dipotong).</p>
+                    )}
+                    <p className="text-[11px] text-slate-500 dark:text-white/40">
+                      Tiada fail dipadam secara automatik. Untuk padam fail yang disahkan tidak diperlukan, jalankan <code className="font-mono bg-slate-100 dark:bg-white/5 px-1.5 py-0.5 rounded">node scripts/storage-cleanup.js --confirm</code> di pelayan.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">✅ Tiada fail orphaned dikesan.</p>
+                )}
+              </>
+            )}
           </motion.div>
         )}
 

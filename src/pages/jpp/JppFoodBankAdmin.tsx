@@ -88,6 +88,9 @@ import {
 import { FoodBankQrPassModal } from '@/components/foodbank/FoodBankQrPassModal';
 import { Link } from 'react-router-dom';
 import { getBuilding360Url } from '@/lib/polymaps360Data';
+import { sendNotificationToUser } from '@/lib/notifications';
+import { sendEmail } from '@/lib/email';
+import { buildFoodBankEmail } from '@/lib/foodbankEmail';
 import {
   DEFAULT_FOODBANK_SETTINGS,
   DEFAULT_FOODBANK_ITEMS,
@@ -109,6 +112,55 @@ type AdminTab = 'applications' | 'inventory' | 'budget' | 'settings' | 'audit';
 
 export function JppFoodBankAdmin() {
   const { user, profile, isSuperAdmin } = useAuth();
+
+  // Helper hantar notifikasi + emel Food Bank kepada pelajar
+  const notifyStudent = async (app: FoodBankApplication, status: 'LULUS' | 'DITOLAK' | 'SELESAI') => {
+    const recipientId = app.applicant?.id;
+    const recipientEmail = app.applicant?.email;
+    const studentName = app.applicant?.full_name || 'Mahasiswa';
+    const locationName = (app.location as any)?.name || app.location?.name || 'Pusat Agihan';
+
+    const payload = {
+      title: status === 'LULUS'
+        ? 'Permohonan Food Bank Diluluskan'
+        : status === 'DITOLAK'
+          ? 'Permohonan Food Bank Ditolak'
+          : 'Bantuan Food Bank Telah Diambil',
+      message: status === 'LULUS'
+        ? `Tahniah! Permohonan ${app.application_no} anda telah diluluskan. Sila muat turun pas QR anda.`
+        : status === 'DITOLAK'
+          ? `Permohonan ${app.application_no} anda tidak berjaya. Sila semak emel untuk maklumat lanjut.`
+          : `Bantuan bagi permohonan ${app.application_no} telah diserahkan. Terima kasih.`,
+      type: 'FOODBANK_STATUS',
+      module: 'KEBAJIKAN' as const,
+      link: '/kebajikan/foodbank',
+      reference_id: app.id,
+      actor_name: profile?.full_name || 'Pegawai JPP',
+    };
+
+    if (recipientId) {
+      sendNotificationToUser(recipientId, payload).catch(() => {});
+    }
+
+    if (recipientEmail) {
+      try {
+        const { subject, html } = buildFoodBankEmail({
+          status,
+          studentName,
+          matricNo: app.applicant?.matric_no,
+          applicationNo: app.application_no,
+          items: (app.selected_items || []).map((it) => ({ name: it.item_name, quantity: it.quantity, unit: it.unit })),
+          pickupDate: app.pickup_date,
+          pickupTime: app.pickup_time_slot,
+          location: status === 'DITOLAK' ? undefined : locationName,
+          rejectionReason: status === 'DITOLAK' ? (app.rejection_reason || undefined) : undefined,
+        });
+        await sendEmail({ to: recipientEmail, subject, html });
+      } catch (e) {
+        console.error('FoodBank admin email error:', e);
+      }
+    }
+  };
 
   // ── States Utama ──────────────────────────────────────────────────────────
   const [settings, setSettings] = useState<FoodBankSettings | null>(null);
@@ -726,6 +778,9 @@ export function JppFoodBankAdmin() {
         });
 
         setCounterInput('');
+        if (matched?.applicant?.id) {
+          notifyStudent({ ...matched, status: 'SELESAI' }, 'SELESAI').catch(() => {});
+        }
         // Muat semula data di latar belakang
         fetchAllData(true);
       } else {
@@ -757,6 +812,7 @@ export function JppFoodBankAdmin() {
       if (error) throw error;
 
       toast.success(`Permohonan ${app.application_no} berjaya DILULUSKAN! Pas QR sedia.`);
+      notifyStudent({ ...app, status: 'LULUS' }, 'LULUS').catch(() => {});
       fetchAllData(true);
     } catch (err: any) {
       console.error('Approve error:', err);
@@ -794,6 +850,7 @@ export function JppFoodBankAdmin() {
       if (error) throw error;
 
       toast.success(`Permohonan ${rejectionModalApp.application_no} telah DITOLAK.`);
+      notifyStudent({ ...rejectionModalApp, status: 'DITOLAK', rejection_reason: rejectionReason.trim() }, 'DITOLAK').catch(() => {});
       setRejectionModalApp(null);
       setRejectionReason('');
       fetchAllData(true);
