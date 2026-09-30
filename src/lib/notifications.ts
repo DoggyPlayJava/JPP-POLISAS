@@ -40,7 +40,7 @@ async function firePush(user_id: string, payload: NotificationPayload): Promise<
     // Fetch all subscriptions for this user
     const { data: subs } = await supabase
       .from('push_subscriptions')
-      .select('endpoint, p256dh, auth')
+      .select('id, endpoint, p256dh, auth')
       .eq('user_id', user_id);
 
     if (!subs?.length) return;
@@ -49,21 +49,37 @@ async function firePush(user_id: string, payload: NotificationPayload): Promise<
     if (!session?.access_token) return;
 
     await Promise.allSettled(
-      subs.map(sub =>
-        fetch(`${API_BASE_URL}/api/send-push-notification`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            subscription: { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-            title: payload.title,
-            body:  payload.message,
-            data:  { url: payload.link || '/portal', link: payload.link, module: payload.module, type: payload.type },
-          })
-        }).catch(err => console.error("Error pushing:", err))
-      )
+      subs.map(async (sub) => {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/send-push-notification`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              subscription: { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+              title: payload.title,
+              body:  payload.message,
+              data:  { url: payload.link || '/portal', link: payload.link, module: payload.module, type: payload.type },
+            })
+          });
+
+          // 410 = subscription mati/expired → padam supaya tak hantar lagi
+          if (res.status === 410) {
+            try {
+              await supabase.from('push_subscriptions').delete().eq('id', sub.id);
+            } catch {
+              /* abaikan jika tiada keizinan (RLS) */
+            }
+          } else if (!res.ok) {
+            // Gagal hantar tapi bukan subscription mati — log status sahaja
+            console.warn(`[firePush] Push gagal (HTTP ${res.status}) untuk user ${user_id}`);
+          }
+        } catch (err) {
+          console.warn('[firePush] Error pushing:', err);
+        }
+      })
     );
   } catch (err) {
     console.error('[firePush] Error:', err);

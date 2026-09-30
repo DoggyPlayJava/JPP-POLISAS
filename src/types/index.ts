@@ -1386,6 +1386,13 @@ export interface FoodBankApplication {
   pickup_qr_code?: string | null;
   pickup_verified_at?: string | null;
   pickup_verified_by?: string | null;
+  // Pindaan Nama / No. Matrik oleh pelajar (sebelum hantar) + pengesahan kaunter
+  applicant_name_override?: string | null;
+  applicant_matric_override?: string | null;
+  requires_counter_verification?: boolean | null;
+  counter_verified?: boolean | null;
+  counter_verified_by?: string | null;
+  counter_verified_at?: string | null;
   total_estimated_value: number;
   reviewed_by?: string | null;
   reviewed_at?: string | null;

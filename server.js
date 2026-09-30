@@ -1065,8 +1065,17 @@ app.post('/api/send-push-notification', requireAuth, async (req, res) => {
 
         return res.status(200).json({ success: true, result });
     } catch (error) {
-        console.error("[send-push-notification] Error:", error.message);
-        return res.status(500).json({ error: error.message });
+        // webpush error biasanya ada `statusCode` (404/410 = subscription mati/expired)
+        const statusCode = error && error.statusCode ? error.statusCode : null;
+        const isGone = statusCode === 404 || statusCode === 410;
+        const detail = error && error.body ? error.body : (error.message || String(error));
+        console.error(`[send-push-notification] Error (${statusCode || 'unknown'}):`, detail);
+
+        // 404/410 bermaksud subscription sudah tidak sah — beritahu client supaya padam.
+        if (isGone) {
+            return res.status(410).json({ success: false, gone: true, error: 'Subscription tidak sah (expired/revoked).' });
+        }
+        return res.status(500).json({ error: error.message || 'Gagal hantar push notification.' });
     }
 });
 

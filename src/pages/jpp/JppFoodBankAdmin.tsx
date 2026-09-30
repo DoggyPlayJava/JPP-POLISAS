@@ -163,6 +163,14 @@ export function JppFoodBankAdmin() {
     }
   };
 
+  // ── Helper: nilai efektif Nama / No. Matrik (override pelajar lebih diutamakan) ──
+  // Pelajar boleh membetulkan nama/matrik sebelum hantar → disimpan sebagai
+  // override + requires_counter_verification. Admin & kaunter guna nilai override.
+  const effectiveName = (app: FoodBankApplication) =>
+    app.applicant_name_override?.trim() || app.applicant?.full_name || 'Pelajar';
+  const effectiveMatric = (app: FoodBankApplication) =>
+    app.applicant_matric_override?.trim() || app.applicant?.matric_no || '-';
+
   // ── States Utama ──────────────────────────────────────────────────────────
   const [settings, setSettings] = useState<FoodBankSettings | null>(null);
   const [applications, setApplications] = useState<FoodBankApplication[]>([]);
@@ -763,17 +771,32 @@ export function JppFoodBankAdmin() {
 
       if (rpcResult && rpcResult.success) {
         triggerCelebration();
+
+        // Jika permohonan perlukan pengesahan kaunter (pelajar ubah nama/matrik),
+        // tandakan counter_verified setelah pegawai selesai imbasan & agihan.
+        const matched = targetApp || applications.find(a => a.id === rpcResult.application_id);
+        if (matched?.requires_counter_verification && !matched.counter_verified) {
+          await supabase
+            .from('foodbank_applications')
+            .update({
+              counter_verified: true,
+              counter_verified_by: user.id,
+              counter_verified_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', matched.id);
+        }
+
         toast.success(
           `Pengesahan Berjaya! Barangan telah diserahkan untuk permohonan ${rpcResult.application_no || ''}.`,
           { duration: 5000 }
         );
 
         // Rekod ringkasan pengesahan terkini
-        const matched = targetApp || applications.find(a => a.id === rpcResult.application_id);
         setRecentVerifiedRecord({
           appNo: rpcResult.application_no || matched?.application_no || query,
-          studentName: matched?.applicant?.full_name || 'Mahasiswa POLISAS',
-          matricNo: matched?.applicant?.matric_no || undefined,
+          studentName: effectiveName(matched as FoodBankApplication) || 'Mahasiswa POLISAS',
+          matricNo: effectiveMatric(matched as FoodBankApplication) || undefined,
           itemsCount: matched?.selected_items?.length || 0,
           totalValue: Number(rpcResult.total_value || matched?.total_estimated_value || 0),
           timestamp: new Date().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }),
@@ -2587,11 +2610,34 @@ export function JppFoodBankAdmin() {
 
                             {/* Maklumat Pemohon */}
                             <td className="py-3.5 px-4">
-                              <div className="font-bold text-slate-900 dark:text-white">
-                                {app.applicant?.full_name || 'Pelajar'}
+                              <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
+                                {effectiveName(app)}
+                                {app.requires_counter_verification && (
+                                  <span
+                                    className={cn(
+                                      'px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide inline-flex items-center gap-1',
+                                      app.counter_verified
+                                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                                        : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                                    )}
+                                  >
+                                    {app.counter_verified ? (
+                                      <>
+                                        <ShieldCheck className="w-2.5 h-2.5" /> Disahkan Kaunter
+                                      </>
+                                    ) : (
+                                      <>
+                                        <AlertTriangle className="w-2.5 h-2.5" /> Perlu Sahkan IC/Matrik
+                                      </>
+                                    )}
+                                  </span>
+                                )}
                               </div>
                               <div className="text-[11px] text-slate-500 font-medium flex items-center gap-1.5">
-                                <span>{app.applicant?.matric_no || '-'}</span>
+                                <span className={app.applicant_matric_override ? 'font-mono' : ''}>{effectiveMatric(app)}</span>
+                                {app.applicant_matric_override && app.applicant?.matric_no && (
+                                  <span className="text-slate-400 line-through">{app.applicant.matric_no}</span>
+                                )}
                                 {app.applicant?.phone && (
                                   <>
                                     <span>•</span>
@@ -4276,12 +4322,26 @@ export function JppFoodBankAdmin() {
             <div className="p-4 rounded-2xl bg-rose-50/50 dark:bg-white/5 border border-rose-100 dark:border-white/5 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
               <div>
                 <span className="text-[10px] text-slate-400 uppercase font-bold">Nama Penuh</span>
-                <p className="font-bold text-slate-800 dark:text-white">{selectedAppForDetail.applicant?.full_name}</p>
+                <p className="font-bold text-slate-800 dark:text-white">{effectiveName(selectedAppForDetail)}</p>
+                {selectedAppForDetail.applicant_name_override && (
+                  <p className="text-[10px] text-slate-400 line-through">{selectedAppForDetail.applicant?.full_name}</p>
+                )}
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 uppercase font-bold">No. Matrik</span>
-                <p className="font-bold text-slate-800 dark:text-white">{selectedAppForDetail.applicant?.matric_no || '-'}</p>
+                <p className="font-bold text-slate-800 dark:text-white font-mono">{effectiveMatric(selectedAppForDetail)}</p>
+                {selectedAppForDetail.applicant_matric_override && selectedAppForDetail.applicant?.matric_no && (
+                  <p className="text-[10px] text-slate-400 line-through">{selectedAppForDetail.applicant.matric_no}</p>
+                )}
               </div>
+              {selectedAppForDetail.requires_counter_verification && (
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold">Pengesahan Kaunter</span>
+                  <p className={cn('font-bold text-xs', selectedAppForDetail.counter_verified ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400')}>
+                    {selectedAppForDetail.counter_verified ? '✓ Disahkan (kad matrik disemak)' : '⚠️ Perlu sahkan kad matrik'}
+                  </p>
+                </div>
+              )}
               <div>
                 <span className="text-[10px] text-slate-400 uppercase font-bold">No. Telefon</span>
                 <p className="font-bold text-slate-800 dark:text-white">{selectedAppForDetail.applicant?.phone || '-'}</p>

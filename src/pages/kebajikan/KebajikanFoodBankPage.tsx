@@ -124,10 +124,36 @@ export function KebajikanFoodBankPage() {
   const [roomNumber, setRoomNumber] = useState('');
   const [phone, setPhone] = useState(profile?.phone || '');
 
+  // ── Pindaan Nama / No. Matrik (sebelum hantar sahaja) ─────────────────────
+  // Pelajar boleh membetulkan Nama / No. Matrik jika tersalah / kosong.
+  // Nilai override disimpan pada aplikasi + tandakan "perlu sahkan kaunter".
+  const [editingIdentity, setEditingIdentity] = useState(false);
+  const [fullNameOverride, setFullNameOverride] = useState('');
+  const [matricOverride, setMatricOverride] = useState('');
+
+  const defaultFullName = profile?.full_name || user?.email || '';
+  const defaultMatric = profile?.matric_no || profile?.matrix_no || '';
+
+  // Nilai efektif yang akan dipaparkan & disimpan
+  const effectiveName = editingIdentity ? fullNameOverride : defaultFullName;
+  const effectiveMatric = editingIdentity ? matricOverride : defaultMatric;
+
+  const hasIdentityChanged =
+    editingIdentity &&
+    (fullNameOverride.trim() !== defaultFullName.trim() ||
+      matricOverride.trim().toUpperCase() !== defaultMatric.trim().toUpperCase());
+
   // Prefill phone from profile (set via CompleteProfileModal)
   useEffect(() => {
     if (profile?.phone) setPhone(profile.phone);
   }, [profile?.phone]);
+
+  // Prefill override bila profile berubah / mula edit
+  useEffect(() => {
+    if (editingIdentity && !fullNameOverride) setFullNameOverride(defaultFullName);
+    if (editingIdentity && !matricOverride) setMatricOverride(defaultMatric);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingIdentity]);
 
   // Senarai Rakan Serumah
   const [housemates, setHousemates] = useState<FoodBankHousemate[]>([]);
@@ -716,6 +742,9 @@ export function KebajikanFoodBankPage() {
             pickup_time_slot: pickupTimeSlot,
             pickup_qr_code: pickupToken,
             total_estimated_value: totalEstimatedCost,
+            applicant_name_override: hasIdentityChanged ? fullNameOverride.trim() : null,
+            applicant_matric_override: hasIdentityChanged ? matricOverride.trim().toUpperCase() : null,
+            requires_counter_verification: hasIdentityChanged,
           },
         ])
         .select('*, location:foodbank_distribution_locations(*)')
@@ -1096,13 +1125,25 @@ export function KebajikanFoodBankPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
               <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Nama Penuh
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-bold text-slate-700 dark:text-slate-300">
+                    Nama Penuh
+                  </label>
+                  {!isSessionClosed && (
+                    <button
+                      type="button"
+                      onClick={() => setEditingIdentity((v) => !v)}
+                      className="text-[10px] font-bold text-primary hover:underline"
+                    >
+                      {editingIdentity ? 'Batal Edit' : 'Edit'}
+                    </button>
+                  )}
+                </div>
                 <Input
-                  disabled
-                  value={profile?.full_name || user?.email || ''}
-                  className="bg-slate-50 dark:bg-slate-800/60 font-medium"
+                  disabled={!editingIdentity || isSessionClosed}
+                  value={effectiveName}
+                  onChange={(e) => setFullNameOverride(e.target.value)}
+                  className={`${editingIdentity ? 'bg-white dark:bg-slate-800' : 'bg-slate-50 dark:bg-slate-800/60'} font-medium`}
                 />
               </div>
 
@@ -1111,9 +1152,10 @@ export function KebajikanFoodBankPage() {
                   No. Matrik Pelajar
                 </label>
                 <Input
-                  disabled
-                  value={profile?.matric_no || profile?.matrix_no || 'Tiada No. Matrik'}
-                  className="bg-slate-50 dark:bg-slate-800/60 font-mono font-medium"
+                  disabled={!editingIdentity || isSessionClosed}
+                  value={effectiveMatric}
+                  onChange={(e) => setMatricOverride(e.target.value)}
+                  className={`${editingIdentity ? 'bg-white dark:bg-slate-800' : 'bg-slate-50 dark:bg-slate-800/60'} font-mono font-medium`}
                 />
               </div>
 
@@ -1149,6 +1191,17 @@ export function KebajikanFoodBankPage() {
                 </select>
               </div>
             </div>
+
+            {hasIdentityChanged && (
+              <div className="flex items-start gap-2 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 px-4 py-3 text-xs text-amber-800 dark:text-amber-300">
+                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>
+                  Anda telah mengubah <strong>Nama</strong> atau <strong>No. Matrik</strong>. Sila{' '}
+                  <strong>bawa kad matrik fizikal</strong> semasa pengambilan Food Bank — pegawai
+                  kaunter akan membuat pengesahan.
+                </span>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div>
