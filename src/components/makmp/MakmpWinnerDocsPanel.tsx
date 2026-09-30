@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Download, FileImage, IdCard, ImageDown, Loader2, CheckCircle2, AlertCircle, FolderArchive, FileSpreadsheet, Mail, Trophy } from 'lucide-react';
+import { Download, FileImage, IdCard, ImageDown, Loader2, CheckCircle2, AlertCircle, FolderArchive, FileSpreadsheet, Mail, Trophy, Phone } from 'lucide-react';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import type { MakmpSubmission } from '@/types';
@@ -97,13 +97,14 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
     }
   };
 
-  // ── Export CSV (nama, matrik, no IC, email, anugerah, URL gambar) ─────────
+  // ── Export CSV (nama, matrik, telefon, no IC, email, anugerah, URL gambar) ─
   const exportCsv = () => {
     const rows = winners.map((s) => {
       const awardLabel = getWinnerAwards(s).join('; ') || '-';
       return [
         s.full_name,
         s.matric_no,
+        s.phone || '',
         s.winner_ic_no || '',
         s.email || '',
         s.department || '',
@@ -111,7 +112,7 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
         s.winner_photo_url || '',
       ];
     });
-    const header = ['Nama', 'No. Matrik', 'No. IC', 'Emel', 'Jabatan', 'Anugerah', 'URL Gambar'];
+    const header = ['Nama', 'No. Matrik', 'No. Telefon', 'No. IC', 'Emel', 'Jabatan', 'Anugerah', 'URL Gambar'];
     const esc = (v: string) => `"${(v || '').replace(/"/g, '""')}"`;
     const csv = [header, ...rows].map((r) => r.map(esc).join(',')).join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -189,6 +190,7 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
                 <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">Gambar</th>
                 <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">Nama</th>
                 <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">No. Matrik</th>
+                <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">No. Telefon</th>
                 <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">No. IC</th>
                 <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">Anugerah</th>
                 <th className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-400">Status</th>
@@ -228,6 +230,14 @@ export default function MakmpWinnerDocsPanel({ submissions }: MakmpWinnerDocsPan
                     </td>
                     {/* Matrik */}
                     <td className="px-4 py-3 font-mono text-slate-700 dark:text-slate-300">{sub.matric_no}</td>
+                    {/* Telefon */}
+                    <td className="px-4 py-3">
+                      {sub.phone ? (
+                        <span className="font-mono text-slate-700 dark:text-slate-300">{sub.phone}</span>
+                      ) : (
+                        <span className="text-slate-400 dark:text-slate-600 italic">-</span>
+                      )}
+                    </td>
                     {/* IC */}
                     <td className="px-4 py-3 font-mono">
                       {hasIc ? (
