@@ -43,7 +43,12 @@ import {
   KEPIMPINAN_JPP_OPTIONS,
   getKepimpinanJppMerit,
   isKepimpinanJppAward,
+  getPeringkatMerit,
+  getTahapMerit,
 } from '@/lib/makmp';
+import { sendEmail } from '@/lib/email';
+import { sendNotificationToUser } from '@/lib/notifications';
+import { buildMakmpEmail } from '@/lib/makmpEmail';
 import type {
   MakmpJuryPin,
   MakmpEdition,
@@ -380,6 +385,45 @@ export default function MakmpJuryPortalPage() {
       if (!res.success) {
         alert('Gagal menyimpan keputusan: ' + res.message);
         return;
+      }
+
+      // ── Notifikasi + Emel kepada pelajar ────────────────────────────────
+      const subEmail = activeAward.submission?.email;
+      const subName = activeAward.submission?.full_name || 'Mahasiswa';
+      const subMatric = activeAward.submission?.matric_no;
+      const awardName = activeAward.award?.name || 'MAKMP';
+
+      const subUserId = activeAward.submission?.user_id;
+      if (subUserId) {
+        sendNotificationToUser(subUserId, {
+          title: status === 'DISAHKAN' ? 'Permohonan MAKMP Disahkan' : 'Permohonan MAKMP Ditolak',
+          message:
+            status === 'DISAHKAN'
+              ? `Tahniah! Permohonan "${awardName}" anda telah disahkan (+${currentTotalMerit} merit).`
+              : `Permohonan "${awardName}" anda tidak berjaya. Sila semak emel untuk maklumat lanjut.`,
+          type: 'MAKMP_STATUS',
+          module: 'JPP',
+          link: '/makmp',
+          reference_id: activeAward.submission.id,
+        }).catch(() => {});
+      }
+
+      if (subEmail) {
+        (async () => {
+          try {
+            const { subject, html } = buildMakmpEmail({
+              status: status as 'DISAHKAN' | 'DITOLAK',
+              studentName: subName,
+              matricNo: subMatric,
+              awardName,
+              totalMerit: status === 'DISAHKAN' ? currentTotalMerit : null,
+              reason: status === 'DITOLAK' ? finalReason : null,
+            });
+            await sendEmail({ to: subEmail, subject, html });
+          } catch (e) {
+            console.error('MAKMP email error:', e);
+          }
+        })();
       }
 
       setReviewToast(
@@ -1175,6 +1219,7 @@ export default function MakmpJuryPortalPage() {
                             </div>
                           ) : (
                             /* Matriks Sijil Standard (Peringkat & Tahap) */
+                            <>
                             <div className="grid grid-cols-2 gap-2 text-xs pt-1">
                               <div>
                                 <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-1">
@@ -1222,6 +1267,14 @@ export default function MakmpJuryPortalPage() {
                                 </select>
                               </div>
                             </div>
+                            <div className="text-[11px] text-sky-700 dark:text-sky-200/70 pt-1 border-t border-sky-200 dark:border-sky-500/20">
+                              Merit = Peringkat + Tahap:{' '}
+                              <span className="font-bold text-sky-800 dark:text-sky-300">
+                                +{getPeringkatMerit(rItem.peringkat)} + {getTahapMerit(rItem.pencapaian_type)} = {getPeringkatMerit(rItem.peringkat) + getTahapMerit(rItem.pencapaian_type)} merit
+                              </span>{' '}
+                              (maks 10)
+                            </div>
+                            </>
                           )}
 
                           {/* Checkbox Pengesahan Dokumen */}

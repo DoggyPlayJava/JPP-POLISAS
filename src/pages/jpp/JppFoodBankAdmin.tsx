@@ -187,6 +187,7 @@ export function JppFoodBankAdmin() {
   const [appSearch, setAppSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'SEMUA' | 'MENUNGGU' | 'LULUS' | 'SELESAI' | 'DITOLAK'>('SEMUA');
   const [housingFilter, setHousingFilter] = useState<string>('SEMUA');
+  const [includeHousemates, setIncludeHousemates] = useState(false);
   const [selectedAppForDetail, setSelectedAppForDetail] = useState<FoodBankApplication | null>(null);
   const [selectedAppForPass, setSelectedAppForPass] = useState<FoodBankApplication | null>(null);
   const [rejectionModalApp, setRejectionModalApp] = useState<FoodBankApplication | null>(null);
@@ -1949,6 +1950,61 @@ export function JppFoodBankAdmin() {
     };
   }, [filteredAuditLogs]);
 
+  // ── Eksport CSV Senarai Nama Pemohon (Bil., Nama, No Pendaftaran) ────────
+  const handleExportNamesCsv = () => {
+    // Gunakan senarai yang telah ditapis (status + kediaman + carian)
+    const source = filteredApplications;
+
+    // Bina baris: pemohon utama + (pilihan) rakan serumah
+    const rows: { name: string; matric: string }[] = [];
+    for (const app of source) {
+      rows.push({
+        name: app.applicant?.full_name || '—',
+        matric: app.applicant?.matric_no || '—',
+      });
+      if (includeHousemates && app.housemates && app.housemates.length > 0) {
+        for (const hm of app.housemates) {
+          rows.push({ name: hm.name, matric: hm.ic_or_matric });
+        }
+      }
+    }
+
+    if (rows.length === 0) {
+      toast.error('Tiada nama untuk dieksport.');
+      return;
+    }
+
+    const escapeCsv = (str: string) => {
+      const s = String(str ?? '').replace(/"/g, '""');
+      return `"${s}"`;
+    };
+
+    const header = 'Bil.,Nama,No Pendaftaran';
+    const body = rows
+      .map((r, i) => `${i + 1},${escapeCsv(r.name)},${escapeCsv(r.matric)}`)
+      .join('\r\n');
+
+    const csvContent = '\uFEFF' + [header, body].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const filename = `Senarai_Nama_FoodBank_${yyyy}${mm}${dd}.csv`;
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Berjaya mengeksport ${rows.length} nama. 📄`);
+  };
+
   const handleExportCsv = (logsToExport: FoodBankAuditLog[]) => {
     if (logsToExport.length === 0) {
       toast.error('Tiada rekod audit untuk dieksport.');
@@ -2459,6 +2515,25 @@ export function JppFoodBankAdmin() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleExportNamesCsv}
+                    className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-sm flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Eksport CSV Nama</span>
+                  </button>
+
+                  <label className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={includeHousemates}
+                      onChange={(e) => setIncludeHousemates(e.target.checked)}
+                      className="w-3.5 h-3.5 accent-rose-600"
+                    />
+                    Termasuk rakan serumah (rumah sewa)
+                  </label>
+
                   <select
                     value={housingFilter}
                     onChange={e => setHousingFilter(e.target.value)}

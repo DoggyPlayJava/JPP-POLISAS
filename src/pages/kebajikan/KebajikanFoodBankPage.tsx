@@ -122,6 +122,12 @@ export function KebajikanFoodBankPage() {
   const [householdIncome, setHouseholdIncome] = useState('');
   const [housingType, setHousingType] = useState<'KAMSIS' | 'RUMAH_SEWA' | 'SENDIRI'>('KAMSIS');
   const [roomNumber, setRoomNumber] = useState('');
+  const [phone, setPhone] = useState(profile?.phone || '');
+
+  // Prefill phone from profile (set via CompleteProfileModal)
+  useEffect(() => {
+    if (profile?.phone) setPhone(profile.phone);
+  }, [profile?.phone]);
 
   // Senarai Rakan Serumah
   const [housemates, setHousemates] = useState<FoodBankHousemate[]>([]);
@@ -639,6 +645,16 @@ export function KebajikanFoodBankPage() {
       return;
     }
 
+    if (!phone.trim()) {
+      toast.error('Sila isikan nombor telefon.');
+      return;
+    }
+
+    if (!/^[0-9+\-\s]{9,15}$/.test(phone.trim())) {
+      toast.error('Nombor telefon tidak sah.');
+      return;
+    }
+
     if (totalSelectedCount === 0) {
       toast.error('Sila pilih sekurang-kurangnya 1 item daripada katalog barangan.');
       return;
@@ -722,6 +738,13 @@ export function KebajikanFoodBankPage() {
       if (insertError) throw insertError;
 
       toast.success('Permohonan Food Bank berjaya dihantar!');
+
+      // Simpan nombor telefon ke profil (jika berubah)
+      if (phone.trim() && phone.trim() !== (profile?.phone || '')) {
+        supabase.from('profiles').update({ phone: phone.trim() }).eq('id', user.id).then(({ error }) => {
+          if (error) console.error('Gagal simpan telefon:', error.message);
+        });
+      }
 
       // ── Notifikasi + Emel ─────────────────────────────────────────────
       const studentEmail = profile?.email || user?.email;
@@ -1105,6 +1128,21 @@ export function KebajikanFoodBankPage() {
                   disabled
                   value={profile?.matric_no || profile?.matrix_no || 'Tiada No. Matrik'}
                   className="bg-slate-50 dark:bg-slate-800/60 font-mono font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Nombor Telefon <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  type="tel"
+                  placeholder="Contoh: 011-2345678"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  disabled={isSessionClosed}
+                  required
+                  className="rounded-xl text-xs font-semibold"
                 />
               </div>
 

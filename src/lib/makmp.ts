@@ -332,6 +332,39 @@ export const MAKMP_MERIT_MATRIX: Record<MakmpPeringkat, Record<MakmpPencapaianTy
   },
 };
 
+// ============================================================================
+// MODEL MERIT ADDITIVE (menggantikan matriks gabungan lama)
+// Merit per sijil = Peringkat Sah + Tahap Pencapaian (max 5 + 5 = 10).
+// Selaras dengan model Anugerah Kepimpinan JPP (Peringkat + Peranan).
+// ============================================================================
+export const PERINGKAT_MERIT: Record<MakmpPeringkat, number> = {
+  ANTARABANGSA: 5,
+  KEBANGSAAN: 4,
+  NEGERI: 3,
+  DAERAH: 2,
+  POLITEKNIK: 1,
+};
+
+// Tahap Pencapaian (JOHAN/EMAS tertinggi, LAIN terendah)
+export const TAHAP_MERIT: Record<MakmpPencapaianType, number> = {
+  JOHAN: 5,
+  EMAS: 5,
+  NAIB_JOHAN: 4,
+  PERAK: 4,
+  KETIGA: 3,
+  GANGSA: 3,
+  PESERTA: 2,
+  LAIN: 1,
+};
+
+export function getPeringkatMerit(peringkat: MakmpPeringkat | string): number {
+  return PERINGKAT_MERIT[peringkat as MakmpPeringkat] ?? 0;
+}
+
+export function getTahapMerit(tahap: MakmpPencapaianType | string): number {
+  return TAHAP_MERIT[tahap as MakmpPencapaianType] ?? 0;
+}
+
 export const PERINGKAT_OPTIONS: { value: MakmpPeringkat; label: string }[] = [
   { value: 'ANTARABANGSA', label: 'Antarabangsa' },
   { value: 'KEBANGSAAN', label: 'Kebangsaan' },
@@ -418,7 +451,8 @@ export function calculateSuggestedMerit(
   peringkat: MakmpPeringkat,
   pencapaianType: MakmpPencapaianType
 ): number {
-  return MAKMP_MERIT_MATRIX[peringkat]?.[pencapaianType] ?? 0;
+  // Model additive: Peringkat Sah + Tahap Pencapaian (max 10).
+  return getPeringkatMerit(peringkat) + getTahapMerit(pencapaianType);
 }
 
 export function generateTrackingCode(year = 2026): string {
