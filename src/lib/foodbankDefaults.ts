@@ -110,6 +110,7 @@ export const DEFAULT_FOODBANK_SETTINGS: FoodBankSettings = {
   current_spent: 0.0,
   max_monthly_applications_per_student: 1,
   max_items_per_application: 5,
+  allow_housemate: true, // Lalai: benarkan kuota rakan serumah
   application_instructions: 'Sila bawa kad matrik fizikal atau digital semasa menuntut barangan di kaunter.',
   eligibility_criteria: 'Terbuka kepada pelajar asnaf dan B40 yang berdaftar di POLISAS.',
   created_at: new Date().toISOString(),

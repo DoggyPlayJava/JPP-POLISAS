@@ -258,7 +258,7 @@ export function JppFoodBankAdmin() {
     application_instructions: '',
     eligibility_criteria: '',
     total_budget: OFFICIAL_BASELINE_BUDGET,
-    specific_pickup_date: '',
+    allow_housemate: true,
   });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
@@ -412,7 +412,7 @@ export function JppFoodBankAdmin() {
         application_instructions: finalSettings.application_instructions || '',
         eligibility_criteria: finalSettings.eligibility_criteria || '',
         total_budget: finalSettings.total_budget || OFFICIAL_BASELINE_BUDGET,
-        specific_pickup_date: finalSettings.specific_pickup_date || '',
+        allow_housemate: finalSettings.allow_housemate !== false,
       });
 
       if (appsRes.data) setApplications(appsRes.data as FoodBankApplication[]);
@@ -1364,7 +1364,7 @@ export function JppFoodBankAdmin() {
       application_instructions: sessionFormData.application_instructions.trim(),
       eligibility_criteria: sessionFormData.eligibility_criteria.trim(),
       total_budget: Math.max(100, sessionFormData.total_budget),
-      specific_pickup_date: sessionFormData.specific_pickup_date.trim() || null,
+      allow_housemate: sessionFormData.allow_housemate,
     };
 
     try {
@@ -3397,23 +3397,27 @@ export function JppFoodBankAdmin() {
                   </div>
 
                   <div>
-                    <label className="block text-slate-700 dark:text-slate-300 mb-1">
-                      Tarikh Pengambilan Khas (Hari Pelancaran — Opsyenal)
+                    <label className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={sessionFormData.allow_housemate}
+                        onChange={e =>
+                          setSessionFormData({
+                            ...sessionFormData,
+                            allow_housemate: e.target.checked,
+                          })
+                        }
+                        className="w-4 h-4 accent-amber-600"
+                      />
+                      <div>
+                        <span className="block text-sm font-bold text-slate-800 dark:text-white">
+                          Benarkan Kuota Rakan Serumah
+                        </span>
+                        <span className="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                          Jika aktif, pelajar boleh tambah rakan serumah untuk tingkatkan kuota barangan. Matikan untuk hadkan pelajar kepada kuota peribadi sahaja (one-off).
+                        </span>
+                      </div>
                     </label>
-                    <input
-                      type="date"
-                      value={sessionFormData.specific_pickup_date}
-                      onChange={e =>
-                        setSessionFormData({
-                          ...sessionFormData,
-                          specific_pickup_date: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white"
-                    />
-                    <p className="text-[10px] text-slate-400 mt-1">
-                      Jika diisi, tarikh pengambilan pelajar dihadkan kepada tarikh ini sahaja (cth: hari pelancaran Jumaat ini). Kosongkan untuk guna hari beroperasi biasa.
-                    </p>
                   </div>
 
                   <div>

@@ -167,22 +167,6 @@ export function KebajikanFoodBankPage() {
   const workingDays = useMemo(() => {
     const days: { dateStr: string; label: string }[] = [];
 
-    // Keutamaan: tarikh pengambilan khas (satu tarikh sahaja)
-    const special = settings?.specific_pickup_date;
-    if (special) {
-      const d = new Date(`${special}T00:00:00`);
-      if (!isNaN(d.getTime())) {
-        const dateStr = d.toISOString().split('T')[0];
-        const label = d.toLocaleDateString('ms-MY', {
-          weekday: 'short',
-          day: 'numeric',
-          month: 'short',
-        });
-        days.push({ dateStr, label });
-        return days;
-      }
-    }
-
     const loc = locations.find((l) => l.id === selectedLocationId);
     const allowedDays = loc && loc.operating_days && loc.operating_days.length > 0
       ? loc.operating_days
@@ -211,7 +195,7 @@ export function KebajikanFoodBankPage() {
       offset++;
     }
     return days;
-  }, [locations, selectedLocationId, settings?.specific_pickup_date]);
+  }, [locations, selectedLocationId]);
 
   // Fetch initial data (MANDATORY RULE: Use Promise.all)
   const fetchInitialData = async () => {
@@ -341,9 +325,11 @@ export function KebajikanFoodBankPage() {
   // Kiraan Kuota Dinamik:
   // Math.min(items_per_person * (1 + housemates.length), max_items_limit)
   const itemsPerPerson = settings?.max_items_per_application || 5;
-  const maxItemsLimit = itemsPerPerson * 3; // Had siling permohonan bersama rakan
+  const allowHousemate = settings?.allow_housemate !== false;
+  const effectiveHousemates = allowHousemate ? housemates : [];
+  const maxItemsLimit = allowHousemate ? itemsPerPerson * 3 : itemsPerPerson; // Had siling
   const maxAllowedItems = Math.min(
-    itemsPerPerson * (1 + housemates.length),
+    itemsPerPerson * (1 + effectiveHousemates.length),
     maxItemsLimit
   );
 
@@ -723,7 +709,7 @@ export function KebajikanFoodBankPage() {
             financial_category: financialCategory,
             household_income: householdIncome ? parseFloat(householdIncome) : null,
             housing_type: housingType,
-            housemates: housemates,
+            housemates: effectiveHousemates,
             selected_items: selectedItemsList,
             location_id: selectedLocationId,
             pickup_date: pickupDate,
@@ -1243,7 +1229,8 @@ export function KebajikanFoodBankPage() {
               </div>
             </div>
 
-            {/* Input Tambah Rakan Serumah */}
+            {/* Input Tambah Rakan Serumah (hanya jika kuota rakan serumah dibenarkan) */}
+            {allowHousemate &&
             <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
@@ -1407,6 +1394,8 @@ export function KebajikanFoodBankPage() {
                   ))}
                 </div>
               )}
+            </div>
+            }
 
               {/* ── Widget Kiraan Kuota Dinamik Langsung ── */}
               <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-950 dark:text-amber-200 space-y-2">
@@ -1474,7 +1463,6 @@ export function KebajikanFoodBankPage() {
                   </div>
                 </div>
               </div>
-            </div>
           </div>
 
           {/* ── Bahagian 3: Lokasi Agihan & Slot Waktu Pengambilan ── */}
