@@ -3318,6 +3318,15 @@ try {
 
 // SPA Fallback: Any route not matched by API or static files will return index.html
 app.use((req, res, next) => {
+    // JANGAN fallback untuk request aset statik (JS/CSS/imej/font).
+    // Kalau chunk lama (selepas rebuild) tak wujud, return 404 — BUKAN index.html.
+    // Ini elak browser dapat MIME "text/html" untuk module script
+    // (error "Expected a JavaScript module but server responded with text/html").
+    const isAssetRequest = /\.(?:js|mjs|css|png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|otf|map|json|txt|webmanifest|wasm)$/i.test(req.path);
+    if (isAssetRequest) {
+        return res.status(404).end();
+    }
+
     if (req.method === 'GET' && !req.path.startsWith('/api/')) {
         if (cachedIndexHtml) {
             // Serve dari memory — ZERO disk I/O, boleh handle ribuan req/s
