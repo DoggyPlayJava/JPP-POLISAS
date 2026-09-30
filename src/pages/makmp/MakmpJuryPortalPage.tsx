@@ -283,9 +283,15 @@ export default function MakmpJuryPortalPage() {
             ? item.report_score
             : Math.round((item.merit_awarded > 0 ? item.merit_awarded : (item.merit_suggested || 0)) * 10)
           : 0,
-      // Hormati nilai is_verified sebenar dari DB — jangan auto-tick.
-      // (Bug lama: dokumen yang juri/pegawai untick jadi auto-accept bila refresh.)
-      is_verified: item.is_verified === true,
+      // Default ticked (diterima) untuk award belum final — untick hanya bila
+      // reject. Untuk award yang dah DISAHKAN/DITOLAK, hormati nilai sebenar
+      // dari DB supaya refresh tak auto-accept semula dokumen yang di-untick.
+      // (Punca sebenar bug auto-accept dibaiki di RPC save_jury_award_review
+      //  — migration 98: is_verified per-item kini dihormati.)
+      is_verified:
+        awApp.status === 'DISAHKAN' || awApp.status === 'DITOLAK'
+          ? item.is_verified === true
+          : true,
       peringkat: item.peringkat,
       pencapaian_type: item.pencapaian_type,
     }));
