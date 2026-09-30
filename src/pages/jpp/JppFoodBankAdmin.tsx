@@ -874,6 +874,15 @@ export function JppFoodBankAdmin() {
 
       if (error) throw error;
 
+      // Lepaskan reservation stok (permohonan ditolak)
+      if (rejectionModalApp.stock_reserved) {
+        try {
+          await supabase.rpc('release_foodbank_stock', { p_application_id: rejectionModalApp.id });
+        } catch {
+          /* abaikan */
+        }
+      }
+
       toast.success(`Permohonan ${rejectionModalApp.application_no} telah DITOLAK.`);
       notifyStudent({ ...rejectionModalApp, status: 'DITOLAK', rejection_reason: rejectionReason.trim() }, 'DITOLAK').catch(() => {});
       setRejectionModalApp(null);

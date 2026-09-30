@@ -38,6 +38,8 @@ import {
   Home,
   Check,
   AlertTriangle,
+  Pencil,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -127,7 +129,11 @@ export function KebajikanFoodBankPage() {
   // ── Pindaan Nama / No. Matrik (sebelum hantar sahaja) ─────────────────────
   // Pelajar boleh membetulkan Nama / No. Matrik jika tersalah / kosong.
   // Nilai override disimpan pada aplikasi + tandakan "perlu sahkan kaunter".
-  const [editingIdentity, setEditingIdentity] = useState(false);
+  // UX: modal "Betulkan Nama / No. Matrik" + popup semak maklumat (first time).
+  const [showIdentityModal, setShowIdentityModal] = useState(false);
+  const [identityConfirmed, setIdentityConfirmed] = useState<boolean>(() => {
+    try { return localStorage.getItem('fb_identity_confirmed') === '1'; } catch { return false; }
+  });
   const [fullNameOverride, setFullNameOverride] = useState('');
   const [matricOverride, setMatricOverride] = useState('');
 
@@ -135,25 +141,30 @@ export function KebajikanFoodBankPage() {
   const defaultMatric = profile?.matric_no || profile?.matrix_no || '';
 
   // Nilai efektif yang akan dipaparkan & disimpan
-  const effectiveName = editingIdentity ? fullNameOverride : defaultFullName;
-  const effectiveMatric = editingIdentity ? matricOverride : defaultMatric;
+  const effectiveName = fullNameOverride.trim() ? fullNameOverride : defaultFullName;
+  const effectiveMatric = matricOverride.trim() ? matricOverride : defaultMatric;
 
   const hasIdentityChanged =
-    editingIdentity &&
-    (fullNameOverride.trim() !== defaultFullName.trim() ||
-      matricOverride.trim().toUpperCase() !== defaultMatric.trim().toUpperCase());
+    fullNameOverride.trim() !== defaultFullName.trim() ||
+    matricOverride.trim().toUpperCase() !== defaultMatric.trim().toUpperCase();
 
   // Prefill phone from profile (set via CompleteProfileModal)
   useEffect(() => {
     if (profile?.phone) setPhone(profile.phone);
   }, [profile?.phone]);
 
-  // Prefill override bila profile berubah / mula edit
-  useEffect(() => {
-    if (editingIdentity && !fullNameOverride) setFullNameOverride(defaultFullName);
-    if (editingIdentity && !matricOverride) setMatricOverride(defaultMatric);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editingIdentity]);
+  // Buka modal edit → prefill nilai semasa
+  const openIdentityModal = () => {
+    setFullNameOverride(effectiveName);
+    setMatricOverride(effectiveMatric);
+    setShowIdentityModal(true);
+  };
+
+  // Sahkan maklumat betul (popup first time)
+  const confirmIdentity = () => {
+    setIdentityConfirmed(true);
+    try { localStorage.setItem('fb_identity_confirmed', '1'); } catch { /* abaikan */ }
+  };
 
   // Senarai Rakan Serumah
   const [housemates, setHousemates] = useState<FoodBankHousemate[]>([]);
@@ -459,19 +470,21 @@ export function KebajikanFoodBankPage() {
     toast.success('Rakan serumah dikeluarkan.');
   };
 
-  // Helper: Baki Stok di Lokasi Terpilih
+  // Helper: Baki Stok (Available) di Lokasi Terpilih = current_stock - reserved_stock
   const getItemStockAtSelectedLocation = (itemId: string): number => {
     if (!selectedLocationId) return 0;
     const locStock = locationStocks.find(
       (ls) => ls.item_id === itemId && ls.location_id === selectedLocationId
     );
-    return locStock ? locStock.current_stock : 0;
+    if (!locStock) return 0;
+    return Math.max(0, locStock.current_stock - (locStock.reserved_stock || 0));
   };
 
   // Helper: Pusat Edaran Alternatif Yang Mempunyai Baki Stok
   const getAlternativeLocationWithStock = (itemId: string): string | null => {
     const alt = locationStocks.find(
-      (ls) => ls.item_id === itemId && ls.location_id !== selectedLocationId && ls.current_stock > 0
+      (ls) => ls.item_id === itemId && ls.location_id !== selectedLocationId &&
+        (ls.current_stock - (ls.reserved_stock || 0)) > 0
     );
     if (!alt) return null;
     const loc = locations.find((l) => l.id === alt.location_id);
@@ -515,7 +528,7 @@ export function KebajikanFoodBankPage() {
       const locStock = locationStocks.find(
         (ls) => ls.item_id === itemId && ls.location_id === newLocationId
       );
-      const available = locStock ? locStock.current_stock : 0;
+      const available = locStock ? Math.max(0, locStock.current_stock - (locStock.reserved_stock || 0)) : 0;
       if (qty > available) {
         hasAdjusted = true;
         if (available <= 0) {
@@ -619,6 +632,14 @@ export function KebajikanFoodBankPage() {
         .eq('applicant_id', user.id);
 
       if (error) throw error;
+
+      // Lepaskan reservation stok (permohonan dibatalkan)
+      try {
+        await supabase.rpc('release_foodbank_stock', { p_application_id: appId });
+      } catch {
+        /* abaikan */
+      }
+
       toast.success('Permohonan Food Bank telah dibatalkan.');
       await fetchInitialData();
     } catch (err: any) {
@@ -752,6 +773,29 @@ export function KebajikanFoodBankPage() {
 
       if (insertError) throw insertError;
 
+      const newApp = insertedApp as FoodBankApplication;
+
+      // ── Reserve stock (atomik) ─────────────────────────────────────────
+      // Tahan kuantiti item supaya tak terima permohonan melebihi stok.
+      // Jika stok tak cukup → RPC raise exception → kita padam permohonan & papar mesej.
+      try {
+        const { error: reserveErr } = await supabase.rpc('reserve_foodbank_stock', {
+          p_application_id: newApp.id,
+        });
+        if (reserveErr) throw reserveErr;
+      } catch (reserveErr: any) {
+        // Gagal reserve (stok habis / race) → padam permohonan yang baru diinsert
+        try {
+          await supabase.from('foodbank_applications').delete().eq('id', newApp.id);
+        } catch {
+          /* abaikan */
+        }
+        toast.error(
+          'Maaf, stok barangan telah habis atau tidak mencukupi. Sila semak semula pilihan anda.'
+        );
+        throw new Error('STOCK_INSUFFICIENT');
+      }
+
       toast.success('Permohonan Food Bank berjaya dihantar!');
 
       // Simpan nombor telefon ke profil (jika berubah)
@@ -763,7 +807,6 @@ export function KebajikanFoodBankPage() {
 
       // ── Notifikasi + Emel ─────────────────────────────────────────────
       const studentEmail = profile?.email || user?.email;
-      const newApp = insertedApp as FoodBankApplication;
 
       // (a) In-app + push ke Exco Kebajikan
       sendNotificationToKebajikanExco({
@@ -807,7 +850,10 @@ export function KebajikanFoodBankPage() {
       await fetchInitialData();
     } catch (err: any) {
       console.error('Failed to submit foodbank application:', err);
-      toast.error('Gagal menghantar permohonan: ' + (err.message || 'Sila cuba lagi.'));
+      // STOCK_INSUFFICIENT sudah papar toast khusus — jangan duplicate
+      if (err?.message !== 'STOCK_INSUFFICIENT') {
+        toast.error('Gagal menghantar permohonan: ' + (err.message || 'Sila cuba lagi.'));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -1125,38 +1171,41 @@ export function KebajikanFoodBankPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block font-bold text-slate-700 dark:text-slate-300">
-                    Nama Penuh
-                  </label>
-                  {!isSessionClosed && (
-                    <button
-                      type="button"
-                      onClick={() => setEditingIdentity((v) => !v)}
-                      className="text-[10px] font-bold text-primary hover:underline"
-                    >
-                      {editingIdentity ? 'Batal Edit' : 'Edit'}
-                    </button>
-                  )}
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Nama Penuh
+                </label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    disabled
+                    value={effectiveName}
+                    className="bg-slate-50 dark:bg-slate-800/60 font-medium"
+                  />
                 </div>
-                <Input
-                  disabled={!editingIdentity || isSessionClosed}
-                  value={effectiveName}
-                  onChange={(e) => setFullNameOverride(e.target.value)}
-                  className={`${editingIdentity ? 'bg-white dark:bg-slate-800' : 'bg-slate-50 dark:bg-slate-800/60'} font-medium`}
-                />
               </div>
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                   No. Matrik Pelajar
                 </label>
-                <Input
-                  disabled={!editingIdentity || isSessionClosed}
-                  value={effectiveMatric}
-                  onChange={(e) => setMatricOverride(e.target.value)}
-                  className={`${editingIdentity ? 'bg-white dark:bg-slate-800' : 'bg-slate-50 dark:bg-slate-800/60'} font-mono font-medium`}
-                />
+                <div className="flex items-center gap-2">
+                  <Input
+                    disabled
+                    value={effectiveMatric}
+                    className="bg-slate-50 dark:bg-slate-800/60 font-mono font-medium"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  onClick={openIdentityModal}
+                  disabled={isSessionClosed}
+                  className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-amber-500 text-slate-950 text-xs font-bold hover:bg-amber-400 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  Betulkan Nama / No. Matrik
+                </button>
               </div>
 
               <div>
@@ -2008,6 +2057,159 @@ export function KebajikanFoodBankPage() {
         studentProgramme={profile?.department || undefined}
         roomOrResidence={roomNumber || undefined}
       />
+
+      {/* ── Popup Semak Maklumat (First Time) ── */}
+      <AnimatePresence>
+        {!identityConfirmed && !isSessionClosed && (
+          <motion.div
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6"
+              initial={{ scale: 0.95, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 10 }}
+            >
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+                    Semak Maklumat Anda
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Sila pastikan <strong className="text-slate-700 dark:text-slate-200">Nama Penuh</strong> dan{' '}
+                    <strong className="text-slate-700 dark:text-slate-200">No. Matrik</strong> anda di bawah adalah{' '}
+                    <strong className="text-amber-600 dark:text-amber-400">betul dan tepat</strong> sebelum meneruskan permohonan.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3 mb-5">
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-800/60 px-4 py-3">
+                  <span className="block text-[10px] text-slate-400 uppercase font-bold">Nama Penuh</span>
+                  <span className="text-sm font-bold text-slate-900 dark:text-white">{effectiveName || '—'}</span>
+                </div>
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-800/60 px-4 py-3">
+                  <span className="block text-[10px] text-slate-400 uppercase font-bold">No. Matrik</span>
+                  <span className="text-sm font-bold font-mono text-slate-900 dark:text-white">{effectiveMatric || '—'}</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={confirmIdentity}
+                  className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition"
+                >
+                  Maklumat Saya Betul ✓
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { confirmIdentity(); openIdentityModal(); }}
+                  className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 text-xs font-bold transition"
+                >
+                  Saya Nak Betulkan Maklumat
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Modal Betulkan Nama / No. Matrik ── */}
+      <AnimatePresence>
+        {showIdentityModal && (
+          <motion.div
+            className="fixed inset-0 z-[61] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6"
+              initial={{ scale: 0.95, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 10 }}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center">
+                    <Pencil className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+                      Betulkan Nama / No. Matrik
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Isi maklumat yang betul. Sila bawa kad matrik semasa pengambilan.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowIdentityModal(false)}
+                  className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3 mb-5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Nama Penuh
+                  </label>
+                  <Input
+                    value={fullNameOverride}
+                    onChange={(e) => setFullNameOverride(e.target.value)}
+                    placeholder="Nama penuh seperti dalam kad matrik"
+                    className="text-sm font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    No. Matrik
+                  </label>
+                  <Input
+                    value={matricOverride}
+                    onChange={(e) => setMatricOverride(e.target.value)}
+                    placeholder="Contoh: 02DTM24F1005"
+                    className="text-sm font-mono font-medium"
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 px-4 py-3 text-xs text-amber-800 dark:text-amber-300 mb-4">
+                <AlertTriangle className="w-4 h-4 inline mr-1.5 -mt-0.5" />
+                Anda telah mengubah maklumat. Sila <strong>bawa kad matrik fizikal</strong> semasa
+                pengambilan — pegawai kaunter akan membuat pengesahan.
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowIdentityModal(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 text-xs font-bold transition"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowIdentityModal(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 text-xs font-bold transition"
+                >
+                  Simpan
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1331,6 +1331,7 @@ export interface FoodBankItem {
   description?: string | null;
   image_url?: string | null;
   current_stock: number;
+  reserved_stock?: number;
   unit: string;
   estimated_cost: number;
   is_active: boolean;
@@ -1393,6 +1394,7 @@ export interface FoodBankApplication {
   counter_verified?: boolean | null;
   counter_verified_by?: string | null;
   counter_verified_at?: string | null;
+  stock_reserved?: boolean | null;
   total_estimated_value: number;
   reviewed_by?: string | null;
   reviewed_at?: string | null;
@@ -1440,6 +1442,7 @@ export interface FoodBankLocationStock {
   item_id: string;
   location_id: string;
   current_stock: number;
+  reserved_stock?: number;
   reorder_level: number;
   created_at?: string;
   updated_at?: string;
