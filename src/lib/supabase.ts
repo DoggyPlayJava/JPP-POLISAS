@@ -73,6 +73,8 @@ export interface Profile {
   intake_year?:       number | null;
   intake_period?:     1 | 2 | null;
   semester_override?: number | null;
+  // Food Bank: pelajar telah sahkan Nama & No. Matrik (popup first-time)
+  fb_identity_confirmed?: boolean | null;
 }
 
 //LOGS SYSTEM

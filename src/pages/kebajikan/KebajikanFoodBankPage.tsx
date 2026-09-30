@@ -131,9 +131,9 @@ export function KebajikanFoodBankPage() {
   // Nilai override disimpan pada aplikasi + tandakan "perlu sahkan kaunter".
   // UX: modal "Betulkan Nama / No. Matrik" + popup semak maklumat (first time).
   const [showIdentityModal, setShowIdentityModal] = useState(false);
-  const [identityConfirmed, setIdentityConfirmed] = useState<boolean>(() => {
-    try { return localStorage.getItem('fb_identity_confirmed') === '1'; } catch { return false; }
-  });
+  const [identityConfirmed, setIdentityConfirmed] = useState<boolean>(
+    () => profile?.fb_identity_confirmed === true
+  );
   const [fullNameOverride, setFullNameOverride] = useState('');
   const [matricOverride, setMatricOverride] = useState('');
 
@@ -160,10 +160,21 @@ export function KebajikanFoodBankPage() {
     setShowIdentityModal(true);
   };
 
-  // Sahkan maklumat betul (popup first time)
+  // Sahkan maklumat betul (popup first time) — simpan pada profil (DB),
+  // supaya kekal merentas device/browser, bukan localStorage per-device.
   const confirmIdentity = () => {
     setIdentityConfirmed(true);
-    try { localStorage.setItem('fb_identity_confirmed', '1'); } catch { /* abaikan */ }
+    // Bersihkan flag localStorage lama (migration) supaya tak bercanggah.
+    try { localStorage.removeItem('fb_identity_confirmed'); } catch { /* abaikan */ }
+    if (user?.id) {
+      supabase
+        .from('profiles')
+        .update({ fb_identity_confirmed: true })
+        .eq('id', user.id)
+        .then(({ error }) => {
+          if (error) console.warn('Gagal simpan fb_identity_confirmed:', error.message);
+        });
+    }
   };
 
   // Senarai Rakan Serumah
