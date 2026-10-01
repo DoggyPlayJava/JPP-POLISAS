@@ -33,20 +33,30 @@ export interface EmsJuryAuditMatrixProps {
   onRefresh: () => void;
 }
 
+export const getParticipantCategory = (p: EmsParticipant): string => {
+  return (
+    p.category_name?.trim() ||
+    (p.custom_responses?.category as string)?.trim() ||
+    (p.custom_responses?.category_name as string)?.trim() ||
+    (p.custom_responses?.kategori as string)?.trim() ||
+    ''
+  );
+};
+
 /**
  * Checks whether a participant is assigned to a specific jury code.
  * Keys: assigned_categories boleh jadi KATEGORI RUBRIK (cth "Best Showcase Award")
  * atau KATEGORI PESERTA (cth "Makanan"). Kalau kategori rubrik — semua peserta
  * dinilai oleh juri tu (wizard juri pilih kategori masa menilai).
  */
-function isParticipantAssignedToJury(participant: EmsParticipant, jury: EmsJuryCode, rubrics: EmsRubricCriteria[]): boolean {
+export function isParticipantAssignedToJury(participant: EmsParticipant, jury: EmsJuryCode, rubrics: EmsRubricCriteria[]): boolean {
   const assignedCats = jury.assigned_categories;
   const assignedBooths = jury.assigned_booths;
 
   const rubricCatNames = new Set(
     rubrics
       .map((r) => r.category_name?.trim().toLowerCase())
-      .filter(Boolean)
+      .filter((n): n is string => Boolean(n && n !== 'umum'))
   );
 
   let matchCat = true;
@@ -54,17 +64,16 @@ function isParticipantAssignedToJury(participant: EmsParticipant, jury: EmsJuryC
     const catSet = assignedCats.map((c) => c.trim().toLowerCase()).filter(Boolean);
     const isRubricScope = catSet.some((c) => rubricCatNames.has(c));
 
+    const pCat = getParticipantCategory(participant).toLowerCase();
+
     if (isRubricScope) {
-      // Kategori RUBRIK: kalau peserta sendiri ber-kategori rubrik (cth iFAMB ada
-      // baris berasingan Best Showcase / Best Pitching) — padan ikut makna.
+      // Kategori RUBRIK: kalau peserta sendiri ber-kategori rubrik (cth MAKMP / iFAMB) — padan ikut makna.
       // Kalau peserta kategori biasa (food/booth, cth Siswapreneur) — semua assigned.
-      const pCat = (participant.category_name || '').trim().toLowerCase();
       if (pCat && rubricCatNames.has(pCat)) {
         matchCat = catSet.includes(pCat);
       }
     } else {
-      const pCat = participant.category_name || '';
-      matchCat = catSet.some((c) => c === pCat.toLowerCase());
+      matchCat = catSet.some((c) => c === pCat);
     }
   }
 
@@ -78,17 +87,36 @@ function isParticipantAssignedToJury(participant: EmsParticipant, jury: EmsJuryC
 }
 
 /**
- * Gets rubrics applicable to a participant based on the JURY's assigned category.
- * Kalau juri di-assign kategori RUBRIK → scope ikut rubrik kategori tu (umum/empty included).
- * Fallback lama: kategori peserta.
+ * Gets rubrics applicable to a participant based on participant category or jury assignment.
+ * 1. Kalau kategori peserta padan dengan salah satu kategori rubrik (cth MAKMP:
+ *    "Anugerah Projek Keusahawanan Terbaik" atau "Anugerah Perusahaan Pelajar Terbaik")
+ *    → rubrik wajib ditapis strictly mengikut kategori peserta itu sahaja (+ umum).
+ *    Ini kerana peserta anugerah projek tidak boleh dinilai dengan rubrik perusahaan!
+ * 2. Kalau kategori peserta BUKAN kategori rubrik (cth karnival booth: "Makanan"),
+ *    tetapi juri di-assign kategori rubrik tertentu (cth "Best Pitching")
+ *    → tapis rubrik mengikut skop juri tersebut (+ umum).
+ * 3. Fallback: kalau tiada padanan di atas, pulangkan rubrik kategori peserta (jika ada) atau semua rubrik.
  */
-function getApplicableRubrics(participant: EmsParticipant, jury: EmsJuryCode, rubrics: EmsRubricCriteria[]): EmsRubricCriteria[] {
+export function getApplicableRubrics(participant: EmsParticipant, jury: EmsJuryCode, rubrics: EmsRubricCriteria[]): EmsRubricCriteria[] {
   const rubricCatNames = new Set(
     rubrics
       .map((r) => r.category_name?.trim().toLowerCase())
-      .filter(Boolean)
+      .filter((n): n is string => Boolean(n && n !== 'umum'))
   );
 
+  const pCat = getParticipantCategory(participant).toLowerCase();
+
+  // 1. Kategori PESERTA padan dengan salah satu kategori rubrik acara
+  if (pCat && rubricCatNames.has(pCat)) {
+    const filtered = rubrics.filter((r) => {
+      const rCat = r.category_name?.trim().toLowerCase();
+      return !rCat || rCat === 'umum' || rCat === pCat;
+    });
+    return filtered.length > 0 ? filtered : rubrics;
+  }
+
+  // 2. Kategori PESERTA bukan kategori rubrik (cth karnival: "Makanan"),
+  //    tetapi JURI di-assign kategori rubrik tertentu (cth "Best Pitching")
   const assignedCats = jury.assigned_categories;
   if (assignedCats && assignedCats.length > 0 && !assignedCats.includes('ALL')) {
     const catSet = assignedCats.map((c) => c.trim().toLowerCase()).filter(Boolean);
@@ -102,21 +130,22 @@ function getApplicableRubrics(participant: EmsParticipant, jury: EmsJuryCode, ru
     }
   }
 
-  const pCat = participant.category_name?.trim().toLowerCase() || '';
-  if (!pCat) return rubrics;
+  // 3. Fallback mengikut kategori peserta (jika ada)
+  if (pCat) {
+    const filtered = rubrics.filter((r) => {
+      const rCat = r.category_name?.trim().toLowerCase();
+      return !rCat || rCat === 'umum' || rCat === pCat;
+    });
+    return filtered.length > 0 ? filtered : rubrics;
+  }
 
-  const filtered = rubrics.filter((r) => {
-    if (!r.category_name || !r.category_name.trim()) return true;
-    return r.category_name.trim().toLowerCase() === pCat;
-  });
-
-  return filtered.length > 0 ? filtered : rubrics;
+  return rubrics;
 }
 
 /**
  * Computes status & weighted score percentage for a participant scored by a jury.
  */
-function getJuryParticipantScoreInfo(
+export function getJuryParticipantScoreInfo(
   participant: EmsParticipant,
   jury: EmsJuryCode,
   rubrics: EmsRubricCriteria[],
@@ -127,7 +156,12 @@ function getJuryParticipantScoreInfo(
     (s) => s.participant_id === participant.id && s.jury_code_id === jury.id
   );
 
-  const submittedCount = pJuryScores.length;
+  // Hanya kira markah yang sepadan dengan rubrik yang berkenaan
+  const submittedApplicableScores = pJuryScores.filter((s) =>
+    applicableRubrics.some((r) => r.id === s.rubric_id)
+  );
+
+  const submittedCount = submittedApplicableScores.length;
   const totalRequired = applicableRubrics.length;
 
   if (submittedCount === 0) {
@@ -145,7 +179,7 @@ function getJuryParticipantScoreInfo(
   );
 
   const rawWeighted = applicableRubrics.reduce((acc, r) => {
-    const s = pJuryScores.find((sc) => sc.rubric_id === r.id);
+    const s = submittedApplicableScores.find((sc) => sc.rubric_id === r.id);
     const scoreVal = s ? Number(s.score) : 0;
     const maxVal = Number(r.max_score) || 5;
     const weightVal = Number(r.weight) || 0;
@@ -232,8 +266,9 @@ export function EmsJuryAuditMatrix({
   const availableCategories = useMemo(() => {
     const cats = new Set<string>();
     participants.forEach((p) => {
-      if (p.category_name && p.category_name.trim()) {
-        cats.add(p.category_name.trim());
+      const cat = getParticipantCategory(p);
+      if (cat) {
+        cats.add(cat);
       }
     });
     return Array.from(cats);
@@ -242,9 +277,10 @@ export function EmsJuryAuditMatrix({
   // Filter participants for matrix view
   const filteredParticipants = useMemo(() => {
     return participants.filter((p) => {
+      const pCat = getParticipantCategory(p);
       const matchCat =
         selectedCategory === 'ALL' ||
-        (p.category_name || '').toLowerCase() === selectedCategory.toLowerCase();
+        pCat.toLowerCase() === selectedCategory.toLowerCase();
 
       const q = searchQuery.toLowerCase().trim();
       const matchSearch =
@@ -252,7 +288,7 @@ export function EmsJuryAuditMatrix({
         (p.booth_no || '').toLowerCase().includes(q) ||
         (p.team_name || '').toLowerCase().includes(q) ||
         (p.leader_name || '').toLowerCase().includes(q) ||
-        (p.category_name || '').toLowerCase().includes(q);
+        pCat.toLowerCase().includes(q);
 
       return matchCat && matchSearch;
     });
@@ -616,7 +652,7 @@ export function EmsJuryAuditMatrix({
                         {/* Category Column */}
                         <td className="p-3.5 text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-800">
                           <span className="inline-block px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60 rounded-md text-[11px]">
-                            {p.category_name || 'Umum'}
+                            {getParticipantCategory(p) || 'Umum'}
                           </span>
                         </td>
 
@@ -764,7 +800,7 @@ export function EmsJuryAuditMatrix({
               <div>
                 <span className="text-slate-500 dark:text-slate-400 block text-[10px]">Kategori</span>
                 <span className="font-semibold text-slate-700 dark:text-slate-200 truncate block">
-                  {editingCell.participant.category_name || 'Umum'}
+                  {getParticipantCategory(editingCell.participant) || 'Umum'}
                 </span>
               </div>
               <div>
