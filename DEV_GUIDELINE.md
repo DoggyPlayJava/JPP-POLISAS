@@ -2517,6 +2517,62 @@ Bagi mengelakkan kekeliruan di mana modal PIN juri hanya memaparkan nama kumpula
 - **Logik Penapisan Queue Juri (`fetchJuryAwardApplications`)**: Memadankan `assigned_categories` mengikut nama anugerah rasmi secara tepat, ID anugerah, mahupun nama kumpulan kategori tanpa konflik padanan rentetan.
 - **Lencana Kad Juri**: Kad PIN membezakan lencana kumpulan (`📁 Kumpulan`) dan anugerah khusus (`🏆 Anugerah`) untuk kejelasan pengurusan.
 
+### 23.9 Mekanisme Penyelarasan Merit Automatik & Kawalan Manual Juri (`MakmpJuryPortalPage.tsx`)
+
+Bagi menjamin ketepatan pengiraan merit anugerah dan kelancaran proses semakan tanpa ralat manusia, portal juri MAKMP (`src/pages/makmp/MakmpJuryPortalPage.tsx`) mengintegrasikan enjin penentukuran merit automatik (*auto-sync*) dipacu formula berasaskan matriks rasmi (`src/lib/makmp.ts`), dengan sokongan prapemuatan pintar (*smart hydration*) serta kawalan manual juri (*manual override*).
+
+#### 1. Formula Pengiraan Merit Mengikut Jenis Dokumen
+Sistem membahagikan pengiraan merit dokumen kepada 3 modul logik:
+
+- **A. Sijil Standard (Model Additive Peringkat + Tahap):**
+  Menggunakan fungsi `calculateSuggestedMerit(peringkat, pencapaianType)`:
+  $$\text{Merit} = \text{getPeringkatMerit}(\text{peringkat}) + \text{getTahapMerit}(\text{tahap})$$
+  - Nilai dijepit (*clamped*) antara 0 hingga maksimum **10 mata** bagi setiap sijil.
+  - Nilai Peringkat (`PERINGKAT_MERIT`): Antarabangsa = 5, Kebangsaan = 4, Negeri = 3, Daerah/Zon = 2, Politeknik = 1.
+  - Nilai Tahap Pencapaian (`TAHAP_MERIT`): Johan/Emas = 5, Naib Johan/Perak = 4, Ketiga/Gangsa = 3, Peserta = 2, Lain-lain = 1.
+
+- **B. Sijil Anugerah Kepimpinan JPP:**
+  Dikesan melalui utiliti `isKepimpinanJppAward(awardName)` (cth: *"Anugerah Kepimpinan JPP Terbaik"*).
+  Menggunakan fungsi `getKepimpinanJppMerit(peringkat, role)`:
+  $$\text{Merit} = \text{KEPIMPINAN\_JPP\_PERINGKAT\_MERIT}[\text{peringkat}] + \text{getKepimpinanJppRoleMerit}(\text{role})$$
+  - Nilai Peringkat (`KEPIMPINAN_JPP_PERINGKAT_MERIT`): Antarabangsa = 5, Kebangsaan = 4, Negeri = 3, Daerah = 2, Politeknik = 1.
+  - Nilai Peranan Kepimpinan (`KEPIMPINAN_JPP_OPTIONS`): Pengarah/Pengerusi = 5, Timbalan Pengarah/Pengerusi = 4, Setiausaha/Bendahari = 3, Ahli Jawatankuasa (AJK) = 2, Penyertaan = 1.
+  - Siling maksimum adalah **10 mata** per sijil.
+
+- **C. Laporan Projek & Keusahawanan (`document_type === 'LAPORAN'`):**
+  Markah mentah laporan dinilai atas skala 0 hingga 100 dan ditukar kepada merit (maks 10):
+  $$\text{Merit Laporan} = \max\left(0, \min\left(10, \text{Math.round}\left(\frac{\text{report\_score}}{10}\right)\right)\right)$$
+  - Pelarasan slider/input markah laporan akan mengemas kini `report_score` dan secara automatik menjana nilai `merit_awarded` sepadan.
+
+#### 2. Pemuatan Awal Pintar (*Smart Hydration*)
+Semasa juri membuka modal penilaian (`openReviewModal`), item semakan (`reviewItems`) dihidrasikan mengikut hierarki keutamaan berikut:
+```typescript
+const formulaMerit = getItemFormulaMerit(item, isKepimpinan);
+const initialMerit =
+  item.merit_awarded > 0
+    ? item.merit_awarded
+    : (item.merit_suggested && item.merit_suggested > 0)
+    ? item.merit_suggested
+    : formulaMerit;
+```
+1. **`item.merit_awarded`**: Digunakan jika item telah dinilai atau disahkan terdahulu (> 0).
+2. **`item.merit_suggested`**: Digunakan jika permohonan baru membawa nilai cadangan merit pemohon (> 0).
+3. **`formulaMerit`**: Digunakan sebagai sandaran automatik (*fallback*) berasaskan formula sekiranya kedua-dua nilai di atas sifar/kosong.
+
+#### 3. Penyelarasan Automatik Semasa Semakan (*Auto-Sync on Change*)
+Apabila juri mengubah dropdown **Peringkat Sah** atau **Tahap Sah / Peranan Kepimpinan**, pengendali `handleUpdateItemReview` secara reaktif memanggil `getItemFormulaMerit(updated, isKepimpinan)`.
+Nilai `merit_awarded` akan disegerakkan serta-merta tanpa memerlukan juri mengira secara manual atau memasukkan angka satu persatu.
+
+#### 4. Pengendalian Manual Override & Pemulihan Automatik (`↺ Auto`)
+Walaupun sistem menyediakan kiraan automatik, budi bicara juri dihormati sepenuhnya:
+- **Pengesanan Status Override:**
+  Keadaan dinilai melalui `isManualOverride = (rItem.merit_awarded !== formulaMerit)`.
+- **Penunjuk Lencana Interaktif:**
+  - `Auto`: Lencana hijau zamrud (`bg-emerald-100 text-emerald-800`) menandakan nilai merit mematuhi formula standard.
+  - `Manual`: Lencana ambar (`bg-amber-100 text-amber-800`) berserta garisan sempadan input ambar memberi amaran visual bahawa nilai telah diubah suai oleh juri.
+- **Butang Reset `↺ Auto` (`RotateCcw`):**
+  Jika juri ingin membatalkan ubah suai manual, klik pada butang `↺ Auto` atau pautan cadangan `Guna Cadangan ({formulaMerit})` akan mencetuskan aksi `'reset_auto'` untuk memulihkan `merit_awarded` kepada nilai formula terkini serta-merta.
+
 ---
 
 ## 24. Modul Persembahan Eksekutif Berasaskan Web (`WEBSITE/`)
