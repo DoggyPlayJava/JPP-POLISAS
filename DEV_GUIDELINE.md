@@ -2279,7 +2279,7 @@ Modul EMS menggunakan 8 jadual teras di dalam skema `public` dengan penguatkuasa
    - **Indeks FK**: `idx_ems_participants_event_id`.
 
 4. **`ems_jury_codes`**: Menyimpan kod laluan (passcode) akses juri luar/dalaman.
-   - **Kolum**: `id` (UUID, PK), `event_id` (UUID, FK -> `ems_events.id` ON DELETE CASCADE), `code` (TEXT, UNIQUE per event), `jury_name` (TEXT), `organization` (TEXT), `assigned_categories` (JSONB / TEXT[]), `assigned_booths` (JSONB / TEXT[]), `is_active` (BOOLEAN, DEFAULT true), `created_at` (TIMESTAMPTZ).
+   - **Kolum**: `id` (UUID, PK), `event_id` (UUID, FK -> `ems_events.id` ON DELETE CASCADE), `code` (TEXT, UNIQUE per event), `jury_name` (TEXT), `organization` (TEXT), `ic_no` (TEXT, NULLABLE), `email` (TEXT, NULLABLE), `office_address` (TEXT, NULLABLE), `assigned_categories` (JSONB / TEXT[]), `assigned_booths` (JSONB / TEXT[]), `is_active` (BOOLEAN, DEFAULT true), `created_at` (TIMESTAMPTZ).
    - **Indeks FK**: `idx_ems_jury_codes_event_id`.
 
 5. **`ems_rubrics`**: Menyimpan kriteria rubrik pemarkahan untuk sesuatu acara.
@@ -2681,6 +2681,13 @@ Sistem beroperasi secara rasmi dengan **Light Theme sebagai mod lalai (*default 
   - `src/pages/ems/EmsEventFormPage.tsx`: Borang cipta/kemaskini acara dan pembina kriteria rubrik juri.
   - `src/pages/ems/EmsApprovalPage.tsx`: Meja kelulusan kertas kerja acara.
   - `src/pages/ems/EmsCheckinSelectorPage.tsx` & `src/pages/ems/EmsCheckinPage.tsx`: Hab pengimbas kamera QR kehadiran peserta/pengunjung.
+- **Integrasi Penjurian MAKMP Keusahawanan (Migrasi 100)**:
+  - Acara rasmi `MAKMP 2026 - ANUGERAH KEUSAHAWANAN` dikonfigurasi secara automatik merangkumi 2 kategori rubrik mengikut Borang Penjurian AKMP 2026:
+    1. *Anugerah Projek Keusahawanan Terbaik* (5 kriteria x pekali 4, skala Likert 1-5, jumlah 100).
+    2. *Anugerah Perusahaan Pelajar Terbaik* (7 kriteria: Logo x1, Maklumat x3, Aktiviti x2, Organisasi x1, Pencapaian x3, Jualan x4, Bukti Kewangan/SSM x5).
+  - Prapendaftaran 7 calon permohonan MAKMP beserta pautan fail PDF/imej ke dalam `ems_participants`.
+  - Penambahan lajur metadata juri `ic_no`, `email`, dan `office_address` pada `ems_jury_codes` berserta konfigurasi 5 kod PIN juri rasmi (3 panel luar, 1 pegawai dalaman Unit Keusahawanan, dan 1 akaun ujian pentadbir).
+  - Sokongan semakan dokumen PDF & imej secara terus dalam modal pemarkahan juri (`EmsJuryPortalPage.tsx`) bagi mengesahkan bukti SSM dan penyata kewangan calon.
 ### 25.8 Pusat Kawalan Food Bank JPP (`/jpp/foodbank`)
 - **Fail Utama:** `src/pages/jpp/JppFoodBankAdmin.tsx`
 - **Laluan:** `/jpp/foodbank` (didaftarkan di bawah `JppLayout` dalam `src/App.tsx`)

@@ -1063,6 +1063,9 @@ export interface EmsJuryCode {
   code: string;
   jury_name?: string | null;
   organization?: string | null;
+  ic_no?: string | null;
+  email?: string | null;
+  office_address?: string | null;
   assigned_categories?: string[] | null;
   assigned_booths?: string[] | null;
   is_active?: boolean;

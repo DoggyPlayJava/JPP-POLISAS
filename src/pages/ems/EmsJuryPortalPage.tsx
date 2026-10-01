@@ -30,6 +30,8 @@ import {
   AlertCircle,
   Trophy,
   HelpCircle,
+  FileText,
+  ExternalLink,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { verifyJuryCode, submitJuryScore } from '@/lib/ems';
@@ -629,7 +631,8 @@ export function EmsJuryPortalPage() {
     if (p.media_urls && Array.isArray(p.media_urls)) {
       p.media_urls.forEach((url, idx) => {
         if (url && typeof url === 'string') {
-          images.push({ url, label: `Foto ${idx + 1}` });
+          const isPdf = url.toLowerCase().endsWith('.pdf');
+          images.push({ url, label: isPdf ? `Dokumen PDF ${idx + 1}` : `Foto ${idx + 1}` });
         }
       });
     }
@@ -1262,29 +1265,48 @@ export function EmsJuryPortalPage() {
                       {mediaImages.length > 0 && (
                         <div className="pt-2 border-t border-slate-200 dark:border-slate-800/80">
                           <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2">
-                            Pratonton Galeri Media
+                            Pratonton Dokumen & Media
                           </span>
                           <div className="flex items-center gap-2 overflow-x-auto">
-                            {mediaImages.map((img, idx) => (
-                              <button
-                                key={idx}
-                                type="button"
-                                onClick={() => setLightboxImage({ url: img.url, title: `${productTitle} - ${img.label}` })}
-                                className="relative group w-16 h-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shrink-0 hover:border-purple-500 transition-all"
-                              >
-                                <img
-                                  src={img.url}
-                                  alt={img.label}
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                                />
-                                <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                  <Eye className="w-4 h-4 text-white" />
-                                </div>
-                                <span className="absolute bottom-0 inset-x-0 bg-slate-950/80 text-[9px] text-slate-300 text-center py-0.5 truncate px-0.5">
-                                  {img.label}
-                                </span>
-                              </button>
-                            ))}
+                            {mediaImages.map((img, idx) => {
+                              const isPdf = img.url.toLowerCase().endsWith('.pdf');
+                              return (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() => {
+                                    if (isPdf) {
+                                      window.open(img.url, '_blank');
+                                    } else {
+                                      setLightboxImage({ url: img.url, title: `${productTitle} - ${img.label}` });
+                                    }
+                                  }}
+                                  className="relative group w-16 h-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shrink-0 hover:border-purple-500 transition-all flex flex-col items-center justify-center"
+                                  title={isPdf ? 'Klik untuk buka fail PDF di tab baru' : 'Klik untuk besarkan imej'}
+                                >
+                                  {isPdf ? (
+                                    <div className="w-full h-full flex flex-col items-center justify-center bg-rose-50 dark:bg-rose-950/40 p-1">
+                                      <FileText className="w-5 h-5 text-rose-500 mb-0.5" />
+                                      <span className="text-[8px] font-bold text-rose-600 dark:text-rose-400">PDF</span>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <img
+                                        src={img.url}
+                                        alt={img.label}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                      />
+                                      <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                        <Eye className="w-4 h-4 text-white" />
+                                      </div>
+                                    </>
+                                  )}
+                                  <span className="absolute bottom-0 inset-x-0 bg-slate-950/80 text-[8px] text-slate-300 text-center py-0.5 truncate px-0.5">
+                                    {img.label}
+                                  </span>
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
                       )}
@@ -1356,6 +1378,30 @@ export function EmsJuryPortalPage() {
                   Ketua / Pasukan: <span className="text-slate-900 dark:text-slate-200 font-semibold">{evalParticipant.leader_name}</span>
                   {evalParticipant.team_name && ` (${evalParticipant.team_name})`}
                 </p>
+                {evalParticipant.media_urls && evalParticipant.media_urls.length > 0 && (
+                  <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                    <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 shrink-0 mr-1">
+                      Lampiran Calon:
+                    </span>
+                    {evalParticipant.media_urls.map((url, idx) => {
+                      const isPdf = url.toLowerCase().endsWith('.pdf');
+                      return (
+                        <a
+                          key={idx}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-purple-600 dark:hover:text-purple-400 border border-slate-300 dark:border-slate-700 hover:border-purple-400 transition-colors shrink-0 shadow-xs"
+                          title="Buka lampiran dalam tab baru untuk semakan juri"
+                        >
+                          {isPdf ? <FileText className="w-3.5 h-3.5 text-rose-500" /> : <Eye className="w-3.5 h-3.5 text-indigo-500" />}
+                          <span>{isPdf ? `Dokumen PDF ${idx + 1}` : `Foto ${idx + 1}`}</span>
+                          <ExternalLink className="w-3 h-3 opacity-60" />
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <button
