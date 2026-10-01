@@ -29,6 +29,7 @@ import {
   FileCheck,
   Download,
   History,
+  RotateCcw,
 } from 'lucide-react';
 import {
   verifyJuryPin,
@@ -90,6 +91,37 @@ function getEmbeddableCertUrl(url: string): { embedUrl: string; isImage: boolean
   }
   return { embedUrl: url, isImage: isImg };
 }
+
+export const getItemFormulaMerit = (
+  item: {
+    document_type?: string;
+    peringkat?: MakmpPeringkat | string;
+    pencapaian_type?: MakmpPencapaianType | string;
+    report_score?: number;
+  },
+  isKepimpinan: boolean
+): number => {
+  if (item.document_type === 'LAPORAN') {
+    return Math.max(0, Math.min(10, Math.round((Number(item.report_score) || 0) / 10)));
+  }
+  if (isKepimpinan) {
+    return Math.max(
+      0,
+      Math.min(
+        10,
+        getKepimpinanJppMerit(item.peringkat || 'POLITEKNIK', (item.pencapaian_type as MakmpKepimpinanRole) || 'PENYERTAAN')
+      )
+    );
+  }
+  return Math.max(
+    0,
+    Math.min(
+      10,
+      getPeringkatMerit((item.peringkat as MakmpPeringkat) || 'POLITEKNIK') +
+        getTahapMerit((item.pencapaian_type as MakmpPencapaianType) || 'PESERTA')
+    )
+  );
+};
 
 // ─── View: Keputusan & Ranking ────────────────────────────────────────────────
 // Grup anugerah unik (definition) dari senarai aplikasi, render panel ranking.
@@ -271,30 +303,41 @@ export default function MakmpJuryPortalPage() {
       });
     }
 
-    const items = (awApp.items || []).map((item) => ({
-      id: item.id,
-      document_type: item.document_type || 'SIJIL',
-      merit_awarded: item.merit_awarded > 0 ? item.merit_awarded : (item.merit_suggested || 3),
-      // Markah mentah 0-100: jika laporan & ada report_score guna nilai itu,
-      // selainnya derive daripada merit_awarded (x10) supaya juri nampak anggaran.
-      report_score:
-        item.document_type === 'LAPORAN'
-          ? item.report_score > 0
-            ? item.report_score
-            : Math.round((item.merit_awarded > 0 ? item.merit_awarded : (item.merit_suggested || 0)) * 10)
-          : 0,
-      // Default ticked (diterima) untuk award belum final — untick hanya bila
-      // reject. Untuk award yang dah DISAHKAN/DITOLAK, hormati nilai sebenar
-      // dari DB supaya refresh tak auto-accept semula dokumen yang di-untick.
-      // (Punca sebenar bug auto-accept dibaiki di RPC save_jury_award_review
-      //  — migration 98: is_verified per-item kini dihormati.)
-      is_verified:
-        awApp.status === 'DISAHKAN' || awApp.status === 'DITOLAK'
-          ? item.is_verified === true
-          : true,
-      peringkat: item.peringkat,
-      pencapaian_type: item.pencapaian_type,
-    }));
+    const isKepimpinan = isKepimpinanJppAward(awApp.award?.name);
+    const items = (awApp.items || []).map((item) => {
+      const formulaMerit = getItemFormulaMerit(item, isKepimpinan);
+      const initialMerit =
+        item.merit_awarded > 0
+          ? item.merit_awarded
+          : (item.merit_suggested && item.merit_suggested > 0)
+          ? item.merit_suggested
+          : formulaMerit;
+
+      return {
+        id: item.id,
+        document_type: item.document_type || 'SIJIL',
+        merit_awarded: initialMerit,
+        // Markah mentah 0-100: jika laporan & ada report_score guna nilai itu,
+        // selainnya derive daripada merit_awarded (x10) supaya juri nampak anggaran.
+        report_score:
+          item.document_type === 'LAPORAN'
+            ? item.report_score > 0
+              ? item.report_score
+              : Math.round(initialMerit * 10)
+            : 0,
+        // Default ticked (diterima) untuk award belum final — untick hanya bila
+        // reject. Untuk award yang dah DISAHKAN/DITOLAK, hormati nilai sebenar
+        // dari DB supaya refresh tak auto-accept semula dokumen yang di-untick.
+        // (Punca sebenar bug auto-accept dibaiki di RPC save_jury_award_review
+        //  — migration 98: is_verified per-item kini dihormati.)
+        is_verified:
+          awApp.status === 'DISAHKAN' || awApp.status === 'DITOLAK'
+            ? item.is_verified === true
+            : true,
+        peringkat: item.peringkat,
+        pencapaian_type: item.pencapaian_type,
+      };
+    });
     setReviewItems(items);
 
     if (awApp.items && awApp.items.length > 0) {
@@ -310,13 +353,18 @@ export default function MakmpJuryPortalPage() {
   // Kemaskini matriks / status verifikasi item
   const handleUpdateItemReview = (
     id: string,
-    field: 'merit_awarded' | 'report_score' | 'is_verified' | 'peringkat' | 'pencapaian_type',
-    value: any
+    field: 'merit_awarded' | 'report_score' | 'is_verified' | 'peringkat' | 'pencapaian_type' | 'reset_auto',
+    value?: any
   ) => {
+    const isKepimpinan = isKepimpinanJppAward(activeAward?.award?.name);
     setReviewItems((prev) =>
       prev.map((item) => {
         if (item.id !== id) return item;
-        const updated = { ...item, [field]: value };
+        const updated = { ...item };
+        if (field !== 'reset_auto') {
+          (updated as any)[field] = value;
+        }
+
         if (field === 'merit_awarded') {
           // OVERRIDE LANGSUNG: juri/pegawai set merit sendiri (0-10 per sijil),
           // tidak bergantung pada nilai yang disyorkan sistem.
@@ -327,10 +375,11 @@ export default function MakmpJuryPortalPage() {
           updated.report_score = score;
           updated.merit_awarded = Math.round(score / 10);
         } else if (field === 'peringkat' || field === 'pencapaian_type') {
-          // JANGAN auto-overwrite merit manual. Nilai merit kekal seperti yang
-          // juri/pegawai key-in. (Bug lama: tukar dropdown Peringkat/Tahap akan
-          // reset merit ke nilai cadangan additive, membatalkan override manual.)
-          // merit_awarded dikekalkan — juri boleh ubah terus melalui field merit.
+          // Auto-fill merit_awarded apabila peringkat atau pencapaian_type ditukar
+          updated.merit_awarded = getItemFormulaMerit(updated, isKepimpinan);
+        } else if (field === 'reset_auto') {
+          // Reset merit_awarded kepada formula merit
+          updated.merit_awarded = getItemFormulaMerit(item, isKepimpinan);
         }
         return updated;
       })
@@ -1066,17 +1115,25 @@ export default function MakmpJuryPortalPage() {
 
                   <div className="space-y-4">
                     {activeAward.items?.map((item, idx) => {
+                      const isReportDoc = item.document_type === 'LAPORAN';
+                      const isKepimpinan = isKepimpinanJppAward(activeAward.award?.name) && !isReportDoc;
                       const rItem = reviewItems.find((r) => r.id === item.id) || {
+                        id: item.id,
                         document_type: item.document_type || 'SIJIL',
-                        merit_awarded: item.merit_suggested,
+                        merit_awarded:
+                          item.merit_awarded > 0
+                            ? item.merit_awarded
+                            : (item.merit_suggested && item.merit_suggested > 0)
+                            ? item.merit_suggested
+                            : getItemFormulaMerit(item, isKepimpinan),
                         report_score: Math.round((item.report_score || item.merit_suggested || 0) * 10),
                         is_verified: true,
                         peringkat: item.peringkat,
                         pencapaian_type: item.pencapaian_type,
                       };
 
-                      const isReportDoc = item.document_type === 'LAPORAN';
-                      const isKepimpinan = isKepimpinanJppAward(activeAward.award?.name) && !isReportDoc;
+                      const formulaMerit = getItemFormulaMerit(rItem, isKepimpinan);
+                      const isManualOverride = rItem.merit_awarded !== formulaMerit;
 
                       return (
                         <div
@@ -1154,9 +1211,22 @@ export default function MakmpJuryPortalPage() {
                                   <span className="text-slate-500 dark:text-slate-400 text-xs">/ 100</span>
                                 </div>
                               </div>
-                              <div className="text-[11px] text-sky-700 dark:text-sky-200/70 pt-1 border-t border-sky-200 dark:border-sky-500/20">
-                                Merit auto-dikira: <span className="font-bold text-sky-800 dark:text-sky-300">+{Math.round((rItem.report_score || 0) / 10)} merit</span>{' '}
-                                (markah ÷ 10, dibundarkan)
+                              <div className="flex items-center justify-between text-[11px] text-sky-700 dark:text-sky-200/70 pt-1 border-t border-sky-200 dark:border-sky-500/20">
+                                <div>
+                                  Merit auto-dikira: <span className="font-bold text-sky-800 dark:text-sky-300">+{formulaMerit} merit</span>{' '}
+                                  (markah ÷ 10, dibundarkan)
+                                </div>
+                                {isManualOverride && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateItemReview(item.id, 'reset_auto')}
+                                    className="inline-flex items-center gap-1 text-[10px] font-bold text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 underline decoration-dotted transition"
+                                    title="Kembalikan merit ke nilai formula automatik"
+                                  >
+                                    <RotateCcw className="w-2.5 h-2.5" />
+                                    Guna Cadangan ({formulaMerit})
+                                  </button>
+                                )}
                               </div>
                             </div>
                           ) : isKepimpinan ? (
@@ -1209,9 +1279,22 @@ export default function MakmpJuryPortalPage() {
                                   </select>
                                 </div>
                               </div>
-                              <div className="text-[11px] text-amber-700 dark:text-amber-200/70 pt-1 border-t border-amber-200 dark:border-amber-500/20">
-                                Merit = Peringkat + Peranan: <span className="font-bold text-amber-800 dark:text-amber-300">+{getKepimpinanJppMerit(rItem.peringkat, rItem.pencapaian_type)} merit</span>{' '}
-                                (maks 10)
+                              <div className="flex items-center justify-between text-[11px] text-amber-700 dark:text-amber-200/70 pt-1 border-t border-amber-200 dark:border-amber-500/20">
+                                <div>
+                                  Merit = Peringkat + Peranan: <span className="font-bold text-amber-800 dark:text-amber-300">+{formulaMerit} merit</span>{' '}
+                                  (maks 10)
+                                </div>
+                                {isManualOverride && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateItemReview(item.id, 'reset_auto')}
+                                    className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 underline decoration-dotted transition"
+                                    title="Kembalikan merit ke nilai formula automatik"
+                                  >
+                                    <RotateCcw className="w-2.5 h-2.5" />
+                                    Guna Cadangan ({formulaMerit})
+                                  </button>
+                                )}
                               </div>
                             </div>
                           ) : (
@@ -1264,12 +1347,25 @@ export default function MakmpJuryPortalPage() {
                                 </select>
                               </div>
                             </div>
-                            <div className="text-[11px] text-sky-700 dark:text-sky-200/70 pt-1 border-t border-sky-200 dark:border-sky-500/20">
-                              Merit = Peringkat + Tahap:{' '}
-                              <span className="font-bold text-sky-800 dark:text-sky-300">
-                                +{getPeringkatMerit(rItem.peringkat)} + {getTahapMerit(rItem.pencapaian_type)} = {getPeringkatMerit(rItem.peringkat) + getTahapMerit(rItem.pencapaian_type)} merit
-                              </span>{' '}
-                              (maks 10)
+                            <div className="flex items-center justify-between text-[11px] text-sky-700 dark:text-sky-200/70 pt-1 border-t border-sky-200 dark:border-sky-500/20">
+                              <div>
+                                Merit = Peringkat + Tahap:{' '}
+                                <span className="font-bold text-sky-800 dark:text-sky-300">
+                                  +{getPeringkatMerit(rItem.peringkat)} + {getTahapMerit(rItem.pencapaian_type)} = {formulaMerit} merit
+                                </span>{' '}
+                                (maks 10)
+                              </div>
+                              {isManualOverride && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateItemReview(item.id, 'reset_auto')}
+                                  className="inline-flex items-center gap-1 text-[10px] font-bold text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 underline decoration-dotted transition"
+                                  title="Kembalikan merit ke nilai formula automatik"
+                                >
+                                  <RotateCcw className="w-2.5 h-2.5" />
+                                  Guna Cadangan ({formulaMerit})
+                                </button>
+                              )}
                             </div>
                             </>
                           )}
@@ -1292,6 +1388,15 @@ export default function MakmpJuryPortalPage() {
 
                             <div className="flex items-center gap-1.5">
                               <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Merit</span>
+                              {isManualOverride ? (
+                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30">
+                                  Manual
+                                </span>
+                              ) : (
+                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30">
+                                  Auto
+                                </span>
+                              )}
                               <input
                                 type="number"
                                 min={0}
@@ -1305,10 +1410,26 @@ export default function MakmpJuryPortalPage() {
                                     Number(e.target.value) || 0
                                   )
                                 }
-                                className="w-16 px-2 py-1 rounded-lg bg-white dark:bg-slate-950 border border-amber-300 dark:border-amber-500/50 text-center font-extrabold text-amber-700 dark:text-amber-300 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-                                title="Override merit secara manual (0-10 per sijil)"
+                                className={`w-16 px-2 py-1 rounded-lg bg-white dark:bg-slate-950 text-center font-extrabold text-sm focus:outline-none focus:ring-2 ${
+                                  isManualOverride
+                                    ? 'border border-amber-400 dark:border-amber-500/50 text-amber-700 dark:text-amber-300 focus:ring-amber-400'
+                                    : 'border border-emerald-300 dark:border-emerald-500/50 text-emerald-700 dark:text-emerald-300 focus:ring-emerald-400'
+                                }`}
+                                title={isManualOverride ? "Merit diubah suai secara manual (0-10 per sijil)" : "Merit dikira secara automatik mengikut formula"}
                               />
                               <span className="text-[10px] text-slate-400 dark:text-slate-500">/ 10</span>
+
+                              {isManualOverride && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateItemReview(item.id, 'reset_auto')}
+                                  className="inline-flex items-center gap-1 px-1.5 py-1 rounded-md text-[10px] font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 dark:text-amber-300 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 border border-amber-200 dark:border-amber-500/30 transition shrink-0"
+                                  title={`Kembalikan ke merit automatik (${formulaMerit})`}
+                                >
+                                  <RotateCcw className="w-3 h-3" />
+                                  <span>↺ Auto</span>
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>
