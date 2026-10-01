@@ -152,11 +152,9 @@ export function EmsJuryPortalPage() {
   const [lightboxImage, setLightboxImage] = useState<{ url: string; title: string } | null>(null);
 
   // Compute active participant category for evaluation wizard
-  const activeParticipantCategory = selectedCategory
-    ? selectedCategory
-    : evalParticipant
-    ? getParticipantCategory(evalParticipant) || ''
-    : '';
+  const activeParticipantCategory = evalParticipant
+    ? getParticipantCategory(evalParticipant) || selectedCategory || ''
+    : selectedCategory || '';
 
   // Set of rubric category names (category_name dari ems_rubrics) — utk bezakan
   // assignment "kategori rubrik" (penilaian) vs "kategori peserta" (booth/makanan)
@@ -438,21 +436,20 @@ export function EmsJuryPortalPage() {
     const assignedBooths = juryCodeData.assigned_booths;
 
     return participants.filter((p) => {
-      // Category filter match — HANYA utk kategori peserta (booth/makanan). Kalau
-      // assigned_categories ialah kategori RUBRIK (penilaian), jangan tapis peserta —
-      // juri tu score semua booth utk rubrik yang ditugaskan.
       let matchCat = true;
       if (assignedCats && assignedCats.length > 0 && !assignedCats.includes('ALL')) {
-        const isRubricScope = assignedCats.some((c) =>
-          rubricCategoryNames.has(c.trim().toLowerCase())
+        const assignedCatsClean = assignedCats.map((c) => c.trim().toLowerCase());
+        const pCategory = getParticipantCategory(p).trim().toLowerCase();
+
+        // Semak jika peserta mempunyai kategori spesifik yang berpadanan dengan penugasan juri
+        const hasMatchingParticipantCategory = participants.some((part) =>
+          assignedCatsClean.includes(getParticipantCategory(part).trim().toLowerCase())
         );
-        if (!isRubricScope) {
-          const pCategory = getParticipantCategory(p);
-          if (pCategory !== '') {
-            matchCat = assignedCats.some(
-              (c) => c.toLowerCase() === pCategory.toLowerCase()
-            );
-          }
+
+        if (hasMatchingParticipantCategory) {
+          matchCat = assignedCatsClean.includes(pCategory);
+        } else {
+          matchCat = true;
         }
       }
 
@@ -527,9 +524,15 @@ export function EmsJuryPortalPage() {
 
       // Selected Category Gateway Filter
       if (selectedCategory !== null) {
-        // Kategori RUBRIK (penilaian) → jangan tapis peserta ikut kategori makanan
-        const isRubricCat = rubricCategoryNames.has(selectedCategory.trim().toLowerCase());
-        if (!isRubricCat && pCat !== '' && pCat.toLowerCase() !== selectedCategory.trim().toLowerCase()) return false;
+        const selCatClean = selectedCategory.trim().toLowerCase();
+        // Semak jika terdapat peserta yang didaftarkan khusus di bawah kategori ini
+        const hasSpecificParticipants = assignedParticipants.some(
+          (part) => getParticipantCategory(part).trim().toLowerCase() === selCatClean
+        );
+
+        if (hasSpecificParticipants) {
+          if (pCat.trim().toLowerCase() !== selCatClean) return false;
+        }
       } else if (categoryFilter !== 'ALL') {
         if (pCat !== '' && pCat.toLowerCase() !== categoryFilter.trim().toLowerCase()) return false;
       }
@@ -924,12 +927,19 @@ export function EmsJuryPortalPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {availableCategories.map((cat) => {
                 const catIcon = getCategoryIcon(cat);
+                const catLower = cat.trim().toLowerCase();
+                // Semak jika peserta mempunyai kategori spesifik yang berpadanan dengan kategori ini
+                const hasSpecificParticipants = assignedParticipants.some(
+                  (part) => getParticipantCategory(part).trim().toLowerCase() === catLower
+                );
+
                 const catParticipants = assignedParticipants.filter((p) => {
-                  // Kategori RUBRIK (penilaian) → semua booth dinilai, jangan tapis ikut kategori makanan
-                  const isRubricCat = rubricCategoryNames.has(cat.trim().toLowerCase());
-                  if (isRubricCat) return true;
-                  const pCat = getParticipantCategory(p);
-                  return pCat === '' || pCat.toLowerCase() === cat.trim().toLowerCase();
+                  const pCat = getParticipantCategory(p).trim().toLowerCase();
+                  if (hasSpecificParticipants) {
+                    return pCat === catLower;
+                  }
+                  // Rubrik umum: terpakai kepada semua booth/peserta
+                  return true;
                 });
                 const catParticipantsCount = catParticipants.length;
                 const catScoredCount = catParticipants.filter((p) =>
