@@ -2400,6 +2400,36 @@ Semua 12 laluan EMS menggunakan prefix `/ems/*` dan dipeta kepada komponen halam
 
 ---
 
+### 22.7 Peningkatan Digital Flagship EMS & Pusat Kawalan Eksekutif (Command Palette)
+
+1. **Mod Pentas Dewan & Pengawal Dedah Berperingkat (Grand Hall Presentation Stage Mode)**:
+   - **Laluan**: `/ems/stage/:eventId` atau `/ems/leaderboard/:eventId` (Tab PENTAS DEWAN).
+   - **Gaya Visual**: Tema gelap obsidian (`bg-slate-950`) dengan pencahayaan emas reflektif (`border-amber-500/30`), kad podium terlindung dengan animasi kunci denyut misteri (*suspenseful veiled cards*), dan bar telemetri langsung masa nyata di bahagian bawah.
+   - **Kawalan Papan Kekunci Emcee**:
+     - `Space` / `ArrowRight`: Melangkah ke fasa pendedahan seterusnya (`HIDDEN` -> `BRONZE` -> `SILVER` -> `CHAMPION` -> `ALL`). Di fasa `CHAMPION`, letupan bunga api (`canvas-confetti`) dicetuskan secara automatik.
+     - `ArrowLeft`: Mengundur fasa pendedahan ke belakang sekiranya berlaku kesilapan klik.
+     - `R`: Mengunci semula pentas ke mod bersiap sedia (`HIDDEN / Armed`) dengan makluman toast.
+     - `C`: Mencetuskan letupan konfeti manual.
+     - `F`: Menogol paparan skrin penuh (*fullscreen presentation*).
+
+2. **Pemarkahan Sentuhan Tablet & Simpan Draf Automatik (Tablet-First Tactile Scoring & Auto-Save)**:
+   - **Laluan**: `/ems/juri` dan `/ems/jury`.
+   - **Simpan Draf Tempatan**: Setiap perubahan skor atau ulasan disimpan secara automatik ke dalam `sessionStorage` menggunakan kunci `ems_jury_draft_<eventId>_<juryCode>_<participantId>`. Status simpanan dipaparkan dengan lencana titik hijau berdenyut (`Draf disimpan setempat`).
+   - **Pemulihan Pintar**: Apabila juri membuka semula penilaian peserta yang belum dihantar ke pelayan, data draf dipulihkan secara automatik dengan notifikasi toast.
+   - **Ergonomik Tablet**: Butang skala Likert (1 - 5) dibina dengan sasaran sentuhan ergonomik (`min-h-[56px]`, `active:scale-[0.98]`, `touch-manipulation`).
+   - **Aliran Urutan Pantas**: Butang `Simpan & Peserta Seterusnya` membolehkan juri menghantar markah peserta semasa dan terus membuka borang peserta seterusnya secara berturutan tanpa perlu kembali ke grid utama.
+
+3. **Pendaftaran Pas Digital Gaya Apple Wallet**:
+   - **Laluan**: `/ems/e/:eventId/register` dan `/ems/register/:id`.
+   - Kad pas acara digital dibina dengan kontras gelap obsidian berbingkai emas, kod QR beresolusi tinggi untuk imbasan pintu masuk, nombor siri pendaftaran, dan butang cetak satu klik (`window.print()`).
+
+4. **Pusat Kawalan Eksekutif (Command Palette / Cmd+K)**:
+   - **Komponen**: `src/components/ui/CommandPalette.tsx` dipasang secara global pada `src/components/layout/AppLayout.tsx`.
+   - **Akses**: Dibuka melalui pintasan papan kekunci `Cmd+K` (macOS) / `Ctrl+K` (Windows/Linux) atau klik pada bar carian `Header.tsx`.
+   - **Capaian Pantas EMS**: Menyediakan carian segera ke Papan Pemuka EMS, Kaunter Imbasan QR, Portal Juri, Semakan Sijil, Kelulusan Acara, dan pautan langsung ke pentas acara aktif yang diambil secara dinamik daripada jadual `ems_events`.
+
+---
+
 ## 23. Modul Majlis Anugerah Kecemerlangan POLISAS (MAKMP)
 
 Modul **Majlis Anugerah Kecemerlangan POLISAS (MAKMP)** ialah subsistem pencalonan, semakan, pemarkahan matriks, dan penganugerahan merit anugerah kecemerlangan tahunan bagi pelajar dan kelab/entiti Politeknik Sultan Haji Ahmad Shah.
