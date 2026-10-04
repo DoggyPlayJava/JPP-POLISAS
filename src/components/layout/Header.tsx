@@ -9,6 +9,7 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { cn } from '@/lib/utils';
+import { triggerCommandPalette } from '@/lib/commandPalette';
 
 export function Header({ onOpenSearch }: { onOpenSearch?: () => void }) {
   const { profile, selectedClubId, isSuperAdmin, isPresident, effectiveRole } = useAuth();
@@ -63,7 +64,10 @@ export function Header({ onOpenSearch }: { onOpenSearch?: () => void }) {
       <div className="flex-1 max-w-sm mx-6 relative group hidden md:block">
         <button
           type="button"
-          onClick={() => onOpenSearch?.()}
+          onClick={() => {
+            if (onOpenSearch) onOpenSearch();
+            else triggerCommandPalette();
+          }}
           className="w-full flex items-center justify-between px-3.5 h-9 rounded-xl bg-muted/40 border border-border/50 hover:border-accent/40 text-sm text-muted-foreground/60 transition-colors shadow-xs"
         >
           <div className="flex items-center gap-2">

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { CommandPalette } from '../ui/CommandPalette';
+import { triggerCommandPalette } from '@/lib/commandPalette';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -44,7 +44,6 @@ function detectExcoFromPath(pathname: string) {
 export function AppLayout() {
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Detect exco aktif untuk header mobile
   const activeExco = detectExcoFromPath(location.pathname);
@@ -132,7 +131,7 @@ export function AppLayout() {
         </div>
 
         {/* Header Asal (Carian, Profile dll) */}
-        <Header onOpenSearch={() => setIsSearchOpen(true)} />
+        <Header onOpenSearch={() => triggerCommandPalette()} />
 
         <main id="main-scroll-container" className="flex-1 overflow-y-auto bg-background scrollbar-hide after:content-[''] after:block after:h-40 after:shrink-0">
           <motion.div
@@ -147,9 +146,6 @@ export function AppLayout() {
             </motion.div>
         </main>
 
-        {/* Global Command Palette */}
-        <CommandPalette open={isSearchOpen} onOpenChange={setIsSearchOpen} />
-
         {/* Global Floating AI Chat */}
         <FloatingAiChat />
 
@@ -159,7 +155,7 @@ export function AppLayout() {
         {/* Floating Mobile Navigation Dock */}
         <BottomNav 
           onOpenSidebar={() => setIsSidebarOpen(true)}
-          onOpenSearch={() => setIsSearchOpen(true)}
+          onOpenSearch={() => triggerCommandPalette()}
         />
       </div>
     </div>

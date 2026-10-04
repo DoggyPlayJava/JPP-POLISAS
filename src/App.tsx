@@ -8,7 +8,7 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute, PublicRoute } from '@/components/RouteGuards';
 
-// Layout components — lazy-loaded since they're only needed per section
+// Layout components - lazy-loaded since they're only needed per section
 const AppLayout = lazy(() => import('@/components/layout/AppLayout').then(m => ({ default: m.AppLayout })));
 
 // Ceraikan (Lazy Load) semua halaman untuk mengurangkan saiz awal
@@ -32,7 +32,7 @@ const RejectedPage = lazy(() => import('@/pages/RejectedPage').then(m => ({ defa
 const UrusKelabPage = lazy(() => import('@/pages/UrusKelabPage').then(m => ({ default: m.UrusKelabPage })));
 const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage').then(m => ({ default: m.LeaderboardPage })));
 const PenasihatLogPage = lazy(() => import('./pages/PenasihatLogPage').then(m => ({ default: m.PenasihatLogPage })));
-// [Karnival v2 — sistem undian baharu]
+// [Karnival v2 - sistem undian baharu]
 const KarnivalLandingPage   = lazy(() => import('./pages/karnival/KarnivalLandingPage').then(m => ({ default: m.KarnivalLandingPage })));
 const KarnivalVotePage      = lazy(() => import('./pages/karnival/KarnivalVotePage').then(m => ({ default: m.KarnivalVotePage })));
 const KarnivalScoreboard    = lazy(() => import('./pages/karnival/KarnivalScoreboard').then(m => ({ default: m.KarnivalScoreboard })));
@@ -121,7 +121,7 @@ const BracketPage = lazy(() => import('./pages/supsas/BracketPage').then(m => ({
 const SupsasHistoryPage = lazy(() => import('./pages/supsas/SupsasHistoryPage').then(m => ({ default: m.SupsasHistoryPage })));
 const SupsasScorekeeperPage = lazy(() => import('./pages/supsas/SupsasScorekeeperPage').then(m => ({ default: m.SupsasScorekeeperPage })));
 
-// ── Karnival JPP v2 (Layouts — lazy loaded) ──
+// ── Karnival JPP v2 (Layouts - lazy loaded) ──
 import { KarnivalProvider } from './contexts/KarnivalContext';
 const KarnivalLayout = lazy(() => import('./pages/karnival/KarnivalLayout').then(m => ({ default: m.KarnivalLayout })));
 const KarnivalAdminLayout = lazy(() => import('./pages/karnival/admin/KarnivalAdminLayout').then(m => ({ default: m.KarnivalAdminLayout })));
@@ -289,15 +289,15 @@ function AppRoutes() {
       {/* 🔑 RESET PASSWORD ROUTE (Standalone to handle Supabase recovery event without kicks) */}
       <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-      {/* 🌍 TRULY PUBLIC — no auth required (Accessible to both guests and logged-in users) */}
+      {/* 🌍 TRULY PUBLIC - no auth required (Accessible to both guests and logged-in users) */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/promo" element={<PromoPage />} />
       <Route path="/launch" element={<LaunchVideo />} />
       <Route path="/kebajikan/statistik" element={<KebajikanStatsPage />} />
       <Route path="/klk/statistik" element={<KlkPublicStats />} />
-      {/* 🗺️ POLYMAPS — Fully public, no login required (anyone can view campus map) */}
+      {/* 🗺️ POLYMAPS - Fully public, no login required (anyone can view campus map) */}
       <Route path="/polymaps" element={<PolyMapsPage />} />
-      {/* QR Program Attendance — standalone, redirect ke login diuruskan dalam page itu sendiri */}
+      {/* QR Program Attendance - standalone, redirect ke login diuruskan dalam page itu sendiri */}
       <Route path="/program/attend/:token" element={<ProgramAttendPage />} />
       {/* 🎪 EMS Public Participant Registration Wizard, Jury Portal & Stage Display */}
       <Route path="/ems/e/:eventId/register" element={<EmsPublicRegisterPage />} />
@@ -307,7 +307,7 @@ function AppRoutes() {
       <Route path="/ems/cert/verify" element={<EmsCertVerifyPage />} />
       <Route path="/ems/cert/:certId" element={<EmsCertificatePage />} />
 
-      {/* 🏆 MAKMP — Majlis Anugerah Kecemerlangan POLISAS (Awam & Juri Tanpa Login) */}
+      {/* 🏆 MAKMP - Majlis Anugerah Kecemerlangan POLISAS (Awam & Juri Tanpa Login) */}
       <Route path="/makmp" element={<MakmpPublicFormPage />} />
       <Route path="/makmp/status" element={<MakmpStatusTrackingPage />} />
       <Route path="/makmp/juri" element={<MakmpJuryPortalPage />} />
@@ -316,16 +316,16 @@ function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route path="/onboarding" element={<OnboardingPage />} />
 
-        {/* 🌐 PORTAL HUB — standalone tanpa sidebar */}
+        {/* 🌐 PORTAL HUB - standalone tanpa sidebar */}
         <Route path="/portal" element={<RequireApproval><PortalPage /></RequireApproval>} />
 
-        {/* 🔔 NOTIFIKASI — standalone tanpa sidebar */}
+        {/* 🔔 NOTIFIKASI - standalone tanpa sidebar */}
         <Route path="/notifikasi" element={<RequireApproval><NotifikasiPage /></RequireApproval>} />
 
-        {/* ⚙️ TETAPAN GLOBAL — standalone tanpa sidebar */}
+        {/* ⚙️ TETAPAN GLOBAL - standalone tanpa sidebar */}
         <Route path="/tetapan" element={<RequireApproval><SettingsPage /></RequireApproval>} />
 
-        {/* ── PolyServices — standalone tanpa sidebar ── */}
+        {/* ── PolyServices - standalone tanpa sidebar ── */}
         <Route path="/polysuara" element={<RequireApproval><PolySuaraPage /></RequireApproval>} />
         <Route path="/polyrent" element={<RequireApproval><PolyRentPage /></RequireApproval>} />
 
@@ -335,7 +335,7 @@ function AppRoutes() {
 
         {/* ✅ WRAP HALAMAN EXCO DALAM APPLAYOUT (ada sidebar) */}
         <Route element={<RequireApproval><AppLayout /></RequireApproval>}>
-          {/* ── e-KPP (route tanpa prefix — konvensyen sedia ada, JANGAN ubah) ── */}
+          {/* ── e-KPP (route tanpa prefix - konvensyen sedia ada, JANGAN ubah) ── */}
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/kelab" element={<KelabPage />} />
           <Route path="/sertai-kelab" element={<KelabPage />} />
@@ -410,13 +410,13 @@ function AppRoutes() {
 
       </Route>
 
-      {/* ── PolyMart Marketplace — PUBLIC (browse tanpa log masuk) ── */}
+      {/* ── PolyMart Marketplace - PUBLIC (browse tanpa log masuk) ── */}
       <Route element={<PolyMartLayout />}>
         <Route path="/polymart"            element={<PolyMartHome />} />
         <Route path="/polymart/produk/:id" element={<PolyMartProductDetail />} />
       </Route>
 
-      {/* ── PolyMart Marketplace — PROTECTED (perlu log masuk & approval) ── */}
+      {/* ── PolyMart Marketplace - PROTECTED (perlu log masuk & approval) ── */}
       <Route element={<ProtectedRoute />}>
         <Route element={<RequireApproval><PolyMartLayout /></RequireApproval>}>
           <Route path="/polymart/pesanan-saya"  element={<PolyMartMyOrders />} />
@@ -432,7 +432,7 @@ function AppRoutes() {
 
       {/* ── e-Akademik (prefix: /akademik/) ── */}
       <Route element={<ProtectedRoute />}>
-        {/* Standalone claim page — papar tanpa layout sidebar, dicapai bila scan QR kod fizikal */}
+        {/* Standalone claim page - papar tanpa layout sidebar, dicapai bila scan QR kod fizikal */}
         <Route path="/akademik/qr/:token" element={<RequireApproval><AkademikQrScan /></RequireApproval>} />
         <Route element={<RequireApproval><AkademikLayout /></RequireApproval>}>
           <Route path="/akademik"              element={<AkademikDashboard />} />
@@ -448,9 +448,9 @@ function AppRoutes() {
 
       {/* ── E-Kediaman Luar Kampus (KLK) ── */}
       <Route element={<ProtectedRoute />}>
-        {/* Standalone form pelajar — tanpa sidebar */}
+        {/* Standalone form pelajar - tanpa sidebar */}
         <Route path="/klk/form" element={<RequireApproval><KlkResidencyFormPage /></RequireApproval>} />
-        {/* Dashboard + Tetapan — guna KlkLayout dengan sidebar sendiri */}
+        {/* Dashboard + Tetapan - guna KlkLayout dengan sidebar sendiri */}
         <Route element={<RequireApproval><KlkLayout /></RequireApproval>}>
           <Route path="/klk"         element={<KlkDashboard />} />
           <Route path="/klk/tetapan" element={<KlkSettingsPage />} />
@@ -481,7 +481,7 @@ function AppRoutes() {
         </Route>
       </Route>
 
-      {/* ── E-Kebajikan — Layout Bersama Sidebar ── */}
+      {/* ── E-Kebajikan - Layout Bersama Sidebar ── */}
       <Route element={<ProtectedRoute />}>
         <Route element={<KebajikanLayout />}>
           {/* Public routes (Pelajar / Semua) */}
@@ -502,7 +502,7 @@ function AppRoutes() {
         </Route>
       </Route>
 
-      {/* ── SUPSAS — Sukan Polisas (PUBLIC — no login needed for scoreboard) ── */}
+      {/* ── SUPSAS - Sukan Polisas (PUBLIC - no login needed for scoreboard) ── */}
       <Route element={<SupsasProvider><SupsasLayout /></SupsasProvider>}>
         <Route path="/supsas"             element={<SupsasLandingPage />} />
         <Route path="/supsas/scoreboard"  element={<SupsasScoreboardPage />} />
@@ -512,7 +512,7 @@ function AppRoutes() {
         <Route path="/supsas/sejarah"     element={<SupsasHistoryPage />} />
         <Route path="/supsas/scorekeeper" element={<SupsasScorekeeperPage />} />
 
-        {/* Admin Panel — role guard inside SupsasAdminLayout */}
+        {/* Admin Panel - role guard inside SupsasAdminLayout */}
         <Route element={<SupsasAdminLayout />}>
           <Route path="/supsas/admin"            element={<SupsasAdminHome />} />
           <Route path="/supsas/admin/sukan"      element={<AdminSukanPage />} />
@@ -522,19 +522,19 @@ function AppRoutes() {
           <Route path="/supsas/admin/tetapan"    element={<AdminTetapanPage />} />
         </Route>
 
-        {/* Ketua Kontingen Portal — auth guard inside KetuaLayout */}
+        {/* Ketua Kontingen Portal - auth guard inside KetuaLayout */}
         <Route element={<KetuaLayout />}>
           <Route path="/supsas/ketua" element={<KetuaDashboard />} />
         </Route>
       </Route>
 
-      {/* ── Karnival JPP v2 — PUBLIC (scoreboard/landing tanpa login, undi wajib login) ── */}
+      {/* ── Karnival JPP v2 - PUBLIC (scoreboard/landing tanpa login, undi wajib login) ── */}
       <Route element={<KarnivalProvider><KarnivalLayout /></KarnivalProvider>}>
         <Route path="/karnival"            element={<KarnivalLandingPage />} />
         <Route path="/karnival/undi"       element={<KarnivalVotePage />} />
         <Route path="/karnival/scoreboard" element={<KarnivalScoreboard />} />
 
-        {/* Admin Panel — role guard inside KarnivalAdminLayout */}
+        {/* Admin Panel - role guard inside KarnivalAdminLayout */}
         <Route element={<KarnivalAdminLayout />}>
           <Route path="/karnival/admin"             element={<KarnivalAdminDashboard />} />
           <Route path="/karnival/admin/edition"     element={<KarnivalAdminEdition />} />
@@ -560,6 +560,7 @@ import { PwaUpdater } from '@/components/PwaUpdater';
 import { InstallAppPrompt } from '@/components/pwa/InstallAppPrompt';
 import { GlobalPullToUpdate } from '@/components/layout/GlobalPullToUpdate';
 import { useDevicePerformance } from '@/hooks/useDevicePerformance';
+import { CommandPalette } from '@/components/ui/CommandPalette';
 
 function GlobalRedirector() {
   const navigate = useNavigate();
@@ -596,6 +597,7 @@ function App() {
                   <JppConfigProvider>
                     <GlobalPullToUpdate />
                     <AppRoutes />
+                    <CommandPalette />
                     <PwaUpdater />
                     <InstallAppPrompt />
                     <OfflineIndicator />

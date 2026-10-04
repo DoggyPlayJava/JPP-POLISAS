@@ -2424,8 +2424,10 @@ Semua 12 laluan EMS menggunakan prefix `/ems/*` dan dipeta kepada komponen halam
    - Kad pas acara digital dibina dengan kontras gelap obsidian berbingkai emas, kod QR beresolusi tinggi untuk imbasan pintu masuk, nombor siri pendaftaran, dan butang cetak satu klik (`window.print()`).
 
 4. **Pusat Kawalan Eksekutif (Command Palette / Cmd+K)**:
-   - **Komponen**: `src/components/ui/CommandPalette.tsx` dipasang secara global pada `src/components/layout/AppLayout.tsx`.
-   - **Akses**: Dibuka melalui pintasan papan kekunci `Cmd+K` (macOS) / `Ctrl+K` (Windows/Linux) atau klik pada bar carian `Header.tsx`.
+   - **Komponen**: `src/components/ui/CommandPalette.tsx` dipasang secara global pada peringkat akar `src/App.tsx` di dalam `BrowserRouter` supaya aktif di semua laluan aplikasi (termasuk `/portal`, `/`, EMS, MAKMP, dan PolyMart).
+   - **Pintasan Papan Kekunci & Hotkey Capture**: Menggunakan `window.addEventListener('keydown', handleKeyDown, { capture: true })` dengan `e.preventDefault()` dan `e.stopPropagation()` pada fasa tangkapan (*capture phase*) bagi memintas pintasan `Ctrl+K` (Windows/Linux) dan `Cmd+K` (macOS) sebelum pelayar Chromium mengambil alih carian omnibox.
+   - **Helper Pencetus Programatik**: Fungsi `triggerCommandPalette()` di `src/lib/commandPalette.ts` membolehkan bar carian di `Header.tsx`, `PortalNavbar.tsx`, dan `BottomNav.tsx` membuka dialog carian dengan satu klik.
+   - **Aksesibiliti & Dialog Radix**: Dilengkapi dengan `DialogPrimitive.Title` dan `DialogPrimitive.Description` (`sr-only`) untuk mematuhi piawaian ARIA serta mengelakkan sebarang amaran hydration pelayar.
    - **Capaian Pantas EMS**: Menyediakan carian segera ke Papan Pemuka EMS, Kaunter Imbasan QR, Portal Juri, Semakan Sijil, Kelulusan Acara, dan pautan langsung ke pentas acara aktif yang diambil secara dinamik daripada jadual `ems_events`.
 
 ---

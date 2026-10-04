@@ -4,7 +4,8 @@ import {
   Users, Clock, FileText, Activity, AlertCircle,
   TrendingUp, LayoutDashboard, Trophy, Medal,
   ArrowUpRight, CheckCircle2, Archive, Star,
-  FileCheck, Send, Unlock, ChevronRight, AlertTriangle
+  FileCheck, Send, Unlock, ChevronRight, AlertTriangle,
+  HelpCircle, Bot
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
